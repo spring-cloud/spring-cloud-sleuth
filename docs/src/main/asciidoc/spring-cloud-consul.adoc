@@ -1,0 +1,10 @@
+:github-tag: master
+:github-repo: spring-cloud/spring-cloud-sleuth
+:github-raw: http://raw.github.com/{github-repo}/{github-tag}
+:github-code: http://github.com/{github-repo}/tree/{github-tag}
+= Spring Cloud Sleuth
+
+include::intro.adoc[]
+
+== TODO: Document Spring Cloud Sleuth
+

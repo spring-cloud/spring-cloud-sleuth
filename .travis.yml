@@ -1,0 +1,20 @@
+language: java
+before_install:
+  - git config user.name "$GIT_NAME"
+  - git config user.email "$GIT_EMAIL"
+  - git config credential.helper "store --file=.git/credentials"
+  - echo "https://$GH_TOKEN:@github.com" > .git/credentials
+  - gem install asciidoctor
+install:
+- mvn --settings .settings.xml install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
+- ./docs/src/main/asciidoc/ghpages.sh
+script:
+#TODO: change install to deploy
+- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || mvn --settings .settings.xml install -nsu -Dmaven.test.redirectTestOutputToFile=true'
+- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || mvn --settings .settings.xml install -nsu -Dmaven.test.redirectTestOutputToFile=true'
+env:
+  global:
+  - GIT_NAME="Spencer Gibb"
+  - GIT_EMAIL=sgibb@pivotal.io
+  - CI_DEPLOY_USERNAME=sgibb
+  - secure: GvDCjRQD5OWk4vUkNZBpSuKqkiO6hqia0DQrig9TICcf/iFL2TQnflpjPHejslqc0pB+38uqgSXESmjuFLxVXnFdMriehYi+ORG/O1JXzT6p41NMDwuO6fWzMYEbwbHw6j2JhVKcALnE4nJBN6mflTjuNA12aX8mqziwIpfoewM=
