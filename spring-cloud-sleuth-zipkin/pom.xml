@@ -24,6 +24,27 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.github.kristofa</groupId>
+			<artifactId>brave-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.kristofa</groupId>
+			<artifactId>brave-impl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.kristofa</groupId>
+			<artifactId>brave-impl-spring</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.kristofa</groupId>
+			<artifactId>brave-tracefilters</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.kristofa</groupId>
+			<artifactId>brave-zipkin-spancollector</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>

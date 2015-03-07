@@ -60,6 +60,11 @@
 			</dependency>
 			<dependency>
 				<groupId>com.github.kristofa</groupId>
+				<artifactId>brave-impl</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.github.kristofa</groupId>
 				<artifactId>brave-impl-spring</artifactId>
 				<version>${brave.version}</version>
 			</dependency>
@@ -72,6 +77,12 @@
 				<groupId>com.github.kristofa</groupId>
 				<artifactId>brave-tracefilters</artifactId>
 				<version>${brave.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-log4j12</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>com.github.kristofa</groupId>
