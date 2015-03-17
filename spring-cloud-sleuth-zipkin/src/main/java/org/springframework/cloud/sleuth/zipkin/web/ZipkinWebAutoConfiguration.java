@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.sleuth.zipkin.ZipkinAutoConfiguration;
-import org.springframework.cloud.sleuth.zipkin.ZipkinHandlerInterceptor;
 import org.springframework.cloud.sleuth.zipkin.ZipkinRestTemplateInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,8 +36,13 @@ public class ZipkinWebAutoConfiguration {
 
 	@Bean
 	public ZipkinHandlerInterceptor zipkinHandlerInterceptor() {
-		return new ZipkinHandlerInterceptor(endPointSubmitter, serverTracer);
+		return new ZipkinHandlerInterceptor(httpServletRequestInterceptor());
 	}
+
+    @Bean
+    public HttpServletRequestInterceptor httpServletRequestInterceptor() {
+        return new HttpServletRequestInterceptor(serverTracer, endPointSubmitter);
+    }
 
 	@Bean
 	public WebMvcConfigurerAdapter webMvcConfigurerAdapter() {

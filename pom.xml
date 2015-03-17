@@ -95,6 +95,12 @@
 				<version>${brave.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-zuul</artifactId>
+				<version>${spring-cloud.version}</version>
+				<optional>true</optional>
+			</dependency>
+			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
 				<version>1.12.6</version>
@@ -105,6 +111,7 @@
 
 	<properties>
 		<brave.version>2.4.2</brave.version>
+		<spring-cloud.version>1.0.1.BUILD-SNAPSHOT</spring-cloud.version>
 	</properties>
 
 </project>
