@@ -16,7 +16,6 @@ import com.github.kristofa.brave.ClientTracer;
 import com.github.kristofa.brave.ClientTracerConfig;
 import com.github.kristofa.brave.EndPointSubmitterConfig;
 import com.github.kristofa.brave.FixedSampleRateTraceFilter;
-import com.github.kristofa.brave.LoggingSpanCollectorImpl;
 import com.github.kristofa.brave.ServerSpanThreadBinderConfig;
 import com.github.kristofa.brave.ServerTracerConfig;
 import com.github.kristofa.brave.SpanCollector;

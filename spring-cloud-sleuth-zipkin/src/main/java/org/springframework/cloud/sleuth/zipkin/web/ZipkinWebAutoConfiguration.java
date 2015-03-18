@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.zipkin.web;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -34,10 +35,15 @@ public class ZipkinWebAutoConfiguration {
 	@Autowired
 	private ServerTracer serverTracer;
 
-	@Bean
+	/*@Bean
 	public ZipkinHandlerInterceptor zipkinHandlerInterceptor() {
 		return new ZipkinHandlerInterceptor(httpServletRequestInterceptor());
-	}
+	}*/
+
+    @Bean
+    public ZipkinFilter zipkinFilter() {
+        return new ZipkinFilter(httpServletRequestInterceptor());
+    }
 
     @Bean
     public HttpServletRequestInterceptor httpServletRequestInterceptor() {
@@ -45,8 +51,9 @@ public class ZipkinWebAutoConfiguration {
     }
 
 	@Bean
-	public WebMvcConfigurerAdapter webMvcConfigurerAdapter() {
-		return new ZipkinWebConfigurer(zipkinHandlerInterceptor());
+    @ConditionalOnBean(ZipkinHandlerInterceptor.class)
+	public WebMvcConfigurerAdapter webMvcConfigurerAdapter(ZipkinHandlerInterceptor zipkinHandlerInterceptor) {
+		return new ZipkinWebConfigurer(zipkinHandlerInterceptor);
 	}
 
     @Configuration
