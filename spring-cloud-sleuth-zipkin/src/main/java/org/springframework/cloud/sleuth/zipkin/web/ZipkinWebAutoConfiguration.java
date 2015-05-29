@@ -1,24 +1,22 @@
 package org.springframework.cloud.sleuth.zipkin.web;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.cloud.sleuth.zipkin.ZipkinAutoConfiguration;
-import org.springframework.cloud.sleuth.zipkin.ZipkinRestTemplateInterceptor;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-
 import com.github.kristofa.brave.EndPointSubmitter;
 import com.github.kristofa.brave.ServerTracer;
 import com.github.kristofa.brave.ServerTracerConfig;
 import com.github.kristofa.brave.client.ClientRequestInterceptor;
 import com.github.kristofa.brave.client.ClientResponseInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.cloud.sleuth.zipkin.ZipkinAutoConfiguration;
+import org.springframework.cloud.sleuth.zipkin.ZipkinRestTemplateInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 /**
  * @author Spencer Gibb
@@ -26,6 +24,7 @@ import com.github.kristofa.brave.client.ClientResponseInterceptor;
 @Configuration
 @ConditionalOnClass(ServerTracerConfig.class)
 @ConditionalOnWebApplication
+@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.enabled", matchIfMissing = true)
 @AutoConfigureAfter(ZipkinAutoConfiguration.class)
 public class ZipkinWebAutoConfiguration {
 
@@ -35,10 +34,10 @@ public class ZipkinWebAutoConfiguration {
 	@Autowired
 	private ServerTracer serverTracer;
 
-	/*@Bean
+	@Bean
 	public ZipkinHandlerInterceptor zipkinHandlerInterceptor() {
 		return new ZipkinHandlerInterceptor(httpServletRequestInterceptor());
-	}*/
+	}
 
     @Bean
     public ZipkinFilter zipkinFilter() {
@@ -64,15 +63,6 @@ public class ZipkinWebAutoConfiguration {
 
         @Autowired
         private ClientResponseInterceptor clientResponseInterceptor;
-
-        @Bean
-        @ConditionalOnMissingBean
-        public RestTemplate restTemplate() {
-            //TODO: howto add this to an existing restTemplate without circular dependencies
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getInterceptors().add(zipkinRestTemplateInterceptor());
-            return restTemplate;
-        }
 
         @Bean
         public ZipkinRestTemplateInterceptor zipkinRestTemplateInterceptor() {

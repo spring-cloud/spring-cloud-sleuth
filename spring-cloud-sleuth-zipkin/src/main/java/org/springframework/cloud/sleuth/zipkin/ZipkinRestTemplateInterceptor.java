@@ -33,7 +33,8 @@ public class ZipkinRestTemplateInterceptor implements ClientHttpRequestIntercept
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
 
-        clientRequestInterceptor.handle(new RequestAdapter(request), Optional.<String>absent());
+        RequestAdapter requestAdapter = new RequestAdapter(request);
+        clientRequestInterceptor.handle(requestAdapter, Optional.<String>absent());
 
         ClientHttpResponse response = null;
         Exception exception = null;
