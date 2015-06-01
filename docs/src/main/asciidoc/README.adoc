@@ -1,4 +1,4 @@
-image::https://travis-ci.org/spring-cloud/spring-cloud-sleuth.svg?branch=master[Build Status, link=https://travis-ci.org/spring-cloud/spring-cloud-sleuth]
+image::https://travis-ci.org/spring-cloud-incubator/spring-cloud-sleuth.svg?branch=master[Build Status, link=https://travis-ci.org/spring-cloud-incubator/spring-cloud-sleuth]
 
 include::intro.adoc[]
 

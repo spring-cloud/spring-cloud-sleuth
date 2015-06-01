@@ -9,12 +9,11 @@ install:
 - mvn --settings .settings.xml install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
 - ./docs/src/main/asciidoc/ghpages.sh
 script:
-#TODO: change install to deploy
-- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || mvn --settings .settings.xml install -nsu -Dmaven.test.redirectTestOutputToFile=true'
+- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || mvn --settings .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true'
 - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || mvn --settings .settings.xml install -nsu -Dmaven.test.redirectTestOutputToFile=true'
 env:
   global:
   - GIT_NAME="Spencer Gibb"
   - GIT_EMAIL=sgibb@pivotal.io
   - CI_DEPLOY_USERNAME=sgibb
-  - secure: GvDCjRQD5OWk4vUkNZBpSuKqkiO6hqia0DQrig9TICcf/iFL2TQnflpjPHejslqc0pB+38uqgSXESmjuFLxVXnFdMriehYi+ORG/O1JXzT6p41NMDwuO6fWzMYEbwbHw6j2JhVKcALnE4nJBN6mflTjuNA12aX8mqziwIpfoewM=
+  - secure: dxec/7oFht2WMaw4GNFNvuWHlnkm1wmFagE3ZrtCcU2SHUW/P2FgG5tiNW9hT2eXHf2H0YUF1ROkL4BrH5qpIlOBtYd0J8Q/67vBqyB112IN2FqoB/F6Erkfp1FKMBBrXXYaGoSvqzmJs6zqS3JRpyr010W2aU8klK0QfqRoJ0g=
