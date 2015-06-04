@@ -4,10 +4,10 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>spring-cloud-sleuth-zipkin</artifactId>
+	<artifactId>spring-cloud-sleuth-core</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Cloud Sleuth Zipkin</name>
-	<description>Spring Cloud Sleuth Zipkin</description>
+	<name>Spring Cloud Sleuth Core</name>
+	<description>Spring Cloud Sleuth Core</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -38,41 +38,9 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-core</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-impl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-impl-spring</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-tracefilters</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-zipkin-spancollector</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-zuul</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
