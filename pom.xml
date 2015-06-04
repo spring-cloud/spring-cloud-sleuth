@@ -142,7 +142,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-zuul</artifactId>
-				<version>${spring-cloud.version}</version>
+				<version>${spring-cloud-netflix.version}</version>
 				<optional>true</optional>
 			</dependency>
 			<dependency>
@@ -208,7 +208,7 @@
 
 	<properties>
 		<brave.version>2.4.2</brave.version>
-		<spring-cloud.version>1.0.1.BUILD-SNAPSHOT</spring-cloud.version>
+		<spring-cloud-netflix.version>1.0.3.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
 		<spock.version>1.0-groovy-2.4</spock.version>
 	</properties>
