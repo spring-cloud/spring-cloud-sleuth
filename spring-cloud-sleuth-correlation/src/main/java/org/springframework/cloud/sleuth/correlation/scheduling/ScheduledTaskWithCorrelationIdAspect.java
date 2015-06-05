@@ -44,15 +44,17 @@ public class ScheduledTaskWithCorrelationIdAspect {
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	private final UuidGenerator uuidGenerator;
+	private CorrelationIdUpdater correlationIdUpdater;
 
-	public ScheduledTaskWithCorrelationIdAspect(UuidGenerator uuidGenerator) {
+	public ScheduledTaskWithCorrelationIdAspect(UuidGenerator uuidGenerator, CorrelationIdUpdater correlationIdUpdater) {
 		this.uuidGenerator = uuidGenerator;
+		this.correlationIdUpdater = correlationIdUpdater;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object setNewCorrelationIdOnThread(final ProceedingJoinPoint pjp) throws Throwable {
 		String correlationId = uuidGenerator.create();
-		return CorrelationIdUpdater.withId(correlationId, new Callable() {
+		return correlationIdUpdater.withId(correlationId, new Callable() {
 			@Override
 			public Object call() throws Exception {
 				try {

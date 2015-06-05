@@ -33,18 +33,21 @@ import java.util.concurrent.Callable;
  */
 public abstract class CorrelatedCommand<R> extends HystrixCommand<R> {
 	private final String clientCorrelationId = CorrelationIdHolder.get();
+	private final CorrelationIdUpdater correlationIdUpdater;
 
-	protected CorrelatedCommand(HystrixCommandGroupKey group) {
+	protected CorrelatedCommand(HystrixCommandGroupKey group, CorrelationIdUpdater correlationIdUpdater) {
 		super(group);
+		this.correlationIdUpdater = correlationIdUpdater;
 	}
 
-	protected CorrelatedCommand(Setter setter) {
+	protected CorrelatedCommand(Setter setter, CorrelationIdUpdater correlationIdUpdater) {
 		super(setter);
+		this.correlationIdUpdater = correlationIdUpdater;
 	}
 
 	@Override
 	protected final R run() throws Exception {
-		return CorrelationIdUpdater.withId(clientCorrelationId, new Callable<R>() {
+		return correlationIdUpdater.withId(clientCorrelationId, new Callable<R>() {
 			@Override
 			public R call() throws Exception {
 				return doRun();

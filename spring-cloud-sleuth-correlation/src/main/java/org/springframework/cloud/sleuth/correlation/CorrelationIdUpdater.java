@@ -15,33 +15,31 @@
  */
 package org.springframework.cloud.sleuth.correlation;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
+
+import java.util.concurrent.Callable;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.MDC;
 import org.springframework.util.StringUtils;
 
-import java.lang.invoke.MethodHandles;
-import java.util.concurrent.Callable;
-
-import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
-
 /**
- * Class that takes care of updating all necessary components with new value
- * of correlation id.
- * It sets correlationId on {@link ThreadLocal} in {@link CorrelationIdHolder}
- * and in {@link MDC}.
+ * Class that takes care of updating all necessary components with new value of
+ * correlation id. It sets correlationId on {@link ThreadLocal} in
+ * {@link CorrelationIdHolder} and in {@link MDC}.
  *
  * @see CorrelationIdHolder
  * @see MDC
  *
  * @author Jakub Nabrdalik, 4financeIT
  * @author Michal Chmielarz, 4financeIT
+ * @author Spencer Gibb
  */
+@Slf4j
 public class CorrelationIdUpdater {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-	public static void updateCorrelationId(String correlationId) {
+	public void updateCorrelationId(String correlationId) {
 		if (StringUtils.hasText(correlationId)) {
 			log.debug("Updating correlationId with value: [" + correlationId + "]");
 			CorrelationIdHolder.set(correlationId);
@@ -57,7 +55,7 @@ public class CorrelationIdUpdater {
 	 * @param block Callable to be executed with new ID
 	 * @return the result of Callable block execution
 	 */
-	public static <T> T withId(String temporaryCorrelationId, Callable<T> block) {
+	public <T> T withId(String temporaryCorrelationId, Callable<T> block) {
 		final String oldCorrelationId = CorrelationIdHolder.get();
 		try {
 			updateCorrelationId(temporaryCorrelationId);
@@ -101,7 +99,7 @@ public class CorrelationIdUpdater {
 	 * @return wrapping block as Callable
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Callable<T> wrapCallableWithId(final Callable<T> block) {
+	public <T> Callable<T> wrapCallableWithId(final Callable<T> block) {
 		final String temporaryCorrelationId = CorrelationIdHolder.get();
 		// unchecked assignment due to groovyc issues with <T>
 		return new Callable() {

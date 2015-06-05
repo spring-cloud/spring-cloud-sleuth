@@ -80,6 +80,11 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-correlation</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-zipkin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -144,6 +149,11 @@
 				<artifactId>spring-cloud-starter-zuul</artifactId>
 				<version>${spring-cloud-netflix.version}</version>
 				<optional>true</optional>
+			</dependency>
+			<dependency>
+				<groupId>com.netflix.archaius</groupId>
+				<artifactId>archaius-core</artifactId>
+				<version>0.6.6</version>
 			</dependency>
 			<dependency>
 				<groupId>org.projectlombok</groupId>
