@@ -4,6 +4,11 @@ include::intro.adoc[]
 
 == This is a Developer Preview
 
+* TODO: multiple ordered providers (slf4j and zipkin).
+* TODO: Hooks for start/end events (ala zipkin).
+* TODO: Abstraction names are temporary off the top of my head.
+* TODO: move slf4j impl to module
+
 == Features
 
 * TODO: list features

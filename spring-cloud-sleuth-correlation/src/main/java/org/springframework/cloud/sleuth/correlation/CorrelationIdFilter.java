@@ -52,15 +52,18 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 
 	private final Pattern skipCorrId;
 	private final UuidGenerator uuidGenerator;
+	private final CorrelationProvider correlationProvider;
 
 	public CorrelationIdFilter() {
 		this.uuidGenerator = new UuidGenerator();
 		this.skipCorrId = null;
+		this.correlationProvider = null;
 	}
 
-	public CorrelationIdFilter(UuidGenerator uuidGenerator, Pattern skipCorrId) {
+	public CorrelationIdFilter(UuidGenerator uuidGenerator, Pattern skipCorrId, CorrelationProvider correlationProvider) {
 		this.uuidGenerator = uuidGenerator;
 		this.skipCorrId = skipCorrId;
+		this.correlationProvider = correlationProvider;
 	}
 
 	@Override
@@ -78,50 +81,38 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 		String correlationId = (hasText(correlationIdFromRequest)) ? correlationIdFromRequest : getCorrelationIdFrom(response);
 		if (!hasText(correlationId) && shouldGenerateCorrId(request)) {
 			correlationId = createNewCorrIdIfEmpty();
+			correlationProvider.correlationIdSet(correlationId);
 		}
 		CorrelationIdHolder.set(correlationId);
 		addCorrelationIdToResponseIfNotPresent(response, correlationId);
 	}
 
 	private String getCorrelationIdFrom(final HttpServletResponse response) {
-		return withLoggingAs("response", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return response.getHeader(CORRELATION_ID_HEADER);
-			}
-		});
+		if (correlationProvider != null) {
+			return correlationProvider.getCorrelationId("response", new Callable<String>() {
+				@Override
+				public String call() throws Exception {
+					return response.getHeader(CORRELATION_ID_HEADER);
+				}
+			});
+		}
+		return StringUtils.EMPTY;
 	}
 
 	private String getCorrelationIdFrom(final HttpServletRequest request) {
-		return withLoggingAs("request", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return request.getHeader(CORRELATION_ID_HEADER);
-			}
-		});
-	}
-
-	private String withLoggingAs(String whereWasFound, Callable<String> correlationIdGetter) {
-		String correlationId = tryToGetCorrelationId(correlationIdGetter);
-		if (hasText(correlationId)) {
-			MDC.put(CORRELATION_ID_HEADER, correlationId);
-			log.debug("Found correlationId in " + whereWasFound + ": " + correlationId);
+		if (correlationProvider != null) {
+			return correlationProvider.getCorrelationId("request", new Callable<String>() {
+				@Override
+				public String call() throws Exception {
+					return request.getHeader(CORRELATION_ID_HEADER);
+				}
+			});
 		}
-		return correlationId;
-	}
-
-	private String tryToGetCorrelationId(Callable<String> correlationIdGetter) {
-		try {
-			return correlationIdGetter.call();
-		} catch (Exception e) {
-			log.error("Exception occurred while trying to retrieve request header", e);
-			return StringUtils.EMPTY;
-		}
+		return StringUtils.EMPTY;
 	}
 
 	private String createNewCorrIdIfEmpty() {
 		String currentCorrId = uuidGenerator.create();
-		MDC.put(CORRELATION_ID_HEADER, currentCorrId);
 		log.debug("Generating new correlationId: " + currentCorrId);
 		return currentCorrId;
 	}

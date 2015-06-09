@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
+import org.springframework.cloud.sleuth.correlation.slf4j.Slf4jCorrelationProvider;
 import org.springframework.cloud.sleuth.resttemplate.SleuthRestTemplateAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,7 +54,7 @@ public class CorrelationIdAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public CorrelationIdUpdater correlationIdUpdater() {
-		return new CorrelationIdUpdater();
+		return new CorrelationIdUpdater(correlationProvider());
 	}
 
 	@Bean
@@ -64,9 +65,15 @@ public class CorrelationIdAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	public CorrelationProvider correlationProvider() {
+		return new Slf4jCorrelationProvider();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	public FilterRegistrationBean correlationHeaderFilter(UuidGenerator uuidGenerator) {
 		Pattern pattern = StringUtils.isBlank(skipPattern) ? CorrelationIdFilter.DEFAULT_SKIP_PATTERN : Pattern.compile(skipPattern);
-		return new FilterRegistrationBean(new CorrelationIdFilter(uuidGenerator, pattern));
+		return new FilterRegistrationBean(new CorrelationIdFilter(uuidGenerator, pattern, correlationProvider()));
 	}
 
 	@Bean

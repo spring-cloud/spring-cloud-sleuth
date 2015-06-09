@@ -39,11 +39,17 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class CorrelationIdUpdater {
 
+	private final CorrelationProvider correlationProvider;
+
+	public CorrelationIdUpdater(CorrelationProvider correlationProvider) {
+		this.correlationProvider = correlationProvider;
+	}
+
 	public void updateCorrelationId(String correlationId) {
 		if (StringUtils.hasText(correlationId)) {
 			log.debug("Updating correlationId with value: [" + correlationId + "]");
 			CorrelationIdHolder.set(correlationId);
-			MDC.put(CORRELATION_ID_HEADER, correlationId);
+			correlationProvider.correlationIdSet(correlationId);
 		}
 	}
 
