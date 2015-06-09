@@ -15,8 +15,8 @@
  */
 package org.springframework.cloud.sleuth.correlation.scheduling;
 
+import org.springframework.cloud.sleuth.correlation.CorrelationIdGenerator;
 import org.springframework.cloud.sleuth.correlation.CorrelationIdUpdater;
-import org.springframework.cloud.sleuth.correlation.UuidGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -34,8 +34,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 public class TaskSchedulingConfiguration {
 	@Bean
-	public ScheduledTaskWithCorrelationIdAspect scheduledTaskPointcut(UuidGenerator uuidGenerator, CorrelationIdUpdater correlationIdUpdater) {
-		return new ScheduledTaskWithCorrelationIdAspect(uuidGenerator, correlationIdUpdater);
+	public ScheduledTaskWithCorrelationIdAspect scheduledTaskPointcut(CorrelationIdGenerator idGenerator, CorrelationIdUpdater correlationIdUpdater) {
+		return new ScheduledTaskWithCorrelationIdAspect(idGenerator, correlationIdUpdater);
 	}
 
 }

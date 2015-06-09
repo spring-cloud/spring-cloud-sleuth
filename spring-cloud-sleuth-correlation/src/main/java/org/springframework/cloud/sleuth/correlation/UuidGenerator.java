@@ -22,7 +22,8 @@ import java.util.UUID;
  *
  * @author <a href="http://www.4financeit.com>4financeIT</a>
  */
-public class UuidGenerator {
+public class UuidGenerator implements CorrelationIdGenerator {
+	@Override
 	public String create() {
 		return UUID.randomUUID().toString();
 	}

@@ -71,14 +71,14 @@ public class CorrelationIdAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public FilterRegistrationBean correlationHeaderFilter(UuidGenerator uuidGenerator) {
+	public FilterRegistrationBean correlationHeaderFilter(CorrelationIdGenerator correlationIdGenerator) {
 		Pattern pattern = StringUtils.isBlank(skipPattern) ? CorrelationIdFilter.DEFAULT_SKIP_PATTERN : Pattern.compile(skipPattern);
-		return new FilterRegistrationBean(new CorrelationIdFilter(uuidGenerator, pattern, correlationProvider()));
+		return new FilterRegistrationBean(new CorrelationIdFilter(correlationIdGenerator, pattern, correlationProvider()));
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public UuidGenerator uuidGenerator() {
+	public CorrelationIdGenerator correlationIdGenerator() {
 		return new UuidGenerator();
 	}
 
