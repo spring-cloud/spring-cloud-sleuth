@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.trace;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -20,12 +21,12 @@ public interface Span {
 	/**
 	 * Get the start time, in milliseconds
 	 */
-	long getStartTimeMillis();
+	long getBegin();
 
 	/**
 	 * Get the stop time, in milliseconds
 	 */
-	long getStopTimeMillis();
+	long getEnd();
 
 	/**
 	 * Return the total amount of time elapsed since start was called, if running,
@@ -51,13 +52,13 @@ public interface Span {
 	 * The spanId is immutable and cannot be changed.  It is safe to access this
 	 * from multiple threads.
 	 */
-	long getSpanId();
+	String getSpanId();
 
 	/**
 	 * A pseudo-unique (random) number assigned to the trace associated with this
 	 * span
 	 */
-	long getTraceId();
+	String getTraceId();
 
 	/**
 	 * Create a child span of this span with the given description
@@ -67,16 +68,9 @@ public interface Span {
 	/**
 	 * Returns the parent IDs of the span.<p/>
 	 * <p/>
-	 * The array will be empty if there are no parents.
+	 * The collection will be empty if there are no parents.
 	 */
-	long[] getParents();
-
-	/**
-	 * Set the parents of this span.<p/>
-	 * <p/>
-	 * Any existing parents will be cleared by this call.
-	 */
-	void setParents(long[] parents);
+	List<String> getParents();
 
 	/**
 	 * Add a data annotation associated with this span
@@ -108,9 +102,4 @@ public interface Span {
 	 * Will never be null.
 	 */
 	String getProcessId();
-
-	/**
-	 * Set the process id of a span.
-	 */
-	void setProcessId(String s);
 }

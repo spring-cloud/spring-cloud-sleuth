@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth.trace;
 
+import java.util.Collection;
+
 /**
  * The Trace class is the primary way to interact with the library.  It provides
  * methods to create and manipulate spans.
@@ -85,4 +87,6 @@ public interface Trace {
 	 * @return Span representing the current trace, or null if not tracing.
 	 */
 	public Span currentSpan();
+
+	public void setSpanReceivers(Collection<SpanReceiver> spanReceivers);
 }
