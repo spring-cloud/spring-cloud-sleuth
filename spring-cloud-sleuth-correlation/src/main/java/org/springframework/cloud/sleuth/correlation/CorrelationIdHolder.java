@@ -23,7 +23,7 @@ package org.springframework.cloud.sleuth.correlation;
  */
 public class CorrelationIdHolder {
 	public static final String CORRELATION_ID_HEADER = "Correlation-Id";
-	private static final ThreadLocal<String> id = new ThreadLocal<String>();
+	private static final ThreadLocal<String> id = new ThreadLocal<>();
 
 	public static void set(String correlationId) {
 		id.set(correlationId);

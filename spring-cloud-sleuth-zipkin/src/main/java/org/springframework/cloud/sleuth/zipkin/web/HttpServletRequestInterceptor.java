@@ -36,13 +36,13 @@ public class HttpServletRequestInterceptor extends ZipkinInterceptor<HttpServlet
     }
 
     @Override
-    public void submitEndpoint(HttpServletRequest servletRequest, EndPointSubmitter endPointSubmitter) {
-        if (!endPointSubmitter.endPointSubmitted()) {
+    public void submitEndpoint(HttpServletRequest servletRequest) {
+        if (!getEndPointSubmitter().endPointSubmitted()) {
             final String localAddr = servletRequest.getLocalAddr();
             final int localPort = servletRequest.getLocalPort();
             final String contextPath = servletRequest.getContextPath();
             log.debug("Setting endpoint: addr: "+localAddr+", port: "+localPort+", contextpath: "+ contextPath);
-            endPointSubmitter.submit(localAddr, localPort, contextPath);
+            getEndPointSubmitter().submit(localAddr, localPort, contextPath);
         }
     }
 

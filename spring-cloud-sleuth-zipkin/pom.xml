@@ -57,6 +57,7 @@
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
 			<artifactId>brave-impl-spring</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
@@ -69,6 +70,7 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-zuul</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>

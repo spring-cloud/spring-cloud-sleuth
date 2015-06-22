@@ -20,8 +20,8 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.sleuth.correlation.CorrelationIdGenerator;
 import org.springframework.cloud.sleuth.correlation.CorrelationIdUpdater;
-import org.springframework.cloud.sleuth.correlation.UuidGenerator;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.lang.invoke.MethodHandles;
@@ -35,7 +35,7 @@ import java.util.concurrent.Callable;
  * @author Michal Chmielarz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT
  *
- * @see UuidGenerator
+ * @see CorrelationIdGenerator
  * @see CorrelationIdUpdater
  */
 @Aspect
@@ -43,16 +43,18 @@ public class ScheduledTaskWithCorrelationIdAspect {
 
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-	private final UuidGenerator uuidGenerator;
+	private final CorrelationIdGenerator correlationIdGenerator;
+	private CorrelationIdUpdater correlationIdUpdater;
 
-	public ScheduledTaskWithCorrelationIdAspect(UuidGenerator uuidGenerator) {
-		this.uuidGenerator = uuidGenerator;
+	public ScheduledTaskWithCorrelationIdAspect(CorrelationIdGenerator correlationIdGenerator, CorrelationIdUpdater correlationIdUpdater) {
+		this.correlationIdGenerator = correlationIdGenerator;
+		this.correlationIdUpdater = correlationIdUpdater;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object setNewCorrelationIdOnThread(final ProceedingJoinPoint pjp) throws Throwable {
-		String correlationId = uuidGenerator.create();
-		return CorrelationIdUpdater.withId(correlationId, new Callable() {
+		String correlationId = correlationIdGenerator.create();
+		return correlationIdUpdater.withId(correlationId, new Callable() {
 			@Override
 			public Object call() throws Exception {
 				try {

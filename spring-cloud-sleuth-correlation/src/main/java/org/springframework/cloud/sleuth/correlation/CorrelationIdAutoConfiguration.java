@@ -21,9 +21,11 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
+import org.springframework.cloud.sleuth.correlation.slf4j.Slf4jCorrelationProvider;
 import org.springframework.cloud.sleuth.resttemplate.SleuthRestTemplateAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import java.util.regex.Pattern;
 
@@ -40,6 +42,7 @@ import java.util.regex.Pattern;
 @Configuration
 @ConditionalOnProperty(value = "spring.cloud.sleuth.correlation.enabled", matchIfMissing = true)
 @AutoConfigureAfter(SleuthRestTemplateAutoConfiguration.class)
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 public class CorrelationIdAutoConfiguration {
 
 	/**
@@ -50,20 +53,32 @@ public class CorrelationIdAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	public CorrelationIdUpdater correlationIdUpdater() {
+		return new CorrelationIdUpdater(correlationProvider());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	public CorrelationIdAspect correlationIdAspect() {
-		return new CorrelationIdAspect();
+		return new CorrelationIdAspect(correlationIdUpdater());
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public FilterRegistrationBean correlationHeaderFilter(UuidGenerator uuidGenerator) {
-		Pattern pattern = StringUtils.isBlank(skipPattern) ? Pattern.compile(skipPattern) : CorrelationIdFilter.DEFAULT_SKIP_PATTERN;
-		return new FilterRegistrationBean(new CorrelationIdFilter(uuidGenerator, pattern));
+	public CorrelationProvider correlationProvider() {
+		return new Slf4jCorrelationProvider();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public UuidGenerator uuidGenerator() {
+	public FilterRegistrationBean correlationHeaderFilter(CorrelationIdGenerator correlationIdGenerator) {
+		Pattern pattern = StringUtils.isBlank(skipPattern) ? CorrelationIdFilter.DEFAULT_SKIP_PATTERN : Pattern.compile(skipPattern);
+		return new FilterRegistrationBean(new CorrelationIdFilter(correlationIdGenerator, pattern, correlationProvider()));
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public CorrelationIdGenerator correlationIdGenerator() {
 		return new UuidGenerator();
 	}
 

@@ -15,24 +15,23 @@
  */
 package org.springframework.cloud.sleuth.correlation;
 
+import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestOperations;
-
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
 
 /**
  * Aspect that adds correlation id to
@@ -64,10 +63,15 @@ import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.C
  * @author Michal Chmielarz, 4financeIT
  */
 @Aspect
+@Slf4j
 public class CorrelationIdAspect {
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
 	private static final int HTTP_ENTITY_PARAM_INDEX = 2;
+
+	private CorrelationIdUpdater correlationIdUpdater;
+
+	public CorrelationIdAspect(CorrelationIdUpdater correlationIdUpdater) {
+		this.correlationIdUpdater = correlationIdUpdater;
+	}
 
 	@Pointcut("@target(org.springframework.web.bind.annotation.RestController)")
 	private void anyRestControllerAnnotated() {
@@ -89,7 +93,7 @@ public class CorrelationIdAspect {
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		final Callable callable = (Callable) pjp.proceed();
 		log.debug("Wrapping callable with correlation id [" + CorrelationIdHolder.get() + "]");
-		return CorrelationIdUpdater.wrapCallableWithId(new Callable() {
+		return correlationIdUpdater.wrapCallableWithId(new Callable() {
 			@Override
 			public Object call() throws Exception {
 				return callable.call();

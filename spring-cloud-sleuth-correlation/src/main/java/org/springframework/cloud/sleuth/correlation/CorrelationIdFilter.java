@@ -15,23 +15,24 @@
  */
 package org.springframework.cloud.sleuth.correlation;
 
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.web.filter.OncePerRequestFilter;
+import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
+import static org.springframework.util.StringUtils.hasText;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
-import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
-import static org.springframework.util.StringUtils.hasText;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Filter that takes the value of the {@link CorrelationIdHolder#CORRELATION_ID_HEADER} header
@@ -51,16 +52,20 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html");
 
 	private final Pattern skipCorrId;
-	private final UuidGenerator uuidGenerator;
+	private final CorrelationIdGenerator correlationIdGenerator;
+	private final CorrelationProvider correlationProvider;
 
-	public CorrelationIdFilter() {
-		this.uuidGenerator = new UuidGenerator();
+	public CorrelationIdFilter(CorrelationIdGenerator correlationIdGenerator) {
+		this.correlationIdGenerator = correlationIdGenerator;
 		this.skipCorrId = null;
+		this.correlationProvider = null;
 	}
 
-	public CorrelationIdFilter(UuidGenerator uuidGenerator, Pattern skipCorrId) {
-		this.uuidGenerator = uuidGenerator;
+	public CorrelationIdFilter(CorrelationIdGenerator correlationIdGenerator,
+			Pattern skipCorrId, CorrelationProvider correlationProvider) {
+		this.correlationIdGenerator = correlationIdGenerator;
 		this.skipCorrId = skipCorrId;
+		this.correlationProvider = correlationProvider;
 	}
 
 	@Override
@@ -78,50 +83,38 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 		String correlationId = (hasText(correlationIdFromRequest)) ? correlationIdFromRequest : getCorrelationIdFrom(response);
 		if (!hasText(correlationId) && shouldGenerateCorrId(request)) {
 			correlationId = createNewCorrIdIfEmpty();
+			correlationProvider.correlationIdSet(correlationId);
 		}
 		CorrelationIdHolder.set(correlationId);
 		addCorrelationIdToResponseIfNotPresent(response, correlationId);
 	}
 
 	private String getCorrelationIdFrom(final HttpServletResponse response) {
-		return withLoggingAs("response", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return response.getHeader(CORRELATION_ID_HEADER);
-			}
-		});
+		if (correlationProvider != null) {
+			return correlationProvider.getCorrelationId("response", new Callable<String>() {
+				@Override
+				public String call() throws Exception {
+					return response.getHeader(CORRELATION_ID_HEADER);
+				}
+			});
+		}
+		return StringUtils.EMPTY;
 	}
 
 	private String getCorrelationIdFrom(final HttpServletRequest request) {
-		return withLoggingAs("request", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return request.getHeader(CORRELATION_ID_HEADER);
-			}
-		});
-	}
-
-	private String withLoggingAs(String whereWasFound, Callable<String> correlationIdGetter) {
-		String correlationId = tryToGetCorrelationId(correlationIdGetter);
-		if (hasText(correlationId)) {
-			MDC.put(CORRELATION_ID_HEADER, correlationId);
-			log.debug("Found correlationId in " + whereWasFound + ": " + correlationId);
+		if (correlationProvider != null) {
+			return correlationProvider.getCorrelationId("request", new Callable<String>() {
+				@Override
+				public String call() throws Exception {
+					return request.getHeader(CORRELATION_ID_HEADER);
+				}
+			});
 		}
-		return correlationId;
-	}
-
-	private String tryToGetCorrelationId(Callable<String> correlationIdGetter) {
-		try {
-			return correlationIdGetter.call();
-		} catch (Exception e) {
-			log.error("Exception occurred while trying to retrieve request header", e);
-			return StringUtils.EMPTY;
-		}
+		return StringUtils.EMPTY;
 	}
 
 	private String createNewCorrIdIfEmpty() {
-		String currentCorrId = uuidGenerator.create();
-		MDC.put(CORRELATION_ID_HEADER, currentCorrId);
+		String currentCorrId = correlationIdGenerator.create();
 		log.debug("Generating new correlationId: " + currentCorrId);
 		return currentCorrId;
 	}

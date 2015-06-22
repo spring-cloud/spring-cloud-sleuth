@@ -19,7 +19,7 @@ public abstract class ZipkinInterceptor<T> {
     }
 
     public void preTrace(T context) {
-        submitEndpoint(context, endPointSubmitter);
+        submitEndpoint(context);
 
         final TraceData traceData = getTraceData(context);
         serverTracer.clearCurrentSpan();
@@ -42,7 +42,7 @@ public abstract class ZipkinInterceptor<T> {
         }
     }
 
-    protected abstract void submitEndpoint(T context, EndPointSubmitter endPointSubmitter);
+    protected abstract void submitEndpoint(T context);
     protected abstract TraceData getTraceData(T context);
     protected abstract String getSpanName(T context, TraceData traceData);
 
