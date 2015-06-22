@@ -10,4 +10,9 @@ public interface CorrelationProvider {
 	String getCorrelationId(String location, Callable<String> correlationIdGetter);
 
 	void correlationIdSet(String correlationId);
+
+	void startTrace(Object context);
+
+	void endTrace(Object context);
+
 }
