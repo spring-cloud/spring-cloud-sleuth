@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class TraceInfo {
-	private final long traceId;
-	private final long spanId;
+	private final String traceId;
+	private final String spanId;
 }

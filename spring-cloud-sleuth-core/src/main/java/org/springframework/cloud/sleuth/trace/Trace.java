@@ -47,9 +47,9 @@ public interface Trace {
 	 *
 	 * @param description The description field for the new span to create.
 	 */
-	public TraceScope startSpan(String description);
+	TraceScope startSpan(String description);
 
-	public TraceScope startSpan(String description, TraceInfo tinfo);
+	TraceScope startSpan(String description, TraceInfo tinfo);
 
 	/**
 	 * Creates a new trace scope.
@@ -60,33 +60,33 @@ public interface Trace {
 	 *
 	 * @param description The description field for the new span to create.
 	 */
-	public TraceScope startSpan(String description, Span parent);
+	TraceScope startSpan(String description, Span parent);
 
-	public <T> TraceScope startSpan(String description, Sampler<T> s);
+	<T> TraceScope startSpan(String description, Sampler<T> s);
 
-	public <T> TraceScope startSpan(String description, Sampler<T> s, T info);
+	<T> TraceScope startSpan(String description, Sampler<T> s, T info);
 
 	/**
 	 * Pick up an existing span from another thread.
 	 */
-	public TraceScope continueSpan(Span s);
+	TraceScope continueSpan(Span s);
 
 	/**
 	 * Adds a data annotation to the current span if tracing is currently on.
 	 */
-	public void addKVAnnotation(String key, String value);
+	void addKVAnnotation(String key, String value);
 
 	/**
 	 * Returns true if the current thread is a part of a trace, false otherwise.
 	 */
-	public boolean isTracing();
+	boolean isTracing();
 
 	/**
 	 * If we are tracing, return the current span, else null
 	 *
 	 * @return Span representing the current trace, or null if not tracing.
 	 */
-	public Span currentSpan();
+	Span currentSpan();
 
-	public void setSpanReceivers(Collection<SpanReceiver> spanReceivers);
+	void setSpanReceivers(Collection<SpanReceiver> spanReceivers);
 }
