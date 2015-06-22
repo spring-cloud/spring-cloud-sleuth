@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.sleuth.correlation.scheduling;
+package org.springframework.cloud.sleuth.logging.scheduling;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cloud.sleuth.correlation.CorrelationIdUpdater;
-import org.springframework.cloud.sleuth.correlation.UuidGenerator;
+import org.springframework.cloud.sleuth.logging.CorrelationIdUpdater;
+import org.springframework.cloud.sleuth.logging.UuidGenerator;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.lang.invoke.MethodHandles;

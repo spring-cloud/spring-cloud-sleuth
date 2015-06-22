@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.correlation.scheduling
 
-import org.springframework.cloud.sleuth.correlation.CorrelationIdHolder
+import org.springframework.cloud.sleuth.logging.CorrelationIdHolder
 import org.springframework.scheduling.annotation.Scheduled
 
 class TestBeanWithScheduledMethod {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.sleuth.correlation;
+package org.springframework.cloud.sleuth.logging;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +22,6 @@ import org.springframework.util.StringUtils;
 
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Callable;
-
-import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
 
 /**
  * Class that takes care of updating all necessary components with new value
@@ -45,7 +43,7 @@ public class CorrelationIdUpdater {
 		if (StringUtils.hasText(correlationId)) {
 			log.debug("Updating correlationId with value: [" + correlationId + "]");
 			CorrelationIdHolder.set(correlationId);
-			MDC.put(CORRELATION_ID_HEADER, correlationId);
+			MDC.put(CorrelationIdHolder.CORRELATION_ID_HEADER, correlationId);
 		}
 	}
 

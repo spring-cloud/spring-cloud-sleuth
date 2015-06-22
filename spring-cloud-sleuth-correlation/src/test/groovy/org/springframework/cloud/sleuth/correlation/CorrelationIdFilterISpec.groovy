@@ -4,6 +4,8 @@ import org.slf4j.MDC
 import org.springframework.boot.test.SpringApplicationContextLoader
 import org.springframework.cloud.sleuth.correlation.base.BaseConfiguration
 import org.springframework.cloud.sleuth.correlation.base.MvcCorrelationIdSettingIntegrationSpec
+import org.springframework.cloud.sleuth.logging.CorrelationIdAutoConfiguration
+import org.springframework.cloud.sleuth.logging.CorrelationIdHolder
 import org.springframework.http.MediaType
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.servlet.MvcResult

@@ -2,7 +2,8 @@ package org.springframework.cloud.sleuth.correlation.scheduling
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.sleuth.correlation.base.BaseConfiguration
-import org.springframework.cloud.sleuth.correlation.CorrelationIdAutoConfiguration
+import org.springframework.cloud.sleuth.logging.CorrelationIdAutoConfiguration
+import org.springframework.cloud.sleuth.logging.scheduling.TaskSchedulingConfiguration
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions

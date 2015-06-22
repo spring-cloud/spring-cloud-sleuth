@@ -1,5 +1,8 @@
 package org.springframework.cloud.sleuth.correlation
 
+import org.springframework.cloud.sleuth.logging.CorrelationIdFilter
+import org.springframework.cloud.sleuth.logging.CorrelationIdHolder
+import org.springframework.cloud.sleuth.logging.UuidGenerator
 import spock.lang.Specification
 import spock.lang.Unroll
 

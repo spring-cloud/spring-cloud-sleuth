@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.sleuth.correlation.scheduling;
+package org.springframework.cloud.sleuth.logging.scheduling;
 
-import org.springframework.cloud.sleuth.correlation.UuidGenerator;
+import org.springframework.cloud.sleuth.logging.UuidGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;

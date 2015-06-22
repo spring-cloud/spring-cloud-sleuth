@@ -2,8 +2,9 @@ package org.springframework.cloud.sleuth.correlation.hystrix
 
 import com.netflix.hystrix.HystrixCommand
 import com.netflix.hystrix.HystrixCommandGroupKey
-import org.springframework.cloud.sleuth.correlation.CorrelationIdHolder
-import org.springframework.cloud.sleuth.correlation.CorrelationIdUpdater
+import org.springframework.cloud.sleuth.logging.CorrelationIdHolder
+import org.springframework.cloud.sleuth.logging.CorrelationIdUpdater
+import org.springframework.cloud.sleuth.logging.hystrix.CorrelatedCommand
 import spock.lang.Specification
 
 class CorrelatedCommandSpec extends Specification {

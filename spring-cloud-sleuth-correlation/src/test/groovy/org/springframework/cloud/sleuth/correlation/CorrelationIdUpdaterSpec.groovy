@@ -1,6 +1,8 @@
 package org.springframework.cloud.sleuth.correlation
 
 import groovyx.gpars.GParsPool
+import org.springframework.cloud.sleuth.logging.CorrelationIdHolder
+import org.springframework.cloud.sleuth.logging.CorrelationIdUpdater
 import spock.lang.Specification
 
 import java.util.concurrent.Callable

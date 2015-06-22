@@ -28,7 +28,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*
-import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER
+import static org.springframework.cloud.sleuth.logging.CorrelationIdHolder.CORRELATION_ID_HEADER
 
 @ContextConfiguration(classes = [CorrelationIdAspectSpecConfiguration], loader = SpringApplicationContextLoader)
 class CorrelationIdAspectISpec extends MvcCorrelationIdSettingIntegrationSpec {

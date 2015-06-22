@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.sleuth.correlation;
+package org.springframework.cloud.sleuth.logging;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -31,8 +31,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-
-import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
 
 /**
  * Aspect that adds correlation id to
@@ -115,7 +113,7 @@ public class CorrelationIdAspect {
 	private HttpEntity createNewHttpEntity(HttpEntity httpEntity, String correlationId) {
 		HttpHeaders newHttpHeaders = new HttpHeaders();
 		newHttpHeaders.putAll(httpEntity.getHeaders());
-		newHttpHeaders.add(CORRELATION_ID_HEADER, correlationId);
+		newHttpHeaders.add(CorrelationIdHolder.CORRELATION_ID_HEADER, correlationId);
 		return new HttpEntity(httpEntity.getBody(), newHttpHeaders);
 	}
 

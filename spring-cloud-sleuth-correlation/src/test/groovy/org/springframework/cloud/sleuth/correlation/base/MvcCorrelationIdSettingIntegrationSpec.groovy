@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.correlation.base
 
-import org.springframework.cloud.sleuth.correlation.CorrelationIdFilter
+import org.springframework.cloud.sleuth.logging.CorrelationIdFilter
 import org.springframework.test.web.servlet.setup.ConfigurableMockMvcBuilder
 
 class MvcCorrelationIdSettingIntegrationSpec extends org.springframework.cloud.sleuth.correlation.base.MvcWiremockIntegrationSpec {

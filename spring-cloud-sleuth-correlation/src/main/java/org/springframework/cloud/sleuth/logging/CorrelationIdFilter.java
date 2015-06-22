@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.sleuth.correlation;
+package org.springframework.cloud.sleuth.logging;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -30,7 +30,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
-import static org.springframework.cloud.sleuth.correlation.CorrelationIdHolder.CORRELATION_ID_HEADER;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -87,7 +86,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 		return withLoggingAs("response", new Callable<String>() {
 			@Override
 			public String call() throws Exception {
-				return response.getHeader(CORRELATION_ID_HEADER);
+				return response.getHeader(CorrelationIdHolder.CORRELATION_ID_HEADER);
 			}
 		});
 	}
@@ -96,7 +95,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 		return withLoggingAs("request", new Callable<String>() {
 			@Override
 			public String call() throws Exception {
-				return request.getHeader(CORRELATION_ID_HEADER);
+				return request.getHeader(CorrelationIdHolder.CORRELATION_ID_HEADER);
 			}
 		});
 	}
@@ -104,7 +103,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 	private String withLoggingAs(String whereWasFound, Callable<String> correlationIdGetter) {
 		String correlationId = tryToGetCorrelationId(correlationIdGetter);
 		if (hasText(correlationId)) {
-			MDC.put(CORRELATION_ID_HEADER, correlationId);
+			MDC.put(CorrelationIdHolder.CORRELATION_ID_HEADER, correlationId);
 			log.debug("Found correlationId in " + whereWasFound + ": " + correlationId);
 		}
 		return correlationId;
@@ -121,7 +120,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 
 	private String createNewCorrIdIfEmpty() {
 		String currentCorrId = uuidGenerator.create();
-		MDC.put(CORRELATION_ID_HEADER, currentCorrId);
+		MDC.put(CorrelationIdHolder.CORRELATION_ID_HEADER, currentCorrId);
 		log.debug("Generating new correlationId: " + currentCorrId);
 		return currentCorrId;
 	}
@@ -134,13 +133,13 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 	}
 
 	private void addCorrelationIdToResponseIfNotPresent(HttpServletResponse response, String correlationId) {
-		if (!hasText(response.getHeader(CORRELATION_ID_HEADER))) {
-			response.addHeader(CORRELATION_ID_HEADER, correlationId);
+		if (!hasText(response.getHeader(CorrelationIdHolder.CORRELATION_ID_HEADER))) {
+			response.addHeader(CorrelationIdHolder.CORRELATION_ID_HEADER, correlationId);
 		}
 	}
 
 	private void cleanupCorrelationId() {
-		MDC.remove(CORRELATION_ID_HEADER);
+		MDC.remove(CorrelationIdHolder.CORRELATION_ID_HEADER);
 		CorrelationIdHolder.remove();
 	}
 

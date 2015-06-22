@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.sleuth.correlation.hystrix;
+package org.springframework.cloud.sleuth.logging.hystrix;
 
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
-import org.springframework.cloud.sleuth.correlation.CorrelationIdHolder;
-import org.springframework.cloud.sleuth.correlation.CorrelationIdUpdater;
+import org.springframework.cloud.sleuth.logging.CorrelationIdHolder;
+import org.springframework.cloud.sleuth.logging.CorrelationIdUpdater;
 
 import java.util.concurrent.Callable;
 
