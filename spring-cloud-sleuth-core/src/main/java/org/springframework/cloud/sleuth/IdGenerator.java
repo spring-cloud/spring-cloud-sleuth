@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.trace;
+package org.springframework.cloud.sleuth;
 
 /**
  * @author Spencer Gibb

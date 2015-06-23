@@ -2,28 +2,28 @@ package org.springframework.cloud.sleuth.trace;
 
 import static org.springframework.cloud.sleuth.trace.Utils.error;
 
-import org.springframework.cloud.sleuth.trace.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.IdGenerator;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.UUID;
 
 /**
  * @author Spencer Gibb
  */
 public class DefaultTrace implements Trace {
 
-	//TODO: no default?, let autoconfig
-	private Sampler<?> defaultSampler = new IsTracingSampler(this);
+	private final Sampler<?> defaultSampler;
 
-	private IdGenerator idGenerator = new IdGenerator() {
-		@Override
-		public String create() {
-			return UUID.randomUUID().toString();
-		}
-	};
+	private final IdGenerator idGenerator;
 
-	private Collection<SpanReceiver> spanReceivers;
+	private final Collection<SpanReceiver> spanReceivers;
+
+	public DefaultTrace(Sampler<?> defaultSampler, IdGenerator idGenerator,
+			Collection<SpanReceiver> spanReceivers) {
+		this.defaultSampler = defaultSampler;
+		this.idGenerator = idGenerator;
+		this.spanReceivers = spanReceivers;
+	}
 
 	@Override
 	public TraceScope startSpan(String description) {
@@ -130,18 +130,5 @@ public class DefaultTrace implements Trace {
 		for (SpanReceiver receiver : spanReceivers) {
 			receiver.receiveSpan(span);
 		}
-	}
-
-	public void setDefaultSampler(Sampler<?> defaultSampler) {
-		this.defaultSampler = defaultSampler;
-	}
-
-	public void setIdGenerator(IdGenerator idGenerator) {
-		this.idGenerator = idGenerator;
-	}
-
-	@Override
-	public void setSpanReceivers(Collection<SpanReceiver> spanReceivers) {
-		this.spanReceivers = spanReceivers;
 	}
 }

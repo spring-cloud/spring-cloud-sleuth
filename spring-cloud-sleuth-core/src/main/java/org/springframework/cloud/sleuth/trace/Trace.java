@@ -81,7 +81,5 @@ public interface Trace {
 	 */
 	boolean isTracing();
 
-	public void deliver(Span span);
-
-	void setSpanReceivers(Collection<SpanReceiver> spanReceivers);
+	void deliver(Span span);
 }
