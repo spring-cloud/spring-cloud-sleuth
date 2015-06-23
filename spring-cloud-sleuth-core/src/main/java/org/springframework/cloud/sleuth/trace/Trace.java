@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.trace;
 
-import java.util.Collection;
-
 /**
  * The Trace class is the primary way to interact with the library.  It provides
  * methods to create and manipulate spans.

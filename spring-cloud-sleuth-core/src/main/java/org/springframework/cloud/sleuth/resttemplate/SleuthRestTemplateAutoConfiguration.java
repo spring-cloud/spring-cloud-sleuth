@@ -42,7 +42,7 @@ public class SleuthRestTemplateAutoConfiguration {
 	@Configuration
 	protected static class RestTemplateConfig {
 
-		@Autowired
+		@Autowired(required = false)
 		private List<ClientHttpRequestInterceptor> clientHttpRequestInterceptors = new ArrayList<>();
 
 		@Bean

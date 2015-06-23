@@ -1,13 +1,14 @@
 package org.springframework.cloud.sleuth.trace;
 
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import lombok.Data;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.RandomUuidGenerator;
@@ -23,14 +24,19 @@ public class DefaultTraceTests {
 	public static final String CREATE_SIMPLE_TRACE = "createSimpleTrace";
 	public static final String IMPORTANT_WORK_1 = "important work 1";
 	public static final String IMPORTANT_WORK_2 = "important work 2";
+	public static final int NUM_SPANS = 3;
 
 	@Test
 	public void tracingWorks() {
 		ArrayListSpanReceiver spanReceiver = new ArrayListSpanReceiver();
+		ListSpanStartListener listener = new ListSpanStartListener();
+		List<SpanStartListener> startListeners = Collections
+				.<SpanStartListener> singletonList(listener);
 		List<SpanReceiver> spanReceivers = Collections
 				.<SpanReceiver> singletonList(spanReceiver);
+
 		DefaultTrace trace = new DefaultTrace(new IsTracingSampler(),
-				new RandomUuidGenerator(), spanReceivers);
+				new RandomUuidGenerator(), startListeners, spanReceivers);
 
 		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
@@ -40,10 +46,13 @@ public class DefaultTraceTests {
 			scope.close();
 		}
 
+		List<Span> startedSpans = listener.getSpans();
+		assertThat("startedSpans was null", startedSpans, is(notNullValue()));
+		assertThat("startedSpans was wrong size", startedSpans.size(), is(NUM_SPANS));
+
 		List<Span> spans = spanReceiver.getSpans();
 		assertThat("spans was null", spans, is(notNullValue()));
-		assertThat("spans was empty", spans.isEmpty(), not(true));
-		assertThat("spans was wrong size", spans.size(), is(3));
+		assertThat("spans was wrong size", spans.size(), is(NUM_SPANS));
 
 		Span root = assertSpan(spans, null, CREATE_SIMPLE_TRACE);
 		Span child = assertSpan(spans, root.getSpanId(), IMPORTANT_WORK_1);
@@ -99,6 +108,16 @@ public class DefaultTraceTests {
 		}
 		finally {
 			cur.close();
+		}
+	}
+
+	@Data
+	class ListSpanStartListener implements SpanStartListener {
+		private ArrayList<Span> spans = new ArrayList<>();
+
+		@Override
+		public void startSpan(Span span) {
+			spans.add(span);
 		}
 	}
 }

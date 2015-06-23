@@ -72,6 +72,7 @@ public class TraceScope implements Closeable {
 					"probably forgotten to close or detach " + cur);
 		} else {
 			span.stop();
+			//TODO: use ApplicationEvents here?
 			trace.deliver(span);
 			SpanHolder.setCurrentSpan(savedSpan);
 		}

@@ -16,12 +16,15 @@ public class DefaultTrace implements Trace {
 
 	private final IdGenerator idGenerator;
 
+	private final Collection<SpanStartListener> spanStartListeners;
 	private final Collection<SpanReceiver> spanReceivers;
 
 	public DefaultTrace(Sampler<?> defaultSampler, IdGenerator idGenerator,
+			Collection<SpanStartListener> spanStartListeners,
 			Collection<SpanReceiver> spanReceivers) {
 		this.defaultSampler = defaultSampler;
 		this.idGenerator = idGenerator;
+		this.spanStartListeners = spanStartListeners;
 		this.spanReceivers = spanReceivers;
 	}
 
@@ -32,7 +35,7 @@ public class DefaultTrace implements Trace {
 
 	@Override
 	public TraceScope startSpan(String description, TraceInfo tinfo) {
-		if (tinfo == null) return continueSpan(null);
+		if (tinfo == null) return doStart(null);
 		MilliSpan span = MilliSpan.builder()
 				.begin(System.currentTimeMillis())
 				.description(description)
@@ -41,7 +44,7 @@ public class DefaultTrace implements Trace {
 				.parents(Collections.singletonList(tinfo.getSpanId()))
 				//TODO: when lombok plugin supports @Singular parent(tinfo.getSpanId()).
 				.build();
-		return continueSpan(span);
+		return doStart(span);
 	}
 
 	@Override
@@ -56,7 +59,7 @@ public class DefaultTrace implements Trace {
 					"with parent " + parent.toString() + ", but there is already a " +
 					"currentSpan " + currentSpan);
 		}
-		return continueSpan(createChild(parent, description));
+		return doStart(createChild(parent, description));
 	}
 
 	@Override
@@ -70,7 +73,7 @@ public class DefaultTrace implements Trace {
 		if (isTracing() || s.next(info)) {
 			span = createNew(description);
 		}
-		return continueSpan(span);
+		return doStart(span);
 	}
 
 	protected Span createNew(String description) {
@@ -99,6 +102,15 @@ public class DefaultTrace implements Trace {
 				build();
 	}
 
+	protected TraceScope doStart(Span span) {
+		if (span != null) {
+			for (SpanStartListener listener : spanStartListeners) {
+				listener.startSpan(span);
+			}
+		}
+		return continueSpan(span);
+	}
+
 	@Override
 	public TraceScope continueSpan(Span span) {
 		// Return an empty TraceScope that does nothing on close
@@ -125,6 +137,7 @@ public class DefaultTrace implements Trace {
 		return getCurrentSpan() != null;
 	}
 
+	//TODO: rename? this is the end of a Span lifecycle
 	@Override
 	public void deliver(Span span) {
 		for (SpanReceiver receiver : spanReceivers) {
