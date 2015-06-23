@@ -10,8 +10,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
+import org.springframework.cloud.sleuth.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.trace.receiver.ArrayListSpanReceiver;
 import org.springframework.cloud.sleuth.trace.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.sampler.IsTracingSampler;
 
 /**
  * @author Spencer Gibb
@@ -24,9 +26,11 @@ public class DefaultTraceTests {
 
 	@Test
 	public void tracingWorks() {
-		DefaultTrace trace = new DefaultTrace();
 		ArrayListSpanReceiver spanReceiver = new ArrayListSpanReceiver();
-		trace.setSpanReceivers(Collections.<SpanReceiver> singletonList(spanReceiver));
+		List<SpanReceiver> spanReceivers = Collections
+				.<SpanReceiver> singletonList(spanReceiver);
+		DefaultTrace trace = new DefaultTrace(new IsTracingSampler(),
+				new RandomUuidGenerator(), spanReceivers);
 
 		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
