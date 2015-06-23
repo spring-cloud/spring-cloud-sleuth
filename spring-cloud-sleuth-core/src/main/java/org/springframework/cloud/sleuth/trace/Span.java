@@ -60,11 +60,6 @@ public interface Span {
 	String getTraceId();
 
 	/**
-	 * Create a child span of this span with the given description
-	 */
-	Span child(String description);
-
-	/**
 	 * Returns the parent IDs of the span.<p/>
 	 * <p/>
 	 * The collection will be empty if there are no parents.

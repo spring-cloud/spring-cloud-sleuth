@@ -81,12 +81,7 @@ public interface Trace {
 	 */
 	boolean isTracing();
 
-	/**
-	 * If we are tracing, return the current span, else null
-	 *
-	 * @return Span representing the current trace, or null if not tracing.
-	 */
-	Span currentSpan();
+	public void deliver(Span span);
 
 	void setSpanReceivers(Collection<SpanReceiver> spanReceivers);
 }

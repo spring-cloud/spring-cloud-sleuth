@@ -1,17 +1,18 @@
 package org.springframework.cloud.sleuth.trace;
 
-import lombok.Data;
-import lombok.extern.apachecommons.CommonsLog;
-
 import java.io.Closeable;
-import java.io.IOException;
+
+import lombok.Data;
+import lombok.SneakyThrows;
 
 /**
  * @author Spencer Gibb
  */
 @Data
-@CommonsLog
 public class TraceScope implements Closeable {
+
+	private final Trace trace;
+
 	/**
 	 * the span for this scope
 	 */
@@ -24,6 +25,12 @@ public class TraceScope implements Closeable {
 
 	private boolean detached = false;
 
+	public TraceScope(Trace trace, Span span, Span savedSpan) {
+		this.trace = trace;
+		this.span = span;
+		this.savedSpan = savedSpan;
+	}
+
 	/**
 	 * Remove this span as the current thread, but don't stop it yet or
 	 * send it for collection. This is useful if the span object is then
@@ -33,14 +40,14 @@ public class TraceScope implements Closeable {
 	 */
 	public Span detach() {
 		if (detached) {
-			error("Tried to detach trace span " + span + " but " +
+			Utils.error("Tried to detach trace span " + span + " but " +
 					"it has already been detached.");
 		}
 		detached = true;
 
 		Span cur = SpanHolder.getCurrentSpan();
 		if (cur != span) {
-			error("Tried to detach trace span " + span + " but " +
+			Utils.error("Tried to detach trace span " + span + " but " +
 					"it is not the current span for the " +
 					Thread.currentThread().getName() + " thread.  You have " +
 					"probably forgotten to close or detach " + cur);
@@ -51,25 +58,23 @@ public class TraceScope implements Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
+	@SneakyThrows
+	public void close() {
 		if (detached) {
 			return;
 		}
 		detached = true;
 		Span cur = SpanHolder.getCurrentSpan();
 		if (cur != span) {
-			error("Tried to close trace span " + span + " but " +
+			Utils.error("Tried to close trace span " + span + " but " +
 					"it is not the current span for the " +
 					Thread.currentThread().getName() + " thread.  You have " +
 					"probably forgotten to close or detach " + cur);
 		} else {
 			span.stop();
+			trace.deliver(span);
 			SpanHolder.setCurrentSpan(savedSpan);
 		}
 	}
 
-	private void error(String msg) {
-		log.error(msg);
-		throw new RuntimeException(msg);
-	}
 }

@@ -1,29 +1,31 @@
 package org.springframework.cloud.sleuth.trace;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
-
 import java.util.List;
 import java.util.Map;
+
+import lombok.Builder;
+import lombok.Singular;
+import lombok.Value;
+import lombok.experimental.NonFinal;
 
 /**
  * @author Spencer Gibb
  */
-@Data
+@Value
 @Builder
 public class MilliSpan implements Span {
-	private final long begin;
-	private long end;
-	private final String description;
-	private final String traceId;
+	private long begin;
+	@NonFinal
+	private long end = 0;
+	private String description;
+	private String traceId;
 	@Singular
-	private final List<String> parents;
-	private final String spanId;
-	private final Map<String, String> kVAnnotations;
-	private final String processId;
+	private List<String> parents;
+	private String spanId;
+	private Map<String, String> kVAnnotations;
+	private String processId;
 	@Singular
-	private final List<TimelineAnnotation> timelineAnnotations;
+	private List<TimelineAnnotation> timelineAnnotations;
 
 	@Override
 	public synchronized void stop() {
@@ -32,7 +34,6 @@ public class MilliSpan implements Span {
 				throw new IllegalStateException("Span for " + description
 						+ " has not been started");
 			end = System.currentTimeMillis();
-			//TODO figure out how to Trace.deliver(this)
 		}
 	}
 
@@ -48,11 +49,6 @@ public class MilliSpan implements Span {
 	@Override
 	public synchronized boolean isRunning() {
 		return begin != 0 && end == 0;
-	}
-
-	@Override
-	public Span child(String description) {
-		return null;
 	}
 
 	@Override

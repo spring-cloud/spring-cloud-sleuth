@@ -1,14 +1,13 @@
 package org.springframework.cloud.sleuth.trace;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * @author Spencer Gibb
  */
+@CommonsLog
 public class SpanHolder {
 	private static final ThreadLocal<Span> currentSpan = new ThreadLocal<>();
-	private static final Log log = LogFactory.getLog(SpanHolder.class);
 
 	public static Span getCurrentSpan() {
 		return currentSpan.get();
