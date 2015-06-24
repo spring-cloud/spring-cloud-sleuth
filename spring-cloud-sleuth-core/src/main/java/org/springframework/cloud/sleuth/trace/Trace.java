@@ -35,6 +35,9 @@ package org.springframework.cloud.sleuth.trace;
  */
 public interface Trace {
 
+	String SPAN_ID_NAME = "Span-Id";
+	String TRACE_ID_NAME = "Trace-Id";
+
 	/**
 	 * Creates a new trace scope.
 	 * <p/>

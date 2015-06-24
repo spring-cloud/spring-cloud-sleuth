@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.slf4j;
 
-import static org.springframework.cloud.sleuth.slf4j.Slf4jSpanStartListener.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.trace.Trace.SPAN_ID_NAME;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
