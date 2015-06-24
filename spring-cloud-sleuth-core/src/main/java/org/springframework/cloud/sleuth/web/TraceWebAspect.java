@@ -1,6 +1,7 @@
 package org.springframework.cloud.sleuth.web;
 
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.http.HttpEntity;
@@ -53,8 +55,6 @@ public class TraceWebAspect {
 		this.trace = trace;
 	}
 
-	private static final int HTTP_ENTITY_PARAM_INDEX = 2;
-
 	@Pointcut("@target(org.springframework.web.bind.annotation.RestController)")
 	private void anyRestControllerAnnotated() {
 	}
@@ -83,41 +83,53 @@ public class TraceWebAspect {
 	}
 
 	@Around("anyExchangeRestOperationsMethod()")
-	public Object wrapWithCorrelationIdForRestOperations(ProceedingJoinPoint pjp)
+	public Object traceRestOperations(ProceedingJoinPoint pjp)
 			throws Throwable {
 		TraceScope scope = trace.startSpan(pjp.toShortString());
 		try {
 			String spanId = scope.getSpan().getSpanId();
-			//TODO: set traceId on restTemplate call as well
-			log.debug("Wrapping RestTemplate call with span id [" + spanId + "]");
-			HttpEntity httpEntity = (HttpEntity) pjp.getArgs()[HTTP_ENTITY_PARAM_INDEX];
-			HttpEntity newHttpEntity = createNewHttpEntity(httpEntity, spanId);
+			String traceId = scope.getSpan().getTraceId();
+			log.debug("Wrapping RestTemplate call with trace id [" + traceId + "] and span id [" + spanId + "]");
+			HttpEntity httpEntity = findHttpEntity(pjp.getArgs());
+			HttpEntity newHttpEntity = createNewHttpEntity(httpEntity, spanId, traceId);
 			List<Object> newArgs = modifyHttpEntityInMethodArguments(pjp, newHttpEntity);
-			return pjp.proceed(newArgs.toArray());
+			return pjp.proceed();
 		}
 		finally {
 			scope.close();
 		}
 	}
 
+	protected HttpEntity findHttpEntity(Object[] args) {
+		for (Object arg : args) {
+			if (isHttpEntity(arg)) {
+				return HttpEntity.class.cast(arg);
+			}
+		}
+		return null;
+	}
+
+	protected boolean isHttpEntity(Object arg) {
+		return HttpEntity.class.isAssignableFrom(arg.getClass());
+	}
+
 	@SuppressWarnings("unchecked")
-	private HttpEntity createNewHttpEntity(HttpEntity httpEntity, String correlationId) {
+	private HttpEntity createNewHttpEntity(HttpEntity httpEntity, String spanId, String traceId) {
 		HttpHeaders newHttpHeaders = new HttpHeaders();
 		newHttpHeaders.putAll(httpEntity.getHeaders());
-		newHttpHeaders.add(SPAN_ID_NAME, correlationId);
+		newHttpHeaders.add(SPAN_ID_NAME, spanId);
+		newHttpHeaders.add(TRACE_ID_NAME, traceId);
 		return new HttpEntity(httpEntity.getBody(), newHttpHeaders);
 	}
 
 	private List<Object> modifyHttpEntityInMethodArguments(ProceedingJoinPoint pjp,
 			HttpEntity newHttpEntity) {
 		List<Object> newArgs = new ArrayList<>();
-		for (int i = 0; i < pjp.getArgs().length; i++) {
-			Object arg = pjp.getArgs()[i];
-			if (i != HTTP_ENTITY_PARAM_INDEX) {
-				newArgs.add(i, arg);
-			}
-			else {
-				newArgs.add(i, newHttpEntity);
+		for (Object arg : pjp.getArgs()) {
+			if (isHttpEntity(arg)) {
+				newArgs.add(newHttpEntity);
+			} else {
+				newArgs.add(arg);
 			}
 		}
 		return newArgs;
