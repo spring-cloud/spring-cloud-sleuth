@@ -27,7 +27,6 @@
 
 	<modules>
 		<module>spring-cloud-sleuth-core</module>
-		<module>spring-cloud-sleuth-slf4j</module>
 		<module>spring-cloud-sleuth-correlation</module>
 		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-sleuth-sample</module>
