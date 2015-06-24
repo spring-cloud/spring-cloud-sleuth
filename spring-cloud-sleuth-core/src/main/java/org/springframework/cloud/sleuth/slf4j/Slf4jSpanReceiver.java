@@ -1,11 +1,11 @@
 package org.springframework.cloud.sleuth.slf4j;
 
-import static org.springframework.cloud.sleuth.trace.Trace.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.cloud.sleuth.trace.Span;
-import org.springframework.cloud.sleuth.trace.SpanReceiver;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReceiver;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;

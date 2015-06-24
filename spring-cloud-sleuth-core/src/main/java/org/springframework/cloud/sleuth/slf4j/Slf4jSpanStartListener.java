@@ -3,9 +3,9 @@ package org.springframework.cloud.sleuth.slf4j;
 import lombok.extern.slf4j.Slf4j;
 
 import org.slf4j.MDC;
-import org.springframework.cloud.sleuth.trace.Span;
-import org.springframework.cloud.sleuth.trace.SpanStartListener;
-import org.springframework.cloud.sleuth.trace.Trace;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanStartListener;
+import org.springframework.cloud.sleuth.Trace;
 
 /**
  * @author Spencer Gibb
