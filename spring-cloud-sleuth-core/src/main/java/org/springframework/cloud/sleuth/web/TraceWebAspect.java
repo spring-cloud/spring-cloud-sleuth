@@ -3,9 +3,6 @@ package org.springframework.cloud.sleuth.web;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import lombok.extern.apachecommons.CommonsLog;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -21,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestOperations;
 
 /**
- * Aspect that adds correlation id to
+ * Aspect that adds trace information to
  * <p/>
  * <ul>
  * <li>{@link RestController} annotated classes</li>
@@ -69,6 +66,7 @@ public class TraceWebAspect {
 
 	@Around("anyControllerOrRestController()")
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
+		//TODO: get trace data from request?
 		TraceScope scope = trace.startSpan(pjp.toShortString());
 		try {
 			return pjp.proceed();
@@ -91,8 +89,10 @@ public class TraceWebAspect {
 			String traceId = scope.getSpan().getTraceId();
 			log.debug("Wrapping RestTemplate call with trace id [" + traceId + "] and span id [" + spanId + "]");
 			HttpEntity httpEntity = findHttpEntity(pjp.getArgs());
-			HttpEntity newHttpEntity = createNewHttpEntity(httpEntity, spanId, traceId);
-			List<Object> newArgs = modifyHttpEntityInMethodArguments(pjp, newHttpEntity);
+			if (httpEntity != null) {
+				httpEntity.getHeaders().set(SPAN_ID_NAME, spanId);
+				httpEntity.getHeaders().set(TRACE_ID_NAME, traceId);
+			}
 			return pjp.proceed();
 		}
 		finally {
@@ -111,27 +111,5 @@ public class TraceWebAspect {
 
 	protected boolean isHttpEntity(Object arg) {
 		return HttpEntity.class.isAssignableFrom(arg.getClass());
-	}
-
-	@SuppressWarnings("unchecked")
-	private HttpEntity createNewHttpEntity(HttpEntity httpEntity, String spanId, String traceId) {
-		HttpHeaders newHttpHeaders = new HttpHeaders();
-		newHttpHeaders.putAll(httpEntity.getHeaders());
-		newHttpHeaders.add(SPAN_ID_NAME, spanId);
-		newHttpHeaders.add(TRACE_ID_NAME, traceId);
-		return new HttpEntity(httpEntity.getBody(), newHttpHeaders);
-	}
-
-	private List<Object> modifyHttpEntityInMethodArguments(ProceedingJoinPoint pjp,
-			HttpEntity newHttpEntity) {
-		List<Object> newArgs = new ArrayList<>();
-		for (Object arg : pjp.getArgs()) {
-			if (isHttpEntity(arg)) {
-				newArgs.add(newHttpEntity);
-			} else {
-				newArgs.add(arg);
-			}
-		}
-		return newArgs;
 	}
 }
