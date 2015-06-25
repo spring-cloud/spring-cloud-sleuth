@@ -26,7 +26,6 @@ import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -40,7 +39,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
  * @author Spencer Gibb
  */
 @Configuration
-@EnableAspectJAutoProxy
 @ConditionalOnProperty(value = "spring.cloud.sleuth.trace.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 public class TraceWebAutoConfiguration {
