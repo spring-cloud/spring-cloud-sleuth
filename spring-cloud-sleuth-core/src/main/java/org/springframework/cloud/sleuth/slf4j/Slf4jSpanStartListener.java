@@ -16,7 +16,8 @@ public class Slf4jSpanStartListener implements SpanStartListener {
 	@Override
 	public void startSpan(Span span) {
 		//TODO: what log level?
-		log.info("Starting span with id: [{}]", span.getSpanId());
+		log.info("Starting span: {}", span);
 		MDC.put(Trace.SPAN_ID_NAME, span.getSpanId());
+		MDC.put(Trace.TRACE_ID_NAME, span.getTraceId());
 	}
 }

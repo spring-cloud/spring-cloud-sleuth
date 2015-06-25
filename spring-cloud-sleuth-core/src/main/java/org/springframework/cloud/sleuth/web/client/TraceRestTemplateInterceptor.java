@@ -42,15 +42,15 @@ public class TraceRestTemplateInterceptor implements ClientHttpRequestIntercepto
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
-		if (!request.getHeaders().containsKey(SPAN_ID_NAME)) {
-			request.getHeaders().add(SPAN_ID_NAME,
-					SpanHolder.getCurrentSpan().getSpanId());
-		}
-		if (!request.getHeaders().containsKey(TRACE_ID_NAME)) {
-			request.getHeaders().add(TRACE_ID_NAME,
-					SpanHolder.getCurrentSpan().getSpanId());
-		}
+		setHeader(request, SPAN_ID_NAME, SpanHolder.getCurrentSpan().getSpanId());
+		setHeader(request, TRACE_ID_NAME, SpanHolder.getCurrentSpan().getTraceId());
 		return execution.execute(request, body);
+	}
+
+	public void setHeader(HttpRequest request, String spanIdName, String spanId) {
+		if (!request.getHeaders().containsKey(spanIdName) && SpanHolder.isTracing()) {
+			request.getHeaders().add(spanIdName, spanId);
+		}
 	}
 
 }

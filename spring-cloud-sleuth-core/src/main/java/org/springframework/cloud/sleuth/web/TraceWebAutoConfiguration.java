@@ -17,8 +17,10 @@ package org.springframework.cloud.sleuth.web;
 
 import java.util.regex.Pattern;
 
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -26,6 +28,7 @@ import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.util.StringUtils;
 
 /**
@@ -37,8 +40,10 @@ import org.springframework.util.StringUtils;
  * @author Spencer Gibb
  */
 @Configuration
+@EnableAspectJAutoProxy
 @ConditionalOnProperty(value = "spring.cloud.sleuth.trace.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
+@ConditionalOnClass(ProceedingJoinPoint.class)
 public class TraceWebAutoConfiguration {
 
 	/**

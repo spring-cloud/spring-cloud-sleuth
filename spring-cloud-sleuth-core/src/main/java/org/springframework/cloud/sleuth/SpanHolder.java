@@ -19,4 +19,8 @@ public class SpanHolder {
 		}
 		currentSpan.set(span);
 	}
+
+	public static boolean isTracing() {
+		return currentSpan.get() != null;
+	}
 }

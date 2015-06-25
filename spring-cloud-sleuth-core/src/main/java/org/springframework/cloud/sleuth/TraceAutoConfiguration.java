@@ -20,6 +20,7 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
 	public Sampler defaultSampler() {
 		return new IsTracingSampler();
 	}
