@@ -46,7 +46,7 @@ public class TraceWebAutoConfiguration {
 	/**
 	 * Pattern for URLs that should be skipped in correlationID setting
 	 */
-	@Value("${spring.cloud.sleuth.trace.web.skipPattern:}")
+	@Value("${spring.cloud.sleuth.instrument.web.skipPattern:}")
 	private String skipPattern;
 
 	@Autowired
