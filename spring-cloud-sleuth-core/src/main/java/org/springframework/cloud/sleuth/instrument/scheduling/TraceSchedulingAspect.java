@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.scheduling;
+package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

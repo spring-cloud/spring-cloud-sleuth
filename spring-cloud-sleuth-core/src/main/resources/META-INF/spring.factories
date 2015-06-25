@@ -1,7 +1,6 @@
 # Auto Configuration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.cloud.sleuth.resttemplate.SleuthRestTemplateAutoConfiguration,\
 org.springframework.cloud.sleuth.TraceAutoConfiguration,\
-org.springframework.cloud.sleuth.web.TraceWebAutoConfiguration,\
-org.springframework.cloud.sleuth.web.client.TraceWebClientAutoConfiguration,\
-org.springframework.cloud.sleuth.slf4j.SleuthSlf4jAutoConfiguration
+org.springframework.cloud.sleuth.slf4j.SleuthSlf4jAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration

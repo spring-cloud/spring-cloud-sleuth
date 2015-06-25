@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.circuitbreaker;
+package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;

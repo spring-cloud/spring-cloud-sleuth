@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.scheduling;
+package org.springframework.cloud.sleuth.instrument.scheduling;
 
 /**
  * @author Spencer Gibb
