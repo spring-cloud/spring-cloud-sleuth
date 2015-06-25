@@ -45,14 +45,14 @@ public class TraceScope implements Closeable {
 		}
 		detached = true;
 
-		Span cur = SpanHolder.getCurrentSpan();
+		Span cur = TraceContextHolder.getCurrentSpan();
 		if (cur != span) {
 			Utils.error("Tried to detach trace span " + span + " but " +
 					"it is not the current span for the " +
 					Thread.currentThread().getName() + " thread.  You have " +
 					"probably forgotten to close or detach " + cur);
 		} else {
-			SpanHolder.setCurrentSpan(savedSpan);
+			TraceContextHolder.setCurrentSpan(savedSpan);
 		}
 		return span;
 	}
@@ -64,7 +64,7 @@ public class TraceScope implements Closeable {
 			return;
 		}
 		detached = true;
-		Span cur = SpanHolder.getCurrentSpan();
+		Span cur = TraceContextHolder.getCurrentSpan();
 		if (cur != span) {
 			Utils.error("Tried to close trace span " + span + " but " +
 					"it is not the current span for the " +
@@ -74,7 +74,7 @@ public class TraceScope implements Closeable {
 			span.stop();
 			//TODO: use ApplicationEvents here?
 			trace.deliver(span);
-			SpanHolder.setCurrentSpan(savedSpan);
+			TraceContextHolder.setCurrentSpan(savedSpan);
 		}
 	}
 

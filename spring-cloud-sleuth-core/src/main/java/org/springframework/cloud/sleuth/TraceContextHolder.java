@@ -1,13 +1,14 @@
 package org.springframework.cloud.sleuth;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.springframework.core.NamedThreadLocal;
 
 /**
  * @author Spencer Gibb
  */
 @CommonsLog
-public class SpanHolder {
-	private static final ThreadLocal<Span> currentSpan = new ThreadLocal<>();
+public class TraceContextHolder {
+	private static final ThreadLocal<Span> currentSpan = new NamedThreadLocal<>("Trace Context");
 
 	public static Span getCurrentSpan() {
 		return currentSpan.get();

@@ -17,10 +17,11 @@ package org.springframework.cloud.sleuth.web.client;
 
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
+import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
+import static org.springframework.cloud.sleuth.TraceContextHolder.isTracing;
 
 import java.io.IOException;
 
-import org.springframework.cloud.sleuth.SpanHolder;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -42,13 +43,13 @@ public class TraceRestTemplateInterceptor implements ClientHttpRequestIntercepto
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
-		setHeader(request, SPAN_ID_NAME, SpanHolder.getCurrentSpan().getSpanId());
-		setHeader(request, TRACE_ID_NAME, SpanHolder.getCurrentSpan().getTraceId());
+		setHeader(request, SPAN_ID_NAME, getCurrentSpan().getSpanId());
+		setHeader(request, TRACE_ID_NAME, getCurrentSpan().getTraceId());
 		return execution.execute(request, body);
 	}
 
 	public void setHeader(HttpRequest request, String spanIdName, String spanId) {
-		if (!request.getHeaders().containsKey(spanIdName) && SpanHolder.isTracing()) {
+		if (!request.getHeaders().containsKey(spanIdName) && isTracing()) {
 			request.getHeaders().add(spanIdName, spanId);
 		}
 	}

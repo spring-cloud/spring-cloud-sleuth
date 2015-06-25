@@ -68,7 +68,7 @@ public class DefaultTrace implements Trace {
 	@Override
 	public <T> TraceScope startSpan(String description, Sampler<T> s, T info) {
 		Span span = null;
-		if (isTracing() || s.next(info)) {
+		if (TraceContextHolder.isTracing() || s.next(info)) {
 			span = createNew(description);
 		}
 		return doStart(span);
@@ -114,12 +114,12 @@ public class DefaultTrace implements Trace {
 		// Return an empty TraceScope that does nothing on close
 		if (span == null) return NullScope.INSTANCE;
 		Span oldSpan = getCurrentSpan();
-		SpanHolder.setCurrentSpan(span);
+		TraceContextHolder.setCurrentSpan(span);
 		return new TraceScope(this, span, oldSpan);
 	}
 
 	protected Span getCurrentSpan() {
-		return SpanHolder.getCurrentSpan();
+		return TraceContextHolder.getCurrentSpan();
 	}
 
 	@Override
@@ -128,11 +128,6 @@ public class DefaultTrace implements Trace {
 		if (s != null) {
 			s.addKVAnnotation(key, value);
 		}
-	}
-
-	@Override
-	public boolean isTracing() {
-		return getCurrentSpan() != null;
 	}
 
 	//TODO: rename? this is the end of a Span lifecycle

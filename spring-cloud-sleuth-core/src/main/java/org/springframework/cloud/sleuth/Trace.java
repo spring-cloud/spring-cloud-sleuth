@@ -77,10 +77,5 @@ public interface Trace {
 	 */
 	void addKVAnnotation(String key, String value);
 
-	/**
-	 * Returns true if the current thread is a part of a trace, false otherwise.
-	 */
-	boolean isTracing();
-
 	void deliver(Span span);
 }
