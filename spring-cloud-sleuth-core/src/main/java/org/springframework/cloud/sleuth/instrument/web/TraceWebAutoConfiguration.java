@@ -17,10 +17,8 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.regex.Pattern;
 
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -30,6 +28,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 /**
  * Registers beans that add tracing to requests
@@ -43,7 +43,6 @@ import org.springframework.util.StringUtils;
 @EnableAspectJAutoProxy
 @ConditionalOnProperty(value = "spring.cloud.sleuth.trace.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
-@ConditionalOnClass(ProceedingJoinPoint.class)
 public class TraceWebAutoConfiguration {
 
 	/**
@@ -57,8 +56,14 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceWebAspect traceWebAspect() {
-		return new TraceWebAspect(trace);
+	public TraceHandlerInterceptor traceHandlerInterceptor() {
+		return new TraceHandlerInterceptor(trace);
+	}
+
+	@Bean
+	public WebMvcConfigurerAdapter webMvcConfigurerAdapter(
+			TraceHandlerInterceptor handlerInterceptor) {
+		return new TraceWebConfigurer(handlerInterceptor);
 	}
 
 	@Bean
@@ -67,5 +72,18 @@ public class TraceWebAutoConfiguration {
 		Pattern pattern = StringUtils.hasText(skipPattern) ? Pattern.compile(skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
 		return new FilterRegistrationBean(new TraceFilter(trace, pattern));
+	}
+
+	protected static class TraceWebConfigurer extends WebMvcConfigurerAdapter {
+		private TraceHandlerInterceptor interceptor;
+
+		public TraceWebConfigurer(TraceHandlerInterceptor interceptor) {
+			this.interceptor = interceptor;
+		}
+
+		@Override
+		public void addInterceptors(InterceptorRegistry registry) {
+			registry.addInterceptor(interceptor).addPathPatterns("/**");
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package org.springframework.cloud.sleuth.slf4j;
 
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -18,8 +19,9 @@ public class Slf4jSpanReceiver implements SpanReceiver {
 	@Override
 	public void receiveSpan(Span span) {
 		//TODO: what should this log level be?
-		log.info("Received span {}", span);
+		log.info("Received span: {}", span);
 		MDC.remove(SPAN_ID_NAME);
+		MDC.remove(TRACE_ID_NAME);
 	}
 
 	@PostConstruct

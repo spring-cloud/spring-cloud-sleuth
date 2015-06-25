@@ -48,9 +48,9 @@ public class TraceRestTemplateInterceptor implements ClientHttpRequestIntercepto
 		return execution.execute(request, body);
 	}
 
-	public void setHeader(HttpRequest request, String spanIdName, String spanId) {
-		if (!request.getHeaders().containsKey(spanIdName) && isTracing()) {
-			request.getHeaders().add(spanIdName, spanId);
+	public void setHeader(HttpRequest request, String name, String value) {
+		if (!request.getHeaders().containsKey(name) && isTracing()) {
+			request.getHeaders().add(name, value);
 		}
 	}
 
