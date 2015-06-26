@@ -29,5 +29,5 @@ package org.springframework.cloud.sleuth;
  * This would trace 50% of all gets, 75% of all puts and would not trace any other requests.
  */
 public interface Sampler<T> {
-	public boolean next(T info);
+	boolean next(T info);
 }
