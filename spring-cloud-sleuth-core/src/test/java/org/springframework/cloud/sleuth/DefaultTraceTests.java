@@ -69,12 +69,12 @@ public class DefaultTraceTests {
 		assertThat("gen4 was non-empty", gen4.isEmpty(), is(true));
 	}
 
-	private Span assertSpan(List<Span> spans, String parentId, String desc) {
+	private Span assertSpan(List<Span> spans, String parentId, String name) {
 		List<Span> found = findSpans(spans, parentId);
 		assertThat("more than one span with parentId " + parentId, found.size(), is(1));
 		Span span = found.get(0);
-		assertThat("description is wrong for span with parentId " + parentId,
-				span.getDescription(), is(desc));
+		assertThat("name is wrong for span with parentId " + parentId,
+				span.getName(), is(name));
 		return span;
 	}
 

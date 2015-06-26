@@ -39,11 +39,11 @@ public interface Span {
 	boolean isRunning();
 
 	/**
-	 * Return a textual description of this span.<p/>
+	 * Return a textual name of this span.<p/>
 	 * <p/>
 	 * Will never be null.
 	 */
-	String getDescription();
+	String getName();
 
 	/**
 	 * A pseudo-unique (random) number assigned to this span instance.<p/>

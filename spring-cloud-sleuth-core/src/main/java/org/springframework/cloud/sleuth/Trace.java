@@ -5,7 +5,7 @@ package org.springframework.cloud.sleuth;
  * methods to create and manipulate spans.
  *
  * A 'Span' represents a length of time.  It has many other attributes such as a
- * description, ID, and even potentially a set of key/value strings attached to
+ * name, ID, and even potentially a set of key/value strings attached to
  * it.
  *
  * Each thread in your application has a single currently active currentSpan
@@ -46,11 +46,11 @@ public interface Trace {
 	 * If there is no currently active trace span, the trace scope we create will
 	 * be empty.
 	 *
-	 * @param description The description field for the new span to create.
+	 * @param name The name field for the new span to create.
 	 */
-	TraceScope startSpan(String description);
+	TraceScope startSpan(String name);
 
-	TraceScope startSpan(String description, TraceInfo tinfo);
+	TraceScope startSpan(String name, TraceInfo tinfo);
 
 	/**
 	 * Creates a new trace scope.
@@ -59,13 +59,13 @@ public interface Trace {
 	 * span that you pass in here as a parameter.  The trace scope we create here
 	 * will contain a new span which is a child of 'parent'.
 	 *
-	 * @param description The description field for the new span to create.
+	 * @param name The name field for the new span to create.
 	 */
-	TraceScope startSpan(String description, Span parent);
+	TraceScope startSpan(String name, Span parent);
 
-	<T> TraceScope startSpan(String description, Sampler<T> s);
+	<T> TraceScope startSpan(String name, Sampler<T> s);
 
-	<T> TraceScope startSpan(String description, Sampler<T> s, T info);
+	<T> TraceScope startSpan(String name, Sampler<T> s, T info);
 
 	/**
 	 * Pick up an existing span from another thread.

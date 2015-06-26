@@ -26,16 +26,16 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public TraceScope startSpan(String description) {
-		return this.startSpan(description, defaultSampler);
+	public TraceScope startSpan(String name) {
+		return this.startSpan(name, defaultSampler);
 	}
 
 	@Override
-	public TraceScope startSpan(String description, TraceInfo tinfo) {
+	public TraceScope startSpan(String name, TraceInfo tinfo) {
 		if (tinfo == null) return doStart(null);
 		MilliSpan span = MilliSpan.builder()
 				.begin(System.currentTimeMillis())
-				.description(description)
+				.name(name)
 				.traceId(tinfo.getTraceId())
 				.spanId(idGenerator.create())
 				.parents(Collections.singletonList(tinfo.getSpanId()))
@@ -45,9 +45,9 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public TraceScope startSpan(String description, Span parent) {
+	public TraceScope startSpan(String name, Span parent) {
 		if (parent == null) {
-			return startSpan(description);
+			return startSpan(name);
 		}
 		Span currentSpan = getCurrentSpan();
 		if ((currentSpan != null) && (currentSpan != parent)) {
@@ -56,41 +56,41 @@ public class DefaultTrace implements Trace {
 					"with parent " + parent.toString() + ", but there is already a " +
 					"currentSpan " + currentSpan);
 		}
-		return doStart(createChild(parent, description));
+		return doStart(createChild(parent, name));
 	}
 
 	@Override
-	public <T> TraceScope startSpan(String description, Sampler<T> s) {
-		return startSpan(description, s, null);
+	public <T> TraceScope startSpan(String name, Sampler<T> s) {
+		return startSpan(name, s, null);
 	}
 
 	@Override
-	public <T> TraceScope startSpan(String description, Sampler<T> s, T info) {
+	public <T> TraceScope startSpan(String name, Sampler<T> s, T info) {
 		Span span = null;
 		if (TraceContextHolder.isTracing() || s.next(info)) {
-			span = createNew(description);
+			span = createNew(name);
 		}
 		return doStart(span);
 	}
 
-	protected Span createNew(String description) {
+	protected Span createNew(String name) {
 		Span parent = getCurrentSpan();
 		if (parent == null) {
 			return MilliSpan.builder()
 					.begin(System.currentTimeMillis())
-					.description(description)
+					.name(name)
 					.traceId(idGenerator.create())
 					.spanId(idGenerator.create())
 					.build();
 		} else {
-			return createChild(parent, description);
+			return createChild(parent, name);
 		}
 	}
 
-	protected Span createChild(Span parent, String childDescription) {
+	protected Span createChild(Span parent, String childname) {
 		return MilliSpan.builder().
 				begin(System.currentTimeMillis()).
-				description(childDescription).
+				name(childname).
 				traceId(parent.getTraceId()).
 				parents(Collections.singletonList(parent.getSpanId())).
 				//TODO: when lombok plugin supports @Singular parent(parent.getSpanId()).

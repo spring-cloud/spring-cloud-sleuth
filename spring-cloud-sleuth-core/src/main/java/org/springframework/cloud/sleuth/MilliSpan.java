@@ -17,7 +17,7 @@ public class MilliSpan implements Span {
 	private long begin;
 	@NonFinal
 	private long end = 0;
-	private String description;
+	private String name;
 	private String traceId;
 	@Singular
 	private List<String> parents;
@@ -31,7 +31,7 @@ public class MilliSpan implements Span {
 	public synchronized void stop() {
 		if (end == 0) {
 			if (begin == 0)
-				throw new IllegalStateException("Span for " + description
+				throw new IllegalStateException("Span for " + name
 						+ " has not been started");
 			end = System.currentTimeMillis();
 		}
