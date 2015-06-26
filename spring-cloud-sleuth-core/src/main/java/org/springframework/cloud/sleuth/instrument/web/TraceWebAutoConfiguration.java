@@ -54,6 +54,12 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	public TraceWebAspect traceWebAspect() {
+		return new TraceWebAspect(trace);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	public TraceHandlerInterceptor traceHandlerInterceptor() {
 		return new TraceHandlerInterceptor(trace);
 	}
