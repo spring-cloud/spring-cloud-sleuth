@@ -8,7 +8,7 @@ import lombok.extern.apachecommons.CommonsLog;
 @CommonsLog
 public abstract class Utils {
 	public static void error(String msg) {
-		error(msg);
+		log.error(msg);
 		throw new RuntimeException(msg);
 	}
 }

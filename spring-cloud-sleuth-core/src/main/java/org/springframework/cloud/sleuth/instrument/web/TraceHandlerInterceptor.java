@@ -25,7 +25,7 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		//TODO: get trace data from request?
 		//TODO: what is the description?
-		TraceScope scope = trace.startSpan("");
+		TraceScope scope = trace.startSpan("traceHandlerInterceptor");
 		request.setAttribute(ATTR_NAME, scope);
 		return true;
 	}
