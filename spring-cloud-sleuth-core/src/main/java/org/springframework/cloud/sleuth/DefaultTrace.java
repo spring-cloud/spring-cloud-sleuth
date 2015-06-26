@@ -2,8 +2,10 @@ package org.springframework.cloud.sleuth;
 
 import static org.springframework.cloud.sleuth.Utils.error;
 
-import java.util.Collection;
 import java.util.Collections;
+
+import org.springframework.cloud.sleuth.event.SpanStartedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * @author Spencer Gibb
@@ -14,16 +16,13 @@ public class DefaultTrace implements Trace {
 
 	private final IdGenerator idGenerator;
 
-	private final Collection<SpanStartListener> spanStartListeners;
-	private final Collection<SpanReceiver> spanReceivers;
+	private final ApplicationEventPublisher publisher;
 
 	public DefaultTrace(Sampler<?> defaultSampler, IdGenerator idGenerator,
-			Collection<SpanStartListener> spanStartListeners,
-			Collection<SpanReceiver> spanReceivers) {
+			ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
 		this.idGenerator = idGenerator;
-		this.spanStartListeners = spanStartListeners;
-		this.spanReceivers = spanReceivers;
+		this.publisher = publisher;
 	}
 
 	@Override
@@ -102,9 +101,7 @@ public class DefaultTrace implements Trace {
 
 	protected TraceScope doStart(Span span) {
 		if (span != null) {
-			for (SpanStartListener listener : spanStartListeners) {
-				listener.startSpan(span);
-			}
+			publisher.publishEvent(new SpanStartedEvent(this, span));
 		}
 		return continueSpan(span);
 	}
@@ -115,7 +112,7 @@ public class DefaultTrace implements Trace {
 		if (span == null) return NullScope.INSTANCE;
 		Span oldSpan = getCurrentSpan();
 		TraceContextHolder.setCurrentSpan(span);
-		return new TraceScope(this, span, oldSpan);
+		return new TraceScope(this.publisher, span, oldSpan);
 	}
 
 	protected Span getCurrentSpan() {
@@ -127,14 +124,6 @@ public class DefaultTrace implements Trace {
 		Span s = getCurrentSpan();
 		if (s != null) {
 			s.addKVAnnotation(key, value);
-		}
-	}
-
-	//TODO: rename? this is the end of a Span lifecycle
-	@Override
-	public void deliver(Span span) {
-		for (SpanReceiver receiver : spanReceivers) {
-			receiver.receiveSpan(span);
 		}
 	}
 }

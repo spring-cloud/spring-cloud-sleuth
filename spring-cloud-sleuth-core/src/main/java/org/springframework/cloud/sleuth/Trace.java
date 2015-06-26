@@ -76,6 +76,4 @@ public interface Trace {
 	 * Adds a data annotation to the current span if tracing is currently on.
 	 */
 	void addKVAnnotation(String key, String value);
-
-	void deliver(Span span);
 }

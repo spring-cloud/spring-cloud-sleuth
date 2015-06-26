@@ -4,17 +4,19 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanStartListener;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.event.SpanStartedEvent;
+import org.springframework.context.ApplicationListener;
 
 /**
  * @author Spencer Gibb
  */
 @Slf4j
-public class Slf4jSpanStartListener implements SpanStartListener {
+public class Slf4jSpanStartedListener implements ApplicationListener<SpanStartedEvent> {
 
 	@Override
-	public void startSpan(Span span) {
+	public void onApplicationEvent(SpanStartedEvent event) {
+		Span span = event.getSpan();
 		//TODO: what log level?
 		log.info("Starting span: {}", span);
 		MDC.put(Trace.SPAN_ID_NAME, span.getSpanId());

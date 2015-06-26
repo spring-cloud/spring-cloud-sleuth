@@ -4,6 +4,8 @@ import java.io.Closeable;
 
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * @author Spencer Gibb
@@ -11,7 +13,7 @@ import lombok.SneakyThrows;
 @Data
 public class TraceScope implements Closeable {
 
-	private final Trace trace;
+	private final ApplicationEventPublisher publisher;
 
 	/**
 	 * the span for this scope
@@ -25,8 +27,8 @@ public class TraceScope implements Closeable {
 
 	private boolean detached = false;
 
-	public TraceScope(Trace trace, Span span, Span savedSpan) {
-		this.trace = trace;
+	public TraceScope(ApplicationEventPublisher publisher, Span span, Span savedSpan) {
+		this.publisher = publisher;
 		this.span = span;
 		this.savedSpan = savedSpan;
 	}
@@ -72,8 +74,7 @@ public class TraceScope implements Closeable {
 					"probably forgotten to close or detach " + cur);
 		} else {
 			span.stop();
-			//TODO: use ApplicationEvents here?
-			trace.deliver(span);
+			this.publisher.publishEvent(new SpanStoppedEvent(this, span));
 			TraceContextHolder.setCurrentSpan(savedSpan);
 		}
 	}

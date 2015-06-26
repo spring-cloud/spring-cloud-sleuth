@@ -1,19 +1,24 @@
 package org.springframework.cloud.sleuth;
 
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import lombok.Data;
-
 import org.junit.Test;
-import org.springframework.cloud.sleuth.receiver.ArrayListSpanReceiver;
+import org.mockito.ArgumentCaptor;
+import org.springframework.cloud.sleuth.event.SpanStartedEvent;
+import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * @author Spencer Gibb
@@ -27,15 +32,10 @@ public class DefaultTraceTests {
 
 	@Test
 	public void tracingWorks() {
-		ArrayListSpanReceiver spanReceiver = new ArrayListSpanReceiver();
-		ListSpanStartListener listener = new ListSpanStartListener();
-		List<SpanStartListener> startListeners = Collections
-				.<SpanStartListener> singletonList(listener);
-		List<SpanReceiver> spanReceivers = Collections
-				.<SpanReceiver> singletonList(spanReceiver);
+		ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
 
 		DefaultTrace trace = new DefaultTrace(new IsTracingSampler(),
-				new RandomUuidGenerator(), startListeners, spanReceivers);
+				new RandomUuidGenerator(), publisher);
 
 		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
@@ -45,12 +45,20 @@ public class DefaultTraceTests {
 			scope.close();
 		}
 
-		List<Span> startedSpans = listener.getSpans();
-		assertThat("startedSpans was null", startedSpans, is(notNullValue()));
-		assertThat("startedSpans was wrong size", startedSpans.size(), is(NUM_SPANS));
+		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanStartedEvent.class));
+		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanStoppedEvent.class));
 
-		List<Span> spans = spanReceiver.getSpans();
-		assertThat("spans was null", spans, is(notNullValue()));
+		ArgumentCaptor<ApplicationEvent> captor = ArgumentCaptor
+				.forClass(ApplicationEvent.class);
+		verify(publisher, atLeast(NUM_SPANS)).publishEvent(captor.capture());
+
+		List<Span> spans = new ArrayList<>();
+		for (ApplicationEvent event : captor.getAllValues()) {
+			if (event instanceof SpanStoppedEvent) {
+				spans.add(((SpanStoppedEvent) event).getSpan());
+			}
+		}
+
 		assertThat("spans was wrong size", spans.size(), is(NUM_SPANS));
 
 		Span root = assertSpan(spans, null, CREATE_SIMPLE_TRACE);
@@ -107,16 +115,6 @@ public class DefaultTraceTests {
 		}
 		finally {
 			cur.close();
-		}
-	}
-
-	@Data
-	class ListSpanStartListener implements SpanStartListener {
-		private ArrayList<Span> spans = new ArrayList<>();
-
-		@Override
-		public void startSpan(Span span) {
-			spans.add(span);
 		}
 	}
 }
