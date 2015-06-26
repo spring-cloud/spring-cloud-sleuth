@@ -44,7 +44,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 public class TraceWebAutoConfiguration {
 
 	/**
-	 * Pattern for URLs that should be skipped in correlationID setting
+	 * Pattern for URLs that should be skipped in tracing
 	 */
 	@Value("${spring.cloud.sleuth.instrument.web.skipPattern:}")
 	private String skipPattern;
@@ -66,7 +66,7 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public FilterRegistrationBean correlationHeaderFilter() {
+	public FilterRegistrationBean traceFilter() {
 		Pattern pattern = StringUtils.hasText(skipPattern) ? Pattern.compile(skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
 		return new FilterRegistrationBean(new TraceFilter(trace, pattern));

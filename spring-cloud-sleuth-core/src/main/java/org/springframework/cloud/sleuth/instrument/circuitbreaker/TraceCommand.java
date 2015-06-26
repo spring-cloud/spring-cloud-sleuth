@@ -10,7 +10,7 @@ import org.springframework.cloud.sleuth.TraceScope;
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
  *
  * @see HystrixCommand
- * @see CorrelationIdUpdater
+ * @see Trace
  *
  * @author Tomasz Nurkiewicz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT

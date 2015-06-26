@@ -8,8 +8,8 @@ import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.scheduling.annotation.Scheduled;
 
 /**
- * Aspect that sets correlationId for running threads executing methods annotated with {@link Scheduled} annotation.
- * For every execution of scheduled method a new, i.e. unique one, value of correlationId will be set.
+ * Aspect that creates a new Span for running threads executing methods annotated with {@link Scheduled} annotation.
+ * For every execution of scheduled method a new trace will be started.
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Michal Chmielarz, 4financeIT
@@ -28,7 +28,7 @@ public class TraceSchedulingAspect {
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
-	public Object setNewCorrelationIdOnThread(final ProceedingJoinPoint pjp) throws Throwable {
+	public Object traceSceduledThread(final ProceedingJoinPoint pjp) throws Throwable {
 		TraceScope scope = trace.startSpan(pjp.toShortString());
 		try {
 			return pjp.proceed();
