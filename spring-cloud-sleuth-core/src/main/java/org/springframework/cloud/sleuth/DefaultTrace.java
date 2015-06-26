@@ -3,8 +3,11 @@ package org.springframework.cloud.sleuth;
 import static org.springframework.cloud.sleuth.Utils.error;
 
 import java.util.Collections;
+import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.event.SpanStartedEvent;
+import org.springframework.cloud.sleuth.instrument.TraceCallable;
+import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
@@ -125,5 +128,31 @@ public class DefaultTrace implements Trace {
 		if (s != null) {
 			s.addKVAnnotation(key, value);
 		}
+	}
+
+	/**
+	 * Wrap the callable in a TraceCallable, if tracing.
+	 *
+	 * @return The callable provided, wrapped if tracing, 'callable' if not.
+	 */
+	@Override
+	public <V> Callable<V> wrap(Callable<V> callable) {
+		if (TraceContextHolder.isTracing()) {
+			return new TraceCallable<>(this, callable, TraceContextHolder.getCurrentSpan());
+		}
+		return callable;
+	}
+
+	/**
+	 * Wrap the runnable in a TraceRunnable, if tracing.
+	 *
+	 * @return The runnable provided, wrapped if tracing, 'runnable' if not.
+	 */
+	@Override
+	public Runnable wrap(Runnable runnable) {
+		if (TraceContextHolder.isTracing()) {
+			return new TraceRunnable(this, runnable, TraceContextHolder.getCurrentSpan());
+		}
+		return runnable;
 	}
 }

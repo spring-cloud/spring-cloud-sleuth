@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth;
 
+import java.util.concurrent.Callable;
+
 /**
  * The Trace class is the primary way to interact with the library.  It provides
  * methods to create and manipulate spans.
@@ -76,4 +78,8 @@ public interface Trace {
 	 * Adds a data annotation to the current span if tracing is currently on.
 	 */
 	void addKVAnnotation(String key, String value);
+
+	<V> Callable<V> wrap(Callable<V> callable);
+
+	Runnable wrap(Runnable runnable);
 }
