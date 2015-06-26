@@ -48,6 +48,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>com.netflix.zuul</groupId>
+			<artifactId>zuul-core</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>io.reactivex</groupId>
 			<artifactId>rxjava</artifactId>
 			<optional>true</optional>

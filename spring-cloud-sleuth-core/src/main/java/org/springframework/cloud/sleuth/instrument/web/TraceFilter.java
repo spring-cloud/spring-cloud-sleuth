@@ -86,6 +86,7 @@ public class TraceFilter extends OncePerRequestFilter {
 				// Send new span id back
 				addToResponseIfNotPresent(response, SPAN_ID_NAME, span.getSpanId());
 
+				//TODO: trace description?
 				traceScope = trace.startSpan("traceFilter", span);
 			}
 			else {
