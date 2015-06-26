@@ -4,13 +4,10 @@ import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
-import java.util.Collections;
-
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.cloud.sleuth.MilliSpan;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceInfo;
 import org.springframework.cloud.sleuth.TraceScope;
 
 import com.netflix.zuul.ZuulFilter;
@@ -52,13 +49,9 @@ public class TracePreFilter extends ZuulFilter {
 		TraceScope traceScope = null;
 		if (hasText(spanId) && hasText(traceId)) {
 
-			Span span = MilliSpan.builder().traceId(traceId)
-					.parents(Collections.singletonList(spanId))
-					// TODO: use parent() when lombok plugin supports it
-					.build();
-
+			TraceInfo traceInfo = new TraceInfo(traceId, spanId);
 			// TODO: trace description?
-			traceScope = trace.startSpan("traceZuulFilter", span);
+			traceScope = trace.startSpan("traceZuulFilter", traceInfo);
 		}
 		else {
 			traceScope = trace.startSpan("traceZuulFilter");

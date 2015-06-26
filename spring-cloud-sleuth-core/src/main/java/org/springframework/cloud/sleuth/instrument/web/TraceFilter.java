@@ -20,7 +20,6 @@ import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
@@ -28,9 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.cloud.sleuth.MilliSpan;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceInfo;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -78,16 +76,12 @@ public class TraceFilter extends OncePerRequestFilter {
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
 			if (hasText(spanId) && hasText(traceId)) {
 
-				Span span = MilliSpan.builder()
-						.traceId(traceId)
-						.parents(Collections.singletonList(spanId))
-						// TODO: use parent() when lombok plugin supports it
-						.build();
+				TraceInfo traceInfo = new TraceInfo(traceId, spanId);
+				// TODO: trace description?
+				traceScope = trace.startSpan("traceFilter", traceInfo);
 				// Send new span id back
-				addToResponseIfNotPresent(response, SPAN_ID_NAME, span.getSpanId());
-
-				//TODO: trace description?
-				traceScope = trace.startSpan("traceFilter", span);
+				addToResponseIfNotPresent(response, SPAN_ID_NAME, traceScope.getSpan()
+						.getSpanId());
 			}
 			else {
 				traceScope = trace.startSpan("traceFilter");
