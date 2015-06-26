@@ -2,15 +2,18 @@ package org.springframework.cloud.sleuth;
 
 import java.io.Closeable;
 
-import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.Value;
+import lombok.experimental.NonFinal;
+
 import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * @author Spencer Gibb
  */
-@Data
+@Value
+@NonFinal
 public class TraceScope implements Closeable {
 
 	private final ApplicationEventPublisher publisher;
@@ -25,6 +28,7 @@ public class TraceScope implements Closeable {
 	 */
 	private final Span savedSpan;
 
+	@NonFinal
 	private boolean detached = false;
 
 	public TraceScope(ApplicationEventPublisher publisher, Span span, Span savedSpan) {
