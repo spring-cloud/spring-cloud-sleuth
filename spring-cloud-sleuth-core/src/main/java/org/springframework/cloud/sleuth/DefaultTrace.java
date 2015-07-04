@@ -41,8 +41,7 @@ public class DefaultTrace implements Trace {
 				.name(name)
 				.traceId(tinfo.getTraceId())
 				.spanId(idGenerator.create())
-				.parents(Collections.singletonList(tinfo.getSpanId()))
-				//TODO: when lombok plugin supports @Singular parent(tinfo.getSpanId()).
+				.parent(tinfo.getSpanId())
 				.build();
 		return doStart(span);
 	}
@@ -91,15 +90,14 @@ public class DefaultTrace implements Trace {
 	}
 
 	protected Span createChild(Span parent, String childname) {
-		return MilliSpan.builder().
-				begin(System.currentTimeMillis()).
-				name(childname).
-				traceId(parent.getTraceId()).
-				parents(Collections.singletonList(parent.getSpanId())).
-				//TODO: when lombok plugin supports @Singular parent(parent.getSpanId()).
-				spanId(idGenerator.create()).
-				processId(parent.getProcessId()).
-				build();
+		return MilliSpan.builder()
+				.begin(System.currentTimeMillis())
+				.name(childname)
+				.traceId(parent.getTraceId())
+				.parent(parent.getSpanId())
+				.spanId(idGenerator.create())
+				.processId(parent.getProcessId())
+				.build();
 	}
 
 	protected TraceScope doStart(Span span) {
