@@ -30,19 +30,22 @@ public class MilliSpan implements Span {
 	@Override
 	public synchronized void stop() {
 		if (end == 0) {
-			if (begin == 0)
+			if (begin == 0) {
 				throw new IllegalStateException("Span for " + name
 						+ " has not been started");
+			}
 			end = System.currentTimeMillis();
 		}
 	}
 
 	@Override
 	public synchronized long getAccumulatedMillis() {
-		if (begin == 0)
+		if (begin == 0) {
 			return 0;
-		if (end > 0)
+		}
+		if (end > 0) {
 			return end - begin;
+		}
 		return System.currentTimeMillis() - begin;
 	}
 
