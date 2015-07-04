@@ -27,8 +27,6 @@
 
 	<modules>
 		<module>spring-cloud-sleuth-core</module>
-		<module>spring-cloud-sleuth-correlation</module>
-		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-sleuth-sample</module>
 		<module>docs</module>
 	</modules>
@@ -148,13 +146,18 @@
 			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
-				<version>1.12.6</version>
+				<version>1.16.4</version>
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.netflix.hystrix</groupId>
 				<artifactId>hystrix-core</artifactId>
 				<version>1.4.5</version>
+			</dependency>
+			<dependency>
+				<groupId>com.netflix.zuul</groupId>
+				<artifactId>zuul-core</artifactId>
+				<version>1.0.28</version>
 			</dependency>
 			<dependency>
 				<groupId>org.aspectj</groupId>
