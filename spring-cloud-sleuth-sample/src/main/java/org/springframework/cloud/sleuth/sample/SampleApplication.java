@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.sample;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
@@ -18,13 +16,12 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAutoConfiguration
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableAsync
-@Slf4j
 public class SampleApplication {
 
 	public static final String CLIENT_NAME = "testApp";
 
 	@Bean
-	public Sampler defaultSampler() {
+	public Sampler<?> defaultSampler() {
 		return new AlwaysSampler();
 	}
 
