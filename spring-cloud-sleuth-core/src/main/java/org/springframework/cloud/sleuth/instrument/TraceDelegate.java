@@ -31,7 +31,11 @@ public abstract class TraceDelegate<T> {
 	}
 
 	protected TraceScope startSpan() {
-		return this.trace.startSpan(getSpanName(), this.parent);
+		return this.startSpan(Span.Type.CLIENT);
+	}
+
+	protected TraceScope startSpan(Span.Type type) {
+		return this.trace.startSpan(type, getSpanName(), this.parent);
 	}
 
 	protected String getSpanName() {

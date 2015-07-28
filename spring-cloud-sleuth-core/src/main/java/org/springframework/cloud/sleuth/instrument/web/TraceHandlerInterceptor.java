@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -25,7 +26,7 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		//TODO: get trace data from request?
 		//TODO: what is the description?
-		TraceScope scope = trace.startSpan("traceHandlerInterceptor");
+		TraceScope scope = trace.startSpan(Span.Type.CLIENT, "traceHandlerInterceptor");
 		request.setAttribute(ATTR_NAME, scope);
 		return true;
 	}

@@ -50,7 +50,7 @@ public interface Trace {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	TraceScope startSpan(String name);
+	TraceScope startSpan(Span.Type type, String name);
 
 	TraceScope startSpan(String name, TraceInfo tinfo);
 
@@ -63,11 +63,11 @@ public interface Trace {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	TraceScope startSpan(String name, Span parent);
+	TraceScope startSpan(Span.Type type, String name, Span parent);
 
-	<T> TraceScope startSpan(String name, Sampler<T> s);
+	<T> TraceScope startSpan(Span.Type type, String name, Sampler<T> s);
 
-	<T> TraceScope startSpan(String name, Sampler<T> s, T info);
+	<T> TraceScope startSpan(Span.Type type, String name, Sampler<T> s, T info);
 
 	/**
 	 * Pick up an existing span from another thread.
@@ -78,6 +78,11 @@ public interface Trace {
 	 * Adds a data annotation to the current span if tracing is currently on.
 	 */
 	void addKVAnnotation(String key, String value);
+
+	/**
+	 * Adds a timeline annotation to the current span if tracing is currently on.
+	 */
+	void addTimelineAnnotation(String msg);
 
 	<V> Callable<V> wrap(Callable<V> callable);
 

@@ -6,6 +6,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceInfo;
 import org.springframework.cloud.sleuth.TraceScope;
@@ -49,12 +50,12 @@ public class TracePreFilter extends ZuulFilter {
 		TraceScope traceScope = null;
 		if (hasText(spanId) && hasText(traceId)) {
 
-			TraceInfo traceInfo = new TraceInfo(traceId, spanId);
+			TraceInfo traceInfo = new TraceInfo(traceId, spanId, Span.Type.SERVER);
 			// TODO: trace description?
 			traceScope = trace.startSpan("traceZuulFilter", traceInfo);
 		}
 		else {
-			traceScope = trace.startSpan("traceZuulFilter");
+			traceScope = trace.startSpan(Span.Type.SERVER, "traceZuulFilter");
 
 		}
 

@@ -1,13 +1,20 @@
 package org.springframework.cloud.sleuth.zipkin;
 
+import static com.twitter.zipkin.gen.zipkinCoreConstants.CLIENT_RECV;
+import static com.twitter.zipkin.gen.zipkinCoreConstants.CLIENT_SEND;
+import static com.twitter.zipkin.gen.zipkinCoreConstants.SERVER_RECV;
+import static com.twitter.zipkin.gen.zipkinCoreConstants.SERVER_SEND;
+
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Data;
 import lombok.extern.apachecommons.CommonsLog;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,21 +22,32 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TimelineAnnotation;
+import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.context.event.EventListener;
 
 import com.github.kristofa.brave.SpanCollector;
 import com.twitter.zipkin.gen.Annotation;
 import com.twitter.zipkin.gen.AnnotationType;
 import com.twitter.zipkin.gen.BinaryAnnotation;
 import com.twitter.zipkin.gen.Endpoint;
-import com.twitter.zipkin.gen.zipkinCoreConstants;
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
-import org.springframework.context.event.EventListener;
 
 /**
  * @author Spencer Gibb
  */
 @CommonsLog
 public class SleuthTracer {
+
+	private static final Map<Span.Type, StartEnd> TYPE_MAP = new HashMap<>();
+	static {
+		TYPE_MAP.put(Span.Type.CLIENT, new StartEnd(CLIENT_SEND, CLIENT_RECV));
+		TYPE_MAP.put(Span.Type.SERVER, new StartEnd(SERVER_RECV, SERVER_SEND));
+	}
+
+	@Data
+	private static class StartEnd {
+		final String start;
+		final String end;
+	}
 
 	private SpanCollector spanCollector;
 	@Value("${spring.application.name:application}")
@@ -130,16 +148,16 @@ public class SleuthTracer {
 
 		int duration = (int)(span.getEnd() - span.getBegin());
 
+		StartEnd startEnd = TYPE_MAP.get(span.getType());
+
 		// add first zipkin  annotation.
-		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.CLIENT_SEND, span.getBegin(), 0, ep, true));
-		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.SERVER_RECV, span.getBegin(), 0, ep, true));
+		annotationList.add(createZipkinAnnotation(startEnd.getStart(), span.getBegin(), 0, ep, true));
 		// add sleuth time annotation
 		for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
 			annotationList.add(createZipkinAnnotation(ta.getMsg(), ta.getTime(), 0, ep, true));
 		}
 		// add last zipkin annotation
-		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.SERVER_SEND, span.getEnd(), duration, ep, false));
-		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.CLIENT_RECV, span.getEnd(), duration, ep, false));
+		annotationList.add(createZipkinAnnotation(startEnd.getEnd(), span.getEnd(), duration, ep, false));
 		return annotationList;
 	}
 

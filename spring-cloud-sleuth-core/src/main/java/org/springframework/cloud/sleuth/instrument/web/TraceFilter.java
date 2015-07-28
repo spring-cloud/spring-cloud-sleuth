@@ -27,6 +27,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceInfo;
 import org.springframework.cloud.sleuth.TraceScope;
@@ -82,7 +83,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			String name = this.urlPathHelper.getPathWithinApplication(request);
 			if (hasText(spanId) && hasText(traceId)) {
 
-				TraceInfo traceInfo = new TraceInfo(traceId, spanId);
+				TraceInfo traceInfo = new TraceInfo(traceId, spanId, Span.Type.SERVER);
 				// TODO: trace description?
 				traceScope = this.trace.startSpan(name, traceInfo);
 				// Send new span id back
@@ -90,7 +91,7 @@ public class TraceFilter extends OncePerRequestFilter {
 						.getSpanId());
 			}
 			else {
-				traceScope = this.trace.startSpan(name);
+				traceScope = this.trace.startSpan(Span.Type.SERVER, name);
 			}
 		}
 

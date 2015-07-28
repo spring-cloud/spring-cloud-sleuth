@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolKey;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceScope;
 
@@ -47,7 +48,7 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
 	@Override
 	protected R run() throws Exception {
-		TraceScope scope = trace.startSpan(getCommandKey().name());
+		TraceScope scope = trace.startSpan(Span.Type.CLIENT, getCommandKey().name());
 		try {
 			return doRun();
 		} finally {

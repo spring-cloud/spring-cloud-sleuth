@@ -67,11 +67,12 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		TraceScope scope = this.trace.startSpan("customTraceEndpoint", new AlwaysSampler());
+		TraceScope scope = this.trace.startSpan(Span.Type.SERVER, "customTraceEndpoint", new AlwaysSampler());
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
+		this.trace.addTimelineAnnotation("Sleeping for "+millis+" millis");
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/hi2", String.class);
 		scope.close();
