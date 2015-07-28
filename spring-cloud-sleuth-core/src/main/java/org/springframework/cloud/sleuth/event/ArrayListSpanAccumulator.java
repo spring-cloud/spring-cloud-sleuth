@@ -1,10 +1,10 @@
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.event;
 
 import java.util.ArrayList;
 
 import lombok.Value;
 
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.ApplicationListener;
 
 /**

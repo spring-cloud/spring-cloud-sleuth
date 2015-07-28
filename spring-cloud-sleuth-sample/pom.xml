@@ -6,8 +6,8 @@
 
 	<artifactId>spring-cloud-sleuth-sample</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Cloud Consul Sample</name>
-	<description>Spring Cloud Consul Sample</description>
+	<name>Spring Cloud Sleuth Sample</name>
+	<description>Spring Cloud Sleuth Sample</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -21,7 +21,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>1.2.1.RELEASE</version>
 				<executions>
 					<execution>
 						<goals>
@@ -48,6 +47,10 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-sleuth-zipkin</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

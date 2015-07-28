@@ -1,10 +1,18 @@
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.trace;
 
-import static org.springframework.cloud.sleuth.Utils.error;
+import static org.springframework.cloud.sleuth.util.ExceptionUtils.error;
 
-import java.util.Collections;
 import java.util.concurrent.Callable;
 
+import org.springframework.cloud.sleuth.IdGenerator;
+import org.springframework.cloud.sleuth.MilliSpan;
+import org.springframework.cloud.sleuth.NullScope;
+import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceContextHolder;
+import org.springframework.cloud.sleuth.TraceInfo;
+import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.cloud.sleuth.event.SpanStartedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
@@ -30,7 +38,7 @@ public class DefaultTrace implements Trace {
 
 	@Override
 	public TraceScope startSpan(String name) {
-		return this.startSpan(name, defaultSampler);
+		return this.startSpan(name, this.defaultSampler);
 	}
 
 	@Override
@@ -40,7 +48,7 @@ public class DefaultTrace implements Trace {
 				.begin(System.currentTimeMillis())
 				.name(name)
 				.traceId(tinfo.getTraceId())
-				.spanId(idGenerator.create())
+				.spanId(this.idGenerator.create())
 				.parent(tinfo.getSpanId())
 				.build();
 		return doStart(span);
@@ -81,8 +89,8 @@ public class DefaultTrace implements Trace {
 			return MilliSpan.builder()
 					.begin(System.currentTimeMillis())
 					.name(name)
-					.traceId(idGenerator.create())
-					.spanId(idGenerator.create())
+					.traceId(this.idGenerator.create())
+					.spanId(this.idGenerator.create())
 					.build();
 		} else {
 			return createChild(parent, name);
@@ -95,14 +103,14 @@ public class DefaultTrace implements Trace {
 				.name(childname)
 				.traceId(parent.getTraceId())
 				.parent(parent.getSpanId())
-				.spanId(idGenerator.create())
+				.spanId(this.idGenerator.create())
 				.processId(parent.getProcessId())
 				.build();
 	}
 
 	protected TraceScope doStart(Span span) {
 		if (span != null) {
-			publisher.publishEvent(new SpanStartedEvent(this, span));
+			this.publisher.publishEvent(new SpanStartedEvent(this, span));
 		}
 		return continueSpan(span);
 	}

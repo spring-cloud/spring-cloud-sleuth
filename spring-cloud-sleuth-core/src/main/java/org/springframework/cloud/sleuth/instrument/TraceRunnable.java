@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.instrument;
 
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import org.springframework.cloud.sleuth.Span;
@@ -10,6 +11,7 @@ import org.springframework.cloud.sleuth.TraceScope;
  * @author Spencer Gibb
  */
 @Value
+@EqualsAndHashCode(callSuper=false)
 public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 
 	public TraceRunnable(Trace trace, Runnable delagate) {

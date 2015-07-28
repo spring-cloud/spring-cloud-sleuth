@@ -67,12 +67,12 @@ public class TraceWebAspect {
 	@Around("anyControllerOrRestControllerWithPublicAsyncMethod()")
 	@SuppressWarnings("unchecked")
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
-		Callable callable = (Callable) pjp.proceed();
+		Callable<Object> callable = (Callable<Object>) pjp.proceed();
 		if (TraceContextHolder.isTracing()) {
 			log.debug("Wrapping callable with span ["
 					+ TraceContextHolder.getCurrentSpan() + "]");
 
-			return new TraceCallable(this.trace, callable);
+			return new TraceCallable<Object>(this.trace, callable);
 		}
 		else {
 			return callable;

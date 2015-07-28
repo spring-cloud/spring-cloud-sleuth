@@ -10,15 +10,10 @@ include::intro.adoc[]
 
 == Running the sample
 
-1. Download and build zipkin
-2. Install redis and run `redis-server`
-3. `cd zipkin`
-4. `bin/collector redis` from [here](https://github.com/twitter/zipkin/blob/master/doc/redis.md)
-5. `bin/query redis`
-6. `bin/web`
-7. run sample application
-8. hit `http://localhost:3380`
-9. goto `http://localhost:8080` for zipkin web
+1. Run [Zipkin](https://github.com/openzipkin/zipkin), e.g. via the docker images at [Zipkin Docker](https://github.com/openzipkin/zipkin-docker)
+7. Run sample application
+8. Hit `http://localhost:3380`
+9. Goto `http://localhost:8080` for zipkin web
 
 == Building
 
