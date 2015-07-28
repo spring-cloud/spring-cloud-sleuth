@@ -8,12 +8,12 @@
 		<version>1.0.0.BUILD-SNAPSHOT</version>
 		<relativePath />
 	</parent>
-	<artifactId>spring-cloud-consul-docs</artifactId>
+	<artifactId>spring-cloud-sleuth-docs</artifactId>
 	<packaging>pom</packaging>
-	<name>Spring Cloud Consul Docs</name>
-	<description>Spring Cloud Docs</description>
+	<name>Spring Cloud Sleuth Docs</name>
+	<description>Spring Sleuth Docs</description>
 	<properties>
-		<docs.main>spring-cloud-consul</docs.main>
+		<docs.main>spring-cloud-sleuth</docs.main>
 		<main.basedir>${basedir}/..</main.basedir>
 	</properties>
 	<profiles>
