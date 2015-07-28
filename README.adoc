@@ -2,7 +2,16 @@
 
 image::https://travis-ci.org/spring-cloud-incubator/spring-cloud-sleuth.svg?branch=master[Build Status, link=https://travis-ci.org/spring-cloud-incubator/spring-cloud-sleuth]
 
-TODO: intro Spring Cloud Sleuth
+=== Terminology
+
+Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.
+
+*Span:* The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span's are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.  Spans also have other data, such as descriptions, key-value annotations, the ID of the span that caused them, and process ID's (normally IP address).
+
+Spans are started and stopped, and they keep track of their timing information.  Once you create a span, you must stop it at some point in the future.
+
+*Trace:* A set of spans forming a tree-like structure.  For example, if you are running a distributed big-data store, a trace might be formed by a put request.
+
 
 
 == This is a Developer Preview
@@ -13,15 +22,10 @@ TODO: intro Spring Cloud Sleuth
 
 == Running the sample
 
-1. Download and build zipkin
-2. Install redis and run `redis-server`
-3. `cd zipkin`
-4. `bin/collector redis` from [here](https://github.com/twitter/zipkin/blob/master/doc/redis.md)
-5. `bin/query redis`
-6. `bin/web`
-7. run sample application
-8. hit `http://localhost:3380`
-9. goto `http://localhost:8080` for zipkin web
+1. Run [Zipkin](https://github.com/openzipkin/zipkin), e.g. via docker compose (there's a `docker-compose.yml` in [Spring Cloud Sleuth](https://github.com/spring-cloud-incubator/spring-cloud-sleuth), or in [Docker Zipkin](https://github.com/openzipkin/docker-zipkin)
+7. Run sample application
+8. Hit `http://localhost:3380`
+9. Goto `http://localhost:8082` for zipkin web
 
 == Building
 
@@ -70,46 +74,6 @@ parsing or rendering it, just copying it to `${main.basedir}`
 any changes in the README it will then show up after a Maven build as
 a modified file in the correct place. Just commit it and push the change.
 
-=== Pull Requests
-
-Spring Cloud is released under the non-restrictive Apache 2.0 license,
-and follows a very standard Github development process, using Github
-tracker for issues and merging pull requests into master. If you want
-to contribute even something trivial please do not hesitate, but
-follow the guidelines below.
-
-==== Sign the Contributor License Agreement
-Before we accept a non-trivial patch or pull request we will need you
-to sign the
-https://support.springsource.com/spring_committer_signup[contributor's
-agreement].  Signing the contributor's agreement does not grant anyone
-commit rights to the main repository, but it does mean that we can
-accept your contributions, and you will get an author credit if we do.
-Active contributors might be asked to join the core team, and given
-the ability to merge pull requests.
-
-==== Code Conventions and Housekeeping
-None of these is essential for a pull request, but they will all help.  They can also be
-added after the original pull request but before a merge.
-
-* Use the Spring Framework code format conventions. If you use Eclipse and you follow
-  the ``Importing into eclipse'' instructions below you should get project specific
-  formatting automatically. You can also import formatter settings using the
-  `eclipse-code-formatter.xml` file from the `eclipse` folder. If using IntelliJ, you can
-  use the http://plugins.jetbrains.com/plugin/6546[Eclipse Code Formatter Plugin]
-  to import the same file.
-* Make sure all new `.java` files to have a simple Javadoc class comment with at least an
-  `@author` tag identifying you, and preferably at least a paragraph on what the class is
-  for.
-* Add the ASF license header comment to all new `.java` files (copy from existing files
-  in the project)
-* Add yourself as an `@author` to the .java files that you modify substantially (more
-  than cosmetic changes).
-* Add some Javadocs and, if you change the namespace, some XSD doc elements.
-* A few unit tests would help a lot as well -- someone has to do it.
-* If no-one else is using your branch, please rebase it against the current master (or
-  other target branch in the main project).
-
 === Working with the code
 If you don't have an IDE preference we would recommend that you use
 http://www.springsource.com/developer/sts[Spring Tools Suite] or
@@ -121,6 +85,14 @@ should also work without issue.
 We recommend the http://eclipse.org/m2e/[m2eclipe] eclipse plugin when working with
 eclipse. If you don't already have m2eclipse installed it is available from the "eclipse
 marketplace".
+
+Once the projects are imported into Eclipse you will also need to tell m2eclipse
+to use the `.settings.xml` file for the projects.  If you do not do this you may
+see errors many different errors related to the POMs in the projects.
+Open your Eclipse preferences, expand the Maven preferences, and select User Settings.
+In the User Settings field click Browse and navigate to the Spring Cloud project you
+imported selecting the `.settings.xml` file in that project.  Click Apply and then OK to
+save the preference changes.
 
 ==== Importing into eclipse without m2eclipse
 If you prefer not to use m2eclipse you can generate eclipse project metadata using the
@@ -160,9 +132,11 @@ Maven is well supported by most Java IDEs. Refer to you vendor documentation.
 
 == Contributing
 
-Spring Cloud is released under the non-restrictive Apache 2.0 license. If you would like
-to contribute something, or simply want to hack on the code this document should help
-you get started.
+Spring Cloud is released under the non-restrictive Apache 2.0 license,
+and follows a very standard Github development process, using Github
+tracker for issues and merging pull requests into master. If you want
+to contribute even something trivial please do not hesitate, but
+follow the guidelines below.
 
 === Sign the Contributor License Agreement
 Before we accept a non-trivial patch or pull request we will need you to sign the
