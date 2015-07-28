@@ -1,7 +1,7 @@
 package org.springframework.cloud.sleuth.sample;
 
-import lombok.extern.slf4j.Slf4j;
-
+import com.github.kristofa.brave.LoggingSpanCollectorImpl;
+import com.github.kristofa.brave.SpanCollector;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
@@ -18,13 +18,12 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAutoConfiguration
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableAsync
-@Slf4j
 public class SampleApplication {
 
 	public static final String CLIENT_NAME = "testApp";
 
 	@Bean
-	public Sampler defaultSampler() {
+	public Sampler<?> defaultSampler() {
 		return new AlwaysSampler();
 	}
 
@@ -37,9 +36,6 @@ public class SampleApplication {
 		SpringApplication.run(SampleApplication.class, args);
 	}
 
-	/*
-	 * @Bean public SpanCollector spanCollector() { return new LoggingSpanCollectorImpl();
-	 * }
-	 */
+	//@Bean public SpanCollector spanCollector() { return new LoggingSpanCollectorImpl(); }
 
 }

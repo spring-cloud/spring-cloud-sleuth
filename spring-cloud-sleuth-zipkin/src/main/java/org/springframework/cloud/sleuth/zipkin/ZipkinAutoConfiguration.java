@@ -1,11 +1,24 @@
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.github.kristofa.brave.AnnotationSubmitterConfig;
 import com.github.kristofa.brave.ClientTracer;
 import com.github.kristofa.brave.ClientTracerConfig;
 import com.github.kristofa.brave.EndPointSubmitterConfig;
 import com.github.kristofa.brave.FixedSampleRateTraceFilter;
 import com.github.kristofa.brave.ServerSpanThreadBinderConfig;
+import com.github.kristofa.brave.ServerTracer;
 import com.github.kristofa.brave.ServerTracerConfig;
 import com.github.kristofa.brave.SpanCollector;
 import com.github.kristofa.brave.TraceFilter;
@@ -15,16 +28,6 @@ import com.github.kristofa.brave.client.ClientResponseInterceptor;
 import com.github.kristofa.brave.client.spanfilter.SpanNameFilter;
 import com.github.kristofa.brave.zipkin.ZipkinSpanCollector;
 import com.google.common.base.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.List;
 
 /**
  * @author Spencer Gibb
@@ -34,15 +37,15 @@ import java.util.List;
 @ConditionalOnClass(ServerTracerConfig.class)
 @ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.enabled", matchIfMissing = true)
 @Import({ AnnotationSubmitterConfig.class, ClientTracerConfig.class,
-		EndPointSubmitterConfig.class, ServerSpanThreadBinderConfig.class,
-		ServerTracerConfig.class })
+	EndPointSubmitterConfig.class, ServerSpanThreadBinderConfig.class,
+	ServerTracerConfig.class })
 public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
 	public SpanCollector spanCollector() {
-        return new ZipkinSpanCollector(zipkinProperties().getHost(),
-                zipkinProperties().getPort());
+		return new ZipkinSpanCollector(zipkinProperties().getHost(), zipkinProperties()
+				.getPort());
 	}
 
 	@Bean
@@ -61,6 +64,18 @@ public class ZipkinAutoConfiguration {
 		return new TraceFilters(traceFilters);
 	}
 
+	@Bean
+	@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", matchIfMissing = true)
+	public ZipkinSpanListener zipkinTrace(ServerTracer serverTracer) {
+		return new ZipkinSpanListener(serverTracer);
+	}
+
+	@Bean
+	@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", havingValue = "false")
+	public SleuthTracer sleuthTracer(SpanCollector spanCollector) {
+		return new SleuthTracer(spanCollector);
+	}
+
 	@Configuration
 	protected static class InterceptorConfig {
 
@@ -73,14 +88,14 @@ public class ZipkinAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		public ClientRequestInterceptor clientRequestInterceptor() {
-			return new ClientRequestInterceptor(clientTracer,
-					Optional.fromNullable(spanNameFilter));
+			return new ClientRequestInterceptor(this.clientTracer,
+					Optional.fromNullable(this.spanNameFilter));
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
 		public ClientResponseInterceptor clientResponseInterceptor() {
-			return new ClientResponseInterceptor(clientTracer);
+			return new ClientResponseInterceptor(this.clientTracer);
 		}
 	}
 }

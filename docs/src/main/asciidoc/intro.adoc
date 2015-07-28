@@ -1,5 +1,3 @@
-TODO: intro Spring Cloud Sleuth
-
 === Terminology
 
 Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.

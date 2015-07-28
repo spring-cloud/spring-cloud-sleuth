@@ -17,6 +17,7 @@ import org.springframework.cloud.sleuth.event.SpanStartedEvent;
 import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.trace.DefaultTrace;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 

@@ -27,8 +27,6 @@ import org.springframework.cloud.sleuth.Trace;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 /**
  * Registers beans that add tracing to requests
@@ -55,41 +53,15 @@ public class TraceWebAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public TraceWebAspect traceWebAspect() {
-		return new TraceWebAspect(trace);
+		return new TraceWebAspect(this.trace);
 	}
-
-	//TODO: I don't think TraceHandlerInterceptor is needed with TraceFilter
-	/*@Bean
-	@ConditionalOnMissingBean
-	public TraceHandlerInterceptor traceHandlerInterceptor() {
-		return new TraceHandlerInterceptor(trace);
-	}
-
-	@Bean
-	public WebMvcConfigurerAdapter webMvcConfigurerAdapter(
-			TraceHandlerInterceptor handlerInterceptor) {
-		return new TraceWebConfigurer(handlerInterceptor);
-	}
-
-	protected static class TraceWebConfigurer extends WebMvcConfigurerAdapter {
-		private TraceHandlerInterceptor interceptor;
-
-		public TraceWebConfigurer(TraceHandlerInterceptor interceptor) {
-			this.interceptor = interceptor;
-		}
-
-		@Override
-		public void addInterceptors(InterceptorRegistry registry) {
-			registry.addInterceptor(interceptor).addPathPatterns("/**");
-		}
-	}*/
 
 	@Bean
 	@ConditionalOnMissingBean
 	public FilterRegistrationBean traceFilter() {
-		Pattern pattern = StringUtils.hasText(skipPattern) ? Pattern.compile(skipPattern)
+		Pattern pattern = StringUtils.hasText(this.skipPattern) ? Pattern.compile(this.skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
-		return new FilterRegistrationBean(new TraceFilter(trace, pattern));
+		return new FilterRegistrationBean(new TraceFilter(this.trace, pattern));
 	}
 
 }

@@ -1,7 +1,11 @@
 package org.springframework.cloud.sleuth.sample;
 
+import java.util.Random;
+import java.util.concurrent.Callable;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
@@ -14,16 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Random;
-import java.util.concurrent.Callable;
-
 /**
  * @author Spencer Gibb
  */
 @Slf4j
 @RestController
 class SampleController implements
-		ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@Autowired
 	private RestTemplate restTemplate;
 	@Autowired
@@ -36,7 +37,7 @@ class SampleController implements
 		final Random random = new Random();
 		Thread.sleep(random.nextInt(1000));
 
-		String s = restTemplate.getForObject("http://localhost:" + port + "/hi2",
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/hi2",
 				String.class);
 		return "hi/" + s;
 	}
@@ -64,19 +65,19 @@ class SampleController implements
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		TraceScope scope = trace.startSpan("customTraceEndpoint", new AlwaysSampler());
+		TraceScope scope = this.trace.startSpan("customTraceEndpoint", new AlwaysSampler());
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
 
-		String s = restTemplate.getForObject("http://localhost:" + port + "/hi2", String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/hi2", String.class);
 		scope.close();
 		return "hi/" + s;
 	}
 
 	@Override
 	public void onApplicationEvent(EmbeddedServletContainerInitializedEvent event) {
-		port = event.getEmbeddedServletContainer().getPort();
+		this.port = event.getEmbeddedServletContainer().getPort();
 	}
 }

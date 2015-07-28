@@ -30,7 +30,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceInfo;
 import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 /**
  * Filter that takes the value of the {@link Trace#SPAN_ID_NAME} and
@@ -44,13 +47,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * @author Marcin Grzejszczak, 4financeIT
  * @author Spencer Gibb
  */
+@Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class TraceFilter extends OncePerRequestFilter {
 
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern
-			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html");
+			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico");
 
 	private final Trace trace;
 	private final Pattern skipPattern;
+	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Trace trace) {
 		this.trace = trace;
@@ -65,26 +70,27 @@ public class TraceFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request,
 			HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
+					throws ServletException, IOException {
 
 		String uri = hasText(request.getRequestURI()) ? request.getRequestURI() : "";
-		boolean skip = skipPattern.matcher(uri).matches();
+		boolean skip = this.skipPattern.matcher(uri).matches();
 
 		TraceScope traceScope = null;
 		if (!skip) {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
+			String name = this.urlPathHelper.getPathWithinApplication(request);
 			if (hasText(spanId) && hasText(traceId)) {
 
 				TraceInfo traceInfo = new TraceInfo(traceId, spanId);
 				// TODO: trace description?
-				traceScope = trace.startSpan("traceFilter", traceInfo);
+				traceScope = this.trace.startSpan(name, traceInfo);
 				// Send new span id back
 				addToResponseIfNotPresent(response, SPAN_ID_NAME, traceScope.getSpan()
 						.getSpanId());
 			}
 			else {
-				traceScope = trace.startSpan("traceFilter");
+				traceScope = this.trace.startSpan(name);
 			}
 		}
 

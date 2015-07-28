@@ -1,0 +1,22 @@
+cassandra:
+  image: itszero/zipkin-cassandra
+collector:
+  image: itszero/zipkin-collector
+  expose:
+    - 9410
+  ports:
+    - 9410:9410
+  links:
+    - cassandra:db
+query:
+  image: itszero/zipkin-query
+  expose:
+    - 9411
+  links:
+    - cassandra:db
+web:
+  image: itszero/zipkin-web
+  links:
+    - query
+  ports:
+    - 8082:8080
