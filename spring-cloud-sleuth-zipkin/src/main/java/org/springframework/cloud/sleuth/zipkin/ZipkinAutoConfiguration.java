@@ -7,9 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.IdGenerator;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -67,8 +64,8 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	public ZipkinTrace zipkinTrace(ServerTracer serverTracer, Sampler<?> sampler, IdGenerator idGenerator, ApplicationEventPublisher publisher) {
-		return new ZipkinTrace(serverTracer, sampler, idGenerator, publisher);
+	public ZipkinSpanListener zipkinTrace(ServerTracer serverTracer) {
+		return new ZipkinSpanListener(serverTracer);
 	}
 
 	@Configuration

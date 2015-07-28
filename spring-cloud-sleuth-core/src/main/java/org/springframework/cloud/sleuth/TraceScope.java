@@ -1,8 +1,6 @@
 package org.springframework.cloud.sleuth;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.List;
 
 import lombok.SneakyThrows;
 import lombok.Value;
@@ -32,11 +30,6 @@ public class TraceScope implements Closeable {
 	 * the span that was "current" before this scope was entered
 	 */
 	private final Span savedSpan;
-
-	/**
-	 * List of callbacks to run on close.
-	 */
-	private List<Runnable> callbacks = new ArrayList<Runnable>();
 
 	@NonFinal
 	private boolean detached = false;
@@ -73,12 +66,6 @@ public class TraceScope implements Closeable {
 		return this.span;
 	}
 
-	public void register(Runnable callback) {
-		if (!this.callbacks .contains(callback)) {
-			this.callbacks.add(callback);
-		}
-	}
-
 	@Override
 	@SneakyThrows
 	public void close() {
@@ -86,13 +73,6 @@ public class TraceScope implements Closeable {
 			return;
 		}
 		this.detached = true;
-		for (Runnable callback : this.callbacks) {
-			try {
-				callback.run();
-			} catch (Throwable e) {
-				log.error("Error with callback on close", e);
-			}
-		}
 		Span cur = TraceContextHolder.getCurrentSpan();
 		if (cur != this.span) {
 			ExceptionUtils.error("Tried to close trace span " + this.span + " but " +

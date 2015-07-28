@@ -3,12 +3,10 @@ package org.springframework.cloud.sleuth.zipkin;
 import lombok.Data;
 import lombok.extern.apachecommons.CommonsLog;
 
-import org.springframework.cloud.sleuth.IdGenerator;
-import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceScope;
-import org.springframework.cloud.sleuth.trace.DefaultTrace;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.cloud.sleuth.event.SpanStartedEvent;
+import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.context.event.EventListener;
 
 import com.github.kristofa.brave.ServerTracer;
 
@@ -16,30 +14,25 @@ import com.github.kristofa.brave.ServerTracer;
  * @author Spencer Gibb
  */
 @CommonsLog
-public class ZipkinTrace extends DefaultTrace {
+public class ZipkinSpanListener {
 
 	private final ServerTracer serverTracer;
 
-	@Override
-	protected TraceScope doStart(final Span span) {
-		preTrace(span);
-		TraceScope scope = super.doStart(span);
-		scope.register(new Runnable() {
-			@Override
-			public void run() {
-				postTrace(span);
-			}
-		});
-		return scope;
-	}
-
-	public ZipkinTrace(ServerTracer serverTracer, Sampler<?> defaultSampler,
-			IdGenerator idGenerator, ApplicationEventPublisher publisher) {
-		super(defaultSampler, idGenerator, publisher);
+	public ZipkinSpanListener(ServerTracer serverTracer) {
 		this.serverTracer = serverTracer;
 	}
 
-	public void preTrace(Span context) {
+	@EventListener
+	public void start(SpanStartedEvent event) {
+		preTrace(event.getSpan());
+	}
+
+	@EventListener
+	public void start(SpanStoppedEvent event) {
+		postTrace(event.getSpan());
+	}
+
+	protected void preTrace(Span context) {
 		final TraceData traceData = getTraceData(context);
 		this.serverTracer.clearCurrentSpan();
 
@@ -79,7 +72,7 @@ public class ZipkinTrace extends DefaultTrace {
 		return context.getName();
 	}
 
-	public void postTrace(Span context) {
+	protected void postTrace(Span context) {
 		// We can submit this in any case. When server state is not set or
 		// we should not trace this request nothing will happen.
 		log.debug("Sending server send.");
