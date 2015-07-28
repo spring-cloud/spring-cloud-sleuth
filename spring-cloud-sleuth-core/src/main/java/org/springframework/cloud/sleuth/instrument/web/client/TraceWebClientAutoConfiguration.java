@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.Trace;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -20,8 +21,8 @@ public class TraceWebClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceRestTemplateInterceptor traceRestTemplateInterceptor() {
-		return new TraceRestTemplateInterceptor();
+	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(Trace trace) {
+		return new TraceRestTemplateInterceptor(trace);
 	}
 
 	@Bean

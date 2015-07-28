@@ -12,6 +12,11 @@ import java.util.Map;
  * parents.<p/>
  */
 public interface Span {
+	enum Type {
+		CLIENT,
+		SERVER
+	}
+
 	/**
 	 * The block has completed, stop the clock
 	 */
@@ -44,6 +49,11 @@ public interface Span {
 	 * Will never be null.
 	 */
 	String getName();
+
+	/**
+	 * @return the type of this span
+	 */
+	Type getType();
 
 	/**
 	 * A pseudo-unique (random) number assigned to this span instance.<p/>

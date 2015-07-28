@@ -38,7 +38,7 @@ public class DefaultTraceTests {
 		DefaultTrace trace = new DefaultTrace(new IsTracingSampler(),
 				new RandomUuidGenerator(), publisher);
 
-		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
+		TraceScope scope = trace.startSpan(Span.Type.SERVER, CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
 			importantWork1(trace);
 		}
@@ -93,7 +93,7 @@ public class DefaultTraceTests {
 	}
 
 	private void importantWork1(Trace trace) {
-		TraceScope cur = trace.startSpan(IMPORTANT_WORK_1);
+		TraceScope cur = trace.startSpan(Span.Type.CLIENT, IMPORTANT_WORK_1);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
 			importantWork2(trace);
@@ -107,7 +107,7 @@ public class DefaultTraceTests {
 	}
 
 	private void importantWork2(Trace trace) {
-		TraceScope cur = trace.startSpan(IMPORTANT_WORK_2);
+		TraceScope cur = trace.startSpan(Span.Type.CLIENT, IMPORTANT_WORK_2);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
 		}

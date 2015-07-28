@@ -37,8 +37,8 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public TraceScope startSpan(String name) {
-		return this.startSpan(name, this.defaultSampler);
+	public TraceScope startSpan(Span.Type type, String name) {
+		return this.startSpan(type, name, this.defaultSampler);
 	}
 
 	@Override
@@ -47,6 +47,7 @@ public class DefaultTrace implements Trace {
 		MilliSpan span = MilliSpan.builder()
 				.begin(System.currentTimeMillis())
 				.name(name)
+				.type(tinfo.getType())
 				.traceId(tinfo.getTraceId())
 				.spanId(this.idGenerator.create())
 				.parent(tinfo.getSpanId())
@@ -55,9 +56,9 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public TraceScope startSpan(String name, Span parent) {
+	public TraceScope startSpan(Span.Type type, String name, Span parent) {
 		if (parent == null) {
-			return startSpan(name);
+			return startSpan(type, name);
 		}
 		Span currentSpan = getCurrentSpan();
 		if ((currentSpan != null) && (currentSpan != parent)) {
@@ -66,41 +67,43 @@ public class DefaultTrace implements Trace {
 					"with parent " + parent.toString() + ", but there is already a " +
 					"currentSpan " + currentSpan);
 		}
-		return doStart(createChild(parent, name));
+		return doStart(createChild(type, parent, name));
 	}
 
 	@Override
-	public <T> TraceScope startSpan(String name, Sampler<T> s) {
-		return startSpan(name, s, null);
+	public <T> TraceScope startSpan(Span.Type type, String name, Sampler<T> s) {
+		return startSpan(type, name, s, null);
 	}
 
 	@Override
-	public <T> TraceScope startSpan(String name, Sampler<T> s, T info) {
+	public <T> TraceScope startSpan(Span.Type type, String name, Sampler<T> s, T info) {
 		Span span = null;
 		if (TraceContextHolder.isTracing() || s.next(info)) {
-			span = createNew(name);
+			span = createNew(type, name);
 		}
 		return doStart(span);
 	}
 
-	protected Span createNew(String name) {
+	protected Span createNew(Span.Type type, String name) {
 		Span parent = getCurrentSpan();
 		if (parent == null) {
 			return MilliSpan.builder()
 					.begin(System.currentTimeMillis())
 					.name(name)
+					.type(type)
 					.traceId(this.idGenerator.create())
 					.spanId(this.idGenerator.create())
 					.build();
 		} else {
-			return createChild(parent, name);
+			return createChild(type, parent, name);
 		}
 	}
 
-	protected Span createChild(Span parent, String childname) {
+	protected Span createChild(Span.Type type, Span parent, String childname) {
 		return MilliSpan.builder()
 				.begin(System.currentTimeMillis())
 				.name(childname)
+				.type(type)
 				.traceId(parent.getTraceId())
 				.parent(parent.getSpanId())
 				.spanId(this.idGenerator.create())
@@ -133,6 +136,14 @@ public class DefaultTrace implements Trace {
 		Span s = getCurrentSpan();
 		if (s != null) {
 			s.addKVAnnotation(key, value);
+		}
+	}
+
+	@Override
+	public void addTimelineAnnotation(String msg) {
+		Span s = getCurrentSpan();
+		if (s != null) {
+			s.addTimelineAnnotation(msg);
 		}
 	}
 

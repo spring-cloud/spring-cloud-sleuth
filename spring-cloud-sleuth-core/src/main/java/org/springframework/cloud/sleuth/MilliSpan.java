@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -20,6 +21,8 @@ public class MilliSpan implements Span {
 	@NonFinal
 	private long end = 0;
 	private String name;
+	@NonNull
+	private Type type;
 	private String traceId;
 	@Singular
 	private List<String> parents;

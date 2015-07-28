@@ -21,7 +21,9 @@ import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan
 import static org.springframework.cloud.sleuth.TraceContextHolder.isTracing;
 
 import java.io.IOException;
+import java.util.concurrent.Callable;
 
+import lombok.SneakyThrows;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -40,12 +42,24 @@ import org.springframework.http.client.ClientHttpResponse;
  */
 public class TraceRestTemplateInterceptor implements ClientHttpRequestInterceptor {
 
+	private final Trace trace;
+
+	public TraceRestTemplateInterceptor(Trace trace) {
+		this.trace = trace;
+	}
+
 	@Override
-	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-			ClientHttpRequestExecution execution) throws IOException {
-		setHeader(request, SPAN_ID_NAME, getCurrentSpan().getSpanId());
-		setHeader(request, TRACE_ID_NAME, getCurrentSpan().getTraceId());
-		return execution.execute(request, body);
+	@SneakyThrows
+	public ClientHttpResponse intercept(final HttpRequest request, final byte[] body,
+			final ClientHttpRequestExecution execution) throws IOException {
+		return trace.wrap(new Callable<ClientHttpResponse>() {
+			@Override
+			public ClientHttpResponse call() throws Exception {
+				setHeader(request, SPAN_ID_NAME, getCurrentSpan().getSpanId());
+				setHeader(request, TRACE_ID_NAME, getCurrentSpan().getTraceId());
+				return execution.execute(request, body);
+			}
+		}).call();
 	}
 
 	public void setHeader(HttpRequest request, String name, String value) {
