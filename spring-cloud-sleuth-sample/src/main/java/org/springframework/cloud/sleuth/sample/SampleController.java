@@ -58,7 +58,9 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@RequestMapping("/hi2")
 	public String hi2() {
 		final Random random = new Random();
-		Thread.sleep(random.nextInt(1000));
+		int millis = random.nextInt(1000);
+		Thread.sleep(millis);
+		this.trace.addKVAnnotation("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
