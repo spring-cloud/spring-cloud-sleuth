@@ -33,6 +33,7 @@ import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 /**
  * Filter that takes the value of the {@link Trace#SPAN_ID_NAME} and
@@ -54,6 +55,7 @@ public class TraceFilter extends OncePerRequestFilter {
 
 	private final Trace trace;
 	private final Pattern skipPattern;
+	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Trace trace) {
 		this.trace = trace;
@@ -77,17 +79,18 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (!skip) {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
+			String name = "traceFilter" + this.urlPathHelper.getPathWithinApplication(request);
 			if (hasText(spanId) && hasText(traceId)) {
 
 				TraceInfo traceInfo = new TraceInfo(traceId, spanId);
 				// TODO: trace description?
-				traceScope = this.trace.startSpan("traceFilter", traceInfo);
+				traceScope = this.trace.startSpan(name, traceInfo);
 				// Send new span id back
 				addToResponseIfNotPresent(response, SPAN_ID_NAME, traceScope.getSpan()
 						.getSpanId());
 			}
 			else {
-				traceScope = this.trace.startSpan("traceFilter");
+				traceScope = this.trace.startSpan(name);
 			}
 		}
 
