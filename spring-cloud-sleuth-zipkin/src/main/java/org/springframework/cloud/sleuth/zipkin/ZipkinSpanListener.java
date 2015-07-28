@@ -34,7 +34,6 @@ public class ZipkinSpanListener {
 
 	protected void preTrace(Span context) {
 		final TraceData traceData = getTraceData(context);
-		this.serverTracer.clearCurrentSpan();
 
 		if (Boolean.FALSE.equals(traceData.getShouldBeSampled())) {
 			this.serverTracer.setStateNoTracing();
