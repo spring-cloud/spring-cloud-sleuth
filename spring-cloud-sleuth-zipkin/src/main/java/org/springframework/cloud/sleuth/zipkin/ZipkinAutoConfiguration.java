@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -64,8 +65,15 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", matchIfMissing = true)
 	public ZipkinSpanListener zipkinTrace(ServerTracer serverTracer) {
 		return new ZipkinSpanListener(serverTracer);
+	}
+
+	@Bean
+	@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", havingValue = "false")
+	public SleuthTracer sleuthTracer(SpanCollector spanCollector) {
+		return new SleuthTracer(spanCollector);
 	}
 
 	@Configuration

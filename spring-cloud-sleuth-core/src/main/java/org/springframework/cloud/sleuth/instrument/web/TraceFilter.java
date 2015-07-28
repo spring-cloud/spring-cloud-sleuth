@@ -51,7 +51,7 @@ import org.springframework.web.util.UrlPathHelper;
 public class TraceFilter extends OncePerRequestFilter {
 
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern
-			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html");
+			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico");
 
 	private final Trace trace;
 	private final Pattern skipPattern;
@@ -79,7 +79,7 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (!skip) {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
-			String name = "traceFilter" + this.urlPathHelper.getPathWithinApplication(request);
+			String name = this.urlPathHelper.getPathWithinApplication(request);
 			if (hasText(spanId) && hasText(traceId)) {
 
 				TraceInfo traceInfo = new TraceInfo(traceId, spanId);

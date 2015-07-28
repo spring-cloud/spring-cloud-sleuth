@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +24,10 @@ public class MilliSpan implements Span {
 	@Singular
 	private List<String> parents;
 	private String spanId;
-	private Map<String, String> kVAnnotations;
+	private Map<String, String> kVAnnotations = new LinkedHashMap<>();
 	private String processId;
 	@Singular
-	private List<TimelineAnnotation> timelineAnnotations;
+	private List<TimelineAnnotation> timelineAnnotations = new ArrayList<>();
 
 	@Override
 	public synchronized void stop() {
