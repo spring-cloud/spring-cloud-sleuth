@@ -25,13 +25,13 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public Sampler<?> defaultSampler() {
+	public Sampler<Void> defaultSampler() {
 		return new IsTracingSampler();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public Trace trace(Sampler<?> sampler, IdGenerator idGenerator,
+	public Trace trace(Sampler<Void> sampler, IdGenerator idGenerator,
 			ApplicationEventPublisher publisher) {
 		return new DefaultTrace(sampler, idGenerator, publisher);
 	}

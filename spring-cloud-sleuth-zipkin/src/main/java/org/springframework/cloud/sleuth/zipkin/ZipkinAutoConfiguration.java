@@ -17,7 +17,6 @@ import com.github.kristofa.brave.ClientTracerConfig;
 import com.github.kristofa.brave.EndPointSubmitterConfig;
 import com.github.kristofa.brave.FixedSampleRateTraceFilter;
 import com.github.kristofa.brave.ServerSpanThreadBinderConfig;
-import com.github.kristofa.brave.ServerTracer;
 import com.github.kristofa.brave.ServerTracerConfig;
 import com.github.kristofa.brave.SpanCollector;
 import com.github.kristofa.brave.TraceFilter;
@@ -41,8 +40,8 @@ import com.google.common.base.Optional;
 public class ZipkinAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean
-	public SpanCollector spanCollector() {
+	@ConditionalOnMissingBean(SpanCollector.class)
+	public ZipkinSpanCollector spanCollector() {
 		return new ZipkinSpanCollector(zipkinProperties().getHost(), zipkinProperties()
 				.getPort());
 	}
@@ -63,16 +62,16 @@ public class ZipkinAutoConfiguration {
 		return new TraceFilters(traceFilters);
 	}
 
-	@Bean
-	@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", matchIfMissing = true)
-	public ZipkinSpanListener zipkinTrace(ServerTracer serverTracer) {
-		return new ZipkinSpanListener(serverTracer);
-	}
+	//	@Bean
+	//	@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", matchIfMissing = true)
+	//	public ZipkinSpanListener zipkinTrace(ServerTracer serverTracer, ClientTracer clientTracer) {
+	//		return new ZipkinSpanListener(serverTracer, clientTracer);
+	//	}
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", havingValue = "false")
-	public SleuthTracer sleuthTracer(SpanCollector spanCollector) {
-		return new SleuthTracer(spanCollector);
+	// @ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", havingValue = "false")
+	public ZipkinSpanListener sleuthTracer(SpanCollector spanCollector) {
+		return new ZipkinSpanListener(spanCollector);
 	}
 
 	@Configuration

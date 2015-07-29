@@ -13,12 +13,8 @@ import org.springframework.context.annotation.Configuration;
 public class SleuthSlf4jAutoConfiguration {
 
 	@Bean
-	public Slf4jSpanStartedListener slf4jSpanStartedListener() {
-		return new Slf4jSpanStartedListener();
+	public Slf4jSpanListener slf4jSpanStartedListener() {
+		return new Slf4jSpanListener();
 	}
 
-	@Bean
-	public Slf4jSpanStoppedListener slf4jSpanStoppedListener() {
-		return new Slf4jSpanStoppedListener();
-	}
 }

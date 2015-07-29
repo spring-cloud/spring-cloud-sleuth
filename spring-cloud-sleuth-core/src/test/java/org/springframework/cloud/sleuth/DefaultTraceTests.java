@@ -2,8 +2,8 @@ package org.springframework.cloud.sleuth;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,7 +38,7 @@ public class DefaultTraceTests {
 		DefaultTrace trace = new DefaultTrace(new IsTracingSampler(),
 				new RandomUuidGenerator(), publisher);
 
-		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
+		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
 		try {
 			importantWork1(trace);
 		}

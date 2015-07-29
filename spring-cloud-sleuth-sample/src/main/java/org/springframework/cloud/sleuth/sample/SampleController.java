@@ -67,7 +67,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		TraceScope scope = this.trace.startSpan("customTraceEndpoint", new AlwaysSampler());
+		TraceScope scope = this.trace.startSpan("customTraceEndpoint", new AlwaysSampler(), null);
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);

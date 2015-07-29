@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.sample;
 
-import com.github.kristofa.brave.LoggingSpanCollectorImpl;
-import com.github.kristofa.brave.SpanCollector;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
@@ -36,6 +34,10 @@ public class SampleApplication {
 		SpringApplication.run(SampleApplication.class, args);
 	}
 
-	//@Bean public SpanCollector spanCollector() { return new LoggingSpanCollectorImpl(); }
+	// Use this for debugging (or if there is no Zipkin collector running on port 9410)
+	// @Bean
+	// public SpanCollector spanCollector() {
+	// return new LoggingSpanCollectorImpl();
+	// }
 
 }

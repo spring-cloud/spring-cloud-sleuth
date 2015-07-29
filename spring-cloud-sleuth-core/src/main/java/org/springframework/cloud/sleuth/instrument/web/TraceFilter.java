@@ -15,7 +15,10 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -27,8 +30,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.cloud.sleuth.MilliSpan;
+import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceInfo;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -72,19 +76,32 @@ public class TraceFilter extends OncePerRequestFilter {
 			HttpServletResponse response, FilterChain filterChain)
 					throws ServletException, IOException {
 
-		String uri = hasText(request.getRequestURI()) ? request.getRequestURI() : "";
+		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches();
 
 		TraceScope traceScope = null;
 		if (!skip) {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
-			String name = this.urlPathHelper.getPathWithinApplication(request);
+			String name = "http" + uri;
 			if (hasText(spanId) && hasText(traceId)) {
 
-				TraceInfo traceInfo = new TraceInfo(traceId, spanId);
+				MilliSpanBuilder traceInfo = MilliSpan.builder().traceId(traceId).spanId(spanId);
+				String parentId = getHeader(request, response, PARENT_ID_NAME);
+				String processId = getHeader(request, response, PROCESS_ID_NAME);
+				String parentName = getHeader(request, response, SPAN_NAME_NAME);
+				if (parentName!=null) {
+					traceInfo.name(parentName);
+				}
+				if (processId!=null) {
+					traceInfo.processId(processId);
+				}
+				if (parentId!=null) {
+					traceInfo.parent(parentId);
+				}
+
 				// TODO: trace description?
-				traceScope = this.trace.startSpan(name, traceInfo);
+				traceScope = this.trace.startSpan(name, traceInfo.build());
 				// Send new span id back
 				addToResponseIfNotPresent(response, SPAN_ID_NAME, traceScope.getSpan()
 						.getSpanId());

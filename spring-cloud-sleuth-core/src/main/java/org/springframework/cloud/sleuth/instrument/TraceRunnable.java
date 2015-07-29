@@ -28,18 +28,18 @@ public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 
 	@Override
 	public void run() {
-		if (this.parent != null) {
+		if (this.getParent() != null) {
 			TraceScope scope = startSpan();
 
 			try {
-				this.delagate.run();
+				this.getDelegate().run();
 			}
 			finally {
 				scope.close();
 			}
 		}
 		else {
-			this.delagate.run();
+			this.getDelegate().run();
 		}
 	}
 }
