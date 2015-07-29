@@ -39,26 +39,27 @@ public class TraceScope implements Closeable {
 	}
 
 	/**
-	 * Remove this span as the current thread, but don't stop it yet or
-	 * send it for collection. This is useful if the span object is then
-	 * passed to another thread for use with Trace.continueTrace().
+	 * Remove this span as the current thread, but don't stop it yet or send it for
+	 * collection. This is useful if the span object is then passed to another thread for
+	 * use with Trace.continueTrace().
 	 *
 	 * @return the same Span object
 	 */
 	public SpanIdentifiers detach() {
 		if (this.detached) {
-			ExceptionUtils.error("Tried to detach trace span " + this.span + " but " +
-					"it has already been detached.");
+			ExceptionUtils.error("Tried to detach trace span " + this.span + " but "
+					+ "it has already been detached.");
 		}
 		this.detached = true;
 
 		SpanIdentifiers cur = TraceContextHolder.getCurrentSpan();
 		if (cur != this.span) {
-			ExceptionUtils.error("Tried to detach trace span " + this.span + " but " +
-					"it is not the current span for the " +
-					Thread.currentThread().getName() + " thread.  You have " +
-					"probably forgotten to close or detach " + cur);
-		} else {
+			ExceptionUtils.error("Tried to detach trace span " + this.span + " but "
+					+ "it is not the current span for the "
+					+ Thread.currentThread().getName() + " thread.  You have "
+					+ "probably forgotten to close or detach " + cur);
+		}
+		else {
 			TraceContextHolder.setCurrentSpan(this.savedSpan);
 		}
 		return this.span;
@@ -73,13 +74,19 @@ public class TraceScope implements Closeable {
 		this.detached = true;
 		SpanIdentifiers cur = TraceContextHolder.getCurrentSpan();
 		if (cur != this.span) {
-			ExceptionUtils.error("Tried to close trace span " + this.span + " but " +
-					"it is not the current span for the " +
-					Thread.currentThread().getName() + " thread.  You have " +
-					"probably forgotten to close or detach " + cur);
-		} else {
+			ExceptionUtils.error("Tried to close trace span " + this.span + " but "
+					+ "it is not the current span for the "
+					+ Thread.currentThread().getName() + " thread.  You have "
+					+ "probably forgotten to close or detach " + cur);
+		}
+		else {
 			this.span.stop();
-			this.publisher.publishEvent(new SpanStoppedEvent(this, this.span));
+			if (this.savedSpan != null && this.span.getParents().contains(this.savedSpan.getSpanId())) {
+				this.publisher.publishEvent(new SpanStoppedEvent(this, this.savedSpan, this.span));
+			}
+			else {
+				this.publisher.publishEvent(new SpanStoppedEvent(this, this.span));
+			}
 			TraceContextHolder.setCurrentSpan(this.savedSpan);
 		}
 	}

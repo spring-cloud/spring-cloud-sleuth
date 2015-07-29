@@ -41,8 +41,8 @@ import com.google.common.base.Optional;
 public class ZipkinAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean
-	public SpanCollector spanCollector() {
+	@ConditionalOnMissingBean(SpanCollector.class)
+	public ZipkinSpanCollector spanCollector() {
 		return new ZipkinSpanCollector(zipkinProperties().getHost(), zipkinProperties()
 				.getPort());
 	}

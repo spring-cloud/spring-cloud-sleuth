@@ -47,7 +47,7 @@ public class DefaultTrace implements Trace {
 					+ " tried to start a new Span " + "with parent " + parent.toString()
 					+ ", but there is already a " + "currentSpan " + currentSpan);
 		}
-		return doStart(createChild(parent, name));
+		return continueSpan(createChild(parent, name));
 	}
 
 	@Override
@@ -61,28 +61,25 @@ public class DefaultTrace implements Trace {
 		if (TraceContextHolder.isTracing() || s.next(info)) {
 			span = createChild(getCurrentSpan(), name);
 		}
-		return doStart(span);
+		return continueSpan(span);
 	}
 
 	protected Span createChild(SpanIdentifiers parent, String name) {
 		if (parent == null) {
-			return MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
+			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(this.idGenerator.create()).spanId(this.idGenerator.create())
 					.build();
+			this.publisher.publishEvent(new SpanStartedEvent(this, span));
+			return span;
 		}
 		else {
-			return MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
+			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(parent.getTraceId()).parent(parent.getSpanId())
 					.spanId(this.idGenerator.create()).processId(parent.getProcessId())
 					.build();
+			this.publisher.publishEvent(new SpanStartedEvent(this, parent, span));
+			return span;
 		}
-	}
-
-	protected TraceScope doStart(Span span) {
-		if (span != null) {
-			this.publisher.publishEvent(new SpanStartedEvent(this, span));
-		}
-		return continueSpan(span);
 	}
 
 	@Override

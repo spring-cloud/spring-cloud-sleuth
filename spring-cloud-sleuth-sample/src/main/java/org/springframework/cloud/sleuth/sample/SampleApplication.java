@@ -34,6 +34,10 @@ public class SampleApplication {
 		SpringApplication.run(SampleApplication.class, args);
 	}
 
-	//@Bean public SpanCollector spanCollector() { return new LoggingSpanCollectorImpl(); }
+	// Use this for debugging (or if there is no Zipkin collector running on port 9410)
+	//	@Bean
+	//	public SpanCollector spanCollector() {
+	//		return new LoggingSpanCollectorImpl();
+	//	}
 
 }

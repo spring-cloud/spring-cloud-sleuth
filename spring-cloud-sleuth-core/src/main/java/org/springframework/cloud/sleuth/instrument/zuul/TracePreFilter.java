@@ -7,7 +7,7 @@ import static org.springframework.util.StringUtils.hasText;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceInfo;
+import org.springframework.cloud.sleuth.BasicSpanIdentifiers;
 import org.springframework.cloud.sleuth.TraceScope;
 
 import com.netflix.zuul.ZuulFilter;
@@ -49,7 +49,7 @@ public class TracePreFilter extends ZuulFilter {
 		TraceScope traceScope = null;
 		if (hasText(spanId) && hasText(traceId)) {
 
-			TraceInfo traceInfo = new TraceInfo(traceId, spanId);
+			BasicSpanIdentifiers traceInfo = new BasicSpanIdentifiers(traceId, spanId);
 			// TODO: trace description?
 			traceScope = trace.startSpan("traceZuulFilter", traceInfo);
 		}

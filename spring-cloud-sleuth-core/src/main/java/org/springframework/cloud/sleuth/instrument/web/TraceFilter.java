@@ -27,8 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.cloud.sleuth.BasicSpanIdentifiers;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceInfo;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -72,17 +72,17 @@ public class TraceFilter extends OncePerRequestFilter {
 			HttpServletResponse response, FilterChain filterChain)
 					throws ServletException, IOException {
 
-		String uri = hasText(request.getRequestURI()) ? request.getRequestURI() : "";
+		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches();
 
 		TraceScope traceScope = null;
 		if (!skip) {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
-			String name = "http" + this.urlPathHelper.getPathWithinApplication(request);
+			String name = "http" + uri;
 			if (hasText(spanId) && hasText(traceId)) {
 
-				TraceInfo traceInfo = new TraceInfo(traceId, spanId);
+				BasicSpanIdentifiers traceInfo = new BasicSpanIdentifiers(traceId, spanId);
 				// TODO: trace description?
 				traceScope = this.trace.startSpan(name, traceInfo);
 				// Send new span id back

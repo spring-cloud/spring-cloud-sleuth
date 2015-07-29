@@ -3,8 +3,8 @@ package org.springframework.cloud.sleuth.zipkin;
 import lombok.Data;
 import lombok.extern.apachecommons.CommonsLog;
 
-import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.cloud.sleuth.event.SpanStartedEvent;
 import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
 import org.springframework.context.event.EventListener;
@@ -25,23 +25,20 @@ public class ZipkinSpanListener {
 
 	@EventListener
 	public void start(SpanStartedEvent event) {
-		preTrace(event.getSpan());
+		preTrace(event.getParent(), event.getSpan());
 	}
 
 	@EventListener
-	public void start(SpanStoppedEvent event) {
-		postTrace(event.getSpan());
+	public void stop(SpanStoppedEvent event) {
+		postTrace(event.getParent(), event.getSpan());
 	}
 
-	protected void preTrace(Span context) {
-		final TraceData traceData = getTraceData(context);
-
-		final String spanName = getSpanName(context, traceData);
-		if (traceData.getTraceId() != null && traceData.getSpanId() != null) {
-
+	protected void preTrace(SpanIdentifiers parent, Span span) {
+		String spanName = span.getName();
+		if (span.getTraceId() != null && span.getSpanId() != null) {
 			log.debug("Received span information as part of request.");
-			this.serverTracer.setStateCurrentTrace(traceData.getTraceId(),
-					traceData.getSpanId(), traceData.getParentSpanId(), spanName);
+			this.serverTracer.setStateCurrentTrace(hash(span.getTraceId()),
+					getSpanId(span), getSpanId(parent), spanName);
 		}
 		else {
 			log.debug("Received no span state.");
@@ -50,22 +47,15 @@ public class ZipkinSpanListener {
 		this.serverTracer.setServerReceived();
 	}
 
-	protected TraceData getTraceData(Span context) {
-		TraceData trace = new TraceData();
-		trace.setTraceId(hash(context.getTraceId()));
-		trace.setSpanId(hash(context.getSpanId()));
-		trace.setSpanName(context.getName());
-		if (!context.getParents().isEmpty()) {
-			trace.setParentSpanId(hash(context.getParents().iterator().next()));
-		}
-		return trace;
+	private Long getSpanId(SpanIdentifiers span) {
+		return span == null ? null : hash(span.getSpanId());
 	}
 
 	protected String getSpanName(Span context, TraceData traceData) {
 		return context.getName();
 	}
 
-	protected void postTrace(SpanIdentifiers context) {
+	protected void postTrace(SpanIdentifiers parent, Span span) {
 		// We can submit this in any case. When server state is not set or
 		// we should not trace this request nothing will happen.
 		log.debug("Sending server send.");
