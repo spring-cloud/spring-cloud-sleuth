@@ -9,7 +9,6 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.NullScope;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
@@ -37,15 +36,18 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public TraceScope startSpan(String name, SpanIdentifiers parent) {
+	public TraceScope startSpan(String name, Span parent) {
 		if (parent == null) {
 			return startSpan(name);
 		}
-		SpanIdentifiers currentSpan = getCurrentSpan();
+		Span currentSpan = getCurrentSpan();
 		if (currentSpan != null && !parent.equals(currentSpan)) {
 			error("HTrace client error: thread " + Thread.currentThread().getName()
 					+ " tried to start a new Span " + "with parent " + parent.toString()
 					+ ", but there is already a " + "currentSpan " + currentSpan);
+		}
+		if (currentSpan==null) {
+			TraceContextHolder.setCurrentSpan(parent);
 		}
 		return continueSpan(createChild(parent, name));
 	}
@@ -64,7 +66,7 @@ public class DefaultTrace implements Trace {
 		return continueSpan(span);
 	}
 
-	protected Span createChild(SpanIdentifiers parent, String name) {
+	protected Span createChild(Span parent, String name) {
 		if (parent == null) {
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(this.idGenerator.create()).spanId(this.idGenerator.create())

@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import org.springframework.cloud.sleuth.SpanIdentifiers;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceScope;
 
@@ -16,15 +16,15 @@ import org.springframework.cloud.sleuth.TraceScope;
 @EqualsAndHashCode(callSuper=false)
 public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Callable<V> {
 
-	public TraceCallable(Trace trace, Callable<V> delagate) {
-		super(trace, delagate);
+	public TraceCallable(Trace trace, Callable<V> delegate) {
+		super(trace, delegate);
 	}
 
-	public TraceCallable(Trace trace, Callable<V> delegate, SpanIdentifiers parent) {
+	public TraceCallable(Trace trace, Callable<V> delegate, Span parent) {
 		super(trace, delegate, parent);
 	}
 
-	public TraceCallable(Trace trace, Callable<V> delegate, SpanIdentifiers parent, String name) {
+	public TraceCallable(Trace trace, Callable<V> delegate, Span parent, String name) {
 		super(trace, delegate, parent, name);
 	}
 

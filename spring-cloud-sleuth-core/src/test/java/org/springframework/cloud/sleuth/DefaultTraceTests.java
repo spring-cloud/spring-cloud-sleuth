@@ -62,15 +62,15 @@ public class DefaultTraceTests {
 
 		assertThat("spans was wrong size", spans.size(), is(NUM_SPANS));
 
-		SpanIdentifiers root = assertSpan(spans, null, CREATE_SIMPLE_TRACE);
-		SpanIdentifiers child = assertSpan(spans, root.getSpanId(), IMPORTANT_WORK_1);
-		SpanIdentifiers grandChild = assertSpan(spans, child.getSpanId(), IMPORTANT_WORK_2);
+		Span root = assertSpan(spans, null, CREATE_SIMPLE_TRACE);
+		Span child = assertSpan(spans, root.getSpanId(), IMPORTANT_WORK_1);
+		Span grandChild = assertSpan(spans, child.getSpanId(), IMPORTANT_WORK_2);
 
 		List<Span> gen4 = findSpans(spans, grandChild.getSpanId());
 		assertThat("gen4 was non-empty", gen4.isEmpty(), is(true));
 	}
 
-	private SpanIdentifiers assertSpan(List<Span> spans, String parentId, String name) {
+	private Span assertSpan(List<Span> spans, String parentId, String name) {
 		List<Span> found = findSpans(spans, parentId);
 		assertThat("more than one span with parentId " + parentId, found.size(), is(1));
 		Span span = found.get(0);

@@ -15,7 +15,7 @@ public final class NullScope extends TraceScope {
 	}
 
 	@Override
-	public SpanIdentifiers detach() {
+	public Span detach() {
 		return null;
 	}
 

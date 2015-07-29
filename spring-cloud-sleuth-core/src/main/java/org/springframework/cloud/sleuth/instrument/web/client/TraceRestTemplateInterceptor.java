@@ -15,22 +15,31 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
 import static org.springframework.cloud.sleuth.TraceContextHolder.isTracing;
 
 import java.io.IOException;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
+import org.springframework.cloud.sleuth.event.ClientSentEvent;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 
 /**
- * Interceptor that verifies whether the trance and span id has been set on the
- * request and sets them if one or both of them are missing.
+ * Interceptor that verifies whether the trance and span id has been set on the request
+ * and sets them if one or both of them are missing.
  *
  * @see org.springframework.web.client.RestTemplate
  * @see Trace
@@ -38,14 +47,47 @@ import org.springframework.http.client.ClientHttpResponse;
  * @author Marcin Grzejszczak, 4financeIT
  * @author Spencer Gibb
  */
-public class TraceRestTemplateInterceptor implements ClientHttpRequestInterceptor {
+public class TraceRestTemplateInterceptor implements ClientHttpRequestInterceptor,
+ApplicationEventPublisherAware {
+
+	private ApplicationEventPublisher publisher;
+
+	@Override
+	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
+		this.publisher = publisher;
+	}
 
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
 		setHeader(request, SPAN_ID_NAME, getCurrentSpan().getSpanId());
 		setHeader(request, TRACE_ID_NAME, getCurrentSpan().getTraceId());
-		return execution.execute(request, body);
+		setHeader(request, SPAN_NAME_NAME, getCurrentSpan().getName());
+		String parentId = getParentId(getCurrentSpan());
+		if (parentId != null) {
+			setHeader(request, PARENT_ID_NAME, parentId);
+		}
+		String processId = getCurrentSpan().getProcessId();
+		if (processId != null) {
+			setHeader(request, PROCESS_ID_NAME, processId);
+		}
+		publish(new ClientSentEvent(this, getCurrentSpan()));
+		try {
+			return execution.execute(request, body);
+		} finally {
+			publish(new ClientReceivedEvent(this, getCurrentSpan()));
+		}
+	}
+
+	private void publish(ApplicationEvent event) {
+		if (this.publisher !=null) {
+			this.publisher.publishEvent(event);
+		}
+	}
+
+	private String getParentId(Span span) {
+		return span.getParents() != null && !span.getParents().isEmpty() ? span
+				.getParents().get(0) : null;
 	}
 
 	public void setHeader(HttpRequest request, String name, String value) {

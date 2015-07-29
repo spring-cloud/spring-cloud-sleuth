@@ -35,8 +35,11 @@ import java.util.concurrent.Callable;
  */
 public interface Trace {
 
-	String SPAN_ID_NAME = "Span-Id";
-	String TRACE_ID_NAME = "Trace-Id";
+	String SPAN_ID_NAME = "X-Span-Id";
+	String TRACE_ID_NAME = "X-Trace-Id";
+	String SPAN_NAME_NAME = "X-Span-Name";
+	String PARENT_ID_NAME = "X-Parent-Id";
+	String PROCESS_ID_NAME = "X-Process-Id";
 
 	/**
 	 * Creates a trace scope wrapping a new span.
@@ -59,7 +62,7 @@ public interface Trace {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	TraceScope startSpan(String name, SpanIdentifiers parent);
+	TraceScope startSpan(String name, Span parent);
 
 	/**
 	 * Start a new span if the sampler allows it or if we are already tracing in this

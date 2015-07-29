@@ -2,7 +2,7 @@ package org.springframework.cloud.sleuth.instrument;
 
 import lombok.Getter;
 
-import org.springframework.cloud.sleuth.SpanIdentifiers;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
@@ -15,18 +15,18 @@ public abstract class TraceDelegate<T> {
 
 	private final Trace trace;
 	private final T delegate;
-	private final SpanIdentifiers parent;
+	private final Span parent;
 	private final String name;
 
 	public TraceDelegate(Trace trace, T delegate) {
 		this(trace, delegate, TraceContextHolder.getCurrentSpan(), null);
 	}
 
-	public TraceDelegate(Trace trace, T delegate, SpanIdentifiers parent) {
+	public TraceDelegate(Trace trace, T delegate, Span parent) {
 		this(trace, delegate, parent, null);
 	}
 
-	public TraceDelegate(Trace trace, T delegate, SpanIdentifiers parent, String name) {
+	public TraceDelegate(Trace trace, T delegate, Span parent, String name) {
 		this.trace = trace;
 		this.delegate = delegate;
 		this.parent = parent;

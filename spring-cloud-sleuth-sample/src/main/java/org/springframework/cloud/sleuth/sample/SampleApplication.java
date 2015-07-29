@@ -35,9 +35,9 @@ public class SampleApplication {
 	}
 
 	// Use this for debugging (or if there is no Zipkin collector running on port 9410)
-	//	@Bean
-	//	public SpanCollector spanCollector() {
-	//		return new LoggingSpanCollectorImpl();
-	//	}
+	// @Bean
+	// public SpanCollector spanCollector() {
+	// return new LoggingSpanCollectorImpl();
+	// }
 
 }

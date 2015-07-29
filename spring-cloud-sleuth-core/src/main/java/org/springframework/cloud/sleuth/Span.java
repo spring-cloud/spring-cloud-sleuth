@@ -11,7 +11,41 @@ import java.util.Map;
  * to keep following the parents of a span until you arrive at a span with no
  * parents.<p/>
  */
-public interface Span extends SpanIdentifiers {
+public interface Span {
+
+	/**
+	 * A human-readable name assigned to this span instance.<p/>
+	 */
+	String getName();
+
+	/**
+	 * A pseudo-unique (random) number assigned to this span instance.<p/>
+	 * <p/>
+	 * The spanId is immutable and cannot be changed.  It is safe to access this
+	 * from multiple threads.
+	 */
+	String getSpanId();
+
+	/**
+	 * A pseudo-unique (random) number assigned to the trace associated with this
+	 * span
+	 */
+	String getTraceId();
+
+	/**
+	 * Return a unique id for the process from which this Span originated.<p/>
+	 * <p/>
+	 * Will never be null.
+	 */
+	String getProcessId();
+
+	/**
+	 * Returns the parent IDs of the span.<p/>
+	 * <p/>
+	 * The collection will be empty if there are no parents.
+	 */
+	List<String> getParents();
+
 	/**
 	 * The block has completed, stop the clock
 	 */
@@ -37,20 +71,6 @@ public interface Span extends SpanIdentifiers {
 	 * Has the span been started and not yet stopped?
 	 */
 	boolean isRunning();
-
-	/**
-	 * Return a textual name of this span.<p/>
-	 * <p/>
-	 * Will never be null.
-	 */
-	String getName();
-
-	/**
-	 * Returns the parent IDs of the span.<p/>
-	 * <p/>
-	 * The collection will be empty if there are no parents.
-	 */
-	List<String> getParents();
 
 	/**
 	 * Add a data annotation associated with this span

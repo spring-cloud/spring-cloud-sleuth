@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import org.springframework.cloud.sleuth.SpanIdentifiers;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
@@ -47,7 +47,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		return new Callable<String>() {
 			@Override
 			public String call() throws Exception {
-				SpanIdentifiers currentSpan = TraceContextHolder.getCurrentSpan();
+				Span currentSpan = TraceContextHolder.getCurrentSpan();
 				return "async hi: "+currentSpan;
 			}
 		};

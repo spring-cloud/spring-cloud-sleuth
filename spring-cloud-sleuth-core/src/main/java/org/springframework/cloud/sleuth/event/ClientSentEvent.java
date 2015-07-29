@@ -14,33 +14,27 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.event;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.context.ApplicationEvent;
 
 /**
  * @author Dave Syer
  *
  */
-public interface SpanIdentifiers {
+@Data
+@EqualsAndHashCode(callSuper = false)
+@SuppressWarnings("serial")
+public class ClientSentEvent extends ApplicationEvent {
 
-	/**
-	 * A pseudo-unique (random) number assigned to this span instance.<p/>
-	 * <p/>
-	 * The spanId is immutable and cannot be changed.  It is safe to access this
-	 * from multiple threads.
-	 */
-	String getSpanId();
+	private final Span span;
 
-	/**
-	 * A pseudo-unique (random) number assigned to the trace associated with this
-	 * span
-	 */
-	String getTraceId();
-
-	/**
-	 * Return a unique id for the process from which this Span originated.<p/>
-	 * <p/>
-	 * Will never be null.
-	 */
-	String getProcessId();
-
+	public ClientSentEvent(Object source, Span span) {
+		super(source);
+		this.span = span;
+	}
 }

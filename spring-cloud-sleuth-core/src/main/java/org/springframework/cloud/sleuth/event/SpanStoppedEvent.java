@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.context.ApplicationEvent;
 
 /**
@@ -16,13 +15,13 @@ import org.springframework.context.ApplicationEvent;
 public class SpanStoppedEvent extends ApplicationEvent {
 
 	private final Span span;
-	private final SpanIdentifiers parent;
+	private final Span parent;
 
 	public SpanStoppedEvent(Object source, Span span) {
 		this(source, null, span);
 	}
 
-	public SpanStoppedEvent(Object source, SpanIdentifiers parent, Span span) {
+	public SpanStoppedEvent(Object source, Span parent, Span span) {
 		super(source);
 		this.parent = parent;
 		this.span = span;
