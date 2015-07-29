@@ -6,10 +6,10 @@ import org.springframework.cloud.sleuth.TraceContextHolder;
 /**
  * @author Spencer Gibb
  */
-public class IsTracingSampler implements Sampler<Object> {
+public class IsTracingSampler implements Sampler<Void> {
 
 	@Override
-	public boolean next(Object info) {
+	public boolean next(Void info) {
 		return TraceContextHolder.getCurrentSpan() != null;
 	}
 }

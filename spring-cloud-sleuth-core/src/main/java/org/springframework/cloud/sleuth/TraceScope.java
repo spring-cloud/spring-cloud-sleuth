@@ -5,7 +5,6 @@ import java.io.Closeable;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.experimental.NonFinal;
-import lombok.extern.apachecommons.CommonsLog;
 
 import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
@@ -16,7 +15,6 @@ import org.springframework.context.ApplicationEventPublisher;
  */
 @Value
 @NonFinal
-@CommonsLog
 public class TraceScope implements Closeable {
 
 	private final ApplicationEventPublisher publisher;
@@ -47,14 +45,14 @@ public class TraceScope implements Closeable {
 	 *
 	 * @return the same Span object
 	 */
-	public Span detach() {
+	public SpanIdentifiers detach() {
 		if (this.detached) {
 			ExceptionUtils.error("Tried to detach trace span " + this.span + " but " +
 					"it has already been detached.");
 		}
 		this.detached = true;
 
-		Span cur = TraceContextHolder.getCurrentSpan();
+		SpanIdentifiers cur = TraceContextHolder.getCurrentSpan();
 		if (cur != this.span) {
 			ExceptionUtils.error("Tried to detach trace span " + this.span + " but " +
 					"it is not the current span for the " +
@@ -73,7 +71,7 @@ public class TraceScope implements Closeable {
 			return;
 		}
 		this.detached = true;
-		Span cur = TraceContextHolder.getCurrentSpan();
+		SpanIdentifiers cur = TraceContextHolder.getCurrentSpan();
 		if (cur != this.span) {
 			ExceptionUtils.error("Tried to close trace span " + this.span + " but " +
 					"it is not the current span for the " +

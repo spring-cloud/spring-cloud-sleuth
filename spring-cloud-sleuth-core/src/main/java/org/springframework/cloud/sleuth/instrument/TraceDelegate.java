@@ -1,6 +1,8 @@
 package org.springframework.cloud.sleuth.instrument;
 
-import org.springframework.cloud.sleuth.Span;
+import lombok.Getter;
+
+import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
@@ -8,24 +10,25 @@ import org.springframework.cloud.sleuth.TraceScope;
 /**
  * @author Spencer Gibb
  */
+@Getter
 public abstract class TraceDelegate<T> {
 
-	protected final Trace trace;
-	protected final T delagate;
-	protected final Span parent;
-	protected final String name;
-	
-	public TraceDelegate(Trace trace, T delagate) {
-		this(trace, delagate, TraceContextHolder.getCurrentSpan(), null);
+	private final Trace trace;
+	private final T delegate;
+	private final SpanIdentifiers parent;
+	private final String name;
+
+	public TraceDelegate(Trace trace, T delegate) {
+		this(trace, delegate, TraceContextHolder.getCurrentSpan(), null);
 	}
 
-	public TraceDelegate(Trace trace, T delagate, Span parent) {
-		this(trace, delagate, parent, null);
+	public TraceDelegate(Trace trace, T delegate, SpanIdentifiers parent) {
+		this(trace, delegate, parent, null);
 	}
 
-	public TraceDelegate(Trace trace, T delagate, Span parent, String name) {
+	public TraceDelegate(Trace trace, T delegate, SpanIdentifiers parent, String name) {
 		this.trace = trace;
-		this.delagate = delagate;
+		this.delegate = delegate;
 		this.parent = parent;
 		this.name = name;
 	}
@@ -35,6 +38,6 @@ public abstract class TraceDelegate<T> {
 	}
 
 	protected String getSpanName() {
-		return this.name == null ? Thread.currentThread().getName() : name;
+		return this.name == null ? Thread.currentThread().getName() : this.name;
 	}
 }

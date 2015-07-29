@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.zipkin;
 import lombok.Data;
 import lombok.extern.apachecommons.CommonsLog;
 
+import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.SpanStartedEvent;
 import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
@@ -64,7 +65,7 @@ public class ZipkinSpanListener {
 		return context.getName();
 	}
 
-	protected void postTrace(Span context) {
+	protected void postTrace(SpanIdentifiers context) {
 		// We can submit this in any case. When server state is not set or
 		// we should not trace this request nothing will happen.
 		log.debug("Sending server send.");

@@ -20,50 +20,50 @@ public class MilliSpan implements Span {
 	@NonFinal
 	private long end = 0;
 	private String name;
-	private String traceId;
+	private final String traceId;
 	@Singular
 	private List<String> parents;
-	private String spanId;
+	private final String spanId;
 	private Map<String, String> kVAnnotations = new LinkedHashMap<>();
-	private String processId;
+	private final String processId;
 	@Singular
 	private List<TimelineAnnotation> timelineAnnotations = new ArrayList<>();
 
 	@Override
 	public synchronized void stop() {
-		if (end == 0) {
-			if (begin == 0) {
-				throw new IllegalStateException("Span for " + name
+		if (this.end == 0) {
+			if (this.begin == 0) {
+				throw new IllegalStateException("Span for " + this.name
 						+ " has not been started");
 			}
-			end = System.currentTimeMillis();
+			this.end = System.currentTimeMillis();
 		}
 	}
 
 	@Override
 	public synchronized long getAccumulatedMillis() {
-		if (begin == 0) {
+		if (this.begin == 0) {
 			return 0;
 		}
-		if (end > 0) {
-			return end - begin;
+		if (this.end > 0) {
+			return this.end - this.begin;
 		}
-		return System.currentTimeMillis() - begin;
+		return System.currentTimeMillis() - this.begin;
 	}
 
 	@Override
 	public synchronized boolean isRunning() {
-		return begin != 0 && end == 0;
+		return this.begin != 0 && this.end == 0;
 	}
 
 	@Override
 	public void addKVAnnotation(String key, String value) {
-		kVAnnotations.put(key, value);
+		this.kVAnnotations.put(key, value);
 	}
 
 	@Override
 	public void addTimelineAnnotation(String msg) {
-		timelineAnnotations.add(new TimelineAnnotation(System.currentTimeMillis(), msg));
+		this.timelineAnnotations.add(new TimelineAnnotation(System.currentTimeMillis(), msg));
 	}
 
 }

@@ -79,7 +79,7 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (!skip) {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
-			String name = this.urlPathHelper.getPathWithinApplication(request);
+			String name = "http" + this.urlPathHelper.getPathWithinApplication(request);
 			if (hasText(spanId) && hasText(traceId)) {
 
 				TraceInfo traceInfo = new TraceInfo(traceId, spanId);

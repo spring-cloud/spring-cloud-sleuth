@@ -9,9 +9,9 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.NullScope;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
-import org.springframework.cloud.sleuth.TraceInfo;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.cloud.sleuth.event.SpanStartedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
@@ -23,13 +23,13 @@ import org.springframework.context.ApplicationEventPublisher;
  */
 public class DefaultTrace implements Trace {
 
-	private final Sampler<?> defaultSampler;
+	private final Sampler<Void> defaultSampler;
 
 	private final IdGenerator idGenerator;
 
 	private final ApplicationEventPublisher publisher;
 
-	public DefaultTrace(Sampler<?> defaultSampler, IdGenerator idGenerator,
+	public DefaultTrace(Sampler<Void> defaultSampler, IdGenerator idGenerator,
 			ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
 		this.idGenerator = idGenerator;
@@ -37,75 +37,45 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public TraceScope startSpan(String name) {
-		return this.startSpan(name, this.defaultSampler);
-	}
-
-	@Override
-	public TraceScope startSpan(String name, TraceInfo tinfo) {
-		if (tinfo == null) return doStart(null);
-		MilliSpan span = MilliSpan.builder()
-				.begin(System.currentTimeMillis())
-				.name(name)
-				.traceId(tinfo.getTraceId())
-				.spanId(this.idGenerator.create())
-				.parent(tinfo.getSpanId())
-				.build();
-		return doStart(span);
-	}
-
-	@Override
-	public TraceScope startSpan(String name, Span parent) {
+	public TraceScope startSpan(String name, SpanIdentifiers parent) {
 		if (parent == null) {
 			return startSpan(name);
 		}
-		Span currentSpan = getCurrentSpan();
-		if ((currentSpan != null) && (currentSpan != parent)) {
-			error("HTrace client error: thread " +
-					Thread.currentThread().getName() + " tried to start a new Span " +
-					"with parent " + parent.toString() + ", but there is already a " +
-					"currentSpan " + currentSpan);
+		SpanIdentifiers currentSpan = getCurrentSpan();
+		if (currentSpan != null && !parent.equals(currentSpan)) {
+			error("HTrace client error: thread " + Thread.currentThread().getName()
+					+ " tried to start a new Span " + "with parent " + parent.toString()
+					+ ", but there is already a " + "currentSpan " + currentSpan);
 		}
 		return doStart(createChild(parent, name));
 	}
 
 	@Override
-	public <T> TraceScope startSpan(String name, Sampler<T> s) {
-		return startSpan(name, s, null);
+	public TraceScope startSpan(String name) {
+		return this.startSpan(name, this.defaultSampler, null);
 	}
 
 	@Override
 	public <T> TraceScope startSpan(String name, Sampler<T> s, T info) {
 		Span span = null;
 		if (TraceContextHolder.isTracing() || s.next(info)) {
-			span = createNew(name);
+			span = createChild(getCurrentSpan(), name);
 		}
 		return doStart(span);
 	}
 
-	protected Span createNew(String name) {
-		Span parent = getCurrentSpan();
+	protected Span createChild(SpanIdentifiers parent, String name) {
 		if (parent == null) {
-			return MilliSpan.builder()
-					.begin(System.currentTimeMillis())
-					.name(name)
-					.traceId(this.idGenerator.create())
-					.spanId(this.idGenerator.create())
+			return MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
+					.traceId(this.idGenerator.create()).spanId(this.idGenerator.create())
 					.build();
-		} else {
-			return createChild(parent, name);
 		}
-	}
-
-	protected Span createChild(Span parent, String childname) {
-		return MilliSpan.builder()
-				.begin(System.currentTimeMillis())
-				.name(childname)
-				.traceId(parent.getTraceId())
-				.parent(parent.getSpanId())
-				.spanId(this.idGenerator.create())
-				.processId(parent.getProcessId())
-				.build();
+		else {
+			return MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
+					.traceId(parent.getTraceId()).parent(parent.getSpanId())
+					.spanId(this.idGenerator.create()).processId(parent.getProcessId())
+					.build();
+		}
 	}
 
 	protected TraceScope doStart(Span span) {
@@ -118,7 +88,8 @@ public class DefaultTrace implements Trace {
 	@Override
 	public TraceScope continueSpan(Span span) {
 		// Return an empty TraceScope that does nothing on close
-		if (span == null) return NullScope.INSTANCE;
+		if (span == null)
+			return NullScope.INSTANCE;
 		Span oldSpan = getCurrentSpan();
 		TraceContextHolder.setCurrentSpan(span);
 		return new TraceScope(this.publisher, span, oldSpan);
@@ -144,7 +115,8 @@ public class DefaultTrace implements Trace {
 	@Override
 	public <V> Callable<V> wrap(Callable<V> callable) {
 		if (TraceContextHolder.isTracing()) {
-			return new TraceCallable<>(this, callable, TraceContextHolder.getCurrentSpan());
+			return new TraceCallable<>(this, callable,
+					TraceContextHolder.getCurrentSpan());
 		}
 		return callable;
 	}

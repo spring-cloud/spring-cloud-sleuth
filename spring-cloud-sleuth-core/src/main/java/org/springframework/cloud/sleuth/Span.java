@@ -11,7 +11,7 @@ import java.util.Map;
  * to keep following the parents of a span until you arrive at a span with no
  * parents.<p/>
  */
-public interface Span {
+public interface Span extends SpanIdentifiers {
 	/**
 	 * The block has completed, stop the clock
 	 */
@@ -46,20 +46,6 @@ public interface Span {
 	String getName();
 
 	/**
-	 * A pseudo-unique (random) number assigned to this span instance.<p/>
-	 * <p/>
-	 * The spanId is immutable and cannot be changed.  It is safe to access this
-	 * from multiple threads.
-	 */
-	String getSpanId();
-
-	/**
-	 * A pseudo-unique (random) number assigned to the trace associated with this
-	 * span
-	 */
-	String getTraceId();
-
-	/**
 	 * Returns the parent IDs of the span.<p/>
 	 * <p/>
 	 * The collection will be empty if there are no parents.
@@ -89,11 +75,4 @@ public interface Span {
 	 * Will never be null.
 	 */
 	List<TimelineAnnotation> getTimelineAnnotations();
-
-	/**
-	 * Return a unique id for the process from which this Span originated.<p/>
-	 * <p/>
-	 * Will never be null.
-	 */
-	String getProcessId();
 }

@@ -2,8 +2,8 @@ package org.springframework.cloud.sleuth;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,7 +38,7 @@ public class DefaultTraceTests {
 		DefaultTrace trace = new DefaultTrace(new IsTracingSampler(),
 				new RandomUuidGenerator(), publisher);
 
-		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
+		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
 		try {
 			importantWork1(trace);
 		}
@@ -62,15 +62,15 @@ public class DefaultTraceTests {
 
 		assertThat("spans was wrong size", spans.size(), is(NUM_SPANS));
 
-		Span root = assertSpan(spans, null, CREATE_SIMPLE_TRACE);
-		Span child = assertSpan(spans, root.getSpanId(), IMPORTANT_WORK_1);
-		Span grandChild = assertSpan(spans, child.getSpanId(), IMPORTANT_WORK_2);
+		SpanIdentifiers root = assertSpan(spans, null, CREATE_SIMPLE_TRACE);
+		SpanIdentifiers child = assertSpan(spans, root.getSpanId(), IMPORTANT_WORK_1);
+		SpanIdentifiers grandChild = assertSpan(spans, child.getSpanId(), IMPORTANT_WORK_2);
 
 		List<Span> gen4 = findSpans(spans, grandChild.getSpanId());
 		assertThat("gen4 was non-empty", gen4.isEmpty(), is(true));
 	}
 
-	private Span assertSpan(List<Span> spans, String parentId, String name) {
+	private SpanIdentifiers assertSpan(List<Span> spans, String parentId, String name) {
 		List<Span> found = findSpans(spans, parentId);
 		assertThat("more than one span with parentId " + parentId, found.size(), is(1));
 		Span span = found.get(0);

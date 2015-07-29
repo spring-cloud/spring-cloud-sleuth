@@ -3,7 +3,7 @@ package org.springframework.cloud.sleuth.instrument;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceScope;
 
@@ -18,28 +18,28 @@ public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 		super(trace, delagate);
 	}
 
-	public TraceRunnable(Trace trace, Runnable delagate, Span parent) {
+	public TraceRunnable(Trace trace, Runnable delagate, SpanIdentifiers parent) {
 		super(trace, delagate, parent);
 	}
 
-	public TraceRunnable(Trace trace, Runnable delagate, Span parent, String name) {
+	public TraceRunnable(Trace trace, Runnable delagate, SpanIdentifiers parent, String name) {
 		super(trace, delagate, parent, name);
 	}
 
 	@Override
 	public void run() {
-		if (this.parent != null) {
+		if (this.getParent() != null) {
 			TraceScope scope = startSpan();
 
 			try {
-				this.delagate.run();
+				this.getDelegate().run();
 			}
 			finally {
 				scope.close();
 			}
 		}
 		else {
-			this.delagate.run();
+			this.getDelegate().run();
 		}
 	}
 }

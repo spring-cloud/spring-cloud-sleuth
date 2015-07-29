@@ -13,8 +13,11 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.cloud.sleuth.SpanIdentifiers;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TimelineAnnotation;
+import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.context.event.EventListener;
 
 import com.github.kristofa.brave.SpanCollector;
 import com.twitter.zipkin.gen.Annotation;
@@ -22,8 +25,6 @@ import com.twitter.zipkin.gen.AnnotationType;
 import com.twitter.zipkin.gen.BinaryAnnotation;
 import com.twitter.zipkin.gen.Endpoint;
 import com.twitter.zipkin.gen.zipkinCoreConstants;
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
-import org.springframework.context.event.EventListener;
 
 /**
  * @author Spencer Gibb
@@ -47,7 +48,7 @@ public class SleuthTracer {
 	}
 
 	/**
-	 * Converts a given HTrace span to a Zipkin Span.
+	 * Converts a given Sleuth span to a Zipkin Span.
 	 * <ul>
 	 * <li>First set the start annotation. [CS, SR], depending whether it is a client service or not.
 	 * <li>Set other id's, etc [TraceId's etc]
@@ -82,8 +83,8 @@ public class SleuthTracer {
 
 	public Integer getPort() {
 		Integer port;
-		if (serverProperties.getPort() != null) {
-			port = serverProperties.getPort();
+		if (this.serverProperties.getPort() != null) {
+			port = this.serverProperties.getPort();
 		} else {
 			port = 8080; //TODO: support random port
 		}
@@ -92,20 +93,20 @@ public class SleuthTracer {
 
 	public int getAddress() {
 		String address;
-		if (serverProperties.getAddress() != null) {
-			address = serverProperties.getAddress().getHostAddress();
+		if (this.serverProperties.getAddress() != null) {
+			address = this.serverProperties.getAddress().getHostAddress();
 		} else {
 			address = "127.0.0.1"; //TODO: get address from config
 		}
 		return ipAddressToInt(address);
 	}
 
-	public String getServiceName(Span span) {
+	public String getServiceName(SpanIdentifiers span) {
 		String serviceName;
 		if (span.getProcessId() != null) {
 			serviceName = span.getProcessId().toLowerCase();
 		} else {
-			serviceName = appName;
+			serviceName = this.appName;
 		}
 		return serviceName;
 	}
@@ -125,21 +126,21 @@ public class SleuthTracer {
 	 * Add annotations from the sleuth Span.
 	 */
 	private List<Annotation> createZipkinAnnotations(Span span,
-													 Endpoint ep) {
+			Endpoint endpoint) {
 		List<Annotation> annotationList = new ArrayList<>();
 
 		int duration = (int)(span.getEnd() - span.getBegin());
 
 		// add first zipkin  annotation.
-		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.CLIENT_SEND, span.getBegin(), 0, ep, true));
-		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.SERVER_RECV, span.getBegin(), 0, ep, true));
+		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.CLIENT_SEND, span.getBegin(), 0, endpoint, true));
+		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.SERVER_RECV, span.getBegin(), 0, endpoint, true));
 		// add sleuth time annotation
 		for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
-			annotationList.add(createZipkinAnnotation(ta.getMsg(), ta.getTime(), 0, ep, true));
+			annotationList.add(createZipkinAnnotation(ta.getMsg(), ta.getTime(), 0, endpoint, true));
 		}
 		// add last zipkin annotation
-		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.SERVER_SEND, span.getEnd(), duration, ep, false));
-		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.CLIENT_RECV, span.getEnd(), duration, ep, false));
+		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.SERVER_SEND, span.getEnd(), duration, endpoint, false));
+		annotationList.add(createZipkinAnnotation(zipkinCoreConstants.CLIENT_RECV, span.getEnd(), duration, endpoint, false));
 		return annotationList;
 	}
 
@@ -149,7 +150,7 @@ public class SleuthTracer {
 	 * @return list of Annotations that could be added to Zipkin Span.
 	 */
 	private List<BinaryAnnotation> createZipkinBinaryAnnotations(Span span,
-																 Endpoint ep) {
+			Endpoint endpoint) {
 		List<BinaryAnnotation> l = new ArrayList<>();
 		for (Map.Entry<String, String> e : span.getKVAnnotations().entrySet()) {
 			BinaryAnnotation binaryAnn = new BinaryAnnotation();
@@ -160,7 +161,7 @@ public class SleuthTracer {
 			} catch (UnsupportedEncodingException ex) {
 				log.error("Error encoding string as UTF-8", ex);
 			}
-			binaryAnn.setHost(ep);
+			binaryAnn.setHost(endpoint);
 			l.add(binaryAnn);
 		}
 		return l;
@@ -171,13 +172,13 @@ public class SleuthTracer {
 	 *
 	 * @param value       Annotation value
 	 * @param time        timestamp will be extracted
-	 * @param ep          the endopint this annotation will be associated with.
+	 * @param endpoint    the endpoint this annotation will be associated with.
 	 * @param sendRequest use the first or last timestamp.
 	 */
 	private static Annotation createZipkinAnnotation(String value, long time, int duration,
-													 Endpoint ep, boolean sendRequest) {
+			Endpoint endpoint, boolean sendRequest) {
 		Annotation annotation = new Annotation();
-		annotation.setHost(ep);
+		annotation.setHost(endpoint);
 
 		// Zipkin is in microseconds
 		if (sendRequest) {
