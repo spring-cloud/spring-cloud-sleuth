@@ -54,6 +54,9 @@ import org.springframework.web.util.UrlPathHelper;
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class TraceFilter extends OncePerRequestFilter {
 
+	private static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
+			+ ".TRACE";
+
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern
 			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico");
 
@@ -79,29 +82,35 @@ public class TraceFilter extends OncePerRequestFilter {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches();
 
-		TraceScope traceScope = null;
-		if (!skip) {
+		TraceScope traceScope = (TraceScope) request.getAttribute(TRACE_REQUEST_ATTR);
+		if (traceScope != null) {
+			this.trace.continueSpan(traceScope.getSpan());
+		}
+		else if (!skip) {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
 			String name = "http" + uri;
 			if (hasText(spanId) && hasText(traceId)) {
 
-				MilliSpanBuilder traceInfo = MilliSpan.builder().traceId(traceId).spanId(spanId);
+				MilliSpanBuilder traceInfo = MilliSpan.builder().traceId(traceId)
+						.spanId(spanId);
 				String parentId = getHeader(request, response, PARENT_ID_NAME);
 				String processId = getHeader(request, response, PROCESS_ID_NAME);
 				String parentName = getHeader(request, response, SPAN_NAME_NAME);
-				if (parentName!=null) {
+				if (parentName != null) {
 					traceInfo.name(parentName);
 				}
-				if (processId!=null) {
+				if (processId != null) {
 					traceInfo.processId(processId);
 				}
-				if (parentId!=null) {
+				if (parentId != null) {
 					traceInfo.parent(parentId);
 				}
+				traceInfo.remote(true);
 
 				// TODO: trace description?
 				traceScope = this.trace.startSpan(name, traceInfo.build());
+				request.setAttribute(TRACE_REQUEST_ATTR, traceScope);
 				// Send new span id back
 				addToResponseIfNotPresent(response, SPAN_ID_NAME, traceScope.getSpan()
 						.getSpanId());
@@ -115,6 +124,9 @@ public class TraceFilter extends OncePerRequestFilter {
 			filterChain.doFilter(request, response);
 		}
 		finally {
+			if (request.isAsyncSupported() && request.isAsyncStarted()) {
+				return;
+			}
 			if (traceScope != null) {
 				traceScope.close();
 			}

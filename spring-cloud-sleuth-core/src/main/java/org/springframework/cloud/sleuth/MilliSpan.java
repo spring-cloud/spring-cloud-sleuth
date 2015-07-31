@@ -24,6 +24,8 @@ public class MilliSpan implements Span {
 	@Singular
 	private List<String> parents;
 	private final String spanId;
+	@NonFinal
+	private boolean remote = false;
 	private Map<String, String> kVAnnotations = new LinkedHashMap<>();
 	private final String processId;
 	@Singular
@@ -63,7 +65,8 @@ public class MilliSpan implements Span {
 
 	@Override
 	public void addTimelineAnnotation(String msg) {
-		this.timelineAnnotations.add(new TimelineAnnotation(System.currentTimeMillis(), msg));
+		this.timelineAnnotations.add(new TimelineAnnotation(System.currentTimeMillis(),
+				msg));
 	}
 
 }

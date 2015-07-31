@@ -29,6 +29,8 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	private RestTemplate restTemplate;
 	@Autowired
 	private Trace trace;
+	@Autowired
+	private SampleBackground controller;
 	private int port;
 
 	@SneakyThrows
@@ -37,8 +39,8 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		final Random random = new Random();
 		Thread.sleep(random.nextInt(1000));
 
-		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/hi2",
-				String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port
+				+ "/hi2", String.class);
 		return "hi/" + s;
 	}
 
@@ -47,12 +49,21 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		return new Callable<String>() {
 			@Override
 			public String call() throws Exception {
+				final Random random = new Random();
+				int millis = random.nextInt(1000);
+				Thread.sleep(millis);
+				SampleController.this.trace.addKVAnnotation("callable-sleep-millis", String.valueOf(millis));
 				Span currentSpan = TraceContextHolder.getCurrentSpan();
-				return "async hi: "+currentSpan;
+				return "async hi: " + currentSpan;
 			}
 		};
 	}
 
+	@RequestMapping("/async")
+	public String async() {
+		this.controller.background();
+		return "ho";
+	}
 
 	@SneakyThrows
 	@RequestMapping("/hi2")
@@ -67,15 +78,32 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		TraceScope scope = this.trace.startSpan("customTraceEndpoint", new AlwaysSampler(), null);
+		TraceScope scope = this.trace.startSpan("customTraceEndpoint",
+				new AlwaysSampler(), null);
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
+		this.trace.addKVAnnotation("random-sleep-millis", String.valueOf(millis));
 
-		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/hi2", String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port
+				+ "/call", String.class);
 		scope.close();
-		return "hi/" + s;
+		return "traced/" + s;
+	}
+
+	@SneakyThrows
+	@RequestMapping("/start")
+	public String start() {
+		final Random random = new Random();
+		int millis = random.nextInt(1000);
+		log.info("Sleeping for {} millis", millis);
+		Thread.sleep(millis);
+		this.trace.addKVAnnotation("random-sleep-millis", String.valueOf(millis));
+
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port
+				+ "/call", String.class);
+		return "start/" + s;
 	}
 
 	@Override

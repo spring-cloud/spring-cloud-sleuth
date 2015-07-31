@@ -28,8 +28,8 @@ public class TraceSchedulingAspect {
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
-	public Object traceSceduledThread(final ProceedingJoinPoint pjp) throws Throwable {
-		TraceScope scope = trace.startSpan(pjp.toShortString());
+	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
+		TraceScope scope = this.trace.startSpan(pjp.toShortString());
 		try {
 			return pjp.proceed();
 		} finally {

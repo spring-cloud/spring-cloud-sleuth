@@ -47,17 +47,17 @@ public class TraceScope implements Closeable {
 	 */
 	public Span detach() {
 		if (this.detached) {
-			ExceptionUtils.error("Tried to detach trace span " + this.span + " but "
-					+ "it has already been detached.");
+			ExceptionUtils.error("Tried to detach trace span but "
+					+ "it has already been detached: " + this.span);
 		}
 		this.detached = true;
 
 		Span cur = TraceContextHolder.getCurrentSpan();
 		if (cur != this.span) {
-			ExceptionUtils.error("Tried to detach trace span " + this.span + " but "
-					+ "it is not the current span for the "
-					+ Thread.currentThread().getName() + " thread.  You have "
-					+ "probably forgotten to close or detach " + cur);
+			ExceptionUtils.error("Tried to detach trace span but "
+					+ "it is not the current span for the '"
+					+ Thread.currentThread().getName() + "' thread: " + this.span
+					+ ". You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
 			TraceContextHolder.setCurrentSpan(this.savedSpan);
@@ -74,15 +74,17 @@ public class TraceScope implements Closeable {
 		this.detached = true;
 		Span cur = TraceContextHolder.getCurrentSpan();
 		if (cur != this.span) {
-			ExceptionUtils.error("Tried to close trace span " + this.span + " but "
-					+ "it is not the current span for the "
-					+ Thread.currentThread().getName() + " thread.  You have "
-					+ "probably forgotten to close or detach " + cur);
+			ExceptionUtils.error("Tried to close trace span but "
+					+ "it is not the current span for the '"
+					+ Thread.currentThread().getName() + "' thread" + this.span
+					+ ".  You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
 			this.span.stop();
-			if (this.savedSpan != null && this.span.getParents().contains(this.savedSpan.getSpanId())) {
-				this.publisher.publishEvent(new SpanStoppedEvent(this, this.savedSpan, this.span));
+			if (this.savedSpan != null
+					&& this.span.getParents().contains(this.savedSpan.getSpanId())) {
+				this.publisher.publishEvent(new SpanStoppedEvent(this, this.savedSpan,
+						this.span));
 			}
 			else {
 				this.publisher.publishEvent(new SpanStoppedEvent(this, this.span));

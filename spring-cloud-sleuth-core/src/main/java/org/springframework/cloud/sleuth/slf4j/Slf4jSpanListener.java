@@ -28,7 +28,7 @@ public class Slf4jSpanListener {
 		//TODO: what log level?
 		log.info("Starting span: {}", span);
 		if (event.getParent()!=null) {
-			log.info("Starting parent: {}", event.getParent());
+			log.info("With parent: {}", event.getParent());
 		}
 	}
 
@@ -37,7 +37,7 @@ public class Slf4jSpanListener {
 		//TODO: what should this log level be?
 		log.info("Stopped span: {}", event.getSpan());
 		if (event.getParent()!=null) {
-			log.info("Stopped parent: {}", event.getParent());
+			log.info("With parent: {}", event.getParent());
 		}
 		MDC.remove(SPAN_ID_NAME);
 		MDC.remove(TRACE_ID_NAME);

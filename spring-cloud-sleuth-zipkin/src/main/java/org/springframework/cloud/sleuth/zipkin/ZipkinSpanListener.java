@@ -48,9 +48,10 @@ public class ZipkinSpanListener {
 
 	@EventListener
 	public void start(SpanStartedEvent event) {
-		if (event.getParent()!=null) {
+		if (event.getParent()!=null && event.getParent().isRemote()) {
 			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_RECV);
 		}
+		event.getSpan().addTimelineAnnotation("start");
 	}
 
 	@EventListener
@@ -65,10 +66,11 @@ public class ZipkinSpanListener {
 
 	@EventListener
 	public void start(SpanStoppedEvent event) {
-		if (event.getParent()!=null) {
+		if (event.getParent()!=null && event.getParent().isRemote()) {
 			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_SEND);
 			this.spanCollector.collect(convert(event.getParent()));
 		}
+		event.getSpan().addTimelineAnnotation("stop");
 		this.spanCollector.collect(convert(event.getSpan()));
 	}
 

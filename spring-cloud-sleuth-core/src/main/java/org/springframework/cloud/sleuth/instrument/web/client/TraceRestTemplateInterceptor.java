@@ -72,11 +72,11 @@ ApplicationEventPublisherAware {
 			setHeader(request, PROCESS_ID_NAME, processId);
 		}
 		publish(new ClientSentEvent(this, getCurrentSpan()));
-		try {
-			return execution.execute(request, body);
-		} finally {
-			publish(new ClientReceivedEvent(this, getCurrentSpan()));
-		}
+		return new TraceHttpResponse(this, execution.execute(request, body));
+	}
+
+	public void close() {
+		publish(new ClientReceivedEvent(this, getCurrentSpan()));
 	}
 
 	private void publish(ApplicationEvent event) {
