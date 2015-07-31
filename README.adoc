@@ -22,10 +22,14 @@ Spans are started and stopped, and they keep track of their timing information. 
 
 == Running the sample
 
-1. Run [Zipkin](https://github.com/openzipkin/zipkin), e.g. via docker compose (there's a `docker-compose.yml` in [Spring Cloud Sleuth](https://github.com/spring-cloud-incubator/spring-cloud-sleuth), or in [Docker Zipkin](https://github.com/openzipkin/docker-zipkin)
+1. Optionally run [Zipkin](https://github.com/openzipkin/zipkin), e.g. via docker compose (there's a `docker-compose.yml` in [Spring Cloud Sleuth](https://github.com/spring-cloud-incubator/spring-cloud-sleuth), or in [Docker Zipkin](https://github.com/openzipkin/docker-zipkin)
 7. Run sample application
 8. Hit `http://localhost:3380`
 9. Goto `http://localhost:8082` for zipkin web
+
+WARNING: The docker images for zipkin are old and don't work very well (the UI in particular). Zipkin is in a state of flux, but it should settle down soon when there is an actual release. Best result actually come from building from source and running the jar files (the query and collector services need command line arguments, so check the zipkin README for updates).
+
+NOTE: You can see the zipkin spans without the UI (in logs) if you just provide a `@Bean` of type `LogSpanCollector` (there's one commented out in the sample).
 
 == Building
 
