@@ -6,16 +6,31 @@ include::intro.adoc[]
 
 == Features
 
-* TODO: list features
+* Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator. Example configuration:
++
+[source,yaml]
+----
+logging:
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}] [%15.15t] %-40.40logger{39}: %m%n'
+----
++
+(notice the `%X` entries from the MDC).
+
+* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
+
+* Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions).
+
+* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via Thrift to a Zipkin collector service on localhost (port 9410). Configure the location of the service using `spring.zipkin.[host,port]`.
 
 == Running the sample
 
 1. Optionally run [Zipkin](https://github.com/openzipkin/zipkin), e.g. via docker compose (there's a `docker-compose.yml` in [Spring Cloud Sleuth](https://github.com/spring-cloud-incubator/spring-cloud-sleuth), or in [Docker Zipkin](https://github.com/openzipkin/docker-zipkin)
-7. Run sample application
-8. Hit `http://localhost:3380`
-9. Goto `http://localhost:8082` for zipkin web
+7. Run the sample application
+8. Hit `http://localhost:3380`, `http://localhost:3380/call`, `http://localhost:3380/async` for some interesting sample traces (the app callas back to itself).
+9. Goto `http://localhost:8082` for zipkin web (8080 if running locally from source, the host is the docker host, so if you are using boot2docker it will be different)
 
-WARNING: The docker images for zipkin are old and don't work very well (the UI in particular). Zipkin is in a state of flux, but it should settle down soon when there is an actual release. Best result actually come from building from source and running the jar files (the query and collector services need command line arguments, so check the zipkin README for updates).
+WARNING: The docker images for zipkin are old and don't work very well (the UI in particular). Zipkin is in a state of flux, but it should settle down soon when there is an actual release. Best results actually come from building from source and running the jar files (the query and collector services need command line arguments, so check the zipkin README for updates).
 
 NOTE: You can see the zipkin spans without the UI (in logs) if you just provide a `@Bean` of type `LogSpanCollector` (there's one commented out in the sample).
 
