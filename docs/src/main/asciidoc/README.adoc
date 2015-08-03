@@ -32,7 +32,7 @@ logging:
 
 WARNING: The docker images for zipkin are old and don't work very well (the UI in particular). Zipkin is in a state of flux, but it should settle down soon when there is an actual release. Best results actually come from building from source and running the jar files (the query and collector services need command line arguments, so check the zipkin README for updates).
 
-NOTE: You can see the zipkin spans without the UI (in logs) if you just provide a `@Bean` of type `LogSpanCollector` (there's one commented out in the sample).
+NOTE: You can see the zipkin spans without the UI (in logs) if you run the sample with `sleuth.sample.logging.collector.enabled=true`.
 
 == Building
 
