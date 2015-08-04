@@ -23,6 +23,7 @@ import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
@@ -50,11 +51,12 @@ import org.springframework.web.util.UrlPathHelper;
  * @author Tomasz Nurkiewicz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT
  * @author Spencer Gibb
+ * @author Dave Syer
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class TraceFilter extends OncePerRequestFilter {
 
-	private static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
+	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".TRACE";
 
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern
@@ -92,26 +94,28 @@ public class TraceFilter extends OncePerRequestFilter {
 			String name = "http" + uri;
 			if (hasText(spanId) && hasText(traceId)) {
 
-				MilliSpanBuilder traceInfo = MilliSpan.builder().traceId(traceId)
+				MilliSpanBuilder span = MilliSpan.builder().traceId(traceId)
 						.spanId(spanId);
 				String parentId = getHeader(request, response, PARENT_ID_NAME);
 				String processId = getHeader(request, response, PROCESS_ID_NAME);
 				String parentName = getHeader(request, response, SPAN_NAME_NAME);
 				if (parentName != null) {
-					traceInfo.name(parentName);
+					span.name(parentName);
 				}
 				if (processId != null) {
-					traceInfo.processId(processId);
+					span.processId(processId);
 				}
 				if (parentId != null) {
-					traceInfo.parent(parentId);
+					span.parent(parentId);
 				}
-				traceInfo.remote(true);
+				span.remote(true);
 
 				// TODO: trace description?
-				traceScope = this.trace.startSpan(name, traceInfo.build());
+				traceScope = this.trace.startSpan(name, span.build());
 				request.setAttribute(TRACE_REQUEST_ATTR, traceScope);
 				// Send new span id back
+				addToResponseIfNotPresent(response, TRACE_ID_NAME, traceScope.getSpan()
+						.getTraceId());
 				addToResponseIfNotPresent(response, SPAN_ID_NAME, traceScope.getSpan()
 						.getSpanId());
 			}
@@ -121,14 +125,53 @@ public class TraceFilter extends OncePerRequestFilter {
 		}
 
 		try {
+
+			addRequestAnnotations(request);
+
 			filterChain.doFilter(request, response);
 		}
 		finally {
 			if (request.isAsyncSupported() && request.isAsyncStarted()) {
+				//TODO: howto deal with response annotations and async?
 				return;
 			}
 			if (traceScope != null) {
+				addResponseAnnotations(response);
+
 				traceScope.close();
+			}
+		}
+	}
+
+	protected void addRequestAnnotations(HttpServletRequest request) {
+		String uri = this.urlPathHelper.getPathWithinApplication(request);
+		this.trace.addKVAnnotation("/http/request/uri",
+				request.getRequestURL().toString());
+		this.trace.addKVAnnotation("/http/request/endpoint", uri);
+		this.trace.addKVAnnotation("/http/request/method",
+				request.getMethod());
+
+		Enumeration<String> headerNames = request.getHeaderNames();
+		while (headerNames.hasMoreElements()) {
+			String name = headerNames.nextElement();
+			Enumeration<String> values = request.getHeaders(name);
+			while (values.hasMoreElements()) {
+				String value = values.nextElement();
+				String key = "/http/request/headers/"+name.toLowerCase();
+				this.trace.addKVAnnotation(key, value);
+
+			}
+		}
+	}
+
+	private void addResponseAnnotations(HttpServletResponse response) {
+		this.trace.addKVAnnotation("/http/response/status_code",
+				String.valueOf(response.getStatus()));
+
+		for (String name : response.getHeaderNames()) {
+			for (String value : response.getHeaders(name)) {
+				String key = "/http/response/headers/"+name.toLowerCase();
+				this.trace.addKVAnnotation(key, value);
 			}
 		}
 	}

@@ -72,7 +72,7 @@ public class TraceWebAspect {
 			log.debug("Wrapping callable with span ["
 					+ TraceContextHolder.getCurrentSpan() + "]");
 
-			return new TraceCallable<Object>(this.trace, callable);
+			return new TraceCallable<>(this.trace, callable);
 		}
 		else {
 			return callable;
