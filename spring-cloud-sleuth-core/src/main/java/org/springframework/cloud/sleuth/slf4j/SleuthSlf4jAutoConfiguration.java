@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.slf4j;
 
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,8 +30,15 @@ import org.springframework.context.annotation.Configuration;
 public class SleuthSlf4jAutoConfiguration {
 
 	@Bean
+	@ConditionalOnProperty(value = "spring.cloud.sleuth.listener.slf4j.enabled", matchIfMissing = true)
 	public Slf4jSpanListener slf4jSpanStartedListener() {
 		return new Slf4jSpanListener();
+	}
+
+	@Bean
+	@ConditionalOnProperty("spring.cloud.sleuth.listener.json.slf4j.enabled")
+	public JsonSlf4jSpanListener jsonSlf4jSpanListener() {
+		return new JsonSlf4jSpanListener();
 	}
 
 }
