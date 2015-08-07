@@ -50,8 +50,8 @@ public class JsonLogSpanListenerTests {
 		listener.stop(new SpanStoppedEvent(this, span));
 
 		String output = this.output.toString().trim();
-		assertTrue("output doesn't container prefix", output.contains(listener.getPrefix()));
-		assertTrue("output doesn't container suffix", output.contains(listener.getSuffix()));
+		assertTrue("output doesn't contain prefix", output.contains(listener.getPrefix()));
+		assertTrue("output doesn't contain suffix", output.contains(listener.getSuffix()));
 
 		int prefixIndex = output.indexOf(listener.getPrefix());
 		int suffixIndex = output.indexOf(listener.getSuffix());
