@@ -37,14 +37,14 @@ import org.springframework.util.StringUtils;
  * @author Spencer Gibb
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.cloud.sleuth.trace.web.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.trace.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 public class TraceWebAutoConfiguration {
 
 	/**
 	 * Pattern for URLs that should be skipped in tracing
 	 */
-	@Value("${spring.cloud.sleuth.instrument.web.skipPattern:}")
+	@Value("${spring.sleuth.instrument.web.skipPattern:}")
 	private String skipPattern;
 
 	@Autowired

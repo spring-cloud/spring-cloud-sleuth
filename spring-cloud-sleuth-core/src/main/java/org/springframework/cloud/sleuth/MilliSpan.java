@@ -22,30 +22,48 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Builder;
+import lombok.Data;
 import lombok.Singular;
-import lombok.Value;
-import lombok.experimental.NonFinal;
 
 /**
  * @author Spencer Gibb
  */
-@Value
+@Data
 @Builder
 public class MilliSpan implements Span {
-	private long begin;
-	@NonFinal
+	private final long begin;
 	private long end = 0;
-	private String name;
+	private final String name;
 	private final String traceId;
 	@Singular
 	private List<String> parents;
 	private final String spanId;
-	@NonFinal
 	private boolean remote = false;
-	private Map<String, String> kVAnnotations = new LinkedHashMap<>();
+	private final Map<String, String> kVAnnotations = new LinkedHashMap<>();
 	private final String processId;
 	@Singular
-	private List<TimelineAnnotation> timelineAnnotations = new ArrayList<>();
+	private final List<TimelineAnnotation> timelineAnnotations = new ArrayList<>();
+
+	public MilliSpan(long begin, long end, String name, String traceId, List<String> parents, String spanId, boolean remote, String processId) {
+		this.begin = begin;
+		this.end = end;
+		this.name = name;
+		this.traceId = traceId;
+		this.parents = parents;
+		this.spanId = spanId;
+		this.remote = remote;
+		this.processId = processId;
+	}
+
+	//for serialization
+	private MilliSpan() {
+		this.begin = 0;
+		this.name = null;
+		this.traceId = null;
+		this.parents = null;
+		this.spanId = null;
+		this.processId = null;
+	}
 
 	@Override
 	public synchronized void stop() {

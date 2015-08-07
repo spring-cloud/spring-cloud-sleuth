@@ -49,7 +49,7 @@ import com.google.common.base.Optional;
 @Configuration
 @EnableConfigurationProperties
 @ConditionalOnClass(ServerTracerConfig.class)
-@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.zipkin.enabled", matchIfMissing = true)
 @Import({ AnnotationSubmitterConfig.class, ClientTracerConfig.class,
 	EndPointSubmitterConfig.class, ServerSpanThreadBinderConfig.class,
 	ServerTracerConfig.class })
@@ -78,14 +78,8 @@ public class ZipkinAutoConfiguration {
 		return new TraceFilters(traceFilters);
 	}
 
-	//	@Bean
-	//	@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", matchIfMissing = true)
-	//	public ZipkinSpanListener zipkinTrace(ServerTracer serverTracer, ClientTracer clientTracer) {
-	//		return new ZipkinSpanListener(serverTracer, clientTracer);
-	//	}
-
 	@Bean
-	// @ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.braveTracer.enabled", havingValue = "false")
+	// @ConditionalOnProperty(value = "spring.sleuth.zipkin.braveTracer.enabled", havingValue = "false")
 	public ZipkinSpanListener sleuthTracer(SpanCollector spanCollector) {
 		return new ZipkinSpanListener(spanCollector);
 	}

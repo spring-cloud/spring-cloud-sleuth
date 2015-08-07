@@ -17,12 +17,19 @@
 package org.springframework.cloud.sleuth;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author Spencer Gibb
  */
 @Data
+@RequiredArgsConstructor
 public class TimelineAnnotation {
 	private final long time;
 	private final String msg;
+
+	private TimelineAnnotation() {
+		this.time = 0;
+		this.msg = null;
+	}
 }

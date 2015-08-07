@@ -36,7 +36,7 @@ import com.github.kristofa.brave.ServerTracerConfig;
 @Configuration
 @ConditionalOnClass(ServerTracerConfig.class)
 @ConditionalOnWebApplication
-@ConditionalOnProperty(value = "spring.cloud.sleuth.zipkin.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.zipkin.enabled", matchIfMissing = true)
 @AutoConfigureAfter(ZipkinAutoConfiguration.class)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 public class ZipkinWebAutoConfiguration {

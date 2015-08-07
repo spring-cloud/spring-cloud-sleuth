@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.slf4j;
+package org.springframework.cloud.sleuth.log;
 
+import org.apache.commons.logging.Log;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,12 +27,26 @@ import org.springframework.context.annotation.Configuration;
  * @author Spencer Gibb
  */
 @Configuration
-@ConditionalOnClass(MDC.class)
-public class SleuthSlf4jAutoConfiguration {
+public class SleuthLogAutoConfiguration {
 
-	@Bean
-	public Slf4jSpanListener slf4jSpanStartedListener() {
-		return new Slf4jSpanListener();
+	@Configuration
+	@ConditionalOnClass(MDC.class)
+	protected static class Slf4jConfiguration {
+		@Bean
+		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
+		public Slf4jSpanListener slf4jSpanStartedListener() {
+			return new Slf4jSpanListener();
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass(Log.class)
+	protected static class JsonConfiguration {
+		@Bean
+		@ConditionalOnProperty("spring.sleuth.log.json.enabled")
+		public JsonLogSpanListener jsonSlf4jSpanListener() {
+			return new JsonLogSpanListener();
+		}
 	}
 
 }
