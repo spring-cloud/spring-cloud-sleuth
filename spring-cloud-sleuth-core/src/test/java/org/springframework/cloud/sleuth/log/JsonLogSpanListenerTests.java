@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.slf4j;
+package org.springframework.cloud.sleuth.log;
 
 import static org.junit.Assert.*;
 
@@ -30,13 +30,13 @@ import java.io.IOException;
 /**
  * @author Spencer Gibb
  */
-public class JsonSlf4jSpanListenerTests {
+public class JsonLogSpanListenerTests {
 	@Rule
 	public final OutputCapture output = new OutputCapture();
 
 	@Test
 	public void jsonSpanIsOnOneLine() throws IOException {
-		JsonSlf4jSpanListener listener = new JsonSlf4jSpanListener();
+		JsonLogSpanListener listener = new JsonLogSpanListener();
 		Span span = MilliSpan.builder()
 				.name("testSpan")
 				.spanId("spanId1")

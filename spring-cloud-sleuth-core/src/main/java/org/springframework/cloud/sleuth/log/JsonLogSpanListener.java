@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.slf4j;
+package org.springframework.cloud.sleuth.log;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import lombok.Data;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.apachecommons.CommonsLog;
 
 import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Spencer Gibb
  */
-@Slf4j
+@CommonsLog
 @Order(Ordered.LOWEST_PRECEDENCE)
 @Data
-public class JsonSlf4jSpanListener {
+public class JsonLogSpanListener {
 
 	private final String prefix;
 	private final String suffix;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	public JsonSlf4jSpanListener() {
+	public JsonLogSpanListener() {
 		prefix = "[span]";
 		suffix = "[endspan]";
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -49,8 +49,7 @@ public class JsonSlf4jSpanListener {
 	@SneakyThrows
 	@EventListener(SpanStoppedEvent.class)
 	public void stop(SpanStoppedEvent event) {
-		log.info("{}{}{}", prefix,
-				objectMapper.writeValueAsString(event.getSpan()),
+		log.info(prefix + objectMapper.writeValueAsString(event.getSpan()) +
 				suffix);
 	}
 
