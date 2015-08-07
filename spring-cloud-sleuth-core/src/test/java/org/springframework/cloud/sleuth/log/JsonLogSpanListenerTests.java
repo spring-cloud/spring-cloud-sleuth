@@ -24,6 +24,7 @@ import org.springframework.boot.test.OutputCapture;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 
@@ -56,6 +57,7 @@ public class JsonLogSpanListenerTests {
 		int prefixIndex = output.indexOf(listener.getPrefix());
 		int suffixIndex = output.indexOf(listener.getSuffix());
 		String json = output.substring(prefixIndex + listener.getPrefix().length(), suffixIndex);
+		assertTrue("json is empty", StringUtils.hasText(json));
 		assertFalse("json contains linefeed", output.contains("\n"));
 		assertFalse("json contains carriage return", output.contains("\r"));
 
