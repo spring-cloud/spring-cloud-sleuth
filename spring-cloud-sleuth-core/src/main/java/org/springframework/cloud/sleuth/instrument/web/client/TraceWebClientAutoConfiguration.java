@@ -30,7 +30,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.cloud.sleuth.trace.web.client.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.trace.web.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(RestTemplate.class)
 public class TraceWebClientAutoConfiguration {
 

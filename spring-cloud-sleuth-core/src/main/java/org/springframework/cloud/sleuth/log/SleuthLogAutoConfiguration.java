@@ -33,7 +33,7 @@ public class SleuthLogAutoConfiguration {
 	@ConditionalOnClass(MDC.class)
 	protected static class Slf4jConfiguration {
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.sleuth.log.slf4j.enabled", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
 		public Slf4jSpanListener slf4jSpanStartedListener() {
 			return new Slf4jSpanListener();
 		}
@@ -43,7 +43,7 @@ public class SleuthLogAutoConfiguration {
 	@ConditionalOnClass(Log.class)
 	protected static class JsonConfiguration {
 		@Bean
-		@ConditionalOnProperty("spring.cloud.sleuth.log.json.enabled")
+		@ConditionalOnProperty("spring.sleuth.log.json.enabled")
 		public JsonLogSpanListener jsonSlf4jSpanListener() {
 			return new JsonLogSpanListener();
 		}
