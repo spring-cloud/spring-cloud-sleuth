@@ -37,7 +37,7 @@ import org.springframework.util.StringUtils;
  * @author Spencer Gibb
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.sleuth.trace.web.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 public class TraceWebAutoConfiguration {
 

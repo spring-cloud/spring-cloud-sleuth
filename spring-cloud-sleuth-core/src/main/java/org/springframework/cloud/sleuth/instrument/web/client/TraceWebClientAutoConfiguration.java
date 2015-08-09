@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.Collection;
+
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.sleuth.trace.web.client.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(RestTemplate.class)
 public class TraceWebClientAutoConfiguration {
 
@@ -50,15 +52,17 @@ public class TraceWebClientAutoConfiguration {
 	protected static class TraceInterceptorConfiguration {
 
 		@Autowired(required = false)
-		private RestTemplate restTemplate;
+		private Collection<RestTemplate> restTemplates;
 
 		@Autowired
 		private TraceRestTemplateInterceptor traceRestTemplateInterceptor;
 
 		@PostConstruct
 		public void init() {
-			if (this.restTemplate != null) {
-				this.restTemplate.getInterceptors().add(this.traceRestTemplateInterceptor);
+			if (this.restTemplates != null) {
+				for (RestTemplate restTemplate : this.restTemplates) {
+					restTemplate.getInterceptors().add(this.traceRestTemplateInterceptor);
+				}
 			}
 		}
 	}
