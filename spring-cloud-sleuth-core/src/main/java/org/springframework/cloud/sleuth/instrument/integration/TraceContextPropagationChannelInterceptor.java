@@ -29,11 +29,6 @@ import java.util.Map;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -44,28 +39,21 @@ import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.util.Assert;
 
 /**
- * The {@link ExecutorChannelInterceptor} implementation responsible for
- * the {@link Span} propagation from one message flow's thread to another
- * through the {@link MessageChannel}s involved in the flow.
+ * The {@link ExecutorChannelInterceptor} implementation responsible for the {@link Span}
+ * propagation from one message flow's thread to another through the
+ * {@link MessageChannel}s involved in the flow.
  * <p>
- * In addition this interceptor cleans up (restores) the {@link Span}
- * in the containers Threads for channels like
- * {@link org.springframework.integration.channel.ExecutorChannel}
- * and {@link org.springframework.integration.channel.QueueChannel}.
+ * In addition this interceptor cleans up (restores) the {@link Span} in the containers
+ * Threads for channels like
+ * {@link org.springframework.integration.channel.ExecutorChannel} and
+ * {@link org.springframework.integration.channel.QueueChannel}.
  * @author Spencer Gibb
  * @since 1.0
  */
-public class TraceContextPropagationChannelInterceptor
-		extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor, ApplicationEventPublisherAware {
+public class TraceContextPropagationChannelInterceptor extends ChannelInterceptorAdapter
+implements ExecutorChannelInterceptor {
 
 	private final static ThreadLocal<Span> ORIGINAL_CONTEXT = new ThreadLocal<>();
-
-	private ApplicationEventPublisher publisher;
-
-	@Override
-	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
-		this.publisher = publisher;
-	}
 
 	@Override
 	public final Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -73,11 +61,9 @@ public class TraceContextPropagationChannelInterceptor
 			return message;
 		}
 
-		//TODO: start span from headers?
 		Span span = getCurrentSpan();
 
 		if (span != null) {
-			publish(new ClientSentEvent(this, span));
 			return new MessageWithSpan(message, span);
 		}
 		else {
@@ -86,21 +72,44 @@ public class TraceContextPropagationChannelInterceptor
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public final Message<?> postReceive(Message<?> message, MessageChannel channel) {
 		if (message instanceof MessageWithSpan) {
 			MessageWithSpan messageWithSpan = (MessageWithSpan) message;
 			Message<?> messageToHandle = messageWithSpan.message;
 			populatePropagatedContext(messageWithSpan.span, messageToHandle, channel);
 
-			publish(new ClientReceivedEvent(this, messageWithSpan.span));
 			return message;
 		}
 		return message;
 	}
 
 	@Override
-	public void afterMessageHandled(Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
+	public void afterMessageHandled(Message<?> message, MessageChannel channel,
+			MessageHandler handler, Exception ex) {
+		resetPropagatedContext();
+	}
+
+	@Override
+	public final Message<?> beforeHandle(Message<?> message, MessageChannel channel,
+			MessageHandler handler) {
+		return postReceive(message, channel);
+	}
+
+	private String getParentId(Span span) {
+		return span.getParents() != null && !span.getParents().isEmpty() ? span
+				.getParents().get(0) : null;
+	}
+
+	protected void populatePropagatedContext(Span span, Message<?> message,
+			MessageChannel channel) {
+		if (span != null) {
+			Span currentContext = getCurrentSpan();
+			ORIGINAL_CONTEXT.set(currentContext);
+			setCurrentSpan(span);
+		}
+	}
+
+	protected void resetPropagatedContext() {
 		Span originalContext = ORIGINAL_CONTEXT.get();
 		try {
 			if (originalContext == null) {
@@ -111,35 +120,8 @@ public class TraceContextPropagationChannelInterceptor
 				setCurrentSpan(originalContext);
 			}
 		}
-		catch (Throwable t) {//NOSONAR
+		catch (Throwable t) {// NOSONAR
 			setCurrentSpan(null);
-		}
-	}
-
-	@Override
-	public final Message<?> beforeHandle(Message<?> message, MessageChannel channel, MessageHandler handler) {
-		return postReceive(message, channel);
-	}
-
-	private void publish(ApplicationEvent event) {
-		if (this.publisher !=null) {
-			this.publisher.publishEvent(event);
-		}
-	}
-
-	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty() ? span
-				.getParents().get(0) : null;
-	}
-
-	protected void populatePropagatedContext(Span span, Message<?> message,
-											 MessageChannel channel) {
-		if (span != null) {
-			Span currentContext = getCurrentSpan();
-
-			ORIGINAL_CONTEXT.set(currentContext);
-
-			setCurrentSpan(span);
 		}
 	}
 
@@ -192,11 +174,8 @@ public class TraceContextPropagationChannelInterceptor
 
 		@Override
 		public String toString() {
-			return "MessageWithThreadState{" +
-					"message=" + message +
-					", span=" + span +
-					", messageHeaders=" + messageHeaders +
-					'}';
+			return "MessageWithThreadState{" + "message=" + this.message + ", span="
+					+ this.span + ", messageHeaders=" + this.messageHeaders + '}';
 		}
 
 	}
