@@ -28,6 +28,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
 import org.springframework.cloud.sleuth.event.SpanStartedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
@@ -107,6 +108,7 @@ public class DefaultTrace implements Trace {
 			return NullScope.INSTANCE;
 		Span oldSpan = getCurrentSpan();
 		TraceContextHolder.setCurrentSpan(span);
+		this.publisher.publishEvent(new SpanContinuedEvent(this, span));
 		return new TraceScope(this.publisher, span, oldSpan);
 	}
 

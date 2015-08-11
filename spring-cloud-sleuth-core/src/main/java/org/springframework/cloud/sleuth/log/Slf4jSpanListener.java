@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
 import org.springframework.cloud.sleuth.event.SpanStartedEvent;
 import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
 import org.springframework.context.event.EventListener;
@@ -41,23 +42,36 @@ public class Slf4jSpanListener {
 		Span span = event.getSpan();
 		MDC.put(Trace.SPAN_ID_NAME, span.getSpanId());
 		MDC.put(Trace.TRACE_ID_NAME, span.getTraceId());
-		//TODO: what log level?
+		// TODO: what log level?
 		log.info("Starting span: {}", span);
-		if (event.getParent()!=null) {
+		if (event.getParent() != null) {
 			log.info("With parent: {}", event.getParent());
 		}
+	}
+
+	@EventListener(SpanContinuedEvent.class)
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void continued(SpanContinuedEvent event) {
+		Span span = event.getSpan();
+		MDC.put(Trace.SPAN_ID_NAME, span.getSpanId());
+		MDC.put(Trace.TRACE_ID_NAME, span.getTraceId());
+		// TODO: what should this log level be?
+		log.info("Continued span: {}", event.getSpan());
 	}
 
 	@EventListener(SpanStoppedEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void stop(SpanStoppedEvent event) {
-		//TODO: what should this log level be?
+		// TODO: what should this log level be?
 		log.info("Stopped span: {}", event.getSpan());
-		if (event.getParent()!=null) {
+		if (event.getParent() != null) {
 			log.info("With parent: {}", event.getParent());
+			MDC.put(Trace.SPAN_ID_NAME, event.getParent().getSpanId());
 		}
-		MDC.remove(SPAN_ID_NAME);
-		MDC.remove(TRACE_ID_NAME);
+		else {
+			MDC.remove(SPAN_ID_NAME);
+			MDC.remove(TRACE_ID_NAME);
+		}
 	}
 
 }
