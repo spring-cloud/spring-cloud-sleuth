@@ -16,8 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.GlobalChannelInterceptor;
@@ -27,6 +31,8 @@ import org.springframework.integration.config.GlobalChannelInterceptor;
  */
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)
+@ConditionalOnBean(Trace.class)
+@AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean

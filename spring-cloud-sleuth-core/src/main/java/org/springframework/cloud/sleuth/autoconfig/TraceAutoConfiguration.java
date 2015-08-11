@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.autoconfig;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.Sampler;
@@ -31,6 +32,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Spencer Gibb
  */
 @Configuration
+@ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
 public class TraceAutoConfiguration {
 
 	@Bean

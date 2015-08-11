@@ -21,9 +21,13 @@ import java.util.Collection;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -34,6 +38,8 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(RestTemplate.class)
+@ConditionalOnBean(Trace.class)
+@AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceWebClientAutoConfiguration {
 
 	@Bean

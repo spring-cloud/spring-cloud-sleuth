@@ -33,10 +33,10 @@ import org.springframework.core.annotation.Order;
  * @author Spencer Gibb
  */
 @Slf4j
-@Order(Ordered.LOWEST_PRECEDENCE)
 public class Slf4jSpanListener {
 
 	@EventListener(SpanStartedEvent.class)
+	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void start(SpanStartedEvent event) {
 		Span span = event.getSpan();
 		MDC.put(Trace.SPAN_ID_NAME, span.getSpanId());
@@ -49,6 +49,7 @@ public class Slf4jSpanListener {
 	}
 
 	@EventListener(SpanStoppedEvent.class)
+	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void stop(SpanStoppedEvent event) {
 		//TODO: what should this log level be?
 		log.info("Stopped span: {}", event.getSpan());

@@ -39,7 +39,7 @@ import org.springframework.web.client.RestTemplate;
  */
 @Slf4j
 @RestController
-class SampleController implements
+public class SampleController implements
 ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@Autowired
 	private RestTemplate restTemplate;

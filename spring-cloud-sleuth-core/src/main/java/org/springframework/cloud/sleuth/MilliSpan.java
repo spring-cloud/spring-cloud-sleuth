@@ -56,6 +56,7 @@ public class MilliSpan implements Span {
 	}
 
 	//for serialization
+	@SuppressWarnings("unused")
 	private MilliSpan() {
 		this.begin = 0;
 		this.name = null;

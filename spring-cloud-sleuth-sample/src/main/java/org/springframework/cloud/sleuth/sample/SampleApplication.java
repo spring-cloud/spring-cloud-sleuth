@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.sample;
 
-import com.github.kristofa.brave.LoggingSpanCollectorImpl;
-import com.github.kristofa.brave.SpanCollector;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,6 +24,9 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
+
+import com.github.kristofa.brave.LoggingSpanCollectorImpl;
+import com.github.kristofa.brave.SpanCollector;
 
 /**
  * @author Spencer Gibb

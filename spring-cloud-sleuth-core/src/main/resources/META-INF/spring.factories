@@ -3,6 +3,8 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
 org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.integration.TraceSpringIntegrationAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration

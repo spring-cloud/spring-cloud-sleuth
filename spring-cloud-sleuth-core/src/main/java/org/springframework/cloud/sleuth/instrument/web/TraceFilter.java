@@ -121,6 +121,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			}
 			else {
 				traceScope = this.trace.startSpan(name);
+				request.setAttribute(TRACE_REQUEST_ATTR, traceScope);
 			}
 		}
 
@@ -131,13 +132,12 @@ public class TraceFilter extends OncePerRequestFilter {
 			filterChain.doFilter(request, response);
 		}
 		finally {
-			if (request.isAsyncSupported() && request.isAsyncStarted()) {
-				//TODO: howto deal with response annotations and async?
+			if (isAsyncStarted(request) || request.isAsyncStarted()) {
+				//TODO: how to deal with response annotations and async?
 				return;
 			}
 			if (traceScope != null) {
 				addResponseAnnotations(response);
-
 				traceScope.close();
 			}
 		}

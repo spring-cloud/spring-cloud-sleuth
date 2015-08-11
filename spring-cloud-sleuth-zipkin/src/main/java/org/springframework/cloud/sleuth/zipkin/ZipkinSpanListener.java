@@ -49,7 +49,6 @@ import com.twitter.zipkin.gen.zipkinCoreConstants;
  * @author Spencer Gibb
  */
 @CommonsLog
-@Order(0)
 public class ZipkinSpanListener {
 
 	private SpanCollector spanCollector;
@@ -63,6 +62,7 @@ public class ZipkinSpanListener {
 	}
 
 	@EventListener
+	@Order(0)
 	public void start(SpanStartedEvent event) {
 		if (event.getParent()!=null && event.getParent().isRemote()) {
 			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_RECV);
@@ -71,17 +71,20 @@ public class ZipkinSpanListener {
 	}
 
 	@EventListener
+	@Order(0)
 	public void clientSend(ClientSentEvent event) {
 		event.getSpan().addTimelineAnnotation(zipkinCoreConstants.CLIENT_SEND);
 	}
 
 	@EventListener
+	@Order(0)
 	public void clientReceive(ClientReceivedEvent event) {
 		event.getSpan().addTimelineAnnotation(zipkinCoreConstants.CLIENT_RECV);
 	}
 
 	@EventListener
-	public void start(SpanStoppedEvent event) {
+	@Order(0)
+	public void stop(SpanStoppedEvent event) {
 		if (event.getParent()!=null && event.getParent().isRemote()) {
 			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_SEND);
 			this.spanCollector.collect(convert(event.getParent()));
@@ -93,10 +96,9 @@ public class ZipkinSpanListener {
 	/**
 	 * Converts a given Sleuth span to a Zipkin Span.
 	 * <ul>
-	 * <li>First set the start annotation. [CS, SR], depending whether it is a client service or not.
-	 * <li>Set other id's, etc [TraceId's etc]
+	 * <li>Set id's, etc [TraceId's etc]
+	 * <li>Create timeline annotations based on data from HTrace Span object.
 	 * <li>Create binary annotations based on data from HTrace Span object.
-	 * <li>Set the last annotation. [SS, CR]
 	 * </ul>
 	 */
 	public com.twitter.zipkin.gen.Span convert(Span span) {

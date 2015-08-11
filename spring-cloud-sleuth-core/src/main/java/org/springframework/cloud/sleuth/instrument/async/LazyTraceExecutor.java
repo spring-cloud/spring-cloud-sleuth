@@ -14,40 +14,39 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.scheduling;
+package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.scheduling.annotation.AsyncConfigurer;
-import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
+import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 
 /**
  * @author Dave Syer
  *
  */
 @RequiredArgsConstructor
-public class LazyTraceAsyncCustomizer extends AsyncConfigurerSupport {
+public class LazyTraceExecutor implements Executor {
 
 	private Trace trace;
 	private final BeanFactory beanFactory;
-	private final AsyncConfigurer delegate;
+	private final Executor delegate;
 
 	@Override
-	public Executor getAsyncExecutor() {
+	public void execute(Runnable command) {
 		if (this.trace == null) {
-			this.trace = this.beanFactory.getBean(Trace.class);
+			try {
+				this.trace = this.beanFactory.getBean(Trace.class);
+			}
+			catch (NoSuchBeanDefinitionException e) {
+				this.delegate.execute(command);
+			}
 		}
-		return new TraceExecutor(this.trace, this.delegate.getAsyncExecutor());
-	}
-
-	@Override
-	public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
-		return this.delegate.getAsyncUncaughtExceptionHandler();
+		this.delegate.execute(new TraceRunnable(this.trace, command));
 	}
 
 }

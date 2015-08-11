@@ -28,6 +28,7 @@ public class TimelineAnnotation {
 	private final long time;
 	private final String msg;
 
+	@SuppressWarnings("unused")
 	private TimelineAnnotation() {
 		this.time = 0;
 		this.msg = null;

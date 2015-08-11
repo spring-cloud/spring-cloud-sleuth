@@ -32,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Spencer Gibb
  */
 @CommonsLog
-@Order(Ordered.LOWEST_PRECEDENCE)
 @Data
 public class JsonLogSpanListener {
 
@@ -41,16 +40,17 @@ public class JsonLogSpanListener {
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	public JsonLogSpanListener() {
-		prefix = "[span]";
-		suffix = "[endspan]";
-		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		this.prefix = "[span]";
+		this.suffix = "[endspan]";
+		this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
 	@SneakyThrows
 	@EventListener(SpanStoppedEvent.class)
+	@Order(Ordered.LOWEST_PRECEDENCE-10)
 	public void stop(SpanStoppedEvent event) {
-		log.info(prefix + objectMapper.writeValueAsString(event.getSpan()) +
-				suffix);
+		log.info(this.prefix + this.objectMapper.writeValueAsString(event.getSpan()) +
+				this.suffix);
 	}
 
 }
