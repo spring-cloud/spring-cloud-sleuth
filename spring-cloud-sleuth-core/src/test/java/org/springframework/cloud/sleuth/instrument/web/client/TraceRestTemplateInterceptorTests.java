@@ -1,0 +1,108 @@
+/*
+ * Copyright 2015 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.cloud.sleuth.instrument.web.client;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.cloud.sleuth.MilliSpan;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceContextHolder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ * @author Dave Syer
+ *
+ */
+public class TraceRestTemplateInterceptorTests {
+
+	private MockMvc mockMvc = MockMvcBuilders.standaloneSetup(new TestController())
+			.build();
+
+	private RestTemplate template = new RestTemplate(new MockMvcClientHttpRequestFactory(
+			this.mockMvc));
+
+	@Before
+	public void setup() {
+		this.template
+		.setInterceptors(Arrays
+				.<ClientHttpRequestInterceptor> asList(new TraceRestTemplateInterceptor()));
+	}
+
+	@After
+	public void clean() {
+		TraceContextHolder.setCurrentSpan(null);
+	}
+
+	@Test
+	public void headersAddedWhenTracing() {
+		TraceContextHolder.setCurrentSpan(MilliSpan.builder().traceId("foo")
+				.spanId("bar").build());
+		@SuppressWarnings("unchecked")
+		Map<String, String> headers = this.template.getForEntity("/", Map.class)
+		.getBody();
+		assertEquals("bar", headers.get(Trace.SPAN_ID_NAME));
+		assertEquals("foo", headers.get(Trace.TRACE_ID_NAME));
+	}
+
+	@Test
+	public void headersNotAddedWhenNotTracing() {
+		@SuppressWarnings("unchecked")
+		Map<String, String> headers = this.template.getForEntity("/", Map.class)
+		.getBody();
+		assertFalse("Wrong headers: " + headers, headers.containsKey(Trace.SPAN_ID_NAME));
+	}
+
+	@RestController
+	public static class TestController {
+		@RequestMapping("/")
+		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
+			Map<String, String> map = new HashMap<String, String>();
+			addHeaders(map, headers, Trace.SPAN_ID_NAME, Trace.TRACE_ID_NAME,
+					Trace.PARENT_ID_NAME, Trace.SPAN_NAME_NAME, Trace.PROCESS_ID_NAME);
+			return map;
+		}
+
+		private void addHeaders(Map<String, String> map, HttpHeaders headers,
+				String... names) {
+			if (headers != null) {
+				for (String name : names) {
+					String value = headers.getFirst(name);
+					if (value != null) {
+						map.put(name, value);
+					}
+				}
+			}
+		}
+	}
+
+}

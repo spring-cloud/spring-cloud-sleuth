@@ -60,27 +60,27 @@ ApplicationEventPublisherAware {
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
+		if (getCurrentSpan() == null) {
+			return execution.execute(request, body);
+		}
 		setHeader(request, SPAN_ID_NAME, getCurrentSpan().getSpanId());
 		setHeader(request, TRACE_ID_NAME, getCurrentSpan().getTraceId());
 		setHeader(request, SPAN_NAME_NAME, getCurrentSpan().getName());
-		String parentId = getParentId(getCurrentSpan());
-		if (parentId != null) {
-			setHeader(request, PARENT_ID_NAME, parentId);
-		}
-		String processId = getCurrentSpan().getProcessId();
-		if (processId != null) {
-			setHeader(request, PROCESS_ID_NAME, processId);
-		}
+		setHeader(request, PARENT_ID_NAME, getParentId(getCurrentSpan()));
+		setHeader(request, PROCESS_ID_NAME, getCurrentSpan().getProcessId());
 		publish(new ClientSentEvent(this, getCurrentSpan()));
 		return new TraceHttpResponse(this, execution.execute(request, body));
 	}
 
 	public void close() {
+		if (getCurrentSpan() == null) {
+			return;
+		}
 		publish(new ClientReceivedEvent(this, getCurrentSpan()));
 	}
 
 	private void publish(ApplicationEvent event) {
-		if (this.publisher !=null) {
+		if (this.publisher != null) {
 			this.publisher.publishEvent(event);
 		}
 	}
@@ -91,7 +91,7 @@ ApplicationEventPublisherAware {
 	}
 
 	public void setHeader(HttpRequest request, String name, String value) {
-		if (!request.getHeaders().containsKey(name) && isTracing()) {
+		if (value != null && !request.getHeaders().containsKey(name) && isTracing()) {
 			request.getHeaders().add(name, value);
 		}
 	}

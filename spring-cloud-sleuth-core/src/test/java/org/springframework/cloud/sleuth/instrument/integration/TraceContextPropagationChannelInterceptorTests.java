@@ -22,8 +22,8 @@ import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
 import org.junit.After;
 import org.junit.Test;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -47,18 +47,18 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 	@After
 	public void close() {
-		if (context != null) {
-			context.close();
+		if (this.context != null) {
+			this.context.close();
 		}
 	}
 
 	@Test
 	public void testSpanPropagation() {
-		context = SpringApplication.run(App.class);
+		this.context = new SpringApplicationBuilder(App.class).web(false).run();
 
-		PollableChannel channel = context.getBean("channel", PollableChannel.class);
+		PollableChannel channel = this.context.getBean("channel", PollableChannel.class);
 
-		Trace trace = context.getBean(Trace.class);
+		Trace trace = this.context.getBean(Trace.class);
 
 		TraceScope traceScope = trace.startSpan("testSendMessage", new AlwaysSampler(), null);
 		channel.send(MessageBuilder.withPayload("hi").build());
