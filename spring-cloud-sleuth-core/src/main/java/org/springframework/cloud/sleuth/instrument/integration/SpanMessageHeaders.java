@@ -16,10 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
 import java.util.HashMap;
@@ -37,27 +36,28 @@ import org.springframework.messaging.Message;
 public class SpanMessageHeaders {
 
 	public static Message<?> addSpanHeaders(Message<?> message, Span span) {
-		if (span==null) {
+		if (span == null) {
+			if (!message.getHeaders().containsKey(NOT_SAMPLED_NAME)) {
+				return MessageBuilder.fromMessage(message).setHeader(NOT_SAMPLED_NAME, "")
+						.build();
+			}
 			return message;
 		}
 		Map<String, String> headers = new HashMap<String, String>();
 		addHeader(headers, TRACE_ID_NAME, span.getTraceId());
 		addHeader(headers, SPAN_ID_NAME, span.getSpanId());
 		addHeader(headers, PARENT_ID_NAME, getFirst(span.getParents()));
-		addHeader(headers, SPAN_NAME_NAME, span.getName());
-		addHeader(headers, PROCESS_ID_NAME, span.getProcessId());
 		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
 	}
 
 	private static void addHeader(Map<String, String> headers, String name, String value) {
-		if (value!=null) {
+		if (value != null) {
 			headers.put(name, value);
 		}
 	}
 
 	private static String getFirst(List<String> parents) {
-		return parents==null || parents.isEmpty() ? null : parents.get(0);
+		return parents == null || parents.isEmpty() ? null : parents.get(0);
 	}
-
 
 }

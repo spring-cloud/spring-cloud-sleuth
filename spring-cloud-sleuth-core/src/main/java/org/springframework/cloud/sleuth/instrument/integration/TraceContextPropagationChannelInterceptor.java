@@ -17,9 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
 import static org.springframework.cloud.sleuth.TraceContextHolder.setCurrentSpan;
@@ -144,14 +142,9 @@ implements ExecutorChannelInterceptor {
 
 			setHeader(headers, SPAN_ID_NAME, this.span.getSpanId());
 			setHeader(headers, TRACE_ID_NAME, this.span.getTraceId());
-			setHeader(headers, SPAN_NAME_NAME, this.span.getName());
 			String parentId = getParentId(getCurrentSpan());
 			if (parentId != null) {
 				setHeader(headers, PARENT_ID_NAME, parentId);
-			}
-			String processId = this.span.getProcessId();
-			if (processId != null) {
-				setHeader(headers, PROCESS_ID_NAME, processId);
 			}
 			this.messageHeaders = new MessageHeaders(headers);
 		}
