@@ -24,9 +24,9 @@ import org.springframework.integration.annotation.MessagingGateway;
  *
  */
 @MessagingGateway
-public interface SampleGateway {
+public interface SampleRequestResponse {
 
-	@Gateway(requestChannel="messages")
-	void send(String message);
+	@Gateway(requestChannel="xform")
+	String send(String input);
 
 }

@@ -43,7 +43,10 @@ import com.github.kristofa.brave.SpanCollector;
 public class SampleMessagingApplication {
 
 	@Autowired
-	private SampleGateway gateway;
+	private SampleSink gateway;
+
+	@Autowired
+	private SampleRequestResponse transformer;
 
 	@Bean
 	public Sampler<?> defaultSampler() {
@@ -55,6 +58,12 @@ public class SampleMessagingApplication {
 		String msg = "Hello";
 		this.gateway.send(msg);
 		return msg;
+	}
+
+	@RequestMapping("/xform")
+	public String xform() {
+		String msg = "Hello";
+		return this.transformer.send(msg);
 	}
 
 	public static void main(String[] args) {

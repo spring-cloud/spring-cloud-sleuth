@@ -3,11 +3,11 @@ server:
 
 spring:
   application:
-    name: testSleuthApp
+    name: testSleuthMessaging
   sleuth:
     log:
       json:
-        enabled: true
+#        enabled: true
 
 logging:
   pattern:
@@ -15,4 +15,4 @@ logging:
 
 span:
   logging:
-    enabled: true
+#   enabled: true

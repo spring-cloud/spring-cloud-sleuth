@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: testSleuthApp
+    name: testSleuthZipkin
 
 logging:
   pattern:
@@ -11,7 +11,7 @@ logging:
 
 span:
   logging:
-    enabled: true
+#    enabled: true
 
 endpoints:
   health:
