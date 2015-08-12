@@ -1,0 +1,2 @@
+application.name: foo-service
+foo-service.ribbon.listOfServers: localhost:9000
