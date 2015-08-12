@@ -52,7 +52,7 @@ public class FeignTraceTest {
 				.spanId(currentSpanId).parent(currentParentId).build());
 
 		// when
-		ResponseEntity<String> response = testFeignInterface.getHealth();
+		ResponseEntity<String> response = testFeignInterface.getTraceId();
 
 		// then
 		assertThat(getHeader(response, TRACE_ID_NAME)).isEqualTo(currentTraceId);
@@ -69,7 +69,7 @@ public class FeignTraceTest {
 	@FeignClient("fooservice")
 	public interface TestFeignInterface {
 		@RequestMapping(method = RequestMethod.GET, value = "/traceid")
-		ResponseEntity<String> getHealth();
+		ResponseEntity<String> getTraceId();
 	}
 
 	@Configuration
@@ -88,7 +88,7 @@ public class FeignTraceTest {
 	public static class FooController {
 
 		@RequestMapping(value = "/traceid", method = RequestMethod.GET)
-		public String foo(@RequestHeader(TRACE_ID_NAME) String traceId,
+		public String traceId(@RequestHeader(TRACE_ID_NAME) String traceId,
 				@RequestHeader(SPAN_ID_NAME) String spanId,
 				@RequestHeader(PARENT_ID_NAME) String parentId) {
 			assertThat(traceId).isNotEmpty();

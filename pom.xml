@@ -169,7 +169,7 @@
 			<dependency>
 				<groupId>com.netflix.feign</groupId>
 				<artifactId>feign-core</artifactId>
-				<version>8.1.1</version>
+				<version>8.7.1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.aspectj</groupId>
