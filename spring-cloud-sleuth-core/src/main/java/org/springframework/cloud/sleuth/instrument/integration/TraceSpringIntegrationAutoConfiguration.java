@@ -33,12 +33,19 @@ import org.springframework.integration.config.GlobalChannelInterceptor;
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Trace.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
+@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor
-	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 	public TraceContextPropagationChannelInterceptor traceContextPropagationChannelInterceptor() {
 		return new TraceContextPropagationChannelInterceptor();
 	}
+
+	@Bean
+	@GlobalChannelInterceptor
+	public TraceChannelInterceptor traceChannelInterceptor(Trace trace) {
+		return new TraceChannelInterceptor(trace);
+	}
+
 }

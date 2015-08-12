@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
@@ -27,12 +26,12 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.test.ImportAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
-import org.springframework.cloud.sleuth.TraceScope;
-import org.springframework.cloud.sleuth.instrument.integration.TraceContextPropagationChannelInterceptorTests.App;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.integration.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,20 +45,17 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * @author Spencer Gibb
+ * @author Dave Syer
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes=App.class)
 @IntegrationTest
 @DirtiesContext
-public class TraceContextPropagationChannelInterceptorTests {
+public class TraceChannelInterceptorTests {
 
 	@Autowired
 	@Qualifier("channel")
 	private PollableChannel channel;
-
-	@Autowired
-	private Trace trace;
 
 	@After
 	public void close() {
@@ -67,19 +63,16 @@ public class TraceContextPropagationChannelInterceptorTests {
 	}
 
 	@Test
-	public void testSpanPropagation() {
+	public void testSpanCreation() {
 
-		TraceScope traceScope = this.trace.startSpan("testSendMessage", new AlwaysSampler(), null);
 		this.channel.send(MessageBuilder.withPayload("hi").build());
-		String expectedSpanId = traceScope.getSpan().getSpanId();
-		traceScope.close();
 
 		Message<?> message = this.channel.receive(0);
 
 		assertNotNull("message was null", message);
 
 		String spanId = message.getHeaders().get(SPAN_ID_NAME, String.class);
-		assertEquals("spanId was wrong", expectedSpanId,  spanId);
+		assertNotNull("spanId was null", spanId);
 
 		String traceId = message.getHeaders().get(TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
@@ -89,11 +82,17 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@EnableAutoConfiguration
 	@MessageEndpoint
 	@EnableIntegration
+	@ImportAutoConfiguration({TraceSpringIntegrationAutoConfiguration.class, TraceAutoConfiguration.class})
 	static class App {
 
 		@Bean
 		public QueueChannel channel() {
 			return new QueueChannel();
+		}
+
+		@Bean
+		public AlwaysSampler alwaysSampler() {
+			return new AlwaysSampler();
 		}
 
 	}
