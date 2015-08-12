@@ -1,9 +1,13 @@
 server:
-  port: 3380
+  port: 3379
 
 spring:
   application:
     name: testSleuthApp
+  sleuth:
+    log:
+      json:
+        enabled: true
 
 logging:
   pattern:

@@ -21,26 +21,26 @@ import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.test.ImportAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.cloud.sleuth.instrument.integration.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.MessageEndpoint;
-import org.springframework.integration.channel.QueueChannel;
-import org.springframework.integration.config.EnableIntegration;
+import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.PollableChannel;
+import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessagingException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -51,43 +51,66 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @SpringApplicationConfiguration(classes=App.class)
 @IntegrationTest
 @DirtiesContext
-public class TraceChannelInterceptorTests {
+public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Autowired
 	@Qualifier("channel")
-	private PollableChannel channel;
+	private DirectChannel channel;
+
+	@Autowired
+	private Trace trace;
+
+	private Message<?> message;
+
+	@Override
+	public void handleMessage(Message<?> message) throws MessagingException {
+		this.message = message;
+	}
+
+	@Before
+	public void init() {
+		this.channel.subscribe(this);
+	}
 
 	@After
 	public void close() {
 		TraceContextHolder.setCurrentSpan(null);
+		this.channel.unsubscribe(this);
 	}
 
 	@Test
 	public void testSpanCreation() {
-
 		this.channel.send(MessageBuilder.withPayload("hi").build());
+		assertNotNull("message was null", this.message);
 
-		Message<?> message = this.channel.receive(0);
-
-		assertNotNull("message was null", message);
-
-		String spanId = message.getHeaders().get(SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 
-		String traceId = message.getHeaders().get(TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TRACE_ID_NAME, String.class);
+		assertNotNull("traceId was null", traceId);
+	}
+
+	@Test
+	public void testHeaderCreation() {
+		TraceScope traceScope = this.trace.startSpan("testSendMessage", new AlwaysSampler(), null);
+		this.channel.send(MessageBuilder.withPayload("hi").build());
+		traceScope.close();
+		assertNotNull("message was null", this.message);
+
+		String spanId = this.message.getHeaders().get(SPAN_ID_NAME, String.class);
+		assertNotNull("spanId was null", spanId);
+
+		String traceId = this.message.getHeaders().get(TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
-	@MessageEndpoint
-	@EnableIntegration
-	@ImportAutoConfiguration({TraceSpringIntegrationAutoConfiguration.class, TraceAutoConfiguration.class})
 	static class App {
 
 		@Bean
-		public QueueChannel channel() {
-			return new QueueChannel();
+		public DirectChannel channel() {
+			return new DirectChannel();
 		}
 
 		@Bean

@@ -34,7 +34,7 @@ import com.github.kristofa.brave.SpanCollector;
 @SpringBootApplication
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableAsync
-public class SampleApplication {
+public class SampleZipkinApplication {
 
 	public static final String CLIENT_NAME = "testApp";
 
@@ -49,12 +49,12 @@ public class SampleApplication {
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(SampleApplication.class, args);
+		SpringApplication.run(SampleZipkinApplication.class, args);
 	}
 
 	// Use this for debugging (or if there is no Zipkin collector running on port 9410)
 	@Bean
-	@ConditionalOnProperty("sleuth.sample.logging.collector.enabled")
+	@ConditionalOnProperty("span.logging.enabled")
 	public SpanCollector spanCollector() {
 		return new LoggingSpanCollectorImpl();
 	}

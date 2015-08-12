@@ -174,7 +174,7 @@ implements ExecutorChannelInterceptor {
 
 		@Override
 		public String toString() {
-			return "MessageWithThreadState{" + "message=" + this.message + ", span="
+			return "MessageWithSpan{" + "message=" + this.message + ", span="
 					+ this.span + ", messageHeaders=" + this.messageHeaders + '}';
 		}
 

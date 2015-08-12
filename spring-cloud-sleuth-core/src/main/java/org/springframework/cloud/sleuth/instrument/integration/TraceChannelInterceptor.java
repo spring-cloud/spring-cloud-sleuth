@@ -23,18 +23,12 @@ import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
-import org.springframework.cloud.sleuth.NullScope;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.integration.context.IntegrationObjectSupport;
-import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
@@ -54,7 +48,7 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		if (TraceContextHolder.isTracing()) {
-			return message;
+			return SpanMessageHeaders.addSpanHeaders(message, TraceContextHolder.getCurrentSpan());
 		}
 		String spanId = getHeader(message, SPAN_ID_NAME);
 		String traceId = getHeader(message, TRACE_ID_NAME);
@@ -67,9 +61,9 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			String parentId = getHeader(message, PARENT_ID_NAME);
 			String processId = getHeader(message, PROCESS_ID_NAME);
-			String parentName = getHeader(message, SPAN_NAME_NAME);
-			if (parentName != null) {
-				span.name(parentName);
+			String spanName = getHeader(message, SPAN_NAME_NAME);
+			if (spanName != null) {
+				span.name(spanName);
 			}
 			if (processId != null) {
 				span.processId(processId);
@@ -85,27 +79,7 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 		else {
 			traceScope = this.trace.startSpan(name);
 		}
-		if (traceScope == NullScope.INSTANCE) {
-			return message;
-		} else {
-			Map<String, String> headers = new HashMap<String, String>();
-			addHeader(headers, TRACE_ID_NAME, traceScope.getSpan().getTraceId());
-			addHeader(headers, SPAN_ID_NAME, traceScope.getSpan().getSpanId());
-			addHeader(headers, PARENT_ID_NAME, getFirst(traceScope.getSpan().getParents()));
-			addHeader(headers, SPAN_NAME_NAME, traceScope.getSpan().getName());
-			addHeader(headers, PROCESS_ID_NAME, traceScope.getSpan().getProcessId());
-			return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
-		}
-	}
-
-	private void addHeader(Map<String, String> headers, String name, String value) {
-		if (value!=null) {
-			headers.put(name, value);
-		}
-	}
-
-	private String getFirst(List<String> parents) {
-		return parents==null || parents.isEmpty() ? null : parents.get(0);
+		return SpanMessageHeaders.addSpanHeaders(message, traceScope.getSpan());
 	}
 
 	private String getHeader(Message<?> message, String name) {

@@ -36,9 +36,7 @@ import org.springframework.cloud.sleuth.instrument.integration.TraceContextPropa
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.channel.QueueChannel;
-import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.PollableChannel;
@@ -87,8 +85,6 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 	@Configuration
 	@EnableAutoConfiguration
-	@MessageEndpoint
-	@EnableIntegration
 	static class App {
 
 		@Bean
