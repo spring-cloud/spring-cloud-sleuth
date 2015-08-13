@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
@@ -47,8 +48,10 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (TraceContextHolder.isTracing()) {
-			return SpanMessageHeaders.addSpanHeaders(message, TraceContextHolder.getCurrentSpan());
+		if (TraceContextHolder.isTracing()
+				|| message.getHeaders().containsKey(NOT_SAMPLED_NAME)) {
+			return SpanMessageHeaders.addSpanHeaders(message,
+					TraceContextHolder.getCurrentSpan());
 		}
 		String spanId = getHeader(message, SPAN_ID_NAME);
 		String traceId = getHeader(message, TRACE_ID_NAME);

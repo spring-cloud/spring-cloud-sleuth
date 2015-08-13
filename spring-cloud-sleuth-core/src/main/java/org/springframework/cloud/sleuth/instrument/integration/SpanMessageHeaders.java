@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
@@ -37,7 +38,11 @@ import org.springframework.messaging.Message;
 public class SpanMessageHeaders {
 
 	public static Message<?> addSpanHeaders(Message<?> message, Span span) {
-		if (span==null) {
+		if (span == null) {
+			if (!message.getHeaders().containsKey(NOT_SAMPLED_NAME)) {
+				return MessageBuilder.fromMessage(message)
+						.setHeader(NOT_SAMPLED_NAME, "").build();
+			}
 			return message;
 		}
 		Map<String, String> headers = new HashMap<String, String>();
@@ -50,14 +55,13 @@ public class SpanMessageHeaders {
 	}
 
 	private static void addHeader(Map<String, String> headers, String name, String value) {
-		if (value!=null) {
+		if (value != null) {
 			headers.put(name, value);
 		}
 	}
 
 	private static String getFirst(List<String> parents) {
-		return parents==null || parents.isEmpty() ? null : parents.get(0);
+		return parents == null || parents.isEmpty() ? null : parents.get(0);
 	}
-
 
 }

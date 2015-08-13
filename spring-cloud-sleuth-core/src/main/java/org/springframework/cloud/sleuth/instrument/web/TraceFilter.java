@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
@@ -82,13 +83,17 @@ public class TraceFilter extends OncePerRequestFilter {
 					throws ServletException, IOException {
 
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		boolean skip = this.skipPattern.matcher(uri).matches();
+		boolean skip = this.skipPattern.matcher(uri).matches()
+				|| getHeader(request, response, NOT_SAMPLED_NAME) != null;
 
 		TraceScope traceScope = (TraceScope) request.getAttribute(TRACE_REQUEST_ATTR);
 		if (traceScope != null) {
 			this.trace.continueSpan(traceScope.getSpan());
 		}
-		else if (!skip) {
+		else if (skip) {
+			addToResponseIfNotPresent(response, NOT_SAMPLED_NAME, "");
+		}
+		else {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
 			String name = "http" + uri;
@@ -133,7 +138,7 @@ public class TraceFilter extends OncePerRequestFilter {
 		}
 		finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
-				//TODO: how to deal with response annotations and async?
+				// TODO: how to deal with response annotations and async?
 				return;
 			}
 			if (traceScope != null) {
@@ -145,11 +150,10 @@ public class TraceFilter extends OncePerRequestFilter {
 
 	protected void addRequestAnnotations(HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.trace.addKVAnnotation("/http/request/uri",
-				request.getRequestURL().toString());
+		this.trace.addKVAnnotation("/http/request/uri", request.getRequestURL()
+				.toString());
 		this.trace.addKVAnnotation("/http/request/endpoint", uri);
-		this.trace.addKVAnnotation("/http/request/method",
-				request.getMethod());
+		this.trace.addKVAnnotation("/http/request/method", request.getMethod());
 
 		Enumeration<String> headerNames = request.getHeaderNames();
 		while (headerNames.hasMoreElements()) {
@@ -157,7 +161,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			Enumeration<String> values = request.getHeaders(name);
 			while (values.hasMoreElements()) {
 				String value = values.nextElement();
-				String key = "/http/request/headers/"+name.toLowerCase();
+				String key = "/http/request/headers/" + name.toLowerCase();
 				this.trace.addKVAnnotation(key, value);
 
 			}
@@ -170,7 +174,7 @@ public class TraceFilter extends OncePerRequestFilter {
 
 		for (String name : response.getHeaderNames()) {
 			for (String value : response.getHeaders(name)) {
-				String key = "/http/response/headers/"+name.toLowerCase();
+				String key = "/http/response/headers/" + name.toLowerCase();
 				this.trace.addKVAnnotation(key, value);
 			}
 		}

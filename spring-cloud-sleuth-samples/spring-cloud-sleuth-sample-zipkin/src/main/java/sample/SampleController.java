@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.sample;
+package sample;
 
 import java.util.Random;
 import java.util.concurrent.Callable;

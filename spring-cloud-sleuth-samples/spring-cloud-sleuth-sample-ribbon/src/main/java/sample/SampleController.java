@@ -14,33 +14,41 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.sample;
+package sample;
 
 import java.util.Random;
 
 import lombok.SneakyThrows;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Spencer Gibb
+ * @author Dave Syer
  */
-@Component
-public class SampleBackground {
+@RestController
+public class SampleController  {
 
 	@Autowired
-	private Trace trace;
+	private RestTemplate restTemplate;
 
 	@SneakyThrows
-	@Async
-	public void background() {
+	@RequestMapping("/")
+	public String hi() {
 		final Random random = new Random();
-		int millis = random.nextInt(1000);
-		Thread.sleep(millis);
-		this.trace.addKVAnnotation("background-sleep-millis", String.valueOf(millis));
+		Thread.sleep(random.nextInt(1000));
+		String s = this.restTemplate.getForObject("http://zipkin/hi2", String.class);
+		return "hi/" + s;
+	}
+
+	@SneakyThrows
+	@RequestMapping("/call")
+	public String traced() {
+		String s = this.restTemplate.getForObject("http://zipkin/call", String.class);
+		return "call/" + s;
 	}
 
 }

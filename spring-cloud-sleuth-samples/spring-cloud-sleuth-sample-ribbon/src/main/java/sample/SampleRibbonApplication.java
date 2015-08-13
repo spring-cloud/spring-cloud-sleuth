@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.sample;
+package sample;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
@@ -34,9 +35,8 @@ import com.github.kristofa.brave.SpanCollector;
 @SpringBootApplication
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableAsync
-public class SampleZipkinApplication {
-
-	public static final String CLIENT_NAME = "testApp";
+@EnableZuulProxy
+public class SampleRibbonApplication {
 
 	@Bean
 	public Sampler<?> defaultSampler() {
@@ -44,12 +44,12 @@ public class SampleZipkinApplication {
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(SampleZipkinApplication.class, args);
+		SpringApplication.run(SampleRibbonApplication.class, args);
 	}
 
 	// Use this for debugging (or if there is no Zipkin collector running on port 9410)
 	@Bean
-	@ConditionalOnProperty("span.logging.enabled")
+	@ConditionalOnProperty(value="sample.zipkin.enabled", havingValue="false")
 	public SpanCollector spanCollector() {
 		return new LoggingSpanCollectorImpl();
 	}

@@ -16,7 +16,6 @@
 
 package sample;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,10 +23,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.github.kristofa.brave.LoggingSpanCollectorImpl;
 import com.github.kristofa.brave.SpanCollector;
@@ -38,36 +34,17 @@ import com.github.kristofa.brave.SpanCollector;
 @SpringBootApplication
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableAsync
-@IntegrationComponentScan
-@RestController
-public class SampleMessagingApplication {
+public class SampleZipkinApplication {
 
-	@Autowired
-	private SampleSink gateway;
-
-	@Autowired
-	private SampleRequestResponse transformer;
+	public static final String CLIENT_NAME = "testApp";
 
 	@Bean
 	public Sampler<?> defaultSampler() {
 		return new AlwaysSampler();
 	}
 
-	@RequestMapping("/")
-	public String home() {
-		String msg = "Hello";
-		this.gateway.send(msg);
-		return msg;
-	}
-
-	@RequestMapping("/xform")
-	public String xform() {
-		String msg = "Hello";
-		return this.transformer.send(msg);
-	}
-
 	public static void main(String[] args) {
-		SpringApplication.run(SampleMessagingApplication.class, args);
+		SpringApplication.run(SampleZipkinApplication.class, args);
 	}
 
 	// Use this for debugging (or if there is no Zipkin collector running on port 9410)

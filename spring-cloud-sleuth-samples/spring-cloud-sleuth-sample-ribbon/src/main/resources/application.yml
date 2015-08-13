@@ -1,0 +1,46 @@
+server:
+  port: 3382
+
+spring:
+  application:
+    name: testSleuthRibbon
+  sleuth:
+    log:
+      json:
+        enabled: true
+
+zipkin:
+  ribbon:
+    listOfServers: localhost:3380
+messaging:
+  ribbon:
+    listOfServers: localhost:3381
+vanilla:
+  ribbon:
+    listOfServers: localhost:3379
+
+hystrix:
+  execution:
+    isolation:
+      strategy: SEMAPHORE
+
+zuul:
+  routes:
+    zipkin:
+      url: http://localhost:3380
+    messaging:
+      url: http://localhost:3381
+    vanilla:
+      url: http://localhost:3379
+
+logging:
+  pattern:
+    console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}]){yellow} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wex'
+
+endpoints:
+  health:
+    sensitive: false
+  restart:
+    enabled: true
+  shutdown:
+    enabled: true

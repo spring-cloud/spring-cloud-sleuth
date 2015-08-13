@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
@@ -61,6 +62,7 @@ ApplicationEventPublisherAware {
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
 		if (getCurrentSpan() == null) {
+			setHeader(request, NOT_SAMPLED_NAME, "");
 			return execution.execute(request, body);
 		}
 		setHeader(request, SPAN_ID_NAME, getCurrentSpan().getSpanId());

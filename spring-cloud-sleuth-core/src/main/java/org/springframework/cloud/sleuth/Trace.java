@@ -56,6 +56,7 @@ public interface Trace {
 	String SPAN_NAME_NAME = "X-Span-Name";
 	String PARENT_ID_NAME = "X-Parent-Id";
 	String PROCESS_ID_NAME = "X-Process-Id";
+	String NOT_SAMPLED_NAME = "X-Not-Sampled";
 
 	/**
 	 * Creates a trace scope wrapping a new span.
