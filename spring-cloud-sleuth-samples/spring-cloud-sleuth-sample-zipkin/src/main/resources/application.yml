@@ -12,11 +12,3 @@ logging:
 sample:
   zipkin:
 #    enabled: false
-
-endpoints:
-  health:
-    sensitive: false
-  restart:
-    enabled: true
-  shutdown:
-    enabled: true
