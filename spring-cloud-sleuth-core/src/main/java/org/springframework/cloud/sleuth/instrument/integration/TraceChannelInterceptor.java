@@ -16,9 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -46,7 +47,7 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (TraceContextHolder.isTracing() || message.getHeaders().containsKey(NOT_SAMPLED_NAME)) {
+		if (TraceContextHolder.isTracing()) {
 			return SpanMessageHeaders.addSpanHeaders(message, TraceContextHolder.getCurrentSpan());
 		}
 		String spanId = getHeader(message, SPAN_ID_NAME);
@@ -59,6 +60,14 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			String parentId = getHeader(message, PARENT_ID_NAME);
+			String processId = getHeader(message, PROCESS_ID_NAME);
+			String spanName = getHeader(message, SPAN_NAME_NAME);
+			if (spanName != null) {
+				span.name(spanName);
+			}
+			if (processId != null) {
+				span.processId(processId);
+			}
 			if (parentId != null) {
 				span.parent(parentId);
 			}

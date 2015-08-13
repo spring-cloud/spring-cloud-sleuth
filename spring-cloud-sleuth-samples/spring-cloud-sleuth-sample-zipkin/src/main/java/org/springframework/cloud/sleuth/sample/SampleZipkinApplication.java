@@ -43,11 +43,6 @@ public class SampleZipkinApplication {
 		return new AlwaysSampler();
 	}
 
-	@Bean
-	public SampleController sampleController() {
-		return new SampleController();
-	}
-
 	public static void main(String[] args) {
 		SpringApplication.run(SampleZipkinApplication.class, args);
 	}

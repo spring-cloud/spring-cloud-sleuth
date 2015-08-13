@@ -16,7 +16,9 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
 import static org.springframework.cloud.sleuth.TraceContextHolder.isTracing;
@@ -63,7 +65,9 @@ ApplicationEventPublisherAware {
 		}
 		setHeader(request, SPAN_ID_NAME, getCurrentSpan().getSpanId());
 		setHeader(request, TRACE_ID_NAME, getCurrentSpan().getTraceId());
+		setHeader(request, SPAN_NAME_NAME, getCurrentSpan().getName());
 		setHeader(request, PARENT_ID_NAME, getParentId(getCurrentSpan()));
+		setHeader(request, PROCESS_ID_NAME, getCurrentSpan().getProcessId());
 		publish(new ClientSentEvent(this, getCurrentSpan()));
 		return new TraceHttpResponse(this, execution.execute(request, body));
 	}

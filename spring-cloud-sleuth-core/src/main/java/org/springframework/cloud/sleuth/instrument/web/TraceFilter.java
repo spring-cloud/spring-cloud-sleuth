@@ -15,9 +15,10 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -81,15 +82,13 @@ public class TraceFilter extends OncePerRequestFilter {
 					throws ServletException, IOException {
 
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		boolean skip = this.skipPattern.matcher(uri).matches() || getHeader(request, response, NOT_SAMPLED_NAME)!=null;
+		boolean skip = this.skipPattern.matcher(uri).matches();
 
 		TraceScope traceScope = (TraceScope) request.getAttribute(TRACE_REQUEST_ATTR);
 		if (traceScope != null) {
 			this.trace.continueSpan(traceScope.getSpan());
 		}
-		else if (skip) {
-			addToResponseIfNotPresent(response, NOT_SAMPLED_NAME, "");
-		} else {
+		else if (!skip) {
 			String spanId = getHeader(request, response, SPAN_ID_NAME);
 			String traceId = getHeader(request, response, TRACE_ID_NAME);
 			String name = "http" + uri;
@@ -98,6 +97,14 @@ public class TraceFilter extends OncePerRequestFilter {
 				MilliSpanBuilder span = MilliSpan.builder().traceId(traceId)
 						.spanId(spanId);
 				String parentId = getHeader(request, response, PARENT_ID_NAME);
+				String processId = getHeader(request, response, PROCESS_ID_NAME);
+				String parentName = getHeader(request, response, SPAN_NAME_NAME);
+				if (parentName != null) {
+					span.name(parentName);
+				}
+				if (processId != null) {
+					span.processId(processId);
+				}
 				if (parentId != null) {
 					span.parent(parentId);
 				}

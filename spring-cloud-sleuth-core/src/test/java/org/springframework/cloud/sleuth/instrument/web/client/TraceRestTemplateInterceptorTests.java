@@ -88,7 +88,7 @@ public class TraceRestTemplateInterceptorTests {
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
 			Map<String, String> map = new HashMap<String, String>();
 			addHeaders(map, headers, Trace.SPAN_ID_NAME, Trace.TRACE_ID_NAME,
-					Trace.PARENT_ID_NAME);
+					Trace.PARENT_ID_NAME, Trace.SPAN_NAME_NAME, Trace.PROCESS_ID_NAME);
 			return map;
 		}
 

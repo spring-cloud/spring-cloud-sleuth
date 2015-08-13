@@ -17,8 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
@@ -50,7 +48,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Dave Syer
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = App.class)
+@SpringApplicationConfiguration(classes=App.class)
 @IntegrationTest
 @DirtiesContext
 public class TraceChannelInterceptorTests implements MessageHandler {
@@ -81,16 +79,6 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	}
 
 	@Test
-	public void testNoSpanCreation() {
-		this.channel.send(MessageBuilder.withPayload("hi").setHeader(NOT_SAMPLED_NAME, "")
-				.build());
-		assertNotNull("message was null", this.message);
-
-		String spanId = this.message.getHeaders().get(SPAN_ID_NAME, String.class);
-		assertNull("spanId was not null", spanId);
-	}
-
-	@Test
 	public void testSpanCreation() {
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		assertNotNull("message was null", this.message);
@@ -104,8 +92,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void testHeaderCreation() {
-		TraceScope traceScope = this.trace.startSpan("testSendMessage",
-				new AlwaysSampler(), null);
+		TraceScope traceScope = this.trace.startSpan("testSendMessage", new AlwaysSampler(), null);
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		traceScope.close();
 		assertNotNull("message was null", this.message);
