@@ -11,3 +11,4 @@ _site/
 .idea
 *.iml
 *.swp
+.factorypath
