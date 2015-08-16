@@ -24,8 +24,8 @@ import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
-import org.springframework.cloud.sleuth.event.SpanStartedEvent;
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -36,9 +36,9 @@ import org.springframework.core.annotation.Order;
 @Slf4j
 public class Slf4jSpanListener {
 
-	@EventListener(SpanStartedEvent.class)
+	@EventListener(SpanAcquiredEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void start(SpanStartedEvent event) {
+	public void start(SpanAcquiredEvent event) {
 		Span span = event.getSpan();
 		MDC.put(Trace.SPAN_ID_NAME, span.getSpanId());
 		MDC.put(Trace.TRACE_ID_NAME, span.getTraceId());
@@ -59,9 +59,9 @@ public class Slf4jSpanListener {
 		log.info("Continued span: {}", event.getSpan());
 	}
 
-	@EventListener(SpanStoppedEvent.class)
+	@EventListener(SpanReleasedEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void stop(SpanStoppedEvent event) {
+	public void stop(SpanReleasedEvent event) {
 		// TODO: what should this log level be?
 		log.info("Stopped span: {}", event.getSpan());
 		if (event.getParent() != null) {

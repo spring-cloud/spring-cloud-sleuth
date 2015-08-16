@@ -27,11 +27,11 @@ import org.springframework.context.ApplicationListener;
  * @author Spencer Gibb
  */
 @Value
-public class ArrayListSpanAccumulator implements ApplicationListener<SpanStoppedEvent> {
+public class ArrayListSpanAccumulator implements ApplicationListener<SpanReleasedEvent> {
 	private final ArrayList<Span> spans = new ArrayList<>();
 
 	@Override
-	public void onApplicationEvent(SpanStoppedEvent event) {
+	public void onApplicationEvent(SpanReleasedEvent event) {
 		spans.add(event.getSpan());
 	}
 }

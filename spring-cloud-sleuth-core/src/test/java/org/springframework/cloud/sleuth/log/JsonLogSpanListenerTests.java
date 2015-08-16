@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.springframework.boot.test.OutputCapture;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -46,9 +46,9 @@ public class JsonLogSpanListenerTests {
 				.begin(1)
 				.end(10)
 				.build();
-		span.addKVAnnotation("myKey", "myVal");
+		span.addAnnotation("myKey", "myVal");
 		span.addTimelineAnnotation("myTimelineAnnotation");
-		listener.stop(new SpanStoppedEvent(this, span));
+		listener.stop(new SpanReleasedEvent(this, span));
 
 		String output = this.output.toString().trim();
 		assertTrue("output doesn't contain prefix", output.contains(listener.getPrefix()));

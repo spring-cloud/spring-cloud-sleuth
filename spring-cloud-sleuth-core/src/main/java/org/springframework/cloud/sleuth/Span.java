@@ -99,7 +99,7 @@ public interface Span {
 	/**
 	 * Add a data annotation associated with this span
 	 */
-	void addKVAnnotation(String key, String value);
+	void addAnnotation(String key, String value);
 
 	/**
 	 * Add a timeline annotation associated with this span
@@ -112,7 +112,7 @@ public interface Span {
 	 * <p/>
 	 * Will never be null.
 	 */
-	Map<String, String> getKVAnnotations();
+	Map<String, String> getAnnotations();
 
 	/**
 	 * Get any timeline annotations (read only)

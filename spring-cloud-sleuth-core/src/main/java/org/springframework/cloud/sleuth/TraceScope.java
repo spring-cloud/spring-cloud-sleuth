@@ -22,7 +22,7 @@ import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -99,11 +99,11 @@ public class TraceScope implements Closeable {
 			this.span.stop();
 			if (this.savedSpan != null
 					&& this.span.getParents().contains(this.savedSpan.getSpanId())) {
-				this.publisher.publishEvent(new SpanStoppedEvent(this, this.savedSpan,
+				this.publisher.publishEvent(new SpanReleasedEvent(this, this.savedSpan,
 						this.span));
 			}
 			else {
-				this.publisher.publishEvent(new SpanStoppedEvent(this, this.span));
+				this.publisher.publishEvent(new SpanReleasedEvent(this, this.span));
 			}
 			TraceContextHolder.setCurrentSpan(this.savedSpan);
 		}

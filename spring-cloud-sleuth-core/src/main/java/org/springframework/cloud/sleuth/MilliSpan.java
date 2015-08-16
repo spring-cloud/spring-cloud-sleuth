@@ -94,7 +94,7 @@ public class MilliSpan implements Span {
 	}
 
 	@Override
-	public void addKVAnnotation(String key, String value) {
+	public void addAnnotation(String key, String value) {
 		this.kVAnnotations.put(key, value);
 	}
 

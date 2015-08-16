@@ -28,16 +28,16 @@ import org.springframework.context.ApplicationEvent;
 @Data
 @EqualsAndHashCode(callSuper=false)
 @SuppressWarnings("serial")
-public class SpanStartedEvent extends ApplicationEvent {
+public class SpanAcquiredEvent extends ApplicationEvent {
 
 	private final Span parent;
 	private final Span span;
 
-	public SpanStartedEvent(Object source, Span span) {
+	public SpanAcquiredEvent(Object source, Span span) {
 		this(source, null, span);
 	}
 
-	public SpanStartedEvent(Object source, Span parent, Span span) {
+	public SpanAcquiredEvent(Object source, Span parent, Span span) {
 		super(source);
 		this.parent = parent;
 		this.span = span;

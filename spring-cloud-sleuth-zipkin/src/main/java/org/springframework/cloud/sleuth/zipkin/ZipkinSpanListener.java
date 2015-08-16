@@ -33,8 +33,8 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TimelineAnnotation;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.event.SpanStartedEvent;
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
@@ -64,11 +64,11 @@ public class ZipkinSpanListener {
 
 	@EventListener
 	@Order(0)
-	public void start(SpanStartedEvent event) {
+	public void start(SpanAcquiredEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
 			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_RECV);
 		}
-		event.getSpan().addTimelineAnnotation("start");
+		event.getSpan().addTimelineAnnotation("acquire");
 	}
 
 	@EventListener
@@ -85,21 +85,21 @@ public class ZipkinSpanListener {
 
 	@EventListener
 	@Order(0)
-	public void stop(SpanStoppedEvent event) {
+	public void release(SpanReleasedEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
 			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_SEND);
 			this.spanCollector.collect(convert(event.getParent()));
 		}
-		event.getSpan().addTimelineAnnotation("stop");
+		event.getSpan().addTimelineAnnotation("release");
 		this.spanCollector.collect(convert(event.getSpan()));
 	}
 
 	/**
 	 * Converts a given Sleuth span to a Zipkin Span.
 	 * <ul>
-	 * <li>Set id's, etc [TraceId's etc]
-	 * <li>Create timeline annotations based on data from HTrace Span object.
-	 * <li>Create binary annotations based on data from HTrace Span object.
+	 * <li>Set ids, etc
+	 * <li>Create timeline annotations based on data from Span object.
+	 * <li>Create binary annotations based on data from Span object.
 	 * </ul>
 	 */
 	public com.twitter.zipkin.gen.Span convert(Span span) {
@@ -212,7 +212,7 @@ public class ZipkinSpanListener {
 	private List<BinaryAnnotation> createZipkinBinaryAnnotations(Span span,
 			Endpoint endpoint) {
 		List<BinaryAnnotation> l = new ArrayList<>();
-		for (Map.Entry<String, String> e : span.getKVAnnotations().entrySet()) {
+		for (Map.Entry<String, String> e : span.getAnnotations().entrySet()) {
 			BinaryAnnotation binaryAnn = new BinaryAnnotation();
 			binaryAnn.setAnnotation_type(AnnotationType.BYTES);
 			binaryAnn.setKey(e.getKey());

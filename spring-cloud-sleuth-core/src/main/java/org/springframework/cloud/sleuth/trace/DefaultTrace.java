@@ -29,7 +29,7 @@ import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
-import org.springframework.cloud.sleuth.event.SpanStartedEvent;
+import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 import org.springframework.context.ApplicationEventPublisher;
@@ -88,7 +88,7 @@ public class DefaultTrace implements Trace {
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(this.idGenerator.create()).spanId(this.idGenerator.create())
 					.build();
-			this.publisher.publishEvent(new SpanStartedEvent(this, span));
+			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 			return span;
 		}
 		else {
@@ -96,7 +96,7 @@ public class DefaultTrace implements Trace {
 					.traceId(parent.getTraceId()).parent(parent.getSpanId())
 					.spanId(this.idGenerator.create()).processId(parent.getProcessId())
 					.build();
-			this.publisher.publishEvent(new SpanStartedEvent(this, parent, span));
+			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
 			return span;
 		}
 	}
@@ -120,7 +120,7 @@ public class DefaultTrace implements Trace {
 	public void addKVAnnotation(String key, String value) {
 		Span s = getCurrentSpan();
 		if (s != null) {
-			s.addKVAnnotation(key, value);
+			s.addAnnotation(key, value);
 		}
 	}
 

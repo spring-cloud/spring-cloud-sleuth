@@ -29,8 +29,8 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.cloud.sleuth.event.SpanStartedEvent;
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTrace;
@@ -62,8 +62,8 @@ public class DefaultTraceTests {
 			scope.close();
 		}
 
-		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanStartedEvent.class));
-		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanStoppedEvent.class));
+		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));
+		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanReleasedEvent.class));
 
 		ArgumentCaptor<ApplicationEvent> captor = ArgumentCaptor
 				.forClass(ApplicationEvent.class);
@@ -71,8 +71,8 @@ public class DefaultTraceTests {
 
 		List<Span> spans = new ArrayList<>();
 		for (ApplicationEvent event : captor.getAllValues()) {
-			if (event instanceof SpanStoppedEvent) {
-				spans.add(((SpanStoppedEvent) event).getSpan());
+			if (event instanceof SpanReleasedEvent) {
+				spans.add(((SpanReleasedEvent) event).getSpan());
 			}
 		}
 

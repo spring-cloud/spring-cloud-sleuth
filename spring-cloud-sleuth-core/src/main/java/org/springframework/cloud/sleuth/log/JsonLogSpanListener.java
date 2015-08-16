@@ -20,7 +20,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
 
-import org.springframework.cloud.sleuth.event.SpanStoppedEvent;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -46,9 +46,9 @@ public class JsonLogSpanListener {
 	}
 
 	@SneakyThrows
-	@EventListener(SpanStoppedEvent.class)
+	@EventListener(SpanReleasedEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE-10)
-	public void stop(SpanStoppedEvent event) {
+	public void stop(SpanReleasedEvent event) {
 		log.info(this.prefix + this.objectMapper.writeValueAsString(event.getSpan()) +
 				this.suffix);
 	}
