@@ -26,9 +26,11 @@ import static org.springframework.util.StringUtils.hasText;
 
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -40,6 +42,10 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
  */
 public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 
+	private ThreadLocal<TraceScope> traceScopeHolder = new ThreadLocal<TraceScope>();
+
+	private ThreadLocal<Span> spanHolder = new ThreadLocal<Span>();
+
 	private final Trace trace;
 
 	public TraceChannelInterceptor(Trace trace) {
@@ -47,7 +53,19 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 	}
 
 	@Override
+	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
+		TraceScope traceScope = this.traceScopeHolder.get();
+		if (traceScope != null) {
+			traceScope.close();
+		}
+		this.traceScopeHolder.set(null);
+		// TODO: Maybe the TraceScope could handle this
+		TraceContextHolder.setCurrentSpan(this.spanHolder.get());
+	}
+
+	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
+		this.spanHolder.set(TraceContextHolder.getCurrentSpan());
 		if (TraceContextHolder.isTracing()
 				|| message.getHeaders().containsKey(NOT_SAMPLED_NAME)) {
 			return SpanMessageHeaders.addSpanHeaders(message,
@@ -55,9 +73,7 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 		}
 		String spanId = getHeader(message, SPAN_ID_NAME);
 		String traceId = getHeader(message, TRACE_ID_NAME);
-		String name = "message/"
-				+ ((channel instanceof IntegrationObjectSupport) ? ((IntegrationObjectSupport) channel)
-						.getComponentName() : channel.toString());
+		String name = "message/" + getChannelName(channel);
 		TraceScope traceScope;
 		if (hasText(spanId) && hasText(traceId)) {
 
@@ -82,7 +98,22 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 		else {
 			traceScope = this.trace.startSpan(name);
 		}
+		this.traceScopeHolder.set(traceScope);
 		return SpanMessageHeaders.addSpanHeaders(message, traceScope.getSpan());
+	}
+
+	private String getChannelName(MessageChannel channel) {
+		String name = null;
+		if (channel instanceof IntegrationObjectSupport) {
+			name = ((IntegrationObjectSupport) channel).getComponentName();
+		}
+		if (name == null && channel instanceof AbstractMessageChannel) {
+			name = ((AbstractMessageChannel) channel).getFullChannelName();
+		}
+		if (name == null) {
+			name = channel.toString();
+		}
+		return name;
 	}
 
 	private String getHeader(Message<?> message, String name) {

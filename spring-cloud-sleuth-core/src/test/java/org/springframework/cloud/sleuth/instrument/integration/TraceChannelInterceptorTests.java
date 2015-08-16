@@ -100,6 +100,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 		String traceId = this.message.getHeaders().get(TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
+		assertNull(TraceContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -115,6 +116,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 		String traceId = this.message.getHeaders().get(TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
+		assertNull(TraceContextHolder.getCurrentSpan());
 	}
 
 	@Configuration

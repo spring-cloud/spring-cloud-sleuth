@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -145,6 +146,7 @@ public class TraceFilter extends OncePerRequestFilter {
 				addResponseAnnotations(response);
 				traceScope.close();
 			}
+			TraceContextHolder.setCurrentSpan(null);
 		}
 	}
 
