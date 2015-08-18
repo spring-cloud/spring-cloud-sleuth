@@ -2,6 +2,10 @@
 
 image::https://api.travis-ci.org/spring-cloud/spring-cloud-sleuth.svg?branch=master[Build Status, link=https://travis-ci.org/spring-cloud/spring-cloud-sleuth]
 
+== Spring Cloud Sleuth
+
+Spring Cloud Sleuth implements a distributed tracing solution for [Spring Cloud](http://cloud.spring.io).
+
 === Terminology
 
 Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.
@@ -11,6 +15,7 @@ Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper
 Spans are started and stopped, and they keep track of their timing information.  Once you create a span, you must stop it at some point in the future.
 
 *Trace:* A set of spans forming a tree-like structure.  For example, if you are running a distributed big-data store, a trace might be formed by a put request.
+
 
 
 == Features
@@ -67,35 +72,47 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master
 
 === Basic Compile and Test
 
-To build the source you will need to install
-http://maven.apache.org/run-maven/index.html[Apache Maven] v3.0.6 or above and JDK {jdkversion}.
+To build the source you will need to install JDK {jdkversion}.
 
 Spring Cloud uses Maven for most build-related activities, and you
 should be able to get off the ground quite quickly by cloning the
 project you are interested in and typing
 
 ----
-$ mvn install -s .settings.xml
+$ ./mvnw install
 ----
 
-NOTE: You may need to increase the amount of memory available to Maven by setting
-a `MAVEN_OPTS` environment variable with the value `-Xmx512m -XX:MaxPermSize=128m`
+NOTE: You can also install Maven (>=3.3.3) yourself and run the `mvn` command
+in place of `./mvnw` in the examples below. If you do that you also
+might need to add `-P spring` if your local Maven settings do not
+contain repository declarations for spring pre-release artifacts.
 
-The `.settings.xml` is only required the first time (or after updates
-to dependencies). It is there to provide repository declarations so
-that those do not need to be hard coded in the project poms.
+NOTE: Be aware that you might need to increase the amount of memory
+available to Maven by setting a `MAVEN_OPTS` environment variable with
+a value like `-Xmx512m -XX:MaxPermSize=128m`. We try to cover this in
+the `.mvn` configuration, so if you find you have to do it to make a
+build succeed, please raise a ticket to get the settings added to
+source control.
 
 For hints on how to build the project look in `.travis.yml` if there
 is one. There should be a "script" and maybe "install" command. Also
 look at the "services" section to see if any services need to be
 running locally (e.g. mongo or rabbit).  Ignore the git-related bits
-that you might find in "before_install" since they will be able git
+that you might find in "before_install" since they're related to setting git
 credentials and you already have those.
 
-If you need mongo, rabbit or redis, see the README in the https://github.com/spring-cloud-samples/scripts[scripts
-demo repository] for
-instructions. For example consider using the "fig.yml" with
-http://www.fig.sh/[Fig] to run them in Docker containers.
+The projects that require middleware generally include a
+`docker-compose.yml`, so consider using
+http://compose.docker.io/[Docker Compose] to run the middeware servers
+in Docker containers. See the README in the
+https://github.com/spring-cloud-samples/scripts[scripts demo
+repository] for specific instructions about the common cases of mongo,
+rabbit and redis.
+
+NOTE: migration to the Maven wrapper (`./mvnw`) is underway. If you
+find a project that doesn't have it yet, raise an issue to get it
+added, and build with the command from `.travis.yml` (usually
+`mvn install -s .settings.xml`).
 
 === Documentation
 
@@ -120,13 +137,17 @@ We recommend the http://eclipse.org/m2e/[m2eclipe] eclipse plugin when working w
 eclipse. If you don't already have m2eclipse installed it is available from the "eclipse
 marketplace".
 
-Once the projects are imported into Eclipse you will also need to tell m2eclipse
-to use the `.settings.xml` file for the projects.  If you do not do this you may
-see errors many different errors related to the POMs in the projects.
-Open your Eclipse preferences, expand the Maven preferences, and select User Settings.
-In the User Settings field click Browse and navigate to the Spring Cloud project you
-imported selecting the `.settings.xml` file in that project.  Click Apply and then OK to
-save the preference changes.
+Unfortunately m2e does not yet support Maven 3.3, so once the projects
+are imported into Eclipse you will also need to tell m2eclipse to use
+the `.settings.xml` file for the projects.  If you do not do this you
+may see errors many different errors related to the POMs in the
+projects.  Open your Eclipse preferences, expand the Maven
+preferences, and select User Settings.  In the User Settings field
+click Browse and navigate to the Spring Cloud project you imported
+selecting the `.settings.xml` file in that project.  Click Apply and
+then OK to save the preference changes.
+
+NOTE: Alternatively you can copy the repository settings from https://github.com/spring-cloud/spring-cloud-build/blob/master/.settings.xml[`.settings.xml`] into your own `~/.m2/settings.xml`.
 
 ==== Importing into eclipse without m2eclipse
 If you prefer not to use m2eclipse you can generate eclipse project metadata using the
@@ -134,7 +155,7 @@ following command:
 
 [indent=0]
 ----
-	$ mvn eclipse:eclipse
+	$ ./mvnw eclipse:eclipse
 ----
 
 The generated eclipse projects can be imported by selecting `import existing projects`
@@ -142,7 +163,7 @@ from the `file` menu.
 
 ==== Adding Project Lombok Agent
 
-Spring Cloud uses Spring Cloud uses http://projectlombok.org/features/index.html[Project Lombok]
+Spring Cloud uses http://projectlombok.org/features/index.html[Project Lombok]
 to generate getters and setters etc. Compiling from the command line this
 shouldn't cause any problems, but in an IDE you need to add an agent
 to the JVM. Full instructions can be found in the Lombok website. The

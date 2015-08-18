@@ -1,3 +1,7 @@
+== Spring Cloud Sleuth
+
+Spring Cloud Sleuth implements a distributed tracing solution for [Spring Cloud](http://cloud.spring.io).
+
 === Terminology
 
 Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.
