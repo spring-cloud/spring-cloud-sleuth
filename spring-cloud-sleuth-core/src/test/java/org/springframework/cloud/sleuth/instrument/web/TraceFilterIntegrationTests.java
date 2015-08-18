@@ -55,7 +55,7 @@ public class TraceFilterIntegrationTests {
 	@Before
 	@SneakyThrows
 	public void init() {
-		TraceContextHolder.setCurrentSpan(null);
+		TraceContextHolder.removeCurrentSpan();
 		this.context.refresh();
 		this.request = builder().buildRequest(new MockServletContext());
 		this.response = new MockHttpServletResponse();

@@ -61,7 +61,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 	@After
 	public void close() {
-		TraceContextHolder.setCurrentSpan(null);
+		TraceContextHolder.removeCurrentSpan();
 	}
 
 	@Test

@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.core.NamedThreadLocal;
+import org.springframework.util.Assert;
 
 /**
  * @author Spencer Gibb
@@ -31,10 +32,15 @@ public class TraceContextHolder {
 	}
 
 	public static void setCurrentSpan(Span span) {
+		Assert.notNull(span, "span can not be null.  Use removeCurrentSpan() instead.");
 		if (log.isTraceEnabled()) {
 			log.trace("Setting current span " + span);
 		}
 		currentSpan.set(span);
+	}
+
+	public static void removeCurrentSpan() {
+		currentSpan.remove();
 	}
 
 	public static boolean isTracing() {
