@@ -146,7 +146,7 @@ public class TraceFilter extends OncePerRequestFilter {
 				addResponseAnnotations(response);
 				traceScope.close();
 			}
-			TraceContextHolder.setCurrentSpan(null);
+			TraceContextHolder.removeCurrentSpan();
 		}
 	}
 

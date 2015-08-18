@@ -22,6 +22,7 @@ import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
+import static org.springframework.cloud.sleuth.TraceContextHolder.removeCurrentSpan;
 import static org.springframework.cloud.sleuth.TraceContextHolder.setCurrentSpan;
 
 import java.util.HashMap;
@@ -113,7 +114,7 @@ implements ExecutorChannelInterceptor {
 		Span originalContext = ORIGINAL_CONTEXT.get();
 		try {
 			if (originalContext == null) {
-				setCurrentSpan(null);
+				removeCurrentSpan();
 				ORIGINAL_CONTEXT.remove();
 			}
 			else {
@@ -121,7 +122,7 @@ implements ExecutorChannelInterceptor {
 			}
 		}
 		catch (Throwable t) {// NOSONAR
-			setCurrentSpan(null);
+			removeCurrentSpan();
 		}
 	}
 

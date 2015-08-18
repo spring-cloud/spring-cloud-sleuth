@@ -76,7 +76,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@After
 	public void close() {
-		TraceContextHolder.setCurrentSpan(null);
+		TraceContextHolder.removeCurrentSpan();
 		this.channel.unsubscribe(this);
 	}
 

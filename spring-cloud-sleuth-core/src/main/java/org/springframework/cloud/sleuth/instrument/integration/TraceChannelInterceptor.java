@@ -58,7 +58,7 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 		if (traceScope != null) {
 			traceScope.close();
 		}
-		this.traceScopeHolder.set(null);
+		this.traceScopeHolder.remove();
 		// TODO: Maybe the TraceScope could handle this
 		TraceContextHolder.setCurrentSpan(this.spanHolder.get());
 	}

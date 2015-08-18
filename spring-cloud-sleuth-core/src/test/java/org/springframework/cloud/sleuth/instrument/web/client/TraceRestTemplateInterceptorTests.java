@@ -60,7 +60,7 @@ public class TraceRestTemplateInterceptorTests {
 
 	@After
 	public void clean() {
-		TraceContextHolder.setCurrentSpan(null);
+		TraceContextHolder.removeCurrentSpan();
 	}
 
 	@Test
