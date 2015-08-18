@@ -32,7 +32,11 @@ public class TraceContextHolder {
 	}
 
 	public static void setCurrentSpan(Span span) {
-		Assert.notNull(span, "span can not be null.  Use removeCurrentSpan() instead.");
+		// backwards compatibility
+		if (span == null) {
+			currentSpan.remove();
+			return;
+		}
 		if (log.isTraceEnabled()) {
 			log.trace("Setting current span " + span);
 		}
