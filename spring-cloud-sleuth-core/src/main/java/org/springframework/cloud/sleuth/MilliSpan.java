@@ -40,7 +40,7 @@ public class MilliSpan implements Span {
 	private List<String> parents;
 	private final String spanId;
 	private boolean remote = false;
-	private final Map<String, String> kVAnnotations = new LinkedHashMap<>();
+	private final Map<String, String> annotations = new LinkedHashMap<>();
 	private final String processId;
 	@Singular
 	private final List<TimelineAnnotation> timelineAnnotations = new ArrayList<>();
@@ -96,7 +96,7 @@ public class MilliSpan implements Span {
 
 	@Override
 	public void addAnnotation(String key, String value) {
-		this.kVAnnotations.put(key, value);
+		this.annotations.put(key, value);
 	}
 
 	@Override
@@ -107,7 +107,12 @@ public class MilliSpan implements Span {
 
 	@Override
 	public Map<String, String> getAnnotations() {
-		return Collections.unmodifiableMap(kVAnnotations);
+		return Collections.unmodifiableMap(this.annotations);
+	}
+
+	@Override
+	public List<TimelineAnnotation> getTimelineAnnotations() {
+		return Collections.unmodifiableList(this.timelineAnnotations);
 	}
 
 }

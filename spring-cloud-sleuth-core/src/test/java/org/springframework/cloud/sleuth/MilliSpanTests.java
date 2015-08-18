@@ -22,14 +22,22 @@ import org.junit.Test;
 
 /**
  * @author Rob Winch
+ * @author Spencer Gibb
  */
 public class MilliSpanTests {
-
 
 	@Test(expected = UnsupportedOperationException.class)
 	public void getAnnotationsReadOnly() {
 		MilliSpan span = new MilliSpan(1, 2, "name", "traceId", Collections.<String>emptyList(), "spanId", true, "processId");
 
 		span.getAnnotations().put("a", "b");
+	}
+
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void getTimelineAnnotationsReadOnly() {
+		MilliSpan span = new MilliSpan(1, 2, "name", "traceId", Collections.<String>emptyList(), "spanId", true, "processId");
+
+		span.getTimelineAnnotations().add(new TimelineAnnotation(1, "1"));
 	}
 }
