@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +103,11 @@ public class MilliSpan implements Span {
 	public void addTimelineAnnotation(String msg) {
 		this.timelineAnnotations.add(new TimelineAnnotation(System.currentTimeMillis(),
 				msg));
+	}
+
+	@Override
+	public Map<String, String> getAnnotations() {
+		return Collections.unmodifiableMap(kVAnnotations);
 	}
 
 }
