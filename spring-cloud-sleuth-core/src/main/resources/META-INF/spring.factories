@@ -10,3 +10,7 @@ org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.zuul.TraceZuulAutoConfiguration
+
+# Environment Post Processor
+org.springframework.boot.env.EnvironmentPostProcessor=\
+org.springframework.cloud.sleuth.bootstrap.TraceBootstrapEnvironmentPostProcessororg.springframework.cloud.sleuth.bootstrap.TraceBootstrapEnvironmentPostProcessororg.springframework.cloud.sleuth.bootstrap.TraceBootstrapEnvironmentPostProcessor
