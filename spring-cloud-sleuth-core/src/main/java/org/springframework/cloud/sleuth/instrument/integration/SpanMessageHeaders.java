@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.springframework.cloud.sleuth.Trace.HEADERS;
 import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
@@ -47,12 +48,14 @@ public class SpanMessageHeaders {
 		}
 
 		for ( Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
-			String key = "/messaging/headers/" + entry.getKey().toLowerCase();
-			String value = null;
-			if (entry.getValue() != null) {
-				value = entry.getValue().toString(); //TODO: better way to serialize?
+			if (!HEADERS.contains(entry.getKey())) { //filter out trace headers
+				String key = "/messaging/headers/" + entry.getKey().toLowerCase();
+				String value = null;
+				if (entry.getValue() != null) {
+					value = entry.getValue().toString(); //TODO: better way to serialize?
+				}
+				span.addAnnotation(key, value);
 			}
-			span.addAnnotation(key, value);
 		}
 
 		Map<String, String> headers = new HashMap<String, String>();
