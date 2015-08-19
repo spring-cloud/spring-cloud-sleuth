@@ -59,9 +59,9 @@ public class TraceBootstrapEnvironmentPostProcessor implements EnvironmentPostPr
 
 	private void addHeaders(Map<String, Object> map, String type, String binder) {
 		if (ClassUtils.isPresent(type, null)) {
-			String stem = "spring.cloud.stream.binder." + binder + ".headers.";
+			String stem = "spring.cloud.stream.binder." + binder + ".headers";
 			for (int i = 0; i < headers.length; i++) {
-				map.put(stem + binder + ".headers[" + i + "]", headers[i]);
+				map.put(stem + "[" + i + "]", headers[i]);
 			}
 		}
 
