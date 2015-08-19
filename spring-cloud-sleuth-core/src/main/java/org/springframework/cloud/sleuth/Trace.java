@@ -99,7 +99,7 @@ public interface Trace {
 	/**
 	 * Adds a data annotation to the current span if tracing is currently on.
 	 */
-	void addKVAnnotation(String key, String value);
+	void addAnnotation(String key, String value);
 
 	<V> Callable<V> wrap(Callable<V> callable);
 

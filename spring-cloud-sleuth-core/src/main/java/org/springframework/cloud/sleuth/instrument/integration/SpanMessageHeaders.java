@@ -45,6 +45,16 @@ public class SpanMessageHeaders {
 			}
 			return message;
 		}
+
+		for ( Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
+			String key = "/messaging/headers/" + entry.getKey().toLowerCase();
+			String value = null;
+			if (entry.getValue() != null) {
+				value = entry.getValue().toString(); //TODO: better way to serialize?
+			}
+			span.addAnnotation(key, value);
+		}
+
 		Map<String, String> headers = new HashMap<String, String>();
 		addHeader(headers, TRACE_ID_NAME, span.getTraceId());
 		addHeader(headers, SPAN_ID_NAME, span.getSpanId());

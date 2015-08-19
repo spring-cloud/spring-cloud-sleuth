@@ -40,7 +40,7 @@ public class SampleBackground {
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
-		this.trace.addKVAnnotation("background-sleep-millis", String.valueOf(millis));
+		this.trace.addAnnotation("background-sleep-millis", String.valueOf(millis));
 	}
 
 }

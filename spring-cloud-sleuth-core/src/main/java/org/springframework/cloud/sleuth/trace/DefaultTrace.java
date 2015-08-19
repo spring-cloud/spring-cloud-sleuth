@@ -117,7 +117,7 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public void addKVAnnotation(String key, String value) {
+	public void addAnnotation(String key, String value) {
 		Span s = getCurrentSpan();
 		if (s != null) {
 			s.addAnnotation(key, value);

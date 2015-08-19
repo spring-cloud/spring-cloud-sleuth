@@ -68,7 +68,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 				final Random random = new Random();
 				int millis = random.nextInt(1000);
 				Thread.sleep(millis);
-				SampleController.this.trace.addKVAnnotation("callable-sleep-millis", String.valueOf(millis));
+				SampleController.this.trace.addAnnotation("callable-sleep-millis", String.valueOf(millis));
 				Span currentSpan = TraceContextHolder.getCurrentSpan();
 				return "async hi: " + currentSpan;
 			}
@@ -87,7 +87,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
-		this.trace.addKVAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
@@ -100,7 +100,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.trace.addKVAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
@@ -115,7 +115,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.trace.addKVAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);

@@ -130,13 +130,13 @@ public class TraceFilterTests {
 
 
 	public void verifyHttpAnnotations() {
-		verify(this.trace).addKVAnnotation("/http/request/uri", "http://localhost/");
-		verify(this.trace).addKVAnnotation("/http/request/endpoint", "/");
-		verify(this.trace).addKVAnnotation("/http/request/method", "GET");
-		verify(this.trace).addKVAnnotation("/http/request/headers/accept", MediaType.APPLICATION_JSON_VALUE);
-		verify(this.trace).addKVAnnotation("/http/request/headers/user-agent", "MockMvc");
+		verify(this.trace).addAnnotation("/http/request/uri", "http://localhost/");
+		verify(this.trace).addAnnotation("/http/request/endpoint", "/");
+		verify(this.trace).addAnnotation("/http/request/method", "GET");
+		verify(this.trace).addAnnotation("/http/request/headers/accept", MediaType.APPLICATION_JSON_VALUE);
+		verify(this.trace).addAnnotation("/http/request/headers/user-agent", "MockMvc");
 
-		verify(this.trace).addKVAnnotation("/http/response/status_code", HttpStatus.OK.toString());
-		verify(this.trace).addKVAnnotation("/http/response/headers/content-type", MediaType.APPLICATION_JSON_VALUE);
+		verify(this.trace).addAnnotation("/http/response/status_code", HttpStatus.OK.toString());
+		verify(this.trace).addAnnotation("/http/response/headers/content-type", MediaType.APPLICATION_JSON_VALUE);
 	}
 }
