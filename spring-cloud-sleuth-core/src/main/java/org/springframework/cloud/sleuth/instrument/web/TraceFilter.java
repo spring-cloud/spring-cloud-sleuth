@@ -150,12 +150,13 @@ public class TraceFilter extends OncePerRequestFilter {
 		}
 	}
 
+	//TODO: move annotation keys to constants
 	protected void addRequestAnnotations(HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.trace.addKVAnnotation("/http/request/uri", request.getRequestURL()
+		this.trace.addAnnotation("/http/request/uri", request.getRequestURL()
 				.toString());
-		this.trace.addKVAnnotation("/http/request/endpoint", uri);
-		this.trace.addKVAnnotation("/http/request/method", request.getMethod());
+		this.trace.addAnnotation("/http/request/endpoint", uri);
+		this.trace.addAnnotation("/http/request/method", request.getMethod());
 
 		Enumeration<String> headerNames = request.getHeaderNames();
 		while (headerNames.hasMoreElements()) {
@@ -164,20 +165,20 @@ public class TraceFilter extends OncePerRequestFilter {
 			while (values.hasMoreElements()) {
 				String value = values.nextElement();
 				String key = "/http/request/headers/" + name.toLowerCase();
-				this.trace.addKVAnnotation(key, value);
+				this.trace.addAnnotation(key, value);
 
 			}
 		}
 	}
 
 	private void addResponseAnnotations(HttpServletResponse response) {
-		this.trace.addKVAnnotation("/http/response/status_code",
+		this.trace.addAnnotation("/http/response/status_code",
 				String.valueOf(response.getStatus()));
 
 		for (String name : response.getHeaderNames()) {
 			for (String value : response.getHeaders(name)) {
 				String key = "/http/response/headers/" + name.toLowerCase();
-				this.trace.addKVAnnotation(key, value);
+				this.trace.addAnnotation(key, value);
 			}
 		}
 	}

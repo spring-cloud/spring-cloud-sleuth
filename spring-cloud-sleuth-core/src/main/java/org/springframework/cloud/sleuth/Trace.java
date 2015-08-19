@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
@@ -58,6 +60,9 @@ public interface Trace {
 	String PROCESS_ID_NAME = "X-Process-Id";
 	String NOT_SAMPLED_NAME = "X-Not-Sampled";
 
+	List<String> HEADERS = Arrays.asList(SPAN_ID_NAME, TRACE_ID_NAME,
+			SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
+
 	/**
 	 * Creates a trace scope wrapping a new span.
 	 * <p/>
@@ -99,7 +104,7 @@ public interface Trace {
 	/**
 	 * Adds a data annotation to the current span if tracing is currently on.
 	 */
-	void addKVAnnotation(String key, String value);
+	void addAnnotation(String key, String value);
 
 	<V> Callable<V> wrap(Callable<V> callable);
 

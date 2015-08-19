@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.springframework.cloud.sleuth.Trace.HEADERS;
 import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
@@ -45,13 +46,42 @@ public class SpanMessageHeaders {
 			}
 			return message;
 		}
-		Map<String, String> headers = new HashMap<String, String>();
+
+		addAnnotations(message, span);
+
+		Map<String, String> headers = new HashMap<>();
 		addHeader(headers, TRACE_ID_NAME, span.getTraceId());
 		addHeader(headers, SPAN_ID_NAME, span.getSpanId());
 		addHeader(headers, PARENT_ID_NAME, getFirst(span.getParents()));
 		addHeader(headers, SPAN_NAME_NAME, span.getName());
 		addHeader(headers, PROCESS_ID_NAME, span.getProcessId());
 		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
+	}
+
+	public static void addAnnotations(Message<?> message, Span span) {
+		for ( Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
+			if (!HEADERS.contains(entry.getKey())) { //filter out trace headers
+				String key = "/messaging/headers/" + entry.getKey().toLowerCase();
+				String value = null;
+				if (entry.getValue() != null) {
+					value = entry.getValue().toString(); //TODO: better way to serialize?
+				}
+				span.addAnnotation(key, value);
+			}
+		}
+
+		Object payload = message.getPayload();
+		if (payload != null) {
+			span.addAnnotation("/messaging/payload/type",
+					payload.getClass().getCanonicalName());
+			if (payload instanceof String) {
+				span.addAnnotation("/messaging/payload/size",
+						String.valueOf(((String)payload).length()));
+			} else if (payload instanceof byte[]) {
+				span.addAnnotation("/messaging/payload/size",
+						String.valueOf(((byte[])payload).length));
+			}
+		}
 	}
 
 	private static void addHeader(Map<String, String> headers, String name, String value) {
