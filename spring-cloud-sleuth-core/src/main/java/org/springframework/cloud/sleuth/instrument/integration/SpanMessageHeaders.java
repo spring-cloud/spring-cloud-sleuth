@@ -47,6 +47,18 @@ public class SpanMessageHeaders {
 			return message;
 		}
 
+		addAnnotations(message, span);
+
+		Map<String, String> headers = new HashMap<>();
+		addHeader(headers, TRACE_ID_NAME, span.getTraceId());
+		addHeader(headers, SPAN_ID_NAME, span.getSpanId());
+		addHeader(headers, PARENT_ID_NAME, getFirst(span.getParents()));
+		addHeader(headers, SPAN_NAME_NAME, span.getName());
+		addHeader(headers, PROCESS_ID_NAME, span.getProcessId());
+		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
+	}
+
+	public static void addAnnotations(Message<?> message, Span span) {
 		for ( Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
 			if (!HEADERS.contains(entry.getKey())) { //filter out trace headers
 				String key = "/messaging/headers/" + entry.getKey().toLowerCase();
@@ -58,13 +70,18 @@ public class SpanMessageHeaders {
 			}
 		}
 
-		Map<String, String> headers = new HashMap<String, String>();
-		addHeader(headers, TRACE_ID_NAME, span.getTraceId());
-		addHeader(headers, SPAN_ID_NAME, span.getSpanId());
-		addHeader(headers, PARENT_ID_NAME, getFirst(span.getParents()));
-		addHeader(headers, SPAN_NAME_NAME, span.getName());
-		addHeader(headers, PROCESS_ID_NAME, span.getProcessId());
-		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
+		Object payload = message.getPayload();
+		if (payload != null) {
+			span.addAnnotation("/messaging/payload/type",
+					payload.getClass().getCanonicalName());
+			if (payload instanceof String) {
+				span.addAnnotation("/messaging/payload/size",
+						String.valueOf(((String)payload).length()));
+			} else if (payload instanceof byte[]) {
+				span.addAnnotation("/messaging/payload/size",
+						String.valueOf(((byte[])payload).length));
+			}
+		}
 	}
 
 	private static void addHeader(Map<String, String> headers, String name, String value) {
