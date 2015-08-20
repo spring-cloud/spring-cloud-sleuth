@@ -64,11 +64,11 @@ public class TraceWebAspect {
 		this.trace = trace;
 	}
 
-	@Pointcut("@target(org.springframework.web.bind.annotation.RestController)")
+	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
 	private void anyRestControllerAnnotated() {
 	}
 
-	@Pointcut("@target(org.springframework.stereotype.Controller)")
+	@Pointcut("@within(org.springframework.stereotype.Controller)")
 	private void anyControllerAnnotated() {
 	}
 

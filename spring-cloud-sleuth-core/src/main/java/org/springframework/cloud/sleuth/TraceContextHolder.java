@@ -17,8 +17,8 @@
 package org.springframework.cloud.sleuth;
 
 import lombok.extern.apachecommons.CommonsLog;
+
 import org.springframework.core.NamedThreadLocal;
-import org.springframework.util.Assert;
 
 /**
  * @author Spencer Gibb
