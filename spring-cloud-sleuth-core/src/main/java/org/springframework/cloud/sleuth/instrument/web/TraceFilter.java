@@ -34,9 +34,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
+import org.springframework.cloud.sleuth.event.ServerSentEvent;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -56,7 +62,7 @@ import org.springframework.web.util.UrlPathHelper;
  * @author Dave Syer
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
-public class TraceFilter extends OncePerRequestFilter {
+public class TraceFilter extends OncePerRequestFilter implements ApplicationEventPublisherAware {
 
 	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".TRACE";
@@ -68,6 +74,8 @@ public class TraceFilter extends OncePerRequestFilter {
 	private final Pattern skipPattern;
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
+	private ApplicationEventPublisher publisher;
+
 	public TraceFilter(Trace trace) {
 		this.trace = trace;
 		this.skipPattern = DEFAULT_SKIP_PATTERN;
@@ -76,6 +84,11 @@ public class TraceFilter extends OncePerRequestFilter {
 	public TraceFilter(Trace trace, Pattern skipPattern) {
 		this.trace = trace;
 		this.skipPattern = skipPattern;
+	}
+
+	@Override
+	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
+		this.publisher = publisher;
 	}
 
 	@Override
@@ -117,7 +130,9 @@ public class TraceFilter extends OncePerRequestFilter {
 				span.remote(true);
 
 				// TODO: trace description?
-				traceScope = this.trace.startSpan(name, span.build());
+				Span parent = span.build();
+				traceScope = this.trace.startSpan(name, parent);
+				publish(new ServerReceivedEvent(this, parent, traceScope.getSpan()));
 				request.setAttribute(TRACE_REQUEST_ATTR, traceScope);
 				// Send new span id back
 				addToResponseIfNotPresent(response, TRACE_ID_NAME, traceScope.getSpan()
@@ -144,9 +159,16 @@ public class TraceFilter extends OncePerRequestFilter {
 			}
 			if (traceScope != null) {
 				addResponseAnnotations(response);
+				publish(new ServerSentEvent(this, traceScope.getSavedSpan(), traceScope.getSpan()));
 				traceScope.close();
 			}
 			TraceContextHolder.removeCurrentSpan();
+		}
+	}
+
+	private void publish(ApplicationEvent event) {
+		if (this.publisher!=null) {
+			this.publisher.publishEvent(event);
 		}
 	}
 

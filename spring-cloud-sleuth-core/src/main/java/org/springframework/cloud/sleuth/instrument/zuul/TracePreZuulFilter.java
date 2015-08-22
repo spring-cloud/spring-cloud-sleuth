@@ -71,6 +71,7 @@ ApplicationEventPublisherAware {
 			setHeader(response, SPAN_NAME_NAME, getCurrentSpan().getName());
 			setHeader(response, PARENT_ID_NAME, getParentId(getCurrentSpan()));
 			setHeader(response, PROCESS_ID_NAME, getCurrentSpan().getProcessId());
+			// TODO: the client sent event should come from the client not the filter!
 			publish(new ClientSentEvent(this, getCurrentSpan()));
 		}
 		catch (Exception ex) {

@@ -44,13 +44,19 @@ public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracePreZuulFilter traceZuulFilter() {
+	public TracePreZuulFilter tracePreZuulFilter() {
 		return new TracePreZuulFilter();
 	}
 
 	@Bean
 	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory) {
 		return new TraceRestClientRibbonCommandFactory(factory);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public TracePostZuulFilter tracePostZuulFilter() {
+		return new TracePostZuulFilter();
 	}
 
 }

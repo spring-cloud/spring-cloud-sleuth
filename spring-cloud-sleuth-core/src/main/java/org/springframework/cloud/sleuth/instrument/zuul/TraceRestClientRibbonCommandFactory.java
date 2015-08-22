@@ -48,7 +48,7 @@ import com.netflix.niws.client.http.RestClient;
  * @author Spencer Gibb
  */
 public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommandFactory
-	implements ApplicationEventPublisherAware {
+implements ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
 
@@ -70,7 +70,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 		return new TraceRestClientRibbonCommand(
 				context.getServiceId(), restClient, getVerb(context.getVerb()),
 				context.getUri(), context.getRetryable(), context.getHeaders(),
-				context.getParams(), context.getRequestEntity(), publisher);
+				context.getParams(), context.getRequestEntity(), this.publisher);
 	}
 
 	class TraceRestClientRibbonCommand extends RestClientRibbonCommand {

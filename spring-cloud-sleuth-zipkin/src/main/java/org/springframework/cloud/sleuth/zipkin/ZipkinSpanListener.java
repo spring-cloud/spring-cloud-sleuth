@@ -33,6 +33,8 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TimelineAnnotation;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
+import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
+import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
@@ -65,10 +67,15 @@ public class ZipkinSpanListener {
 	@EventListener
 	@Order(0)
 	public void start(SpanAcquiredEvent event) {
+		event.getSpan().addTimelineAnnotation("acquire");
+	}
+
+	@EventListener
+	@Order(0)
+	public void serverReceived(ServerReceivedEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
 			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_RECV);
 		}
-		event.getSpan().addTimelineAnnotation("acquire");
 	}
 
 	@EventListener
@@ -85,11 +92,16 @@ public class ZipkinSpanListener {
 
 	@EventListener
 	@Order(0)
-	public void release(SpanReleasedEvent event) {
+	public void serverSend(ServerSentEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
 			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_SEND);
 			this.spanCollector.collect(convert(event.getParent()));
 		}
+	}
+
+	@EventListener
+	@Order(0)
+	public void release(SpanReleasedEvent event) {
 		event.getSpan().addTimelineAnnotation("release");
 		this.spanCollector.collect(convert(event.getSpan()));
 	}
