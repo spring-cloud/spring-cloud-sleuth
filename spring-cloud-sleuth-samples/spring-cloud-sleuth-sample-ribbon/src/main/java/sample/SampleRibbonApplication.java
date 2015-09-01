@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import com.github.kristofa.brave.LoggingSpanCollectorImpl;
+import com.github.kristofa.brave.LoggingSpanCollector;
 import com.github.kristofa.brave.SpanCollector;
 
 /**
@@ -51,7 +51,7 @@ public class SampleRibbonApplication {
 	@Bean
 	@ConditionalOnProperty(value="sample.zipkin.enabled", havingValue="false")
 	public SpanCollector spanCollector() {
-		return new LoggingSpanCollectorImpl();
+		return new LoggingSpanCollector();
 	}
 
 }

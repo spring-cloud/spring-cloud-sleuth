@@ -29,7 +29,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.github.kristofa.brave.LoggingSpanCollectorImpl;
+import com.github.kristofa.brave.LoggingSpanCollector;
 import com.github.kristofa.brave.SpanCollector;
 
 /**
@@ -74,7 +74,7 @@ public class SampleMessagingApplication {
 	@Bean
 	@ConditionalOnProperty(value="sample.zipkin.enabled", havingValue="false")
 	public SpanCollector spanCollector() {
-		return new LoggingSpanCollectorImpl();
+		return new LoggingSpanCollector();
 	}
 
 }
