@@ -49,15 +49,15 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-client</artifactId>
+			<artifactId>brave-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-impl</artifactId>
+			<artifactId>brave-http</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-impl-spring</artifactId>
+			<artifactId>brave-core-spring</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
