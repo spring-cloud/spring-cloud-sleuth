@@ -1,6 +1,6 @@
 == Spring Cloud Sleuth
 
-Spring Cloud Sleuth implements a distributed tracing solution for [Spring Cloud](http://cloud.spring.io).
+Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.spring.io[Spring Cloud].
 
 === Terminology
 
