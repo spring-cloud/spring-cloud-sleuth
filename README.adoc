@@ -4,7 +4,7 @@ image::https://api.travis-ci.org/spring-cloud/spring-cloud-sleuth.svg?branch=mas
 
 == Spring Cloud Sleuth
 
-Spring Cloud Sleuth implements a distributed tracing solution for [Spring Cloud](http://cloud.spring.io).
+Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.spring.io[Spring Cloud].
 
 === Terminology
 
@@ -140,7 +140,7 @@ marketplace".
 Unfortunately m2e does not yet support Maven 3.3, so once the projects
 are imported into Eclipse you will also need to tell m2eclipse to use
 the `.settings.xml` file for the projects.  If you do not do this you
-may see errors many different errors related to the POMs in the
+may see many different errors related to the POMs in the
 projects.  Open your Eclipse preferences, expand the Maven
 preferences, and select User Settings.  In the User Settings field
 click Browse and navigate to the Spring Cloud project you imported
