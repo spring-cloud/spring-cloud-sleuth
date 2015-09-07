@@ -64,7 +64,7 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public FilterRegistrationBean traceFilter(ApplicationEventPublisher publisher) {
+	public FilterRegistrationBean traceWebFilter(ApplicationEventPublisher publisher) {
 		Pattern pattern = StringUtils.hasText(this.skipPattern) ? Pattern.compile(this.skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
 		TraceFilter filter = new TraceFilter(this.trace, pattern);

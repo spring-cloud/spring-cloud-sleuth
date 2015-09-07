@@ -17,10 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import static java.util.Collections.singletonList;
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
-import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
+import static org.springframework.cloud.sleuth.Trace.*;
 import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
 import static org.springframework.cloud.sleuth.TraceContextHolder.isTracing;
 
@@ -97,10 +94,13 @@ public class TraceFeignClientAutoConfiguration {
 				Span span = getCurrentSpan();
 				if (span != null) {
 					template.header(TRACE_ID_NAME, span.getTraceId());
-					setHeader(template, TRACE_ID_NAME, span.getTraceId());
+					setHeader(template, SPAN_NAME_NAME, span.getName());
 					setHeader(template, SPAN_ID_NAME, span.getSpanId());
 					setHeader(template, PARENT_ID_NAME, getParentId(span));
+					setHeader(template, PROCESS_ID_NAME, span.getProcessId());
 					publish(new ClientSentEvent(this, span));
+				} else {
+					setHeader(template, NOT_SAMPLED_NAME, "");
 				}
 			}
 		};
