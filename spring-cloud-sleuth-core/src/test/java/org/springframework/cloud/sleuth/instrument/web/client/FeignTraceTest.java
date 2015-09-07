@@ -8,9 +8,7 @@ import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import java.util.Arrays;
 import java.util.List;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +31,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { TraceWebAutoConfiguration.class,
 		FeignTraceTest.TestConfiguration.class })
@@ -41,6 +43,20 @@ public class FeignTraceTest {
 
 	@Autowired
 	TestFeignInterface testFeignInterface;
+	
+	@After
+	public void close() {
+		TraceContextHolder.removeCurrentSpan();
+	}
+
+	@Test
+	public void shouldWorkWhenNotTracing() {
+		// when
+		ResponseEntity<String> response = testFeignInterface.getNoTrace();
+
+		// then
+		assertThat(getHeader(response, TRACE_ID_NAME)).isNull();
+	}
 
 	@Test
 	public void shouldAttachTraceIdWhenUsingFeignClient() {
@@ -62,14 +78,15 @@ public class FeignTraceTest {
 
 	private String getHeader(ResponseEntity<String> response, String name) {
 		List<String> headers = response.getHeaders().get(name);
-		assertThat(headers).asList().isNotEmpty();
-		return headers.get(0);
+		return headers==null || headers.isEmpty() ? null : headers.get(0);
 	}
 
 	@FeignClient("fooservice")
 	public interface TestFeignInterface {
 		@RequestMapping(method = RequestMethod.GET, value = "/traceid")
 		ResponseEntity<String> getTraceId();
+		@RequestMapping(method = RequestMethod.GET, value = "/notrace")
+		ResponseEntity<String> getNoTrace();
 	}
 
 	@Configuration
@@ -86,6 +103,12 @@ public class FeignTraceTest {
 
 	@RestController
 	public static class FooController {
+
+		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
+		public String notrace(@RequestHeader(name=TRACE_ID_NAME, required=false) String traceId) {
+			assertThat(traceId).isNull();
+			return "OK";
+		}
 
 		@RequestMapping(value = "/traceid", method = RequestMethod.GET)
 		public String traceId(@RequestHeader(TRACE_ID_NAME) String traceId,

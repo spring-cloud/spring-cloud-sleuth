@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import static java.util.Collections.singletonList;
+import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
 import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
 import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
@@ -73,8 +74,7 @@ public class TraceFeignClientAutoConfiguration {
 	public Decoder feignDecoder() {
 		return new ResponseEntityDecoder(new SpringDecoder(messageConverters)) {
 			@Override
-			public Object decode(Response response, Type type) throws IOException,
-					FeignException {
+			public Object decode(Response response, Type type) throws IOException, FeignException {
 				return super.decode(Response.create(response.status(), response.reason(),
 						headersWithTraceId(response.headers()), response.body()), type);
 			}
@@ -86,11 +86,14 @@ public class TraceFeignClientAutoConfiguration {
 		return new RequestInterceptor() {
 			@Override
 			public void apply(RequestTemplate template) {
-				template.header(TRACE_ID_NAME, getCurrentSpan().getTraceId());
-				setHeader(template, TRACE_ID_NAME, getCurrentSpan().getTraceId());
-				setHeader(template, SPAN_ID_NAME, getCurrentSpan().getSpanId());
-				setHeader(template, PARENT_ID_NAME, getParentId(getCurrentSpan()));
-				publish(new ClientSentEvent(this, getCurrentSpan()));
+				Span span = getCurrentSpan();
+				if (span != null) {
+					template.header(TRACE_ID_NAME, span.getTraceId());
+					setHeader(template, TRACE_ID_NAME, span.getTraceId());
+					setHeader(template, SPAN_ID_NAME, span.getSpanId());
+					setHeader(template, PARENT_ID_NAME, getParentId(span));
+					publish(new ClientSentEvent(this, span));
+				}
 			}
 		};
 	}
@@ -102,8 +105,7 @@ public class TraceFeignClientAutoConfiguration {
 	}
 
 	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty() ? span
-				.getParents().get(0) : null;
+		return span.getParents() != null && !span.getParents().isEmpty() ? span.getParents().get(0) : null;
 	}
 
 	public void setHeader(RequestTemplate request, String name, String value) {
@@ -112,10 +114,13 @@ public class TraceFeignClientAutoConfiguration {
 		}
 	}
 
-	private Map<String, Collection<String>> headersWithTraceId(
-			Map<String, Collection<String>> headers) {
+	private Map<String, Collection<String>> headersWithTraceId(Map<String, Collection<String>> headers) {
 		Map<String, Collection<String>> newHeaders = new HashMap<>();
 		newHeaders.putAll(headers);
+		if (getCurrentSpan() == null) {
+			setHeader(newHeaders, NOT_SAMPLED_NAME, "");
+			return newHeaders;
+		}
 		setHeader(newHeaders, TRACE_ID_NAME, getCurrentSpan().getTraceId());
 		setHeader(newHeaders, SPAN_ID_NAME, getCurrentSpan().getSpanId());
 		setHeader(newHeaders, PARENT_ID_NAME, getParentId(getCurrentSpan()));
