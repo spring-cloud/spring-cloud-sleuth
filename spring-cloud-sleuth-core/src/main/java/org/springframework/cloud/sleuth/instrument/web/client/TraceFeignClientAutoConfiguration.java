@@ -38,6 +38,7 @@ import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -75,8 +76,15 @@ public class TraceFeignClientAutoConfiguration {
 		return new ResponseEntityDecoder(new SpringDecoder(messageConverters)) {
 			@Override
 			public Object decode(Response response, Type type) throws IOException, FeignException {
-				return super.decode(Response.create(response.status(), response.reason(),
+				try {
+					return super.decode(Response.create(response.status(), response.reason(),
 						headersWithTraceId(response.headers()), response.body()), type);
+				} finally {
+					Span span = getCurrentSpan();
+					if (span != null) {
+						publish(new ClientReceivedEvent(this, span));
+					}
+				}
 			}
 		};
 	}
