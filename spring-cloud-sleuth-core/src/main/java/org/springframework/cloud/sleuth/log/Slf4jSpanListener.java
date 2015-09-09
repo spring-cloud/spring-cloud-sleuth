@@ -16,19 +16,17 @@
 
 package org.springframework.cloud.sleuth.log;
 
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
-import lombok.extern.slf4j.Slf4j;
-
 import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
+import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Spencer Gibb
@@ -69,8 +67,8 @@ public class Slf4jSpanListener {
 			MDC.put(Trace.SPAN_ID_NAME, event.getParent().getSpanId());
 		}
 		else {
-			MDC.remove(SPAN_ID_NAME);
-			MDC.remove(TRACE_ID_NAME);
+			MDC.remove(Trace.SPAN_ID_NAME);
+			MDC.remove(Trace.TRACE_ID_NAME);
 		}
 	}
 

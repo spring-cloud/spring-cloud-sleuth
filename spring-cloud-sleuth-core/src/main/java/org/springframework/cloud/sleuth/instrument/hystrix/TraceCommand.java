@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.circuitbreaker;
+package org.springframework.cloud.sleuth.instrument.hystrix;
+
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
 
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolKey;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceScope;
 
 /**
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
  *
  * @see HystrixCommand
- * @see Trace
+ * @see TraceManager
  *
  * @author Tomasz Nurkiewicz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT
@@ -34,40 +35,40 @@ import org.springframework.cloud.sleuth.TraceScope;
  */
 public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
-	private Trace trace;
+	private TraceManager traceManager;
 
-	protected TraceCommand(Trace trace, HystrixCommandGroupKey group) {
+	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group) {
 		super(group);
-		this.trace = trace;
+		this.traceManager = traceManager;
 	}
 
-	protected TraceCommand(Trace trace, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool) {
+	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool) {
 		super(group, threadPool);
-		this.trace = trace;
+		this.traceManager = traceManager;
 	}
 
-	protected TraceCommand(Trace trace, HystrixCommandGroupKey group, int executionIsolationThreadTimeoutInMilliseconds) {
+	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, int executionIsolationThreadTimeoutInMilliseconds) {
 		super(group, executionIsolationThreadTimeoutInMilliseconds);
-		this.trace = trace;
+		this.traceManager = traceManager;
 	}
 
-	protected TraceCommand(Trace trace, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool, int executionIsolationThreadTimeoutInMilliseconds) {
+	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool, int executionIsolationThreadTimeoutInMilliseconds) {
 		super(group, threadPool, executionIsolationThreadTimeoutInMilliseconds);
-		this.trace = trace;
+		this.traceManager = traceManager;
 	}
 
-	protected TraceCommand(Trace trace, Setter setter) {
+	protected TraceCommand(TraceManager traceManager, Setter setter) {
 		super(setter);
-		this.trace = trace;
+		this.traceManager = traceManager;
 	}
 
 	@Override
 	protected R run() throws Exception {
-		TraceScope scope = trace.startSpan(getCommandKey().name());
+		Trace trace = this.traceManager.startSpan(getCommandKey().name());
 		try {
 			return doRun();
 		} finally {
-			scope.close();
+			this.traceManager.close(trace);
 		}
 	}
 

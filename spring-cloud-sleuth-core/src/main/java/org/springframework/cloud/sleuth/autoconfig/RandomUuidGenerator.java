@@ -14,34 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.autoconfig;
+
+import java.util.UUID;
+
+import org.springframework.cloud.sleuth.IdGenerator;
 
 /**
  * @author Spencer Gibb
  */
-/**
- * Singleton instance representing an empty {@link TraceScope}.
- */
-public final class NullScope extends TraceScope {
-
-	public static final TraceScope INSTANCE = new NullScope();
-
-	private NullScope() {
-		super(null, null, null);
-	}
+public class RandomUuidGenerator implements IdGenerator {
 
 	@Override
-	public Span detach() {
-		return null;
-	}
-
-	@Override
-	public void close() {
-		return;
-	}
-
-	@Override
-	public String toString() {
-		return "NullScope";
+	public String create() {
+		return UUID.randomUUID().toString();
 	}
 }

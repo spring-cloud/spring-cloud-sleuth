@@ -18,18 +18,18 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.concurrent.Callable;
 
-import lombok.extern.apachecommons.CommonsLog;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
+import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestOperations;
+
+import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Aspect that adds correlation id to
@@ -47,7 +47,7 @@ import org.springframework.web.client.RestOperations;
  * @see Controller
  * @see RestOperations
  * @see TraceCallable
- * @see Trace
+ * @see TraceManager
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT
@@ -58,10 +58,12 @@ import org.springframework.web.client.RestOperations;
 @CommonsLog
 public class TraceWebAspect {
 
-	private final Trace trace;
+	private final TraceManager traceManager;
+	private final TraceAccessor accessor;
 
-	public TraceWebAspect(Trace trace) {
-		this.trace = trace;
+	public TraceWebAspect(TraceManager traceManager, TraceAccessor accessor) {
+		this.traceManager = traceManager;
+		this.accessor = accessor;
 	}
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
@@ -84,11 +86,10 @@ public class TraceWebAspect {
 	@SuppressWarnings("unchecked")
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		Callable<Object> callable = (Callable<Object>) pjp.proceed();
-		if (TraceContextHolder.isTracing()) {
+		if (this.accessor.isTracing()) {
 			log.debug("Wrapping callable with span ["
-					+ TraceContextHolder.getCurrentSpan() + "]");
-
-			return new TraceCallable<>(this.trace, callable);
+					+ this.accessor.getCurrentSpan() + "]");
+			return new TraceCallable<>(this.traceManager, callable);
 		}
 		else {
 			return callable;

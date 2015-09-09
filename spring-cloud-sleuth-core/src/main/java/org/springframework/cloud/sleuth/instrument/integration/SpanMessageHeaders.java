@@ -16,19 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.springframework.cloud.sleuth.Trace.HEADERS;
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
-import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Trace;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 
@@ -40,9 +33,9 @@ public class SpanMessageHeaders {
 
 	public static Message<?> addSpanHeaders(Message<?> message, Span span) {
 		if (span == null) {
-			if (!message.getHeaders().containsKey(NOT_SAMPLED_NAME)) {
+			if (!message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
 				return MessageBuilder.fromMessage(message)
-						.setHeader(NOT_SAMPLED_NAME, "").build();
+						.setHeader(Trace.NOT_SAMPLED_NAME, "").build();
 			}
 			return message;
 		}
@@ -50,17 +43,17 @@ public class SpanMessageHeaders {
 		addAnnotations(message, span);
 
 		Map<String, String> headers = new HashMap<>();
-		addHeader(headers, TRACE_ID_NAME, span.getTraceId());
-		addHeader(headers, SPAN_ID_NAME, span.getSpanId());
-		addHeader(headers, PARENT_ID_NAME, getFirst(span.getParents()));
-		addHeader(headers, SPAN_NAME_NAME, span.getName());
-		addHeader(headers, PROCESS_ID_NAME, span.getProcessId());
+		addHeader(headers, Trace.TRACE_ID_NAME, span.getTraceId());
+		addHeader(headers, Trace.SPAN_ID_NAME, span.getSpanId());
+		addHeader(headers, Trace.PARENT_ID_NAME, getFirst(span.getParents()));
+		addHeader(headers, Trace.SPAN_NAME_NAME, span.getName());
+		addHeader(headers, Trace.PROCESS_ID_NAME, span.getProcessId());
 		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
 	}
 
 	public static void addAnnotations(Message<?> message, Span span) {
 		for ( Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
-			if (!HEADERS.contains(entry.getKey())) { //filter out trace headers
+			if (!Trace.HEADERS.contains(entry.getKey())) { //filter out trace headers
 				String key = "/messaging/headers/" + entry.getKey().toLowerCase();
 				String value = null;
 				if (entry.getValue() != null) {

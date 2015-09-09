@@ -16,18 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
-import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
-import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
-import static org.springframework.cloud.sleuth.TraceContextHolder.isTracing;
+import static org.springframework.cloud.sleuth.trace.TraceContextHolder.isTracing;
 
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -46,6 +41,12 @@ ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
 
+	private final TraceAccessor accessor;
+
+	public TracePreZuulFilter(TraceAccessor accessor) {
+		this.accessor = accessor;
+	}
+
 	@Override
 	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
 		this.publisher = publisher;
@@ -62,15 +63,15 @@ ApplicationEventPublisherAware {
 		Map<String, String> response = ctx.getZuulRequestHeaders();
 		// N.B. this will only work with the simple host filter (not ribbon) unless you set hystrix.execution.isolation.strategy=SEMAPHORE
 		if (getCurrentSpan() == null) {
-			setHeader(response, NOT_SAMPLED_NAME, "");
+			setHeader(response, Trace.NOT_SAMPLED_NAME, "");
 			return null;
 		}
 		try {
-			setHeader(response, SPAN_ID_NAME, getCurrentSpan().getSpanId());
-			setHeader(response, TRACE_ID_NAME, getCurrentSpan().getTraceId());
-			setHeader(response, SPAN_NAME_NAME, getCurrentSpan().getName());
-			setHeader(response, PARENT_ID_NAME, getParentId(getCurrentSpan()));
-			setHeader(response, PROCESS_ID_NAME, getCurrentSpan().getProcessId());
+			setHeader(response, Trace.SPAN_ID_NAME, getCurrentSpan().getSpanId());
+			setHeader(response, Trace.TRACE_ID_NAME, getCurrentSpan().getTraceId());
+			setHeader(response, Trace.SPAN_NAME_NAME, getCurrentSpan().getName());
+			setHeader(response, Trace.PARENT_ID_NAME, getParentId(getCurrentSpan()));
+			setHeader(response, Trace.PROCESS_ID_NAME, getCurrentSpan().getProcessId());
 			// TODO: the client sent event should come from the client not the filter!
 			publish(new ClientSentEvent(this, getCurrentSpan()));
 		}
@@ -78,6 +79,10 @@ ApplicationEventPublisherAware {
 			ReflectionUtils.rethrowRuntimeException(ex);
 		}
 		return null;
+	}
+
+	private Span getCurrentSpan() {
+		return this.accessor.getCurrentSpan();
 	}
 
 	private String getParentId(Span span) {

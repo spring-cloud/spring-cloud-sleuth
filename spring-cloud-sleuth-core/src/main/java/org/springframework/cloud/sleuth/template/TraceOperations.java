@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.sampler;
-
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+package org.springframework.cloud.sleuth.template;
 
 /**
- * @author Spencer Gibb
+ * @author Dave Syer
+ *
  */
-public class IsTracingSampler implements Sampler<Void> {
+public interface TraceOperations {
 
-	@Override
-	public boolean next(Void info) {
-		return TraceContextHolder.isTracing();
-	}
+	<T> T trace(TraceCallback<T> task);
+
 }

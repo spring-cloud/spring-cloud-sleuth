@@ -18,95 +18,62 @@ package org.springframework.cloud.sleuth;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
+
+import lombok.Value;
+import lombok.experimental.NonFinal;
 
 /**
- * The Trace class is the primary way to interact with the library. It provides methods to
- * create and manipulate spans.
- *
- * A 'Span' represents a length of time. It has many other attributes such as a name, ID,
- * and even potentially a set of key/value strings attached to it.
- *
- * Each thread in your application has a single currently active currentSpan associated
- * with it. When this is non-null, it represents the current operation that the thread is
- * doing. Spans are NOT thread-safe, and must never be used by multiple threads at once.
- * With care, it is possible to safely pass a Span object between threads, but in most
- * cases this is not necessary.
- *
- * A 'TraceScope' can either be empty, or contain a Span. TraceScope objects implement the
- * Java's Closeable interface. Similar to file descriptors, they must be closed after they
- * are created. When a TraceScope contains a Span, this span is closed when the scope is
- * closed.
- *
- * The 'startSpan' methods in this class do a few things:
- * <ul>
- * <li>Create a new Span which has this thread's currentSpan as one of its parents.</li>
- * <li>Set currentSpan to the new Span.</li>
- * <li>Create a TraceSpan object to manage the new Span.</li>
- * </ul>
- *
- * Closing a TraceScope does a few things:
- * <ul>
- * <li>It closes the span which the scope was managing.</li>
- * <li>Set currentSpan to the previous currentSpan (which may be null).</li>
- * </ul>
+ * @author Spencer Gibb
  */
-public interface Trace {
+@Value
+@NonFinal
+public class Trace {
 
-	String SPAN_ID_NAME = "X-Span-Id";
-	String TRACE_ID_NAME = "X-Trace-Id";
-	String SPAN_NAME_NAME = "X-Span-Name";
-	String PARENT_ID_NAME = "X-Parent-Id";
-	String PROCESS_ID_NAME = "X-Process-Id";
-	String NOT_SAMPLED_NAME = "X-Not-Sampled";
+	public static final String NOT_SAMPLED_NAME = "X-Not-Sampled";
 
-	List<String> HEADERS = Arrays.asList(SPAN_ID_NAME, TRACE_ID_NAME,
-			SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
+	public static final String PROCESS_ID_NAME = "X-Process-Id";
 
-	/**
-	 * Creates a trace scope wrapping a new span.
-	 * <p/>
-	 * If this thread has a currently active span, it will be the parent of the span we
-	 * create here, and the trace scope will contain the new span and the parent. If there
-	 * is no currently active trace span, the trace scope we create will be empty.
-	 *
-	 * @param name The name field for the new span to create.
-	 */
-	TraceScope startSpan(String name);
+	public static final String PARENT_ID_NAME = "X-Parent-Id";
+
+	public static final String TRACE_ID_NAME = "X-Trace-Id";
+
+	public static final String SPAN_NAME_NAME = "X-Span-Name";
+
+	public static final String SPAN_ID_NAME = "X-Span-Id";
+
+	public static final List<String> HEADERS = Arrays.asList(SPAN_ID_NAME, TRACE_ID_NAME,
+	SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
 
 	/**
-	 * Creates a new trace scope with a specific parent. The parent might be in another
-	 * process or thread.
-	 * <p/>
-	 * If this thread has a currently active trace span, it must be the 'parent' span that
-	 * you pass in here as a parameter. The trace scope we create here will contain a new
-	 * span which is a child of 'parent'.
-	 *
-	 * @param name The name field for the new span to create.
+	 * the span for this scope
 	 */
-	TraceScope startSpan(String name, Span parent);
+	private final Span span;
 
 	/**
-	 * Start a new span if the sampler allows it or if we are already tracing in this
-	 * thread. A sampler can be used to limit the number of traces created.
-	 *
-	 * @param name the name of the span
-	 * @param sampler a sampler to decide whether to create the span or not
-	 * @param info the samplers context information
+	 * the trace that was "current" before this trace was entered
 	 */
-	<T> TraceScope startSpan(String name, Sampler<T> sampler, T info);
+	private final Trace savedTrace;
 
-	/**
-	 * Pick up an existing span from another thread.
-	 */
-	TraceScope continueSpan(Span s);
+	@NonFinal
+	private boolean detached = false;
 
-	/**
-	 * Adds a data annotation to the current span if tracing is currently on.
-	 */
-	void addAnnotation(String key, String value);
+	public Trace(Trace saved, Span span) {
+		this.savedTrace = saved;
+		this.span = span;
+	}
 
-	<V> Callable<V> wrap(Callable<V> callable);
+	public Trace(Span span) {
+		this(null, span);
+	}
 
-	Runnable wrap(Runnable runnable);
+	public void addAnnotation(String key, String value) {
+		if (this.span != null && !this.detached) {
+			this.span.addAnnotation(key, value);
+		}
+	}
+
+	public void detach() {
+		this.detached = true;
+	}
+
 }

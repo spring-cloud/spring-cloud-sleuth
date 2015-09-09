@@ -46,7 +46,7 @@ public class MilliSpan implements Span {
 	private final List<TimelineAnnotation> timelineAnnotations = new ArrayList<>();
 
 	public MilliSpan(long begin, long end, String name, String traceId, List<String> parents, String spanId, boolean remote, String processId) {
-		this.begin = begin;
+		this.begin = begin<=0 ? System.currentTimeMillis() : begin;
 		this.end = end;
 		this.name = name;
 		this.traceId = traceId;

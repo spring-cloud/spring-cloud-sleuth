@@ -16,46 +16,35 @@
 
 package org.springframework.cloud.sleuth.instrument;
 
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceScope;
 
 /**
  * @author Spencer Gibb
  */
 @Value
-@EqualsAndHashCode(callSuper=false)
-public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
+@EqualsAndHashCode(callSuper = false)
+public class TraceRunnable extends TraceDelegate<Runnable>implements Runnable {
 
-	public TraceRunnable(Trace trace, Runnable delagate) {
-		super(trace, delagate);
+	public TraceRunnable(TraceManager traceManager, Runnable delegate) {
+		super(traceManager, delegate);
 	}
 
-	public TraceRunnable(Trace trace, Runnable delagate, Span parent) {
-		super(trace, delagate, parent);
-	}
-
-	public TraceRunnable(Trace trace, Runnable delagate, Span parent, String name) {
-		super(trace, delagate, parent, name);
+	public TraceRunnable(TraceManager traceManager, Runnable delegate, String name) {
+		super(traceManager, delegate, name);
 	}
 
 	@Override
 	public void run() {
-		if (this.getParent() != null) {
-			TraceScope scope = startSpan();
-
-			try {
-				this.getDelegate().run();
-			}
-			finally {
-				scope.close();
-			}
-		}
-		else {
+		Trace trace = startSpan();
+		try {
 			this.getDelegate().run();
+		}
+		finally {
+			close(trace);
 		}
 	}
 }

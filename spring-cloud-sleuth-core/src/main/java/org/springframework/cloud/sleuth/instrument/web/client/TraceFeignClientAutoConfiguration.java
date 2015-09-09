@@ -17,9 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import static java.util.Collections.singletonList;
-import static org.springframework.cloud.sleuth.Trace.*;
-import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
-import static org.springframework.cloud.sleuth.TraceContextHolder.isTracing;
+import static org.springframework.cloud.sleuth.trace.TraceContextHolder.isTracing;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -35,6 +33,8 @@ import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
@@ -67,10 +67,13 @@ public class TraceFeignClientAutoConfiguration {
 	@Autowired
 	private ApplicationEventPublisher publisher;
 
+	@Autowired
+	private TraceAccessor accessor;
+
 	@Bean
 	@Primary
 	public Decoder feignDecoder() {
-		return new ResponseEntityDecoder(new SpringDecoder(messageConverters)) {
+		return new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
 			@Override
 			public Object decode(Response response, Type type) throws IOException, FeignException {
 				try {
@@ -93,14 +96,14 @@ public class TraceFeignClientAutoConfiguration {
 			public void apply(RequestTemplate template) {
 				Span span = getCurrentSpan();
 				if (span != null) {
-					template.header(TRACE_ID_NAME, span.getTraceId());
-					setHeader(template, SPAN_NAME_NAME, span.getName());
-					setHeader(template, SPAN_ID_NAME, span.getSpanId());
-					setHeader(template, PARENT_ID_NAME, getParentId(span));
-					setHeader(template, PROCESS_ID_NAME, span.getProcessId());
+					template.header(Trace.TRACE_ID_NAME, span.getTraceId());
+					setHeader(template, Trace.SPAN_NAME_NAME, span.getName());
+					setHeader(template, Trace.SPAN_ID_NAME, span.getSpanId());
+					setHeader(template, Trace.PARENT_ID_NAME, getParentId(span));
+					setHeader(template, Trace.PROCESS_ID_NAME, span.getProcessId());
 					publish(new ClientSentEvent(this, span));
 				} else {
-					setHeader(template, NOT_SAMPLED_NAME, "");
+					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
 				}
 			}
 		};
@@ -126,12 +129,12 @@ public class TraceFeignClientAutoConfiguration {
 		Map<String, Collection<String>> newHeaders = new HashMap<>();
 		newHeaders.putAll(headers);
 		if (getCurrentSpan() == null) {
-			setHeader(newHeaders, NOT_SAMPLED_NAME, "");
+			setHeader(newHeaders, Trace.NOT_SAMPLED_NAME, "");
 			return newHeaders;
 		}
-		setHeader(newHeaders, TRACE_ID_NAME, getCurrentSpan().getTraceId());
-		setHeader(newHeaders, SPAN_ID_NAME, getCurrentSpan().getSpanId());
-		setHeader(newHeaders, PARENT_ID_NAME, getParentId(getCurrentSpan()));
+		setHeader(newHeaders, Trace.TRACE_ID_NAME, getCurrentSpan().getTraceId());
+		setHeader(newHeaders, Trace.SPAN_ID_NAME, getCurrentSpan().getSpanId());
+		setHeader(newHeaders, Trace.PARENT_ID_NAME, getParentId(getCurrentSpan()));
 		return newHeaders;
 	}
 
@@ -140,4 +143,9 @@ public class TraceFeignClientAutoConfiguration {
 			headers.put(name, singletonList(value));
 		}
 	}
+
+	private Span getCurrentSpan() {
+		return this.accessor.getCurrentSpan();
+	}
+
 }

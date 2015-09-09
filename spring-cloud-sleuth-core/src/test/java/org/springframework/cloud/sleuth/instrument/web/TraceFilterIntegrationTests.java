@@ -17,18 +17,16 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import static org.junit.Assert.assertNull;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import lombok.SneakyThrows;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
+import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.autoconfig.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTrace;
+import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -36,6 +34,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+
+import lombok.SneakyThrows;
 
 /**
  * @author Spencer Gibb
@@ -45,7 +45,7 @@ public class TraceFilterIntegrationTests {
 
 	private StaticApplicationContext context = new StaticApplicationContext();
 
-	private Trace trace = new DefaultTrace(new AlwaysSampler(),
+	private TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
 			new RandomUuidGenerator(), this.context);
 
 	private MockHttpServletRequest request;
@@ -55,7 +55,7 @@ public class TraceFilterIntegrationTests {
 	@Before
 	@SneakyThrows
 	public void init() {
-		TraceContextHolder.removeCurrentSpan();
+		TraceContextHolder.removeCurrentTrace();
 		this.context.refresh();
 		this.request = builder().buildRequest(new MockServletContext());
 		this.response = new MockHttpServletResponse();
@@ -70,16 +70,16 @@ public class TraceFilterIntegrationTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.trace);
+		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
-		assertNull(TraceContextHolder.getCurrentSpan());
+		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, "myspan")
-				.header(TRACE_ID_NAME, "mytrace").buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.trace);
+		this.request = builder().header(Trace.SPAN_ID_NAME, "myspan")
+				.header(Trace.TRACE_ID_NAME, "mytraceManager").buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TraceContextHolder.getCurrentSpan());
 	}

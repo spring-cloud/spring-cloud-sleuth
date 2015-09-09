@@ -15,12 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
-import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.io.IOException;
@@ -36,8 +30,7 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
-import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.context.ApplicationEvent;
@@ -53,7 +46,7 @@ import org.springframework.web.util.UrlPathHelper;
  * {@link Trace#TRACE_ID_NAME} header from either request or response and uses them to
  * create a new span.
  *
- * @see Trace
+ * @see TraceManager
  *
  * @author Jakub Nabrdalik, 4financeIT
  * @author Tomasz Nurkiewicz, 4financeIT
@@ -70,19 +63,19 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern
 			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream");
 
-	private final Trace trace;
+	private final TraceManager traceManager;
 	private final Pattern skipPattern;
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	private ApplicationEventPublisher publisher;
 
-	public TraceFilter(Trace trace) {
-		this.trace = trace;
+	public TraceFilter(TraceManager traceManager) {
+		this.traceManager = traceManager;
 		this.skipPattern = DEFAULT_SKIP_PATTERN;
 	}
 
-	public TraceFilter(Trace trace, Pattern skipPattern) {
-		this.trace = trace;
+	public TraceFilter(TraceManager traceManager, Pattern skipPattern) {
+		this.traceManager = traceManager;
 		this.skipPattern = skipPattern;
 	}
 
@@ -98,26 +91,26 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| getHeader(request, response, NOT_SAMPLED_NAME) != null;
+				|| getHeader(request, response, Trace.NOT_SAMPLED_NAME) != null;
 
-		TraceScope traceScope = (TraceScope) request.getAttribute(TRACE_REQUEST_ATTR);
-		if (traceScope != null) {
-			this.trace.continueSpan(traceScope.getSpan());
+		Trace trace = (Trace) request.getAttribute(TRACE_REQUEST_ATTR);
+		if (trace != null) {
+			this.traceManager.continueSpan(trace.getSpan());
 		}
 		else if (skip) {
-			addToResponseIfNotPresent(response, NOT_SAMPLED_NAME, "");
+			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 		}
 		else {
-			String spanId = getHeader(request, response, SPAN_ID_NAME);
-			String traceId = getHeader(request, response, TRACE_ID_NAME);
+			String spanId = getHeader(request, response, Trace.SPAN_ID_NAME);
+			String traceId = getHeader(request, response, Trace.TRACE_ID_NAME);
 			String name = "http" + uri;
 			if (hasText(spanId) && hasText(traceId)) {
 
 				MilliSpanBuilder span = MilliSpan.builder().traceId(traceId)
 						.spanId(spanId);
-				String parentId = getHeader(request, response, PARENT_ID_NAME);
-				String processId = getHeader(request, response, PROCESS_ID_NAME);
-				String parentName = getHeader(request, response, SPAN_NAME_NAME);
+				String parentId = getHeader(request, response, Trace.PARENT_ID_NAME);
+				String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
+				String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
 				if (parentName != null) {
 					span.name(parentName);
 				}
@@ -131,18 +124,18 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 
 				// TODO: trace description?
 				Span parent = span.build();
-				traceScope = this.trace.startSpan(name, parent);
-				publish(new ServerReceivedEvent(this, parent, traceScope.getSpan()));
-				request.setAttribute(TRACE_REQUEST_ATTR, traceScope);
+				trace = this.traceManager.startSpan(name, parent);
+				publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
+				request.setAttribute(TRACE_REQUEST_ATTR, trace);
 				// Send new span id back
-				addToResponseIfNotPresent(response, TRACE_ID_NAME, traceScope.getSpan()
+				addToResponseIfNotPresent(response, Trace.TRACE_ID_NAME, trace.getSpan()
 						.getTraceId());
-				addToResponseIfNotPresent(response, SPAN_ID_NAME, traceScope.getSpan()
+				addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME, trace.getSpan()
 						.getSpanId());
 			}
 			else {
-				traceScope = this.trace.startSpan(name);
-				request.setAttribute(TRACE_REQUEST_ATTR, traceScope);
+				trace = this.traceManager.startSpan(name);
+				request.setAttribute(TRACE_REQUEST_ATTR, trace);
 			}
 		}
 
@@ -157,12 +150,14 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 				// TODO: how to deal with response annotations and async?
 				return;
 			}
-			if (traceScope != null) {
+			if (trace != null) {
 				addResponseAnnotations(response);
-				publish(new ServerSentEvent(this, traceScope.getSavedSpan(), traceScope.getSpan()));
-				traceScope.close();
+				if (trace.getSavedTrace()!=null) {
+					publish(new ServerSentEvent(this, trace.getSavedTrace().getSpan(), trace.getSpan()));
+				}
+				// Double close to clean up the parent (remote span as well)
+				this.traceManager.close(this.traceManager.close(trace));
 			}
-			TraceContextHolder.removeCurrentSpan();
 		}
 	}
 
@@ -175,10 +170,10 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 	//TODO: move annotation keys to constants
 	protected void addRequestAnnotations(HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.trace.addAnnotation("/http/request/uri", request.getRequestURL()
+		this.traceManager.addAnnotation("/http/request/uri", request.getRequestURL()
 				.toString());
-		this.trace.addAnnotation("/http/request/endpoint", uri);
-		this.trace.addAnnotation("/http/request/method", request.getMethod());
+		this.traceManager.addAnnotation("/http/request/endpoint", uri);
+		this.traceManager.addAnnotation("/http/request/method", request.getMethod());
 
 		Enumeration<String> headerNames = request.getHeaderNames();
 		while (headerNames.hasMoreElements()) {
@@ -187,20 +182,20 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 			while (values.hasMoreElements()) {
 				String value = values.nextElement();
 				String key = "/http/request/headers/" + name.toLowerCase();
-				this.trace.addAnnotation(key, value);
+				this.traceManager.addAnnotation(key, value);
 
 			}
 		}
 	}
 
 	private void addResponseAnnotations(HttpServletResponse response) {
-		this.trace.addAnnotation("/http/response/status_code",
+		this.traceManager.addAnnotation("/http/response/status_code",
 				String.valueOf(response.getStatus()));
 
 		for (String name : response.getHeaderNames()) {
 			for (String value : response.getHeaders(name)) {
 				String key = "/http/response/headers/" + name.toLowerCase();
-				this.trace.addAnnotation(key, value);
+				this.traceManager.addAnnotation(key, value);
 			}
 		}
 	}

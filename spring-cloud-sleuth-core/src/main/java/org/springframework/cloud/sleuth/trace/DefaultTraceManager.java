@@ -22,22 +22,22 @@ import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.MilliSpan;
-import org.springframework.cloud.sleuth.NullScope;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
-import org.springframework.cloud.sleuth.TraceScope;
-import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
+import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * @author Spencer Gibb
  */
-public class DefaultTrace implements Trace {
+public class DefaultTraceManager implements TraceManager {
 
 	private final Sampler<Void> defaultSampler;
 
@@ -45,7 +45,7 @@ public class DefaultTrace implements Trace {
 
 	private final ApplicationEventPublisher publisher;
 
-	public DefaultTrace(Sampler<Void> defaultSampler, IdGenerator idGenerator,
+	public DefaultTraceManager(Sampler<Void> defaultSampler, IdGenerator idGenerator,
 			ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
 		this.idGenerator = idGenerator;
@@ -53,7 +53,7 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public TraceScope startSpan(String name, Span parent) {
+	public Trace startSpan(String name, Span parent) {
 		if (parent == null) {
 			return startSpan(name);
 		}
@@ -63,19 +63,16 @@ public class DefaultTrace implements Trace {
 					+ " tried to start a new Span " + "with parent " + parent.toString()
 					+ ", but there is already a " + "currentSpan " + currentSpan);
 		}
-		if (currentSpan==null) {
-			TraceContextHolder.setCurrentSpan(parent);
-		}
 		return continueSpan(createChild(parent, name));
 	}
 
 	@Override
-	public TraceScope startSpan(String name) {
+	public Trace startSpan(String name) {
 		return this.startSpan(name, this.defaultSampler, null);
 	}
 
 	@Override
-	public <T> TraceScope startSpan(String name, Sampler<T> s, T info) {
+	public <T> Trace startSpan(String name, Sampler<T> s, T info) {
 		Span span = null;
 		if (TraceContextHolder.isTracing() || s.next(info)) {
 			span = createChild(getCurrentSpan(), name);
@@ -83,17 +80,75 @@ public class DefaultTrace implements Trace {
 		return continueSpan(span);
 	}
 
+	@Override
+	public Trace detach(Trace trace) {
+		if (trace == null) {
+			return null;
+		}
+		trace.detach();
+		Span cur = TraceContextHolder.getCurrentSpan();
+		Span span = trace.getSpan();
+		if (cur != span) {
+			ExceptionUtils.error("Tried to detach trace span but "
+					+ "it is not the current span for the '"
+					+ Thread.currentThread().getName() + "' thread: " + span
+					+ ". You have " + "probably forgotten to close or detach " + cur);
+		}
+		else {
+			if (span != NullTrace.INSTANCE) {
+				TraceContextHolder.setCurrentTrace(trace.getSavedTrace());
+			}
+		}
+		return trace.getSavedTrace();
+	}
+
+	@Override
+	public Trace close(Trace trace) {
+		if (trace == null) {
+			return null;
+		}
+		Span cur = TraceContextHolder.getCurrentSpan();
+		Span span = trace.getSpan();
+		Trace savedTrace = trace.getSavedTrace();
+		if (cur != span) {
+			ExceptionUtils.error("Tried to close trace span but "
+					+ "it is not the current span for the '"
+					+ Thread.currentThread().getName() + "' thread" + span
+					+ ".  You have " + "probably forgotten to close or detach " + cur);
+		}
+		else {
+			if (span != NullTrace.INSTANCE) {
+				span.stop();
+				if (savedTrace != null
+						&& span.getParents().contains(savedTrace.getSpan().getSpanId())) {
+					this.publisher.publishEvent(
+							new SpanReleasedEvent(this, savedTrace.getSpan(), span));
+					TraceContextHolder.setCurrentTrace(savedTrace);
+				}
+				else {
+					this.publisher.publishEvent(new SpanReleasedEvent(this, span));
+					TraceContextHolder.removeCurrentTrace();
+				}
+			}
+		}
+		return savedTrace;
+	}
+
 	protected Span createChild(Span parent, String name) {
 		if (parent == null) {
-			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
-					.traceId(this.idGenerator.create()).spanId(this.idGenerator.create())
-					.build();
+			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
+					.name(name).traceId(this.idGenerator.create())
+					.spanId(this.idGenerator.create()).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 			return span;
 		}
 		else {
-			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
-					.traceId(parent.getTraceId()).parent(parent.getSpanId())
+			if (TraceContextHolder.getCurrentTrace() == null) {
+				Trace trace = createTrace(null, parent);
+				TraceContextHolder.setCurrentTrace(trace);
+			}
+			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
+					.name(name).traceId(parent.getTraceId()).parent(parent.getSpanId())
 					.spanId(this.idGenerator.create()).processId(parent.getProcessId())
 					.build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
@@ -102,18 +157,29 @@ public class DefaultTrace implements Trace {
 	}
 
 	@Override
-	public TraceScope continueSpan(Span span) {
+	public Trace continueSpan(Span span) {
 		// Return an empty TraceScope that does nothing on close
-		if (span == null)
-			return NullScope.INSTANCE;
-		Span oldSpan = getCurrentSpan();
-		TraceContextHolder.setCurrentSpan(span);
+		if (span == null) {
+			return NullTrace.INSTANCE;
+		}
 		this.publisher.publishEvent(new SpanContinuedEvent(this, span));
-		return new TraceScope(this.publisher, span, oldSpan);
+		Trace trace = createTrace(TraceContextHolder.getCurrentTrace(), span);
+		TraceContextHolder.setCurrentTrace(trace);
+		return trace;
 	}
 
-	protected Span getCurrentSpan() {
+	protected Trace createTrace(Trace trace, Span span) {
+		return new Trace(trace, span);
+	}
+
+	@Override
+	public Span getCurrentSpan() {
 		return TraceContextHolder.getCurrentSpan();
+	}
+
+	@Override
+	public boolean isTracing() {
+		return TraceContextHolder.isTracing();
 	}
 
 	@Override
@@ -132,8 +198,7 @@ public class DefaultTrace implements Trace {
 	@Override
 	public <V> Callable<V> wrap(Callable<V> callable) {
 		if (TraceContextHolder.isTracing()) {
-			return new TraceCallable<>(this, callable,
-					TraceContextHolder.getCurrentSpan());
+			return new TraceCallable<>(this, callable);
 		}
 		return callable;
 	}
@@ -146,8 +211,9 @@ public class DefaultTrace implements Trace {
 	@Override
 	public Runnable wrap(Runnable runnable) {
 		if (TraceContextHolder.isTracing()) {
-			return new TraceRunnable(this, runnable, TraceContextHolder.getCurrentSpan());
+			return new TraceRunnable(this, runnable);
 		}
 		return runnable;
 	}
+
 }

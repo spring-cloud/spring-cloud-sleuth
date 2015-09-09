@@ -16,24 +16,27 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.mockito.Matchers.anyObject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
-import lombok.SneakyThrows;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.autoconfig.RandomUuidGenerator;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -42,18 +45,18 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import lombok.SneakyThrows;
+
 /**
  * @author Spencer Gibb
  */
 public class TraceFilterTests {
 
 	@Mock
-	private Trace trace;
+	private ApplicationEventPublisher publisher;
 
-	@Mock
-	private TraceScope traceScope;
+	private TraceManager trace;
 
-	@Mock
 	private Span span;
 
 	private MockHttpServletRequest request;
@@ -64,97 +67,90 @@ public class TraceFilterTests {
 	@SneakyThrows
 	public void init() {
 		initMocks(this);
-		request = builder()
-				.buildRequest(new MockServletContext());
-		response = new MockHttpServletResponse();
-		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-		filterChain = new MockFilterChain();
+		this.trace = new DefaultTraceManager(new AlwaysSampler(),
+				new RandomUuidGenerator(), this.publisher) {
+			@Override
+			protected Trace createTrace(Trace trace, Span span) {
+				TraceFilterTests.this.span= span;
+				return super.createTrace(trace, span);
+			}
+		};
+		this.request = builder().buildRequest(new MockServletContext());
+		this.response = new MockHttpServletResponse();
+		this.response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		this.filterChain = new MockFilterChain();
 	}
 
 	public MockHttpServletRequestBuilder builder() {
-		return get("/")
-				.accept(MediaType.APPLICATION_JSON)
-				.header("User-Agent", "MockMvc");
+		return get("/").accept(MediaType.APPLICATION_JSON).header("User-Agent",
+				"MockMvc");
 	}
 
 	@Test
 	public void notTraced() throws Exception {
+		TraceManager trace = Mockito.mock(TraceManager.class);
 		TraceFilter filter = new TraceFilter(trace);
 
-		when(this.trace.startSpan(anyString())).thenReturn(traceScope);
-
-		request = get("/favicon.ico")
-				.accept(MediaType.ALL)
+		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
 
-		filter.doFilter(request, response, filterChain);
+		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verify(this.trace, never()).startSpan(anyString());
-
-		verify(this.traceScope, never()).close();
+		verify(trace, never()).startSpan(anyString());
+		verify(trace, never()).close(any(Trace.class));
 	}
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(trace);
-
-		when(this.trace.startSpan(anyString())).thenReturn(traceScope);
-
-		filter.doFilter(request, response, filterChain);
-
-		verify(this.trace).startSpan(anyString());
-
+		TraceFilter filter = new TraceFilter(this.trace);
+		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpAnnotations();
-
-		verify(this.traceScope).close();
+		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
-		request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, this.traceScope);
 
-		TraceFilter filter = new TraceFilter(trace);
-		filter.doFilter(request, response, filterChain);
+		Trace traceScope = this.trace.startSpan("foo");
+		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, traceScope);
 
-		verify(this.trace).continueSpan((Span) anyObject());
+		TraceFilter filter = new TraceFilter(this.trace);
+		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpAnnotations();
 
-		verify(this.traceScope).close();
+		assertNull(TraceContextHolder.getCurrentTrace());
 	}
-
 
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
-		request = builder()
-				.header(SPAN_ID_NAME, "myspan")
-				.header(TRACE_ID_NAME, "mytrace")
+		this.request = builder().header(Trace.SPAN_ID_NAME, "myspan")
+				.header(Trace.TRACE_ID_NAME, "mytrace")
 				.buildRequest(new MockServletContext());
 
-		when(this.trace.startSpan(anyString(), (Span) anyObject())).thenReturn(traceScope);
-		when(this.traceScope.getSpan()).thenReturn(this.span);
-		when(this.span.getSpanId()).thenReturn("myspan");
-		when(this.span.getTraceId()).thenReturn("mytrace");
-
-		TraceFilter filter = new TraceFilter(trace);
-		filter.doFilter(request, response, filterChain);
-
-		verify(this.trace).startSpan(anyString(), (Span) anyObject());
+		TraceFilter filter = new TraceFilter(this.trace);
+		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpAnnotations();
 
-		verify(this.traceScope).close();
+		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
-
 	public void verifyHttpAnnotations() {
-		verify(this.trace).addAnnotation("/http/request/uri", "http://localhost/");
-		verify(this.trace).addAnnotation("/http/request/endpoint", "/");
-		verify(this.trace).addAnnotation("/http/request/method", "GET");
-		verify(this.trace).addAnnotation("/http/request/headers/accept", MediaType.APPLICATION_JSON_VALUE);
-		verify(this.trace).addAnnotation("/http/request/headers/user-agent", "MockMvc");
+		hasAnnotation(this.span, "/http/request/uri", "http://localhost/");
+		hasAnnotation(this.span, "/http/request/endpoint", "/");
+		hasAnnotation(this.span, "/http/request/method", "GET");
+		hasAnnotation(this.span, "/http/request/headers/accept",
+				MediaType.APPLICATION_JSON_VALUE);
+		hasAnnotation(this.span, "/http/request/headers/user-agent", "MockMvc");
 
-		verify(this.trace).addAnnotation("/http/response/status_code", HttpStatus.OK.toString());
-		verify(this.trace).addAnnotation("/http/response/headers/content-type", MediaType.APPLICATION_JSON_VALUE);
+		hasAnnotation(this.span, "/http/response/status_code",
+				HttpStatus.OK.toString());
+		hasAnnotation(this.span, "/http/response/headers/content-type",
+				MediaType.APPLICATION_JSON_VALUE);
+	}
+
+	private void hasAnnotation(Span span, String name, String value) {
+		assertEquals(value, span.getAnnotations().get(name));
 	}
 }

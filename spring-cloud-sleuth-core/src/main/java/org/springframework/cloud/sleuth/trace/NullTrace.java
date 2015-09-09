@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.sampler;
+package org.springframework.cloud.sleuth.trace;
 
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.Trace;
 
 /**
  * @author Spencer Gibb
  */
-public class IsTracingSampler implements Sampler<Void> {
+public final class NullTrace extends Trace {
+
+	/**
+	 * Singleton instance representing an empty {@link Trace}.
+	 */
+	public static final Trace INSTANCE = new NullTrace();
+
+	private NullTrace() {
+		super(null);
+	}
 
 	@Override
-	public boolean next(Void info) {
-		return TraceContextHolder.isTracing();
+	public String toString() {
+		return "NullTrace";
 	}
 }

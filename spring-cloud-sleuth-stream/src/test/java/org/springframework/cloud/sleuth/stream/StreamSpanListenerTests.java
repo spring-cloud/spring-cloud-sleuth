@@ -32,15 +32,13 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.stream.SleuthStreamAutoConfiguration;
-import org.springframework.cloud.sleuth.stream.StreamSpanListener;
 import org.springframework.cloud.sleuth.stream.StreamSpanListenerTests.TestConfiguration;
 import org.springframework.cloud.stream.binder.local.config.LocalBinderAutoConfiguration;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
@@ -59,7 +57,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class StreamSpanListenerTests {
 
 	@Autowired
-	private Trace trace;
+	private TraceManager traceManager;
 
 	@Autowired
 	private ApplicationContext application;
@@ -74,8 +72,8 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void acquireAndRelease() {
-		TraceScope context = this.trace.startSpan("foo");
-		context.close();
+		Trace context = this.traceManager.startSpan("foo");
+		this.traceManager.close(context);
 		assertEquals(1, this.test.spans.size());
 	}
 
@@ -83,14 +81,14 @@ public class StreamSpanListenerTests {
 	public void rpcAnnotations() {
 		Span parent = MilliSpan.builder().traceId("xxxx").name("parent").remote(true)
 				.build();
-		TraceScope context = this.trace.startSpan("child", parent);
+		Trace context = this.traceManager.startSpan("child", parent);
 		this.application.publishEvent(new ClientSentEvent(this, context.getSpan()));
 		this.application
 				.publishEvent(new ServerReceivedEvent(this, parent, context.getSpan()));
 		this.application
 				.publishEvent(new ServerSentEvent(this, parent, context.getSpan()));
 		this.application.publishEvent(new ClientReceivedEvent(this, context.getSpan()));
-		context.close();
+		this.traceManager.close(context);
 		assertEquals(2, this.test.spans.size());
 	}
 

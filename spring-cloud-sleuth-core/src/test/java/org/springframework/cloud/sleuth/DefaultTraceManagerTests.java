@@ -29,18 +29,19 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.cloud.sleuth.autoconfig.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTrace;
+import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * @author Spencer Gibb
  */
-public class DefaultTraceTests {
+public class DefaultTraceManagerTests {
 
 	public static final String CREATE_SIMPLE_TRACE = "createSimpleTrace";
 	public static final String IMPORTANT_WORK_1 = "important work 1";
@@ -51,15 +52,15 @@ public class DefaultTraceTests {
 	public void tracingWorks() {
 		ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
 
-		DefaultTrace trace = new DefaultTrace(new IsTracingSampler(),
+		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(),
 				new RandomUuidGenerator(), publisher);
 
-		TraceScope scope = trace.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
+		Trace scope = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
 		try {
-			importantWork1(trace);
+			importantWork1(traceManager);
 		}
 		finally {
-			scope.close();
+			traceManager.close(scope);
 		}
 
 		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));
@@ -108,22 +109,22 @@ public class DefaultTraceTests {
 		return found;
 	}
 
-	private void importantWork1(Trace trace) {
-		TraceScope cur = trace.startSpan(IMPORTANT_WORK_1);
+	private void importantWork1(TraceManager traceManager) {
+		Trace cur = traceManager.startSpan(IMPORTANT_WORK_1);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
-			importantWork2(trace);
+			importantWork2(traceManager);
 		}
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
 		finally {
-			cur.close();
+			traceManager.close(cur);
 		}
 	}
 
-	private void importantWork2(Trace trace) {
-		TraceScope cur = trace.startSpan(IMPORTANT_WORK_2);
+	private void importantWork2(TraceManager traceManager) {
+		Trace cur = traceManager.startSpan(IMPORTANT_WORK_2);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
 		}
@@ -131,7 +132,7 @@ public class DefaultTraceTests {
 			Thread.currentThread().interrupt();
 		}
 		finally {
-			cur.close();
+			traceManager.close(cur);
 		}
 	}
 }

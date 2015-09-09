@@ -1,6 +1,10 @@
 server:
   port: 3382
 
+sample:
+  zipkin:
+    enabled: false
+
 spring:
   application:
     name: testSleuthRibbon

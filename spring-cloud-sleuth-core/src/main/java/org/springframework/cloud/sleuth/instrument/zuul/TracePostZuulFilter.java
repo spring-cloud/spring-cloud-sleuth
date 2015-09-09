@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
-
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,6 +33,12 @@ public class TracePostZuulFilter extends ZuulFilter
 		implements ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
+
+	private final TraceAccessor accessor;
+
+	public TracePostZuulFilter(TraceAccessor accessor) {
+		this.accessor = accessor;
+	}
 
 	@Override
 	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
@@ -67,4 +73,7 @@ public class TracePostZuulFilter extends ZuulFilter
 		}
 	}
 
+	private Span getCurrentSpan() {
+		return this.accessor.getCurrentSpan();
+	}
 }

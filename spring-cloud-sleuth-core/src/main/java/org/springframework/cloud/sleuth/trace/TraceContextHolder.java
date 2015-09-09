@@ -14,24 +14,31 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.trace;
+
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.core.NamedThreadLocal;
 
 import lombok.extern.apachecommons.CommonsLog;
-
-import org.springframework.core.NamedThreadLocal;
 
 /**
  * @author Spencer Gibb
  */
 @CommonsLog
 public class TraceContextHolder {
-	private static final ThreadLocal<Span> currentSpan = new NamedThreadLocal<>("Trace Context");
 
-	public static Span getCurrentSpan() {
+	private static final ThreadLocal<Trace> currentSpan = new NamedThreadLocal<>("Trace Context");
+
+	public static Trace getCurrentTrace() {
 		return currentSpan.get();
 	}
 
-	public static void setCurrentSpan(Span span) {
+	public static Span getCurrentSpan() {
+		return isTracing() ? currentSpan.get().getSpan() : null;
+	}
+
+	public static void setCurrentTrace(Trace span) {
 		// backwards compatibility
 		if (span == null) {
 			currentSpan.remove();
@@ -43,7 +50,7 @@ public class TraceContextHolder {
 		currentSpan.set(span);
 	}
 
-	public static void removeCurrentSpan() {
+	public static void removeCurrentTrace() {
 		currentSpan.remove();
 	}
 

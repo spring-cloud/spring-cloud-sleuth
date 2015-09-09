@@ -22,7 +22,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,25 +39,25 @@ import com.netflix.zuul.ZuulFilter;
 @ConditionalOnProperty(value = "spring.sleuth.zuul.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 @ConditionalOnClass(ZuulFilter.class)
-@ConditionalOnBean(Trace.class)
+@ConditionalOnBean(TraceManager.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracePreZuulFilter tracePreZuulFilter() {
-		return new TracePreZuulFilter();
+	public TracePreZuulFilter tracePreZuulFilter(TraceAccessor accessor) {
+		return new TracePreZuulFilter(accessor);
 	}
 
 	@Bean
-	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory) {
-		return new TraceRestClientRibbonCommandFactory(factory);
+	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory, TraceAccessor accessor) {
+		return new TraceRestClientRibbonCommandFactory(factory, accessor);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracePostZuulFilter tracePostZuulFilter() {
-		return new TracePostZuulFilter();
+	public TracePostZuulFilter tracePostZuulFilter(TraceAccessor accessor) {
+		return new TracePostZuulFilter(accessor);
 	}
 
 }

@@ -15,19 +15,13 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
-import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
-import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
-import static org.springframework.cloud.sleuth.TraceContextHolder.isTracing;
+import static org.springframework.cloud.sleuth.trace.TraceContextHolder.isTracing;
 
 import java.io.IOException;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
@@ -43,7 +37,7 @@ import org.springframework.http.client.ClientHttpResponse;
  * and sets them if one or both of them are missing.
  *
  * @see org.springframework.web.client.RestTemplate
- * @see Trace
+ * @see TraceAccessor
  *
  * @author Marcin Grzejszczak, 4financeIT
  * @author Spencer Gibb
@@ -52,6 +46,12 @@ public class TraceRestTemplateInterceptor implements ClientHttpRequestIntercepto
 ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
+
+	private TraceAccessor accessor;
+
+	public TraceRestTemplateInterceptor(TraceAccessor accessor) {
+		this.accessor = accessor;
+	}
 
 	@Override
 	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
@@ -62,14 +62,14 @@ ApplicationEventPublisherAware {
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
 		if (getCurrentSpan() == null) {
-			setHeader(request, NOT_SAMPLED_NAME, "");
+			setHeader(request, Trace.NOT_SAMPLED_NAME, "");
 			return execution.execute(request, body);
 		}
-		setHeader(request, SPAN_ID_NAME, getCurrentSpan().getSpanId());
-		setHeader(request, TRACE_ID_NAME, getCurrentSpan().getTraceId());
-		setHeader(request, SPAN_NAME_NAME, getCurrentSpan().getName());
-		setHeader(request, PARENT_ID_NAME, getParentId(getCurrentSpan()));
-		setHeader(request, PROCESS_ID_NAME, getCurrentSpan().getProcessId());
+		setHeader(request, Trace.SPAN_ID_NAME, getCurrentSpan().getSpanId());
+		setHeader(request, Trace.TRACE_ID_NAME, getCurrentSpan().getTraceId());
+		setHeader(request, Trace.SPAN_NAME_NAME, getCurrentSpan().getName());
+		setHeader(request, Trace.PARENT_ID_NAME, getParentId(getCurrentSpan()));
+		setHeader(request, Trace.PROCESS_ID_NAME, getCurrentSpan().getProcessId());
 		publish(new ClientSentEvent(this, getCurrentSpan()));
 		return new TraceHttpResponse(this, execution.execute(request, body));
 	}
@@ -96,6 +96,10 @@ ApplicationEventPublisherAware {
 		if (value != null && !request.getHeaders().containsKey(name) && isTracing()) {
 			request.getHeaders().add(name, value);
 		}
+	}
+
+	private Span getCurrentSpan() {
+		return this.accessor.getCurrentSpan();
 	}
 
 }

@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.integration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
 import org.junit.After;
 import org.junit.Test;
@@ -30,10 +28,10 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
-import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.integration.TraceContextPropagationChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.QueueChannel;
@@ -57,29 +55,29 @@ public class TraceContextPropagationChannelInterceptorTests {
 	private PollableChannel channel;
 
 	@Autowired
-	private Trace trace;
+	private TraceManager trace;
 
 	@After
 	public void close() {
-		TraceContextHolder.removeCurrentSpan();
+		TraceContextHolder.removeCurrentTrace();
 	}
 
 	@Test
 	public void testSpanPropagation() {
 
-		TraceScope traceScope = this.trace.startSpan("testSendMessage", new AlwaysSampler(), null);
+		Trace traceScope = this.trace.startSpan("testSendMessage", new AlwaysSampler(), null);
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		String expectedSpanId = traceScope.getSpan().getSpanId();
-		traceScope.close();
+		this.trace.close(traceScope);
 
 		Message<?> message = this.channel.receive(0);
 
 		assertNotNull("message was null", message);
 
-		String spanId = message.getHeaders().get(SPAN_ID_NAME, String.class);
+		String spanId = message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
 		assertEquals("spanId was wrong", expectedSpanId,  spanId);
 
-		String traceId = message.getHeaders().get(TRACE_ID_NAME, String.class);
+		String traceId = message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
 	}
 

@@ -11,4 +11,4 @@ logging:
 
 sample:
   zipkin:
-#    enabled: false
+    enabled: false

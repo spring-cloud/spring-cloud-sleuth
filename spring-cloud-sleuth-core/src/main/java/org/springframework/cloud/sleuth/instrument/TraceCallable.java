@@ -18,47 +18,35 @@ package org.springframework.cloud.sleuth.instrument;
 
 import java.util.concurrent.Callable;
 
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceScope;
 
 /**
  * @author Spencer Gibb
  */
 @Value
-@EqualsAndHashCode(callSuper=false)
-public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Callable<V> {
+@EqualsAndHashCode(callSuper = false)
+public class TraceCallable<V> extends TraceDelegate<Callable<V>>implements Callable<V> {
 
-	public TraceCallable(Trace trace, Callable<V> delegate) {
-		super(trace, delegate);
+	public TraceCallable(TraceManager traceManager, Callable<V> delegate) {
+		super(traceManager, delegate);
 	}
 
-	public TraceCallable(Trace trace, Callable<V> delegate, Span parent) {
-		super(trace, delegate, parent);
-	}
-
-	public TraceCallable(Trace trace, Callable<V> delegate, Span parent, String name) {
-		super(trace, delegate, parent, name);
+	public TraceCallable(TraceManager traceManager, Callable<V> delegate, String name) {
+		super(traceManager, delegate, name);
 	}
 
 	@Override
 	public V call() throws Exception {
-		if (this.getParent() != null) {
-			TraceScope scope = startSpan();
-
-			try {
-				return this.getDelegate().call();
-			}
-			finally {
-				scope.close();
-			}
-
-		}
-		else {
+		Trace trace = startSpan();
+		try {
 			return this.getDelegate().call();
+		}
+		finally {
+			close(trace);
 		}
 	}
 

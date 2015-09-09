@@ -25,7 +25,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,13 +42,13 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @Configuration
 @EnableAspectJAutoProxy
 @ConditionalOnProperty(value = "spring.sleuth.schedule.enabled", matchIfMissing = true)
-@ConditionalOnBean(Trace.class)
+@ConditionalOnBean(TraceManager.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceSchedulingAutoConfiguration {
 
 	@ConditionalOnClass(ProceedingJoinPoint.class)
 	@Bean
-	public TraceSchedulingAspect traceSchedulingAspect(Trace trace) {
+	public TraceSchedulingAspect traceSchedulingAspect(TraceManager trace) {
 		return new TraceSchedulingAspect(trace);
 	}
 

@@ -16,13 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceScope;
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
 /**
  * @author Spencer Gibb
@@ -31,31 +31,32 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 
 	private static final String ATTR_NAME = "__CURRENT_TRACE_HANDLER_TRACE_SCOPE_ATTR___";
 
-	private final Trace trace;
+	private final TraceManager traceManager;
 
-	public TraceHandlerInterceptor(Trace trace) {
-		this.trace = trace;
+	public TraceHandlerInterceptor(TraceManager traceManager) {
+		this.traceManager = traceManager;
 	}
 
 	@Override
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-		//TODO: get trace data from request?
-		//TODO: what is the description?
-		TraceScope scope = trace.startSpan("traceHandlerInterceptor");
-		request.setAttribute(ATTR_NAME, scope);
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
+			Object handler) throws Exception {
+		// TODO: get trace data from request?
+		// TODO: what is the description?
+		Trace trace = this.traceManager.startSpan("traceHandlerInterceptor");
+		request.setAttribute(ATTR_NAME, trace);
 		return true;
 	}
 
 	@Override
-	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+	public void postHandle(HttpServletRequest request, HttpServletResponse response,
+			Object handler, ModelAndView modelAndView) throws Exception {
 
 	}
 
 	@Override
-	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-		TraceScope scope = TraceScope.class.cast(request.getAttribute(ATTR_NAME));
-		if (scope != null) {
-			scope.close();
-		}
+	public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
+			Object handler, Exception ex) throws Exception {
+		Trace trace = Trace.class.cast(request.getAttribute(ATTR_NAME));
+		this.traceManager.close(trace);
 	}
 }

@@ -14,34 +14,34 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.template;
 
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.TraceDelegate;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 
 /**
  * @author Spencer Gibb
  */
-public class TraceTemplate {
+public class TraceTemplate implements TraceOperations  {
 
-	public interface TraceCallback<T> {
-		T doInTrace(TraceScope traceScope);
-	}
+	private final TraceManager trace;
 
-	private final Trace trace;
-
-	public TraceTemplate(Trace trace) {
+	public TraceTemplate(TraceManager trace) {
 		this.trace = trace;
 	}
 
+	@Override
 	public <T> T trace(final TraceCallback<T> callback) {
-		DelegateCallback<T> delegate = new DelegateCallback<>(this.trace);
 
-		if (delegate.getParent() != null) {
-			TraceScope traceScope = delegate.startSpan();
+		if (TraceContextHolder.isTracing()) {
+			DelegateCallback<T> delegate = new DelegateCallback<>(this.trace);
+			Trace traceScope = delegate.startSpan();
 			try {
 				return callback.doInTrace(traceScope);
 			} finally {
-				traceScope.close();
+				this.trace.close(traceScope);
 			}
 		} else {
 			return callback.doInTrace(null);
@@ -50,12 +50,12 @@ public class TraceTemplate {
 
 	class DelegateCallback<T> extends TraceDelegate<TraceCallback<T>> {
 
-		public DelegateCallback(Trace trace) {
+		public DelegateCallback(TraceManager trace) {
 			super(trace, null);
 		}
 
 		@Override
-		protected TraceScope startSpan() {
+		protected Trace startSpan() {
 			return super.startSpan();
 		}
 

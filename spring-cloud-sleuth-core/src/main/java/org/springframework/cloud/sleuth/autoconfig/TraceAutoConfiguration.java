@@ -19,11 +19,9 @@ package org.springframework.cloud.sleuth.autoconfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.IdGenerator;
-import org.springframework.cloud.sleuth.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTrace;
+import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,20 +35,20 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public IdGenerator idGenerator() {
+	public IdGenerator traceIdGenerator() {
 		return new RandomUuidGenerator();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public Sampler<Void> defaultSampler() {
+	public Sampler<Void> defaultTraceSampler() {
 		return new IsTracingSampler();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public Trace trace(Sampler<Void> sampler, IdGenerator idGenerator,
+	public DefaultTraceManager traceManager(Sampler<Void> sampler, IdGenerator idGenerator,
 			ApplicationEventPublisher publisher) {
-		return new DefaultTrace(sampler, idGenerator, publisher);
+		return new DefaultTraceManager(sampler, idGenerator, publisher);
 	}
 }

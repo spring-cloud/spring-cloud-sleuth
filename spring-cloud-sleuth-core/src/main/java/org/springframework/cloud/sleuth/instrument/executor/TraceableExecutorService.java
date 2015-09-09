@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.sleuth.instrument.concurrent.executor;
+package org.springframework.cloud.sleuth.instrument.executor;
 
 import java.util.Collection;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 /**
@@ -34,16 +34,16 @@ import org.springframework.cloud.sleuth.instrument.TraceRunnable;
  */
 public class TraceableExecutorService implements ExecutorService {
 	final ExecutorService delegate;
-	final Trace trace;
-	
-	public TraceableExecutorService(final ExecutorService delegate, final Trace trace) {
+	final TraceManager traceManager;
+
+	public TraceableExecutorService(final ExecutorService delegate, final TraceManager traceManager) {
 		this.delegate = delegate;
-		this.trace = trace;
+		this.traceManager = traceManager;
 	}
-	
+
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new TraceRunnable(trace, command);
+		final Runnable r = new TraceRunnable(this.traceManager, command);
 		this.delegate.execute(r);
 	}
 
@@ -74,19 +74,19 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new TraceCallable<>(this.trace, task);
+		Callable<T> c = new TraceCallable<>(this.traceManager, task);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new TraceRunnable(trace, task);
+		Runnable r = new TraceRunnable(this.traceManager, task);
 		return this.delegate.submit(r, result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = new TraceRunnable(trace, task);
+		Runnable r = new TraceRunnable(this.traceManager, task);
 		return this.delegate.submit(r);
 	}
 

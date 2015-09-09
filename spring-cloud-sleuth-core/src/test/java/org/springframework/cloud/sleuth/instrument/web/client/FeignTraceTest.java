@@ -1,9 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,10 +18,12 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.MilliSpan;
-import org.springframework.cloud.sleuth.TraceContextHolder;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,8 +41,11 @@ import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { TraceWebAutoConfiguration.class, FeignTraceTest.TestConfiguration.class })
-@WebIntegrationTest(value = "spring.application.name=fooservice", randomPort = true)
+@SpringApplicationConfiguration(classes = { TraceWebAutoConfiguration.class,
+		FeignTraceTest.TestConfiguration.class })
+// TODO: make it work with default isolation
+@WebIntegrationTest(value = { "spring.application.name=fooservice",
+		"hystrix.command.default.execution.isolation.strategy=SEMAPHORE" }, randomPort = true)
 public class FeignTraceTest {
 
 	@Autowired
@@ -52,20 +54,23 @@ public class FeignTraceTest {
 	@Autowired
 	Listener listener;
 
+	@Autowired
+	TraceManager traceManager;
+
 	@After
 	public void close() {
-		TraceContextHolder.removeCurrentSpan();
-		listener.getEvents().clear();
+		TraceContextHolder.removeCurrentTrace();
+		this.listener.getEvents().clear();
 	}
 
 	@Test
 	public void shouldWorkWhenNotTracing() {
 		// when
-		ResponseEntity<String> response = testFeignInterface.getNoTrace();
+		ResponseEntity<String> response = this.testFeignInterface.getNoTrace();
 
 		// then
-		assertThat(getHeader(response, TRACE_ID_NAME)).isNull();
-		assertThat(listener.getEvents()).isEmpty();
+		assertThat(getHeader(response, Trace.TRACE_ID_NAME)).isNull();
+		assertThat(this.listener.getEvents()).isEmpty();
 	}
 
 	@Test
@@ -74,17 +79,17 @@ public class FeignTraceTest {
 		String currentTraceId = "currentTraceId";
 		String currentSpanId = "currentSpanId";
 		String currentParentId = "currentParentId";
-		TraceContextHolder.setCurrentSpan(
-				MilliSpan.builder().traceId(currentTraceId).spanId(currentSpanId).parent(currentParentId).build());
+		this.traceManager.continueSpan(MilliSpan.builder().traceId(currentTraceId)
+				.spanId(currentSpanId).parent(currentParentId).build());
 
 		// when
-		ResponseEntity<String> response = testFeignInterface.getTraceId();
+		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		// then
-		assertThat(getHeader(response, TRACE_ID_NAME)).isEqualTo(currentTraceId);
-		assertThat(getHeader(response, SPAN_ID_NAME)).isEqualTo(currentSpanId);
-		assertThat(getHeader(response, PARENT_ID_NAME)).isEqualTo(currentParentId);
-		assertThat(listener.getEvents().size()).isEqualTo(2);
+		assertThat(getHeader(response, Trace.TRACE_ID_NAME)).isEqualTo(currentTraceId);
+		assertThat(getHeader(response, Trace.SPAN_ID_NAME)).isEqualTo(currentSpanId);
+		assertThat(getHeader(response, Trace.PARENT_ID_NAME)).isEqualTo(currentParentId);
+		assertThat(this.listener.getEvents().size()).isEqualTo(2);
 	}
 
 	private String getHeader(ResponseEntity<String> response, String name) {
@@ -124,16 +129,16 @@ public class FeignTraceTest {
 
 		@EventListener(ClientSentEvent.class)
 		public void sent(ClientSentEvent event) {
-			events.add(event);
+			this.events.add(event);
 		}
 
 		@EventListener(ClientReceivedEvent.class)
 		public void received(ClientReceivedEvent event) {
-			events.add(event);
+			this.events.add(event);
 		}
 
 		public List<ApplicationEvent> getEvents() {
-			return events;
+			return this.events;
 		}
 	}
 
@@ -141,14 +146,16 @@ public class FeignTraceTest {
 	public static class FooController {
 
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
-		public String notrace(@RequestHeader(name = TRACE_ID_NAME, required = false) String traceId) {
+		public String notrace(
+				@RequestHeader(name = Trace.TRACE_ID_NAME, required = false) String traceId) {
 			assertThat(traceId).isNull();
 			return "OK";
 		}
 
 		@RequestMapping(value = "/traceid", method = RequestMethod.GET)
-		public String traceId(@RequestHeader(TRACE_ID_NAME) String traceId, @RequestHeader(SPAN_ID_NAME) String spanId,
-				@RequestHeader(PARENT_ID_NAME) String parentId) {
+		public String traceId(@RequestHeader(Trace.TRACE_ID_NAME) String traceId,
+				@RequestHeader(Trace.SPAN_ID_NAME) String spanId,
+				@RequestHeader(Trace.PARENT_ID_NAME) String parentId) {
 			assertThat(traceId).isNotEmpty();
 			assertThat(parentId).isNotEmpty();
 			assertThat(spanId).isNotEmpty();
@@ -165,7 +172,7 @@ public class FeignTraceTest {
 		@Bean
 		public ILoadBalancer ribbonLoadBalancer() {
 			BaseLoadBalancer balancer = new BaseLoadBalancer();
-			balancer.setServersList(Arrays.asList(new Server("localhost", port)));
+			balancer.setServersList(Arrays.asList(new Server("localhost", this.port)));
 			return balancer;
 		}
 

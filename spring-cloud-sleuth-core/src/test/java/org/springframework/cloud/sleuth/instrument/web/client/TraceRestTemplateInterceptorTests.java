@@ -28,7 +28,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
+import org.springframework.cloud.sleuth.autoconfig.RandomUuidGenerator;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
@@ -48,28 +52,33 @@ public class TraceRestTemplateInterceptorTests {
 	private MockMvc mockMvc = MockMvcBuilders.standaloneSetup(new TestController())
 			.build();
 
-	private RestTemplate template = new RestTemplate(new MockMvcClientHttpRequestFactory(
-			this.mockMvc));
+	private RestTemplate template = new RestTemplate(
+			new MockMvcClientHttpRequestFactory(this.mockMvc));
+
+	private DefaultTraceManager traces;
+
+	private StaticApplicationContext publisher = new StaticApplicationContext();
 
 	@Before
 	public void setup() {
-		this.template
-		.setInterceptors(Arrays
-				.<ClientHttpRequestInterceptor> asList(new TraceRestTemplateInterceptor()));
+		this.publisher.refresh();
+		this.traces = new DefaultTraceManager(new AlwaysSampler(),
+				new RandomUuidGenerator(), this.publisher);
+		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
+				new TraceRestTemplateInterceptor(this.traces)));
 	}
 
 	@After
 	public void clean() {
-		TraceContextHolder.removeCurrentSpan();
+		TraceContextHolder.removeCurrentTrace();
 	}
 
 	@Test
 	public void headersAddedWhenTracing() {
-		TraceContextHolder.setCurrentSpan(MilliSpan.builder().traceId("foo")
-				.spanId("bar").build());
+		this.traces.continueSpan(MilliSpan.builder().traceId("foo").spanId("bar").build());
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
-		.getBody();
+				.getBody();
 		assertEquals("bar", headers.get(Trace.SPAN_ID_NAME));
 		assertEquals("foo", headers.get(Trace.TRACE_ID_NAME));
 	}
@@ -78,7 +87,7 @@ public class TraceRestTemplateInterceptorTests {
 	public void headersNotAddedWhenNotTracing() {
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
-		.getBody();
+				.getBody();
 		assertFalse("Wrong headers: " + headers, headers.containsKey(Trace.SPAN_ID_NAME));
 	}
 

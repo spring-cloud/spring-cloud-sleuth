@@ -19,20 +19,20 @@ package sample;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
-import org.springframework.cloud.sleuth.TraceScope;
+import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Spencer Gibb
@@ -44,7 +44,9 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@Autowired
 	private RestTemplate restTemplate;
 	@Autowired
-	private Trace trace;
+	private TraceManager traceManager;
+	@Autowired
+	private TraceAccessor accessor;
 	@Autowired
 	private SampleBackground controller;
 	private int port;
@@ -68,8 +70,8 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 				final Random random = new Random();
 				int millis = random.nextInt(1000);
 				Thread.sleep(millis);
-				SampleController.this.trace.addAnnotation("callable-sleep-millis", String.valueOf(millis));
-				Span currentSpan = TraceContextHolder.getCurrentSpan();
+				SampleController.this.traceManager.addAnnotation("callable-sleep-millis", String.valueOf(millis));
+				Span currentSpan = SampleController.this.accessor.getCurrentSpan();
 				return "async hi: " + currentSpan;
 			}
 		};
@@ -87,24 +89,24 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
-		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		TraceScope scope = this.trace.startSpan("customTraceEndpoint",
+		Trace scope = this.traceManager.startSpan("customTraceEndpoint",
 				new AlwaysSampler(), null);
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
-		scope.close();
+		this.traceManager.close(scope);
 		return "traced/" + s;
 	}
 
@@ -115,7 +117,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);

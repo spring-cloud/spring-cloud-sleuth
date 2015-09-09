@@ -16,20 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
-import static org.springframework.cloud.sleuth.TraceContextHolder.getCurrentSpan;
-import static org.springframework.cloud.sleuth.TraceContextHolder.removeCurrentSpan;
-import static org.springframework.cloud.sleuth.TraceContextHolder.setCurrentSpan;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -52,18 +45,22 @@ import org.springframework.util.Assert;
  * @since 1.0
  */
 public class TraceContextPropagationChannelInterceptor extends ChannelInterceptorAdapter
-implements ExecutorChannelInterceptor {
+		implements ExecutorChannelInterceptor {
 
-	private final static ThreadLocal<Span> ORIGINAL_CONTEXT = new ThreadLocal<>();
+	private final TraceManager traceManager;
+
+	private final static ThreadLocal<Trace> ORIGINAL_CONTEXT = new ThreadLocal<>();
+
+	public TraceContextPropagationChannelInterceptor(TraceManager traceManager) {
+		this.traceManager = traceManager;
+	}
 
 	@Override
 	public final Message<?> preSend(Message<?> message, MessageChannel channel) {
 		if (DirectChannel.class.isAssignableFrom(AopUtils.getTargetClass(channel))) {
 			return message;
 		}
-
-		Span span = getCurrentSpan();
-
+		Span span = this.traceManager.getCurrentSpan();
 		if (span != null) {
 			return new MessageWithSpan(message, span);
 		}
@@ -78,7 +75,6 @@ implements ExecutorChannelInterceptor {
 			MessageWithSpan messageWithSpan = (MessageWithSpan) message;
 			Message<?> messageToHandle = messageWithSpan.message;
 			populatePropagatedContext(messageWithSpan.span, messageToHandle, channel);
-
 			return message;
 		}
 		return message;
@@ -97,33 +93,21 @@ implements ExecutorChannelInterceptor {
 	}
 
 	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty() ? span
-				.getParents().get(0) : null;
+		return span.getParents() != null && !span.getParents().isEmpty()
+				? span.getParents().get(0) : null;
 	}
 
 	protected void populatePropagatedContext(Span span, Message<?> message,
 			MessageChannel channel) {
 		if (span != null) {
-			Span currentContext = getCurrentSpan();
-			ORIGINAL_CONTEXT.set(currentContext);
-			setCurrentSpan(span);
+			ORIGINAL_CONTEXT.set(this.traceManager.continueSpan(span).getSavedTrace());
 		}
 	}
 
 	protected void resetPropagatedContext() {
-		Span originalContext = ORIGINAL_CONTEXT.get();
-		try {
-			if (originalContext == null) {
-				removeCurrentSpan();
-				ORIGINAL_CONTEXT.remove();
-			}
-			else {
-				setCurrentSpan(originalContext);
-			}
-		}
-		catch (Throwable t) {// NOSONAR
-			removeCurrentSpan();
-		}
+		Trace originalContext = ORIGINAL_CONTEXT.get();
+		this.traceManager.detach(originalContext);
+		ORIGINAL_CONTEXT.remove();
 	}
 
 	private class MessageWithSpan implements Message<Object> {
@@ -143,16 +127,16 @@ implements ExecutorChannelInterceptor {
 			Map<String, Object> headers = new HashMap<>();
 			headers.putAll(message.getHeaders());
 
-			setHeader(headers, SPAN_ID_NAME, this.span.getSpanId());
-			setHeader(headers, TRACE_ID_NAME, this.span.getTraceId());
-			setHeader(headers, SPAN_NAME_NAME, this.span.getName());
-			String parentId = getParentId(getCurrentSpan());
+			setHeader(headers, Trace.SPAN_ID_NAME, this.span.getSpanId());
+			setHeader(headers, Trace.TRACE_ID_NAME, this.span.getTraceId());
+			setHeader(headers, Trace.SPAN_NAME_NAME, this.span.getName());
+			String parentId = getParentId(span);
 			if (parentId != null) {
-				setHeader(headers, PARENT_ID_NAME, parentId);
+				setHeader(headers, Trace.PARENT_ID_NAME, parentId);
 			}
 			String processId = this.span.getProcessId();
 			if (processId != null) {
-				setHeader(headers, PROCESS_ID_NAME, processId);
+				setHeader(headers, Trace.PROCESS_ID_NAME, processId);
 			}
 			this.messageHeaders = new MessageHeaders(headers);
 		}
@@ -175,8 +159,8 @@ implements ExecutorChannelInterceptor {
 
 		@Override
 		public String toString() {
-			return "MessageWithSpan{" + "message=" + this.message + ", span="
-					+ this.span + ", messageHeaders=" + this.messageHeaders + '}';
+			return "MessageWithSpan{" + "message=" + this.message + ", span=" + this.span
+					+ ", messageHeaders=" + this.messageHeaders + '}';
 		}
 
 	}

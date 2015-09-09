@@ -18,12 +18,12 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author Dave Syer
@@ -32,21 +32,21 @@ import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 @RequiredArgsConstructor
 public class LazyTraceExecutor implements Executor {
 
-	private Trace trace;
+	private TraceManager traceManager;
 	private final BeanFactory beanFactory;
 	private final Executor delegate;
 
 	@Override
 	public void execute(Runnable command) {
-		if (this.trace == null) {
+		if (this.traceManager == null) {
 			try {
-				this.trace = this.beanFactory.getBean(Trace.class);
+				this.traceManager = this.beanFactory.getBean(TraceManager.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
 				this.delegate.execute(command);
 			}
 		}
-		this.delegate.execute(new TraceRunnable(this.trace, command));
+		this.delegate.execute(new TraceRunnable(this.traceManager, command));
 	}
 
 }
