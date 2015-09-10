@@ -1,0 +1,112 @@
+---
+# The name of your project
+title: Spring Cloud Sleuth
+
+badges:
+
+  # Customize your project's badges. Delete any entries that do not apply.
+  custom:
+    - name: Source (GitHub)
+      url:  https://github.com/spring-cloud/spring-cloud-sleuth
+      icon: github
+
+    - name: StackOverflow
+      url:  http://stackoverflow.com/questions/tagged/spring-cloud
+      icon: stackoverflow
+
+---
+<!DOCTYPE HTML>
+<html lang="en-US">
+
+<!-- Specify the parent of this project (or delete if none) to influence the rendering of the breadcrumb -->
+{% capture parent_link %}
+[Spring Cloud]({{ site.projects_site_url }}/spring-cloud)
+{% endcapture %}
+
+
+{% capture billboard_description %}
+
+Spring Cloud Sleuth implements a distributed tracing solution for Spring Cloud, borrowing heavily from [Dapper](http://research.google.com/pubs/pub36356.html), [Zipkin](https://github.com/openkipkin/zipkin) and HTrace. For most users Sleuth should be invisible, and all your interactions with external systems should be instrumented automatically. You can capture data simply in logs, or by sending it to a remote collector service.
+
+{% endcapture %}
+
+{% capture main_content %}
+
+## Features
+
+A Span is the basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span’s are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of. Spans also have other data, such as descriptions, key-value annotations, the ID of the span that caused them, and process ID’s (normally IP address). Spans are started and stopped, and they keep track of their timing information. Once you create a span, you must stop it at some point in the future. A set of spans forming a tree-like structure called a Trace. For example, if you are running a distributed big-data store, a trace might be formed by a put request.
+
+Spring Cloud Sleuth features:
+
+* Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator.
+
+* Optionally log span data in JSON format for harvesting in a log aggregator (set `spring.sleuth.log.json.enabled=true`).
+
+* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
+
+* Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, zuul filters, feign client).
+
+* If `spring-cloud-sleuth-zipkin` is available then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via Thrift to a Zipkin collector service on localhost (port 9410). Configure the location of the service using `spring.zipkin.[host,port]`.
+
+<span id="quick-start"></span>
+## Quick Start
+
+<script type="text/javascript">{% include custom.js %}</script>
+{% include download_widget.md %}
+
+
+
+As long as Spring Cloud Sleuth is on the classpath any Spring Boot
+application will generate trace data, but you have to add a `Sampler`
+bean to tell it how often to start a new span (default is never):
+
+```java
+@SpringBootApplication
+@RestController
+public class Application {
+
+  @Bean
+  public AlwaysSampler defaultSampler() {
+    return new AlwaysSampler();
+  }
+
+  @RequestMapping("/")
+  public String home() {
+    return "Hello World";
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(Application.class, args);
+  }
+
+}
+```
+
+Run this app and add the MDC patterns to your log pattern:
+
+```yaml
+logging:
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}] [%15.15t] %-40.40logger{39}: %m%n'
+```
+
+and then hit the home page. You will see traceId and spanId populated
+in the logs. If this app calls out to another one (e.g. with
+`RestTemplate`) it will send the trace data in headers and if the
+receiver is another Sleuth app you will see the trace continue there.
+
+{% endcapture %}
+
+{% capture related_resources %}
+
+### Sample Projects
+
+* [Simple HTTP app](https://github.com/spring-cloud-samples/tests/tree/master/sleuth) that calls back to itself
+* [Using Zipkin](https://github.com/spring-cloud/spring-cloud-sleuth/tree/master/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin) to collect traces
+* [Messaging with Spring Integration](https://github.com/spring-cloud/spring-cloud-sleuth/tree/master/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-messaging)
+
+{% endcapture %}
+
+
+{% include project_page.html %}
+</html>
