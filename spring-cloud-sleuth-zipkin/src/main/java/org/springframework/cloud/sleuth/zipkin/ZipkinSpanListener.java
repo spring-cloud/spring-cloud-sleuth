@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import lombok.extern.apachecommons.CommonsLog;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -48,6 +46,8 @@ import com.twitter.zipkin.gen.BinaryAnnotation;
 import com.twitter.zipkin.gen.Endpoint;
 import com.twitter.zipkin.gen.zipkinCoreConstants;
 
+import lombok.extern.apachecommons.CommonsLog;
+
 /**
  * @author Spencer Gibb
  */
@@ -57,7 +57,7 @@ public class ZipkinSpanListener {
 	private SpanCollector spanCollector;
 	@Value("${spring.application.name:application}")
 	private String appName;
-	@Autowired
+	@Autowired(required=false)
 	private ServerProperties serverProperties;
 
 	public ZipkinSpanListener(SpanCollector spanCollector) {
@@ -144,7 +144,7 @@ public class ZipkinSpanListener {
 
 	public Integer getPort() {
 		Integer port;
-		if (this.serverProperties.getPort() != null) {
+		if (this.serverProperties!=null && this.serverProperties.getPort() != null) {
 			port = this.serverProperties.getPort();
 		}
 		else {

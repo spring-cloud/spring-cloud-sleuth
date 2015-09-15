@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 
@@ -30,6 +32,7 @@ import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -67,7 +70,9 @@ public class TraceWebClientAutoConfiguration {
 		public void init() {
 			if (this.restTemplates != null) {
 				for (RestTemplate restTemplate : this.restTemplates) {
-					restTemplate.getInterceptors().add(this.traceRestTemplateInterceptor);
+					List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>(restTemplate.getInterceptors());
+					interceptors.add(this.traceRestTemplateInterceptor);
+					restTemplate.setInterceptors(interceptors);
 				}
 			}
 		}
