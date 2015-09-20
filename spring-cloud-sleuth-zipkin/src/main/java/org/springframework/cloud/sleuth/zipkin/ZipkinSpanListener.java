@@ -191,26 +191,9 @@ public class ZipkinSpanListener {
 	 */
 	private List<Annotation> createZipkinAnnotations(Span span, Endpoint endpoint) {
 		List<Annotation> annotationList = new ArrayList<>();
-
-		long srTime = 0, csTime = 0;
-		// add sleuth time annotation
 		for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
 			Annotation zipkinAnnotation = createZipkinAnnotation(ta.getMsg(),
-					ta.getTime(), 0, endpoint, true);
-			if (zipkinCoreConstants.SERVER_RECV.equals(ta.getMsg())) {
-				srTime = ta.getTime();
-			}
-			if (zipkinCoreConstants.SERVER_SEND.equals(ta.getMsg()) && srTime != 0) {
-				zipkinAnnotation
-				.setDuration(new Long(ta.getTime() - srTime).intValue() * 1000);
-			}
-			if (zipkinCoreConstants.CLIENT_SEND.equals(ta.getMsg())) {
-				csTime = ta.getTime();
-			}
-			if (zipkinCoreConstants.CLIENT_RECV.equals(ta.getMsg()) && csTime != 0) {
-				zipkinAnnotation
-				.setDuration(new Long(ta.getTime() - csTime).intValue() * 1000);
-			}
+					ta.getTime(), endpoint, true);
 			annotationList.add(zipkinAnnotation);
 		}
 		return annotationList;
@@ -249,7 +232,7 @@ public class ZipkinSpanListener {
 	 * @param sendRequest use the first or last timestamp.
 	 */
 	private static Annotation createZipkinAnnotation(String value, long time,
-			int duration, Endpoint endpoint, boolean sendRequest) {
+			Endpoint endpoint, boolean sendRequest) {
 		Annotation annotation = new Annotation();
 		annotation.setHost(endpoint);
 
@@ -259,10 +242,6 @@ public class ZipkinSpanListener {
 		}
 		else {
 			annotation.setTimestamp(time * 1000);
-		}
-
-		if (duration > 0) {
-			annotation.setDuration(duration * 1000);
 		}
 		annotation.setValue(value);
 		return annotation;
