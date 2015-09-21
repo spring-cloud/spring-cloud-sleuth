@@ -16,9 +16,11 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import lombok.Data;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.github.kristofa.brave.zipkin.ZipkinSpanCollectorParams;
+
+import lombok.Data;
 
 /**
  * @author Spencer Gibb
@@ -30,4 +32,5 @@ public class ZipkinProperties {
 	private int fixedSampleRate = 1;
 	private String host = "localhost";
 	private int port = 9410;
+	private ZipkinSpanCollectorParams collector = new ZipkinSpanCollectorParams();
 }

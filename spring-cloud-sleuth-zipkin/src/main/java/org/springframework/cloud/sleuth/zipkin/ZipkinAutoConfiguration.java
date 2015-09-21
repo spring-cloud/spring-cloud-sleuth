@@ -32,14 +32,16 @@ import com.github.kristofa.brave.zipkin.ZipkinSpanCollector;
 @Configuration
 @EnableConfigurationProperties
 @ConditionalOnClass(ZipkinSpanCollector.class)
-@ConditionalOnProperty(value = "spring.sleuth.zipkin.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
 public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(SpanCollector.class)
 	public ZipkinSpanCollector spanCollector() {
-		return new ZipkinSpanCollector(zipkinProperties().getHost(), zipkinProperties()
-				.getPort());
+		ZipkinProperties zipkin = zipkinProperties();
+		ZipkinSpanCollector collector = new ZipkinSpanCollector(zipkin.getHost(),
+				zipkin.getPort(), zipkin.getCollector());
+		return collector;
 	}
 
 	@Bean
@@ -48,7 +50,8 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	// @ConditionalOnProperty(value = "spring.sleuth.zipkin.braveTracer.enabled", havingValue = "false")
+	// @ConditionalOnProperty(value = "spring.sleuth.zipkin.braveTracer.enabled",
+	// havingValue = "false")
 	public ZipkinSpanListener sleuthTracer(SpanCollector spanCollector) {
 		return new ZipkinSpanListener(spanCollector);
 	}

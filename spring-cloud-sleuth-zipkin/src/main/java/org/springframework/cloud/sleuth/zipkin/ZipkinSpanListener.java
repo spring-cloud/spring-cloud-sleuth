@@ -155,7 +155,7 @@ public class ZipkinSpanListener {
 
 	public int getAddress() {
 		String address;
-		if (this.serverProperties.getAddress() != null) {
+		if (this.serverProperties!=null && this.serverProperties.getAddress() != null) {
 			address = this.serverProperties.getAddress().getHostAddress();
 		}
 		else {
@@ -249,6 +249,9 @@ public class ZipkinSpanListener {
 
 	private static long hash(String string) {
 		long h = 1125899906842597L;
+		if (string==null) {
+			return h;
+		}
 		int len = string.length();
 
 		for (int i = 0; i < len; i++) {
