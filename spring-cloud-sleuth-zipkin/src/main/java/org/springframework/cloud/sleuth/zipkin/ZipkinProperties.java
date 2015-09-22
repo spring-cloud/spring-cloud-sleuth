@@ -32,5 +32,6 @@ public class ZipkinProperties {
 	private int fixedSampleRate = 1;
 	private String host = "localhost";
 	private int port = 9410;
+	private boolean enabled = true;
 	private ZipkinSpanCollectorParams collector = new ZipkinSpanCollectorParams();
 }
