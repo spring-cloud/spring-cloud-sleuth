@@ -29,8 +29,8 @@ import com.netflix.zuul.ZuulFilter;
  * @author Dave Syer
  *
  */
-public class TracePostZuulFilter extends ZuulFilter implements
-ApplicationEventPublisherAware {
+public class TracePostZuulFilter extends ZuulFilter
+		implements ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
 
@@ -41,7 +41,7 @@ ApplicationEventPublisherAware {
 
 	@Override
 	public boolean shouldFilter() {
-		return true;
+		return getCurrentSpan() != null;
 	}
 
 	@Override
