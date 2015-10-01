@@ -16,10 +16,14 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -50,10 +54,42 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	// @ConditionalOnProperty(value = "spring.sleuth.zipkin.braveTracer.enabled",
-	// havingValue = "false")
-	public ZipkinSpanListener sleuthTracer(SpanCollector spanCollector) {
-		return new ZipkinSpanListener(spanCollector);
+	public ZipkinSpanListener sleuthTracer(SpanCollector spanCollector, EndpointLocator endpointLocator) {
+		return new ZipkinSpanListener(spanCollector, endpointLocator);
+	}
+
+	@Configuration
+	@ConditionalOnMissingClass("org.springframework.cloud.client.discovery.DiscoveryClient")
+	protected static class DefaultEndpointLocatorConfiguration {
+
+		@Autowired(required=false)
+		private ServerProperties serverProperties;
+
+		@Bean
+		public EndpointLocator zipkinEndpointLocator() {
+			return new ServerPropertiesEndpointLocator(this.serverProperties);
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass(DiscoveryClient.class)
+	protected static class DiscoveryClientEndpointLocatorConfiguration {
+
+		@Autowired(required=false)
+		private ServerProperties serverProperties;
+
+		@Autowired(required=false)
+		private DiscoveryClient client;
+
+		@Bean
+		public EndpointLocator zipkinEndpointLocator() {
+			if (this.client!=null) {
+				return new DiscoveryClientEndpointLocator(this.client);
+			}
+			return new ServerPropertiesEndpointLocator(this.serverProperties);
+		}
+
 	}
 
 }

@@ -10,7 +10,7 @@ include::intro.adoc[]
 ----
 logging:
   pattern:
-    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}] [%15.15t] %-40.40logger{39}: %m%n'
+    level: '[trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}] %5p'
 ----
 +
 (notice the `%X` entries from the MDC).

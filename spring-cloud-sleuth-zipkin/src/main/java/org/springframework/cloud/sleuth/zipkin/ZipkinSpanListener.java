@@ -17,16 +17,10 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TimelineAnnotation;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -55,13 +49,11 @@ import lombok.extern.apachecommons.CommonsLog;
 public class ZipkinSpanListener {
 
 	private SpanCollector spanCollector;
-	@Value("${spring.application.name:application}")
-	private String appName;
-	@Autowired(required=false)
-	private ServerProperties serverProperties;
+	private EndpointLocator endpointLocator;
 
-	public ZipkinSpanListener(SpanCollector spanCollector) {
+	public ZipkinSpanListener(SpanCollector spanCollector, EndpointLocator endpointLocator) {
 		this.spanCollector = spanCollector;
+		this.endpointLocator = endpointLocator;
 	}
 
 	@EventListener
@@ -117,11 +109,7 @@ public class ZipkinSpanListener {
 	public com.twitter.zipkin.gen.Span convert(Span span) {
 		com.twitter.zipkin.gen.Span zipkinSpan = new com.twitter.zipkin.gen.Span();
 
-		String serviceName = getServiceName(span);
-		int address = getAddress();
-		Integer port = getPort();
-
-		Endpoint ep = new Endpoint(address, port.shortValue(), serviceName);
+		Endpoint ep = this.endpointLocator.locate(span);
 		List<Annotation> annotationList = createZipkinAnnotations(span, ep);
 		List<BinaryAnnotation> binaryAnnotationList = createZipkinBinaryAnnotations(span,
 				ep);
@@ -142,49 +130,6 @@ public class ZipkinSpanListener {
 		return zipkinSpan;
 	}
 
-	public Integer getPort() {
-		Integer port;
-		if (this.serverProperties!=null && this.serverProperties.getPort() != null) {
-			port = this.serverProperties.getPort();
-		}
-		else {
-			port = 8080; // TODO: support random port
-		}
-		return port;
-	}
-
-	public int getAddress() {
-		String address;
-		if (this.serverProperties!=null && this.serverProperties.getAddress() != null) {
-			address = this.serverProperties.getAddress().getHostAddress();
-		}
-		else {
-			address = "127.0.0.1"; // TODO: get address from config
-		}
-		return ipAddressToInt(address);
-	}
-
-	public String getServiceName(Span span) {
-		String serviceName;
-		if (span.getProcessId() != null) {
-			serviceName = span.getProcessId().toLowerCase();
-		}
-		else {
-			serviceName = this.appName;
-		}
-		return serviceName;
-	}
-
-	private int ipAddressToInt(final String ip) {
-		InetAddress inetAddress = null;
-		try {
-			inetAddress = InetAddress.getByName(ip);
-		}
-		catch (final UnknownHostException e) {
-			throw new IllegalArgumentException(e);
-		}
-		return ByteBuffer.wrap(inetAddress.getAddress()).getInt();
-	}
 
 	/**
 	 * Add annotations from the sleuth Span.
