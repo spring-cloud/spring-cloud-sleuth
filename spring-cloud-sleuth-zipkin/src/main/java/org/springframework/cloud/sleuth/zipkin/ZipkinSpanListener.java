@@ -154,7 +154,7 @@ public class ZipkinSpanListener {
 		List<BinaryAnnotation> l = new ArrayList<>();
 		for (Map.Entry<String, String> e : span.getAnnotations().entrySet()) {
 			BinaryAnnotation binaryAnn = new BinaryAnnotation();
-			binaryAnn.setAnnotation_type(AnnotationType.BYTES);
+			binaryAnn.setAnnotation_type(AnnotationType.STRING);
 			binaryAnn.setKey(e.getKey());
 			try {
 				binaryAnn.setValue(e.getValue().getBytes("UTF-8"));
