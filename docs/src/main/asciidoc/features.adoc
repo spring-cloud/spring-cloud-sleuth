@@ -1,0 +1,22 @@
+== Features
+
+* Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator. Example configuration:
++
+[source,yaml]
+----
+logging:
+  pattern:
+    level: '[trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}] %5p'
+----
++
+(notice the `%X` entries from the MDC).
+
+* Optionally log span data in JSON format for harvesting in a log aggregator (set `spring.sleuth.log.json.enabled=true`).
+
+* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
+
+* Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, zuul filters, feign client).
+
+* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via Thrift to a Zipkin collector service on localhost (port 9410). Configure the location of the service using `spring.zipkin.[host,port]`.
+
+* If `spring-cloud-sleuth-stream` then the app will generate and collect traces via Spring Cloud Stream. Your app automatically becomes a producer of tracer messages that are sent over your broker of choice (e.g. RabbitMQ, Apache Kafka, Redis). 

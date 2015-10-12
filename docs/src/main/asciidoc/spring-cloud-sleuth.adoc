@@ -6,5 +6,55 @@
 
 include::intro.adoc[]
 
-== TODO: Document Spring Cloud Sleuth
+include::features.adoc[]
 
+== Sampling
+
+In distributed tracing the data volumes can be very high so sampling
+is important (you usually don't need to trace all requests to get a
+good picture of what is happening). Spring Cloud Sleuth has a
+`Sampler` strategy that you can implement to take control of the
+sampling algorithm. By default you get a strategy that continues to
+trace if a span is already active, but never starts a new one. If all
+your apps run with this sampler you will see no traces, so it's best
+to install your own strategy. For testing there is an `AlwaysSampler`
+that traces everything, which can be installed just by creating a bean definition:
+
+[source,java]
+----
+@Bean
+public Sampler<?> defaultSampler() {
+    return new AlwaysSampler();
+}
+---- 
+
+== Spans as Messages
+
+You can accumulate and send span data over
+http://cloud.spring.io/spring-cloud-stream[Spring Cloud Stream] by
+including the `spring-cloud-sleuth-stream` jar as a dependency, and
+adding a Channel Binder implementation
+(e.g. `spring-cloud-starter-stream-rabbit` for RabbitMQ or
+`spring-cloud-starter-stream-kafka` for Kafka). This will
+automatically turn your app into a producer of messages with payload
+type `Spans`. A consumer can then easily be implemented using
+`spring-cloud-sleuth-stream` and binding to the `SleuthSink`. Example:
+
+[source,java]
+----
+@EnableBinding(SleuthSink.class)
+@SpringBootApplication(exclude = SleuthStreamAutoConfiguration.class)
+@MessageEndpoint
+public class Consumer {
+
+    @ServiceActivator(inputChannel = SleuthSink.INPUT)
+    public void sink(Spans input) throws Exception {
+        // ... process spans
+    }
+}
+----
+
+NOTE: the sample consumer application above explicitly excludes
+`SleuthStreamAutoConfiguration` so it doesn't send messages to itself,
+but this is optional (you might actually want to trace requests into
+the consumer app).
