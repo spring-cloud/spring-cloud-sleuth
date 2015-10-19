@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -74,6 +75,23 @@ public class TraceFilterTests {
 		return get("/")
 				.accept(MediaType.APPLICATION_JSON)
 				.header("User-Agent", "MockMvc");
+	}
+
+	@Test
+	public void notTraced() throws Exception {
+		TraceFilter filter = new TraceFilter(trace);
+
+		when(this.trace.startSpan(anyString())).thenReturn(traceScope);
+
+		request = get("/favicon.ico")
+				.accept(MediaType.ALL)
+				.buildRequest(new MockServletContext());
+
+		filter.doFilter(request, response, filterChain);
+
+		verify(this.trace, never()).startSpan(anyString());
+
+		verify(this.traceScope, never()).close();
 	}
 
 	@Test

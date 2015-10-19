@@ -68,7 +68,7 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 			+ ".TRACE";
 
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern
-			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico");
+			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream");
 
 	private final Trace trace;
 	private final Pattern skipPattern;
