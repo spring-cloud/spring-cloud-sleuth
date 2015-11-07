@@ -28,22 +28,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.github.kristofa.brave.SpanCollector;
-import com.github.kristofa.brave.zipkin.ZipkinSpanCollector;
+import com.github.kristofa.brave.scribe.ScribeSpanCollector;
 
 /**
  * @author Spencer Gibb
  */
 @Configuration
 @EnableConfigurationProperties
-@ConditionalOnClass(ZipkinSpanCollector.class)
+@ConditionalOnClass(ScribeSpanCollector.class)
 @ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
 public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(SpanCollector.class)
-	public ZipkinSpanCollector spanCollector() {
+	public ScribeSpanCollector spanCollector() {
 		ZipkinProperties zipkin = zipkinProperties();
-		ZipkinSpanCollector collector = new ZipkinSpanCollector(zipkin.getHost(),
+		ScribeSpanCollector collector = new ScribeSpanCollector(zipkin.getHost(),
 				zipkin.getPort(), zipkin.getCollector());
 		return collector;
 	}
@@ -55,7 +55,7 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	public ZipkinSpanListener sleuthTracer(SpanCollector spanCollector, EndpointLocator endpointLocator) {
-		return new ZipkinSpanListener(spanCollector, endpointLocator);
+		return new ZipkinSpanListener(spanCollector, endpointLocator.local());
 	}
 
 	@Configuration

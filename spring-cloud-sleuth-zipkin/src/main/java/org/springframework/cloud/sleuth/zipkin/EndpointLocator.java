@@ -16,19 +16,16 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import org.springframework.cloud.sleuth.Span;
-
 import com.twitter.zipkin.gen.Endpoint;
 
 /**
- * Strategy for locating a Brave "Endpoin" from a Spring Cloud Span (and whatever other
- * environment properties might be available).
+ * Strategy for locating a zipkin {@linkplain Endpoint} for the current process.
  *
  * @author Dave Syer
  *
  */
 public interface EndpointLocator {
 
-	Endpoint locate(Span span);
+	Endpoint local();
 
 }
