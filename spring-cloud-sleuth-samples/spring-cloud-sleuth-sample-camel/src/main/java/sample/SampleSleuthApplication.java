@@ -22,30 +22,27 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.scheduling.annotation.EnableAsync;
 
-/**
- * @author Spencer Gibb
- */
 @SpringBootApplication
 @EnableAspectJAutoProxy(proxyTargetClass = true)
-@EnableAsync
 public class SampleSleuthApplication {
 
-	public static final String CLIENT_NAME = "testApp";
+    public static void main(String[] args) {
+        SpringApplication.run(SampleSleuthApplication.class, args);
+    }
 
-	@Bean
-	public Sampler<?> defaultSampler() {
-		return new AlwaysSampler();
-	}
+    @Bean
+    public Sampler<?> defaultSampler() {
+        return new AlwaysSampler();
+    }
 
-	@Bean
-	public SampleController sampleController() {
-		return new SampleController();
-	}
+    @Bean
+    public SampleRouteBuilder sampleRouteBuilder() {
+        return new SampleRouteBuilder();
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(SampleSleuthApplication.class, args);
-	}
-
+    @Bean
+    public TraceProcessorFactory traceProcessorFactory() {
+        return new TraceProcessorFactory();
+    }
 }
