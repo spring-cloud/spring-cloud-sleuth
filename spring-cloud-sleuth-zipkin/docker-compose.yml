@@ -1,35 +1,39 @@
-cassandra:
-  image: quay.io/openzipkin/zipkin-cassandra:1.9.0
+mysql:
+  image: openzipkin/zipkin-mysql:1.25.0
   ports:
-    - 9042:9042
+    - 3306:3306
 collector:
-  image: quay.io/openzipkin/zipkin-collector:1.9.0
+  image: openzipkin/zipkin-collector:1.25.0
   environment:
-    - BLOCK_ON_CASSANDRA=true
+    - TRANSPORT_TYPE=scribe
+    - STORAGE_TYPE=mysql
   expose:
     - 9410
   ports:
     - 9410:9410
     - 9900:9900
   links:
-    - cassandra:db
+    - mysql:storage
 query:
-  image: quay.io/openzipkin/zipkin-query:1.9.0
+  image: openzipkin/zipkin-query:1.25.0
   environment:
-    - BLOCK_ON_CASSANDRA=true
+    # Remove TRANSPORT_TYPE to disable tracing
+    - TRANSPORT_TYPE=http
+    - STORAGE_TYPE=mysql
   expose:
     - 9411
   ports:
     - 9411:9411
     - 9901:9901
   links:
-    - cassandra:db
-    - collector
+    - mysql:storage
 web:
-  image: quay.io/openzipkin/zipkin-web:1.9.0
+  image: openzipkin/zipkin-web:1.25.0
+  environment:
+    # Remove TRANSPORT_TYPE to disable tracing
+    - TRANSPORT_TYPE=http
   ports:
     - 8080:8080
     - 9990:9990
   links:
-    - collector
     - query

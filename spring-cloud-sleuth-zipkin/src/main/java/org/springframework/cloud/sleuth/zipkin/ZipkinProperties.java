@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import com.github.kristofa.brave.zipkin.ZipkinSpanCollectorParams;
+import com.github.kristofa.brave.scribe.ScribeSpanCollectorParams;
 
 import lombok.Data;
 
@@ -33,5 +33,5 @@ public class ZipkinProperties {
 	private String host = "localhost";
 	private int port = 9410;
 	private boolean enabled = true;
-	private ZipkinSpanCollectorParams collector = new ZipkinSpanCollectorParams();
+	private ScribeSpanCollectorParams collector = new ScribeSpanCollectorParams();
 }

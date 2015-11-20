@@ -48,8 +48,6 @@ logging:
 8. Hit `http://localhost:3380`, `http://localhost:3380/call`, `http://localhost:3380/async` for some interesting sample traces (the app callas back to itself).
 9. Goto `http://localhost:8082` for zipkin web (8080 if running locally from source, the host is the docker host, so if you are using boot2docker it will be different)
 
-WARNING: The docker images for zipkin are old and don't work very well (the UI in particular). Zipkin is in a state of flux, but it should settle down soon when there is an actual release. Best results actually come from building from source and running the jar files (the query and collector services need command line arguments, so check the zipkin README for updates).
-
 NOTE: You can see the zipkin spans without the UI (in logs) if you run the sample with `sample.zipkin.enabled=false`.
 
 There are a few samples with slightly different features:

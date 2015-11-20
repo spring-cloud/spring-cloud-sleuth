@@ -41,7 +41,7 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 	}
 
 	@Override
-	public Endpoint locate(Span span) {
+	public Endpoint local() {
 		ServiceInstance instance = this.client.getLocalServiceInstance();
 		return new Endpoint(getIpAddress(instance),
 				new Integer(instance.getPort()).shortValue(), instance.getServiceId());

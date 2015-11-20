@@ -43,7 +43,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-zipkin-spancollector</artifactId>
+			<artifactId>brave-spancollector-scribe</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>

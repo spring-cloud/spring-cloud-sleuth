@@ -129,7 +129,7 @@
 			</dependency>
 			<dependency>
 				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-zipkin-spancollector</artifactId>
+				<artifactId>brave-spancollector-scribe</artifactId>
 				<version>${brave.version}</version>
 			</dependency>
 			<dependency>
@@ -202,7 +202,7 @@
 	</dependencyManagement>
 
 	<properties>
-		<brave.version>3.0.0</brave.version>
+		<brave.version>3.1.0</brave.version>
 		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
 		<spock.version>1.0-groovy-2.4</spock.version>

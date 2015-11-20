@@ -16,14 +16,10 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.util.InetUtils;
 import org.springframework.context.event.EventListener;
 
 import com.twitter.zipkin.gen.Endpoint;
@@ -46,11 +42,10 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	}
 
 	@Override
-	public Endpoint locate(Span span) {
-		String serviceName = getServiceName(span);
+	public Endpoint local() {
 		int address = getAddress();
 		Integer port = getPort();
-		Endpoint ep = new Endpoint(address, port.shortValue(), serviceName);
+		Endpoint ep = new Endpoint(address, port.shortValue(), appName);
 		return ep;
 	}
 
@@ -74,36 +69,11 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	}
 
 	private int getAddress() {
-		String address;
 		if (this.serverProperties!=null && this.serverProperties.getAddress() != null) {
-			address = this.serverProperties.getAddress().getHostAddress();
+			return InetUtils.convert(this.serverProperties.getAddress()).getIpAddressAsInt();
 		}
 		else {
-			address = "127.0.0.1";
+			return 127 <<24|1;
 		}
-		return ipAddressToInt(address);
 	}
-
-	private String getServiceName(Span span) {
-		String serviceName;
-		if (span.getProcessId() != null) {
-			serviceName = span.getProcessId().toLowerCase();
-		}
-		else {
-			serviceName = this.appName;
-		}
-		return serviceName;
-	}
-
-	private int ipAddressToInt(final String ip) {
-		InetAddress inetAddress = null;
-		try {
-			inetAddress = InetAddress.getByName(ip);
-		}
-		catch (final UnknownHostException e) {
-			throw new IllegalArgumentException(e);
-		}
-		return ByteBuffer.wrap(inetAddress.getAddress()).getInt();
-	}
-
 }
