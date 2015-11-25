@@ -32,11 +32,11 @@ import org.springframework.cloud.sleuth.instrument.TraceRunnable;
  * @author Gaurav Rai Mazra
  *
  */
-public class TracableExecutorService implements ExecutorService {
+public class TraceableExecutorService implements ExecutorService {
 	final ExecutorService delegate;
 	final Trace trace;
 	
-	public TracableExecutorService(final ExecutorService delegate, final Trace trace) {
+	public TraceableExecutorService(final ExecutorService delegate, final Trace trace) {
 		this.delegate = delegate;
 		this.trace = trace;
 	}

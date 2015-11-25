@@ -30,7 +30,7 @@ import org.springframework.cloud.sleuth.instrument.TraceRunnable;
  * @author Gaurav Rai Mazra
  *
  */
-public class TraceableScheduledExecutorService extends TracableExecutorService implements ScheduledExecutorService {
+public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
 	
 	public TraceableScheduledExecutorService(final ScheduledExecutorService delegate, final Trace trace) {
 		super(delegate, trace);
