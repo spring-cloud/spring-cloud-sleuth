@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.instrument.concurrent.executor.support.TraceCallableSupport;
-import org.springframework.cloud.sleuth.instrument.concurrent.executor.support.TraceRunnableSupport;
+import org.springframework.cloud.sleuth.instrument.TraceCallable;
+import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors
  * @author Gaurav Rai Mazra
@@ -43,7 +43,7 @@ public class TracableExecutorService implements ExecutorService {
 	
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = TraceRunnableSupport.decorate(trace, command);
+		final Runnable r = new TraceRunnable(trace, command);
 		this.delegate.execute(r);
 	}
 
@@ -74,19 +74,19 @@ public class TracableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = TraceCallableSupport.decorate(trace, task);
+		Callable<T> c = new TraceCallable<>(this.trace, task);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = TraceRunnableSupport.decorate(trace, task);
+		Runnable r = new TraceRunnable(trace, task);
 		return this.delegate.submit(r, result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = TraceRunnableSupport.decorate(trace, task);
+		Runnable r = new TraceRunnable(trace, task);
 		return this.delegate.submit(r);
 	}
 
