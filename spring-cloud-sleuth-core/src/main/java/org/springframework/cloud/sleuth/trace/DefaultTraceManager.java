@@ -117,7 +117,7 @@ public class DefaultTraceManager implements TraceManager {
 					+ ".  You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
-			if (span != NullTrace.INSTANCE) {
+			if (span != NullTrace.INSTANCE && span!=null) {
 				span.stop();
 				if (savedTrace != null
 						&& span.getParents().contains(savedTrace.getSpan().getSpanId())) {

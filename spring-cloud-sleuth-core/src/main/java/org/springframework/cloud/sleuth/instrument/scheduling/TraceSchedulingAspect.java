@@ -19,13 +19,17 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.cloud.sleuth.IdGenerator;
+import org.springframework.cloud.sleuth.MilliSpan;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.scheduling.annotation.Scheduled;
 
 /**
- * Aspect that creates a new Span for running threads executing methods annotated with {@link Scheduled} annotation.
- * For every execution of scheduled method a new trace will be started.
+ * Aspect that creates a new Span for running threads executing methods annotated with
+ * {@link Scheduled} annotation. For every execution of scheduled method a new trace will
+ * be started.
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Michal Chmielarz, 4financeIT
@@ -38,17 +42,24 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class TraceSchedulingAspect {
 
 	private final TraceManager trace;
+	private final IdGenerator idGenerator;
 
-	public TraceSchedulingAspect(TraceManager trace) {
+	public TraceSchedulingAspect(TraceManager trace, IdGenerator idGenerator) {
 		this.trace = trace;
+		this.idGenerator = idGenerator;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		Trace scope = this.trace.startSpan(pjp.toShortString());
+		final Span span = this.trace.isTracing() ? this.trace.getCurrentSpan()
+				: MilliSpan.builder().begin(System.currentTimeMillis())
+						.traceId(this.idGenerator.create()).spanId(this.idGenerator.create())
+						.build();
+		Trace scope = this.trace.startSpan(pjp.toShortString(), span);
 		try {
 			return pjp.proceed();
-		} finally {
+		}
+		finally {
 			this.trace.close(scope);
 		}
 	}

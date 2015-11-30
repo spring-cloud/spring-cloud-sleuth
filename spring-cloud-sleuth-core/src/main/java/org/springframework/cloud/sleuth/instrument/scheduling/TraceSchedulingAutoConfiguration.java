@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -48,8 +49,8 @@ public class TraceSchedulingAutoConfiguration {
 
 	@ConditionalOnClass(ProceedingJoinPoint.class)
 	@Bean
-	public TraceSchedulingAspect traceSchedulingAspect(TraceManager trace) {
-		return new TraceSchedulingAspect(trace);
+	public TraceSchedulingAspect traceSchedulingAspect(TraceManager trace, IdGenerator idGenerator) {
+		return new TraceSchedulingAspect(trace, idGenerator);
 	}
 
 }
