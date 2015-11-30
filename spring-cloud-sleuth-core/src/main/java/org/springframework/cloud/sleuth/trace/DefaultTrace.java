@@ -59,7 +59,7 @@ public class DefaultTrace implements Trace {
 		}
 		Span currentSpan = getCurrentSpan();
 		if (currentSpan != null && !parent.equals(currentSpan)) {
-			error("HTrace client error: thread " + Thread.currentThread().getName()
+			error("Trace client error: thread " + Thread.currentThread().getName()
 					+ " tried to start a new Span " + "with parent " + parent.toString()
 					+ ", but there is already a " + "currentSpan " + currentSpan);
 		}
