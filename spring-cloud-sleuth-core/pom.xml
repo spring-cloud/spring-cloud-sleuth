@@ -115,6 +115,10 @@
 			<version>2.1.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.jayway.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

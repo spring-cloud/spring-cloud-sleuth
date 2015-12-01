@@ -19,7 +19,11 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.cloud.sleuth.IdGenerator;
+import org.springframework.cloud.sleuth.MilliSpan;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceContextHolder;
 import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -38,14 +42,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class TraceSchedulingAspect {
 
 	private final Trace trace;
+	private final IdGenerator idGenerator;
 
-	public TraceSchedulingAspect(Trace trace) {
+	public TraceSchedulingAspect(Trace trace, IdGenerator idGenerator) {
 		this.trace = trace;
+		this.idGenerator = idGenerator;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		TraceScope scope = this.trace.startSpan(pjp.toShortString());
+		final Span span = TraceContextHolder.isTracing() ? TraceContextHolder.getCurrentSpan() :
+				MilliSpan.builder().begin(System.currentTimeMillis())
+						.traceId(idGenerator.create()).spanId(idGenerator.create()).build();
+		TraceScope scope = this.trace.startSpan(pjp.toShortString(), span);
 		try {
 			return pjp.proceed();
 		} finally {
