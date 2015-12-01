@@ -21,7 +21,7 @@ import org.springframework.web.context.WebApplicationContext;
  * @author 4financeIT
  */
 @WebAppConfiguration
-@IntegrationTest
+@IntegrationTest(value = {"server.port=0"})
 public abstract class MvcITest {
 
 	@Autowired protected WebApplicationContext webApplicationContext;
