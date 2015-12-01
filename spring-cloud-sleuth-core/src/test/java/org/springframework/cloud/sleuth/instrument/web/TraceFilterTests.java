@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
@@ -52,10 +53,10 @@ import lombok.SneakyThrows;
  */
 public class TraceFilterTests {
 
-	@Mock
-	private ApplicationEventPublisher publisher;
-
+	@Mock private ApplicationEventPublisher publisher;
 	private TraceManager trace;
+
+	@Mock private IdGenerator idGenerator;
 
 	private Span span;
 
@@ -89,7 +90,7 @@ public class TraceFilterTests {
 	@Test
 	public void notTraced() throws Exception {
 		TraceManager trace = Mockito.mock(TraceManager.class);
-		TraceFilter filter = new TraceFilter(trace);
+		TraceFilter filter = new TraceFilter(trace, idGenerator);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
@@ -102,7 +103,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.trace);
+		TraceFilter filter = new TraceFilter(this.trace, idGenerator);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpAnnotations();
 		assertNull(TraceContextHolder.getCurrentTrace());
@@ -114,7 +115,7 @@ public class TraceFilterTests {
 		Trace traceScope = this.trace.startSpan("foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, traceScope);
 
-		TraceFilter filter = new TraceFilter(this.trace);
+		TraceFilter filter = new TraceFilter(this.trace, idGenerator);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpAnnotations();
@@ -128,7 +129,7 @@ public class TraceFilterTests {
 				.header(Trace.TRACE_ID_NAME, "mytrace")
 				.buildRequest(new MockServletContext());
 
-		TraceFilter filter = new TraceFilter(this.trace);
+		TraceFilter filter = new TraceFilter(this.trace, idGenerator);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpAnnotations();

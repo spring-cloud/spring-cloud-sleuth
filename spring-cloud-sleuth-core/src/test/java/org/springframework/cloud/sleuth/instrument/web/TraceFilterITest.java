@@ -2,11 +2,11 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
@@ -20,10 +20,12 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterITest.class)
 @DefaultTestAutoConfiguration
-@Ignore("Will fail cause no tracing data is set on the TraceFilter")
 public class TraceFilterITest extends MvcITest {
 
+	private static final String PING_ENDPOINT = "/ping";
+
 	@Autowired TraceManager traceManager;
+	@Autowired IdGenerator idGenerator;
 
 	@Test
 	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
@@ -43,11 +45,11 @@ public class TraceFilterITest extends MvcITest {
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(traceManager));
+		mockMvcBuilder.addFilters(new TraceFilter(traceManager, idGenerator));
 	}
 
 	private MvcResult whenSentPingWithoutTracingData() throws Exception {
-		return mockMvc.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)).andReturn();
+		return mockMvc.perform(MockMvcRequestBuilders.get(PING_ENDPOINT).accept(MediaType.TEXT_PLAIN)).andReturn();
 	}
 
 	private MvcResult whenSentPingWithTraceId(String passedCorrelationId) throws Exception {
@@ -55,7 +57,7 @@ public class TraceFilterITest extends MvcITest {
 	}
 
 	private MvcResult sendPingWithTraceId(String headerName, String passedCorrelationId) throws Exception {
-		return mockMvc.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
+		return mockMvc.perform(MockMvcRequestBuilders.get(PING_ENDPOINT).accept(MediaType.TEXT_PLAIN)
 				.header(headerName, passedCorrelationId)).andReturn();
 	}
 

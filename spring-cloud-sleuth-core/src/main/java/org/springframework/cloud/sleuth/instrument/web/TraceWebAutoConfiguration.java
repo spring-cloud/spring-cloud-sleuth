@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
+import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -65,10 +66,10 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public FilterRegistrationBean traceWebFilter(ApplicationEventPublisher publisher) {
+	public FilterRegistrationBean traceWebFilter(ApplicationEventPublisher publisher, IdGenerator idGenerator) {
 		Pattern pattern = StringUtils.hasText(this.skipPattern) ? Pattern.compile(this.skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
-		TraceFilter filter = new TraceFilter(this.traceManager, pattern);
+		TraceFilter filter = new TraceFilter(this.traceManager, pattern, idGenerator);
 		filter.setApplicationEventPublisher(publisher);
 		return new FilterRegistrationBean(filter);
 	}
