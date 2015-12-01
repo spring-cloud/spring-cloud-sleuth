@@ -8,6 +8,11 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -23,7 +28,7 @@ public class TracingOnScheduledITest {
 
 	@Test
 	public void should_have_a_new_span_set_each_time_a_scheduled_method_has_been_executed() {
-		Span firstSpan = beanWithScheduledMethod.getSpan();
+		Span firstSpan = this.beanWithScheduledMethod.getSpan();
 		await().until(differentSpanHasBeenSetThan(firstSpan));
 	}
 
@@ -31,7 +36,7 @@ public class TracingOnScheduledITest {
 		return new Runnable() {
 			@Override
 			public void run() {
-				Span storedSpan = beanWithScheduledMethod.getSpan();
+				Span storedSpan = TracingOnScheduledITest.this.beanWithScheduledMethod.getSpan();
 				then(storedSpan).isNotNull();
 				then(storedSpan.getTraceId()).isNotNull();
 			}
@@ -42,9 +47,33 @@ public class TracingOnScheduledITest {
 		return new Runnable() {
 			@Override
 			public void run() {
-				then(beanWithScheduledMethod.getSpan()).isNotEqualTo(spanToCompare);
+				then(TracingOnScheduledITest.this.beanWithScheduledMethod.getSpan()).isNotEqualTo(spanToCompare);
 			}
 		};
 	}
 
+}
+
+@Configuration
+@DefaultTestAutoConfiguration
+class ScheduledTestConfiguration {
+
+	@Bean TestBeanWithScheduledMethod testBeanWithScheduledMethod() {
+		return new TestBeanWithScheduledMethod();
+	}
+
+}
+
+class TestBeanWithScheduledMethod {
+
+	Span span;
+
+	@Scheduled(fixedDelay = 1L)
+	public void scheduledMethod() {
+		this.span = TraceContextHolder.getCurrentSpan();
+	}
+
+	public Span getSpan() {
+		return this.span;
+	}
 }

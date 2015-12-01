@@ -19,12 +19,9 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.cloud.sleuth.MilliSpan;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.IdGenerator;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
@@ -42,20 +39,14 @@ import org.springframework.util.IdGenerator;
 public class TraceSchedulingAspect {
 
 	private final TraceManager trace;
-	private final IdGenerator idGenerator;
 
-	public TraceSchedulingAspect(TraceManager trace, IdGenerator idGenerator) {
+	public TraceSchedulingAspect(TraceManager trace) {
 		this.trace = trace;
-		this.idGenerator = idGenerator;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		final Span span = this.trace.isTracing() ? this.trace.getCurrentSpan()
-				: MilliSpan.builder().begin(System.currentTimeMillis())
-						.traceId(createId()).spanId(createId())
-						.build();
-		Trace scope = this.trace.startSpan(pjp.toShortString(), span);
+		Trace scope = this.trace.startSpan(pjp.toShortString());
 		try {
 			return pjp.proceed();
 		}
@@ -64,7 +55,4 @@ public class TraceSchedulingAspect {
 		}
 	}
 
-	private String createId() {
-		return this.idGenerator.generateId().toString();
-	}
 }

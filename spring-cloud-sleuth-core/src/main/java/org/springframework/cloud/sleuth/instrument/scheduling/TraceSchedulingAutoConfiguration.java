@@ -30,7 +30,6 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.util.IdGenerator;
 
 /**
  * Registers beans related to task scheduling.
@@ -49,8 +48,8 @@ public class TraceSchedulingAutoConfiguration {
 
 	@ConditionalOnClass(ProceedingJoinPoint.class)
 	@Bean
-	public TraceSchedulingAspect traceSchedulingAspect(TraceManager trace, IdGenerator idGenerator) {
-		return new TraceSchedulingAspect(trace, idGenerator);
+	public TraceSchedulingAspect traceSchedulingAspect(TraceManager trace) {
+		return new TraceSchedulingAspect(trace);
 	}
 
 }

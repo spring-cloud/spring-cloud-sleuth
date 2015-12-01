@@ -55,13 +55,14 @@ import org.springframework.web.util.UrlPathHelper;
  * @author Dave Syer
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
-public class TraceFilter extends OncePerRequestFilter implements ApplicationEventPublisherAware {
+public class TraceFilter extends OncePerRequestFilter
+		implements ApplicationEventPublisherAware {
 
 	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".TRACE";
 
-	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern
-			.compile("/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream");
+	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern.compile(
+			"/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream");
 
 	private final TraceManager traceManager;
 	private final Pattern skipPattern;
@@ -128,10 +129,10 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 				publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
 				request.setAttribute(TRACE_REQUEST_ATTR, trace);
 				// Send new span id back
-				addToResponseIfNotPresent(response, Trace.TRACE_ID_NAME, trace.getSpan()
-						.getTraceId());
-				addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME, trace.getSpan()
-						.getSpanId());
+				addToResponseIfNotPresent(response, Trace.TRACE_ID_NAME,
+						trace.getSpan().getTraceId());
+				addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME,
+						trace.getSpan().getSpanId());
 			}
 			else {
 				trace = this.traceManager.startSpan(name);
@@ -151,9 +152,11 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 				return;
 			}
 			if (trace != null) {
+				addResponseHeaders(response, trace.getSpan());
 				addResponseAnnotations(response);
-				if (trace.getSavedTrace()!=null) {
-					publish(new ServerSentEvent(this, trace.getSavedTrace().getSpan(), trace.getSpan()));
+				if (trace.getSavedTrace() != null) {
+					publish(new ServerSentEvent(this, trace.getSavedTrace().getSpan(),
+							trace.getSpan()));
 				}
 				// Double close to clean up the parent (remote span as well)
 				this.traceManager.close(this.traceManager.close(trace));
@@ -161,17 +164,24 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 		}
 	}
 
+	private void addResponseHeaders(HttpServletResponse response, Span span) {
+		if (span != null) {
+			response.addHeader(Trace.SPAN_ID_NAME, span.getSpanId());
+			response.addHeader(Trace.TRACE_ID_NAME, span.getTraceId());
+		}
+	}
+
 	private void publish(ApplicationEvent event) {
-		if (this.publisher!=null) {
+		if (this.publisher != null) {
 			this.publisher.publishEvent(event);
 		}
 	}
 
-	//TODO: move annotation keys to constants
+	// TODO: move annotation keys to constants
 	protected void addRequestAnnotations(HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.traceManager.addAnnotation("/http/request/uri", request.getRequestURL()
-				.toString());
+		this.traceManager.addAnnotation("/http/request/uri",
+				request.getRequestURL().toString());
 		this.traceManager.addAnnotation("/http/request/endpoint", uri);
 		this.traceManager.addAnnotation("/http/request/method", request.getMethod());
 

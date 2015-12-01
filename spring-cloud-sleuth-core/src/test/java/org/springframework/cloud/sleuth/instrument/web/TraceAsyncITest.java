@@ -10,7 +10,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
@@ -21,7 +20,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.IdGenerator;
 
 import com.jayway.awaitility.Awaitility;
 
@@ -35,8 +33,6 @@ public class TraceAsyncITest {
 	@Autowired
 	AsyncDelegation asyncDelegation;
 	@Autowired
-	IdGenerator idGenerator;
-	@Autowired
 	TraceManager traceManager;
 
 	@Test
@@ -49,8 +45,7 @@ public class TraceAsyncITest {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = MilliSpan.builder().traceId(this.idGenerator.generateId().toString())
-				.spanId(this.idGenerator.generateId().toString()).build();
+		Span span = this.traceManager.startSpan("existing").getSpan();
 		this.traceManager.continueSpan(span);
 		return span;
 	}
