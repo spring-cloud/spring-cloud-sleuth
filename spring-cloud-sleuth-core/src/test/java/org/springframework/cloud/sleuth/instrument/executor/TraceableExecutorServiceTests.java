@@ -23,7 +23,6 @@ import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
-import org.springframework.cloud.sleuth.autoconfig.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
@@ -31,6 +30,7 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.util.JdkIdGenerator;
 
 public class TraceableExecutorServiceTests {
 	private ApplicationEventPublisher publisher;
@@ -44,7 +44,7 @@ public class TraceableExecutorServiceTests {
 	@Before
 	public void setUp() throws Exception {
 		this.publisher = Mockito.mock(ApplicationEventPublisher.class);
-		this.traceManager = new DefaultTraceManager(new AlwaysSampler(), new RandomUuidGenerator(), this.publisher);
+		this.traceManager = new DefaultTraceManager(new AlwaysSampler(), new JdkIdGenerator(), this.publisher);
 		ExecutorService es = Executors.newFixedThreadPool(3);
 		this.traceManagerableExecutorService = new TraceableExecutorService(es, this.traceManager);
 		this.executorService = Executors.newFixedThreadPool(3);

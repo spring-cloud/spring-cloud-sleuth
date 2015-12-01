@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.cloud.sleuth.autoconfig.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -37,6 +36,7 @@ import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.util.JdkIdGenerator;
 
 /**
  * @author Spencer Gibb
@@ -53,7 +53,7 @@ public class DefaultTraceManagerTests {
 		ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
 
 		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(),
-				new RandomUuidGenerator(), publisher);
+				new JdkIdGenerator(), publisher);
 
 		Trace scope = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
 		try {

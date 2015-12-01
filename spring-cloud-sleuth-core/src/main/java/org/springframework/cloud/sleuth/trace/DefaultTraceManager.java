@@ -20,7 +20,6 @@ import static org.springframework.cloud.sleuth.util.ExceptionUtils.error;
 
 import java.util.concurrent.Callable;
 
-import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
@@ -33,6 +32,7 @@ import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.util.IdGenerator;
 
 /**
  * @author Spencer Gibb
@@ -137,8 +137,8 @@ public class DefaultTraceManager implements TraceManager {
 	protected Span createChild(Span parent, String name) {
 		if (parent == null) {
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
-					.name(name).traceId(this.idGenerator.create())
-					.spanId(this.idGenerator.create()).build();
+					.name(name).traceId(createId())
+					.spanId(createId()).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 			return span;
 		}
@@ -149,11 +149,15 @@ public class DefaultTraceManager implements TraceManager {
 			}
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
 					.name(name).traceId(parent.getTraceId()).parent(parent.getSpanId())
-					.spanId(this.idGenerator.create()).processId(parent.getProcessId())
+					.spanId(createId()).processId(parent.getProcessId())
 					.build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
 			return span;
 		}
+	}
+
+	private String createId() {
+		return this.idGenerator.generateId().toString();
 	}
 
 	@Override

@@ -10,7 +10,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceManager;
@@ -22,17 +21,23 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.IdGenerator;
 
 import com.jayway.awaitility.Awaitility;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {TraceAsyncITest.CorrelationIdAsyncSpecConfiguration.class})
+@SpringApplicationConfiguration(classes = {
+		TraceAsyncITest.CorrelationIdAsyncSpecConfiguration.class })
 public class TraceAsyncITest {
 
-	@Autowired AsyncClass asyncClass;
-	@Autowired AsyncDelegation asyncDelegation;
-	@Autowired IdGenerator idGenerator;
-	@Autowired TraceManager traceManager;
+	@Autowired
+	AsyncClass asyncClass;
+	@Autowired
+	AsyncDelegation asyncDelegation;
+	@Autowired
+	IdGenerator idGenerator;
+	@Autowired
+	TraceManager traceManager;
 
 	@Test
 	public void should_set_span_on_an_async_annotated_method() {
@@ -44,7 +49,8 @@ public class TraceAsyncITest {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = MilliSpan.builder().traceId(this.idGenerator.create()).spanId(this.idGenerator.create()).build();
+		Span span = MilliSpan.builder().traceId(this.idGenerator.generateId().toString())
+				.spanId(this.idGenerator.generateId().toString()).build();
 		this.traceManager.continueSpan(span);
 		return span;
 	}
@@ -57,8 +63,11 @@ public class TraceAsyncITest {
 		Awaitility.await().until(new Runnable() {
 			@Override
 			public void run() {
-				then(span.getTraceId()).isNotNull().isEqualTo(asyncClass.getTraceId());
-				then(span.getName()).isNotEqualTo(asyncClass.getSpanName());			}
+				then(span.getTraceId()).isNotNull()
+						.isEqualTo(TraceAsyncITest.this.asyncClass.getTraceId());
+				then(span.getName())
+						.isNotEqualTo(TraceAsyncITest.this.asyncClass.getSpanName());
+			}
 		});
 	}
 
@@ -73,11 +82,13 @@ public class TraceAsyncITest {
 	@Configuration
 	public static class CorrelationIdAsyncSpecConfiguration {
 
-		@Bean AsyncClass asyncClass() {
+		@Bean
+		AsyncClass asyncClass() {
 			return new AsyncClass();
 		}
 
-		@Bean AsyncDelegation asyncDelegation() {
+		@Bean
+		AsyncDelegation asyncDelegation() {
 			return new AsyncDelegation(asyncClass());
 		}
 	}
@@ -105,14 +116,16 @@ public class TraceAsyncITest {
 		}
 
 		public String getTraceId() {
-			if (this.span == null || (this.span.get() != null && this.span.get().getTraceId() == null)) {
+			if (this.span == null || (this.span.get() != null
+					&& this.span.get().getTraceId() == null)) {
 				return null;
 			}
 			return this.span.get().getTraceId();
 		}
 
 		public String getSpanName() {
-			if (this.span == null || (this.span.get() != null && this.span.get().getName() == null)) {
+			if (this.span == null
+					|| (this.span.get() != null && this.span.get().getName() == null)) {
 				return null;
 			}
 			return this.span.get().getName();

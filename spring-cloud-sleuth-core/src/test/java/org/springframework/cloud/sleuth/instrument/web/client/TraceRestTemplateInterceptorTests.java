@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.autoconfig.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
@@ -38,6 +37,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.JdkIdGenerator;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -63,7 +63,7 @@ public class TraceRestTemplateInterceptorTests {
 	public void setup() {
 		this.publisher.refresh();
 		this.traces = new DefaultTraceManager(new AlwaysSampler(),
-				new RandomUuidGenerator(), this.publisher);
+				new JdkIdGenerator(), this.publisher);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.traces)));
 	}

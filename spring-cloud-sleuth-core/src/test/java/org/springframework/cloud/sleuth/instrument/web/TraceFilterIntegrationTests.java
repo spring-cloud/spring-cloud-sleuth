@@ -23,7 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
-import org.springframework.cloud.sleuth.autoconfig.RandomUuidGenerator;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
@@ -34,6 +33,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.util.JdkIdGenerator;
 
 import lombok.SneakyThrows;
 
@@ -46,7 +46,7 @@ public class TraceFilterIntegrationTests {
 	private StaticApplicationContext context = new StaticApplicationContext();
 
 	private TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
-			new RandomUuidGenerator(), this.context);
+			new JdkIdGenerator(), this.context);
 
 	private MockHttpServletRequest request;
 	private MockHttpServletResponse response;
