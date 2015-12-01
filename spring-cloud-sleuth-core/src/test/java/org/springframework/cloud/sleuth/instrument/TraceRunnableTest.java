@@ -5,35 +5,40 @@ import static org.assertj.core.api.BDDAssertions.then;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.util.JdkIdGenerator;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRunnableTest {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
-	TraceManager traceManager = Mockito.mock(TraceManager.class);
+	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
+			new JdkIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@Test
-	@Ignore("Will fail because trace is not removed after runnable gets executed")
 	public void should_remove_span_from_thread_local_after_finishing_work() throws Exception {
 		// given
 		TraceSettingRunnable traceSettingRunnable = runnableThatSetsTraceInCurrentThreadLocalWithInitialTrace();
 		givenRunnableGetsSubmitted(traceSettingRunnable);
-		then(traceSettingRunnable.trace).isNotNull();
+		Trace firstTrace = traceSettingRunnable.trace;
+		then(firstTrace).isNotNull();
 
 		// when
 		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
 		whenRunnableGetsSubmitted(traceKeepingRunnable);
 
 		// then
-		then(traceKeepingRunnable.trace).isNull();
+		Trace secondTrace = traceKeepingRunnable.trace;
+		then(secondTrace.getSpan().getTraceId()).isNotEqualTo(firstTrace.getSpan().getTraceId());
 	}
 
 	private TraceSettingRunnable runnableThatSetsTraceInCurrentThreadLocalWithInitialTrace() {
@@ -49,7 +54,7 @@ public class TraceRunnableTest {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable callable) throws Exception {
-		executor.submit(new TraceRunnable(traceManager, callable)).get();
+		this.executor.submit(new TraceRunnable(this.traceManager, callable)).get();
 	}
 
 	static class TraceKeepingRunnable implements Runnable {
@@ -57,7 +62,7 @@ public class TraceRunnableTest {
 
 		@Override
 		public void run() {
-			trace = TraceContextHolder.getCurrentTrace();
+			this.trace = TraceContextHolder.getCurrentTrace();
 		}
 	}
 
@@ -66,8 +71,7 @@ public class TraceRunnableTest {
 
 		@Override
 		public void run() {
-			TraceContextHolder.setCurrentTrace(Mockito.mock(Trace.class));
-			trace = TraceContextHolder.getCurrentTrace();
+			this.trace = TraceContextHolder.getCurrentTrace();
 		}
 	}
 }
