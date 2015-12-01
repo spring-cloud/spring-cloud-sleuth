@@ -135,4 +135,5 @@ public class DefaultTraceManagerTests {
 			traceManager.close(cur);
 		}
 	}
+
 }
