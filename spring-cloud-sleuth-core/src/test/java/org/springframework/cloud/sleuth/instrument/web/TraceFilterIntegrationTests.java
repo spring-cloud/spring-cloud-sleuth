@@ -70,7 +70,7 @@ public class TraceFilterIntegrationTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.traceManager, new RandomUuidGenerator());
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
@@ -79,7 +79,7 @@ public class TraceFilterIntegrationTests {
 	public void continuesSpanFromHeaders() throws Exception {
 		this.request = builder().header(Trace.SPAN_ID_NAME, "myspan")
 				.header(Trace.TRACE_ID_NAME, "mytraceManager").buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.traceManager, new RandomUuidGenerator());
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TraceContextHolder.getCurrentSpan());
 	}

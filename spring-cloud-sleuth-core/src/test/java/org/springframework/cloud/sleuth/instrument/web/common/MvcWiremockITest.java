@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.instrument.web.common;
 
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.test.context.ContextConfiguration;
@@ -28,6 +29,7 @@ public abstract class MvcWiremockITest extends MvcITest {
 	protected WireMock wireMock;
 	@Autowired protected HttpMockServer httpMockServer;
 	@Autowired protected TraceManager trace;
+	@Autowired protected IdGenerator idGenerator;
 
 	@Override
 	@Before
@@ -41,16 +43,8 @@ public abstract class MvcWiremockITest extends MvcITest {
 		this.wireMock.register(mapping.willReturn(response));
 	}
 
-	public WireMock getWireMock() {
-		return this.wireMock;
-	}
-
-	public void setWireMock(WireMock wireMock) {
-		this.wireMock = wireMock;
-	}
-
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.trace));
+		mockMvcBuilder.addFilters(new TraceFilter(this.trace, idGenerator));
 	}
 }

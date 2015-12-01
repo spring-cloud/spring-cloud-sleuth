@@ -26,6 +26,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.cloud.sleuth.IdGenerator;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
 import org.springframework.cloud.sleuth.Span;
@@ -38,6 +39,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -65,18 +67,21 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 
 	private final TraceManager traceManager;
 	private final Pattern skipPattern;
+	private final IdGenerator idGenerator;
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	private ApplicationEventPublisher publisher;
 
-	public TraceFilter(TraceManager traceManager) {
+	public TraceFilter(TraceManager traceManager, IdGenerator idGenerator) {
 		this.traceManager = traceManager;
+		this.idGenerator = idGenerator;
 		this.skipPattern = DEFAULT_SKIP_PATTERN;
 	}
 
-	public TraceFilter(TraceManager traceManager, Pattern skipPattern) {
+	public TraceFilter(TraceManager traceManager, Pattern skipPattern, IdGenerator idGenerator) {
 		this.traceManager = traceManager;
 		this.skipPattern = skipPattern;
+		this.idGenerator = idGenerator;
 	}
 
 	@Override
@@ -101,42 +106,35 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 		}
 		else {
-			String spanId = getHeader(request, response, Trace.SPAN_ID_NAME);
-			String traceId = getHeader(request, response, Trace.TRACE_ID_NAME);
+			String spanId = getValueOrDefault(getHeader(request, response, Trace.SPAN_ID_NAME), idGenerator.create());
+			String traceId = getValueOrDefault(getHeader(request, response, Trace.TRACE_ID_NAME), idGenerator.create());
 			String name = "http" + uri;
-			if (hasText(spanId) && hasText(traceId)) {
-
-				MilliSpanBuilder span = MilliSpan.builder().traceId(traceId)
-						.spanId(spanId);
-				String parentId = getHeader(request, response, Trace.PARENT_ID_NAME);
-				String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
-				String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
-				if (parentName != null) {
-					span.name(parentName);
-				}
-				if (processId != null) {
-					span.processId(processId);
-				}
-				if (parentId != null) {
-					span.parent(parentId);
-				}
-				span.remote(true);
-
-				// TODO: trace description?
-				Span parent = span.build();
-				trace = this.traceManager.startSpan(name, parent);
-				publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
-				request.setAttribute(TRACE_REQUEST_ATTR, trace);
-				// Send new span id back
-				addToResponseIfNotPresent(response, Trace.TRACE_ID_NAME, trace.getSpan()
-						.getTraceId());
-				addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME, trace.getSpan()
-						.getSpanId());
+			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId)
+					.spanId(spanId);
+			String parentId = getHeader(request, response, Trace.PARENT_ID_NAME);
+			String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
+			String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
+			if (parentName != null) {
+				span.name(parentName);
 			}
-			else {
-				trace = this.traceManager.startSpan(name);
-				request.setAttribute(TRACE_REQUEST_ATTR, trace);
+			if (processId != null) {
+				span.processId(processId);
 			}
+			if (parentId != null) {
+				span.parent(parentId);
+			}
+			span.remote(true);
+
+			// TODO: trace description?
+			Span parent = span.build();
+			trace = this.traceManager.startSpan(name, parent);
+			publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
+			request.setAttribute(TRACE_REQUEST_ATTR, trace);
+			// Send new span id back
+			addToResponseIfNotPresent(response, Trace.TRACE_ID_NAME, trace.getSpan()
+					.getTraceId());
+			addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME, trace.getSpan()
+					.getSpanId());
 		}
 
 		try {
@@ -211,6 +209,13 @@ public class TraceFilter extends OncePerRequestFilter implements ApplicationEven
 		if (!hasText(response.getHeader(name))) {
 			response.addHeader(name, value);
 		}
+	}
+
+	private String getValueOrDefault(String valueToCheck, String defaultValue) {
+		if (StringUtils.hasText(valueToCheck)) {
+			return valueToCheck;
+		}
+		return defaultValue;
 	}
 
 	@Override

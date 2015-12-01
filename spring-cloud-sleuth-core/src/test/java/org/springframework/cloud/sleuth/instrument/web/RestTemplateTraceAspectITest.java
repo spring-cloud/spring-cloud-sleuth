@@ -16,7 +16,6 @@ import java.util.concurrent.Callable;
 
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +42,6 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 @SpringApplicationConfiguration(classes = {RestTemplateTraceAspectITest.CorrelationIdAspectSpecConfiguration.class})
-@Ignore("Will fail due to not setting initial values for Trace and Span IDs")
 @RunWith(JUnitParamsRunner.class)
 public class RestTemplateTraceAspectITest extends MvcWiremockITest {
 
