@@ -1,14 +1,14 @@
 package org.springframework.cloud.sleuth.instrument.scheduling;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static org.assertj.core.api.BDDAssertions.then;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {ScheduledTestConfiguration.class})
@@ -32,8 +32,8 @@ public class TracingOnScheduledITest {
 			@Override
 			public void run() {
 				Span storedSpan = beanWithScheduledMethod.getSpan();
-				assertThat(storedSpan).isNotNull();
-				assertThat(storedSpan.getTraceId()).isNotNull();
+				then(storedSpan).isNotNull();
+				then(storedSpan.getTraceId()).isNotNull();
 			}
 		};
 	}
@@ -42,7 +42,7 @@ public class TracingOnScheduledITest {
 		return new Runnable() {
 			@Override
 			public void run() {
-				assertThat(beanWithScheduledMethod.getSpan()).isNotEqualTo(spanToCompare);
+				then(beanWithScheduledMethod.getSpan()).isNotEqualTo(spanToCompare);
 			}
 		};
 	}

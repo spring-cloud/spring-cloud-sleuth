@@ -9,10 +9,12 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration;
 import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.integration.TraceSpringIntegrationAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @EnableAutoConfiguration(exclude = { TraceSpringIntegrationAutoConfiguration.class,
 		ArchaiusAutoConfiguration.class, LoadBalancerAutoConfiguration.class })
+@Configuration
 public @interface DefaultTestAutoConfiguration {
 }

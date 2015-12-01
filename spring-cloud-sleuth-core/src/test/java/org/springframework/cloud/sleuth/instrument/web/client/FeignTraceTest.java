@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,8 +69,8 @@ public class FeignTraceTest {
 		ResponseEntity<String> response = this.testFeignInterface.getNoTrace();
 
 		// then
-		assertThat(getHeader(response, Trace.TRACE_ID_NAME)).isNull();
-		assertThat(this.listener.getEvents()).isEmpty();
+		then(getHeader(response, Trace.TRACE_ID_NAME)).isNull();
+		then(this.listener.getEvents()).isEmpty();
 	}
 
 	@Test
@@ -86,10 +86,10 @@ public class FeignTraceTest {
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		// then
-		assertThat(getHeader(response, Trace.TRACE_ID_NAME)).isEqualTo(currentTraceId);
-		assertThat(getHeader(response, Trace.SPAN_ID_NAME)).isEqualTo(currentSpanId);
-		assertThat(getHeader(response, Trace.PARENT_ID_NAME)).isEqualTo(currentParentId);
-		assertThat(this.listener.getEvents().size()).isEqualTo(2);
+		then(getHeader(response, Trace.TRACE_ID_NAME)).isEqualTo(currentTraceId);
+		then(getHeader(response, Trace.SPAN_ID_NAME)).isEqualTo(currentSpanId);
+		then(getHeader(response, Trace.PARENT_ID_NAME)).isEqualTo(currentParentId);
+		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 
 	private String getHeader(ResponseEntity<String> response, String name) {
@@ -148,7 +148,7 @@ public class FeignTraceTest {
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
 				@RequestHeader(name = Trace.TRACE_ID_NAME, required = false) String traceId) {
-			assertThat(traceId).isNull();
+			then(traceId).isNull();
 			return "OK";
 		}
 
@@ -156,9 +156,9 @@ public class FeignTraceTest {
 		public String traceId(@RequestHeader(Trace.TRACE_ID_NAME) String traceId,
 				@RequestHeader(Trace.SPAN_ID_NAME) String spanId,
 				@RequestHeader(Trace.PARENT_ID_NAME) String parentId) {
-			assertThat(traceId).isNotEmpty();
-			assertThat(parentId).isNotEmpty();
-			assertThat(spanId).isNotEmpty();
+			then(traceId).isNotEmpty();
+			then(parentId).isNotEmpty();
+			then(spanId).isNotEmpty();
 			return traceId;
 		}
 	}
