@@ -35,36 +35,43 @@ import com.netflix.hystrix.HystrixThreadPoolKey;
  */
 public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
-	private TraceManager traceManager;
+	private final TraceManager traceManager;
+	//private final Span parentSpan;
 
 	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group) {
 		super(group);
 		this.traceManager = traceManager;
+		//this.parentSpan = traceManager.getCurrentSpan();
 	}
 
 	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool) {
 		super(group, threadPool);
 		this.traceManager = traceManager;
+		//this.parentSpan = traceManager.getCurrentSpan();
 	}
 
 	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, int executionIsolationThreadTimeoutInMilliseconds) {
 		super(group, executionIsolationThreadTimeoutInMilliseconds);
 		this.traceManager = traceManager;
+		//this.parentSpan = traceManager.getCurrentSpan();
 	}
 
 	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool, int executionIsolationThreadTimeoutInMilliseconds) {
 		super(group, threadPool, executionIsolationThreadTimeoutInMilliseconds);
 		this.traceManager = traceManager;
+		//this.parentSpan = traceManager.getCurrentSpan();
 	}
 
 	protected TraceCommand(TraceManager traceManager, Setter setter) {
 		super(setter);
 		this.traceManager = traceManager;
+		//this.parentSpan = traceManager.getCurrentSpan();
 	}
 
 	@Override
 	protected R run() throws Exception {
 		Trace trace = this.traceManager.startSpan(getCommandKey().name());
+		//Trace trace = this.traceManager.startSpan(getCommandKey().name(), parentSpan);
 		try {
 			return doRun();
 		} finally {
