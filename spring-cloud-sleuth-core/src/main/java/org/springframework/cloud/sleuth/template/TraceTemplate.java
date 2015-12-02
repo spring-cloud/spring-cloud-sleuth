@@ -26,22 +26,21 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
  */
 public class TraceTemplate implements TraceOperations  {
 
-	private final TraceManager trace;
+	private final TraceManager traceManager;
 
-	public TraceTemplate(TraceManager trace) {
-		this.trace = trace;
+	public TraceTemplate(TraceManager traceManager) {
+		this.traceManager = traceManager;
 	}
 
 	@Override
 	public <T> T trace(final TraceCallback<T> callback) {
-
 		if (TraceContextHolder.isTracing()) {
-			DelegateCallback<T> delegate = new DelegateCallback<>(this.trace);
+			DelegateCallback<T> delegate = new DelegateCallback<>(this.traceManager);
 			Trace traceScope = delegate.startSpan();
 			try {
 				return callback.doInTrace(traceScope);
 			} finally {
-				this.trace.close(traceScope);
+				this.traceManager.close(traceScope);
 			}
 		} else {
 			return callback.doInTrace(null);
