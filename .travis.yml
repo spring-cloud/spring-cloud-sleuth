@@ -8,7 +8,7 @@ before_install:
   - gem install asciidoctor
 install:
 - ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
-- ./docs/src/main/asciidoc/ghpages.sh
+- '[ "${TRAVIS_BRANCH}" = "master" ] || ./docs/src/main/asciidoc/ghpages.sh'
 script:
 - '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || ./mvnw -s .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true'
 - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || ./mvnw install -nsu -Dmaven.test.redirectTestOutputToFile=true'
