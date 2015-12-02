@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import static org.springframework.cloud.sleuth.util.ExceptionUtils.error;
+import static org.springframework.cloud.sleuth.util.ExceptionUtils.warn;
 
 import java.util.concurrent.Callable;
 
@@ -59,7 +59,7 @@ public class DefaultTraceManager implements TraceManager {
 		}
 		Span currentSpan = getCurrentSpan();
 		if (currentSpan != null && !parent.equals(currentSpan)) {
-			error("Trace client error: thread " + Thread.currentThread().getName()
+			warn("Trace client warn: thread " + Thread.currentThread().getName()
 					+ " tried to start a new Span " + "with parent " + parent.toString()
 					+ ", but there is already a " + "currentSpan " + currentSpan);
 		}
@@ -88,7 +88,7 @@ public class DefaultTraceManager implements TraceManager {
 		Span cur = TraceContextHolder.getCurrentSpan();
 		Span span = trace.getSpan();
 		if (cur != span) {
-			ExceptionUtils.error("Tried to detach trace span but "
+			ExceptionUtils.warn("Tried to detach trace span but "
 					+ "it is not the current span for the '"
 					+ Thread.currentThread().getName() + "' thread: " + span
 					+ ". You have " + "probably forgotten to close or detach " + cur);
@@ -113,7 +113,7 @@ public class DefaultTraceManager implements TraceManager {
 		Span span = trace.getSpan();
 		Trace savedTrace = trace.getSavedTrace();
 		if (cur != span) {
-			ExceptionUtils.error("Tried to close trace span but "
+			ExceptionUtils.warn("Tried to close trace span but "
 					+ "it is not the current span for the '"
 					+ Thread.currentThread().getName() + "' thread" + span
 					+ ".  You have " + "probably forgotten to close or detach " + cur);

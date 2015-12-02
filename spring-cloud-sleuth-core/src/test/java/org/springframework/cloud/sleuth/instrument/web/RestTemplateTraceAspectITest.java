@@ -16,7 +16,6 @@ import java.util.concurrent.Callable;
 
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +42,6 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 @SpringApplicationConfiguration(classes = {RestTemplateTraceAspectITest.CorrelationIdAspectSpecConfiguration.class})
-@Ignore("Will fail due to not setting initial values for Trace and Span IDs")
 @RunWith(JUnitParamsRunner.class)
 public class RestTemplateTraceAspectITest extends MvcWiremockITest {
 
@@ -78,7 +76,7 @@ public class RestTemplateTraceAspectITest extends MvcWiremockITest {
 	}
 
 	private void thenTraceIdHasBeenSetOnARequestHeader() {
-		this.wireMock.verifyThat(getRequestedFor(urlMatching(".*")).withHeader(Trace.TRACE_ID_NAME, matching("^(?!\\s*$).+/))")));
+		this.wireMock.verifyThat(getRequestedFor(urlMatching(".*")).withHeader(Trace.TRACE_ID_NAME, matching("^(?!\\s*$).+")));
 	}
 
 	private void whenARequestIsSentToAnAsyncEndpoint(String url) throws Exception {
@@ -119,7 +117,7 @@ public class RestTemplateTraceAspectITest extends MvcWiremockITest {
 		}
 
 		@RequestMapping(value = "/webAsyncTaskPing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
-		WebAsyncTask<String> webAsyncTaskPing() {
+		public WebAsyncTask<String> webAsyncTaskPing() {
 			return new WebAsyncTask<>(new Callable<String>() {
 				@Override
 				public String call() throws Exception {

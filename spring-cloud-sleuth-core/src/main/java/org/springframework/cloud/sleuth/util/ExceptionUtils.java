@@ -23,8 +23,7 @@ import lombok.extern.apachecommons.CommonsLog;
  */
 @CommonsLog
 public abstract class ExceptionUtils {
-	public static void error(String msg) {
-		log.error(msg);
-		throw new RuntimeException(msg);
+	public static void warn(String msg) {
+		log.warn(msg);
 	}
 }
