@@ -48,6 +48,13 @@ public abstract class TraceDelegate<T> {
 		this.traceManager.close(scope);
 	}
 
+	protected void closeAll(Trace scope) {
+		scope = this.traceManager.close(scope);
+		while (scope != null) {
+			scope = this.traceManager.detach(scope);
+		}
+	}
+
 	protected Trace startSpan() {
 		return this.traceManager.startSpan(getSpanName(), this.parent);
 	}

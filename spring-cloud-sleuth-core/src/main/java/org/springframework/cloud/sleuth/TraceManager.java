@@ -95,7 +95,7 @@ public interface TraceManager extends TraceAccessor {
 	void addAnnotation(String key, String value);
 
 	/**
-	 * Remove this span as the current thread, but don't stop it yet or send it for
+	 * Remove this span from the current thread, but don't stop it yet or send it for
 	 * collection. This is useful if the span object is then passed to another thread for
 	 * use with Trace.continueTrace().
 	 *
@@ -103,6 +103,12 @@ public interface TraceManager extends TraceAccessor {
 	 */
 	Trace detach(Trace trace);
 
+	/**
+	 * Remove this span from the current thread, stop it and send it for collection.
+	 *
+	 * @param trace the trace to close
+	 * @return the saved trace if there was one before the trace started (null otherwise)
+	 */
 	Trace close(Trace trace);
 
 	<V> Callable<V> wrap(Callable<V> callable);

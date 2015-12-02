@@ -54,9 +54,6 @@ public class Trace {
 	 */
 	private final Trace savedTrace;
 
-	@NonFinal
-	private boolean detached = false;
-
 	public Trace(Trace saved, Span span) {
 		this.savedTrace = saved;
 		this.span = span;
@@ -67,13 +64,9 @@ public class Trace {
 	}
 
 	public void addAnnotation(String key, String value) {
-		if (this.span != null && !this.detached) {
+		if (this.span != null) {
 			this.span.addAnnotation(key, value);
 		}
-	}
-
-	public void detach() {
-		this.detached = true;
 	}
 
 }

@@ -85,7 +85,6 @@ public class DefaultTraceManager implements TraceManager {
 		if (trace == null) {
 			return null;
 		}
-		trace.detach();
 		Span cur = TraceContextHolder.getCurrentSpan();
 		Span span = trace.getSpan();
 		if (cur != span) {
@@ -97,6 +96,9 @@ public class DefaultTraceManager implements TraceManager {
 		else {
 			if (span != NullTrace.INSTANCE) {
 				TraceContextHolder.setCurrentTrace(trace.getSavedTrace());
+			}
+			else {
+				TraceContextHolder.removeCurrentTrace();
 			}
 		}
 		return trace.getSavedTrace();
@@ -117,7 +119,7 @@ public class DefaultTraceManager implements TraceManager {
 					+ ".  You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
-			if (span != NullTrace.INSTANCE && span!=null) {
+			if (span != NullTrace.INSTANCE && span != null) {
 				span.stop();
 				if (savedTrace != null
 						&& span.getParents().contains(savedTrace.getSpan().getSpanId())) {
@@ -130,6 +132,9 @@ public class DefaultTraceManager implements TraceManager {
 					TraceContextHolder.removeCurrentTrace();
 				}
 			}
+			else {
+				TraceContextHolder.removeCurrentTrace();
+			}
 		}
 		return savedTrace;
 	}
@@ -137,8 +142,7 @@ public class DefaultTraceManager implements TraceManager {
 	protected Span createChild(Span parent, String name) {
 		if (parent == null) {
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
-					.name(name).traceId(createId())
-					.spanId(createId()).build();
+					.name(name).traceId(createId()).spanId(createId()).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 			return span;
 		}
@@ -149,8 +153,7 @@ public class DefaultTraceManager implements TraceManager {
 			}
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
 					.name(name).traceId(parent.getTraceId()).parent(parent.getSpanId())
-					.spanId(createId()).processId(parent.getProcessId())
-					.build();
+					.spanId(createId()).processId(parent.getProcessId()).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
 			return span;
 		}
