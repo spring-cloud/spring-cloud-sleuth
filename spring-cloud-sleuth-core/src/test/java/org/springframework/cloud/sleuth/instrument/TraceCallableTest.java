@@ -28,20 +28,26 @@ public class TraceCallableTest {
 	@Test
 	public void should_remove_span_from_thread_local_after_finishing_work()
 			throws Exception {
-		Trace firstTrace = givenCallableGetsSubmitted(thatSetsTraceInCurrentThreadLocalWithInitialTrace());
+		Trace firstTrace = givenCallableGetsSubmitted(
+				thatRetrievesTraceFromThreadLocal());
 
-		Trace secondTrace = whenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
+		Trace secondTrace = whenCallableGetsSubmitted(
+				thatRetrievesTraceFromThreadLocal());
 
-		then(secondTrace.getSpan().getTraceId()).isNotEqualTo(firstTrace.getSpan().getTraceId());
+		then(secondTrace.getSpan().getTraceId())
+				.isNotEqualTo(firstTrace.getSpan().getTraceId());
+		then(secondTrace.getSavedTrace()).isNull();
 	}
 
-	private Callable<Trace> thatSetsTraceInCurrentThreadLocalWithInitialTrace() {
-		return new Callable<Trace>() {
-			@Override
-			public Trace call() throws Exception {
-				return TraceContextHolder.getCurrentTrace();
-			}
-		};
+	@Test
+	public void should_not_find_thread_local_in_non_traceable_callback()
+			throws Exception {
+		givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
+
+		Trace secondTrace = whenNonTraceableCallableGetsSubmitted(
+				thatRetrievesTraceFromThreadLocal());
+
+		then(secondTrace).isNull();
 	}
 
 	private Callable<Trace> thatRetrievesTraceFromThreadLocal() {
@@ -62,6 +68,11 @@ public class TraceCallableTest {
 			throws InterruptedException, java.util.concurrent.ExecutionException {
 		return this.executor.submit(new TraceCallable<>(this.traceManager, callable))
 				.get();
+	}
+
+	private Trace whenNonTraceableCallableGetsSubmitted(Callable<Trace> callable)
+			throws InterruptedException, java.util.concurrent.ExecutionException {
+		return this.executor.submit(callable).get();
 	}
 
 }

@@ -25,24 +25,42 @@ public class TraceRunnableTest {
 			new JdkIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@Test
-	public void should_remove_span_from_thread_local_after_finishing_work() throws Exception {
+	public void should_remove_span_from_thread_local_after_finishing_work()
+			throws Exception {
 		// given
-		TraceSettingRunnable traceSettingRunnable = runnableThatSetsTraceInCurrentThreadLocalWithInitialTrace();
-		givenRunnableGetsSubmitted(traceSettingRunnable);
-		Trace firstTrace = traceSettingRunnable.trace;
-		then(firstTrace).isNotNull();
+		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
+		givenRunnableGetsSubmitted(traceKeepingRunnable);
+		Trace firstTrace = traceKeepingRunnable.trace;
+		then(firstTrace).as("first trace").isNotNull();
 
 		// when
-		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
 		whenRunnableGetsSubmitted(traceKeepingRunnable);
 
 		// then
 		Trace secondTrace = traceKeepingRunnable.trace;
-		then(secondTrace.getSpan().getTraceId()).isNotEqualTo(firstTrace.getSpan().getTraceId());
+		then(secondTrace.getSpan().getTraceId()).as("second trace id")
+				.isNotEqualTo(firstTrace.getSpan().getTraceId()).as("first trace id");
+
+		// and
+		then(secondTrace.getSavedTrace()).as("saved trace as remnant of first trace")
+				.isNull();
 	}
 
-	private TraceSettingRunnable runnableThatSetsTraceInCurrentThreadLocalWithInitialTrace() {
-		return new TraceSettingRunnable();
+	@Test
+	public void should_not_find_thread_local_in_non_traceable_callback()
+			throws Exception {
+		// given
+		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
+		givenRunnableGetsSubmitted(traceKeepingRunnable);
+		Trace firstTrace = traceKeepingRunnable.trace;
+		then(firstTrace).as("expected trace").isNotNull();
+
+		// when
+		whenNonTraceableRunnableGetsSubmitted(traceKeepingRunnable);
+
+		// then
+		Trace secondTrace = traceKeepingRunnable.trace;
+		then(secondTrace).as("unexpected trace").isNull();
 	}
 
 	private TraceKeepingRunnable runnableThatRetrievesTraceFromThreadLocal() {
@@ -57,6 +75,11 @@ public class TraceRunnableTest {
 		this.executor.submit(new TraceRunnable(this.traceManager, callable)).get();
 	}
 
+	private void whenNonTraceableRunnableGetsSubmitted(Runnable callable)
+			throws Exception {
+		this.executor.submit(callable).get();
+	}
+
 	static class TraceKeepingRunnable implements Runnable {
 		public Trace trace;
 
@@ -66,12 +89,4 @@ public class TraceRunnableTest {
 		}
 	}
 
-	static class TraceSettingRunnable implements Runnable {
-		public Trace trace;
-
-		@Override
-		public void run() {
-			this.trace = TraceContextHolder.getCurrentTrace();
-		}
-	}
 }
