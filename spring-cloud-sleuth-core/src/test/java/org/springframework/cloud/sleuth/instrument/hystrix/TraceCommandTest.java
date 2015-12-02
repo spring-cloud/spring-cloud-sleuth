@@ -36,26 +36,17 @@ public class TraceCommandTest {
 				.isNotEqualTo(firstTraceFromHystrix.getSpan().getTraceId()).as("first trace id");
 		then(secondTraceFromHystrix.getSavedTrace()).as("saved trace as remnant of first trace")
 				.isNull();
-
-		cleanupTrace(firstTraceFromHystrix);
-		cleanupTrace(secondTraceFromHystrix);
 	}
 
 	@Test
 	public void should_run_Hystrix_command_with_span_passed_from_parent_thread() {
-		Trace trace = givenATraceIsPresentInTheCurrentThread();
+		givenATraceIsPresentInTheCurrentThread();
 		TraceCommand<Trace> command = traceReturningCommand();
 
 		Trace traceFromCommand = whenCommandIsExecuted(command);
 
 		then(traceFromCommand).as("Trace from the Hystrix Thread").isNotNull();
 		then(traceFromCommand.getSpan().getTraceId()).isEqualTo(EXPECTED_TRACE_ID);
-
-		cleanupTrace(trace);
-	}
-
-	private void cleanupTrace(Trace trace) {
-		traceManager.close(trace);
 	}
 
 	@After
