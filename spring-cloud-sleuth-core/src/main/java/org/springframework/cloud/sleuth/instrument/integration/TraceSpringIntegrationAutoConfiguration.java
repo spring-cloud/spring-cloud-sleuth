@@ -20,7 +20,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,22 +31,30 @@ import org.springframework.integration.config.GlobalChannelInterceptor;
  */
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)
-@ConditionalOnBean(TraceManager.class)
+@ConditionalOnBean(Trace.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor
-	public TraceContextPropagationChannelInterceptor traceContextPropagationChannelInterceptor(
-			TraceManager trace) {
-		return new TraceContextPropagationChannelInterceptor(trace);
+	public TraceContextPropagationChannelInterceptor traceContextPropagationChannelInterceptor() {
+		return new TraceContextPropagationChannelInterceptor();
 	}
 
 	@Bean
 	@GlobalChannelInterceptor
-	public TraceChannelInterceptor traceChannelInterceptor(TraceManager trace) {
+	public TraceChannelInterceptor traceChannelInterceptor(Trace trace) {
 		return new TraceChannelInterceptor(trace);
 	}
-
+	
+	@Bean
+	public TraceStompMessageChannelInterceptor traceStompMessageChannelInterceptor(Trace trace) {
+		return new TraceStompMessageChannelInterceptor(trace);
+	}
+	
+	@Bean
+	public TraceStompMessageContextPropagationChannelInterceptor traceStompMessageContextPropagationChannelInterceptor() {
+		return new TraceStompMessageContextPropagationChannelInterceptor();
+	}
 }
