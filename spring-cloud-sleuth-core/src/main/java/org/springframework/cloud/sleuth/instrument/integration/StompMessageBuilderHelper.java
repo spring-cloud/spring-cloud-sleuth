@@ -22,7 +22,7 @@ import java.util.TreeMap;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;

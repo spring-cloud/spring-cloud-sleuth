@@ -15,20 +15,12 @@
  */
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.springframework.cloud.sleuth.Trace.NOT_SAMPLED_NAME;
-import static org.springframework.cloud.sleuth.Trace.PARENT_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.PROCESS_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_ID_NAME;
-import static org.springframework.cloud.sleuth.Trace.SPAN_NAME_NAME;
-import static org.springframework.cloud.sleuth.Trace.TRACE_ID_NAME;
 import static org.springframework.util.StringUtils.hasText;
 
 import org.springframework.cloud.sleuth.MilliSpan;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceContextHolder;
-import org.springframework.cloud.sleuth.TraceScope;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
@@ -42,32 +34,31 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
  * 
  */
 public class TraceStompMessageChannelInterceptor extends ChannelInterceptorAdapter implements ChannelInterceptor {
-	private ThreadLocal<TraceScope> traceScopeHolder = new ThreadLocal<TraceScope>();
-	private ThreadLocal<Span> spanHolder = new ThreadLocal<Span>();
+	private ThreadLocal<Trace> traceManagerScopeHolder = new ThreadLocal<Trace>();
 
-	private final Trace trace;
+	private final TraceManager traceManager;
 
-	public TraceStompMessageChannelInterceptor(Trace trace) {
-		this.trace = trace;
+	public TraceStompMessageChannelInterceptor(TraceManager traceManager) {
+		this.traceManager = traceManager;
 	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		this.spanHolder.set(TraceContextHolder.getCurrentSpan());
-		if (TraceContextHolder.isTracing() || message.getHeaders().containsKey(NOT_SAMPLED_NAME)) {
-			return StompMessageBuilderHelper.fromMessage(message).setHeadersFromSpan(TraceContextHolder.getCurrentSpan()).build();
+		if (this.traceManager.isTracing()
+				|| message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+			return SpanMessageHeaders.addSpanHeaders(message,
+					this.traceManager.getCurrentSpan());
 		}
-		
-		String spanId = getHeader(message, SPAN_ID_NAME);
-		String traceId = getHeader(message, TRACE_ID_NAME);
+		String spanId = getHeader(message, Trace.SPAN_ID_NAME);
+		String traceId = getHeader(message, Trace.TRACE_ID_NAME);
 		String name = "message/" + getChannelName(channel);
-		TraceScope traceScope;
+		Trace trace;
 		if (hasText(spanId) && hasText(traceId)) {
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
-			String parentId = getHeader(message, PARENT_ID_NAME);
-			String processId = getHeader(message, PROCESS_ID_NAME);
-			String spanName = getHeader(message, SPAN_NAME_NAME);
+			String parentId = getHeader(message, Trace.PARENT_ID_NAME);
+			String processId = getHeader(message, Trace.PROCESS_ID_NAME);
+			String spanName = getHeader(message, Trace.SPAN_NAME_NAME);
 			if (spanName != null) {
 				span.name(spanName);
 			}
@@ -79,25 +70,21 @@ public class TraceStompMessageChannelInterceptor extends ChannelInterceptorAdapt
 			}
 			span.remote(true);
 
-			// TODO: trace description?
-			traceScope = this.trace.startSpan(name, span.build());
-		} else {
-			traceScope = this.trace.startSpan(name);
+			// TODO: traceManager description?
+			trace = this.traceManager.startSpan(name, span.build());
 		}
-		this.traceScopeHolder.set(traceScope);
-		return StompMessageBuilderHelper.fromMessage(message).setHeadersFromSpan(traceScope.getSpan()).build();
+		else {
+			trace = this.traceManager.startSpan(name);
+		}
+		this.traceManagerScopeHolder.set(trace);
+		return StompMessageBuilderHelper.fromMessage(message).setHeadersFromSpan(trace.getSpan()).build();
 	}
 	
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		TraceScope traceScope = this.traceScopeHolder.get();
-		if (traceScope != null) {
-			traceScope.close();
-		}
-		
-		this.traceScopeHolder.remove();
-		// TODO: Maybe the TraceScope could handle this
-		TraceContextHolder.setCurrentSpan(this.spanHolder.get());
+		Trace traceManagerScope = this.traceManagerScopeHolder.get();
+		this.traceManager.close(traceManagerScope);
+		this.traceManagerScopeHolder.remove();
 	}
 
 	private String getChannelName(MessageChannel channel) {
