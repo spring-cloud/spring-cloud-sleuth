@@ -72,7 +72,9 @@ public class StompMessageBuilderHelper {
 		}
 
 		public StompMessageBuilder setHeaderIfAbsent(String key, Object value) {
-			this.headers.putIfAbsent(key, value);
+			if (this.headers.get(key) == null)
+				this.headers.put(key, value);
+			
 			return this;
 		}
 
