@@ -1,5 +1,7 @@
 language: java
-sudo: false
+sudo: true
+services:
+  - docker
 before_install:
   - git config user.name "$GIT_NAME"
   - git config user.email "$GIT_EMAIL"
@@ -12,9 +14,11 @@ install:
 script:
 - '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || ./mvnw -s .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true'
 - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || ./mvnw install -nsu -Dmaven.test.redirectTestOutputToFile=true'
+- jdk_switcher use oraclejdk8 && sh -e scripts/runAcceptanceTests.sh
 env:
   global:
   - GIT_NAME="Spencer Gibb"
   - GIT_EMAIL=sgibb@pivotal.io
   - CI_DEPLOY_USERNAME=sgibb
   - secure: dxec/7oFht2WMaw4GNFNvuWHlnkm1wmFagE3ZrtCcU2SHUW/P2FgG5tiNW9hT2eXHf2H0YUF1ROkL4BrH5qpIlOBtYd0J8Q/67vBqyB112IN2FqoB/F6Erkfp1FKMBBrXXYaGoSvqzmJs6zqS3JRpyr010W2aU8klK0QfqRoJ0g=
+  - TERM=dumb
