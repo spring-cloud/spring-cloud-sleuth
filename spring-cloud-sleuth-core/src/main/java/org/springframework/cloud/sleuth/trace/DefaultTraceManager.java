@@ -165,7 +165,7 @@ public class DefaultTraceManager implements TraceManager {
 
 	@Override
 	public Trace continueSpan(Span span) {
-		// Return an empty TraceScope that does nothing on close
+		// Return an empty Trace that does nothing on close
 		if (span == null) {
 			return NullTrace.INSTANCE;
 		}

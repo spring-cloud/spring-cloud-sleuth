@@ -63,7 +63,7 @@ public class TraceableExecutorServiceTests {
 		// https://github.com/spring-cloud/spring-cloud-sleuth/issues/60 comment two
 		final AtomicInteger counter = new AtomicInteger(0);
 		final CountDownLatch latch = new CountDownLatch(this.TOTAL_THREADS);
-		Trace scope = this.traceManager.startSpan("PARENT");
+		Trace trace = this.traceManager.startSpan("PARENT");
 		for (int i = 0; i < this.TOTAL_THREADS; i++) {
 			this.traceManagerableExecutorService.execute(new MyRunnable(counter, latch));
 		}
@@ -74,7 +74,7 @@ public class TraceableExecutorServiceTests {
 			e.printStackTrace();
 		}
 
-		this.traceManager.close(scope);
+		this.traceManager.close(trace);
 
 		verify(this.publisher, times(this.NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));
 		verify(this.publisher, times(this.NUM_SPANS)).publishEvent(isA(SpanReleasedEvent.class));
@@ -97,7 +97,7 @@ public class TraceableExecutorServiceTests {
 	public void test_whenTraceContextOfWorkerThreadIsClosed_thenNoException() {
 		final AtomicInteger counter = new AtomicInteger(0);
 		final CountDownLatch latch = new CountDownLatch(this.TOTAL_THREADS);
-		Trace scope = this.traceManager.startSpan("PARENT");
+		Trace trace = this.traceManager.startSpan("PARENT");
 		for (int i = 0; i < this.TOTAL_THREADS; i++) {
 			final Runnable command = new TraceRunnable(this.traceManager, new MyRunnable(counter, latch));
 			this.executorService.execute(command);
@@ -109,7 +109,7 @@ public class TraceableExecutorServiceTests {
 			e.printStackTrace();
 		}
 
-		this.traceManager.close(scope);
+		this.traceManager.close(trace);
 
 		verify(this.publisher, times(this.NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));
 		verify(this.publisher, times(this.NUM_SPANS)).publishEvent(isA(SpanReleasedEvent.class));

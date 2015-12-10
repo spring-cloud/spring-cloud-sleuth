@@ -38,20 +38,20 @@ import org.springframework.scheduling.annotation.Scheduled;
 @Aspect
 public class TraceSchedulingAspect {
 
-	private final TraceManager trace;
+	private final TraceManager traceManager;
 
-	public TraceSchedulingAspect(TraceManager trace) {
-		this.trace = trace;
+	public TraceSchedulingAspect(TraceManager traceManager) {
+		this.traceManager = traceManager;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		Trace scope = this.trace.startSpan(pjp.toShortString());
+		Trace trace = this.traceManager.startSpan(pjp.toShortString());
 		try {
 			return pjp.proceed();
 		}
 		finally {
-			this.trace.close(scope);
+			this.traceManager.close(trace);
 		}
 	}
 

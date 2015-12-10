@@ -19,5 +19,5 @@ package org.springframework.cloud.sleuth.template;
 import org.springframework.cloud.sleuth.Trace;
 
 public interface TraceCallback<T> {
-	T doInTrace(Trace traceScope);
+	T doInTrace(Trace trace);
 }

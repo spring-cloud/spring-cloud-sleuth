@@ -48,8 +48,8 @@ public class TraceSchedulingAutoConfiguration {
 
 	@ConditionalOnClass(ProceedingJoinPoint.class)
 	@Bean
-	public TraceSchedulingAspect traceSchedulingAspect(TraceManager trace) {
-		return new TraceSchedulingAspect(trace);
+	public TraceSchedulingAspect traceSchedulingAspect(TraceManager traceManager) {
+		return new TraceSchedulingAspect(traceManager);
 	}
 
 }

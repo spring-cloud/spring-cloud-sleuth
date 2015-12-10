@@ -29,7 +29,7 @@ import org.springframework.web.servlet.ModelAndView;
  */
 public class TraceHandlerInterceptor implements HandlerInterceptor {
 
-	private static final String ATTR_NAME = "__CURRENT_TRACE_HANDLER_TRACE_SCOPE_ATTR___";
+	private static final String ATTR_NAME = "__CURRENT_TRACE_HANDLER_TRACE_ATTR___";
 
 	private final TraceManager traceManager;
 

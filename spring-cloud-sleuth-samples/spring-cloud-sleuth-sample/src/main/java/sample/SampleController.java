@@ -44,7 +44,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@Autowired
 	private RestTemplate restTemplate;
 	@Autowired
-	private TraceManager trace;
+	private TraceManager traceManager;
 	@Autowired
 	private TraceAccessor accessor;
 	@Autowired
@@ -70,7 +70,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 				final Random random = new Random();
 				int millis = random.nextInt(1000);
 				Thread.sleep(millis);
-				SampleController.this.trace.addAnnotation("callable-sleep-millis", String.valueOf(millis));
+				SampleController.this.traceManager.addAnnotation("callable-sleep-millis", String.valueOf(millis));
 				Span currentSpan = SampleController.this.accessor.getCurrentSpan();
 				return "async hi: " + currentSpan;
 			}
@@ -89,24 +89,24 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
-		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		Trace scope = this.trace.startSpan("customTraceEndpoint",
+		Trace trace = this.traceManager.startSpan("customTraceEndpoint",
 				new AlwaysSampler(), null);
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
-		this.trace.close(scope);
+		this.traceManager.close(trace);
 		return "traced/" + s;
 	}
 
@@ -117,7 +117,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.trace.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);

@@ -36,11 +36,11 @@ public class TraceTemplate implements TraceOperations  {
 	public <T> T trace(final TraceCallback<T> callback) {
 		if (TraceContextHolder.isTracing()) {
 			DelegateCallback<T> delegate = new DelegateCallback<>(this.traceManager);
-			Trace traceScope = delegate.startSpan();
+			Trace trace = delegate.startSpan();
 			try {
-				return callback.doInTrace(traceScope);
+				return callback.doInTrace(trace);
 			} finally {
-				this.traceManager.close(traceScope);
+				this.traceManager.close(trace);
 			}
 		} else {
 			return callback.doInTrace(null);
@@ -49,8 +49,8 @@ public class TraceTemplate implements TraceOperations  {
 
 	class DelegateCallback<T> extends TraceDelegate<TraceCallback<T>> {
 
-		public DelegateCallback(TraceManager trace) {
-			super(trace, null);
+		public DelegateCallback(TraceManager traceManager) {
+			super(traceManager, null);
 		}
 
 		@Override

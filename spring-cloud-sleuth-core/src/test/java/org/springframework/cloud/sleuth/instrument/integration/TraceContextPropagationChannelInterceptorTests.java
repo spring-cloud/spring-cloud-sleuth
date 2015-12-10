@@ -55,7 +55,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 	private PollableChannel channel;
 
 	@Autowired
-	private TraceManager trace;
+	private TraceManager traceManager;
 
 	@After
 	public void close() {
@@ -65,10 +65,10 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@Test
 	public void testSpanPropagation() {
 
-		Trace traceScope = this.trace.startSpan("testSendMessage", new AlwaysSampler(), null);
+		Trace trace = this.traceManager.startSpan("testSendMessage", new AlwaysSampler(), null);
 		this.channel.send(MessageBuilder.withPayload("hi").build());
-		String expectedSpanId = traceScope.getSpan().getSpanId();
-		this.trace.close(traceScope);
+		String expectedSpanId = trace.getSpan().getSpanId();
+		this.traceManager.close(trace);
 
 		Message<?> message = this.channel.receive(0);
 

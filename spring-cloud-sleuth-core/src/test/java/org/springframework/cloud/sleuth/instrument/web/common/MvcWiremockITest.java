@@ -27,7 +27,7 @@ public abstract class MvcWiremockITest extends MvcITest {
 
 	protected WireMock wireMock;
 	@Autowired protected HttpMockServer httpMockServer;
-	@Autowired protected TraceManager trace;
+	@Autowired protected TraceManager traceManager;
 
 	@Override
 	@Before
@@ -51,6 +51,6 @@ public abstract class MvcWiremockITest extends MvcITest {
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.trace));
+		mockMvcBuilder.addFilters(new TraceFilter(this.traceManager));
 	}
 }

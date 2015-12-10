@@ -33,8 +33,8 @@ public abstract class TraceDelegate<T> {
 	private final String name;
 	private final Span parent;
 
-	public TraceDelegate(TraceManager trace, T delegate) {
-		this(trace, delegate, null);
+	public TraceDelegate(TraceManager traceManager, T delegate) {
+		this(traceManager, delegate, null);
 	}
 
 	public TraceDelegate(TraceManager traceManager, T delegate, String name) {

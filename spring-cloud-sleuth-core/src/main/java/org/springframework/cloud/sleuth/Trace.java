@@ -45,7 +45,7 @@ public class Trace {
 	SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
 
 	/**
-	 * the span for this scope
+	 * the span for this trace
 	 */
 	private final Span span;
 

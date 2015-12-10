@@ -34,7 +34,7 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
  */
 public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 
-	private ThreadLocal<Trace> traceManagerScopeHolder = new ThreadLocal<Trace>();
+	private ThreadLocal<Trace> traceHolder = new ThreadLocal<>();
 
 	private final TraceManager traceManager;
 
@@ -44,9 +44,9 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		Trace traceManagerScope = this.traceManagerScopeHolder.get();
-		this.traceManager.close(traceManagerScope);
-		this.traceManagerScopeHolder.remove();
+		Trace trace = this.traceHolder.get();
+		this.traceManager.close(trace);
+		this.traceHolder.remove();
 	}
 
 	@Override
@@ -83,7 +83,7 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 		else {
 			trace = this.traceManager.startSpan(name);
 		}
-		this.traceManagerScopeHolder.set(trace);
+		this.traceHolder.set(trace);
 		return SpanMessageHeaders.addSpanHeaders(message, trace.getSpan());
 	}
 

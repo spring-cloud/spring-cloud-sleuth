@@ -55,7 +55,7 @@ public class TraceFilterTests {
 	@Mock
 	private ApplicationEventPublisher publisher;
 
-	private TraceManager trace;
+	private TraceManager traceManager;
 
 	private Span span;
 
@@ -67,7 +67,7 @@ public class TraceFilterTests {
 	@SneakyThrows
 	public void init() {
 		initMocks(this);
-		this.trace = new DefaultTraceManager(new AlwaysSampler(),
+		this.traceManager = new DefaultTraceManager(new AlwaysSampler(),
 				new JdkIdGenerator(), this.publisher) {
 			@Override
 			protected Trace createTrace(Trace trace, Span span) {
@@ -88,21 +88,21 @@ public class TraceFilterTests {
 
 	@Test
 	public void notTraced() throws Exception {
-		TraceManager trace = Mockito.mock(TraceManager.class);
-		TraceFilter filter = new TraceFilter(trace);
+		TraceManager mockTraceManager = Mockito.mock(TraceManager.class);
+		TraceFilter filter = new TraceFilter(mockTraceManager);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verify(trace, never()).startSpan(anyString());
-		verify(trace, never()).close(any(Trace.class));
+		verify(mockTraceManager, never()).startSpan(anyString());
+		verify(mockTraceManager, never()).close(any(Trace.class));
 	}
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.trace);
+		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpAnnotations();
 		assertNull(TraceContextHolder.getCurrentTrace());
@@ -111,10 +111,10 @@ public class TraceFilterTests {
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
 
-		Trace traceScope = this.trace.startSpan("foo");
-		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, traceScope);
+		Trace trace = this.traceManager.startSpan("foo");
+		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, trace);
 
-		TraceFilter filter = new TraceFilter(this.trace);
+		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpAnnotations();
@@ -128,7 +128,7 @@ public class TraceFilterTests {
 				.header(Trace.TRACE_ID_NAME, "mytrace")
 				.buildRequest(new MockServletContext());
 
-		TraceFilter filter = new TraceFilter(this.trace);
+		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpAnnotations();

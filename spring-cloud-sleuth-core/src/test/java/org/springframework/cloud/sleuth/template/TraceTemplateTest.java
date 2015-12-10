@@ -30,7 +30,7 @@ public class TraceTemplateTest {
 	private Trace whenTraceCallbackReturningCurrentTraceIsExecuted(TraceTemplate traceTemplate) {
 		return traceTemplate.trace(new TraceCallback<Trace>() {
 				@Override
-				public Trace doInTrace(Trace traceScope) {
+				public Trace doInTrace(Trace trace) {
 					return TraceContextHolder.getCurrentTrace();
 				}
 			});

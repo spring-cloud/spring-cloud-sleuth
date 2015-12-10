@@ -55,12 +55,12 @@ public class DefaultTraceManagerTests {
 		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(),
 				new JdkIdGenerator(), publisher);
 
-		Trace scope = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
+		Trace trace = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
 		try {
 			importantWork1(traceManager);
 		}
 		finally {
-			traceManager.close(scope);
+			traceManager.close(trace);
 		}
 
 		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));

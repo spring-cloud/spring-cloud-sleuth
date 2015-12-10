@@ -57,7 +57,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	private DirectChannel channel;
 
 	@Autowired
-	private TraceManager trace;
+	private TraceManager traceManager;
 
 	private Message<?> message;
 
@@ -102,10 +102,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void testHeaderCreation() {
-		Trace traceScope = this.trace.startSpan("testSendMessage",
+		Trace trace = this.traceManager.startSpan("testSendMessage",
 				new AlwaysSampler(), null);
 		this.channel.send(MessageBuilder.withPayload("hi").build());
-		this.trace.close(traceScope);
+		this.traceManager.close(trace);
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
