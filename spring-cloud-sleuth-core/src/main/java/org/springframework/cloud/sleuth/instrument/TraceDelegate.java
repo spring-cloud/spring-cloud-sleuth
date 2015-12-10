@@ -44,14 +44,14 @@ public abstract class TraceDelegate<T> {
 		this.parent = traceManager.getCurrentSpan();
 	}
 
-	protected void close(Trace scope) {
-		this.traceManager.close(scope);
+	protected void close(Trace trace) {
+		this.traceManager.close(trace);
 	}
 
-	protected void closeAll(Trace scope) {
-		scope = this.traceManager.close(scope);
-		while (scope != null) {
-			scope = this.traceManager.detach(scope);
+	protected void closeAll(Trace trace) {
+		trace = this.traceManager.close(trace);
+		while (trace != null) {
+			trace = this.traceManager.detach(trace);
 		}
 	}
 
