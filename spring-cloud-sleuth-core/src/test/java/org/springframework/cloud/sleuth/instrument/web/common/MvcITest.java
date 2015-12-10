@@ -2,9 +2,8 @@ package org.springframework.cloud.sleuth.instrument.web.common;
 
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.IntegrationTest;
+import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -20,8 +19,7 @@ import org.springframework.web.context.WebApplicationContext;
  *
  * @author 4financeIT
  */
-@WebAppConfiguration
-@IntegrationTest(value = {"server.port=0"})
+@WebIntegrationTest(randomPort = true)
 public abstract class MvcITest {
 
 	@Autowired protected WebApplicationContext webApplicationContext;
