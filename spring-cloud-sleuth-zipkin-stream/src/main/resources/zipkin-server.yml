@@ -1,0 +1,24 @@
+server:
+  port: 9411
+
+spring:
+  datasource:
+    schema: classpath:/mysql.sql
+    url: jdbc:mysql://${MYSQL_HOST:localhost}/test
+    username: root
+    password: root
+# Switch this on to create the schema on startup:
+    initialize: false
+    continueOnError: true
+  sleuth:
+    enabled: false
+zipkin:
+  store:
+    type: mysql # default is inMemory
+
+---
+spring:
+  profiles: test
+zipkin:
+  store:
+    type: mem # default is inMemory
