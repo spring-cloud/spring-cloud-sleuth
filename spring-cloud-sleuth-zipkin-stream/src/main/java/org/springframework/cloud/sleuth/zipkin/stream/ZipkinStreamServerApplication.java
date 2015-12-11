@@ -5,10 +5,10 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 
 @SpringBootApplication
 @EnableZipkinStreamServer
-public class ZipkinQueryServerApplication {
+public class ZipkinStreamServerApplication {
 
 	public static void main(String[] args) throws Exception {
-		new SpringApplicationBuilder(ZipkinQueryServerApplication.class)
+		new SpringApplicationBuilder(ZipkinStreamServerApplication.class)
 				.properties("spring.config.name=zipkin-server").run(args);
 	}
 

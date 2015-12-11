@@ -29,17 +29,9 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-stream-rabbit</artifactId>
-		</dependency>
-		<dependency>
 			<artifactId>objenesis</artifactId>
 			<groupId>org.objenesis</groupId>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -56,6 +48,16 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-stream</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.integration</groupId>
+			<artifactId>spring-integration-jmx</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -89,7 +91,7 @@
 
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-stream-test-support</artifactId>
+			<artifactId>spring-cloud-stream-binder-local</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -106,23 +108,57 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>${project.basedir}/src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>${project.build.directory}/generated-resources</directory>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<classifier>exec</classifier>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<!-- Serves *only* to filter the Dockerfile so it can get an absolute 
+							path for the project -->
+						<id>copy-resources</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/generated-docker</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/docker</directory>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>com.spotify</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
-				<version>0.3.5</version>
+				<version>0.3.8</version>
 				<configuration>
 					<imageName>${docker.image.prefix}/${project.artifactId}</imageName>
-					<dockerDirectory>src/main/docker</dockerDirectory>
+					<dockerDirectory>${basedir}/target/generated-docker</dockerDirectory>
 					<resources>
 						<resource>
 							<targetPath>/</targetPath>
 							<directory>${project.build.directory}</directory>
-							<include>${project.build.finalName}.jar</include>
+							<include>${project.build.finalName}-exec.jar</include>
 						</resource>
 					</resources>
 				</configuration>

@@ -1,0 +1,21 @@
+zipkin:
+  image: springio/spring-cloud-sleuth-zipkin-stream
+  environment:
+    - MYSQL_HOST=mysql
+    - RABBIT_HOST=rabbitmq
+  expose:
+    - 9411
+  ports:
+    - 9411:9411
+  links:
+    - mysql
+    - rabbitmq
+web:
+  image: openzipkin/zipkin-web:1.25.3
+  ports:
+    - 8080:8080
+  environment:
+    - TRANSPORT_TYPE=http
+    - WEB_LOG_LEVEL=DEBUG
+  links:
+    - zipkin:query
