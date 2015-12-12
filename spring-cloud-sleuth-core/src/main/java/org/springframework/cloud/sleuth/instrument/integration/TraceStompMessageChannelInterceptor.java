@@ -29,26 +29,27 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 
 /**
- * Interceptor for Stomp Messages sent over websocket 
+ * Interceptor for Stomp Messages sent over websocket
+ * 
  * @author Gaurav Rai Mazra
  * 
  */
 public class TraceStompMessageChannelInterceptor extends ChannelInterceptorAdapter implements ChannelInterceptor {
-	private ThreadLocal<Trace> traceManagerScopeHolder = new ThreadLocal<Trace>();
-
+	private ThreadLocal<Trace> traceScopeHolder = new ThreadLocal<Trace>();
 	private final TraceManager traceManager;
 
-	public TraceStompMessageChannelInterceptor(TraceManager traceManager) {
+	public TraceStompMessageChannelInterceptor(final TraceManager traceManager) {
 		this.traceManager = traceManager;
 	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (this.traceManager.isTracing()
-				|| message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-			return SpanMessageHeaders.addSpanHeaders(message,
-					this.traceManager.getCurrentSpan());
+		final TraceManager traceManager = this.traceManager;
+
+		if (traceManager.isTracing() || message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+			return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(traceManager.getCurrentSpan()).build();
 		}
+		
 		String spanId = getHeader(message, Trace.SPAN_ID_NAME);
 		String traceId = getHeader(message, Trace.TRACE_ID_NAME);
 		String name = "message/" + getChannelName(channel);
@@ -71,20 +72,20 @@ public class TraceStompMessageChannelInterceptor extends ChannelInterceptorAdapt
 			span.remote(true);
 
 			// TODO: traceManager description?
-			trace = this.traceManager.startSpan(name, span.build());
+			trace = traceManager.startSpan(name, span.build());
+		} else {
+			trace = traceManager.startSpan(name);
 		}
-		else {
-			trace = this.traceManager.startSpan(name);
-		}
-		this.traceManagerScopeHolder.set(trace);
-		return StompMessageBuilderHelper.fromMessage(message).setHeadersFromSpan(trace.getSpan()).build();
+		this.traceScopeHolder.set(trace);
+		return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(trace.getSpan()).build();
 	}
-	
+
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		Trace traceManagerScope = this.traceManagerScopeHolder.get();
-		this.traceManager.close(traceManagerScope);
-		this.traceManagerScopeHolder.remove();
+		final ThreadLocal<Trace> traceScopeHolder = this.traceScopeHolder;
+		Trace traceInScope = traceScopeHolder.get();
+		this.traceManager.close(traceInScope);
+		traceScopeHolder.remove();
 	}
 
 	private String getChannelName(MessageChannel channel) {

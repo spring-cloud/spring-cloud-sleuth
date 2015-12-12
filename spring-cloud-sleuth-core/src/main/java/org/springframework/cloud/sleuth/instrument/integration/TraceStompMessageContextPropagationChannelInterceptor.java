@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import java.util.Map;
+
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
@@ -102,8 +104,29 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 			Assert.notNull(message, "message can not be null");
 			Assert.notNull(span, "span can not be null");
 			this.span = span;
-			this.message = StompMessageBuilderHelper.fromMessage(message).setHeadersFromSpan(this.span).build();
-			StompMessageBuilderHelper.addAnnotationsToSpanFromMessage(this.message, this.span);
+			this.message = StompMessageBuilder.fromMessage(message).setHeadersFromSpan(this.span).build();
+			addAnnotationsToSpanFromMessage(this.message, this.span);
+		}
+		
+		private void addAnnotationsToSpanFromMessage(Message<?> message, Span span) {
+			for (Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
+				if (!Trace.HEADERS.contains(entry.getKey())) {
+					String key = "/messaging/headers/" + entry.getKey().toLowerCase();
+					String value = entry.getValue() == null ? null : entry.getValue().toString();
+					span.addAnnotation(key, value);
+				}
+			}
+
+			Object payload = message.getPayload();
+			if (payload != null) {
+				span.addAnnotation("/messaging/payload/type", payload.getClass().getCanonicalName());
+
+				if (payload instanceof String) {
+					span.addAnnotation("/messaging/payload/size", String.valueOf(((String) payload).length()));
+				} else if (payload instanceof byte[]) {
+					span.addAnnotation("/messaging/payload/size", String.valueOf(((byte[]) payload).length));
+				}
+			}
 		}
 
 		@Override
