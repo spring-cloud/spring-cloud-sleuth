@@ -133,7 +133,6 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-messaging</artifactId>
 			<version>4.2.3.RELEASE</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
