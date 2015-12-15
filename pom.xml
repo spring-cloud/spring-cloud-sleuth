@@ -169,6 +169,16 @@
 				<artifactId>aspectjweaver</artifactId>
 				<version>${aspectj.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.zipkin</groupId>
+				<artifactId>zipkin-java-server</artifactId>
+				<version>${zipkin-java.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin</groupId>
+				<artifactId>zipkin-java-jdbc</artifactId>
+				<version>${zipkin-java.version}</version>
+			</dependency>
 			<!-- Spock -->
 			<dependency>
 				<groupId>org.spockframework</groupId>
@@ -186,13 +196,12 @@
 				<groupId>cglib</groupId>
 				<artifactId>cglib-nodep</artifactId>
 				<version>3.1</version>
-				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.objenesis</groupId>
 				<artifactId>objenesis</artifactId>
 				<version>2.1</version>
-				<scope>test</scope>
+                <!-- not test because we need it in stream -->
 			</dependency>
 			<dependency>
 				<groupId>org.hamcrest</groupId>
@@ -230,6 +239,7 @@
 		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
 		<spock.version>1.0-groovy-2.4</spock.version>
+		<zipkin-java.version>0.1.1</zipkin-java.version>
 	</properties>
 
 	<profiles>

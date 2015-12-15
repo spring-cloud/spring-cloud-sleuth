@@ -10,21 +10,27 @@ Depend on [Spring Cloud Sleuth Stream](https://github.com/spring-cloud-spring-cl
 
 ## Query Server
 
-Code is [here](https://github.com/spring-cloud-spring-cloud-sleuth/spring-cloud-sleuth-zipkin-stream).
+Depend on `spring-cloud-sleuth-zipkin-stream` and enable the server:
 
-Bind to MySQL and the same Stream service that you did in the apps (rabbit, redis, kafka). Set `spring.datasource.initialize=true` the first time you start to initialize the database. Alternatively, curl it:
+```java
+@SpringBootApplication
+@EnableZipkinStreamServer
+public class ZipkinStreamServerApplication {
 
+	public static void main(String[] args) throws Exception {
+		SpringApplication.run(ZipkinStreamServerApplication.class, args);
+	}
+
+}
 ```
-$ curl  zipkin-server.cfapps.io/env -d endpoints.restart.enabled=true
-$ curl  zipkin-server.cfapps.io/env -d spring.datasource.initialize=true
-$ curl  zipkin-server.cfapps.io/restart -d {}
-```
 
-Uses the `zipkin-server` jar from the [OSS](https://github.com/openzipkin/zipkin-java) as well as `spring-cloud-sleuth-stream`.
+Bind to MySQL and the same Stream service that you did in the apps (rabbit, redis, kafka). Set `spring.datasource.initialize=true` the first time you start to initialize the database.
+
+Uses the `zipkin-server` library from the [OSS](https://github.com/openzipkin/zipkin-java) as well as `spring-cloud-sleuth-stream`.
 
 > NOTE: running in the "test" profile you don't need MySQL (the span store is in memory). You could even run in PWS without MySQL.
 
-## Web UI
+## Web UI in Cloud Foundry
 
 Get the jar from the [OSS](https://github.com/openzipkin/zipkin) and push it:
 

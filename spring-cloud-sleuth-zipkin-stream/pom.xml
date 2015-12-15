@@ -19,7 +19,6 @@
 		<docker.image.prefix>springio</docker.image.prefix>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
-		<zipkin-java.version>0.1.0</zipkin-java.version>
 	</properties>
 
 	<dependencies>
@@ -27,11 +26,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<artifactId>objenesis</artifactId>
-			<groupId>org.objenesis</groupId>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -66,12 +60,10 @@
 		<dependency>
 			<groupId>io.zipkin</groupId>
 			<artifactId>zipkin-java-server</artifactId>
-			<version>${zipkin-java.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin</groupId>
 			<artifactId>zipkin-java-jdbc</artifactId>
-			<version>${zipkin-java.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -117,13 +109,6 @@
 			</resource>
 		</resources>
 		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<classifier>exec</classifier>
-				</configuration>
-			</plugin>
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<executions>

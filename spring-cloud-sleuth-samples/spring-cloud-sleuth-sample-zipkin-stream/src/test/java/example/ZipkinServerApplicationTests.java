@@ -1,18 +1,16 @@
-package org.springframework.cloud.sleuth.zipkin.stream;
+package example;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.sleuth.zipkin.stream.ZipkinServerApplicationTests.ZipkinStreamServerApplication;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import example.ZipkinStreamServerApplication;
 import io.zipkin.SpanStore;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -30,15 +28,4 @@ public class ZipkinServerApplicationTests {
 		assertEquals(0, count);
 	}
 
-	@SpringBootApplication
-	@EnableZipkinStreamServer
-	public static class ZipkinStreamServerApplication {
-
-		public static void main(String[] args) throws Exception {
-			new SpringApplicationBuilder(ZipkinStreamServerApplication.class)
-					.profiles("test").properties("spring.datasource.initialize=true")
-					.run(args);
-		}
-
-	}
 }
