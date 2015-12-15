@@ -8,7 +8,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
@@ -52,7 +51,7 @@ public class ZipkinMessageListener {
 	SpanStore spanStore;
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
-	public void sink(Spans input) throws TException {
+	public void sink(Spans input) {
 		List<io.zipkin.Span> spans = new ArrayList<>();
 		for (Span span : input.getSpans()) {
 			if (!span.getName().equals("message/" + SleuthSink.INPUT)) {
