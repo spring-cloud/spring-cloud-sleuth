@@ -120,43 +120,7 @@
 			</dependency>
 			<dependency>
 				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-core</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-http</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-core-spring</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
 				<artifactId>brave-spancollector-scribe</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-tracefilters</artifactId>
-				<version>${brave.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>org.slf4j</groupId>
-						<artifactId>slf4j-log4j12</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>flume-zipkin-collector-sink</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>flume-zipkin-metrics-sink</artifactId>
 				<version>${brave.version}</version>
 			</dependency>
 			<dependency>
