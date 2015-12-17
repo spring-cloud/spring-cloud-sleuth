@@ -28,7 +28,7 @@ public Sampler<?> defaultSampler() {
 }
 ---- 
 
-== Spans as Messages
+== Spans Data as Messages
 
 You can accumulate and send span data over
 http://cloud.spring.io/spring-cloud-stream[Spring Cloud Stream] by
@@ -37,7 +37,61 @@ adding a Channel Binder implementation
 (e.g. `spring-cloud-starter-stream-rabbit` for RabbitMQ or
 `spring-cloud-starter-stream-kafka` for Kafka). This will
 automatically turn your app into a producer of messages with payload
-type `Spans`. A consumer can then easily be implemented using
+type `Spans`. 
+
+=== Zipkin Consumer
+
+There is a special convenience annotation for setting up a message consumer 
+for the Span data and pushing it into a Zipkin `SpanStore`. This application
+
+[source,java]
+----
+@SpringBootApplication
+@EnableZipkinStreamServer
+public class Consumer {
+  public static void main(String[] args) {
+    SpringApplication.run(Consumer.class, args);
+  }
+}
+----
+
+will listen for the Span data on whatever transport you provide via a
+Spring Cloud Stream `Binder` (e.g. include
+`spring-cloud-starter-stream-rabbit` for RabbitMQ, and similar
+starters exist for Redis and Kafka). The app will also be a
+https://github.com/openzipkin/zipkin-java[Zipkin query server], so you
+can point a standard Zipkin UI at it (e.g. run the consumer app on
+port 9411 if you want the query server on the same host and the
+default configuration).
+
+The deafult `SpanStore` is in-memory (good for demos and getting
+started quickly). For a more robust solution you can add MySQL and
+`spring-boot-starter-jdbc` to your classpath and enable the JDBC
+`SpanStore` via configuration, e.g.:
+
+[source,yaml]
+----
+spring:
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+  datasource:
+    schema: classpath:/mysql.sql
+    url: jdbc:mysql://${MYSQL_HOST:localhost}/test
+    username: root
+    password: root
+# Switch this on to create the schema on startup:
+    initialize: true
+    continueOnError: true
+  sleuth:
+    enabled: false
+zipkin:
+  store:
+    type: mysql
+----
+
+=== Custom Consumer
+
+A custom consumer can also easily be implemented using
 `spring-cloud-sleuth-stream` and binding to the `SleuthSink`. Example:
 
 [source,java]
