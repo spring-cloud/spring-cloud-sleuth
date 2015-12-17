@@ -5,6 +5,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -23,6 +24,11 @@ public class TraceRunnableTest {
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
 			new JdkIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
+
+	@Before
+	public void init() {
+		TraceContextHolder.removeCurrentTrace();
+	}
 
 	@Test
 	public void should_remove_span_from_thread_local_after_finishing_work()

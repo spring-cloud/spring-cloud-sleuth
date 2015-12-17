@@ -28,33 +28,33 @@ import lombok.extern.apachecommons.CommonsLog;
 @CommonsLog
 public class TraceContextHolder {
 
-	private static final ThreadLocal<Trace> currentSpan = new NamedThreadLocal<>("Trace Context");
+	private static final ThreadLocal<Trace> currentTrace = new NamedThreadLocal<>("Trace Context");
 
 	public static Trace getCurrentTrace() {
-		return currentSpan.get();
+		return currentTrace.get();
 	}
 
 	public static Span getCurrentSpan() {
-		return isTracing() ? currentSpan.get().getSpan() : null;
+		return isTracing() ? currentTrace.get().getSpan() : null;
 	}
 
-	public static void setCurrentTrace(Trace span) {
+	public static void setCurrentTrace(Trace trace) {
 		// backwards compatibility
-		if (span == null) {
-			currentSpan.remove();
+		if (trace == null) {
+			currentTrace.remove();
 			return;
 		}
 		if (log.isTraceEnabled()) {
-			log.trace("Setting current span " + span);
+			log.trace("Setting current trace " + trace);
 		}
-		currentSpan.set(span);
+		currentTrace.set(trace);
 	}
 
 	public static void removeCurrentTrace() {
-		currentSpan.remove();
+		currentTrace.remove();
 	}
 
 	public static boolean isTracing() {
-		return currentSpan.get() != null;
+		return currentTrace.get() != null;
 	}
 }

@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import static org.springframework.cloud.sleuth.trace.TraceContextHolder.isTracing;
-
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
@@ -93,19 +91,25 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 
 		@Override
 		protected void customizeRequest(HttpRequest.Builder requestBuilder) {
-			if (getCurrentSpan() == null) {
+			Span span = getCurrentSpan();
+			if (span == null) {
+				setHeader(requestBuilder, Trace.NOT_SAMPLED_NAME, "");
+				return;
+			}
+			if (span.getSpanId()==null) {
+				setHeader(requestBuilder, Trace.TRACE_ID_NAME, span.getTraceId());
 				setHeader(requestBuilder, Trace.NOT_SAMPLED_NAME, "");
 				return;
 			}
 
-			setHeader(requestBuilder, Trace.SPAN_ID_NAME, getCurrentSpan().getSpanId());
-			setHeader(requestBuilder, Trace.TRACE_ID_NAME, getCurrentSpan().getTraceId());
-			setHeader(requestBuilder, Trace.SPAN_NAME_NAME, getCurrentSpan().getName());
+			setHeader(requestBuilder, Trace.TRACE_ID_NAME, span.getTraceId());
+			setHeader(requestBuilder, Trace.SPAN_ID_NAME, span.getSpanId());
+			setHeader(requestBuilder, Trace.SPAN_NAME_NAME, span.getName());
 			setHeader(requestBuilder, Trace.PARENT_ID_NAME,
-					getParentId(getCurrentSpan()));
+					getParentId(span));
 			setHeader(requestBuilder, Trace.PROCESS_ID_NAME,
-					getCurrentSpan().getProcessId());
-			publish(new ClientSentEvent(this, getCurrentSpan()));
+					span.getProcessId());
+			publish(new ClientSentEvent(this, span));
 		}
 
 		private void publish(ApplicationEvent event) {
@@ -120,7 +124,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 		}
 
 		public void setHeader(HttpRequest.Builder builder, String name, String value) {
-			if (value != null && isTracing()) {
+			if (value != null && this.accessor.isTracing()) {
 				builder.header(name, value);
 			}
 		}

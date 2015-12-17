@@ -50,8 +50,8 @@ public class ZipkinSpanListener {
 
 	private SpanCollector spanCollector;
 	/**
-	 * Endpoint is the visible IP address of this service, the port it is
-	 * listening on and the service name from discovery.
+	 * Endpoint is the visible IP address of this service, the port it is listening on and
+	 * the service name from discovery.
 	 */
 	private Endpoint localEndpoint;
 
@@ -63,7 +63,8 @@ public class ZipkinSpanListener {
 	@EventListener
 	@Order(0)
 	public void start(SpanAcquiredEvent event) {
-		// Starting a span in zipkin means adding: traceId, id, parentId(optional), and timestamp
+		// Starting a span in zipkin means adding: traceId, id, parentId(optional), and
+		// timestamp
 		event.getSpan().addTimelineAnnotation("acquire");
 	}
 
@@ -107,7 +108,9 @@ public class ZipkinSpanListener {
 	public void release(SpanReleasedEvent event) {
 		// Ending a span in zipkin means adding duration and sending it out
 		event.getSpan().addTimelineAnnotation("release");
-		this.spanCollector.collect(convert(event.getSpan()));
+		if (event.getSpan().isExportable()) {
+			this.spanCollector.collect(convert(event.getSpan()));
+		}
 	}
 
 	/**
@@ -120,12 +123,14 @@ public class ZipkinSpanListener {
 	 */
 	public com.twitter.zipkin.gen.Span convert(Span span) {
 		com.twitter.zipkin.gen.Span zipkinSpan = new com.twitter.zipkin.gen.Span();
-		addZipkinAnnotations(zipkinSpan, span, localEndpoint);
-		List<BinaryAnnotation> binaryAnnotationList = createZipkinBinaryAnnotations(span, localEndpoint);
+		addZipkinAnnotations(zipkinSpan, span, this.localEndpoint);
+		List<BinaryAnnotation> binaryAnnotationList = createZipkinBinaryAnnotations(span,
+				this.localEndpoint);
+		zipkinSpan.setDuration(span.getEnd() - span.getBegin());
 		zipkinSpan.setTrace_id(hash(span.getTraceId()));
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
-				log.error("zipkin doesn't support spans with multiple parents.  Omitting "
+				log.error("Zipkin doesn't support spans with multiple parents. Omitting "
 						+ "other parents for " + span);
 			}
 			zipkinSpan.setParent_id(hash(span.getParents().get(0)));
@@ -138,12 +143,11 @@ public class ZipkinSpanListener {
 		return zipkinSpan;
 	}
 
-
 	/**
 	 * Add annotations from the sleuth Span.
 	 */
-	private void addZipkinAnnotations(com.twitter.zipkin.gen.Span zipkinSpan,
-																		Span span, Endpoint endpoint) {
+	private void addZipkinAnnotations(com.twitter.zipkin.gen.Span zipkinSpan, Span span,
+			Endpoint endpoint) {
 		Long startTs = null;
 		Long endTs = null;
 		for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
@@ -151,9 +155,11 @@ public class ZipkinSpanListener {
 					ta.getTime(), endpoint);
 			if (zipkinAnnotation.getValue().equals("acquire")) {
 				startTs = zipkinAnnotation.getTimestamp();
-			} else if (zipkinAnnotation.getValue().equals("release")) {
+			}
+			else if (zipkinAnnotation.getValue().equals("release")) {
 				endTs = zipkinAnnotation.getTimestamp();
-			} else {
+			}
+			else {
 				zipkinSpan.addToAnnotations(zipkinAnnotation);
 			}
 		}
@@ -209,7 +215,7 @@ public class ZipkinSpanListener {
 
 	private static long hash(String string) {
 		long h = 1125899906842597L;
-		if (string==null) {
+		if (string == null) {
 			return h;
 		}
 		int len = string.length();

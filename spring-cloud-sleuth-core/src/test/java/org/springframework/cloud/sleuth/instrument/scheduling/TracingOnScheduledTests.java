@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {ScheduledTestConfiguration.class})
-public class TracingOnScheduledITest {
+public class TracingOnScheduledTests {
 
 	@Autowired TestBeanWithScheduledMethod beanWithScheduledMethod;
 
@@ -36,7 +36,7 @@ public class TracingOnScheduledITest {
 		return new Runnable() {
 			@Override
 			public void run() {
-				Span storedSpan = TracingOnScheduledITest.this.beanWithScheduledMethod.getSpan();
+				Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
 				then(storedSpan).isNotNull();
 				then(storedSpan.getTraceId()).isNotNull();
 			}
@@ -47,7 +47,7 @@ public class TracingOnScheduledITest {
 		return new Runnable() {
 			@Override
 			public void run() {
-				then(TracingOnScheduledITest.this.beanWithScheduledMethod.getSpan()).isNotEqualTo(spanToCompare);
+				then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan()).isNotEqualTo(spanToCompare);
 			}
 		};
 	}

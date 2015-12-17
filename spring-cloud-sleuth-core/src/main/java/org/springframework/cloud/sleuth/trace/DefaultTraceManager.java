@@ -74,8 +74,15 @@ public class DefaultTraceManager implements TraceManager {
 	@Override
 	public <T> Trace startSpan(String name, Sampler<T> s, T info) {
 		Span span = null;
-		if (TraceContextHolder.isTracing() || s.next(info)) {
+		if (isTracing() || s.next(info)) {
 			span = createChild(getCurrentSpan(), name);
+		}
+		else {
+			// Non-exportable so we keep the trace but not other data
+			String id = createId();
+			span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
+					.traceId(id).spanId(id).exportable(false).build();
+			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 		}
 		return continueSpan(span);
 	}
@@ -94,7 +101,7 @@ public class DefaultTraceManager implements TraceManager {
 					+ ". You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
-			if (span != NullTrace.INSTANCE) {
+			if (trace.getSavedTrace() != null) {
 				TraceContextHolder.setCurrentTrace(trace.getSavedTrace());
 			}
 			else {
@@ -119,7 +126,7 @@ public class DefaultTraceManager implements TraceManager {
 					+ ".  You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
-			if (span != NullTrace.INSTANCE && span != null) {
+			if (span != null) {
 				span.stop();
 				if (savedTrace != null
 						&& span.getParents().contains(savedTrace.getSpan().getSpanId())) {
@@ -140,9 +147,10 @@ public class DefaultTraceManager implements TraceManager {
 	}
 
 	protected Span createChild(Span parent, String name) {
+		String id = createId();
 		if (parent == null) {
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
-					.name(name).traceId(createId()).spanId(createId()).build();
+					.name(name).traceId(id).spanId(id).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 			return span;
 		}
@@ -153,7 +161,7 @@ public class DefaultTraceManager implements TraceManager {
 			}
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
 					.name(name).traceId(parent.getTraceId()).parent(parent.getSpanId())
-					.spanId(createId()).processId(parent.getProcessId()).build();
+					.spanId(id).processId(parent.getProcessId()).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
 			return span;
 		}
@@ -165,11 +173,9 @@ public class DefaultTraceManager implements TraceManager {
 
 	@Override
 	public Trace continueSpan(Span span) {
-		// Return an empty Trace that does nothing on close
-		if (span == null) {
-			return NullTrace.INSTANCE;
+		if (span != null) {
+			this.publisher.publishEvent(new SpanContinuedEvent(this, span));
 		}
-		this.publisher.publishEvent(new SpanContinuedEvent(this, span));
 		Trace trace = createTrace(TraceContextHolder.getCurrentTrace(), span);
 		TraceContextHolder.setCurrentTrace(trace);
 		return trace;
@@ -192,7 +198,7 @@ public class DefaultTraceManager implements TraceManager {
 	@Override
 	public void addAnnotation(String key, String value) {
 		Span s = getCurrentSpan();
-		if (s != null) {
+		if (s != null && s.isExportable()) {
 			s.addAnnotation(key, value);
 		}
 	}
@@ -204,7 +210,7 @@ public class DefaultTraceManager implements TraceManager {
 	 */
 	@Override
 	public <V> Callable<V> wrap(Callable<V> callable) {
-		if (TraceContextHolder.isTracing()) {
+		if (isTracing()) {
 			return new TraceCallable<>(this, callable);
 		}
 		return callable;
@@ -217,7 +223,7 @@ public class DefaultTraceManager implements TraceManager {
 	 */
 	@Override
 	public Runnable wrap(Runnable runnable) {
-		if (TraceContextHolder.isTracing()) {
+		if (isTracing()) {
 			return new TraceRunnable(this, runnable);
 		}
 		return runnable;

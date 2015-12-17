@@ -95,7 +95,9 @@ public class StreamSpanListener {
 	@Order(0)
 	public void release(SpanReleasedEvent event) {
 		event.getSpan().addTimelineAnnotation("release");
-		this.queue.add(event.getSpan());
+		if (event.getSpan().isExportable()) {
+			this.queue.add(event.getSpan());
+		}
 	}
 
 	@InboundChannelAdapter(value = SleuthSource.OUTPUT)

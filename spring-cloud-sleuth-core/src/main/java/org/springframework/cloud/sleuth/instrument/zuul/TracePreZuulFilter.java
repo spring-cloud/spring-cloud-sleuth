@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import static org.springframework.cloud.sleuth.trace.TraceContextHolder.isTracing;
-
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
@@ -62,18 +60,24 @@ ApplicationEventPublisherAware {
 		RequestContext ctx = RequestContext.getCurrentContext();
 		Map<String, String> response = ctx.getZuulRequestHeaders();
 		// N.B. this will only work with the simple host filter (not ribbon) unless you set hystrix.execution.isolation.strategy=SEMAPHORE
-		if (getCurrentSpan() == null) {
+		Span span = getCurrentSpan();
+		if (span == null) {
+			setHeader(response, Trace.NOT_SAMPLED_NAME, "");
+			return null;
+		}
+		if (span.getSpanId()==null) {
+			setHeader(response, Trace.TRACE_ID_NAME, span.getTraceId());
 			setHeader(response, Trace.NOT_SAMPLED_NAME, "");
 			return null;
 		}
 		try {
-			setHeader(response, Trace.SPAN_ID_NAME, getCurrentSpan().getSpanId());
-			setHeader(response, Trace.TRACE_ID_NAME, getCurrentSpan().getTraceId());
-			setHeader(response, Trace.SPAN_NAME_NAME, getCurrentSpan().getName());
-			setHeader(response, Trace.PARENT_ID_NAME, getParentId(getCurrentSpan()));
-			setHeader(response, Trace.PROCESS_ID_NAME, getCurrentSpan().getProcessId());
+			setHeader(response, Trace.SPAN_ID_NAME, span.getSpanId());
+			setHeader(response, Trace.TRACE_ID_NAME, span.getTraceId());
+			setHeader(response, Trace.SPAN_NAME_NAME, span.getName());
+			setHeader(response, Trace.PARENT_ID_NAME, getParentId(span));
+			setHeader(response, Trace.PROCESS_ID_NAME, span.getProcessId());
 			// TODO: the client sent event should come from the client not the filter!
-			publish(new ClientSentEvent(this, getCurrentSpan()));
+			publish(new ClientSentEvent(this, span));
 		}
 		catch (Exception ex) {
 			ReflectionUtils.rethrowRuntimeException(ex);
@@ -91,7 +95,7 @@ ApplicationEventPublisherAware {
 	}
 
 	public void setHeader(Map<String, String> request, String name, String value) {
-		if (value != null && !request.containsKey(name) && isTracing()) {
+		if (value != null && !request.containsKey(name) && this.accessor.isTracing()) {
 			request.put(name, value);
 		}
 	}

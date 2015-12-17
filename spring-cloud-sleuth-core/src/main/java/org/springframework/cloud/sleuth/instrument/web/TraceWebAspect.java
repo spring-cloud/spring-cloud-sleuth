@@ -107,10 +107,9 @@ public class TraceWebAspect {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
 	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
-		final WebAsyncTask webAsyncTask = (WebAsyncTask) pjp.proceed();
+		final WebAsyncTask<?> webAsyncTask = (WebAsyncTask<?>) pjp.proceed();
 		if (this.accessor.isTracing()) {
 			try {
 				log.debug("Wrapping callable with span ["

@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import static java.util.Collections.singletonList;
-import static org.springframework.cloud.sleuth.trace.TraceContextHolder.isTracing;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -75,11 +74,14 @@ public class TraceFeignClientAutoConfiguration {
 	public Decoder feignDecoder() {
 		return new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
 			@Override
-			public Object decode(Response response, Type type) throws IOException, FeignException {
+			public Object decode(Response response, Type type)
+					throws IOException, FeignException {
 				try {
-					return super.decode(Response.create(response.status(), response.reason(),
-						headersWithTraceId(response.headers()), response.body()), type);
-				} finally {
+					return super.decode(Response.create(response.status(),
+							response.reason(), headersWithTraceId(response.headers()),
+							response.body()), type);
+				}
+				finally {
 					Span span = getCurrentSpan();
 					if (span != null) {
 						publish(new ClientReceivedEvent(this, span));
@@ -95,16 +97,21 @@ public class TraceFeignClientAutoConfiguration {
 			@Override
 			public void apply(RequestTemplate template) {
 				Span span = getCurrentSpan();
-				if (span != null) {
-					template.header(Trace.TRACE_ID_NAME, span.getTraceId());
-					setHeader(template, Trace.SPAN_NAME_NAME, span.getName());
-					setHeader(template, Trace.SPAN_ID_NAME, span.getSpanId());
-					setHeader(template, Trace.PARENT_ID_NAME, getParentId(span));
-					setHeader(template, Trace.PROCESS_ID_NAME, span.getProcessId());
-					publish(new ClientSentEvent(this, span));
-				} else {
+				if (span == null) {
 					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
+					return;
 				}
+				if (span.getSpanId() == null) {
+					setHeader(template, Trace.TRACE_ID_NAME, span.getTraceId());
+					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
+					return;
+				}
+				template.header(Trace.TRACE_ID_NAME, span.getTraceId());
+				setHeader(template, Trace.SPAN_NAME_NAME, span.getName());
+				setHeader(template, Trace.SPAN_ID_NAME, span.getSpanId());
+				setHeader(template, Trace.PARENT_ID_NAME, getParentId(span));
+				setHeader(template, Trace.PROCESS_ID_NAME, span.getProcessId());
+				publish(new ClientSentEvent(this, span));
 			}
 		};
 	}
@@ -116,30 +123,40 @@ public class TraceFeignClientAutoConfiguration {
 	}
 
 	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty() ? span.getParents().get(0) : null;
+		return span.getParents() != null && !span.getParents().isEmpty()
+				? span.getParents().get(0) : null;
 	}
 
 	public void setHeader(RequestTemplate request, String name, String value) {
-		if (value != null && !request.headers().containsKey(name) && isTracing()) {
+		if (value != null && !request.headers().containsKey(name)
+				&& this.accessor.isTracing()) {
 			request.header(name, value);
 		}
 	}
 
-	private Map<String, Collection<String>> headersWithTraceId(Map<String, Collection<String>> headers) {
+	private Map<String, Collection<String>> headersWithTraceId(
+			Map<String, Collection<String>> headers) {
 		Map<String, Collection<String>> newHeaders = new HashMap<>();
 		newHeaders.putAll(headers);
-		if (getCurrentSpan() == null) {
+		Span span = getCurrentSpan();
+		if (span == null) {
 			setHeader(newHeaders, Trace.NOT_SAMPLED_NAME, "");
 			return newHeaders;
 		}
-		setHeader(newHeaders, Trace.TRACE_ID_NAME, getCurrentSpan().getTraceId());
-		setHeader(newHeaders, Trace.SPAN_ID_NAME, getCurrentSpan().getSpanId());
-		setHeader(newHeaders, Trace.PARENT_ID_NAME, getParentId(getCurrentSpan()));
+		if (span.getSpanId() == null) {
+			setHeader(newHeaders, Trace.TRACE_ID_NAME, span.getTraceId());
+			setHeader(newHeaders, Trace.NOT_SAMPLED_NAME, "");
+			return newHeaders;
+		}
+		setHeader(newHeaders, Trace.TRACE_ID_NAME, span.getTraceId());
+		setHeader(newHeaders, Trace.SPAN_ID_NAME, span.getSpanId());
+		setHeader(newHeaders, Trace.PARENT_ID_NAME, getParentId(span));
 		return newHeaders;
 	}
 
-	public void setHeader(Map<String, Collection<String>> headers, String name, String value) {
-		if (value != null && !headers.containsKey(name) && isTracing()) {
+	public void setHeader(Map<String, Collection<String>> headers, String name,
+			String value) {
+		if (value != null && !headers.containsKey(name) && this.accessor.isTracing()) {
 			headers.put(name, singletonList(value));
 		}
 	}

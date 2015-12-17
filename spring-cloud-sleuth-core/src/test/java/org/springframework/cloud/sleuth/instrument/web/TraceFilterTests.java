@@ -17,22 +17,20 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
@@ -62,12 +60,13 @@ public class TraceFilterTests {
 	private MockHttpServletRequest request;
 	private MockHttpServletResponse response;
 	private MockFilterChain filterChain;
+	private Sampler<Void> sampler = new AlwaysSampler();
 
 	@Before
 	@SneakyThrows
 	public void init() {
 		initMocks(this);
-		this.traceManager = new DefaultTraceManager(new AlwaysSampler(),
+		this.traceManager = new DefaultTraceManager(new DelegateSampler(),
 				new JdkIdGenerator(), this.publisher) {
 			@Override
 			protected Trace createTrace(Trace trace, Span span) {
@@ -88,16 +87,16 @@ public class TraceFilterTests {
 
 	@Test
 	public void notTraced() throws Exception {
-		TraceManager mockTraceManager = Mockito.mock(TraceManager.class);
-		TraceFilter filter = new TraceFilter(mockTraceManager);
+		this.sampler = new IsTracingSampler();
+		TraceFilter filter = new TraceFilter(this.traceManager);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verify(mockTraceManager, never()).startSpan(anyString());
-		verify(mockTraceManager, never()).close(any(Trace.class));
+		assertFalse(this.span.isExportable());
+		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
 	@Test
@@ -152,5 +151,12 @@ public class TraceFilterTests {
 
 	private void hasAnnotation(Span span, String name, String value) {
 		assertEquals(value, span.getAnnotations().get(name));
+	}
+
+	private class DelegateSampler implements Sampler<Void> {
+		@Override
+		public boolean next(Void info) {
+			return TraceFilterTests.this.sampler.next(info);
+		}
 	}
 }

@@ -101,50 +101,52 @@ public class TraceFilter extends OncePerRequestFilter
 		else if (skip) {
 			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 		}
-		else {
-			String spanId = getHeader(request, response, Trace.SPAN_ID_NAME);
-			String traceId = getHeader(request, response, Trace.TRACE_ID_NAME);
-			String name = "http" + uri;
-			if (hasText(spanId) && hasText(traceId)) {
 
-				MilliSpanBuilder span = MilliSpan.builder().traceId(traceId)
-						.spanId(spanId);
-				String parentId = getHeader(request, response, Trace.PARENT_ID_NAME);
-				String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
-				String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
-				if (parentName != null) {
-					span.name(parentName);
-				}
-				if (processId != null) {
-					span.processId(processId);
-				}
-				if (parentId != null) {
-					span.parent(parentId);
-				}
-				span.remote(true);
+		String spanId = getHeader(request, response, Trace.SPAN_ID_NAME);
+		String traceId = getHeader(request, response, Trace.TRACE_ID_NAME);
+		String name = "http" + uri;
+		if (hasText(traceId)) {
 
-				// TODO: trace description?
-				Span parent = span.build();
-				trace = this.traceManager.startSpan(name, parent);
-				publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
-				request.setAttribute(TRACE_REQUEST_ATTR, trace);
-				// Send new span id back
-				addToResponseIfNotPresent(response, Trace.TRACE_ID_NAME,
-						trace.getSpan().getTraceId());
-				addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME,
-						trace.getSpan().getSpanId());
+			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
+			if (skip) {
+				span.exportable(false);
 			}
-			else {
-				trace = this.traceManager.startSpan(name);
-				request.setAttribute(TRACE_REQUEST_ATTR, trace);
+			String parentId = getHeader(request, response, Trace.PARENT_ID_NAME);
+			String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
+			String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
+			if (parentName != null) {
+				span.name(parentName);
 			}
+			if (processId != null) {
+				span.processId(processId);
+			}
+			if (parentId != null) {
+				span.parent(parentId);
+			}
+			span.remote(true);
+
+			Span parent = span.build();
+			trace = this.traceManager.startSpan(name, parent);
+			publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
+			request.setAttribute(TRACE_REQUEST_ATTR, trace);
+
 		}
+		else {
+			trace = this.traceManager.startSpan(name);
+			request.setAttribute(TRACE_REQUEST_ATTR, trace);
+		}
+
+		// Send new trace id back to the caller
+		addToResponseIfNotPresent(response, Trace.TRACE_ID_NAME,
+				trace.getSpan().getTraceId());
+		addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME,
+				trace.getSpan().getSpanId());
 
 		try {
 
 			addRequestAnnotations(request);
-
 			filterChain.doFilter(request, response);
+
 		}
 		finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {

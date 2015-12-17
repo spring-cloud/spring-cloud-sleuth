@@ -15,8 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.springframework.cloud.sleuth.trace.TraceContextHolder.isTracing;
-
 import java.io.IOException;
 
 import org.springframework.cloud.sleuth.Span;
@@ -61,16 +59,22 @@ ApplicationEventPublisherAware {
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
-		if (getCurrentSpan() == null) {
+		Span span = getCurrentSpan();
+		if (span == null) {
 			setHeader(request, Trace.NOT_SAMPLED_NAME, "");
 			return execution.execute(request, body);
 		}
-		setHeader(request, Trace.SPAN_ID_NAME, getCurrentSpan().getSpanId());
-		setHeader(request, Trace.TRACE_ID_NAME, getCurrentSpan().getTraceId());
-		setHeader(request, Trace.SPAN_NAME_NAME, getCurrentSpan().getName());
-		setHeader(request, Trace.PARENT_ID_NAME, getParentId(getCurrentSpan()));
-		setHeader(request, Trace.PROCESS_ID_NAME, getCurrentSpan().getProcessId());
-		publish(new ClientSentEvent(this, getCurrentSpan()));
+		if (span.getSpanId()==null) {
+			setHeader(request, Trace.TRACE_ID_NAME, span.getTraceId());
+			setHeader(request, Trace.NOT_SAMPLED_NAME, "");
+			return execution.execute(request, body);
+		}
+		setHeader(request, Trace.TRACE_ID_NAME, span.getTraceId());
+		setHeader(request, Trace.SPAN_ID_NAME, span.getSpanId());
+		setHeader(request, Trace.SPAN_NAME_NAME, span.getName());
+		setHeader(request, Trace.PARENT_ID_NAME, getParentId(span));
+		setHeader(request, Trace.PROCESS_ID_NAME, span.getProcessId());
+		publish(new ClientSentEvent(this, span));
 		return new TraceHttpResponse(this, execution.execute(request, body));
 	}
 
@@ -93,7 +97,7 @@ ApplicationEventPublisherAware {
 	}
 
 	public void setHeader(HttpRequest request, String name, String value) {
-		if (value != null && !request.getHeaders().containsKey(name) && isTracing()) {
+		if (value != null && !request.getHeaders().containsKey(name) && this.accessor.isTracing()) {
 			request.getHeaders().add(name, value);
 		}
 	}

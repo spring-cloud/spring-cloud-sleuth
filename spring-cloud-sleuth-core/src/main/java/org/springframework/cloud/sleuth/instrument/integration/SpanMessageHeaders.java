@@ -26,6 +26,8 @@ import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 
 /**
+ * Utility for manipulating message headers related to span data.
+ *
  * @author Dave Syer
  *
  */
@@ -40,24 +42,28 @@ public class SpanMessageHeaders {
 			return message;
 		}
 
-		addAnnotations(message, span);
-
 		Map<String, String> headers = new HashMap<>();
 		addHeader(headers, Trace.TRACE_ID_NAME, span.getTraceId());
 		addHeader(headers, Trace.SPAN_ID_NAME, span.getSpanId());
-		addHeader(headers, Trace.PARENT_ID_NAME, getFirst(span.getParents()));
-		addHeader(headers, Trace.SPAN_NAME_NAME, span.getName());
-		addHeader(headers, Trace.PROCESS_ID_NAME, span.getProcessId());
+
+		if (span.isExportable()) {
+			addAnnotations(message, span);
+			addHeader(headers, Trace.PARENT_ID_NAME, getFirst(span.getParents()));
+			addHeader(headers, Trace.SPAN_NAME_NAME, span.getName());
+			addHeader(headers, Trace.PROCESS_ID_NAME, span.getProcessId());
+		} else {
+			addHeader(headers, Trace.NOT_SAMPLED_NAME, "");
+		}
 		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
 	}
 
 	public static void addAnnotations(Message<?> message, Span span) {
-		for ( Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
-			if (!Trace.HEADERS.contains(entry.getKey())) { //filter out trace headers
+		for (Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
+			if (!Trace.HEADERS.contains(entry.getKey())) { // filter out trace headers
 				String key = "/messaging/headers/" + entry.getKey().toLowerCase();
 				String value = null;
 				if (entry.getValue() != null) {
-					value = entry.getValue().toString(); //TODO: better way to serialize?
+					value = entry.getValue().toString(); // TODO: better way to serialize?
 				}
 				span.addAnnotation(key, value);
 			}
@@ -69,15 +75,17 @@ public class SpanMessageHeaders {
 					payload.getClass().getCanonicalName());
 			if (payload instanceof String) {
 				span.addAnnotation("/messaging/payload/size",
-						String.valueOf(((String)payload).length()));
-			} else if (payload instanceof byte[]) {
+						String.valueOf(((String) payload).length()));
+			}
+			else if (payload instanceof byte[]) {
 				span.addAnnotation("/messaging/payload/size",
-						String.valueOf(((byte[])payload).length));
+						String.valueOf(((byte[]) payload).length));
 			}
 		}
 	}
 
-	private static void addHeader(Map<String, String> headers, String name, String value) {
+	private static void addHeader(Map<String, String> headers, String name,
+			String value) {
 		if (value != null) {
 			headers.put(name, value);
 		}

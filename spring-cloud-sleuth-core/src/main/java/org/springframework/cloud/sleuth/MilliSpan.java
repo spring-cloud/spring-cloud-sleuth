@@ -30,22 +30,27 @@ import lombok.Singular;
  * @author Spencer Gibb
  */
 @Data
-@Builder
+@Builder(toBuilder=true)
 public class MilliSpan implements Span {
 	private final long begin;
 	private long end = 0;
 	private final String name;
 	private final String traceId;
 	@Singular
-	private List<String> parents;
+	private List<String> parents = new ArrayList<>();
 	private final String spanId;
 	private boolean remote = false;
+	private boolean exportable = true;
 	private final Map<String, String> annotations = new LinkedHashMap<>();
 	private final String processId;
 	@Singular
 	private final List<TimelineAnnotation> timelineAnnotations = new ArrayList<>();
 
-	public MilliSpan(long begin, long end, String name, String traceId, List<String> parents, String spanId, boolean remote, String processId) {
+	public static MilliSpan.MilliSpanBuilder builder() {
+		return new MilliSpan().toBuilder();
+	}
+
+	public MilliSpan(long begin, long end, String name, String traceId, List<String> parents, String spanId, boolean remote, boolean exportable, String processId) {
 		this.begin = begin<=0 ? System.currentTimeMillis() : begin;
 		this.end = end;
 		this.name = name;
@@ -53,16 +58,15 @@ public class MilliSpan implements Span {
 		this.parents = parents;
 		this.spanId = spanId;
 		this.remote = remote;
+		this.exportable = exportable;
 		this.processId = processId;
 	}
 
 	//for serialization
-	@SuppressWarnings("unused")
 	private MilliSpan() {
 		this.begin = 0;
 		this.name = null;
 		this.traceId = null;
-		this.parents = null;
 		this.spanId = null;
 		this.processId = null;
 	}

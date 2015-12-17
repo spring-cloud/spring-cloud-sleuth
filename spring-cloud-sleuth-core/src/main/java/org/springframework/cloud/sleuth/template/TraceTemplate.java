@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.template;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.TraceDelegate;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 
 /**
  * @author Spencer Gibb
@@ -34,7 +33,7 @@ public class TraceTemplate implements TraceOperations  {
 
 	@Override
 	public <T> T trace(final TraceCallback<T> callback) {
-		if (TraceContextHolder.isTracing()) {
+		if (this.traceManager.isTracing()) {
 			DelegateCallback<T> delegate = new DelegateCallback<>(this.traceManager);
 			Trace trace = delegate.startSpan();
 			try {

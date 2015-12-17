@@ -97,6 +97,12 @@ public interface Span {
 	boolean isRunning();
 
 	/**
+	 * Is the span eligible for export? If not then we may not need accumulate annotations
+	 * (for instance).
+	 */
+	boolean isExportable();
+
+	/**
 	 * Add a data annotation associated with this span
 	 */
 	void addAnnotation(String key, String value);
