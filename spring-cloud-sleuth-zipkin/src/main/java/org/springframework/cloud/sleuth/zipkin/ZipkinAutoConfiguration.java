@@ -84,10 +84,15 @@ public class ZipkinAutoConfiguration {
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
+			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
+					new ServerPropertiesEndpointLocator(this.serverProperties));
+		}
+
+		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
 			if (this.client!=null) {
 				return new DiscoveryClientEndpointLocator(this.client);
 			}
-			return new ServerPropertiesEndpointLocator(this.serverProperties);
+			return null;
 		}
 
 	}
