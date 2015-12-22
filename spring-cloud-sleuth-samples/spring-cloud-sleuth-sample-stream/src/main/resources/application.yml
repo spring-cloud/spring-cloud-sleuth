@@ -1,0 +1,14 @@
+server:
+  port: 3379
+
+spring:
+  application:
+    name: testSleuthApp
+  sleuth:
+    log:
+      json:
+        enabled: true
+
+logging:
+  pattern:
+    level: '%clr([trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}]){yellow} %5p'

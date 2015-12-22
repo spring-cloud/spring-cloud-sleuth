@@ -1,0 +1,39 @@
+mysql:
+  image: openzipkin/zipkin-mysql:1.26.0
+  ports:
+    - 3306:3306
+collector:
+  image: openzipkin/zipkin-collector:1.26.0
+  environment:
+    - TRANSPORT_TYPE=scribe
+    - STORAGE_TYPE=mysql
+  expose:
+    - 9410
+  ports:
+    - 9410:9410
+    - 9900:9900
+  links:
+    - mysql:storage
+query:
+  image: openzipkin/zipkin-query:1.26.0
+  environment:
+    # Remove TRANSPORT_TYPE to disable tracing
+    - TRANSPORT_TYPE=http
+    - STORAGE_TYPE=mysql
+  expose:
+    - 9411
+  ports:
+    - 9411:9411
+    - 9901:9901
+  links:
+    - mysql:storage
+web:
+  image: openzipkin/zipkin-web:1.26.0
+  environment:
+    # Remove TRANSPORT_TYPE to disable tracing
+    - TRANSPORT_TYPE=http
+  ports:
+    - 8080:8080
+    - 9990:9990
+  links:
+    - query
