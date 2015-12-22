@@ -26,14 +26,18 @@ import java.util.Map;
 
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
+import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
@@ -41,23 +45,28 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 
+import com.netflix.hystrix.HystrixCommand;
 import feign.Client;
+import feign.Feign;
 import feign.FeignException;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
+import feign.hystrix.HystrixFeign;
 
 /**
  *
- * Configuration for ensuring that TraceID is set on the response
+ * Configuration for ensuring that Spans are propagated while using Feign
  *
  * @author Marcin Grzejszczak, 4financeIT
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass(Client.class)
+@AutoConfigureBefore(FeignAutoConfiguration.class)
 public class TraceFeignClientAutoConfiguration {
 
 	@Autowired
@@ -68,6 +77,14 @@ public class TraceFeignClientAutoConfiguration {
 
 	@Autowired
 	private TraceAccessor accessor;
+
+	@Bean
+	@Scope("prototype")
+	@ConditionalOnClass(HystrixCommand.class)
+	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
+	public Feign.Builder feignHystrixBuilder(TraceManager traceManager) {
+		return SleuthHystrixFeign.builder(traceManager);
+	}
 
 	@Bean
 	@Primary
