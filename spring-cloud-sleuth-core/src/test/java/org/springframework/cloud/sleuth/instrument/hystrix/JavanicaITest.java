@@ -1,5 +1,4 @@
-
-package org.springframework.cloud.sleuth.instrument.web;
+package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -10,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
@@ -17,26 +17,25 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.jayway.awaitility.Awaitility;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
-		TraceAsyncITest.TraceAsyncITestConfiguration.class })
-public class TraceAsyncITest {
+		JavanicaITest.JavanicaITestConfiguration.class })
+public class JavanicaITest {
 
-	@Autowired AsyncClass asyncClass;
-	@Autowired AsyncDelegation asyncDelegation;
+	@Autowired JavanicaClass javanicaClass;
+	@Autowired JavanicaDelegation javanicaDelegation;
 	@Autowired TraceManager traceManager;
 
 	@Test
-	public void should_set_span_on_an_async_annotated_method() {
+	public void should_set_span_on_an_hystrix_command_annotated_method() {
 		final Span span = givenASpanInCurrentThread();
 
-		whenAsyncProcessingTakesPlace();
+		whenHystrixCommandGetsExecutedViaJavanica();
 
 		thenSpanPutInTheAsyncThreadIsSameAs(span);
 	}
@@ -47,8 +46,8 @@ public class TraceAsyncITest {
 		return span;
 	}
 
-	private void whenAsyncProcessingTakesPlace() {
-		this.asyncDelegation.doSthThatDelegatesToAsync();
+	private void whenHystrixCommandGetsExecutedViaJavanica() {
+		this.javanicaDelegation.doSthThatDelegatesToJavanica();
 	}
 
 	private void thenSpanPutInTheAsyncThreadIsSameAs(final Span span) {
@@ -56,9 +55,9 @@ public class TraceAsyncITest {
 			@Override
 			public void run() {
 				then(span.getTraceId()).isNotNull()
-						.isEqualTo(TraceAsyncITest.this.asyncClass.getTraceId());
+						.isEqualTo(javanicaClass.getTraceId());
 				then(span.getName())
-						.isNotEqualTo(TraceAsyncITest.this.asyncClass.getSpanName());
+						.isNotEqualTo(javanicaClass.getSpanName());
 			}
 		});
 	}
@@ -69,46 +68,46 @@ public class TraceAsyncITest {
 	}
 
 	@DefaultTestAutoConfiguration
-	@EnableAsync
+	@EnableHystrix
 	@EnableAspectJAutoProxy(proxyTargetClass = true)
 	@Configuration
-	public static class TraceAsyncITestConfiguration {
+	public static class JavanicaITestConfiguration {
 
 		@Bean
-		AsyncClass asyncClass() {
-			return new AsyncClass();
+		JavanicaClass javanicaClass() {
+			return new JavanicaClass();
 		}
 
 		@Bean
-		AsyncDelegation asyncDelegation() {
-			return new AsyncDelegation(asyncClass());
+		JavanicaDelegation javanicaDelegation() {
+			return new JavanicaDelegation(javanicaClass());
 		}
 	}
 
-	public static class AsyncDelegation {
+	public static class JavanicaDelegation {
 
-		private final AsyncClass asyncClass;
+		private final JavanicaClass javanicaClass;
 
-		public AsyncDelegation(AsyncClass asyncClass) {
-			this.asyncClass = asyncClass;
+		public JavanicaDelegation(JavanicaClass javanicaClass) {
+			this.javanicaClass = javanicaClass;
 		}
 
-		public void doSthThatDelegatesToAsync() {
-			this.asyncClass.doSth();
+		public void doSthThatDelegatesToJavanica() {
+			this.javanicaClass.doSth();
 		}
 	}
 
-	public static class AsyncClass {
+	public static class JavanicaClass {
 
 		AtomicReference<Span> span;
 
-		@Async
+		@HystrixCommand
 		public void doSth() {
 			this.span = new AtomicReference<>(TraceContextHolder.getCurrentSpan());
 		}
 
 		public String getTraceId() {
-			if (this.span == null || (this.span.get() != null
+			if (this.span == null || this.span.get() == null || (this.span.get() != null
 					&& this.span.get().getTraceId() == null)) {
 				return null;
 			}
