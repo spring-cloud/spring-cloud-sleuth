@@ -18,6 +18,7 @@
 
 	<modules>
 		<module>spring-cloud-sleuth-sample</module>
+		<module>spring-cloud-sleuth-sample-camel</module>
 		<module>spring-cloud-sleuth-sample-messaging</module>
 		<module>spring-cloud-sleuth-sample-ribbon</module>
 		<module>spring-cloud-sleuth-sample-zipkin</module>
