@@ -31,6 +31,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.JdkIdGenerator;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -43,9 +44,7 @@ import com.netflix.loadbalancer.Server;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { TraceWebAutoConfiguration.class,
 		FeignTraceTest.TestConfiguration.class })
-// TODO: make it work with default isolation
-@WebIntegrationTest(value = { "spring.application.name=fooservice",
-		"hystrix.command.default.execution.isolation.strategy=SEMAPHORE" }, randomPort = true)
+@WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
 public class FeignTraceTest {
 
 	@Autowired
@@ -77,19 +76,21 @@ public class FeignTraceTest {
 	public void shouldAttachTraceIdWhenUsingFeignClient() {
 		// given
 		String currentTraceId = "currentTraceId";
-		String currentSpanId = "currentSpanId";
 		String currentParentId = "currentParentId";
 		this.traceManager.continueSpan(MilliSpan.builder().traceId(currentTraceId)
-				.spanId(currentSpanId).parent(currentParentId).build());
+				.spanId(generatedId()).parent(currentParentId).build());
 
 		// when
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		// then
 		then(getHeader(response, Trace.TRACE_ID_NAME)).isEqualTo(currentTraceId);
-		then(getHeader(response, Trace.SPAN_ID_NAME)).isEqualTo(currentSpanId);
 		then(getHeader(response, Trace.PARENT_ID_NAME)).isEqualTo(currentParentId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
+	}
+
+	private String generatedId() {
+		return new JdkIdGenerator().generateId().toString();
 	}
 
 	private String getHeader(ResponseEntity<String> response, String name) {
