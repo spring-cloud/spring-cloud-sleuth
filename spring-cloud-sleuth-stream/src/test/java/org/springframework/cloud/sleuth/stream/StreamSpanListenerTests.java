@@ -40,12 +40,15 @@ import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.stream.StreamSpanListenerTests.TestConfiguration;
-import org.springframework.cloud.stream.binder.local.config.LocalBinderAutoConfiguration;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
+import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.integration.annotation.MessageEndpoint;
+import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.messaging.Message;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
@@ -94,18 +97,23 @@ public class StreamSpanListenerTests {
 
 	@Configuration
 	@Import({ ZipkinTestConfiguration.class, SleuthStreamAutoConfiguration.class,
-			LocalBinderAutoConfiguration.class, ChannelBindingAutoConfiguration.class,
+			TestSupportBinderAutoConfiguration.class, ChannelBindingAutoConfiguration.class,
 			TraceAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class })
 	protected static class TestConfiguration {
 	}
 
 	@Configuration
+	@MessageEndpoint
 	protected static class ZipkinTestConfiguration {
 
 		private List<Span> spans = new ArrayList<>();
 
 		@Autowired
 		StreamSpanListener listener;
+		
+		@ServiceActivator(inputChannel=SleuthSource.OUTPUT)
+		public void handle(Message<?> msg) {
+		}
 
 		@Bean
 		public Sampler<?> defaultSampler() {
