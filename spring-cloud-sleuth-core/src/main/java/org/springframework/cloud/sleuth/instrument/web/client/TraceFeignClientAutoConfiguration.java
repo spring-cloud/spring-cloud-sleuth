@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -40,6 +41,8 @@ import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
+import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConcurrencyStrategy;
+import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -67,6 +70,7 @@ import feign.hystrix.HystrixFeign;
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass(Client.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
+@AutoConfigureAfter(SleuthHystrixAutoConfiguration.class)
 public class TraceFeignClientAutoConfiguration {
 
 	@Autowired
@@ -81,6 +85,7 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	@Scope("prototype")
 	@ConditionalOnClass(HystrixCommand.class)
+	@ConditionalOnMissingBean(SleuthHystrixConcurrencyStrategy.class)
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
 	public Feign.Builder feignHystrixBuilder(TraceManager traceManager) {
 		return HystrixFeign.builder()

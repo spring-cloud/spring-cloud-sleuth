@@ -5,7 +5,7 @@ org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.integration.TraceSpringIntegrationAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConfiguration,\
+org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\

@@ -11,7 +11,7 @@ import com.netflix.hystrix.HystrixCommand;
 @Configuration
 @ConditionalOnClass(HystrixCommand.class)
 @ConditionalOnProperty(value = "spring.sleuth.hystrix.strategy.enabled", matchIfMissing = true)
-public class SleuthHystrixConfiguration {
+public class SleuthHystrixAutoConfiguration {
 
 	@Bean SleuthHystrixConcurrencyStrategy sleuthHystrixConcurrencyStrategy(TraceManager traceManager) {
 		return new SleuthHystrixConcurrencyStrategy(traceManager);
