@@ -15,7 +15,7 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
     return new SpanAssert(actual);
   }
 
-  public SpanAssert hasTraceId(String traceId) {
+  public SpanAssert hasTraceIdEqualTo(String traceId) {
     isNotNull();
     if (!Objects.equals(actual.getTraceId(), traceId)) {
       failWithMessage("Expected span's traceId to be <%s> but was <%s>", traceId, actual.getTraceId());
