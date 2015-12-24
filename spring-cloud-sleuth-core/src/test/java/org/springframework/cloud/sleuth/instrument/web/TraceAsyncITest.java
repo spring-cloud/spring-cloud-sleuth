@@ -1,7 +1,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -55,10 +55,9 @@ public class TraceAsyncITest {
 		Awaitility.await().until(new Runnable() {
 			@Override
 			public void run() {
-				then(span.getTraceId()).isNotNull()
-						.isEqualTo(TraceAsyncITest.this.asyncClass.getTraceId());
-				then(span.getName())
-						.isNotEqualTo(TraceAsyncITest.this.asyncClass.getSpanName());
+				then(span)
+						.hasTraceId(asyncClass.getTraceId())
+						.hasNameNotEqualTo(asyncClass.getSpanName());
 			}
 		});
 	}

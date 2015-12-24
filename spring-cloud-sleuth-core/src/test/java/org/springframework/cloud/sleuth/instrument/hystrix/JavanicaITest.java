@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -54,10 +54,9 @@ public class JavanicaITest {
 		Awaitility.await().until(new Runnable() {
 			@Override
 			public void run() {
-				then(span.getTraceId()).isNotNull()
-						.isEqualTo(javanicaClass.getTraceId());
-				then(span.getName())
-						.isNotEqualTo(javanicaClass.getSpanName());
+				then(span)
+						.hasTraceId(javanicaClass.getTraceId())
+						.hasNameNotEqualTo(javanicaClass.getSpanName());
 			}
 		});
 	}
