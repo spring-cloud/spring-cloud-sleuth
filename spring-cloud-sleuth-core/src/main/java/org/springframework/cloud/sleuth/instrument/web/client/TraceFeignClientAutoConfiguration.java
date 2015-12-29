@@ -41,8 +41,8 @@ import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConcurrencyStrategy;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConcurrencyStrategy;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +51,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 
 import com.netflix.hystrix.HystrixCommand;
+
 import feign.Client;
 import feign.Feign;
 import feign.FeignException;

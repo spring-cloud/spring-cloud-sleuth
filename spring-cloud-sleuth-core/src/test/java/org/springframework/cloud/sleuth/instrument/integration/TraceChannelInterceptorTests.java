@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.integration.TraceChannelInterceptorTests.App;
@@ -61,9 +63,12 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	private Message<?> message;
 
+	private Span span;
+
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
 		this.message = message;
+		this.span = TraceContextHolder.getCurrentSpan();
 	}
 
 	@Before
@@ -78,17 +83,19 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	}
 
 	@Test
-	public void testNoSpanCreation() {
+	public void nonExportableSpanCreation() {
 		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Trace.NOT_SAMPLED_NAME, "")
 				.build());
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
-		assertNull("spanId was not null", spanId);
+		assertNotNull("spanId was null", spanId);
+		assertNull(TraceContextHolder.getCurrentTrace());
+		assertFalse(this.span.isExportable());
 	}
 
 	@Test
-	public void testSpanCreation() {
+	public void spanCreation() {
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		assertNotNull("message was null", this.message);
 
@@ -101,7 +108,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	}
 
 	@Test
-	public void testHeaderCreation() {
+	public void headerCreation() {
 		Trace trace = this.traceManager.startSpan("testSendMessage",
 				new AlwaysSampler(), null);
 		this.channel.send(MessageBuilder.withPayload("hi").build());

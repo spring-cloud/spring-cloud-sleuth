@@ -20,6 +20,7 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
@@ -81,7 +82,11 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 			trace = this.traceManager.startSpan(name, span.build());
 		}
 		else {
-			trace = this.traceManager.startSpan(name);
+			if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+				trace = this.traceManager.startSpan(name, IsTracingSampler.INSTANCE, null);
+			} else {
+				trace = this.traceManager.startSpan(name);
+			}
 		}
 		this.traceHolder.set(trace);
 		return SpanMessageHeaders.addSpanHeaders(message, trace.getSpan());

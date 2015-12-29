@@ -41,6 +41,8 @@ public class Trace {
 
 	public static final String SPAN_ID_NAME = "X-Span-Id";
 
+	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
+
 	public static final List<String> HEADERS = Arrays.asList(SPAN_ID_NAME, TRACE_ID_NAME,
 	SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
 

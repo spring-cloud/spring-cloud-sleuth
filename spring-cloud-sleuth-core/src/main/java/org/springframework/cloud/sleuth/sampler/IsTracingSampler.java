@@ -24,6 +24,8 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
  */
 public class IsTracingSampler implements Sampler<Void> {
 
+	public static IsTracingSampler INSTANCE = new IsTracingSampler();
+
 	@Override
 	public boolean next(Void info) {
 		return TraceContextHolder.isTracing();

@@ -39,11 +39,11 @@ public class Slf4jSpanListener {
 	public void start(SpanAcquiredEvent event) {
 		Span span = event.getSpan();
 		MDC.put(Trace.SPAN_ID_NAME, span.getSpanId());
+		MDC.put(Trace.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
 		MDC.put(Trace.TRACE_ID_NAME, span.getTraceId());
-		// TODO: what log level?
-		log.info("Starting span: {}", span);
+		log.trace("Starting span: {}", span);
 		if (event.getParent() != null) {
-			log.info("With parent: {}", event.getParent());
+			log.trace("With parent: {}", event.getParent());
 		}
 	}
 
@@ -53,21 +53,22 @@ public class Slf4jSpanListener {
 		Span span = event.getSpan();
 		MDC.put(Trace.SPAN_ID_NAME, span.getSpanId());
 		MDC.put(Trace.TRACE_ID_NAME, span.getTraceId());
-		// TODO: what should this log level be?
-		log.info("Continued span: {}", event.getSpan());
+		MDC.put(Trace.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
+		log.trace("Continued span: {}", event.getSpan());
 	}
 
 	@EventListener(SpanReleasedEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void stop(SpanReleasedEvent event) {
-		// TODO: what should this log level be?
-		log.info("Stopped span: {}", event.getSpan());
+		log.trace("Stopped span: {}", event.getSpan());
 		if (event.getParent() != null) {
-			log.info("With parent: {}", event.getParent());
+			log.trace("With parent: {}", event.getParent());
 			MDC.put(Trace.SPAN_ID_NAME, event.getParent().getSpanId());
+			MDC.put(Trace.SPAN_EXPORT_NAME, String.valueOf(event.getParent().isExportable()));
 		}
 		else {
 			MDC.remove(Trace.SPAN_ID_NAME);
+			MDC.remove(Trace.SPAN_EXPORT_NAME);
 			MDC.remove(Trace.TRACE_ID_NAME);
 		}
 	}

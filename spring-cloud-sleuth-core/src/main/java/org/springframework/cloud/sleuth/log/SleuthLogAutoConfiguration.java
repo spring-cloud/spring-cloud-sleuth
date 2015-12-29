@@ -41,6 +41,7 @@ public class SleuthLogAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
 		public Slf4jSpanListener slf4jSpanStartedListener() {
+			// Sets up MDC entries X-Trace-Id and X-Span-Id
 			return new Slf4jSpanListener();
 		}
 	}

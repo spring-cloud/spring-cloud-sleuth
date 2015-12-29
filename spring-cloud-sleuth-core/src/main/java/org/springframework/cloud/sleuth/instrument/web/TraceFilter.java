@@ -33,6 +33,7 @@ import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
+import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -132,7 +133,13 @@ public class TraceFilter extends OncePerRequestFilter
 
 		}
 		else {
-			trace = this.traceManager.startSpan(name);
+			if (skip) {
+				trace = this.traceManager.startSpan(name, IsTracingSampler.INSTANCE,
+						null);
+			}
+			else {
+				trace = this.traceManager.startSpan(name);
+			}
 			request.setAttribute(TRACE_REQUEST_ATTR, trace);
 		}
 
@@ -141,6 +148,9 @@ public class TraceFilter extends OncePerRequestFilter
 				trace.getSpan().getTraceId());
 		addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME,
 				trace.getSpan().getSpanId());
+		if (skip) {
+			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
+		}
 
 		try {
 
@@ -215,7 +225,7 @@ public class TraceFilter extends OncePerRequestFilter
 	private String getHeader(HttpServletRequest request, HttpServletResponse response,
 			String name) {
 		String value = request.getHeader(name);
-		return hasText(value) ? value : response.getHeader(name);
+		return value!=null ? value : response.getHeader(name);
 	}
 
 	private void addToResponseIfNotPresent(HttpServletResponse response, String name,
