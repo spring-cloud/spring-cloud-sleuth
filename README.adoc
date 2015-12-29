@@ -6,7 +6,7 @@ image::https://api.travis-ci.org/spring-cloud/spring-cloud-sleuth.svg?branch=mas
 
 Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.spring.io[Spring Cloud].
 
-=== Terminology
+=== Terminologyc
 
 Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.
 
@@ -45,7 +45,7 @@ logging:
 
 1. Optionally run https://github.com/openzipkin/zipkin[Zipkin], e.g. via docker compose (there's a `docker-compose.yml` in https://github.com/spring-cloud-incubator/spring-cloud-sleuth[Spring Cloud Sleuth], or in https://github.com/openzipkin/docker-zipkin[Docker Zipkin]
 7. Run the zipkin sample application (and set `sample.zipkin.enabled=false` if you have no collector running)
-8. Hit `http://localhost:3380`, `http://localhost:3380/call`, `http://localhost:3380/async` for some interesting sample traces (the app callas back to itself).
+8. Hit `http://localhost:3380`, `http://localhost:3380/call`, `http://localhost:3380/async` for some interesting sample traces (the app calls back to itself).
 9. Goto `http://localhost:8082` for zipkin web (8080 if running locally from source, the host is the docker host, so if you are using boot2docker it will be different)
 
 NOTE: You can see the zipkin spans without the UI (in logs) if you run the sample with `sample.zipkin.enabled=false`.
