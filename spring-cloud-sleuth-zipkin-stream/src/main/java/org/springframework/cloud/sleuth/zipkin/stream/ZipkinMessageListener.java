@@ -37,6 +37,7 @@ import org.springframework.util.StringUtils;
 import io.zipkin.Annotation;
 import io.zipkin.BinaryAnnotation;
 import io.zipkin.BinaryAnnotation.Type;
+import io.zipkin.Constants;
 import io.zipkin.Endpoint;
 import io.zipkin.Span.Builder;
 import io.zipkin.SpanStore;
@@ -74,14 +75,29 @@ public class ZipkinMessageListener {
 	 * <li>Create binary annotations based on data from Span object.
 	 * </ul>
 	 */
-	public io.zipkin.Span convert(Span span, Host host) {
+	// VisibleForTesting
+	static io.zipkin.Span convert(Span span, Host host) {
 		Builder zipkinSpan = new io.zipkin.Span.Builder();
 
 		Endpoint ep = Endpoint.create(host.getServiceName(), host.getIpv4(),
 				host.getPort().shortValue());
-		List<Annotation> annotationList = createZipkinAnnotations(span, ep);
-		List<BinaryAnnotation> binaryAnnotationList = createZipkinBinaryAnnotations(span,
-				ep);
+
+		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
+		if (span.getTimelineAnnotations().isEmpty() && span.getAnnotations().isEmpty()) {
+			// TODO: javadocs say this isn't nullable!
+			String processId = span.getProcessId() != null
+					? span.getProcessId().toLowerCase()
+					: "unknown";
+			zipkinSpan.addBinaryAnnotation(
+					BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep)
+			);
+		} else {
+			addZipkinAnnotations(zipkinSpan, span, ep);
+			addZipkinBinaryAnnotations(zipkinSpan, span, ep);
+		}
+
+		zipkinSpan.timestamp(span.getBegin() * 1000);
+		zipkinSpan.duration((span.getEnd() - span.getBegin()) * 1000);
 		zipkinSpan.traceId(hash(span.getTraceId()));
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
@@ -94,26 +110,21 @@ public class ZipkinMessageListener {
 		if (StringUtils.hasText(span.getName())) {
 			zipkinSpan.name(span.getName());
 		}
-		for (Annotation annotation : annotationList) {
-			zipkinSpan.addAnnotation(annotation);
-		}
-		for (BinaryAnnotation annotation : binaryAnnotationList) {
-			zipkinSpan.addBinaryAnnotation(annotation);
-		}
 		return zipkinSpan.build();
 	}
 
 	/**
 	 * Add annotations from the sleuth Span.
 	 */
-	private List<Annotation> createZipkinAnnotations(Span span, Endpoint endpoint) {
-		List<Annotation> annotationList = new ArrayList<>();
+	private static void addZipkinAnnotations(Builder zipkinSpan, Span span, Endpoint endpoint) {
 		for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
-			Annotation zipkinAnnotation = createZipkinAnnotation(ta.getMsg(),
-					ta.getTime(), endpoint, true);
-			annotationList.add(zipkinAnnotation);
+			Annotation zipkinAnnotation = new Annotation.Builder()
+					.endpoint(endpoint)
+					.timestamp(ta.getTime() * 1000) // Zipkin is in microseconds
+					.value(ta.getMsg())
+					.build();
+			zipkinSpan.addAnnotation(zipkinAnnotation);
 		}
-		return annotationList;
 	}
 
 	/**
@@ -121,9 +132,8 @@ public class ZipkinMessageListener {
 	 *
 	 * @return list of Annotations that could be added to Zipkin Span.
 	 */
-	private List<BinaryAnnotation> createZipkinBinaryAnnotations(Span span,
+	private static void addZipkinBinaryAnnotations(Builder zipkinSpan, Span span,
 			Endpoint endpoint) {
-		List<BinaryAnnotation> l = new ArrayList<>();
 		for (Map.Entry<String, String> e : span.getAnnotations().entrySet()) {
 			BinaryAnnotation.Builder binaryAnn = new BinaryAnnotation.Builder();
 			binaryAnn.type(Type.STRING);
@@ -135,33 +145,8 @@ public class ZipkinMessageListener {
 				log.error("Error encoding string as UTF-8", ex);
 			}
 			binaryAnn.endpoint(endpoint);
-			l.add(binaryAnn.build());
+			zipkinSpan.addBinaryAnnotation(binaryAnn.build());
 		}
-		return l;
-	}
-
-	/**
-	 * Create an annotation with the correct times and endpoint.
-	 *
-	 * @param value Annotation value
-	 * @param time timestamp will be extracted
-	 * @param endpoint the endpoint this annotation will be associated with.
-	 * @param sendRequest use the first or last timestamp.
-	 */
-	private static Annotation createZipkinAnnotation(String value, long time,
-			Endpoint endpoint, boolean sendRequest) {
-		Annotation.Builder annotation = new Annotation.Builder();
-		annotation.endpoint(endpoint);
-
-		// Zipkin is in microseconds
-		if (sendRequest) {
-			annotation.timestamp(time * 1000);
-		}
-		else {
-			annotation.timestamp(time * 1000);
-		}
-		annotation.value(value);
-		return annotation.build();
 	}
 
 	private static long hash(String string) {

@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
@@ -28,15 +27,14 @@ import org.springframework.context.event.EventListener;
  */
 public class ServerPropertiesHostLocator implements HostLocator {
 
-	@Value("${spring.application.name:application}")
-	private String appName;
-
-	private ServerProperties serverProperties;
-
+	private final ServerProperties serverProperties;
+	private final String appName;
 	private Integer port;
 
-	public ServerPropertiesHostLocator(ServerProperties serverProperties) {
+	public ServerPropertiesHostLocator(ServerProperties serverProperties,
+																		 String appName) {
 		this.serverProperties = serverProperties;
+		this.appName = appName;
 	}
 
 	@Override
@@ -80,7 +78,7 @@ public class ServerPropertiesHostLocator implements HostLocator {
 
 	private String getServiceName(Span span) {
 		String serviceName;
-		if (span.getProcessId() != null) {
+		if (span.getProcessId() != null) { // TODO: javadocs say this isn't nullable!
 			serviceName = span.getProcessId().toLowerCase();
 		}
 		else {
