@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -77,9 +78,12 @@ public class SleuthStreamAutoConfiguration {
 		@Autowired(required = false)
 		private ServerProperties serverProperties;
 
+		@Value("${spring.application.name:unknown}")
+		private String appName;
+
 		@Bean
 		public HostLocator zipkinEndpointLocator() {
-			return new ServerPropertiesHostLocator(this.serverProperties);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
 		}
 
 	}
@@ -91,6 +95,9 @@ public class SleuthStreamAutoConfiguration {
 		@Autowired(required = false)
 		private ServerProperties serverProperties;
 
+		@Value("${spring.application.name:unknown}")
+		private String appName;
+
 		@Autowired(required = false)
 		private DiscoveryClient client;
 
@@ -99,7 +106,7 @@ public class SleuthStreamAutoConfiguration {
 			if (this.client != null) {
 				return new DiscoveryClientHostLocator(this.client);
 			}
-			return new ServerPropertiesHostLocator(this.serverProperties);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
 		}
 
 	}

@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -65,9 +66,12 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
 
+		@Value("${spring.application.name:unknown}")
+		private String appName;
+
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties);
+			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName);
 		}
 
 	}
@@ -79,13 +83,16 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
 
+		@Value("${spring.application.name:unknown}")
+		private String appName;
+
 		@Autowired(required=false)
 		private DiscoveryClient client;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties));
+					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {

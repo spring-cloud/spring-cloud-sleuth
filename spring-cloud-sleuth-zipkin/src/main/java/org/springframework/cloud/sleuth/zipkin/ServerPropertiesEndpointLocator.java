@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.util.InetUtils;
@@ -30,15 +29,14 @@ import com.twitter.zipkin.gen.Endpoint;
  */
 public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
-	@Value("${spring.application.name:application}")
-	private String appName;
-
-	private ServerProperties serverProperties;
-
+	private final ServerProperties serverProperties;
+  private final String appName;
 	private Integer port;
 
-	public ServerPropertiesEndpointLocator(ServerProperties serverProperties) {
+	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
+																				 String appName) {
 		this.serverProperties = serverProperties;
+		this.appName = appName;
 	}
 
 	@Override

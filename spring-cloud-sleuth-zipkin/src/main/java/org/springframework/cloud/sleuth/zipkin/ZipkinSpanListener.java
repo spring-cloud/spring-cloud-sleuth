@@ -16,9 +16,7 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
@@ -47,13 +45,16 @@ import lombok.extern.apachecommons.CommonsLog;
  */
 @CommonsLog
 public class ZipkinSpanListener {
+	private static final Charset UTF_8 = Charset.forName("UTF-8");
+	private static final byte[] UNKNOWN_BYTES = "unknown".getBytes(UTF_8);
 
 	private SpanCollector spanCollector;
 	/**
 	 * Endpoint is the visible IP address of this service, the port it is listening on and
 	 * the service name from discovery.
 	 */
-	private Endpoint localEndpoint;
+	// Visible for testing
+	Endpoint localEndpoint;
 
 	public ZipkinSpanListener(SpanCollector spanCollector, Endpoint localEndpoint) {
 		this.spanCollector = spanCollector;
@@ -63,9 +64,8 @@ public class ZipkinSpanListener {
 	@EventListener
 	@Order(0)
 	public void start(SpanAcquiredEvent event) {
-		// Starting a span in zipkin means adding: traceId, id, parentId(optional), and
-		// timestamp
-		event.getSpan().addTimelineAnnotation("acquire");
+		// Zipkin Span.timestamp corresponds with Sleuth's Span.begin
+		assert event.getSpan().getBegin() != 0;
 	}
 
 	@EventListener
@@ -107,7 +107,8 @@ public class ZipkinSpanListener {
 	@Order(0)
 	public void release(SpanReleasedEvent event) {
 		// Ending a span in zipkin means adding duration and sending it out
-		event.getSpan().addTimelineAnnotation("release");
+		// Zipkin Span.duration corresponds with Sleuth's Span.begin and end
+		assert event.getSpan().getEnd() != 0;
 		if (event.getSpan().isExportable()) {
 			this.spanCollector.collect(convert(event.getSpan()));
 		}
@@ -121,12 +122,29 @@ public class ZipkinSpanListener {
 	 * <li>Create binary annotations based on data from Span object.
 	 * </ul>
 	 */
-	public com.twitter.zipkin.gen.Span convert(Span span) {
+	// Visible for testing
+	com.twitter.zipkin.gen.Span convert(Span span) {
 		com.twitter.zipkin.gen.Span zipkinSpan = new com.twitter.zipkin.gen.Span();
-		addZipkinAnnotations(zipkinSpan, span, this.localEndpoint);
-		List<BinaryAnnotation> binaryAnnotationList = createZipkinBinaryAnnotations(span,
-				this.localEndpoint);
-		zipkinSpan.setDuration(span.getEnd() - span.getBegin());
+
+		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
+		if (span.getTimelineAnnotations().isEmpty() && span.getAnnotations().isEmpty()) {
+			// TODO: javadocs say this isn't nullable!
+			byte[] processId = span.getProcessId() != null
+					? span.getProcessId().toLowerCase().getBytes(UTF_8)
+					: UNKNOWN_BYTES;
+			BinaryAnnotation component = new BinaryAnnotation()
+					.setAnnotation_type(AnnotationType.STRING)
+					.setKey("lc") // LOCAL_COMPONENT
+					.setValue(processId)
+					.setHost(this.localEndpoint);
+			zipkinSpan.addToBinary_annotations(component);
+		} else {
+			addZipkinAnnotations(zipkinSpan, span, this.localEndpoint);
+			addZipkinBinaryAnnotations(zipkinSpan, span, this.localEndpoint);
+		}
+
+		zipkinSpan.setTimestamp(span.getBegin() * 1000L);
+		zipkinSpan.setDuration((span.getEnd() - span.getBegin()) * 1000L);
 		zipkinSpan.setTrace_id(hash(span.getTraceId()));
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
@@ -139,35 +157,20 @@ public class ZipkinSpanListener {
 		if (StringUtils.hasText(span.getName())) {
 			zipkinSpan.setName(span.getName());
 		}
-		zipkinSpan.setBinary_annotations(binaryAnnotationList);
 		return zipkinSpan;
 	}
 
 	/**
 	 * Add annotations from the sleuth Span.
 	 */
-	private void addZipkinAnnotations(com.twitter.zipkin.gen.Span zipkinSpan, Span span,
-			Endpoint endpoint) {
-		Long startTs = null;
-		Long endTs = null;
+	private void addZipkinAnnotations(com.twitter.zipkin.gen.Span zipkinSpan,
+			Span span, Endpoint endpoint) {
 		for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
-			Annotation zipkinAnnotation = createZipkinAnnotation(ta.getMsg(),
-					ta.getTime(), endpoint);
-			if (zipkinAnnotation.getValue().equals("acquire")) {
-				startTs = zipkinAnnotation.getTimestamp();
-			}
-			else if (zipkinAnnotation.getValue().equals("release")) {
-				endTs = zipkinAnnotation.getTimestamp();
-			}
-			else {
-				zipkinSpan.addToAnnotations(zipkinAnnotation);
-			}
-		}
-		if (startTs != null) {
-			zipkinSpan.setTimestamp(startTs);
-			if (endTs != null) {
-				zipkinSpan.setDuration(endTs - zipkinSpan.getTimestamp());
-			}
+			Annotation zipkinAnnotation = new Annotation()
+					.setHost(endpoint)
+					.setTimestamp(ta.getTime() * 1000) // Zipkin is in microseconds
+					.setValue(ta.getMsg());
+			zipkinSpan.addToAnnotations(zipkinAnnotation);
 		}
 	}
 
@@ -176,41 +179,16 @@ public class ZipkinSpanListener {
 	 *
 	 * @return list of Annotations that could be added to Zipkin Span.
 	 */
-	private List<BinaryAnnotation> createZipkinBinaryAnnotations(Span span,
-			Endpoint endpoint) {
-		List<BinaryAnnotation> l = new ArrayList<>();
+	private void addZipkinBinaryAnnotations(com.twitter.zipkin.gen.Span zipkinSpan,
+			Span span, Endpoint endpoint) {
 		for (Map.Entry<String, String> e : span.getAnnotations().entrySet()) {
-			BinaryAnnotation binaryAnn = new BinaryAnnotation();
-			binaryAnn.setAnnotation_type(AnnotationType.STRING);
-			binaryAnn.setKey(e.getKey());
-			try {
-				binaryAnn.setValue(e.getValue().getBytes("UTF-8"));
-			}
-			catch (UnsupportedEncodingException ex) {
-				log.error("Error encoding string as UTF-8", ex);
-			}
-			binaryAnn.setHost(endpoint);
-			l.add(binaryAnn);
+			BinaryAnnotation binaryAnn = new BinaryAnnotation()
+					.setAnnotation_type(AnnotationType.STRING)
+					.setKey(e.getKey())
+					.setValue(e.getValue().getBytes(UTF_8))
+					.setHost(endpoint);
+			zipkinSpan.addToBinary_annotations(binaryAnn);
 		}
-		return l;
-	}
-
-	/**
-	 * Create an annotation with the correct times and endpoint.
-	 *
-	 * @param value Annotation value
-	 * @param time timestamp will be extracted
-	 * @param endpoint the endpoint this annotation will be associated with.
-	 */
-	private static Annotation createZipkinAnnotation(String value, long time,
-			Endpoint endpoint) {
-		Annotation annotation = new Annotation();
-		annotation.setHost(endpoint);
-
-		// Zipkin is in microseconds
-		annotation.setTimestamp(time * 1000);
-		annotation.setValue(value);
-		return annotation;
 	}
 
 	private static long hash(String string) {
