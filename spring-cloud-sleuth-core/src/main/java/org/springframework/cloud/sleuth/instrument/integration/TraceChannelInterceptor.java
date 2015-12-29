@@ -45,7 +45,8 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
 		Trace trace = this.traceHolder.get();
-		this.traceManager.close(trace);
+		// Double close to clean up the parent (remote span as well)
+		this.traceManager.close(this.traceManager.close(trace));
 		this.traceHolder.remove();
 	}
 
