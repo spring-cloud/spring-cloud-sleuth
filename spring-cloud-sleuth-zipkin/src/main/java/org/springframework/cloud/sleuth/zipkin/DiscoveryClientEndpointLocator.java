@@ -16,14 +16,12 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.net.InetAddress;
-
+import com.twitter.zipkin.gen.Endpoint;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.util.InetUtils;
 
-import com.twitter.zipkin.gen.Endpoint;
+import java.net.InetAddress;
 
 /**
  * An {@link EndpointLocator} that tries to find local service information from a
@@ -43,6 +41,9 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 	@Override
 	public Endpoint local() {
 		ServiceInstance instance = this.client.getLocalServiceInstance();
+		if (instance == null) {
+			throw new NoServiceInstanceAvailableException();
+		}
 		return new Endpoint(getIpAddress(instance),
 				new Integer(instance.getPort()).shortValue(), instance.getServiceId());
 	}
@@ -57,4 +58,5 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 		}
 	}
 
+	static class NoServiceInstanceAvailableException extends RuntimeException { }
 }
