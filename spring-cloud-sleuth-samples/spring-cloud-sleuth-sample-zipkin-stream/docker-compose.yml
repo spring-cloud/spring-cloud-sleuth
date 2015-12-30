@@ -20,6 +20,7 @@ zipkin:
   environment:
     - MYSQL_HOST=mysql
     - RABBIT_HOST=rabbitmq
+    # - JAVA_OPTS=your jvm params here
   expose:
     - 9411
   ports:
@@ -28,7 +29,7 @@ zipkin:
     - mysql
     - rabbitmq
 web:
-  image: openzipkin/zipkin-web:1.26.0
+  image: openzipkin/zipkin-web:1.28.0
   ports:
     - 8080:8080
   environment:

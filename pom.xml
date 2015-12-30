@@ -203,7 +203,7 @@
 		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
 		<spock.version>1.0-groovy-2.4</spock.version>
-		<zipkin-java.version>0.1.1</zipkin-java.version>
+		<zipkin-java.version>0.1.2</zipkin-java.version>
 	</properties>
 
 	<profiles>
