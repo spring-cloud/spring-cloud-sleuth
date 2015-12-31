@@ -35,7 +35,7 @@ public class PercentageBasedSamplerTest {
 
 		int numberOfSampledElements = countNumberOfSampledElements(sampler);
 
-		then(numberOfSampledElements).isGreaterThanOrEqualTo(30);
+		then(numberOfSampledElements).isEqualTo(30);
 	}
 
 	private int countNumberOfSampledElements(PercentageBasedSampler sampler) {

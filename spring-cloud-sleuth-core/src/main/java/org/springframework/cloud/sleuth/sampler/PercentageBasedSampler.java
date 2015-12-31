@@ -13,7 +13,7 @@ import org.springframework.cloud.sleuth.Sampler;
 public class PercentageBasedSampler implements Sampler<Void> {
 
 	private final SamplerConfiguration samplerConfiguration;
-	private final AtomicLong sucessfulSamples = new AtomicLong();
+	private final AtomicLong successfulSamples = new AtomicLong();
 	private final AtomicLong rejectedSamples = new AtomicLong();
 
 	public PercentageBasedSampler(SamplerConfiguration samplerConfiguration) {
@@ -22,15 +22,20 @@ public class PercentageBasedSampler implements Sampler<Void> {
 
 	@Override
 	public boolean next(Void info) {
-		long successful = sucessfulSamples.get();
+		long successful = successfulSamples.get();
 		long rejected = rejectedSamples.get();
-		double percentage = (successful + 1d) / (successful + 1d + rejected);
-		boolean sample = percentage <= samplerConfiguration.getPercentage();
+		double incrementedSuccessful = successful + 1d;
+		double percentageOfSuccessfulSamples = incrementedSuccessful / (incrementedSuccessful + rejected);
+		boolean shouldSample = percentageOfSuccessfulSamples <= samplerConfiguration.getPercentage();
+		incrementSamples(shouldSample);
+		return shouldSample;
+	}
+
+	private void incrementSamples(boolean sample) {
 		if (sample) {
-			sucessfulSamples.incrementAndGet();
+			successfulSamples.incrementAndGet();
 		} else {
 			rejectedSamples.incrementAndGet();
 		}
-		return sample;
 	}
 }
