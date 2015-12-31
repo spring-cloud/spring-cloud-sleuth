@@ -17,5 +17,5 @@ public class SamplerConfiguration {
 	 * <li> 0.0 - 0% requests should be sampled </li>
 	 * </ul?
 	 */
-	private Double percentage = 1.0;
+	private double percentage = 1.0;
 }
