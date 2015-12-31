@@ -5,10 +5,6 @@ spring:
   application:
     name: testSleuthZipkin
 
-logging:
-  pattern:
-    level: '%clr([trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}]){yellow} %5p'
-
 sample:
   zipkin:
     enabled: false

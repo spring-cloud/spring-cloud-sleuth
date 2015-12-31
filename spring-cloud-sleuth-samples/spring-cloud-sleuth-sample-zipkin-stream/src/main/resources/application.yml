@@ -5,6 +5,16 @@ spring:
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
   datasource:
+    initialize: false
+
+zipkin:
+  store:
+    type: mem # default is inMemory
+
+---
+spring:
+  profiles: mysql
+  datasource:
     schema: classpath:/mysql.sql
     url: jdbc:mysql://${MYSQL_HOST:localhost}/test
     username: root
@@ -17,12 +27,3 @@ spring:
 zipkin:
   store:
     type: mysql # default is inMemory
-
----
-spring:
-  profiles: test
-  datasource:
-    initialize: false
-zipkin:
-  store:
-    type: mem # default is inMemory

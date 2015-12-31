@@ -8,10 +8,6 @@ sample:
 spring:
   application:
     name: testSleuthRibbon
-  sleuth:
-    log:
-      json:
-        enabled: true
 
 zipkin:
   ribbon:
@@ -38,7 +34,3 @@ zuul:
       url: http://localhost:3381
     vanilla:
       url: http://localhost:3379
-
-logging:
-  pattern:
-    level: '%clr([trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}]){yellow} %5p'
