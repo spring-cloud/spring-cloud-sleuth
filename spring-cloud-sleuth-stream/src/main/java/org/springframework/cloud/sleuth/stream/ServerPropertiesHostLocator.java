@@ -32,7 +32,7 @@ public class ServerPropertiesHostLocator implements HostLocator {
 	private Integer port;
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
-																		 String appName) {
+			String appName) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
 	}
@@ -52,11 +52,11 @@ public class ServerPropertiesHostLocator implements HostLocator {
 	}
 
 	private Integer getPort() {
-		if (this.port!=null) {
+		if (this.port != null) {
 			return this.port;
 		}
 		Integer port;
-		if (this.serverProperties!=null && this.serverProperties.getPort() != null) {
+		if (this.serverProperties != null && this.serverProperties.getPort() != null) {
 			port = this.serverProperties.getPort();
 		}
 		else {
@@ -67,7 +67,7 @@ public class ServerPropertiesHostLocator implements HostLocator {
 
 	private String getAddress() {
 		String address;
-		if (this.serverProperties!=null && this.serverProperties.getAddress() != null) {
+		if (this.serverProperties != null && this.serverProperties.getAddress() != null) {
 			address = this.serverProperties.getAddress().getHostAddress();
 		}
 		else {
