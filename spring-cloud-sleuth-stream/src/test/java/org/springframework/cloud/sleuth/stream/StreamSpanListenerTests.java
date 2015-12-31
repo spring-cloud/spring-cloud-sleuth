@@ -68,6 +68,9 @@ public class StreamSpanListenerTests {
 	@Autowired
 	private ZipkinTestConfiguration test;
 
+	@Autowired
+	StreamSpanListener listener;
+
 	@PostConstruct
 	public void init() {
 		this.test.spans.clear();
@@ -95,6 +98,16 @@ public class StreamSpanListenerTests {
 		assertEquals(2, this.test.spans.size());
 	}
 
+	@Test
+	public void nullSpanName() {
+		Trace context = this.traceManager.startSpan(null, null);
+		this.application.publishEvent(new ClientSentEvent(this, context.getSpan()));
+		this.traceManager.close(context);
+		assertEquals(1, this.test.spans.size());
+		this.listener.poll();
+		assertEquals(0, this.test.spans.size());
+	}
+
 	@Configuration
 	@Import({ ZipkinTestConfiguration.class, SleuthStreamAutoConfiguration.class,
 			TestSupportBinderAutoConfiguration.class, ChannelBindingAutoConfiguration.class,
@@ -110,7 +123,7 @@ public class StreamSpanListenerTests {
 
 		@Autowired
 		StreamSpanListener listener;
-		
+
 		@ServiceActivator(inputChannel=SleuthSource.OUTPUT)
 		public void handle(Message<?> msg) {
 		}

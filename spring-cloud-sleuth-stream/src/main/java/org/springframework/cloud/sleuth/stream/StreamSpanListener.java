@@ -106,7 +106,7 @@ public class StreamSpanListener {
 		this.queue.clear();
 		for (Iterator<Span> iterator = result.iterator(); iterator.hasNext();) {
 			Span span = iterator.next();
-			if (span.getName().equals("message/zipkin")) {
+			if (span.getName() != null && span.getName().equals("message/zipkin")) {
 				iterator.remove();
 			}
 		}
