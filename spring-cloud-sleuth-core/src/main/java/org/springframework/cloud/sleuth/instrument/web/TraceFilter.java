@@ -143,11 +143,16 @@ public class TraceFilter extends OncePerRequestFilter
 			request.setAttribute(TRACE_REQUEST_ATTR, trace);
 		}
 
+		Throwable exception = null;
 		try {
 
 			addRequestAnnotations(request);
 			filterChain.doFilter(request, response);
 
+		}
+		catch (Throwable e) {
+			exception = e;
+			throw e;
 		}
 		finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
@@ -158,8 +163,8 @@ public class TraceFilter extends OncePerRequestFilter
 				addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 			}
 			if (trace != null) {
+				addResponseAnnotations(response, exception);
 				addResponseHeaders(response, trace.getSpan());
-				addResponseAnnotations(response);
 				if (trace.getSavedTrace() != null) {
 					publish(new ServerSentEvent(this, trace.getSavedTrace().getSpan(),
 							trace.getSpan()));
@@ -204,9 +209,17 @@ public class TraceFilter extends OncePerRequestFilter
 		}
 	}
 
-	private void addResponseAnnotations(HttpServletResponse response) {
-		this.traceManager.addAnnotation("/http/response/status_code",
-				String.valueOf(response.getStatus()));
+	private void addResponseAnnotations(HttpServletResponse response, Throwable e) {
+		if (response.getStatus() == HttpServletResponse.SC_OK && e != null) {
+			// Filter chain threw exception but the response status may not have been set
+			// yet, so we have to guess.
+			this.traceManager.addAnnotation("/http/response/status_code",
+					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+		}
+		else {
+			this.traceManager.addAnnotation("/http/response/status_code",
+					String.valueOf(response.getStatus()));
+		}
 
 		for (String name : response.getHeaderNames()) {
 			for (String value : response.getHeaders(name)) {
@@ -219,7 +232,7 @@ public class TraceFilter extends OncePerRequestFilter
 	private String getHeader(HttpServletRequest request, HttpServletResponse response,
 			String name) {
 		String value = request.getHeader(name);
-		return value!=null ? value : response.getHeader(name);
+		return value != null ? value : response.getHeader(name);
 	}
 
 	private void addToResponseIfNotPresent(HttpServletResponse response, String name,

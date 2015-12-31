@@ -19,9 +19,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(TraceFilterITest.class)
+@SpringApplicationConfiguration(TraceFilterIntegartionTests.class)
 @DefaultTestAutoConfiguration
-public class TraceFilterITest extends MvcITest {
+public class TraceFilterIntegartionTests extends MvcITest {
 
 	@Autowired
 	TraceManager traceManager;

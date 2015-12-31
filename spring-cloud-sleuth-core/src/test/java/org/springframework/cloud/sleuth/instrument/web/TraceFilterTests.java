@@ -70,7 +70,7 @@ public class TraceFilterTests {
 				new JdkIdGenerator(), this.publisher) {
 			@Override
 			protected Trace createTrace(Trace trace, Span span) {
-				TraceFilterTests.this.span= span;
+				TraceFilterTests.this.span = span;
 				return super.createTrace(trace, span);
 			}
 		};
@@ -135,7 +135,33 @@ public class TraceFilterTests {
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
+	@Test
+	public void catchesException() throws Exception {
+		TraceFilter filter = new TraceFilter(this.traceManager);
+		this.filterChain = new MockFilterChain() {
+			@Override
+			public void doFilter(javax.servlet.ServletRequest request,
+					javax.servlet.ServletResponse response)
+							throws java.io.IOException, javax.servlet.ServletException {
+				throw new RuntimeException("Planned");
+			};
+		};
+		try {
+			filter.doFilter(this.request, this.response, this.filterChain);
+		}
+		catch (RuntimeException e) {
+			assertEquals("Planned", e.getMessage());
+		}
+		verifyHttpAnnotations(HttpStatus.INTERNAL_SERVER_ERROR);
+
+		assertNull(TraceContextHolder.getCurrentTrace());
+	}
+
 	public void verifyHttpAnnotations() {
+		verifyHttpAnnotations(HttpStatus.OK);
+	}
+
+	public void verifyHttpAnnotations(HttpStatus status) {
 		hasAnnotation(this.span, "/http/request/uri", "http://localhost/");
 		hasAnnotation(this.span, "/http/request/endpoint", "/");
 		hasAnnotation(this.span, "/http/request/method", "GET");
@@ -143,8 +169,7 @@ public class TraceFilterTests {
 				MediaType.APPLICATION_JSON_VALUE);
 		hasAnnotation(this.span, "/http/request/headers/user-agent", "MockMvc");
 
-		hasAnnotation(this.span, "/http/response/status_code",
-				HttpStatus.OK.toString());
+		hasAnnotation(this.span, "/http/response/status_code", status.toString());
 		hasAnnotation(this.span, "/http/response/headers/content-type",
 				MediaType.APPLICATION_JSON_VALUE);
 	}

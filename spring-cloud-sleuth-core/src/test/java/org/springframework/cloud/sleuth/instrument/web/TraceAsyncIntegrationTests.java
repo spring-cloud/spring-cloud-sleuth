@@ -24,8 +24,8 @@ import com.jayway.awaitility.Awaitility;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
-		TraceAsyncITest.TraceAsyncITestConfiguration.class })
-public class TraceAsyncITest {
+		TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
+public class TraceAsyncIntegrationTests {
 
 	@Autowired ClassPerformingAsyncLogic classPerformingAsyncLogic;
 	@Autowired TraceManager traceManager;
