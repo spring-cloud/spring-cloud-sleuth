@@ -3,11 +3,7 @@ package org.springframework.cloud.sleuth.sampler;
 import static org.assertj.core.api.BDDAssertions.then;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import junitparams.JUnitParamsRunner;
-
-@RunWith(JUnitParamsRunner.class)
 public class PercentageBasedSamplerTest {
 
 	SamplerConfiguration samplerConfiguration = new SamplerConfiguration();
