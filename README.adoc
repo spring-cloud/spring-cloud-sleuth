@@ -6,7 +6,7 @@ image::https://api.travis-ci.org/spring-cloud/spring-cloud-sleuth.svg?branch=mas
 
 Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.spring.io[Spring Cloud].
 
-=== Terminologyc
+=== Terminology
 
 Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.
 
