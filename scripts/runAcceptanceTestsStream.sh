@@ -14,3 +14,9 @@ cd target
 chmod +x runDockerAcceptanceTests.sh
 
 ./runDockerAcceptanceTests.sh -t "${AT_WHAT_TO_TEST}"
+
+(cd brewery; docker-compose -f docker-compose-"${AT_WHAT_TO_TEST}".yml kill)
+
+AT_WHAT_TO_TEST="SLEUTH_STREAM"
+
+./runDockerAcceptanceTests.sh -t "${AT_WHAT_TO_TEST}"
