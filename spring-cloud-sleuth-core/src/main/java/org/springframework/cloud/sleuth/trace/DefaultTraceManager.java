@@ -135,7 +135,9 @@ public class DefaultTraceManager implements TraceManager {
 					TraceContextHolder.setCurrentTrace(savedTrace);
 				}
 				else {
-					this.publisher.publishEvent(new SpanReleasedEvent(this, span));
+					if (!span.isRemote()) {
+						this.publisher.publishEvent(new SpanReleasedEvent(this, span));
+					}
 					TraceContextHolder.removeCurrentTrace();
 				}
 			}

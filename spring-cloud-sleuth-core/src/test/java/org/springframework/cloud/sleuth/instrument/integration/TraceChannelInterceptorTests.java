@@ -16,9 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -32,11 +36,13 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.integration.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -60,6 +66,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Autowired
 	private TraceManager traceManager;
+
+	@Autowired
+	private App app;
 
 	private Message<?> message;
 
@@ -95,6 +104,20 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	}
 
 	@Test
+	public void parentSpanIncluded() {
+		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Trace.TRACE_ID_NAME, "parent")
+				.build());
+		assertNotNull("message was null", this.message);
+
+		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
+		assertNotNull("spanId was null", spanId);
+		String traceId = this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
+		assertEquals("parent", traceId);
+		assertNull(TraceContextHolder.getCurrentTrace());
+		assertEquals(1, this.app.events.size());
+	}
+
+	@Test
 	public void spanCreation() {
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		assertNotNull("message was null", this.message);
@@ -127,14 +150,16 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@EnableAutoConfiguration
 	static class App {
 
-		@Bean
-		public DirectChannel channel() {
-			return new DirectChannel();
+		private List<SpanReleasedEvent> events = new ArrayList<>();
+
+		@EventListener
+		public void  handle(SpanReleasedEvent event) {
+			this.events.add(event);
 		}
 
 		@Bean
-		public AlwaysSampler alwaysSampler() {
-			return new AlwaysSampler();
+		public DirectChannel channel() {
+			return new DirectChannel();
 		}
 
 	}

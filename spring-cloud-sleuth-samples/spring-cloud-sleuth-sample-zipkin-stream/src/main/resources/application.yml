@@ -21,6 +21,8 @@ zipkin:
 ---
 spring:
   profiles: test
+  datasource:
+    initialize: false
 zipkin:
   store:
     type: mem # default is inMemory
