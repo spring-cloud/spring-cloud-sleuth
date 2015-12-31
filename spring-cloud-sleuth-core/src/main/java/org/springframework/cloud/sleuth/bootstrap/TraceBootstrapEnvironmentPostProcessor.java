@@ -24,6 +24,8 @@ import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -32,29 +34,51 @@ import org.springframework.util.ClassUtils;
  */
 public class TraceBootstrapEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
-	private static final String STREAM_BINDER_HEADERS = "streamBinderHeaders";
+	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
 	private static String[] headers = new String[] { Trace.SPAN_ID_NAME,
-		Trace.TRACE_ID_NAME, Trace.PARENT_ID_NAME, Trace.PROCESS_ID_NAME,
-		Trace.NOT_SAMPLED_NAME, Trace.SPAN_NAME_NAME };
+			Trace.TRACE_ID_NAME, Trace.PARENT_ID_NAME, Trace.PROCESS_ID_NAME,
+			Trace.NOT_SAMPLED_NAME, Trace.SPAN_NAME_NAME };
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
 			SpringApplication application) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		addHeaders(
-				map,
+		addHeaders(map,
 				"org.springframework.cloud.stream.binder.redis.RedisMessageChannelBinder",
 				"redis");
-		addHeaders(
-				map,
+		addHeaders(map,
 				"org.springframework.cloud.stream.binder.rabbit.RabbitMessageChannelBinder",
 				"rabbit");
-		addHeaders(
-				map,
+		addHeaders(map,
 				"org.springframework.cloud.stream.binder.kafka.KafkaMessageChannelBinder",
 				"kafka");
-		MapPropertySource source = new MapPropertySource(STREAM_BINDER_HEADERS, map);
-		environment.getPropertySources().addLast(source);
+		// This doesn't work with all logging systems but it's a useful default so you see
+		// traces in logs without having to configure it.
+		map.put("logging.pattern.level",
+				"%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}");
+		addOrReplace(environment.getPropertySources(), map);
+	}
+
+	private void addOrReplace(MutablePropertySources propertySources,
+			Map<String, Object> map) {
+		MapPropertySource target = null;
+		if (propertySources.contains(PROPERTY_SOURCE_NAME)) {
+			PropertySource<?> source = propertySources.get(PROPERTY_SOURCE_NAME);
+			if (source instanceof MapPropertySource) {
+				target = (MapPropertySource) source;
+				for (String key : map.keySet()) {
+					if (!target.containsProperty(key)) {
+						target.getSource().put(key, map.get(key));
+					}
+				}
+			}
+		}
+		if (target == null) {
+			target = new MapPropertySource(PROPERTY_SOURCE_NAME, map);
+		}
+		if (!propertySources.contains(PROPERTY_SOURCE_NAME)) {
+			propertySources.addLast(target);
+		}
 	}
 
 	private void addHeaders(Map<String, Object> map, String type, String binder) {
