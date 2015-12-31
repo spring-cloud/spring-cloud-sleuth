@@ -143,15 +143,6 @@ public class TraceFilter extends OncePerRequestFilter
 			request.setAttribute(TRACE_REQUEST_ATTR, trace);
 		}
 
-		// Send new trace id back to the caller
-		addToResponseIfNotPresent(response, Trace.TRACE_ID_NAME,
-				trace.getSpan().getTraceId());
-		addToResponseIfNotPresent(response, Trace.SPAN_ID_NAME,
-				trace.getSpan().getSpanId());
-		if (skip) {
-			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
-		}
-
 		try {
 
 			addRequestAnnotations(request);
@@ -162,6 +153,9 @@ public class TraceFilter extends OncePerRequestFilter
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
 				// TODO: how to deal with response annotations and async?
 				return;
+			}
+			if (skip) {
+				addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 			}
 			if (trace != null) {
 				addResponseHeaders(response, trace.getSpan());
