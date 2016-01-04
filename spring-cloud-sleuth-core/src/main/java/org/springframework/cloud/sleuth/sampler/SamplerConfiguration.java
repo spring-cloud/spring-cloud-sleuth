@@ -15,7 +15,9 @@ public class SamplerConfiguration {
 	 * <li> 1.0 - 100% requests should be sampled </li>
 	 * <li> 0.8 - 80% of requests should be sampled </li>
 	 * <li> 0.0 - 0% requests should be sampled </li>
-	 * </ul?
+	 * </ul>
+	 *
+	 * The precision is whole-numbers only. We don't support 0.1% of the trace rate.
 	 */
-	private double percentage = 0.1;
+	private float percentage = 0.1f;
 }

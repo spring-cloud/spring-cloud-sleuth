@@ -17,7 +17,7 @@ public class PercentageBasedSamplerTest {
 
 	@Test
 	public void should_pass_all_samples_when_config_has_1_percentage() throws Exception {
-		samplerConfiguration.setPercentage(1d);
+		samplerConfiguration.setPercentage(1f);
 
 		boolean passed = new PercentageBasedSampler(samplerConfiguration, traceAccessor).next(null);
 
@@ -28,7 +28,7 @@ public class PercentageBasedSamplerTest {
 
 	@Test
 	public void should_reject_all_samples_when_config_has_0_percentage() throws Exception {
-		samplerConfiguration.setPercentage(0d);
+		samplerConfiguration.setPercentage(0f);
 
 		boolean passed = new PercentageBasedSampler(samplerConfiguration, traceAccessor).next(null);
 
@@ -39,7 +39,7 @@ public class PercentageBasedSamplerTest {
 
 	@Test
 	public void should_pass_given_percent_of_samples() throws Exception {
-		samplerConfiguration.setPercentage(0.3d);
+		samplerConfiguration.setPercentage(0.3f);
 
 		int numberOfSampledElements = countNumberOfSampledElements();
 

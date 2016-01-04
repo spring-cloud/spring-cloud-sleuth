@@ -13,10 +13,10 @@ import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
 import static junitparams.JUnitParamsRunner.$;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.sampler.UuidToBigIntegerConverterTest.TestData.sample;
+import static org.springframework.cloud.sleuth.sampler.TraceIdToBigIntegerConverterTest.TestData.sample;
 
 @RunWith(JUnitParamsRunner.class)
-public class UuidToBigIntegerConverterTest {
+public class TraceIdToBigIntegerConverterTest {
 
 	private static final BigInteger TWO = new BigInteger("2");
 
@@ -25,7 +25,7 @@ public class UuidToBigIntegerConverterTest {
 	public void should_convert_uuid_to_big_integer(TestData testData) throws Exception {
 		UUID uuid = new UUID(testData.mostSignificantBits, testData.leastSignificantBits);
 
-		BigInteger bigInteger = UuidToBigIntegerConverter.uuidToBigInt(uuid);
+		BigInteger bigInteger = TraceIdToBigIntegerConverter.traceIdToBigInt(uuid.toString());
 
 		then(bigInteger).isEqualByComparingTo(testData.expectedInteger);
 	}
