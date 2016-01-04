@@ -26,6 +26,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.cloud.sleuth.Filter;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
 import org.springframework.cloud.sleuth.Span;
@@ -54,6 +55,7 @@ import org.springframework.web.util.UrlPathHelper;
  * @author Marcin Grzejszczak, 4financeIT
  * @author Spencer Gibb
  * @author Dave Syer
+ * @author Gaurav Rai Mazra
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class TraceFilter extends OncePerRequestFilter
@@ -71,13 +73,17 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private ApplicationEventPublisher publisher;
 
-	public TraceFilter(TraceManager traceManager) {
+	private Filter filter;
+	
+	public TraceFilter(TraceManager traceManager, Filter filter) {
 		this.traceManager = traceManager;
+		this.filter = filter;
 		this.skipPattern = DEFAULT_SKIP_PATTERN;
 	}
 
-	public TraceFilter(TraceManager traceManager, Pattern skipPattern) {
+	public TraceFilter(TraceManager traceManager, Filter filter, Pattern skipPattern) {
 		this.traceManager = traceManager;
+		this.filter = filter;
 		this.skipPattern = skipPattern;
 	}
 
@@ -199,12 +205,15 @@ public class TraceFilter extends OncePerRequestFilter
 		Enumeration<String> headerNames = request.getHeaderNames();
 		while (headerNames.hasMoreElements()) {
 			String name = headerNames.nextElement();
-			Enumeration<String> values = request.getHeaders(name);
-			while (values.hasMoreElements()) {
-				String value = values.nextElement();
-				String key = "/http/request/headers/" + name.toLowerCase();
-				this.traceManager.addAnnotation(key, value);
-
+			// Accepts only those headers which is configured to be set
+			if (filter != null && filter.accept(name)) {
+				Enumeration<String> values = request.getHeaders(name);
+				while (values.hasMoreElements()) {
+					String value = values.nextElement();
+					String key = "/http/request/headers/" + name.toLowerCase();
+					this.traceManager.addAnnotation(key, value);
+	
+				}
 			}
 		}
 	}
