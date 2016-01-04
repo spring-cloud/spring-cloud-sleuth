@@ -1,29 +1,22 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.integration.TraceStompMessageContextPropagationChannelInterceptorTests.TestApplication;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
-import org.springframework.messaging.support.GenericMessage;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
@@ -34,78 +27,47 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes=TestApplication.class)
 @IntegrationTest
-public class TraceStompMessageContextPropagationChannelInterceptorTests implements MessageHandler {
-	@Autowired
-	@Qualifier("executorSubscribableChannel")
-	private ExecutorSubscribableChannel channel;
+public class TraceStompMessageContextPropagationChannelInterceptorTests extends AbstractTraceStompIntegrationTests {
 
-	@Autowired
-	private TraceManager traceManager;
-	
-	@Autowired
-	private AlwaysSampler sampler;
-	
-	private Message<?> message;
-
-	@Override
-	public void handleMessage(Message<?> message) throws MessagingException {
-		this.message = message;
-	}
-	
-	@org.junit.Before
-	public void init() {
-		this.channel.subscribe(this);
-	}
-	
-	@After
-	public void close() {
-		TraceContextHolder.removeCurrentTrace();
-		this.channel.unsubscribe(this);
-	}
-	
 	@Test
-	public void testSpanPropagation() {
-		final TraceManager traceManager = this.traceManager;
-		
-		Trace trace = traceManager.startSpan("testSendMessage", this.sampler, null);
-		Message<?> m = StompMessageBuilder.fromMessage(new GenericMessage<String>("Message2")).build();
+	public void should_propagate_span_information() {
+		Trace trace = givenALocallyStartedSpan();
+		Message<?> m = givenMessageToBeSampled();
 
-		this.channel.send(m);
-		
-		String expectedSpanId = trace.getSpan().getSpanId();
+		whenTheMessageWasSent(m);
+		String expectedTraceId = trace.getSpan().getTraceId();
 		traceManager.close(trace);
-		
-		Message<?> message = this.message;
 
-		assertNotNull("message was null", message);
-
-		String spanId = message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
-		assertEquals("spanId was wrong", expectedSpanId,  spanId);
-
-		String traceId = message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
-		assertNotNull("traceId was null", traceId);
+		thenReceivedMessageIsNotNull();
+		String traceId = thenTraceIdFromHeadersIsNotEmpty();
+		then(traceId).isEqualTo(expectedTraceId);
+		thenSpanIdFromHeadersIsNotEmpty();
 	}
-	
+
+	private void thenReceivedMessageIsNotNull() {
+		Message<?> message = stompMessageHandler.message;
+		then(message).isNotNull();
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	static class TestApplication {
-		@Autowired
-		TraceStompMessageChannelInterceptor stompChannelInterceptor;
-		
-		@Autowired
-		TraceStompMessageContextPropagationChannelInterceptor stompMessageContextChannelInterceptor;
-		
-		@Bean
-		public ExecutorSubscribableChannel executorSubscribableChannel() {
+
+		@Bean ExecutorSubscribableChannel executorSubscribableChannel(
+				TraceStompMessageChannelInterceptor stompChannelInterceptor,
+				TraceStompMessageContextPropagationChannelInterceptor stompMessageContextChannelInterceptor) {
 			ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
 			channel.addInterceptor(stompChannelInterceptor);
 			channel.addInterceptor(stompMessageContextChannelInterceptor);
 			return channel;
 		}
 
-		@Bean
-		public AlwaysSampler alwaysSampler() {
+		@Bean AlwaysSampler alwaysSampler() {
 			return new AlwaysSampler();
+		}
+
+		@Bean StompMessageHandler stompMessageHandler() {
+			return new StompMessageHandler();
 		}
 	}
 }

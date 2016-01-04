@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.Map;
-
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
@@ -30,6 +28,8 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.util.Assert;
+
+import java.util.Map;
 
 /**
  * 
@@ -51,9 +51,7 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 		if (DirectChannel.class.isAssignableFrom(AopUtils.getTargetClass(channel))) {
 			return message;
 		}
-
 		Span span = this.traceManager.getCurrentSpan();
-
 		if (span != null) {
 			return new MessageWithSpan(message, span);
 		} else {
@@ -66,7 +64,7 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 		if (message instanceof MessageWithSpan) {
 			MessageWithSpan messageWithSpan = (MessageWithSpan) message;
 			Message<?> messageToHandle = messageWithSpan.message;
-			populatePropagatedContext(messageWithSpan.span, messageToHandle, channel);
+			populatePropagatedContext(messageWithSpan.span);
 
 			return message;
 		}
@@ -83,7 +81,7 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 		return postReceive(message, channel);
 	}
 
-	protected void populatePropagatedContext(Span span, Message<?> message, MessageChannel channel) {
+	protected void populatePropagatedContext(Span span) {
 		if (span != null) {
 			ORIGINAL_CONTEXT.set(this.traceManager.continueSpan(span).getSavedTrace());
 		}
@@ -116,11 +114,9 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 					span.addAnnotation(key, value);
 				}
 			}
-
 			Object payload = message.getPayload();
 			if (payload != null) {
 				span.addAnnotation("/messaging/payload/type", payload.getClass().getCanonicalName());
-
 				if (payload instanceof String) {
 					span.addAnnotation("/messaging/payload/size", String.valueOf(((String) payload).length()));
 				} else if (payload instanceof byte[]) {

@@ -16,16 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
+
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Builder class to create STOMP message
@@ -77,16 +77,13 @@ public class StompMessageBuilder {
 
 	public Message<?> build() {
 		SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
-		String key;
-		Object value;
 		for (Map.Entry<String, Object> entry : this.headers.entrySet()) {
-			key = entry.getKey();
+			String key = entry.getKey();
 			if (key != null) {
-				value = entry.getValue();
+				Object value = entry.getValue();
 				pushHeaders(headerAccessor, key, value);
 			}
 		}
-
 		return org.springframework.messaging.support.MessageBuilder.createMessage(this.message.getPayload(),
 				headerAccessor.getMessageHeaders());
 	}
