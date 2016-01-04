@@ -34,6 +34,7 @@ import java.util.Map;
 /**
  * 
  * @author Gaurav Rai Mazra
+ * @author Marcin Grzejszczak
  *
  */
 public class TraceStompMessageContextPropagationChannelInterceptor extends ChannelInterceptorAdapter
@@ -63,9 +64,7 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 	public final Message<?> postReceive(Message<?> message, MessageChannel channel) {
 		if (message instanceof MessageWithSpan) {
 			MessageWithSpan messageWithSpan = (MessageWithSpan) message;
-			Message<?> messageToHandle = messageWithSpan.message;
 			populatePropagatedContext(messageWithSpan.span);
-
 			return message;
 		}
 		return message;
@@ -114,15 +113,7 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 					span.addAnnotation(key, value);
 				}
 			}
-			Object payload = message.getPayload();
-			if (payload != null) {
-				span.addAnnotation("/messaging/payload/type", payload.getClass().getCanonicalName());
-				if (payload instanceof String) {
-					span.addAnnotation("/messaging/payload/size", String.valueOf(((String) payload).length()));
-				} else if (payload instanceof byte[]) {
-					span.addAnnotation("/messaging/payload/size", String.valueOf(((byte[]) payload).length));
-				}
-			}
+			SpanMessageHeaders.addPayloadAnnotations(message.getPayload(), span);
 		}
 
 		@Override

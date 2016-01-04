@@ -16,14 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility for manipulating message headers related to span data.
@@ -68,8 +68,10 @@ public class SpanMessageHeaders {
 				span.addAnnotation(key, value);
 			}
 		}
+		addPayloadAnnotations(message.getPayload(), span);
+	}
 
-		Object payload = message.getPayload();
+	static void addPayloadAnnotations(Object payload, Span span) {
 		if (payload != null) {
 			span.addAnnotation("/messaging/payload/type",
 					payload.getClass().getCanonicalName());

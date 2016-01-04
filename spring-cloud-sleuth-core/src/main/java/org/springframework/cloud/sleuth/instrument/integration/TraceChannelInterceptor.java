@@ -16,30 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import org.springframework.cloud.sleuth.MilliSpan;
-import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.integration.channel.AbstractMessageChannel;
-import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.support.ChannelInterceptorAdapter;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Dave Syer
  *
  */
-public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
+public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private ThreadLocal<Trace> traceHolder = new ThreadLocal<>();
 
-	private final TraceManager traceManager;
-
 	public TraceChannelInterceptor(TraceManager traceManager) {
-		this.traceManager = traceManager;
+		super(traceManager);
 	}
 
 	@Override
@@ -56,59 +49,20 @@ public class TraceChannelInterceptor extends ChannelInterceptorAdapter {
 			return SpanMessageHeaders.addSpanHeaders(message,
 					this.traceManager.getCurrentSpan());
 		}
-		String spanId = getHeader(message, Trace.SPAN_ID_NAME);
-		String traceId = getHeader(message, Trace.TRACE_ID_NAME);
-		String name = "message/" + getChannelName(channel);
-		Trace trace;
-		if (StringUtils.hasText(traceId)) {
-
-			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
-			String parentId = getHeader(message, Trace.PARENT_ID_NAME);
-			if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-				span.exportable(false);
-			}
-			String processId = getHeader(message, Trace.PROCESS_ID_NAME);
-			String spanName = getHeader(message, Trace.SPAN_NAME_NAME);
-			if (spanName != null) {
-				span.name(spanName);
-			}
-			if (processId != null) {
-				span.processId(processId);
-			}
-			if (parentId != null) {
-				span.parent(parentId);
-			}
-			span.remote(true);
-
-			trace = this.traceManager.startSpan(name, span.build());
-		}
-		else {
-			if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-				trace = this.traceManager.startSpan(name, IsTracingSampler.INSTANCE, null);
-			} else {
-				trace = this.traceManager.startSpan(name);
-			}
-		}
+		String name = getMessageChannelName(channel);
+		Trace trace = startSpan(buildSpan(message), name, message);
 		this.traceHolder.set(trace);
 		return SpanMessageHeaders.addSpanHeaders(message, trace.getSpan());
 	}
 
-	private String getChannelName(MessageChannel channel) {
-		String name = null;
-		if (channel instanceof IntegrationObjectSupport) {
-			name = ((IntegrationObjectSupport) channel).getComponentName();
+	private Trace startSpan(Span span, String name, Message message) {
+		if (span != null) {
+			return traceManager.startSpan(name, span);
 		}
-		if (name == null && channel instanceof AbstractMessageChannel) {
-			name = ((AbstractMessageChannel) channel).getFullChannelName();
+		if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+			return traceManager.startSpan(name, IsTracingSampler.INSTANCE, null);
 		}
-		if (name == null) {
-			name = channel.toString();
-		}
-		return name;
-	}
-
-	private String getHeader(Message<?> message, String name) {
-		return (String) message.getHeaders().get(name);
+		return this.traceManager.startSpan(name);
 	}
 
 }
