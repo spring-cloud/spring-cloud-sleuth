@@ -34,7 +34,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes=TestApplication.class)
 @IntegrationTest
-@DirtiesContext
 public class TraceStompMessageContextPropagationChannelInterceptorTests implements MessageHandler {
 	@Autowired
 	@Qualifier("executorSubscribableChannel")

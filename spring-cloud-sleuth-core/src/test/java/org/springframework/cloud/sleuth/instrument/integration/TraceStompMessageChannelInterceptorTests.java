@@ -1,11 +1,13 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.assertj.core.api.Assertions.registerCustomDateFormat;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 
+import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,7 +28,6 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.GenericMessage;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
@@ -37,97 +38,130 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = TestApplication.class)
 @IntegrationTest
-@DirtiesContext
-public class TraceStompMessageChannelInterceptorTests implements MessageHandler {
+public class TraceStompMessageChannelInterceptorTests {
 	@Autowired
 	@Qualifier("executorSubscribableChannel")
 	private ExecutorSubscribableChannel channel;
 
-	@Autowired
-	private TraceManager traceManager;
-
-	private Message<?> message;
-	
-	@Override
-	public void handleMessage(Message<?> message) throws MessagingException {
-		this.message = message;
-	}
+	@Autowired TraceManager traceManager;
+	@Autowired StompMessageHandler stompMessageHandler;
 	
 	@Before
 	public void init() {
-		this.channel.subscribe(this);
+		this.channel.subscribe(stompMessageHandler);
 	}
 
 	@After
 	public void close() {
 		TraceContextHolder.removeCurrentTrace();
-		this.channel.unsubscribe(this);
+		this.channel.unsubscribe(stompMessageHandler);
 	}
 
 	@Test
-	public void test_whenHeaderIsStamped_thenNoSpanCreation() {
-		Message<?> message = StompMessageBuilder.fromMessage(new GenericMessage<String>("Message2")).setHeader(Trace.NOT_SAMPLED_NAME, "").build();
-		
-		this.channel.send(message);
-		assertNotNull("message was null", this.message);
-		
-		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
-		assertNull("spanId was not null", spanId);
-		
-		Assert.assertEquals(message.getPayload(), this.message.getPayload());
+	public void should_not_create_span_if_message_contains_not_sampled_header() {
+		Message<?> message = givenMessageNotToBeSampled();
+
+		whenTheMessageWasSent(message);
+
+		thenSpanIdFromHeadersIsEmpty();
+		thenReceivedMessageIsEqualToTheSentOne(message);
 	}
 
 	@Test
-	public void test_whenMessageHeaderIsNotStamped_thenSpanCreation() {
-		Message<?> message = StompMessageBuilder.fromMessage(new GenericMessage<String>("Message2")).build();
-		this.channel.send(message);
-		assertNotNull("message was null", this.message);
+	public void should_create_span_when_headers_dont_contain_not_sampled() {
+		Message<?> message = givenMessageToBeSampled();
 
-		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
-		assertNotNull("spanId was null", spanId);
+		whenTheMessageWasSent(message);
 
-		String traceId = this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
-		assertNotNull("traceId was null", traceId);
-		assertNull(TraceContextHolder.getCurrentTrace());
+		thenSpanIdFromHeadersIsNotEmpty();
+		thenTraceIdFromHeadersIsNotEmpty();
+		then(TraceContextHolder.getCurrentTrace()).isNull();
 	}
 
 	@Test
-	public void test_whenMessageHeaderNotStamped_thenHeaderCreation() {
-		final TraceManager traceManager = this.traceManager;
-		final Trace trace = traceManager.startSpan("testSendMessage", new AlwaysSampler(), null);
-		Message<?> message = StompMessageBuilder.fromMessage(new GenericMessage<String>("Message2")).build();
-		this.channel.send(message);
-		
+	public void should_propagate_headers_when_message_was_sent_during_local_span_starting() {
+		Trace trace = givenALocallyStartedSpan();
+		Message<?> message = givenMessageToBeSampled();
+
+		whenTheMessageWasSent(message);
 		traceManager.close(trace);
 
-		assertNotNull("message was null", this.message);
+		String spanId = thenSpanIdFromHeadersIsNotEmpty();
+		String traceId = thenTraceIdFromHeadersIsNotEmpty();
+		then(traceId).isEqualTo(trace.getSpan().getTraceId());
+		then(spanId).isEqualTo(trace.getSpan().getSpanId());
+		then(TraceContextHolder.getCurrentTrace()).isNull();
+	}
 
-		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
-		assertNotNull("spanId was null", spanId);
+	private Trace givenALocallyStartedSpan() {
+		return traceManager.startSpan("testSendMessage", new AlwaysSampler(), null);
+	}
 
-		String traceId = this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
-		assertNotNull("traceId was null", traceId);
-		
-		assertEquals("Trace context is not continued", trace.getSpan().getTraceId(), traceId);
-		assertEquals("Trace context is not continued", trace.getSpan().getSpanId(), spanId);
-		assertNull(TraceContextHolder.getCurrentTrace());
+	private Message<?> givenMessageNotToBeSampled() {
+		return StompMessageBuilder.fromMessage(new GenericMessage<>("Message2")).setHeader(Trace.NOT_SAMPLED_NAME, "").build();
+	}
+
+	private Message<?> givenMessageToBeSampled() {
+		return StompMessageBuilder.fromMessage(new GenericMessage<>("Message2")).build();
+	}
+
+	private void whenTheMessageWasSent(Message<?> message) {
+		this.channel.send(message);
+		then(stompMessageHandler.message).isNotNull();
+	}
+
+	private String thenSpanIdFromHeadersIsEmpty() {
+		String header = getValueFromHeaders(Trace.SPAN_ID_NAME);
+		then(header).as("Span id should be empty").isNullOrEmpty();
+		return header;
+	}
+
+	private String thenSpanIdFromHeadersIsNotEmpty() {
+		String header = getValueFromHeaders(Trace.SPAN_ID_NAME);
+		then(header).as("Span id should not be empty").isNotEmpty();
+		return header;
+	}
+
+	private String thenTraceIdFromHeadersIsNotEmpty() {
+		String header = getValueFromHeaders(Trace.TRACE_ID_NAME);
+		then(header).as("Trace id should not be empty").isNotEmpty();
+		return header;
+	}
+
+	private void thenReceivedMessageIsEqualToTheSentOne(Message<?> message) {
+		then(message.getPayload()).isEqualTo(stompMessageHandler.message.getPayload());
+	}
+
+	private String getValueFromHeaders(String headerName) {
+		return stompMessageHandler.message.getHeaders().get(headerName, String.class);
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
 	static class TestApplication {
-		@Autowired
-		TraceStompMessageChannelInterceptor stompChannelInterceptor;
-		@Bean
-		public ExecutorSubscribableChannel executorSubscribableChannel() {
+
+		@Bean ExecutorSubscribableChannel executorSubscribableChannel(TraceStompMessageChannelInterceptor stompChannelInterceptor) {
 			ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
 			channel.addInterceptor(stompChannelInterceptor);
 			return channel;
 		}
 
-		@Bean
-		public AlwaysSampler alwaysSampler() {
+		@Bean StompMessageHandler stompMessageHandler() {
+			return new StompMessageHandler();
+		}
+
+		@Bean AlwaysSampler alwaysSampler() {
 			return new AlwaysSampler();
+		}
+	}
+
+	static class StompMessageHandler implements MessageHandler {
+
+		Message<?> message;
+
+		@Override
+		public void handleMessage(Message<?> message) throws MessagingException {
+			this.message = message;
 		}
 	}
 }
