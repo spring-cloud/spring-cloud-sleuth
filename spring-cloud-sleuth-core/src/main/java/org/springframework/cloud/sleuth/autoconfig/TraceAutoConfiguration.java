@@ -19,7 +19,9 @@ package org.springframework.cloud.sleuth.autoconfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.sampler.DefaultStringToUuidConverter;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.sampler.StringToUuidConverter;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -44,6 +46,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	public Sampler<Void> defaultTraceSampler() {
 		return new IsTracingSampler();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public StringToUuidConverter stringToUuidConverter() {
+		return new DefaultStringToUuidConverter();
 	}
 
 	@Bean

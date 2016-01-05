@@ -1,6 +1,5 @@
 package org.springframework.cloud.sleuth.sampler;
 
-import org.assertj.core.data.Percentage;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
@@ -14,27 +13,34 @@ public class PercentageBasedSamplerTest {
 
 	SamplerConfiguration samplerConfiguration = new SamplerConfiguration();
 	TraceAccessor traceAccessor = traceReturningSpanWithUuid();
+	StringToUuidConverter stringToUuidConverter = new DefaultStringToUuidConverter();
 
 	@Test
 	public void should_pass_all_samples_when_config_has_1_percentage() throws Exception {
 		samplerConfiguration.setPercentage(1f);
 
-		boolean passed = new PercentageBasedSampler(samplerConfiguration, traceAccessor).next(null);
-
 		for (int i = 0; i < 10; i++) {
-			then(passed).isTrue();
+			then(new PercentageBasedSampler(samplerConfiguration, traceAccessor, stringToUuidConverter).next(null)).isTrue();
 		}
+
 	}
 
 	@Test
 	public void should_reject_all_samples_when_config_has_0_percentage() throws Exception {
 		samplerConfiguration.setPercentage(0f);
 
-		boolean passed = new PercentageBasedSampler(samplerConfiguration, traceAccessor).next(null);
-
 		for (int i = 0; i < 10; i++) {
-			then(passed).isFalse();
+			then(new PercentageBasedSampler(samplerConfiguration, traceAccessor, stringToUuidConverter).next(null)).isFalse();
 		}
+	}
+
+	@Test
+	public void should_reject_sample_when_trace_id_is_invalid() throws Exception {
+		samplerConfiguration.setPercentage(1f);
+
+		boolean passed = new PercentageBasedSampler(samplerConfiguration, traceReturningSpanWithInvalidUuid(), stringToUuidConverter).next(null);
+
+		then(passed).isFalse();
 	}
 
 	@Test
@@ -50,7 +56,7 @@ public class PercentageBasedSamplerTest {
 	private int countNumberOfSampledElements() {
 		int passedCounter = 0;
 		for (int i = 0; i < 100; i++) {
-			boolean passed = new PercentageBasedSampler(samplerConfiguration, traceReturningSpanWithUuid()).next(null);
+			boolean passed = new PercentageBasedSampler(samplerConfiguration, traceReturningSpanWithUuid(), stringToUuidConverter).next(null);
 			passedCounter = passedCounter + (passed ? 1 : 0);
 		}
 		return passedCounter;
@@ -61,6 +67,20 @@ public class PercentageBasedSamplerTest {
 			@Override
 			public Span getCurrentSpan() {
 				return MilliSpan.builder().traceId(new JdkIdGenerator().generateId().toString()).build();
+			}
+
+			@Override
+			public boolean isTracing() {
+				return true;
+			}
+		};
+	}
+
+	private TraceAccessor traceReturningSpanWithInvalidUuid() {
+		return new TraceAccessor() {
+			@Override
+			public Span getCurrentSpan() {
+				return MilliSpan.builder().traceId("invalid uuid").build();
 			}
 
 			@Override

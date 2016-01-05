@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.sampler;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceAccessor;
@@ -20,14 +21,17 @@ import org.springframework.cloud.sleuth.TraceAccessor;
  *
  * @author Marcin Grzejszczak
  */
+@Slf4j
 public class PercentageBasedSampler implements Sampler<Void> {
 
-	private final SamplerConfiguration samplerConfiguration;
+	private final SamplerConfiguration configuration;
 	private final TraceAccessor traceAccessor;
+	private final StringToUuidConverter converter;
 
-	public PercentageBasedSampler(SamplerConfiguration samplerConfiguration, TraceAccessor traceAccessor) {
-		this.samplerConfiguration = samplerConfiguration;
+	public PercentageBasedSampler(SamplerConfiguration configuration, TraceAccessor traceAccessor, StringToUuidConverter converter) {
+		this.configuration = configuration;
 		this.traceAccessor = traceAccessor;
+		this.converter = converter;
 	}
 
 	@Override
@@ -36,9 +40,13 @@ public class PercentageBasedSampler implements Sampler<Void> {
 		if (currentSpan == null) {
 			return false;
 		}
-		int comparison = new UuidTraceIdToThresholdComparable(samplerConfiguration.getPercentage())
-				.compareTo(currentSpan.getTraceId());
-		return comparison <= 0;
+		try {
+			return new UuidTraceIdToThresholdComparable(configuration.getPercentage(), converter)
+					.compareTo(currentSpan.getTraceId()) <= 0;
+		} catch (InvalidUuidStringFormatException e) {
+			log.debug("Exception occurred while trying to compare trace id to threshold", e);
+			return false;
+		}
 	}
 
 }
