@@ -4,8 +4,6 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceAccessor;
 
-import java.math.BigInteger;
-
 /**
  * Sampler that based on the given percentage rate will allow sampling.
  *
@@ -24,8 +22,6 @@ import java.math.BigInteger;
  */
 public class PercentageBasedSampler implements Sampler<Void> {
 
-	private static final BigInteger MOD_DIVISOR = new BigInteger("100");
-
 	private final SamplerConfiguration samplerConfiguration;
 	private final TraceAccessor traceAccessor;
 
@@ -40,14 +36,9 @@ public class PercentageBasedSampler implements Sampler<Void> {
 		if (currentSpan == null) {
 			return false;
 		}
-		BigInteger traceAsInt = TraceIdToBigIntegerConverter.traceIdToBigInt(currentSpan.getTraceId());
-		BigInteger mod = traceAsInt.mod(MOD_DIVISOR);
-		return mod.compareTo(percentageAsBigInteger()) <= 0;
-	}
-
-	private BigInteger percentageAsBigInteger() {
-		long percents = (long) (samplerConfiguration.getPercentage() * 100);
-		return BigInteger.valueOf(percents);
+		int comparison = new UuidTraceIdToThresholdComparable(samplerConfiguration.getPercentage())
+				.compareTo(currentSpan.getTraceId());
+		return comparison <= 0;
 	}
 
 }
