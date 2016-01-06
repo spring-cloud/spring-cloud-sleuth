@@ -45,7 +45,7 @@ public class PercentageBasedSamplerTest {
 
 	@Test
 	public void should_pass_given_percent_of_samples() throws Exception {
-		int numberOfIterations = 100000;
+		int numberOfIterations = 10000;
 		float percentage = 0.3f;
 		samplerConfiguration.setPercentage(percentage);
 
