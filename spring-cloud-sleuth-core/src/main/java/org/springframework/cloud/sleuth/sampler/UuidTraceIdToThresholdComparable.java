@@ -8,7 +8,7 @@ import java.util.UUID;
  * Given the absolute value of a random 128 bit trace id, we expect inputs to be balanced across
  * 0-MAX. Threshold is the range of inputs between 0-MAX that we retain.
  *
- * Can be compared with a String UUID TraceId to see its relation to the provided threshold.
+ * This decodes a trace id in UUID format into a 128 bit number, then compares it against a threshold.
  *
  * @author Marcin Grzejszczak
  * @author Adrian Cole
