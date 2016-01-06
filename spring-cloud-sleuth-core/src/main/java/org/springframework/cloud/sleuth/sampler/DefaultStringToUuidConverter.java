@@ -16,9 +16,6 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class DefaultStringToUuidConverter implements StringToUuidConverter {
 
-	final AtomicLong successes = new AtomicLong();
-	final AtomicLong failures = new AtomicLong();
-
 	@Override
 	public UUID convert(String source) {
 		try {
@@ -33,19 +30,15 @@ public class DefaultStringToUuidConverter implements StringToUuidConverter {
 	}
 
 	/**
-	 * Increment counter of parsing success
-	 * @return incremented state of success
+	 * Override to increment your counter.
 	 */
-	protected long incrementSuccess() {
-		return successes.incrementAndGet();
+	protected void incrementSuccess() {
 	}
 
 
 	/**
-	 * Increment counter of parsing failures
-	 * @return incremented state of failures
+	 * Override to increment your counter.
 	 */
-	protected long incrementFailures() {
-		return failures.incrementAndGet();
+	protected void incrementFailures() {
 	}
 }

@@ -20,7 +20,6 @@ public class DefaultStringToUuidConverterTest {
 		UUID convertedUuid = defaultStringToUuidConverter.convert(uuidAsString);
 
 		then(convertedUuid).isEqualTo(expectedUuid);
-		then(defaultStringToUuidConverter.successes.get()).isEqualTo(1L);
 	}
 
 	@Test
@@ -30,6 +29,5 @@ public class DefaultStringToUuidConverterTest {
 		UUID convertedUuid = defaultStringToUuidConverter.convert(invalidUuidString);
 
 		then(convertedUuid).isNull();
-		then(defaultStringToUuidConverter.failures.get()).isEqualTo(1L);
 	}
 }
