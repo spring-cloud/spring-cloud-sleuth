@@ -1,29 +1,28 @@
 package org.springframework.cloud.sleuth.sampler;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
  * Given the absolute value of a random 128 bit trace id, we expect inputs to be balanced across
  * 0-MAX. Threshold is the range of inputs between 0-MAX that we retain.
  *
- * Can be compared with a UUID TraceId to see its relation to the provided threshold.
+ * Can be compared with a String UUID TraceId to see its relation to the provided threshold.
  */
 final class UuidTraceIdToThresholdComparable implements Comparable<String> {
 
 	private static final int EIGHT_BYTES = 64;
 	private static final int GREATER_THAN_THRESHOLD = 1;
+
 	/**
-	 * We're shifting the first 64 bits by 8 bytes (64 bits) to the left cause these are
-	 * the most significant bits. Then we're adding -1 (1111...1111). That's how we're getting
-	 * 1111....1111 (128 times '1')
+	 * 0111....1111 ('0' - for the sign and then 127 times '1')
 	 */
-	private static final BigInteger MAX_128 =
-			BigInteger.valueOf(Long.MAX_VALUE).shiftLeft(EIGHT_BYTES).add(BigInteger.valueOf(-1L));
+	static final BigInteger MAX_128 = max_128signed();
 
 	private final BigInteger threshold;
-	private final StringToUuidConverter stringToUuidConverter;
 
+	private final StringToUuidConverter stringToUuidConverter;
 	UuidTraceIdToThresholdComparable(float rate, StringToUuidConverter converter) {
 		threshold = MAX_128
 				.multiply(BigInteger.valueOf((int) (rate * 100))) // drops fractional percentage.
@@ -50,5 +49,17 @@ final class UuidTraceIdToThresholdComparable implements Comparable<String> {
 						.add(BigInteger.valueOf(uuid.getLeastSignificantBits()))
 						.abs();
 		return asInteger.compareTo(threshold);
+	}
+
+	/**
+	 * The Long.MAX_VALUE in binary 0 followed by 63 1s.
+	 *
+	 * We simulate a 128bit long, by doing the same, except following by 127 1s
+	 */
+	static BigInteger max_128signed() {
+		byte[] max_128signed = new byte[16];
+		Arrays.fill(max_128signed, (byte) -1); // initialize to 11111111
+		max_128signed[0] = (byte) 127; // reset MSBs to 01111111
+		return new BigInteger(max_128signed);
 	}
 }

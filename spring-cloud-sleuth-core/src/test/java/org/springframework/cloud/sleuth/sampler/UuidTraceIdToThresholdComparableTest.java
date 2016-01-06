@@ -32,6 +32,11 @@ public class UuidTraceIdToThresholdComparableTest {
 				.containsExactly(Stream.of(traceIds).filter(uuid -> smallerThanThreshold(sampler2, uuid)).toArray());
 	}
 
+	@Test
+	public void should_have_127_bit_number_as_max_long() {
+		then(UuidTraceIdToThresholdComparable.MAX_128.toString(2)).matches("^1+$").hasSize(127);
+	}
+
 	private boolean smallerThanThreshold(UuidTraceIdToThresholdComparable comparable, UUID traceId) {
 		return comparable.compareTo(traceId.toString()) == -1;
 	}
