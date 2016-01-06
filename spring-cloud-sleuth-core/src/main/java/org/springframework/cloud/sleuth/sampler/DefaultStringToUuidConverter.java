@@ -7,9 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Default implementation that converts String into UUID
- * On parse exceptions an exception is thrown and logged.
- *
- * Successful and failed parse attempts are registered in counters.
+ * On parse exceptions a null is returned.
  *
  * @author Marcin Grzejszczak
  */
