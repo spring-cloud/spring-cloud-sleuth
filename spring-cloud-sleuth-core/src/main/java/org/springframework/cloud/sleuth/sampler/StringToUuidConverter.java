@@ -10,5 +10,5 @@ import java.util.UUID;
 public interface StringToUuidConverter extends Converter<String, UUID> {
 
 	@Override
-	UUID convert(String source) throws InvalidUuidStringFormatException;
+	UUID convert(String source);
 }

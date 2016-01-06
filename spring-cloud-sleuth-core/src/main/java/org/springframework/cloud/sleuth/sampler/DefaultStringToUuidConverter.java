@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth.sampler;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -8,21 +10,42 @@ import java.util.concurrent.atomic.AtomicLong;
  * On parse exceptions an exception is thrown and logged.
  *
  * Successful and failed parse attempts are registered in counters.
+ *
+ * @author Marcin Grzejszczak
  */
+@Slf4j
 public class DefaultStringToUuidConverter implements StringToUuidConverter {
 
-	protected final AtomicLong successes = new AtomicLong();
-	protected final AtomicLong failures = new AtomicLong();
+	final AtomicLong successes = new AtomicLong();
+	final AtomicLong failures = new AtomicLong();
 
 	@Override
-	public UUID convert(String source) throws InvalidUuidStringFormatException {
+	public UUID convert(String source) {
 		try {
 			UUID uuid = UUID.fromString(source);
-			successes.incrementAndGet();
+			incrementSuccess();
 			return uuid;
 		} catch (IllegalArgumentException e) {
-			failures.incrementAndGet();
-			throw new InvalidUuidStringFormatException(source);
+			log.debug("Exception occurred while trying to parse String to UUID", e);
+			incrementFailures();
+			return null;
 		}
+	}
+
+	/**
+	 * Increment counter of parsing success
+	 * @return incremented state of success
+	 */
+	protected long incrementSuccess() {
+		return successes.incrementAndGet();
+	}
+
+
+	/**
+	 * Increment counter of parsing failures
+	 * @return incremented state of failures
+	 */
+	protected long incrementFailures() {
+		return failures.incrementAndGet();
 	}
 }

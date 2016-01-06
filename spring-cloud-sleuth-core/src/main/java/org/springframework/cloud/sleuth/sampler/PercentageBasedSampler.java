@@ -40,13 +40,8 @@ public class PercentageBasedSampler implements Sampler<Void> {
 		if (currentSpan == null) {
 			return false;
 		}
-		try {
-			return new UuidTraceIdToThresholdComparable(configuration.getPercentage(), converter)
-					.compareTo(currentSpan.getTraceId()) <= 0;
-		} catch (InvalidUuidStringFormatException e) {
-			log.debug("Exception occurred while trying to compare trace id to threshold", e);
-			return false;
-		}
+		return new UuidTraceIdToThresholdComparable(configuration.getPercentage(), converter)
+				.compareTo(currentSpan.getTraceId()) <= 0;
 	}
 
 }

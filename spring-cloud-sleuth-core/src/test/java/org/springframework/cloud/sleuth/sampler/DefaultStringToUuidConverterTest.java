@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.in;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.Assert.fail;
 
@@ -26,11 +27,9 @@ public class DefaultStringToUuidConverterTest {
 	public void should_fail_to_convert_string_to_uuid_and_increment_failures_counter() throws Exception {
 		String invalidUuidString = "non UUID format string";
 
-		try {
-			defaultStringToUuidConverter.convert(invalidUuidString);
-			fail();
-		} catch (InvalidUuidStringFormatException e) {
-			then(defaultStringToUuidConverter.failures.get()).isEqualTo(1L);
-		}
+		UUID convertedUuid = defaultStringToUuidConverter.convert(invalidUuidString);
+
+		then(convertedUuid).isNull();
+		then(defaultStringToUuidConverter.failures.get()).isEqualTo(1L);
 	}
 }

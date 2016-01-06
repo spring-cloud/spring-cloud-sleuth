@@ -11,13 +11,14 @@ import java.util.UUID;
  */
 final class UuidTraceIdToThresholdComparable implements Comparable<String> {
 
-	static final int EIGHT_BYTES = 64;
+	private static final int EIGHT_BYTES = 64;
+	private static final int GREATER_THAN_THRESHOLD = 1;
 	/**
 	 * We're shifting the first 64 bits by 8 bytes (64 bits) to the left cause these are
 	 * the most significant bits. Then we're adding -1 (1111...1111). That's how we're getting
 	 * 1111....1111 (128 times '1')
 	 */
-	static final BigInteger MAX_128 =
+	private static final BigInteger MAX_128 =
 			BigInteger.valueOf(Long.MAX_VALUE).shiftLeft(EIGHT_BYTES).add(BigInteger.valueOf(-1L));
 
 	private final BigInteger threshold;
@@ -41,6 +42,9 @@ final class UuidTraceIdToThresholdComparable implements Comparable<String> {
 	@Override
 	public int compareTo(String traceId) {
 		UUID uuid = stringToUuidConverter.convert(traceId);
+		if (uuid == null) {
+			return GREATER_THAN_THRESHOLD;
+		}
 		BigInteger asInteger = BigInteger.valueOf(uuid.getMostSignificantBits())
 						.shiftLeft(EIGHT_BYTES)
 						.add(BigInteger.valueOf(uuid.getLeastSignificantBits()))
