@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class DefaultStringToUuidConverter implements StringToUuidConverter {
 
+	/** Returns a UUID parsed from the input, or null if failed for any reason. */
 	@Override
 	public UUID convert(String source) {
 		try {
