@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * On parse exceptions a null is returned.
  *
  * @author Marcin Grzejszczak
+ * @author Adrian Cole
  */
 @Slf4j
 public class DefaultStringToUuidConverter implements StringToUuidConverter {

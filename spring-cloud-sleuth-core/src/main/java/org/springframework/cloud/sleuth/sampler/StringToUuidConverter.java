@@ -6,6 +6,9 @@ import java.util.UUID;
 
 /**
  * Interface showing how to convert String into UUID
+ *
+ * @author Marcin Grzejszczak
+ * @author Adrian Cole
  */
 public interface StringToUuidConverter extends Converter<String, UUID> {
 

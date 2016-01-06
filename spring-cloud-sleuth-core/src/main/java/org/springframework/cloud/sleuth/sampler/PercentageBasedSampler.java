@@ -19,6 +19,7 @@ import org.springframework.cloud.sleuth.TraceAccessor;
  * of data sampled differs from the provided percentage.
  *
  * @author Marcin Grzejszczak
+ * @author Adrian Cole
  */
 @Slf4j
 public class PercentageBasedSampler implements Sampler<Void> {

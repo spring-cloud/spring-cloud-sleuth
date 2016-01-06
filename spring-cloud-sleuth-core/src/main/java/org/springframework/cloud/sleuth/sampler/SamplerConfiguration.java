@@ -4,6 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Data;
 
+/**
+ * @author Marcin Grzejszczak
+ * @author Adrian Cole
+ */
 @ConfigurationProperties("spring.sleuth.sampler")
 @Data
 public class SamplerConfiguration {

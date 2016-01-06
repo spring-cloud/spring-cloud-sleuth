@@ -9,10 +9,13 @@ import java.util.UUID;
  * 0-MAX. Threshold is the range of inputs between 0-MAX that we retain.
  *
  * Can be compared with a String UUID TraceId to see its relation to the provided threshold.
+ *
+ * @author Marcin Grzejszczak
+ * @author Adrian Cole
  */
 final class UuidTraceIdToThresholdComparable implements Comparable<String> {
 
-	private static final int EIGHT_BYTES = 64;
+	private static final int SIXTY_FOUR_BITS = 64;
 	private static final int GREATER_THAN_THRESHOLD = 1;
 
 	/**
@@ -45,7 +48,7 @@ final class UuidTraceIdToThresholdComparable implements Comparable<String> {
 			return GREATER_THAN_THRESHOLD;
 		}
 		BigInteger asInteger = BigInteger.valueOf(uuid.getMostSignificantBits())
-						.shiftLeft(EIGHT_BYTES)
+						.shiftLeft(SIXTY_FOUR_BITS)
 						.add(BigInteger.valueOf(uuid.getLeastSignificantBits()))
 						.abs();
 		return asInteger.compareTo(threshold);
