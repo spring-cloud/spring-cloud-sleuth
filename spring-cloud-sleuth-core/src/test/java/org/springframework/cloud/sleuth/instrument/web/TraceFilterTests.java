@@ -104,6 +104,7 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpAnnotations();
+		verifySpanName(HeaderKeys.HTTP + "GET");
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
@@ -117,7 +118,7 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpAnnotations();
-
+		verifySpanName(HeaderKeys.HTTP + "GET");
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
@@ -132,6 +133,8 @@ public class TraceFilterTests {
 
 		verifyHttpAnnotations();
 
+		verifySpanName(HeaderKeys.HTTP + "GET");
+		
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
@@ -153,8 +156,12 @@ public class TraceFilterTests {
 			assertEquals("Planned", e.getMessage());
 		}
 		verifyHttpAnnotations(HttpStatus.INTERNAL_SERVER_ERROR);
-
+		verifySpanName(HeaderKeys.HTTP + "GET");
 		assertNull(TraceContextHolder.getCurrentTrace());
+	}
+	
+	public void verifySpanName(String value) {
+		assertEquals(this.span.getName(), value);
 	}
 
 	public void verifyHttpAnnotations() {
@@ -162,16 +169,9 @@ public class TraceFilterTests {
 	}
 
 	public void verifyHttpAnnotations(HttpStatus status) {
-		hasAnnotation(this.span, "/http/request/uri", "http://localhost/");
-		hasAnnotation(this.span, "/http/request/endpoint", "/");
-		hasAnnotation(this.span, "/http/request/method", "GET");
-		hasAnnotation(this.span, "/http/request/headers/accept",
-				MediaType.APPLICATION_JSON_VALUE);
-		hasAnnotation(this.span, "/http/request/headers/user-agent", "MockMvc");
-
-		hasAnnotation(this.span, "/http/response/status_code", status.toString());
-		hasAnnotation(this.span, "/http/response/headers/content-type",
-				MediaType.APPLICATION_JSON_VALUE);
+		hasAnnotation(this.span, HeaderKeys.HTTP_URL, "http://localhost/");
+		hasAnnotation(this.span, HeaderKeys.HTTP_URI, "/");
+		hasAnnotation(this.span, HeaderKeys.HTTP_STATUS_CODE, status.toString());
 	}
 
 	private void hasAnnotation(Span span, String name, String value) {

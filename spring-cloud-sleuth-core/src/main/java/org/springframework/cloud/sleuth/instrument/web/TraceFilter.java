@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
@@ -44,8 +43,8 @@ import org.springframework.web.util.UrlPathHelper;
 
 /**
  * Filter that takes the value of the {@link Trace#SPAN_ID_NAME} and
- * {@link Trace#TRACE_ID_NAME} header from either request or response and uses them to
- * create a new span.
+ * {@link Trace#TRACE_ID_NAME} header from either request or response and uses
+ * them to create a new span.
  *
  * @see TraceManager
  *
@@ -56,11 +55,9 @@ import org.springframework.web.util.UrlPathHelper;
  * @author Dave Syer
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
-public class TraceFilter extends OncePerRequestFilter
-		implements ApplicationEventPublisherAware {
+public class TraceFilter extends OncePerRequestFilter implements ApplicationEventPublisherAware {
 
-	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
-			+ ".TRACE";
+	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName() + ".TRACE";
 
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern.compile(
 			"/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream");
@@ -87,9 +84,8 @@ public class TraceFilter extends OncePerRequestFilter
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request,
-			HttpServletResponse response, FilterChain filterChain)
-					throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
@@ -98,14 +94,13 @@ public class TraceFilter extends OncePerRequestFilter
 		Trace trace = (Trace) request.getAttribute(TRACE_REQUEST_ATTR);
 		if (trace != null) {
 			this.traceManager.continueSpan(trace.getSpan());
-		}
-		else if (skip) {
+		} else if (skip) {
 			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 		}
 
 		String spanId = getHeader(request, response, Trace.SPAN_ID_NAME);
 		String traceId = getHeader(request, response, Trace.TRACE_ID_NAME);
-		String name = "http" + uri;
+		String name = HeaderKeys.HTTP + request.getMethod();
 		if (hasText(traceId)) {
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
@@ -131,13 +126,10 @@ public class TraceFilter extends OncePerRequestFilter
 			publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
 			request.setAttribute(TRACE_REQUEST_ATTR, trace);
 
-		}
-		else {
+		} else {
 			if (skip) {
-				trace = this.traceManager.startSpan(name, IsTracingSampler.INSTANCE,
-						null);
-			}
-			else {
+				trace = this.traceManager.startSpan(name, IsTracingSampler.INSTANCE, null);
+			} else {
 				trace = this.traceManager.startSpan(name);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, trace);
@@ -149,12 +141,10 @@ public class TraceFilter extends OncePerRequestFilter
 			addRequestAnnotations(request);
 			filterChain.doFilter(request, response);
 
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			exception = e;
 			throw e;
-		}
-		finally {
+		} finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
 				// TODO: how to deal with response annotations and async?
 				return;
@@ -166,8 +156,7 @@ public class TraceFilter extends OncePerRequestFilter
 				addResponseAnnotations(response, exception);
 				addResponseHeaders(response, trace.getSpan());
 				if (trace.getSavedTrace() != null) {
-					publish(new ServerSentEvent(this, trace.getSavedTrace().getSpan(),
-							trace.getSpan()));
+					publish(new ServerSentEvent(this, trace.getSavedTrace().getSpan(), trace.getSpan()));
 				}
 				// Double close to clean up the parent (remote span as well)
 				this.traceManager.close(this.traceManager.close(trace));
@@ -188,55 +177,31 @@ public class TraceFilter extends OncePerRequestFilter
 		}
 	}
 
-	// TODO: move annotation keys to constants
 	protected void addRequestAnnotations(HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.traceManager.addAnnotation("/http/request/uri",
-				request.getRequestURL().toString());
-		this.traceManager.addAnnotation("/http/request/endpoint", uri);
-		this.traceManager.addAnnotation("/http/request/method", request.getMethod());
 
-		Enumeration<String> headerNames = request.getHeaderNames();
-		while (headerNames.hasMoreElements()) {
-			String name = headerNames.nextElement();
-			Enumeration<String> values = request.getHeaders(name);
-			while (values.hasMoreElements()) {
-				String value = values.nextElement();
-				String key = "/http/request/headers/" + name.toLowerCase();
-				this.traceManager.addAnnotation(key, value);
-
-			}
-		}
+		this.traceManager.addAnnotation(HeaderKeys.HTTP_URL, request.getRequestURL().toString());
+		this.traceManager.addAnnotation(HeaderKeys.HTTP_URI, uri);
 	}
 
-	private void addResponseAnnotations(HttpServletResponse response, Throwable e) {
+	protected void addResponseAnnotations(HttpServletResponse response, Throwable e) {
 		if (response.getStatus() == HttpServletResponse.SC_OK && e != null) {
-			// Filter chain threw exception but the response status may not have been set
+			// Filter chain threw exception but the response status may not have
+			// been set
 			// yet, so we have to guess.
-			this.traceManager.addAnnotation("/http/response/status_code",
+			this.traceManager.addAnnotation(HeaderKeys.HTTP_STATUS_CODE,
 					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
-		}
-		else {
-			this.traceManager.addAnnotation("/http/response/status_code",
-					String.valueOf(response.getStatus()));
-		}
-
-		for (String name : response.getHeaderNames()) {
-			for (String value : response.getHeaders(name)) {
-				String key = "/http/response/headers/" + name.toLowerCase();
-				this.traceManager.addAnnotation(key, value);
-			}
+		} else {
+			this.traceManager.addAnnotation(HeaderKeys.HTTP_STATUS_CODE, String.valueOf(response.getStatus()));
 		}
 	}
 
-	private String getHeader(HttpServletRequest request, HttpServletResponse response,
-			String name) {
+	private String getHeader(HttpServletRequest request, HttpServletResponse response, String name) {
 		String value = request.getHeader(name);
 		return value != null ? value : response.getHeader(name);
 	}
 
-	private void addToResponseIfNotPresent(HttpServletResponse response, String name,
-			String value) {
+	private void addToResponseIfNotPresent(HttpServletResponse response, String name, String value) {
 		if (!hasText(response.getHeader(name))) {
 			response.addHeader(name, value);
 		}
@@ -246,4 +211,5 @@ public class TraceFilter extends OncePerRequestFilter
 	protected boolean shouldNotFilterAsyncDispatch() {
 		return false;
 	}
+
 }
