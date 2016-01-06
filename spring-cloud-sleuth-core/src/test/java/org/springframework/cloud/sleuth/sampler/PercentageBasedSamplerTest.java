@@ -45,17 +45,18 @@ public class PercentageBasedSamplerTest {
 
 	@Test
 	public void should_pass_given_percent_of_samples() throws Exception {
-		samplerConfiguration.setPercentage(0.3f);
+		int numberOfIterations = 100000;
+		float percentage = 0.3f;
+		samplerConfiguration.setPercentage(percentage);
 
-		int numberOfSampledElements = countNumberOfSampledElements();
+		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations);
 
-		//TODO: We have random data thus tests can fail due to this percentage. If that's the case we should change it to .isPositive()
-		then(numberOfSampledElements).isCloseTo(30, withPercentage(30));
+		then(numberOfSampledElements).isCloseTo((int) (numberOfIterations * percentage), withPercentage(3));
 	}
 
-	private int countNumberOfSampledElements() {
+	private int countNumberOfSampledElements(int numberOfIterations) {
 		int passedCounter = 0;
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < numberOfIterations; i++) {
 			boolean passed = new PercentageBasedSampler(samplerConfiguration, traceReturningSpanWithUuid(), stringToUuidConverter).next(null);
 			passedCounter = passedCounter + (passed ? 1 : 0);
 		}
