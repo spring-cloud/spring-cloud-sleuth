@@ -15,9 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +24,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
-import org.springframework.cloud.sleuth.Filter;
-import org.springframework.cloud.sleuth.ParamFilter;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -37,8 +32,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.google.common.base.Splitter;
-
 /**
  * Registers beans that add tracing to requests
  *
@@ -46,7 +39,6 @@ import com.google.common.base.Splitter;
  * @author Marcin Grzejszczak, 4financeIT
  * @author Michal Chmielarz, 4financeIT
  * @author Spencer Gibb
- * @author Gaurav Rai Mazra
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
@@ -76,35 +68,9 @@ public class TraceWebAutoConfiguration {
 	public FilterRegistrationBean traceWebFilter(ApplicationEventPublisher publisher) {
 		Pattern pattern = StringUtils.hasText(this.skipPattern) ? Pattern.compile(this.skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
-		TraceFilter filter = new TraceFilter(this.traceManager, paramFilter(), pattern);
+		TraceFilter filter = new TraceFilter(this.traceManager, pattern);
 		filter.setApplicationEventPublisher(publisher);
 		return new FilterRegistrationBean(filter);
 	}
-	
-	@Value("${spring.sleuth.instrument.web.paramPattern:}")
-	private String paramPattern;
-	
-	@Bean
-	public Filter paramFilter() {
-		List<String> params = new ArrayList<>();
-		if (StringUtils.hasText(this.paramPattern)) {
-			final String pattern = StringUtils.trimAllWhitespace(this.paramPattern);
-			final Iterator<String> itr =  Splitter.on(",").split(pattern).iterator();
-			while (itr.hasNext()) {
-				params.add(itr.next().toLowerCase());
-			}
-		}
-		else {
-			params.add("accept");
-			params.add("host");
-			params.add("origin");
-			params.add("user-agent");
-		}
-		
-		ParamFilter filter = new ParamFilter();
-		
-		return filter;
-	}
-	
 
 }
