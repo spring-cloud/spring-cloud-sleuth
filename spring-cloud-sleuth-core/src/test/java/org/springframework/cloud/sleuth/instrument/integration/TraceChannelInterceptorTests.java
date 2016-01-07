@@ -151,6 +151,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
+	// TODO: Refactor to parametrized test together with sending messages via channel
 	@Test
 	public void headerCreationViaMessagingTemplate() {
 		Trace trace = this.traceManager.startSpan("testSendMessage",
