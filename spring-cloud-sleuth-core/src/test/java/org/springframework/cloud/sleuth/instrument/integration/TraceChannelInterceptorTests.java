@@ -44,8 +44,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.test.annotation.DirtiesContext;
@@ -66,6 +68,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Autowired
 	private TraceManager traceManager;
+
+	@Autowired
+	private MessagingTemplate messagingTemplate;
 
 	@Autowired
 	private App app;
@@ -146,6 +151,22 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
+	@Test
+	public void headerCreationViaMessagingTemplate() {
+		Trace trace = this.traceManager.startSpan("testSendMessage",
+				new AlwaysSampler(), null);
+		messagingTemplate.send(MessageBuilder.withPayload("hi").build());
+		this.traceManager.close(trace);
+		assertNotNull("message was null", this.message);
+
+		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
+		assertNotNull("spanId was null", spanId);
+
+		String traceId = this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
+		assertNotNull("traceId was null", traceId);
+		assertNull(TraceContextHolder.getCurrentTrace());
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	static class App {
@@ -160,6 +181,11 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		@Bean
 		public DirectChannel channel() {
 			return new DirectChannel();
+		}
+
+		@Bean
+		public MessagingTemplate messagingTemplate() {
+			return new MessagingTemplate(channel());
 		}
 
 	}
