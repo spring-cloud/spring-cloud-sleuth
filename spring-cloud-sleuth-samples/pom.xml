@@ -18,6 +18,7 @@
 
 	<modules>
 		<module>spring-cloud-sleuth-sample</module>
+		<module>spring-cloud-sleuth-sample-test-core</module>
 		<module>spring-cloud-sleuth-sample-messaging</module>
 		<module>spring-cloud-sleuth-sample-ribbon</module>
 		<module>spring-cloud-sleuth-sample-zipkin</module>
@@ -26,17 +27,27 @@
 	</modules>
 
 	<build>
-      <pluginManagement>
-		<plugins>
-			<plugin>
-				<!--skip deploy (this is just a test module) -->
-				<artifactId>maven-deploy-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
-        </plugins>
-      </pluginManagement>
-    </build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<!--skip deploy (this is just a test module) -->
+					<artifactId>maven-deploy-plugin</artifactId>
+					<configuration>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-sample-test-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 </project>

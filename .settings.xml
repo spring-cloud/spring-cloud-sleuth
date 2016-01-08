@@ -62,5 +62,12 @@
 		</pluginRepository>
 	  </pluginRepositories>
     </profile>
+	<profile>
+	  <!--
+		  Turns on jdk8 for tests
+	  -->
+	  <id>ide</id>
+	  <activation><activeByDefault>true</activeByDefault></activation>
+	</profile>
   </profiles>
 </settings>

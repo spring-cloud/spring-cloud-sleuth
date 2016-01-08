@@ -16,20 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument;
 
-import java.util.concurrent.Callable;
-
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
+import java.util.concurrent.Callable;
 
 /**
  * @author Spencer Gibb
  */
 @Value
 @EqualsAndHashCode(callSuper = false)
-public class TraceCallable<V> extends TraceDelegate<Callable<V>>implements Callable<V> {
+public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Callable<V> {
+
 
 	public TraceCallable(TraceManager traceManager, Callable<V> delegate) {
 		super(traceManager, delegate);

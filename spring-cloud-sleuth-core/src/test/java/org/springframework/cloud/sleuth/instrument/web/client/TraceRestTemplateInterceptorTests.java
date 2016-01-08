@@ -66,6 +66,7 @@ public class TraceRestTemplateInterceptorTests {
 				new JdkIdGenerator(), this.publisher);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.traces)));
+		TraceContextHolder.removeCurrentTrace();
 	}
 
 	@After

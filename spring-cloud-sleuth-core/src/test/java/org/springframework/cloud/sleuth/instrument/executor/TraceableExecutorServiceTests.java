@@ -1,20 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.executor;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,9 +13,23 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.JdkIdGenerator;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.*;
 
 public class TraceableExecutorServiceTests {
 	private ApplicationEventPublisher publisher;
@@ -55,6 +54,7 @@ public class TraceableExecutorServiceTests {
 		this.traceManager = null;
 		this.traceManagerableExecutorService.shutdown();
 		this.executorService.shutdown();
+		TraceContextHolder.removeCurrentTrace();
 	}
 
 	@Test

@@ -89,37 +89,6 @@
 						</execution>
 					</executions>
 				</plugin>
-				<plugin>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.6</version>
-					<configuration>
-						<useFile>false</useFile>
-						<includes>
-							<include>**/*Spec.java</include>
-						</includes>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>animal-sniffer-maven-plugin</artifactId>
-					<version>1.7</version>
-					<executions>
-						<execution>
-							<id>signature-check</id>
-							<phase>verify</phase>
-							<goals>
-								<goal>check</goal>
-							</goals>
-						</execution>
-					</executions>
-					<configuration>
-						<signature>
-							<groupId>org.codehaus.mojo.signature</groupId>
-							<artifactId>java17</artifactId>
-							<version>1.0</version>
-						</signature>
-					</configuration>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -163,11 +132,6 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.codehaus.groovy</groupId>
-				<artifactId>groovy</artifactId>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
 				<groupId>com.jayway.awaitility</groupId>
 				<artifactId>awaitility</artifactId>
 				<version>1.7.0</version>
@@ -185,6 +149,12 @@
 				<version>1.0.4</version>
 				<scope>test</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>2.1.0</version>
+				<scope>test</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -194,6 +164,7 @@
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
+		<surefire.plugin.version>2.9</surefire.plugin.version>
 	</properties>
 
 	<profiles>
@@ -243,6 +214,45 @@
 					</snapshots>
 				</pluginRepository>
 			</pluginRepositories>
+		</profile>
+		<profile>
+			<id>integration</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>${surefire.plugin.version}</version>
+						<configuration>
+							<useFile>false</useFile>
+							<groups>tools.DockerTests</groups>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>!integration</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>${surefire.plugin.version}</version>
+						<configuration>
+							<useFile>false</useFile>
+							<excludes>
+								<exclude>**/Abstract*.java</exclude>
+								<exclude>**/*DockerTests.java</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>ide</id>

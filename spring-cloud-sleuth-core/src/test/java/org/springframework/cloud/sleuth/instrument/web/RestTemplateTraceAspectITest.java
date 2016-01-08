@@ -1,19 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static junitparams.JUnitParamsRunner.$;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.concurrent.Callable;
-
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -38,10 +26,17 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
+import java.util.concurrent.Callable;
 
-@SpringApplicationConfiguration(classes = {RestTemplateTraceAspectITest.CorrelationIdAspectSpecConfiguration.class})
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static junitparams.JUnitParamsRunner.$;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringApplicationConfiguration(classes = {RestTemplateTraceAspectITest.CorrelationIdAspectTestConfiguration.class})
 @RunWith(JUnitParamsRunner.class)
 public class RestTemplateTraceAspectITest extends MvcWiremockITest {
 
@@ -92,7 +87,7 @@ public class RestTemplateTraceAspectITest extends MvcWiremockITest {
 	@EnableAsync
 	@DefaultTestAutoConfiguration
 	@Import(AspectTestingController.class)
-	public static class CorrelationIdAspectSpecConfiguration {
+	public static class CorrelationIdAspectTestConfiguration {
 	}
 
 	@RestController

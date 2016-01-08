@@ -127,8 +127,7 @@ public class ZipkinSpanListenerTests {
 		Trace context = this.traceManager.startSpan("foo");
 		this.traceManager.close(context);
 		assertEquals(1, this.test.spans.size());
-		assertThat(this.test.spans.get(0).getBinary_annotations())
-				.extracting("host.service_name")
+		assertThat(this.test.spans.get(0).getBinary_annotations().get(0).getHost().getService_name())
 				.isEqualTo("unknown"); // TODO: "unknown" bc process id, documented as not nullable, is null.
 	}
 

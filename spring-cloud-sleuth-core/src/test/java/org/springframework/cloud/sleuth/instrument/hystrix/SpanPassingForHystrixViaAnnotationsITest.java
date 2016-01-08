@@ -1,9 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
-import java.util.concurrent.atomic.AtomicReference;
-
+import com.jayway.awaitility.Awaitility;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,8 +16,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.jayway.awaitility.Awaitility;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
@@ -29,6 +28,7 @@ public class SpanPassingForHystrixViaAnnotationsITest {
 	@Autowired HystrixCommandInvocationSpanCatcher hystrixCommandInvocationSpanCatcher;
 	@Autowired TraceManager traceManager;
 
+	
 	@Test
 	public void should_set_span_on_an_hystrix_command_annotated_method() {
 		Span span = givenASpanInCurrentThread();

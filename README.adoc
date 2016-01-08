@@ -69,10 +69,11 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master
 == Building
 
 :jdkversion: 1.7
+:testjdkversion: 1.8
 
 === Basic Compile and Test
 
-To build the source you will need to install JDK {jdkversion}.
+To build the source you will need to install JDK {jdkversion}. However to run the tests you need {testjdkversion}.
 
 Spring Cloud uses Maven for most build-related activities, and you
 should be able to get off the ground quite quickly by cloning the

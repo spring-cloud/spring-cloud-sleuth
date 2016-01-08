@@ -27,7 +27,7 @@ import lombok.Value;
  */
 @Value
 @EqualsAndHashCode(callSuper = false)
-public class TraceRunnable extends TraceDelegate<Runnable>implements Runnable {
+public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 
 	public TraceRunnable(TraceManager traceManager, Runnable delegate) {
 		super(traceManager, delegate);

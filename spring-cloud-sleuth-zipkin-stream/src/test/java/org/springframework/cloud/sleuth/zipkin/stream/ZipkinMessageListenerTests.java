@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth.zipkin.stream;
 import io.zipkin.BinaryAnnotation;
 import io.zipkin.Endpoint;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Objects;
+
 import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.stream.Host;
@@ -70,8 +73,9 @@ public class ZipkinMessageListenerTests {
 	public void spanWithoutAnnotationsLogsComponent() {
 		io.zipkin.Span result = ZipkinMessageListener.convert(span, host);
 
-		assertThat(result.binaryAnnotations)
-				.containsOnly(BinaryAnnotation.create("lc", span.getProcessId(), endpoint));
+		assertThat(result.binaryAnnotations).hasSize(1);
+		assertThat(result.binaryAnnotations.get(0)).isEqualToComparingFieldByField(
+				BinaryAnnotation.create("lc", span.getProcessId().toLowerCase(), endpoint));
 	}
 
 	// TODO: "unknown" bc process id, documented as not nullable, is null in some tests.

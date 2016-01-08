@@ -1,10 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
-import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
-import static org.assertj.core.api.BDDAssertions.then;
-
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.MilliSpan;
@@ -16,8 +15,9 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.JdkIdGenerator;
 
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixThreadPoolProperties;
+import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
+import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class TraceCommandTest {
 
@@ -25,9 +25,20 @@ public class TraceCommandTest {
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
 			new JdkIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
 
+	@Before
+	public void setup() {
+		TraceContextHolder.removeCurrentTrace();
+	}
+
+	@After
+	public void cleanup() {
+		TraceContextHolder.removeCurrentTrace();
+	}
+
 	@Test
 	public void should_remove_span_from_thread_local_after_finishing_work()
 			throws Exception {
+		TraceContextHolder.removeCurrentTrace();
 		Trace firstTraceFromHystrix = givenACommandWasExecuted(traceReturningCommand());
 
 		Trace secondTraceFromHystrix = whenCommandIsExecuted(traceReturningCommand());

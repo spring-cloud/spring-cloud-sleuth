@@ -4,10 +4,10 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>spring-cloud-sleuth-sample-messaging</artifactId>
+	<artifactId>spring-cloud-sleuth-sample-test-core</artifactId>
 	<packaging>jar</packaging>
-	<name>spring-cloud-sleuth-sample-messaging</name>
-	<description>Spring Cloud Sleuth Sample</description>
+	<name>Spring Cloud Sleuth Sample Test Core</name>
+	<description>Test classes for Spring Cloud Samples</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -17,26 +17,17 @@
 	</parent>
 
 	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<!--skip deploy -->
-				<artifactId>maven-deploy-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
-		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<!--skip deploy (this is just a test module) -->
+					<artifactId>maven-deploy-plugin</artifactId>
+					<configuration>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 	<properties>
@@ -73,6 +64,10 @@
 			<artifactId>lombok</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
@@ -80,17 +75,36 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<scope>test</scope>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.jayway.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
-			<scope>test</scope>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-sample-test-core</artifactId>
-			<scope>test</scope>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>docker-compose</artifactId>
+			<version>0.9.8</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${testcontainers.jackson.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${testcontainers.jackson.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>${testcontainers.jackson.version}</version>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 

@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -42,9 +43,9 @@ import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { TraceWebAutoConfiguration.class,
-		FeignTraceTest.TestConfiguration.class })
+@SpringApplicationConfiguration(classes = { FeignTraceTest.TestConfiguration.class })
 @WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
+@DirtiesContext
 public class FeignTraceTest {
 
 	@Autowired
@@ -63,13 +64,13 @@ public class FeignTraceTest {
 	}
 
 	@Test
-	public void shouldWorkWhenNotTracing() {
+	public void shouldCreateANewSpanWhenNoPreviousTracingWasPresent() {
 		// when
 		ResponseEntity<String> response = this.testFeignInterface.getNoTrace();
 
 		// then
-		then(getHeader(response, Trace.TRACE_ID_NAME)).isNull();
-		then(this.listener.getEvents()).isEmpty();
+		then(getHeader(response, Trace.TRACE_ID_NAME)).isNotNull();
+		then(this.listener.getEvents()).isNotEmpty();
 	}
 
 	@Test
@@ -85,7 +86,6 @@ public class FeignTraceTest {
 
 		// then
 		then(getHeader(response, Trace.TRACE_ID_NAME)).isEqualTo(currentTraceId);
-		then(getHeader(response, Trace.PARENT_ID_NAME)).isEqualTo(currentParentId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 
@@ -149,7 +149,7 @@ public class FeignTraceTest {
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
 				@RequestHeader(name = Trace.TRACE_ID_NAME, required = false) String traceId) {
-			then(traceId).isNull();
+			then(traceId).isNotNull();
 			return "OK";
 		}
 

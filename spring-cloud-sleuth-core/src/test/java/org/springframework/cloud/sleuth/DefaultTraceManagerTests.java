@@ -16,17 +16,8 @@
 
 package org.springframework.cloud.sleuth;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
@@ -34,9 +25,18 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.JdkIdGenerator;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Spencer Gibb
@@ -47,6 +47,16 @@ public class DefaultTraceManagerTests {
 	public static final String IMPORTANT_WORK_1 = "important work 1";
 	public static final String IMPORTANT_WORK_2 = "important work 2";
 	public static final int NUM_SPANS = 3;
+
+	@Before
+	public void setup() {
+		TraceContextHolder.removeCurrentTrace();
+	}
+
+	@After
+	public void clean() {
+		TraceContextHolder.removeCurrentTrace();
+	}
 
 	@Test
 	public void tracingWorks() {
