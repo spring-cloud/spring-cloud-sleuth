@@ -26,6 +26,7 @@
 	</scm>
 
 	<modules>
+		<module>spring-cloud-sleuth-dependencies</module>
 		<module>spring-cloud-sleuth-core</module>
 		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-sleuth-stream</module>
@@ -127,70 +128,10 @@
 		<dependencies>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-netflix</artifactId>
-				<version>${spring-cloud-netflix.version}</version>
+				<artifactId>spring-cloud-sleuth-dependencies</artifactId>
+				<version>${project.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.integration</groupId>
-				<artifactId>spring-integration-core</artifactId>
-				<version>${spring-integration.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-sleuth-core</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-sleuth-zipkin</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-sleuth-stream</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-sleuth-zipkin-stream</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-zipkin</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-sleuth</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-spancollector-scribe</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aspectj</groupId>
-				<artifactId>aspectjrt</artifactId>
-				<version>${aspectj.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aspectj</groupId>
-				<artifactId>aspectjweaver</artifactId>
-				<version>${aspectj.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin</groupId>
-				<artifactId>zipkin-java-server</artifactId>
-				<version>${zipkin-java.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin</groupId>
-				<artifactId>zipkin-java-jdbc</artifactId>
-				<version>${zipkin-java.version}</version>
 			</dependency>
 			<!-- Spock -->
 			<dependency>
@@ -248,11 +189,7 @@
 	</dependencyManagement>
 
 	<properties>
-		<brave.version>3.2.0</brave.version>
-		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
-		<aspectj.version>1.8.4</aspectj.version>
 		<spock.version>1.0-groovy-2.4</spock.version>
-		<zipkin-java.version>0.1.2</zipkin-java.version>
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
