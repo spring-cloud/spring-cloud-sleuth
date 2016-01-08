@@ -30,10 +30,6 @@
 		</pluginManagement>
 	</build>
 
-	<properties>
-		<testcontainers.jackson.version>2.1.0</testcontainers.jackson.version>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

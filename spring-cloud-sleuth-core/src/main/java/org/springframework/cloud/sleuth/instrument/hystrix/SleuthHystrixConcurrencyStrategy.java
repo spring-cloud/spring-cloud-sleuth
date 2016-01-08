@@ -19,7 +19,7 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 			HystrixPlugins.getInstance().registerConcurrencyStrategy(this);
 		} catch (Exception e) {
 			HystrixConcurrencyStrategy concurrencyStrategy = HystrixPlugins.getInstance().getConcurrencyStrategy();
-			log.warn("Failed to register Sleuth Hystrix Concurrency Strategy. Will use the current one which is [" + concurrencyStrategy + "]", e);
+			log.debug("Failed to register Sleuth Hystrix Concurrency Strategy. Will use the current one which is [" + concurrencyStrategy + "]", e);
 		}
 	}
 

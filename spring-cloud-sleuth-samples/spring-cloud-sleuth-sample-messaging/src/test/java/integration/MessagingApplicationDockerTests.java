@@ -21,7 +21,6 @@ import com.twitter.zipkin.gen.Span;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +34,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.testcontainers.containers.DockerComposeContainer;
 import sample.SampleMessagingApplication;
-import tools.*;
+import tools.AbstractIntegrationTest;
+import tools.AssertingRestTemplate;
+import tools.IntegrationTestSpanCollector;
+import tools.RequestSendingRunnable;
 
 import java.io.File;
 import java.util.Collection;
@@ -46,7 +48,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringApplicationConfiguration(classes = { MessagingApplicationDockerTests.Config.class, SampleMessagingApplication.class })
 @WebIntegrationTest
 @Slf4j
-@Ignore("Ignored until working on profile")
 public class MessagingApplicationDockerTests extends AbstractIntegrationTest {
 
 	private static int port = 3381;

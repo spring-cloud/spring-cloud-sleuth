@@ -12,3 +12,4 @@ _site/
 *.iml
 *.swp
 .factorypath
+*.log
