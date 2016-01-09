@@ -1,4 +1,6 @@
 language: java
+jdk:
+  - oraclejdk8
 # To use the more powerful, GCE-powered trusty, which also has a newer JDK!
 # See https://docs.travis-ci.com/user/trusty-ci-environment/
 sudo: required
