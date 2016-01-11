@@ -29,7 +29,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 abstract public class AbstractIntegrationTest {
 
 	@Value("${test.pollinterval:1}") protected int pollInterval;
-	@Value("${test.timeout:1}") protected int timeout;
+	@Value("${test.timeout:10}") protected int timeout;
 
 	protected ConditionFactory await() {
 		return Awaitility.await().pollInterval(pollInterval, SECONDS).atMost(timeout, SECONDS);
