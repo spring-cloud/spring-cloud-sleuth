@@ -14,6 +14,7 @@ import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -23,6 +24,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
 		SpanPassingForHystrixViaAnnotationsITest.TestConfig.class })
+@DirtiesContext
 public class SpanPassingForHystrixViaAnnotationsITest {
 
 	@Autowired HystrixCommandInvocationSpanCatcher hystrixCommandInvocationSpanCatcher;
