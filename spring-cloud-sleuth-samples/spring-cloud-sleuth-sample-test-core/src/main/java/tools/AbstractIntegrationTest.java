@@ -15,23 +15,35 @@
  */
 package tools;
 
+import com.github.kristofa.brave.SpanCollector;
+import com.github.kristofa.brave.scribe.ScribeSpanCollector;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
-import org.junit.experimental.categories.Category;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.*;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+
+import java.net.URI;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
-@Category(DockerTests.class)
-abstract public class AbstractIntegrationTest {
+@Slf4j
+public abstract class AbstractIntegrationTest {
 
-	@Value("${test.pollinterval:1}") protected int pollInterval;
-	@Value("${test.timeout:10}") protected int timeout;
+	protected static int pollInterval = 1;
+	protected static int timeout = 120;
+	protected RestTemplate restTemplate = new AssertingRestTemplate();
 
-	protected ConditionFactory await() {
+	protected static ConditionFactory await() {
 		return Awaitility.await().pollInterval(pollInterval, SECONDS).atMost(timeout, SECONDS);
 	}
 
@@ -46,5 +58,121 @@ abstract public class AbstractIntegrationTest {
 			h = 31 * h + string.charAt(i);
 		}
 		return h;
+	}
+
+	String zipkinHashedHexStringTraceId(String traceId) {
+		long hashedTraceId = zipkinHashedTraceId(traceId);
+		return Long.toHexString(hashedTraceId);
+	}
+
+	protected static String getDockerUrl() {
+		URI dockerUri = getDockerURI();
+		if (StringUtils.isEmpty(dockerUri.getScheme())) {
+			return "http://localhost";
+		}
+		return "http://" + dockerUri.getHost();
+	}
+
+	protected static URI getDockerURI() {
+		String dockerHost = System.getenv("DOCKER_HOST");
+		if (StringUtils.isEmpty(dockerHost)) {
+			return URI.create("http://localhost");
+		}
+		return URI.create(dockerHost);
+	}
+
+	protected Runnable zipkinQueryServerIsUp() {
+		return new Runnable() {
+			@Override
+			public void run() {
+				ResponseEntity<String> response = endpointToCheckZipkinQueryHealth();
+				log.info("Response from the Zipkin query with current traces [{}]", response);
+				then(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+				log.info("Zipkin query server is up!");
+			}
+		};
+	}
+
+	protected Runnable zipkinCollectorServerIsUp() {
+		return new Runnable() {
+			@Override
+			public void run() {
+				ResponseEntity<String> response = endpointToCheckZipkinCollectorHealth();
+				log.info("Response from the Zipkin collector's health endpoint is [{}]", response);
+				then(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+				log.info("Zipkin collector server is up!");
+			}
+		};
+	}
+
+	protected ResponseEntity<String> endpointToCheckZipkinQueryHealth() {
+		URI uri = URI.create(getZipkinServicesQueryUrl());
+		log.info("Sending request to the Zipkin query service [{}]", uri);
+		return exchangeRequest(uri);
+	}
+
+	protected ResponseEntity<String> endpointToCheckZipkinCollectorHealth() {
+		URI uri = URI.create(getZipkinCollectorHealthUrl());
+		log.info("Sending request to the Zipkin collector service [{}]", uri);
+		return exchangeRequest(uri);
+	}
+
+	protected ResponseEntity<String> checkStateOfTheTraceId(String traceId) {
+		String hexTraceId = zipkinHashedHexStringTraceId(traceId);
+		URI uri = URI.create(getZipkinTraceQueryUrl() + hexTraceId);
+		log.info("Sending request to the Zipkin query service [{}]. Checking presence of trace id [{}] and its hex version [{}]", uri, traceId, hexTraceId);
+		return exchangeRequest(uri);
+	}
+
+	protected ResponseEntity<String> exchangeRequest(URI uri) {
+		return restTemplate.exchange(
+				new RequestEntity<>(new HttpHeaders(), HttpMethod.GET, uri), String.class
+		);
+	}
+
+	protected String getZipkinTraceQueryUrl() {
+		return getDockerUrl() + ":9411/api/v1/trace/";
+	}
+
+	protected String getZipkinServicesQueryUrl() {
+		return getDockerUrl() + ":9411/api/v1/services";
+	}
+
+	protected String getZipkinCollectorHealthUrl() {
+		return getDockerUrl() + ":9900/health";
+	}
+
+	@Configuration
+	public static class Config {
+		@Bean
+		SpanCollector integrationTestSpanCollector() {
+			return new IntegrationTestSpanCollector();
+		}
+	}
+
+	@Configuration
+	@Slf4j
+	public static class ZipkinConfig {
+		@Bean
+		@SneakyThrows
+		public ScribeSpanCollector spanCollector(final ZipkinProperties zipkin) {
+			await().until(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						ZipkinConfig.this.getSpanCollector(zipkin);
+					} catch (Exception e) {
+						log.error("Exception occurred while trying to connect to zipkin [" + e.getCause() + "]");
+						throw new AssertionError(e);
+					}
+				}
+			});
+			return getSpanCollector(zipkin);
+		}
+
+		private ScribeSpanCollector getSpanCollector(ZipkinProperties zipkin) {
+			return new ScribeSpanCollector(getDockerURI().getHost(),
+					zipkin.getPort(), zipkin.getCollector());
+		}
 	}
 }

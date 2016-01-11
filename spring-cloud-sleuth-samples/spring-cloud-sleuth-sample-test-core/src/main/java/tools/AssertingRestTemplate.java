@@ -48,7 +48,7 @@ public class AssertingRestTemplate extends RestTemplate {
 		try {
 			return super.doExecute(url, method, requestCallback, responseExtractor);
 		} catch (Exception e) {
-			log.error("Exception occurred while sending the message", e);
+			log.error("Exception occurred while sending the message to uri [" + url +"]. Exception [" + e.getCause() + "]");
 			throw new AssertionError(e);
 		}
 	}

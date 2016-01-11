@@ -15,7 +15,6 @@
  */
 package integration;
 
-import com.github.kristofa.brave.SpanCollector;
 import com.twitter.zipkin.gen.BinaryAnnotation;
 import com.twitter.zipkin.gen.Span;
 import lombok.extern.slf4j.Slf4j;
@@ -26,16 +25,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
 import org.testcontainers.containers.DockerComposeContainer;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
-import tools.AssertingRestTemplate;
 import tools.IntegrationTestSpanCollector;
 import tools.RequestSendingRunnable;
 
@@ -45,14 +41,14 @@ import java.util.Collection;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { MessagingApplicationDockerTests.Config.class, SampleMessagingApplication.class })
+@SpringApplicationConfiguration(classes = { AbstractIntegrationTest.Config.class, SampleMessagingApplication.class })
 @WebIntegrationTest
+@TestPropertySource(properties="sample.zipkin.enabled=true")
 @Slf4j
 public class MessagingApplicationDockerTests extends AbstractIntegrationTest {
 
 	private static int port = 3381;
 	private static String sampleAppUrl = "http://localhost:" + port;
-	RestTemplate restTemplate = new AssertingRestTemplate();
 	@Autowired IntegrationTestSpanCollector integrationTestSpanCollector;
 
 	@ClassRule
@@ -106,10 +102,4 @@ public class MessagingApplicationDockerTests extends AbstractIntegrationTest {
 		then(integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.getTrace_id() == zipkinHashedTraceId(traceId))).isTrue();
 	}
 
-	@Configuration
-	static class Config {
-		@Bean SpanCollector integrationTestSpanCollector() {
-			return new IntegrationTestSpanCollector();
-		}
-	}
 }
