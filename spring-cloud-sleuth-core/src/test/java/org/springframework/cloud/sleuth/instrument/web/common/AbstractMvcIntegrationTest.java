@@ -20,7 +20,7 @@ import org.springframework.web.context.WebApplicationContext;
  * @author 4financeIT
  */
 @WebIntegrationTest(randomPort = true)
-public abstract class MvcITest {
+public abstract class AbstractMvcIntegrationTest {
 
 	@Autowired protected WebApplicationContext webApplicationContext;
 	@Autowired protected ApplicationContext applicationContext;

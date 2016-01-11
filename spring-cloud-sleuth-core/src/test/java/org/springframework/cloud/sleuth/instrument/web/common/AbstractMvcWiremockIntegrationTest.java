@@ -23,7 +23,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
  * @author 4financeIT
  */
 @ContextConfiguration(classes = {MockServerConfiguration.class})
-public abstract class MvcWiremockITest extends MvcITest {
+public abstract class AbstractMvcWiremockIntegrationTest extends AbstractMvcIntegrationTest {
 
 	protected WireMock wireMock;
 	@Autowired protected HttpMockServer httpMockServer;

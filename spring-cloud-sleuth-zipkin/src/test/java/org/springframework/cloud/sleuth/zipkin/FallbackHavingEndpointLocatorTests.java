@@ -10,7 +10,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FallbackHavingEndpointLocatorTest {
+public class FallbackHavingEndpointLocatorTests {
 
 	@Mock DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
 	@Mock ServerPropertiesEndpointLocator serverPropertiesEndpointLocator;

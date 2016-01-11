@@ -22,8 +22,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
-		SpanPassingForHystrixViaAnnotationsITest.TestConfig.class })
-public class SpanPassingForHystrixViaAnnotationsITest {
+		SpanPassingForHystrixViaAnnotationsIntegrationTests.TestConfig.class })
+public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 
 	@Autowired HystrixCommandInvocationSpanCatcher hystrixCommandInvocationSpanCatcher;
 	@Autowired TraceManager traceManager;

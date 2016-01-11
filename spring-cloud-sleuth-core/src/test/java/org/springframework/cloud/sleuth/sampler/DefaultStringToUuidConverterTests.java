@@ -4,11 +4,9 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.in;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.fail;
 
-public class DefaultStringToUuidConverterTest {
+public class DefaultStringToUuidConverterTests {
 
 	DefaultStringToUuidConverter defaultStringToUuidConverter = new DefaultStringToUuidConverter();
 

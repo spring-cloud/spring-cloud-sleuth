@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.data.Percentage.withPercentage;
 
-public class UuidTraceIdToThresholdComparableTest {
+public class UuidTraceIdToThresholdComparableTests {
 
 	final UUID[] traceIds = createRandomUuids();
 

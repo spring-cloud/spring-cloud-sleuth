@@ -12,7 +12,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.HttpMockServer;
-import org.springframework.cloud.sleuth.instrument.web.common.MvcWiremockITest;
+import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcWiremockIntegrationTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -36,9 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringApplicationConfiguration(classes = {RestTemplateTraceAspectITest.CorrelationIdAspectTestConfiguration.class})
+@SpringApplicationConfiguration(classes = {RestTemplateTraceAspectIntegrationTests.CorrelationIdAspectTestConfiguration.class})
 @RunWith(JUnitParamsRunner.class)
-public class RestTemplateTraceAspectITest extends MvcWiremockITest {
+public class RestTemplateTraceAspectIntegrationTests extends AbstractMvcWiremockIntegrationTest {
 
 	@ClassRule public static final SpringClassRule SCR = new SpringClassRule();
 	@Rule public final SpringMethodRule springMethodRule = new SpringMethodRule();

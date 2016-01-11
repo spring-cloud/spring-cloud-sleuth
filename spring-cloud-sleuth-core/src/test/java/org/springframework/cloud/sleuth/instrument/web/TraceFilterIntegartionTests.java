@@ -11,7 +11,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.common.MvcITest;
+import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MvcResult;
@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterIntegartionTests.class)
 @DefaultTestAutoConfiguration
-public class TraceFilterIntegartionTests extends MvcITest {
+public class TraceFilterIntegartionTests extends AbstractMvcIntegrationTest {
 
 	@Autowired
 	TraceManager traceManager;

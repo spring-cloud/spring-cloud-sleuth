@@ -20,7 +20,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.JdkIdGenerator;
 
 @RunWith(MockitoJUnitRunner.class)
-public class TraceCallableTest {
+public class TraceCallableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),

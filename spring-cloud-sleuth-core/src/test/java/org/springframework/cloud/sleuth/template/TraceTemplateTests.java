@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.template;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Trace;
@@ -12,7 +10,9 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.JdkIdGenerator;
 
-public class TraceTemplateTest {
+import static org.assertj.core.api.BDDAssertions.then;
+
+public class TraceTemplateTests {
 
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(), new JdkIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
 

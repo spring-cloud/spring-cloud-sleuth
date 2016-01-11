@@ -9,7 +9,7 @@ import org.springframework.util.JdkIdGenerator;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.data.Percentage.withPercentage;
 
-public class PercentageBasedSamplerTest {
+public class PercentageBasedSamplerTests {
 
 	SamplerConfiguration samplerConfiguration = new SamplerConfiguration();
 	TraceAccessor traceAccessor = traceReturningSpanWithUuid();

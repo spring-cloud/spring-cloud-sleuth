@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
-public class TraceRunnableTest {
+public class TraceRunnableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),

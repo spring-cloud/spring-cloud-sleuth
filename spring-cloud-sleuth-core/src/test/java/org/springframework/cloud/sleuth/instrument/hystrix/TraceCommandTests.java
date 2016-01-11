@@ -19,7 +19,7 @@ import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class TraceCommandTest {
+public class TraceCommandTests {
 
 	static final String EXPECTED_TRACE_ID = "A";
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
