@@ -44,6 +44,7 @@ public class RequestSendingRunnable implements Runnable {
 
 	@Override
 	public void run() {
+		log.info("Sending the request to url [{}] with trace id in headers [{}]", url, traceId);
 		ResponseEntity<String> responseEntity = restTemplate.exchange(requestWithTraceId(traceId), String.class);
 		then(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		log.info("Received the following response [{}]", responseEntity);

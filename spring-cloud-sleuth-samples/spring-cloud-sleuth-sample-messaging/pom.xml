@@ -118,6 +118,11 @@
 			<version>${testcontainers.jackson.version}</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>docker-compose</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 </project>

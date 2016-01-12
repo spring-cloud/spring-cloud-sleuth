@@ -31,9 +31,8 @@ import org.springframework.util.JdkIdGenerator;
 import org.springframework.util.StringUtils;
 import org.testcontainers.containers.DockerComposeContainer;
 import sample.SampleMessagingApplication;
-import tools.AbstractIntegrationTest;
+import tools.AbstractDockerIntegrationTest;
 import tools.IntegrationTestSpanCollector;
-import tools.RequestSendingRunnable;
 
 import java.io.File;
 import java.util.Collection;
@@ -41,11 +40,11 @@ import java.util.Collection;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { AbstractIntegrationTest.Config.class, SampleMessagingApplication.class })
+@SpringApplicationConfiguration(classes = { AbstractDockerIntegrationTest.Config.class, SampleMessagingApplication.class })
 @WebIntegrationTest
 @TestPropertySource(properties="sample.zipkin.enabled=true")
 @Slf4j
-public class MessagingApplicationDockerTests extends AbstractIntegrationTest {
+public class MessagingApplicationDockerTests extends AbstractDockerIntegrationTest {
 
 	private static int port = 3381;
 	private static String sampleAppUrl = "http://localhost:" + port;
@@ -92,10 +91,6 @@ public class MessagingApplicationDockerTests extends AbstractIntegrationTest {
 				.filter(binaryAnnotation -> StringUtils.hasText(binaryAnnotation.getKey()))
 				.map(BinaryAnnotation::getKey)
 				.anyMatch(binaryAnnotationKey::equals)).isTrue();
-	}
-
-	private RequestSendingRunnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, String traceId) {
-		return new RequestSendingRunnable(restTemplate, endpoint, traceId);
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(String traceId) {

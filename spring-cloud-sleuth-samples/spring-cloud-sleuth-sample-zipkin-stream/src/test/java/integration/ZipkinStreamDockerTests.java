@@ -15,49 +15,42 @@
  */
 package integration;
 
+import example.ZipkinStreamServerApplication;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
 import org.testcontainers.containers.DockerComposeContainer;
-import sample.SampleZipkinApplication;
 import tools.AbstractDockerIntegrationTest;
 
 import java.io.File;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { AbstractDockerIntegrationTest.ZipkinConfig.class, SampleZipkinApplication.class })
-@WebIntegrationTest
-@TestPropertySource(properties="sample.zipkin.enabled=true")
+@SpringApplicationConfiguration(classes = { SampleApp.Config.class,
+		AbstractDockerIntegrationTest.ZipkinConfig.class, ZipkinStreamServerApplication.class })
+@WebIntegrationTest()
 @Slf4j
-public class ZipkinDockerTests extends AbstractDockerIntegrationTest {
+public class ZipkinStreamDockerTests extends AbstractDockerIntegrationTest {
 
-	private static final String APP_NAME = "testsleuthzipkin";
-	private static int port = 3380;
+	private static int port = 9411;
 	private static String sampleAppUrl = "http://localhost:" + port;
 
 	@ClassRule
 	public static DockerComposeContainer environment =
 			new DockerComposeContainer(new File("src/test/resources/docker-compose.yml"))
 					.withExposedService("rabbitmq_1", 5672)
-					.withExposedService("mysql_1", 3306)
-					.withExposedService("query_1", 9411);
-
-	@Before
-	public void setup() {
-		await().until(zipkinQueryServerIsUp());
-	}
+					.withExposedService("rabbitmq_1", 15672)
+					.withExposedService("mysql_1", 3306);
 
 	@Test
 	@SneakyThrows
 	public void should_propagate_spans_to_zipkin() {
+		await().until(zipkinServerIsUp());
 		String traceId = new JdkIdGenerator().generateId().toString();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/hi2", traceId));
@@ -66,7 +59,7 @@ public class ZipkinDockerTests extends AbstractDockerIntegrationTest {
 	}
 
 	@Override
-	protected String getAppName() {
-		return APP_NAME;
+	protected String getZipkinRootUrl() {
+		return "http://localhost";
 	}
 }
