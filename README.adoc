@@ -116,8 +116,15 @@ NOTE: If all else fails, build with the command from `.travis.yml` (usually
 ==== Integration tests
 
 You can run the integration tests that boot up via docker compose the necessary
-middleware during project building. To do that you need to run maven with the
-`integration` profile.
+middleware during project building. To do that you need to:
+
+Set up the DOCKER_HOST environment variable to point to your docker daemon
+
+----
+$ export DOCKER_HOST=tcp://127.0.0.1:2376
+----
+
+Run Maven with the `integration` profile.
 
 ----
 $ ./mvnw install -Pintegration
