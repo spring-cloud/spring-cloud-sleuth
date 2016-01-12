@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Base interface for gathering and reporting statistics about a block of execution.
+ * Interface for gathering and reporting statistics about a block of execution.
  * <p/>
  * Spans should form a directed acyclic graph structure. It should be possible to keep
  * following the parents of a span until you arrive at a span with no parents.
@@ -103,28 +103,28 @@ public interface Span {
 	boolean isExportable();
 
 	/**
-	 * Add a data annotation associated with this span
+	 * Add a tag or data annotation associated with this span
 	 */
-	void addAnnotation(String key, String value);
+	void tag(String key, String value);
 
 	/**
-	 * Add a timeline annotation associated with this span
+	 * Add a log or timeline annotation associated with this span
 	 */
-	void addTimelineAnnotation(String msg);
+	void log(String msg);
 
 	/**
-	 * Get data associated with this span (read only)
+	 * Get tag data associated with this span (read only)
 	 * <p/>
 	 * <p/>
 	 * Will never be null.
 	 */
-	Map<String, String> getAnnotations();
+	Map<String, String> tags();
 
 	/**
-	 * Get any timeline annotations (read only)
+	 * Get any logs or annotations (read only)
 	 * <p/>
 	 * <p/>
 	 * Will never be null.
 	 */
-	List<TimelineAnnotation> getTimelineAnnotations();
+	List<Log> logs();
 }

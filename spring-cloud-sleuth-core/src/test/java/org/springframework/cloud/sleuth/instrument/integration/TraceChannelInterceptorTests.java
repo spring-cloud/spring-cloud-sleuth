@@ -47,7 +47,6 @@ import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.test.annotation.DirtiesContext;
@@ -156,7 +155,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	public void headerCreationViaMessagingTemplate() {
 		Trace trace = this.traceManager.startSpan("testSendMessage",
 				new AlwaysSampler(), null);
-		messagingTemplate.send(MessageBuilder.withPayload("hi").build());
+		this.messagingTemplate.send(MessageBuilder.withPayload("hi").build());
 		this.traceManager.close(trace);
 		assertNotNull("message was null", this.message);
 

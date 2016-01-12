@@ -41,10 +41,10 @@ public class MilliSpan implements Span {
 	private final String spanId;
 	private boolean remote = false;
 	private boolean exportable = true;
-	private final Map<String, String> annotations = new LinkedHashMap<>();
+	private final Map<String, String> tags = new LinkedHashMap<>();
 	private final String processId;
 	@Singular
-	private final List<TimelineAnnotation> timelineAnnotations = new ArrayList<>();
+	private final List<Log> logs = new ArrayList<>();
 
 	public static MilliSpan.MilliSpanBuilder builder() {
 		return new MilliSpan().toBuilder();
@@ -99,24 +99,24 @@ public class MilliSpan implements Span {
 	}
 
 	@Override
-	public void addAnnotation(String key, String value) {
-		this.annotations.put(key, value);
+	public void tag(String key, String value) {
+		this.tags.put(key, value);
 	}
 
 	@Override
-	public void addTimelineAnnotation(String msg) {
-		this.timelineAnnotations.add(new TimelineAnnotation(System.currentTimeMillis(),
+	public void log(String msg) {
+		this.logs.add(new Log(System.currentTimeMillis(),
 				msg));
 	}
 
 	@Override
-	public Map<String, String> getAnnotations() {
-		return Collections.unmodifiableMap(this.annotations);
+	public Map<String, String> tags() {
+		return Collections.unmodifiableMap(this.tags);
 	}
 
 	@Override
-	public List<TimelineAnnotation> getTimelineAnnotations() {
-		return Collections.unmodifiableList(this.timelineAnnotations);
+	public List<Log> logs() {
+		return Collections.unmodifiableList(this.logs);
 	}
 
 }

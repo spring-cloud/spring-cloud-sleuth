@@ -43,7 +43,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	public Endpoint local() {
 		int address = getAddress();
 		Integer port = getPort();
-		Endpoint ep = new Endpoint(address, port.shortValue(), appName);
+		Endpoint ep = new Endpoint(address, port.shortValue(), this.appName);
 		return ep;
 	}
 
@@ -68,7 +68,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	private int getAddress() {
 		if (this.serverProperties!=null && this.serverProperties.getAddress() != null) {
-			return InetUtils.convert(this.serverProperties.getAddress()).getIpAddressAsInt();
+			return InetUtils.getIpAddressAsInt(this.serverProperties.getAddress().getHostAddress());
 		}
 		else {
 			return 127 <<24|1;

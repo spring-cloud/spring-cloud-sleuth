@@ -83,7 +83,7 @@ public class ZipkinSpanListenerTests {
 	@Test
 	public void convertsTimestampAndDurationToMicroseconds() {
 		long start = System.currentTimeMillis();
-		parent.addTimelineAnnotation("http/request/retry"); // System.currentTimeMillis
+		parent.log("http/request/retry"); // System.currentTimeMillis
 
 		com.twitter.zipkin.gen.Span result = listener.convert(parent);
 
@@ -99,8 +99,8 @@ public class ZipkinSpanListenerTests {
 	/** Sleuth host corresponds to annotation/binaryAnnotation.host in zipkin. */
 	@Test
 	public void annotationsIncludeHost() {
-		parent.addTimelineAnnotation("http/request/retry");
-		parent.addAnnotation("spring-boot/version", "1.3.1.RELEASE");
+		parent.log("http/request/retry");
+		parent.tag("spring-boot/version", "1.3.1.RELEASE");
 
 		com.twitter.zipkin.gen.Span result = listener.convert(parent);
 

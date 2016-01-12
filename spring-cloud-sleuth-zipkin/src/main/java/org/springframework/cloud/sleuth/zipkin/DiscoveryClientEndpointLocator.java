@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import com.twitter.zipkin.gen.Endpoint;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.util.InetUtils;
 
-import java.net.InetAddress;
+import com.twitter.zipkin.gen.Endpoint;
 
 /**
  * An {@link EndpointLocator} that tries to find local service information from a
@@ -50,8 +49,7 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 
 	private int getIpAddress(ServiceInstance instance) {
 		try {
-			InetAddress address = InetAddress.getByName(instance.getHost());
-			return InetUtils.convert(address).getIpAddressAsInt();
+			return InetUtils.getIpAddressAsInt(instance.getHost());
 		}
 		catch (Exception e) {
 			return 0;

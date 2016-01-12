@@ -17,7 +17,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.Cloud;
 import org.springframework.cloud.CloudFactory;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TimelineAnnotation;
+import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
@@ -79,7 +79,7 @@ public class ZipkinMessageListener {
 				host.getPort().shortValue());
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
-		if (span.getTimelineAnnotations().isEmpty() && span.getAnnotations().isEmpty()) {
+		if (span.logs().isEmpty() && span.tags().isEmpty()) {
 			// TODO: javadocs say this isn't nullable!
 			String processId = span.getProcessId() != null
 					? span.getProcessId().toLowerCase()
@@ -113,7 +113,7 @@ public class ZipkinMessageListener {
 	 * Add annotations from the sleuth Span.
 	 */
 	private static void addZipkinAnnotations(Builder zipkinSpan, Span span, Endpoint endpoint) {
-		for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
+		for (Log ta : span.logs()) {
 			Annotation zipkinAnnotation = new Annotation.Builder()
 					.endpoint(endpoint)
 					.timestamp(ta.getTime() * 1000) // Zipkin is in microseconds
@@ -130,7 +130,7 @@ public class ZipkinMessageListener {
 	 */
 	private static void addZipkinBinaryAnnotations(Builder zipkinSpan, Span span,
 			Endpoint endpoint) {
-		for (Map.Entry<String, String> e : span.getAnnotations().entrySet()) {
+		for (Map.Entry<String, String> e : span.tags().entrySet()) {
 			BinaryAnnotation.Builder binaryAnn = new BinaryAnnotation.Builder();
 			binaryAnn.type(Type.STRING);
 			binaryAnn.key(e.getKey());

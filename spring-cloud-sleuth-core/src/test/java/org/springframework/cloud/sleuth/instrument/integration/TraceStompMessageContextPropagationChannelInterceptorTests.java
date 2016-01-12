@@ -1,12 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -20,7 +17,7 @@ import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * 
+ *
  * @author Gaurav Rai Mazra
  *
  */
@@ -36,7 +33,7 @@ public class TraceStompMessageContextPropagationChannelInterceptorTests extends 
 
 		whenTheMessageWasSent(m);
 		String expectedTraceId = trace.getSpan().getTraceId();
-		traceManager.close(trace);
+		this.traceManager.close(trace);
 
 		thenReceivedMessageIsNotNull();
 		String traceId = thenTraceIdFromHeadersIsNotEmpty();
@@ -45,7 +42,7 @@ public class TraceStompMessageContextPropagationChannelInterceptorTests extends 
 	}
 
 	private void thenReceivedMessageIsNotNull() {
-		Message<?> message = stompMessageHandler.message;
+		Message<?> message = this.stompMessageHandler.message;
 		then(message).isNotNull();
 	}
 

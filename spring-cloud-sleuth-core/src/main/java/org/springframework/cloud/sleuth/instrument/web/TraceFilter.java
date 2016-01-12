@@ -165,8 +165,8 @@ public class TraceFilter extends OncePerRequestFilter
 			if (trace != null) {
 				addResponseAnnotations(response, exception);
 				addResponseHeaders(response, trace.getSpan());
-				if (trace.getSavedTrace() != null) {
-					publish(new ServerSentEvent(this, trace.getSavedTrace().getSpan(),
+				if (trace.getSaved() != null) {
+					publish(new ServerSentEvent(this, trace.getSaved().getSpan(),
 							trace.getSpan()));
 				}
 				// Double close to clean up the parent (remote span as well)

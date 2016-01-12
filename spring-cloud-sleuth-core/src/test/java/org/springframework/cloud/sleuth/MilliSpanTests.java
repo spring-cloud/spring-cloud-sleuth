@@ -30,7 +30,7 @@ public class MilliSpanTests {
 	public void getAnnotationsReadOnly() {
 		MilliSpan span = new MilliSpan(1, 2, "name", "traceId", Collections.<String>emptyList(), "spanId", true, true, "processId");
 
-		span.getAnnotations().put("a", "b");
+		span.tags().put("a", "b");
 	}
 
 
@@ -38,6 +38,6 @@ public class MilliSpanTests {
 	public void getTimelineAnnotationsReadOnly() {
 		MilliSpan span = new MilliSpan(1, 2, "name", "traceId", Collections.<String>emptyList(), "spanId", true, true, "processId");
 
-		span.getTimelineAnnotations().add(new TimelineAnnotation(1, "1"));
+		span.logs().add(new Log(1, "1"));
 	}
 }

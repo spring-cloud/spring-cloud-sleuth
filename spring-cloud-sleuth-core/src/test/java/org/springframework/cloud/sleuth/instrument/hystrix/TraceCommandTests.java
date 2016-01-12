@@ -1,7 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixThreadPoolProperties;
+import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
+import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
+import static org.assertj.core.api.BDDAssertions.then;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,9 +17,8 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.JdkIdGenerator;
 
-import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
-import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
-import static org.assertj.core.api.BDDAssertions.then;
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 public class TraceCommandTests {
 
@@ -45,7 +46,7 @@ public class TraceCommandTests {
 
 		then(secondTraceFromHystrix.getSpan().getTraceId()).as("second trace id")
 				.isNotEqualTo(firstTraceFromHystrix.getSpan().getTraceId()).as("first trace id");
-		then(secondTraceFromHystrix.getSavedTrace()).as("saved trace as remnant of first trace")
+		then(secondTraceFromHystrix.getSaved()).as("saved trace as remnant of first trace")
 				.isNull();
 	}
 
@@ -66,11 +67,11 @@ public class TraceCommandTests {
 	}
 
 	private Trace givenATraceIsPresentInTheCurrentThread() {
-		return traceManager.startSpan("test", MilliSpan.builder().traceId(EXPECTED_TRACE_ID).build());
+		return this.traceManager.startSpan("test", MilliSpan.builder().traceId(EXPECTED_TRACE_ID).build());
 	}
 
 	private TraceCommand<Trace> traceReturningCommand() {
-		return new TraceCommand<Trace>(traceManager,  withGroupKey(asKey(""))
+		return new TraceCommand<Trace>(this.traceManager,  withGroupKey(asKey(""))
 				.andCommandKey(HystrixCommandKey.Factory.asKey("")).andThreadPoolPropertiesDefaults(
 						HystrixThreadPoolProperties.Setter().withMaxQueueSize(1).withCoreSize(1))) {
 			@Override

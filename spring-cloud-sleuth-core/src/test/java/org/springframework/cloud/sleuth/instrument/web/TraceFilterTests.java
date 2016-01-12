@@ -175,7 +175,7 @@ public class TraceFilterTests {
 	}
 
 	private void hasAnnotation(Span span, String name, String value) {
-		assertEquals(value, span.getAnnotations().get(name));
+		assertEquals(value, span.tags().get(name));
 	}
 
 	private class DelegateSampler implements Sampler<Void> {

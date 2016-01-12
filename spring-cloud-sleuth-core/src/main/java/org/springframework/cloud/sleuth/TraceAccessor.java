@@ -17,7 +17,9 @@
 package org.springframework.cloud.sleuth;
 
 /**
- * Strategy for accessing the current span.
+ * Strategy for accessing the current span. This is the primary interface for use by user
+ * code (if it needs access to spans at all - in general it is better to leave span access
+ * to specialized and cross-cutting instrumentation code).
  *
  * @author Dave Syer
  *

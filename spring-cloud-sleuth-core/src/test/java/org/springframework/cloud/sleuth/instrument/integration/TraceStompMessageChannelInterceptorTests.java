@@ -1,37 +1,23 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.assertj.core.api.Assertions.registerCustomDateFormat;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
 
-import org.assertj.core.api.BDDAssertions;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.integration.TraceStompMessageChannelInterceptorTests.TestApplication;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.GenericMessage;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * 
+ *
  * @author Gaurav Rai Mazra
  *
  */
@@ -67,7 +53,7 @@ public class TraceStompMessageChannelInterceptorTests extends AbstractTraceStomp
 		Message<?> message = givenMessageToBeSampled();
 
 		whenTheMessageWasSent(message);
-		traceManager.close(trace);
+		this.traceManager.close(trace);
 
 		String spanId = thenSpanIdFromHeadersIsNotEmpty();
 		String traceId = thenTraceIdFromHeadersIsNotEmpty();
@@ -87,7 +73,7 @@ public class TraceStompMessageChannelInterceptorTests extends AbstractTraceStomp
 	}
 
 	private void thenReceivedMessageIsEqualToTheSentOne(Message<?> message) {
-		then(message.getPayload()).isEqualTo(stompMessageHandler.message.getPayload());
+		then(message.getPayload()).isEqualTo(this.stompMessageHandler.message.getPayload());
 	}
 
 	@Configuration

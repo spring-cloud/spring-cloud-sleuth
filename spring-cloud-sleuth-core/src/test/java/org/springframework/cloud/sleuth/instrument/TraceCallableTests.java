@@ -42,7 +42,7 @@ public class TraceCallableTests {
 
 		then(secondTrace.getSpan().getTraceId())
 				.isNotEqualTo(firstTrace.getSpan().getTraceId());
-		then(secondTrace.getSavedTrace()).isNull();
+		then(secondTrace.getSaved()).isNull();
 	}
 
 	@Test
@@ -62,7 +62,7 @@ public class TraceCallableTests {
 		Trace parent = givenSpanIsAlreadyActive();
 		Trace child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 		then(parent).as("parent").isNotNull();
-		then(child.getSavedTrace()).isEqualTo(parent);
+		then(child.getSaved()).isEqualTo(parent);
 
 		Trace secondTrace = whenNonTraceableCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());

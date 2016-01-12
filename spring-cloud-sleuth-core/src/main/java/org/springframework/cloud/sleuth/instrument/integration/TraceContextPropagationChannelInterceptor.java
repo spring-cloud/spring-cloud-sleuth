@@ -100,7 +100,7 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 	protected void populatePropagatedContext(Span span, Message<?> message,
 			MessageChannel channel) {
 		if (span != null) {
-			ORIGINAL_CONTEXT.set(this.traceManager.continueSpan(span).getSavedTrace());
+			ORIGINAL_CONTEXT.set(this.traceManager.continueSpan(span).getSaved());
 		}
 	}
 

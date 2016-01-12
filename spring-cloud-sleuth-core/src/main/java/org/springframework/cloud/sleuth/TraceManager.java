@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth;
 import java.util.concurrent.Callable;
 
 /**
- * The Trace class is the primary way to interact with the library. It provides methods to
- * create and manipulate spans.
+ * The TraceManager class is the primary way for instrumentation code (note user code) to
+ * interact with the library. It provides methods to create and manipulate spans.
  *
  * A 'Span' represents a length of time. It has many other attributes such as a name, ID,
  * and even potentially a set of key/value strings attached to it.

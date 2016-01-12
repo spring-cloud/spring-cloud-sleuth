@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import java.util.Map;
+
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
@@ -29,10 +31,8 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.util.Assert;
 
-import java.util.Map;
-
 /**
- * 
+ *
  * @author Gaurav Rai Mazra
  * @author Marcin Grzejszczak
  *
@@ -82,7 +82,7 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 
 	protected void populatePropagatedContext(Span span) {
 		if (span != null) {
-			ORIGINAL_CONTEXT.set(this.traceManager.continueSpan(span).getSavedTrace());
+			ORIGINAL_CONTEXT.set(this.traceManager.continueSpan(span).getSaved());
 		}
 	}
 
@@ -104,13 +104,13 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 			this.message = StompMessageBuilder.fromMessage(message).setHeadersFromSpan(this.span).build();
 			addAnnotationsToSpanFromMessage(this.message, this.span);
 		}
-		
+
 		private void addAnnotationsToSpanFromMessage(Message<?> message, Span span) {
 			for (Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
 				if (!Trace.HEADERS.contains(entry.getKey())) {
 					String key = "/messaging/headers/" + entry.getKey().toLowerCase();
 					String value = entry.getValue() == null ? null : entry.getValue().toString();
-					span.addAnnotation(key, value);
+					span.tag(key, value);
 				}
 			}
 			SpanMessageHeaders.addPayloadAnnotations(message.getPayload(), span);

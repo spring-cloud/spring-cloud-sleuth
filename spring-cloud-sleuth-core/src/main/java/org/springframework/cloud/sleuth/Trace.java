@@ -23,6 +23,9 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 
 /**
+ * A wrapper around the current span with context for a possible hierarchy or stack of
+ * spans being monitored.
+ *
  * @author Spencer Gibb
  */
 @Value
@@ -44,7 +47,7 @@ public class Trace {
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
 
 	public static final List<String> HEADERS = Arrays.asList(SPAN_ID_NAME, TRACE_ID_NAME,
-	SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
+			SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
 
 	/**
 	 * the span for this trace
@@ -54,21 +57,15 @@ public class Trace {
 	/**
 	 * the trace that was "current" before this trace was entered
 	 */
-	private final Trace savedTrace;
+	private final Trace saved;
 
 	public Trace(Trace saved, Span span) {
-		this.savedTrace = saved;
+		this.saved = saved;
 		this.span = span;
 	}
 
 	public Trace(Span span) {
 		this(null, span);
-	}
-
-	public void addAnnotation(String key, String value) {
-		if (this.span != null) {
-			this.span.addAnnotation(key, value);
-		}
 	}
 
 }

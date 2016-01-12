@@ -37,7 +37,7 @@ public class ZipkinMessageListenerTests {
 	@Test
 	public void convertsTimestampAndDurationToMicroseconds() {
 		long start = System.currentTimeMillis();
-		span.addTimelineAnnotation("http/request/retry"); // System.currentTimeMillis
+		span.log("http/request/retry"); // System.currentTimeMillis
 
 		io.zipkin.Span result = ZipkinMessageListener.convert(span, host);
 
@@ -53,8 +53,8 @@ public class ZipkinMessageListenerTests {
 	/** Sleuth host corresponds to annotation/binaryAnnotation.host in zipkin. */
 	@Test
 	public void annotationsIncludeHost() {
-		span.addTimelineAnnotation("http/request/retry");
-		span.addAnnotation("spring-boot/version", "1.3.1.RELEASE");
+		span.log("http/request/retry");
+		span.tag("spring-boot/version", "1.3.1.RELEASE");
 
 		io.zipkin.Span result = ZipkinMessageListener.convert(span, host);
 

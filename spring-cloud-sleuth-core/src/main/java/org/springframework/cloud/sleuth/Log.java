@@ -24,12 +24,12 @@ import lombok.RequiredArgsConstructor;
  */
 @Data
 @RequiredArgsConstructor
-public class TimelineAnnotation {
+public class Log {
 	private final long time;
 	private final String msg;
 
 	@SuppressWarnings("unused")
-	private TimelineAnnotation() {
+	private Log() {
 		this.time = 0;
 		this.msg = null;
 	}

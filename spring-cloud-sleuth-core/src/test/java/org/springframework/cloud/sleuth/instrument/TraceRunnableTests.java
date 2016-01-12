@@ -1,5 +1,10 @@
 package org.springframework.cloud.sleuth.instrument;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,11 +17,6 @@ import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.JdkIdGenerator;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRunnableTests {
@@ -48,7 +48,7 @@ public class TraceRunnableTests {
 				.isNotEqualTo(firstTrace.getSpan().getTraceId()).as("first trace id");
 
 		// and
-		then(secondTrace.getSavedTrace()).as("saved trace as remnant of first trace")
+		then(secondTrace.getSaved()).as("saved trace as remnant of first trace")
 				.isNull();
 	}
 

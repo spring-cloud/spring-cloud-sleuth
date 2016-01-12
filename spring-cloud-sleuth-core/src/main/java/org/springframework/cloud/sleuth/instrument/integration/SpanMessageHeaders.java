@@ -65,7 +65,7 @@ public class SpanMessageHeaders {
 				if (entry.getValue() != null) {
 					value = entry.getValue().toString(); // TODO: better way to serialize?
 				}
-				span.addAnnotation(key, value);
+				span.tag(key, value);
 			}
 		}
 		addPayloadAnnotations(message.getPayload(), span);
@@ -73,14 +73,14 @@ public class SpanMessageHeaders {
 
 	static void addPayloadAnnotations(Object payload, Span span) {
 		if (payload != null) {
-			span.addAnnotation("/messaging/payload/type",
+			span.tag("/messaging/payload/type",
 					payload.getClass().getCanonicalName());
 			if (payload instanceof String) {
-				span.addAnnotation("/messaging/payload/size",
+				span.tag("/messaging/payload/size",
 						String.valueOf(((String) payload).length()));
 			}
 			else if (payload instanceof byte[]) {
-				span.addAnnotation("/messaging/payload/size",
+				span.tag("/messaging/payload/size",
 						String.valueOf(((byte[]) payload).length));
 			}
 		}

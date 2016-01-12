@@ -20,7 +20,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TimelineAnnotation;
+import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
@@ -75,7 +75,7 @@ public class ZipkinSpanListener {
 			// If an inbound RPC call, it should log a "sr" annotation.
 			// If possible, it should log a binary annotation of "ca", indicating the
 			// caller's address (ex X-Forwarded-For header)
-			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_RECV);
+			event.getParent().log(zipkinCoreConstants.SERVER_RECV);
 		}
 	}
 
@@ -85,20 +85,20 @@ public class ZipkinSpanListener {
 		// For an outbound RPC call, it should log a "cs" annotation.
 		// If possible, it should log a binary annotation of "sa", indicating the
 		// destination address.
-		event.getSpan().addTimelineAnnotation(zipkinCoreConstants.CLIENT_SEND);
+		event.getSpan().log(zipkinCoreConstants.CLIENT_SEND);
 	}
 
 	@EventListener
 	@Order(0)
 	public void clientReceive(ClientReceivedEvent event) {
-		event.getSpan().addTimelineAnnotation(zipkinCoreConstants.CLIENT_RECV);
+		event.getSpan().log(zipkinCoreConstants.CLIENT_RECV);
 	}
 
 	@EventListener
 	@Order(0)
 	public void serverSend(ServerSentEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
-			event.getParent().addTimelineAnnotation(zipkinCoreConstants.SERVER_SEND);
+			event.getParent().log(zipkinCoreConstants.SERVER_SEND);
 			this.spanCollector.collect(convert(event.getParent()));
 		}
 	}
@@ -127,7 +127,7 @@ public class ZipkinSpanListener {
 		com.twitter.zipkin.gen.Span zipkinSpan = new com.twitter.zipkin.gen.Span();
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
-		if (span.getTimelineAnnotations().isEmpty() && span.getAnnotations().isEmpty()) {
+		if (span.logs().isEmpty() && span.tags().isEmpty()) {
 			// TODO: javadocs say this isn't nullable!
 			byte[] processId = span.getProcessId() != null
 					? span.getProcessId().toLowerCase().getBytes(UTF_8)
@@ -165,7 +165,7 @@ public class ZipkinSpanListener {
 	 */
 	private void addZipkinAnnotations(com.twitter.zipkin.gen.Span zipkinSpan,
 			Span span, Endpoint endpoint) {
-		for (TimelineAnnotation ta : span.getTimelineAnnotations()) {
+		for (Log ta : span.logs()) {
 			Annotation zipkinAnnotation = new Annotation()
 					.setHost(endpoint)
 					.setTimestamp(ta.getTime() * 1000) // Zipkin is in microseconds
@@ -181,7 +181,7 @@ public class ZipkinSpanListener {
 	 */
 	private void addZipkinBinaryAnnotations(com.twitter.zipkin.gen.Span zipkinSpan,
 			Span span, Endpoint endpoint) {
-		for (Map.Entry<String, String> e : span.getAnnotations().entrySet()) {
+		for (Map.Entry<String, String> e : span.tags().entrySet()) {
 			BinaryAnnotation binaryAnn = new BinaryAnnotation()
 					.setAnnotation_type(AnnotationType.STRING)
 					.setKey(e.getKey())

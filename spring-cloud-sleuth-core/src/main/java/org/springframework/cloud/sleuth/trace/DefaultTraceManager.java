@@ -101,14 +101,14 @@ public class DefaultTraceManager implements TraceManager {
 					+ ". You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
-			if (trace.getSavedTrace() != null) {
-				TraceContextHolder.setCurrentTrace(trace.getSavedTrace());
+			if (trace.getSaved() != null) {
+				TraceContextHolder.setCurrentTrace(trace.getSaved());
 			}
 			else {
 				TraceContextHolder.removeCurrentTrace();
 			}
 		}
-		return trace.getSavedTrace();
+		return trace.getSaved();
 	}
 
 	@Override
@@ -118,7 +118,7 @@ public class DefaultTraceManager implements TraceManager {
 		}
 		Span cur = TraceContextHolder.getCurrentSpan();
 		Span span = trace.getSpan();
-		Trace savedTrace = trace.getSavedTrace();
+		Trace savedTrace = trace.getSaved();
 		if (cur != span) {
 			ExceptionUtils.warn("Tried to close trace span but "
 					+ "it is not the current span for the '"
@@ -201,7 +201,7 @@ public class DefaultTraceManager implements TraceManager {
 	public void addAnnotation(String key, String value) {
 		Span s = getCurrentSpan();
 		if (s != null && s.isExportable()) {
-			s.addAnnotation(key, value);
+			s.tag(key, value);
 		}
 	}
 
