@@ -51,10 +51,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-spancollector-scribe</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
 			<artifactId>brave-http</artifactId>
 		</dependency>
 		<dependency>
@@ -75,6 +71,10 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.zipkin</groupId>
+			<artifactId>zipkin-java-core</artifactId>
 		</dependency>
 
 		<dependency>

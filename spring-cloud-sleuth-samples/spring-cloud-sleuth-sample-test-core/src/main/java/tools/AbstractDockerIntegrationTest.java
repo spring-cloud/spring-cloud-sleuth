@@ -15,8 +15,10 @@
  */
 package tools;
 
+import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
+import com.github.kristofa.brave.HttpSpanCollector;
 import com.github.kristofa.brave.SpanCollector;
-import com.github.kristofa.brave.scribe.ScribeSpanCollector;
+import com.github.kristofa.brave.SpanCollectorMetricsHandler;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
 import io.zipkin.Codec;
@@ -91,10 +93,6 @@ public abstract class AbstractDockerIntegrationTest {
 
 	protected Runnable zipkinServerIsUp() {
 		return checkServerHealth("Zipkin Stream Server", this::endpointToCheckZipkinServerHealth);
-	}
-
-	protected Runnable zipkinCollectorServerIsUp() {
-		return checkServerHealth("Zipkin collector", this::endpointToCheckZipkinCollectorHealth);
 	}
 
 	protected Runnable checkServerHealth(String appName, RequestExchanger requestExchanger) {
@@ -241,21 +239,26 @@ public abstract class AbstractDockerIntegrationTest {
 	public static class ZipkinConfig {
 		@Bean
 		@SneakyThrows
-		public ScribeSpanCollector spanCollector(final ZipkinProperties zipkin) {
-			await().until(() -> {
-				try {
-					ZipkinConfig.this.getSpanCollector(zipkin);
-				} catch (Exception e) {
-					log.error("Exception occurred while trying to connect to zipkin [" + e.getCause() + "]");
-					throw new AssertionError(e);
+		public SpanCollector spanCollector(final ZipkinProperties zipkin) {
+			await().until(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						ZipkinConfig.this.getSpanCollector(zipkin);
+					} catch (Exception e) {
+						log.error("Exception occurred while trying to connect to zipkin [" + e.getCause() + "]");
+						throw new AssertionError(e);
+					}
 				}
 			});
 			return getSpanCollector(zipkin);
 		}
 
-		private ScribeSpanCollector getSpanCollector(ZipkinProperties zipkin) {
-			return new ScribeSpanCollector(getDockerURI().getHost(),
-					zipkin.getPort(), zipkin.getCollector());
+		private SpanCollector getSpanCollector(ZipkinProperties zipkin) {
+			String url = "http://" + getDockerURI().getHost() + ":" + zipkin.getPort();
+			// TODO: parameterize this
+			SpanCollectorMetricsHandler metrics = new EmptySpanCollectorMetricsHandler();
+			return HttpSpanCollector.create(url, zipkin.getHttpConfig(), metrics);
 		}
 	}
 }
