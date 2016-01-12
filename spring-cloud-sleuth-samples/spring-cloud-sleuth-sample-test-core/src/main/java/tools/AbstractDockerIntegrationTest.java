@@ -15,29 +15,39 @@
  */
 package tools;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+
 import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
 import com.github.kristofa.brave.HttpSpanCollector;
 import com.github.kristofa.brave.SpanCollector;
 import com.github.kristofa.brave.SpanCollectorMetricsHandler;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
+
 import io.zipkin.Codec;
 import io.zipkin.Span;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.*;
-import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
-
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -134,7 +144,7 @@ public abstract class AbstractDockerIntegrationTest {
 	}
 
 	protected ResponseEntity<String> exchangeRequest(URI uri) {
-		return restTemplate.exchange(
+		return this.restTemplate.exchange(
 				new RequestEntity<>(new HttpHeaders(), HttpMethod.GET, uri), String.class
 		);
 	}
@@ -160,7 +170,7 @@ public abstract class AbstractDockerIntegrationTest {
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, String traceId) {
-		return new RequestSendingRunnable(restTemplate, endpoint, traceId);
+		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId);
 	}
 
 	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(String traceId) {
@@ -202,7 +212,7 @@ public abstract class AbstractDockerIntegrationTest {
 		List<String> names = new ArrayList<>();
 		names.addAll(serviceNamesFoundInAnnotations);
 		names.addAll(serviceNamesFoundInBinaryAnnotations);
-		return names.contains(getAppName()) ? Collections.EMPTY_LIST : names;
+		return names.contains(getAppName()) ? Collections.emptyList() : names;
 	}
 
 	protected String getAppName() {
@@ -219,7 +229,7 @@ public abstract class AbstractDockerIntegrationTest {
 				.map(annotation -> annotation.key)
 				.filter(binaryAnnotationName::equals)
 				.findFirst();
-		return names.isPresent() ? Collections.EMPTY_LIST : Collections.singletonList(binaryAnnotationName);
+		return names.isPresent() ? Collections.emptyList() : Collections.singletonList(binaryAnnotationName);
 	}
 
 	protected String getRequiredBinaryAnnotationName() {
