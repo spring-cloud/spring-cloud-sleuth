@@ -8,6 +8,10 @@ spring:
     initialize: false
 
 zipkin:
+  collector:
+    sample-rate: 1.0 # percentage to traces to retain
+  query:
+    lookback: 86400000 # 7 days in millis
   store:
     type: mem # default is inMemory
 

@@ -55,16 +55,12 @@ public class ZipkinDockerTests extends AbstractIntegrationTest {
 	public static DockerComposeContainer environment =
 			new DockerComposeContainer(new File("src/test/resources/docker-compose.yml"))
 					.withExposedService("rabbitmq_1", 5672)
-					.withExposedService("collector_1", 9410)
-					.withExposedService("collector_1", 9900)
 					.withExposedService("mysql_1", 3306)
-					.withExposedService("query_1", 9411)
-					.withExposedService("query_1", 9901);
+					.withExposedService("query_1", 9411);
 
 	@Before
 	public void setup() {
 		await().until(zipkinQueryServerIsUp());
-		await().until(zipkinCollectorServerIsUp());
 	}
 
 	@Test
@@ -96,7 +92,6 @@ public class ZipkinDockerTests extends AbstractIntegrationTest {
 
 	private List<String> serviceNamesNotFoundInZipkin(List<io.zipkin.Span> spans) {
 		List<String> serviceNamesFoundInAnnotations = spans.stream()
-				.filter(span -> span.annotations != null)
 				.map(span -> span.annotations)
 				.flatMap(Collection::stream)
 				.filter(span -> span.endpoint != null)
@@ -105,7 +100,6 @@ public class ZipkinDockerTests extends AbstractIntegrationTest {
 				.distinct()
 				.collect(Collectors.toList());
 		List<String> serviceNamesFoundInBinaryAnnotations = spans.stream()
-				.filter(span -> span.binaryAnnotations != null)
 				.map(span -> span.binaryAnnotations)
 				.flatMap(Collection::stream)
 				.filter(span -> span.endpoint != null)
@@ -122,7 +116,6 @@ public class ZipkinDockerTests extends AbstractIntegrationTest {
 	private List<String> annotationsNotFoundInZipkin(List<io.zipkin.Span> spans) {
 		String binaryAnnotationName = "random-sleep-millis";
 		Optional<String> names = spans.stream()
-				.filter(span -> span.binaryAnnotations != null)
 				.map(span -> span.binaryAnnotations)
 				.flatMap(Collection::stream)
 				.filter(span -> span.endpoint != null)

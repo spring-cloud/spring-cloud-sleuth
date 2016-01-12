@@ -29,7 +29,7 @@ zipkin:
     - mysql
     - rabbitmq
 web:
-  image: openzipkin/zipkin-web:1.28.0
+  image: openzipkin/zipkin-web:1.30.0
   ports:
     - 8080:8080
   environment:

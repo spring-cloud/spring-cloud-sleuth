@@ -111,7 +111,6 @@
 		<dependency>
 			<groupId>io.zipkin</groupId>
 			<artifactId>zipkin-java-core</artifactId>
-			<version>0.1.1</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

@@ -14,10 +14,10 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<brave.version>3.2.0</brave.version>
+		<brave.version>3.4.0</brave.version>
 		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
-		<zipkin-java.version>0.1.2</zipkin-java.version>
+		<zipkin-java.version>0.4.0</zipkin-java.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -60,7 +60,7 @@
 			</dependency>
 			<dependency>
 				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-spancollector-scribe</artifactId>
+				<artifactId>brave-core</artifactId>
 				<version>${brave.version}</version>
 			</dependency>
 			<dependency>
@@ -72,6 +72,11 @@
 				<groupId>org.aspectj</groupId>
 				<artifactId>aspectjweaver</artifactId>
 				<version>${aspectj.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin</groupId>
+				<artifactId>zipkin-java-core</artifactId>
+				<version>${zipkin-java.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin</groupId>

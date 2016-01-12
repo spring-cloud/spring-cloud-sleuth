@@ -15,20 +15,25 @@
  */
 package tools;
 
+import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
+import com.github.kristofa.brave.HttpSpanCollector;
 import com.github.kristofa.brave.SpanCollector;
-import com.github.kristofa.brave.scribe.ScribeSpanCollector;
+import com.github.kristofa.brave.SpanCollectorMetricsHandler;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
+import java.net.URI;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.URI;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -93,27 +98,9 @@ public abstract class AbstractIntegrationTest {
 		};
 	}
 
-	protected Runnable zipkinCollectorServerIsUp() {
-		return new Runnable() {
-			@Override
-			public void run() {
-				ResponseEntity<String> response = endpointToCheckZipkinCollectorHealth();
-				log.info("Response from the Zipkin collector's health endpoint is [{}]", response);
-				then(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-				log.info("Zipkin collector server is up!");
-			}
-		};
-	}
-
 	protected ResponseEntity<String> endpointToCheckZipkinQueryHealth() {
 		URI uri = URI.create(getZipkinServicesQueryUrl());
 		log.info("Sending request to the Zipkin query service [{}]", uri);
-		return exchangeRequest(uri);
-	}
-
-	protected ResponseEntity<String> endpointToCheckZipkinCollectorHealth() {
-		URI uri = URI.create(getZipkinCollectorHealthUrl());
-		log.info("Sending request to the Zipkin collector service [{}]", uri);
 		return exchangeRequest(uri);
 	}
 
@@ -138,10 +125,6 @@ public abstract class AbstractIntegrationTest {
 		return getDockerUrl() + ":9411/api/v1/services";
 	}
 
-	protected String getZipkinCollectorHealthUrl() {
-		return getDockerUrl() + ":9900/health";
-	}
-
 	@Configuration
 	public static class Config {
 		@Bean
@@ -155,7 +138,7 @@ public abstract class AbstractIntegrationTest {
 	public static class ZipkinConfig {
 		@Bean
 		@SneakyThrows
-		public ScribeSpanCollector spanCollector(final ZipkinProperties zipkin) {
+		public SpanCollector spanCollector(final ZipkinProperties zipkin) {
 			await().until(new Runnable() {
 				@Override
 				public void run() {
@@ -170,9 +153,11 @@ public abstract class AbstractIntegrationTest {
 			return getSpanCollector(zipkin);
 		}
 
-		private ScribeSpanCollector getSpanCollector(ZipkinProperties zipkin) {
-			return new ScribeSpanCollector(getDockerURI().getHost(),
-					zipkin.getPort(), zipkin.getCollector());
-		}
-	}
+    private SpanCollector getSpanCollector(ZipkinProperties zipkin) {
+      String url = "http://" + getDockerURI().getHost() + ":" + zipkin.getPort();
+      // TODO: parameterize this
+      SpanCollectorMetricsHandler metrics = new EmptySpanCollectorMetricsHandler();
+      return HttpSpanCollector.create(url, zipkin.getHttpConfig(), metrics);
+    }
+  }
 }
