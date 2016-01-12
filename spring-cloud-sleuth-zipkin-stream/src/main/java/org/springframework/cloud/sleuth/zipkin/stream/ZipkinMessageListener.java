@@ -1,14 +1,15 @@
 package org.springframework.cloud.sleuth.zipkin.stream;
 
+import io.zipkin.Sampler;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -51,19 +52,14 @@ public class ZipkinMessageListener {
 	@Autowired
 	SpanStore spanStore;
 
+	@Autowired
+	Sampler sampler;
+
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
 	public void sink(Spans input) {
-		List<io.zipkin.Span> spans = new ArrayList<>();
-		for (Span span : input.getSpans()) {
-			if (!span.getName().equals("message/" + SleuthSink.INPUT)) {
-				spans.add(convert(span, input.getHost()));
-			}
-			else {
-				log.warn("Message tracing cycle detected for: " + span);
-			}
-		}
-		if (!spans.isEmpty()) {
-			this.spanStore.accept(spans);
+		Iterator<io.zipkin.Span> sampled = new SamplingZipkinSpanIterator(sampler, input);
+		if (sampled.hasNext()) {
+			this.spanStore.accept(sampled);
 		}
 	}
 
@@ -194,6 +190,14 @@ public class ZipkinMessageListener {
 		@Bean
 		public Cloud cloud() {
 			return new CloudFactory().getCloud();
+		}
+
+		@Value("${zipkin.collector.sample-rate:1.0}")
+		float sampleRate = 1.0f;
+
+		@Bean
+		Sampler traceIdSampler() {
+			return Sampler.create(this.sampleRate);
 		}
 
 		@Bean

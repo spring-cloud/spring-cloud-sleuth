@@ -37,7 +37,7 @@ logging:
 
 * Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, zuul filters, feign client).
 
-* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via Thrift to a Zipkin collector service on localhost (port 9410). Configure the location of the service using `spring.zipkin.[host,port]`.
+* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via HTTP to a Zipkin server on localhost (port 9411). Configure the location of the service using `spring.zipkin.[host,port]`.
 
 * If `spring-cloud-sleuth-stream` then the app will generate and collect traces via Spring Cloud Stream. Your app automatically becomes a producer of tracer messages that are sent over your broker of choice (e.g. RabbitMQ, Apache Kafka, Redis).
 

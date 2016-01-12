@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import com.github.kristofa.brave.HttpSpanCollector;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.github.kristofa.brave.scribe.ScribeSpanCollectorParams;
 
 import lombok.Data;
 
@@ -28,10 +27,10 @@ import lombok.Data;
 @ConfigurationProperties("spring.zipkin")
 @Data
 public class ZipkinProperties {
-	// Sample rate = 1 means every request will get traced.
-	private int fixedSampleRate = 1;
+	// Sample rate = 1.0 means 100% of requests will get traced.
+	private float fixedSampleRate = 1.0f;
 	private String host = "localhost";
-	private int port = 9410;
+	private int port = 9411;
 	private boolean enabled = true;
-	private ScribeSpanCollectorParams collector = new ScribeSpanCollectorParams();
+	private HttpSpanCollector.Config httpConfig = HttpSpanCollector.Config.builder().build();
 }
