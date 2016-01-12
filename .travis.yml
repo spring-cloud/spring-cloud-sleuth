@@ -17,8 +17,8 @@ install:
 - ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
 - 'if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then ./docs/src/main/asciidoc/ghpages.sh; fi'
 script:
-- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || ./mvnw -s .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true  -P integration && jdk_switcher use oraclejdk8 && sh -e scripts/runAcceptanceTests.sh'
-- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || ./mvnw install -nsu -Dmaven.test.redirectTestOutputToFile=true -P integration && jdk_switcher use oraclejdk8 && sh -e scripts/runAcceptanceTests.sh'
+- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || ./mvnw -s .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true && jdk_switcher use oraclejdk8 && sh -e scripts/runAcceptanceTests.sh'
+- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || ./mvnw install -nsu -Dmaven.test.redirectTestOutputToFile=true && jdk_switcher use oraclejdk8 && sh -e scripts/runAcceptanceTests.sh'
 env:
   global:
   - GIT_NAME="Spencer Gibb"
