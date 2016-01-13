@@ -34,6 +34,7 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -90,6 +91,7 @@ public class TraceFilter extends OncePerRequestFilter
 	protected void doFilterInternal(HttpServletRequest request,
 			HttpServletResponse response, FilterChain filterChain)
 					throws ServletException, IOException {
+		TraceContextHolder.removeCurrentTrace();
 
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
@@ -117,6 +119,8 @@ public class TraceFilter extends OncePerRequestFilter
 			String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
 			if (parentName != null) {
 				span.name(parentName);
+			} else {
+				span.name("parent/" + name);
 			}
 			if (processId != null) {
 				span.processId(processId);
