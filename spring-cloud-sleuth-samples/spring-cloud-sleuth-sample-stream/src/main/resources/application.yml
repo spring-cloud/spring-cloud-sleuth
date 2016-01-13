@@ -4,3 +4,6 @@ server:
 spring:
   application:
     name: testSleuthApp
+# TODO: remove this once Brave is off the class path
+  zipkin:
+    enabled: false

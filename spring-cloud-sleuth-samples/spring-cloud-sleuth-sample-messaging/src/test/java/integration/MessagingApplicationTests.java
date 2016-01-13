@@ -15,32 +15,35 @@
  */
 package integration;
 
-import com.twitter.zipkin.gen.BinaryAnnotation;
-import com.twitter.zipkin.gen.Span;
-import lombok.extern.slf4j.Slf4j;
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.util.Collection;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
 import org.springframework.util.StringUtils;
+
+import com.github.kristofa.brave.SpanCollector;
+import com.twitter.zipkin.gen.BinaryAnnotation;
+import com.twitter.zipkin.gen.Span;
+
+import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
-import tools.IntegrationTestSpanCollector;
-
-import java.util.Collection;
-
-import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { AbstractIntegrationTest.IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class })
+@SpringApplicationConfiguration(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class })
 @WebIntegrationTest
 @TestPropertySource(properties="sample.zipkin.enabled=true")
-@Slf4j
 public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private static int port = 3381;
@@ -49,7 +52,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@After
 	public void cleanup() {
-		integrationTestSpanCollector.hashedSpans.clear();
+		this.integrationTestSpanCollector.hashedSpans.clear();
 	}
 
 	@Test
@@ -76,7 +79,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenThereIsAtLeastOneBinaryAnnotationWithKey(String binaryAnnotationKey) {
-		then(integrationTestSpanCollector.hashedSpans.stream()
+		then(this.integrationTestSpanCollector.hashedSpans.stream()
 				.filter(Span::isSetBinary_annotations)
 				.map(Span::getBinary_annotations)
 				.flatMap(Collection::stream)
@@ -86,7 +89,15 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(String traceId) {
-		then(integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.getTrace_id() == zipkinHashedTraceId(traceId))).isTrue();
+		then(this.integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.getTrace_id() == zipkinHashedTraceId(traceId))).isTrue();
+	}
+
+	@Configuration
+	public static class IntegrationSpanCollectorConfig {
+		@Bean
+		SpanCollector integrationTestSpanCollector() {
+			return new IntegrationTestSpanCollector();
+		}
 	}
 
 }

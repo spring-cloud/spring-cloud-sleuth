@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package tools;
+package integration;
 
 import com.github.kristofa.brave.LoggingSpanCollector;
 import com.twitter.zipkin.gen.Span;

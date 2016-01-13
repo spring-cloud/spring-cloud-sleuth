@@ -15,27 +15,35 @@
  */
 package integration;
 
-import io.zipkin.server.ZipkinServer;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
+
+import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
+import com.github.kristofa.brave.HttpSpanCollector;
+import com.github.kristofa.brave.SpanCollector;
+import com.github.kristofa.brave.SpanCollectorMetricsHandler;
+
+import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
+import io.zipkin.server.ZipkinServer;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {
-		AbstractIntegrationTest.WaitUntilZipkinIsUpConfig.class,
+@SpringApplicationConfiguration(classes = { WaitUntilZipkinIsUpConfig.class,
 		SampleZipkinApplication.class })
 @WebIntegrationTest
-@TestPropertySource(properties="sample.zipkin.enabled=true")
-@Slf4j
+@TestPropertySource(properties = "sample.zipkin.enabled=true")
 public class ZipkinTests extends AbstractIntegrationTest {
 
 	private static final String APP_NAME = "testsleuthzipkin";
@@ -44,7 +52,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 
 	@Before
 	public void setup() {
-		ZipkinServer.main(new String[]{"server.port=9411"});
+		ZipkinServer.main(new String[] { "server.port=9411" });
 		await().until(zipkinQueryServerIsUp());
 	}
 
@@ -53,7 +61,8 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	public void should_propagate_spans_to_zipkin() {
 		String traceId = new JdkIdGenerator().generateId().toString();
 
-		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/hi2", traceId));
+		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
+				sampleAppUrl + "/hi2", traceId));
 
 		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
 	}
@@ -61,5 +70,35 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	@Override
 	protected String getAppName() {
 		return APP_NAME;
+	}
+
+	@Configuration
+	@Slf4j
+	public static class WaitUntilZipkinIsUpConfig {
+		@Bean
+		@SneakyThrows
+		public SpanCollector spanCollector(final ZipkinProperties zipkin) {
+			await().until(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						WaitUntilZipkinIsUpConfig.this.getSpanCollector(zipkin);
+					}
+					catch (Exception e) {
+						log.error("Exception occurred while trying to connect to zipkin ["
+								+ e.getCause() + "]");
+						throw new AssertionError(e);
+					}
+				}
+			});
+			return getSpanCollector(zipkin);
+		}
+
+		private SpanCollector getSpanCollector(ZipkinProperties zipkin) {
+			String url = "http://localhost:" + zipkin.getPort();
+			// TODO: parameterize this
+			SpanCollectorMetricsHandler metrics = new EmptySpanCollectorMetricsHandler();
+			return HttpSpanCollector.create(url, zipkin.getHttpConfig(), metrics);
+		}
 	}
 }

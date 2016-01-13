@@ -26,9 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -36,16 +33,11 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
-import com.github.kristofa.brave.HttpSpanCollector;
-import com.github.kristofa.brave.SpanCollector;
-import com.github.kristofa.brave.SpanCollectorMetricsHandler;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
 
 import io.zipkin.Codec;
 import io.zipkin.Span;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -108,9 +100,13 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected ResponseEntity<String> endpointToCheckZipkinServerHealth() {
-		URI uri = URI.create("http://localhost:9411/health");
+		URI uri = URI.create("http://localhost:" +getZipkinServerPort()+"/health");
 		log.info("Sending request to the Zipkin Server [{}]", uri);
 		return exchangeRequest(uri);
+	}
+
+	protected int getZipkinServerPort() {
+		return 9411;
 	}
 
 	protected ResponseEntity<String> checkStateOfTheTraceId(String traceId) {
@@ -127,11 +123,11 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected String getZipkinTraceQueryUrl() {
-		return "http://localhost:9411/api/v1/trace/";
+		return "http://localhost:"+getZipkinServerPort()+"/api/v1/trace/";
 	}
 
 	protected String getZipkinServicesQueryUrl() {
-		return "http://localhost:9411/api/v1/services";
+		return "http://localhost:"+getZipkinServerPort()+"/api/v1/services";
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, String traceId) {
@@ -148,7 +144,7 @@ public abstract class AbstractIntegrationTest {
 			List<String> serviceNamesNotFoundInZipkin = serviceNamesNotFoundInZipkin(spans);
 			List<String> spanNamesNotFoundInZipkin = annotationsNotFoundInZipkin(spans);
 			log.info("The following services were not found in Zipkin {}", serviceNamesNotFoundInZipkin);
-			log.info("The following spans were not found in Zipkin {}", spanNamesNotFoundInZipkin);
+			log.info("The following annotations were not found in Zipkin {}", spanNamesNotFoundInZipkin);
 			then(serviceNamesNotFoundInZipkin).isEmpty();
 			then(spanNamesNotFoundInZipkin).isEmpty();
 			log.info("Zipkin tracing is working! Sleuth is working! Let's be happy!");
@@ -201,39 +197,4 @@ public abstract class AbstractIntegrationTest {
 		return "random-sleep-millis";
 	}
 
-	@Configuration
-	public static class IntegrationSpanCollectorConfig {
-		@Bean
-		SpanCollector integrationTestSpanCollector() {
-			return new IntegrationTestSpanCollector();
-		}
-	}
-
-	@Configuration
-	@Slf4j
-	public static class WaitUntilZipkinIsUpConfig {
-		@Bean
-		@SneakyThrows
-		public SpanCollector spanCollector(final ZipkinProperties zipkin) {
-			await().until(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						WaitUntilZipkinIsUpConfig.this.getSpanCollector(zipkin);
-					} catch (Exception e) {
-						log.error("Exception occurred while trying to connect to zipkin [" + e.getCause() + "]");
-						throw new AssertionError(e);
-					}
-				}
-			});
-			return getSpanCollector(zipkin);
-		}
-
-		private SpanCollector getSpanCollector(ZipkinProperties zipkin) {
-			String url = "http://localhost:" + zipkin.getPort();
-			// TODO: parameterize this
-			SpanCollectorMetricsHandler metrics = new EmptySpanCollectorMetricsHandler();
-			return HttpSpanCollector.create(url, zipkin.getHttpConfig(), metrics);
-		}
-	}
 }

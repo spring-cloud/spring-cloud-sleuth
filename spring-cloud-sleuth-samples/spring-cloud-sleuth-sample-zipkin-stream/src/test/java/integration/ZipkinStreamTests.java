@@ -15,41 +15,71 @@
  */
 package integration;
 
-import example.ZipkinStreamServerApplication;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.MilliSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.stream.Host;
+import org.springframework.cloud.sleuth.stream.SleuthSink;
+import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
+import org.springframework.integration.support.MessageBuilder;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
+
+import example.ZipkinStreamServerApplication;
+import lombok.SneakyThrows;
 import tools.AbstractIntegrationTest;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { SampleApp.Config.class,
-		AbstractIntegrationTest.WaitUntilZipkinIsUpConfig.class,
-		TestSupportBinderAutoConfiguration.class,
+@SpringApplicationConfiguration(classes = { TestSupportBinderAutoConfiguration.class,
 		ZipkinStreamServerApplication.class })
-@WebIntegrationTest
-@Slf4j
+@WebIntegrationTest({ "server.port=0", "management.health.rabbit.enabled=false" })
 @ActiveProfiles("test")
 public class ZipkinStreamTests extends AbstractIntegrationTest {
 
-	private static int port = 9411;
-	private static String sampleAppUrl = "http://localhost:" + port;
+	@Value("${local.server.port}")
+	private int zipkinServerPort = 9411;
+
+	@Autowired
+	@Qualifier(SleuthSink.INPUT)
+	private MessageChannel input;
 
 	@Test
 	@SneakyThrows
 	public void should_propagate_spans_to_zipkin() {
-		await().until(zipkinServerIsUp());
-		String traceId = new JdkIdGenerator().generateId().toString();
 
-		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/hi2", traceId));
+		await().until(zipkinServerIsUp());
+
+		String traceId = new JdkIdGenerator().generateId().toString();
+		Span span = MilliSpan.builder().traceId(traceId).spanId(traceId).name("test")
+				.build();
+		span.tag(getRequiredBinaryAnnotationName(), "10131");
+
+		this.input.send(MessageBuilder.withPayload(
+				new Spans(new Host(getAppName(), "127.0.0.1", 8080), Arrays.asList(span)))
+				.build());
 
 		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
+	}
+
+	@Override
+	protected int getZipkinServerPort() {
+		return this.zipkinServerPort;
+	}
+
+	@Override
+	protected String getAppName() {
+		return "local";
 	}
 
 }
