@@ -119,6 +119,8 @@ public class TraceFilter extends OncePerRequestFilter
 			String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
 			if (parentName != null) {
 				span.name(parentName);
+			} else {
+				span.name("parent/" + name);
 			}
 			if (processId != null) {
 				span.processId(processId);
@@ -127,7 +129,6 @@ public class TraceFilter extends OncePerRequestFilter
 				span.parent(parentId);
 			}
 			span.remote(true);
-			span.name(name);
 
 			Span parent = span.build();
 			trace = this.traceManager.startSpan(name, parent);
