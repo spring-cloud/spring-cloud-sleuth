@@ -125,6 +125,7 @@ public class TraceFilter extends OncePerRequestFilter
 				span.parent(parentId);
 			}
 			span.remote(true);
+			span.name(name);
 
 			Span parent = span.build();
 			trace = this.traceManager.startSpan(name, parent);

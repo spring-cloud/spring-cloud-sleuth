@@ -19,7 +19,6 @@ import io.zipkin.server.ZipkinServer;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -37,7 +36,6 @@ import tools.AbstractIntegrationTest;
 @WebIntegrationTest
 @TestPropertySource(properties="sample.zipkin.enabled=true")
 @Slf4j
-@Ignore("Not passing beacuse of 400 from query")
 public class ZipkinTests extends AbstractIntegrationTest {
 
 	private static final String APP_NAME = "testsleuthzipkin";
