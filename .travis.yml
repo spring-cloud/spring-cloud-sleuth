@@ -3,7 +3,7 @@ jdk:
   - oraclejdk8
 # To use the more powerful, GCE-powered trusty, which also has a newer JDK!
 # See https://docs.travis-ci.com/user/trusty-ci-environment/
-sudo: required
+sudo: false
 dist: trusty
 services:
   - docker
@@ -26,4 +26,5 @@ env:
   - CI_DEPLOY_USERNAME=sgibb
   - secure: dxec/7oFht2WMaw4GNFNvuWHlnkm1wmFagE3ZrtCcU2SHUW/P2FgG5tiNW9hT2eXHf2H0YUF1ROkL4BrH5qpIlOBtYd0J8Q/67vBqyB112IN2FqoB/F6Erkfp1FKMBBrXXYaGoSvqzmJs6zqS3JRpyr010W2aU8klK0QfqRoJ0g=
   - TERM=dumb
-  - DOCKER_HOST=tcp://127.0.0.1:2375
+  - MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=350m"
+
