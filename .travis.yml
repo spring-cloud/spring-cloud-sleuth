@@ -1,24 +1,20 @@
 language: java
 jdk:
   - oraclejdk8
-# To use the more powerful, GCE-powered trusty, which also has a newer JDK!
-# See https://docs.travis-ci.com/user/trusty-ci-environment/
 sudo: false
-dist: trusty
-services:
-  - docker
 before_install:
   - git config user.name "$GIT_NAME"
   - git config user.email "$GIT_EMAIL"
   - git config credential.helper "store --file=.git/credentials"
   - echo "https://$GH_TOKEN:@github.com" > .git/credentials
   - gem install asciidoctor
+  - echo "MAVEN_OPTS='-Xmx2048m -XX:MaxPermSize=512m'" > ~/.mavenrc
 install:
 - ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
 - 'if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then ./docs/src/main/asciidoc/ghpages.sh; fi'
 script:
-- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || ./mvnw -s .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true'
-- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || ./mvnw install -nsu -Dmaven.test.redirectTestOutputToFile=true'
+- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || ./mvnw -s .settings.xml deploy -nsu'
+- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || ./mvnw install -nsu'
 env:
   global:
   - GIT_NAME="Spencer Gibb"
@@ -26,5 +22,4 @@ env:
   - CI_DEPLOY_USERNAME=sgibb
   - secure: dxec/7oFht2WMaw4GNFNvuWHlnkm1wmFagE3ZrtCcU2SHUW/P2FgG5tiNW9hT2eXHf2H0YUF1ROkL4BrH5qpIlOBtYd0J8Q/67vBqyB112IN2FqoB/F6Erkfp1FKMBBrXXYaGoSvqzmJs6zqS3JRpyr010W2aU8klK0QfqRoJ0g=
   - TERM=dumb
-  - MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=350m"
 
