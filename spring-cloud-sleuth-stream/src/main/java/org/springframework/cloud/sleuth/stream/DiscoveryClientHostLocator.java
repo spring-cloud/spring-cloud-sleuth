@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.util.Assert;
 
 /**
  * An {@link HostLocator} that tries to find local service information from a
@@ -35,6 +36,7 @@ public class DiscoveryClientHostLocator implements HostLocator {
 
 	public DiscoveryClientHostLocator(DiscoveryClient client) {
 		this.client = client;
+		Assert.notNull(this.client, "client");
 	}
 
 	@Override

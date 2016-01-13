@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.event.EventListener;
+import org.springframework.util.Assert;
 
 /**
  * @author Dave Syer
@@ -27,14 +28,15 @@ import org.springframework.context.event.EventListener;
  */
 public class ServerPropertiesHostLocator implements HostLocator {
 
-	private final ServerProperties serverProperties;
+	private final ServerProperties serverProperties; // Nullable
 	private final String appName;
-	private Integer port;
+	private Integer port; // Lazy assigned
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
 			String appName) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
+		Assert.notNull(this.appName, "appName");
 	}
 
 	@Override
