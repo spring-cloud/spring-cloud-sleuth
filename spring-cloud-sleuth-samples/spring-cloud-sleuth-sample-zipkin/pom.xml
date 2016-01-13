@@ -83,35 +83,16 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>${testcontainers.jackson.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>${testcontainers.jackson.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-annotations</artifactId>
-			<version>${testcontainers.jackson.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>docker-compose</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.github.kristofa</groupId>
 			<artifactId>brave-http</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>
 			<artifactId>brave-spring-web-servlet-interceptor</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.zipkin</groupId>
+			<artifactId>zipkin-java-server</artifactId>
 		</dependency>
 	</dependencies>
 

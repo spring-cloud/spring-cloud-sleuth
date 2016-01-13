@@ -15,10 +15,10 @@
  */
 package integration;
 
+import io.zipkin.server.ZipkinServer;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,14 +27,12 @@ import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
-import org.testcontainers.containers.DockerComposeContainer;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
 
-import java.io.File;
-
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { AbstractIntegrationTest.WaitUntilZipkinIsUpConfig.class,
+@SpringApplicationConfiguration(classes = {
+		AbstractIntegrationTest.WaitUntilZipkinIsUpConfig.class,
 		SampleZipkinApplication.class })
 @WebIntegrationTest
 @TestPropertySource(properties="sample.zipkin.enabled=true")
@@ -46,13 +44,9 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	private static int port = 3380;
 	private static String sampleAppUrl = "http://localhost:" + port;
 
-	@ClassRule
-	public static DockerComposeContainer environment =
-			new DockerComposeContainer(new File("src/test/resources/docker-compose.yml"))
-					.withExposedService("query_1", 9411);
-
 	@Before
 	public void setup() {
+		ZipkinServer.main(new String[]{"server.port=9411"});
 		await().until(zipkinQueryServerIsUp());
 	}
 
