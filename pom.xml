@@ -89,17 +89,6 @@
 						</execution>
 					</executions>
 				</plugin>
-				<plugin>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>${surefire.plugin.version}</version>
-					<configuration>
-						<useFile>false</useFile>
-						<excludes>
-							<exclude>**/Abstract*.java</exclude>
-							<exclude>**/*DockerTests.java</exclude>
-						</excludes>
-					</configuration>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -225,42 +214,6 @@
 					</snapshots>
 				</pluginRepository>
 			</pluginRepositories>
-		</profile>
-		<profile>
-			<id>integration</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-failsafe-plugin</artifactId>
-						<version>${surefire.plugin.version}</version>
-						<configuration>
-							<useFile>false</useFile>
-							<includes>
-								<include>**/*DockerTests.java</include>
-							</includes>
-						</configuration>
-						<executions>
-							<execution>
-								<id>failsafe-integration-tests</id>
-								<phase>integration-test</phase>
-								<goals>
-									<goal>integration-test</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>failsafe-verify</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>verify</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
 		</profile>
 		<profile>
 			<id>ide</id>

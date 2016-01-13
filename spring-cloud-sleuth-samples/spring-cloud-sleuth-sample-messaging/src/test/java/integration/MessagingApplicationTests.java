@@ -29,7 +29,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
 import org.springframework.util.StringUtils;
 import sample.SampleMessagingApplication;
-import tools.AbstractDockerIntegrationTest;
+import tools.AbstractIntegrationTest;
 import tools.IntegrationTestSpanCollector;
 
 import java.util.Collection;
@@ -37,11 +37,11 @@ import java.util.Collection;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { AbstractDockerIntegrationTest.Config.class, SampleMessagingApplication.class })
+@SpringApplicationConfiguration(classes = { AbstractIntegrationTest.IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class })
 @WebIntegrationTest
 @TestPropertySource(properties="sample.zipkin.enabled=true")
 @Slf4j
-public class MessagingApplicationDockerTests extends AbstractDockerIntegrationTest {
+public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private static int port = 3381;
 	private static String sampleAppUrl = "http://localhost:" + port;

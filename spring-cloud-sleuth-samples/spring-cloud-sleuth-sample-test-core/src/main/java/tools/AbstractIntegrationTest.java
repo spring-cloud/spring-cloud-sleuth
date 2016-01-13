@@ -34,7 +34,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
@@ -53,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Marcin Grzejszczak
  */
 @Slf4j
-public abstract class AbstractDockerIntegrationTest {
+public abstract class AbstractIntegrationTest {
 
 	protected static int pollInterval = 1;
 	protected static int timeout = 120;
@@ -79,22 +78,6 @@ public abstract class AbstractDockerIntegrationTest {
 	protected String zipkinHashedHexStringTraceId(String traceId) {
 		long hashedTraceId = zipkinHashedTraceId(traceId);
 		return Long.toHexString(hashedTraceId);
-	}
-
-	public static String getDockerUrl() {
-		URI dockerUri = getDockerURI();
-		if (StringUtils.isEmpty(dockerUri.getScheme())) {
-			return "http://localhost";
-		}
-		return "http://" + dockerUri.getHost();
-	}
-
-	public static URI getDockerURI() {
-		String dockerHost = System.getenv("DOCKER_HOST");
-		if (StringUtils.isEmpty(dockerHost)) {
-			return URI.create("http://localhost");
-		}
-		return URI.create(dockerHost);
 	}
 
 	protected Runnable zipkinQueryServerIsUp() {
@@ -130,12 +113,6 @@ public abstract class AbstractDockerIntegrationTest {
 		return exchangeRequest(uri);
 	}
 
-	protected ResponseEntity<String> endpointToCheckZipkinCollectorHealth() {
-		URI uri = URI.create(getZipkinCollectorHealthUrl());
-		log.info("Sending request to the Zipkin collector service [{}]", uri);
-		return exchangeRequest(uri);
-	}
-
 	protected ResponseEntity<String> checkStateOfTheTraceId(String traceId) {
 		String hexTraceId = zipkinHashedHexStringTraceId(traceId);
 		URI uri = URI.create(getZipkinTraceQueryUrl() + hexTraceId);
@@ -150,23 +127,11 @@ public abstract class AbstractDockerIntegrationTest {
 	}
 
 	protected String getZipkinTraceQueryUrl() {
-		return getZipkinRootUrl() + ":9411/api/v1/trace/";
-	}
-
-	protected String getZipkinRootUrl() {
-		return getDockerUrl();
+		return "http://localhost:9411/api/v1/trace/";
 	}
 
 	protected String getZipkinServicesQueryUrl() {
-		return getDockerUrl() + ":9411/api/v1/services";
-	}
-
-	protected String getZipkinServerHealthUrl() {
-		return getDockerUrl() + ":9411/health";
-	}
-
-	protected String getZipkinCollectorHealthUrl() {
-		return getDockerUrl() + ":9900/health";
+		return "http://localhost:9411/api/v1/services";
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, String traceId) {
@@ -237,7 +202,7 @@ public abstract class AbstractDockerIntegrationTest {
 	}
 
 	@Configuration
-	public static class Config {
+	public static class IntegrationSpanCollectorConfig {
 		@Bean
 		SpanCollector integrationTestSpanCollector() {
 			return new IntegrationTestSpanCollector();
@@ -246,7 +211,7 @@ public abstract class AbstractDockerIntegrationTest {
 
 	@Configuration
 	@Slf4j
-	public static class ZipkinConfig {
+	public static class WaitUntilZipkinIsUpConfig {
 		@Bean
 		@SneakyThrows
 		public SpanCollector spanCollector(final ZipkinProperties zipkin) {
@@ -254,7 +219,7 @@ public abstract class AbstractDockerIntegrationTest {
 				@Override
 				public void run() {
 					try {
-						ZipkinConfig.this.getSpanCollector(zipkin);
+						WaitUntilZipkinIsUpConfig.this.getSpanCollector(zipkin);
 					} catch (Exception e) {
 						log.error("Exception occurred while trying to connect to zipkin [" + e.getCause() + "]");
 						throw new AssertionError(e);
@@ -265,7 +230,7 @@ public abstract class AbstractDockerIntegrationTest {
 		}
 
 		private SpanCollector getSpanCollector(ZipkinProperties zipkin) {
-			String url = "http://" + getDockerURI().getHost() + ":" + zipkin.getPort();
+			String url = "http://localhost:" + zipkin.getPort();
 			// TODO: parameterize this
 			SpanCollectorMetricsHandler metrics = new EmptySpanCollectorMetricsHandler();
 			return HttpSpanCollector.create(url, zipkin.getHttpConfig(), metrics);

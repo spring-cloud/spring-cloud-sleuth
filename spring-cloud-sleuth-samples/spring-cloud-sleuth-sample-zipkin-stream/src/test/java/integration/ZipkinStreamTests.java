@@ -26,17 +26,17 @@ import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfigu
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
-import tools.AbstractDockerIntegrationTest;
+import tools.AbstractIntegrationTest;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { SampleApp.Config.class,
-		AbstractDockerIntegrationTest.ZipkinConfig.class,
+		AbstractIntegrationTest.WaitUntilZipkinIsUpConfig.class,
 		TestSupportBinderAutoConfiguration.class,
 		ZipkinStreamServerApplication.class })
 @WebIntegrationTest
 @Slf4j
 @ActiveProfiles("test")
-public class ZipkinStreamDockerTests extends AbstractDockerIntegrationTest {
+public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 	private static int port = 9411;
 	private static String sampleAppUrl = "http://localhost:" + port;
@@ -52,8 +52,4 @@ public class ZipkinStreamDockerTests extends AbstractDockerIntegrationTest {
 		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
 	}
 
-	@Override
-	protected String getZipkinRootUrl() {
-		return "http://localhost";
-	}
 }

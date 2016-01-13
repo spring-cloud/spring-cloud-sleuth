@@ -29,17 +29,18 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
 import org.testcontainers.containers.DockerComposeContainer;
 import sample.SampleZipkinApplication;
-import tools.AbstractDockerIntegrationTest;
+import tools.AbstractIntegrationTest;
 
 import java.io.File;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { AbstractDockerIntegrationTest.ZipkinConfig.class, SampleZipkinApplication.class })
+@SpringApplicationConfiguration(classes = { AbstractIntegrationTest.WaitUntilZipkinIsUpConfig.class,
+		SampleZipkinApplication.class })
 @WebIntegrationTest
 @TestPropertySource(properties="sample.zipkin.enabled=true")
 @Slf4j
 @Ignore("Not passing beacuse of 400 from query")
-public class ZipkinDockerTests extends AbstractDockerIntegrationTest {
+public class ZipkinTests extends AbstractIntegrationTest {
 
 	private static final String APP_NAME = "testsleuthzipkin";
 	private static int port = 3380;
@@ -48,8 +49,6 @@ public class ZipkinDockerTests extends AbstractDockerIntegrationTest {
 	@ClassRule
 	public static DockerComposeContainer environment =
 			new DockerComposeContainer(new File("src/test/resources/docker-compose.yml"))
-					.withExposedService("rabbitmq_1", 5672)
-					.withExposedService("mysql_1", 3306)
 					.withExposedService("query_1", 9411);
 
 	@Before
