@@ -3,20 +3,7 @@ query:
   environment:
     # Remove TRANSPORT_TYPE to disable tracing
     - TRANSPORT_TYPE=http
-    - STORAGE_TYPE=mysql
+    - STORAGE_TYPE=sqlite-memory
   ports:
     - 9411:9411
     - 9901:9901
-  links:
-    - mysql:storage
-
-rabbitmq:
-  image: rabbitmq:management
-  ports:
-    - 5672
-    - 15672
-
-mysql:
-  image: openzipkin/zipkin-mysql:1.30.0
-  ports:
-    - 3306:3306

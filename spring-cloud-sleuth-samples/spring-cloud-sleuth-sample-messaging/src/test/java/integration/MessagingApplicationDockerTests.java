@@ -19,7 +19,6 @@ import com.twitter.zipkin.gen.BinaryAnnotation;
 import com.twitter.zipkin.gen.Span;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +28,10 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
 import org.springframework.util.StringUtils;
-import org.testcontainers.containers.DockerComposeContainer;
 import sample.SampleMessagingApplication;
 import tools.AbstractDockerIntegrationTest;
 import tools.IntegrationTestSpanCollector;
 
-import java.io.File;
 import java.util.Collection;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -49,11 +46,6 @@ public class MessagingApplicationDockerTests extends AbstractDockerIntegrationTe
 	private static int port = 3381;
 	private static String sampleAppUrl = "http://localhost:" + port;
 	@Autowired IntegrationTestSpanCollector integrationTestSpanCollector;
-
-	@ClassRule
-	public static DockerComposeContainer environment =
-			new DockerComposeContainer(new File("src/test/resources/docker-compose.yml"))
-					.withExposedService("rabbitmq_1", 5672);
 
 	@After
 	public void cleanup() {

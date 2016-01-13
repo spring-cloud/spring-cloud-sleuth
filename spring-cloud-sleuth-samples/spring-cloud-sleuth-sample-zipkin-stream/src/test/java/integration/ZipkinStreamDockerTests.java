@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
 import org.testcontainers.containers.DockerComposeContainer;
@@ -33,8 +34,9 @@ import java.io.File;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { SampleApp.Config.class,
 		AbstractDockerIntegrationTest.ZipkinConfig.class, ZipkinStreamServerApplication.class })
-@WebIntegrationTest()
+@WebIntegrationTest
 @Slf4j
+@ActiveProfiles("test")
 public class ZipkinStreamDockerTests extends AbstractDockerIntegrationTest {
 
 	private static int port = 9411;
@@ -44,8 +46,7 @@ public class ZipkinStreamDockerTests extends AbstractDockerIntegrationTest {
 	public static DockerComposeContainer environment =
 			new DockerComposeContainer(new File("src/test/resources/docker-compose.yml"))
 					.withExposedService("rabbitmq_1", 5672)
-					.withExposedService("rabbitmq_1", 15672)
-					.withExposedService("mysql_1", 3306);
+					.withExposedService("rabbitmq_1", 15672);
 
 	@Test
 	@SneakyThrows
