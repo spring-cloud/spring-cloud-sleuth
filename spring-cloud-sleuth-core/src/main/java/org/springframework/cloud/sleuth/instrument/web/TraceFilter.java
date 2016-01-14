@@ -35,11 +35,13 @@ import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -105,24 +107,24 @@ public class TraceFilter extends OncePerRequestFilter
 			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 		}
 
-		String spanId = getHeader(request, response, Trace.SPAN_ID_NAME);
-		String traceId = getHeader(request, response, Trace.TRACE_ID_NAME);
+		Long spanId = LongUtils.valueOf(getHeader(request, response, Trace.SPAN_ID_NAME));
+		Long traceId = LongUtils.valueOf(getHeader(request, response, Trace.TRACE_ID_NAME));
 		String name = "http" + uri;
-		if (hasText(traceId)) {
+		if (traceId != null) {
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			if (skip) {
 				span.exportable(false);
 			}
-			String parentId = getHeader(request, response, Trace.PARENT_ID_NAME);
+			Long parentId = LongUtils.valueOf(getHeader(request, response, Trace.PARENT_ID_NAME));
 			String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
 			String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
-			if (parentName != null) {
+			if (StringUtils.hasText(parentName)) {
 				span.name(parentName);
 			} else {
 				span.name("parent/" + name);
 			}
-			if (processId != null) {
+			if (StringUtils.hasText(processId)) {
 				span.processId(processId);
 			}
 			if (parentId != null) {
@@ -181,8 +183,8 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private void addResponseHeaders(HttpServletResponse response, Span span) {
 		if (span != null) {
-			response.addHeader(Trace.SPAN_ID_NAME, span.getSpanId());
-			response.addHeader(Trace.TRACE_ID_NAME, span.getTraceId());
+			response.addHeader(Trace.SPAN_ID_NAME, LongUtils.toString(span.getSpanId()));
+			response.addHeader(Trace.TRACE_ID_NAME, LongUtils.toString(span.getTraceId()));
 		}
 	}
 

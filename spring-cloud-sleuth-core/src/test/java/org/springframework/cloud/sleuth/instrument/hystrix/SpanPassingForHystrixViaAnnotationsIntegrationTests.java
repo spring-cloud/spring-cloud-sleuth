@@ -83,11 +83,9 @@ public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 			spanCaughtFromHystrixThread = new AtomicReference<>(TraceContextHolder.getCurrentSpan());
 		}
 
-		public String getTraceId() {
+		public Long getTraceId() {
 			if (spanCaughtFromHystrixThread == null ||
-					spanCaughtFromHystrixThread.get() == null ||
-					(spanCaughtFromHystrixThread.get() != null &&
-							spanCaughtFromHystrixThread.get().getTraceId() == null)) {
+					spanCaughtFromHystrixThread.get() == null) {
 				return null;
 			}
 			return spanCaughtFromHystrixThread.get().getTraceId();

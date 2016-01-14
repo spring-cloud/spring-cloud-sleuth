@@ -85,7 +85,7 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void rpcAnnotations() {
-		Span parent = MilliSpan.builder().traceId("xxxx").name("parent").remote(true)
+		Span parent = MilliSpan.builder().traceId(1L).name("parent").remote(true)
 				.build();
 		Trace context = this.traceManager.startSpan("child", parent);
 		this.application.publishEvent(new ClientSentEvent(this, context.getSpan()));

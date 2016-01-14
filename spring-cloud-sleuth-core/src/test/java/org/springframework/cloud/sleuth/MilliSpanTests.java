@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth;
 
-import java.util.Collections;
-
 import org.junit.Test;
+
+import java.util.Collections;
 
 /**
  * @author Rob Winch
@@ -28,7 +28,7 @@ public class MilliSpanTests {
 
 	@Test(expected = UnsupportedOperationException.class)
 	public void getAnnotationsReadOnly() {
-		MilliSpan span = new MilliSpan(1, 2, "name", "traceId", Collections.<String>emptyList(), "spanId", true, true, "processId");
+		MilliSpan span = new MilliSpan(1, 2, "name", 1L, Collections.<Long>emptyList(), 2L, true, true, "process");
 
 		span.tags().put("a", "b");
 	}
@@ -36,7 +36,7 @@ public class MilliSpanTests {
 
 	@Test(expected = UnsupportedOperationException.class)
 	public void getTimelineAnnotationsReadOnly() {
-		MilliSpan span = new MilliSpan(1, 2, "name", "traceId", Collections.<String>emptyList(), "spanId", true, true, "processId");
+		MilliSpan span = new MilliSpan(1, 2, "name", 1L, Collections.<Long>emptyList(), 2L, true, true, "process");
 
 		span.logs().add(new Log(1, "1"));
 	}

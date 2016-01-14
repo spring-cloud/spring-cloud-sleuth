@@ -16,18 +16,19 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.sampler.DefaultStringToUuidConverter;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.sampler.StringToUuidConverter;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
+import org.springframework.cloud.sleuth.util.SpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.IdGenerator;
-import org.springframework.util.JdkIdGenerator;
+
+import java.util.Random;
 
 /**
  * @author Spencer Gibb
@@ -36,10 +37,14 @@ import org.springframework.util.JdkIdGenerator;
 @ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
 public class TraceAutoConfiguration {
 
+	@Autowired(required = false) Random random;
+
 	@Bean
 	@ConditionalOnMissingBean
-	public IdGenerator traceIdGenerator() {
-		return new JdkIdGenerator();
+	public SpanIdGenerator traceIdGenerator() {
+		RandomLongSpanIdGenerator randomLongSpanIdGenerator = new RandomLongSpanIdGenerator();
+		randomLongSpanIdGenerator.setRandom(random);
+		return randomLongSpanIdGenerator;
 	}
 
 	@Bean
@@ -48,15 +53,10 @@ public class TraceAutoConfiguration {
 		return new IsTracingSampler();
 	}
 
-	@Bean
-	@ConditionalOnMissingBean
-	public StringToUuidConverter stringToUuidConverter() {
-		return new DefaultStringToUuidConverter();
-	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DefaultTraceManager traceManager(Sampler<Void> sampler, IdGenerator idGenerator,
+	public DefaultTraceManager traceManager(Sampler<Void> sampler, SpanIdGenerator idGenerator,
 			ApplicationEventPublisher publisher) {
 		return new DefaultTraceManager(sampler, idGenerator, publisher);
 	}

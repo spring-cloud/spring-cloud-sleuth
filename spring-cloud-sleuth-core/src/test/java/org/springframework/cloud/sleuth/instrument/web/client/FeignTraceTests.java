@@ -23,6 +23,8 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.util.LongUtils;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -75,8 +77,8 @@ public class FeignTraceTests {
 	@Test
 	public void shouldAttachTraceIdWhenUsingFeignClient() {
 		// given
-		String currentTraceId = "currentTraceId";
-		String currentParentId = "currentParentId";
+		Long currentTraceId = 1L;
+		Long currentParentId = 2L;
 		this.traceManager.continueSpan(MilliSpan.builder().traceId(currentTraceId)
 				.spanId(generatedId()).parent(currentParentId).build());
 
@@ -84,12 +86,12 @@ public class FeignTraceTests {
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		// then
-		then(getHeader(response, Trace.TRACE_ID_NAME)).isEqualTo(currentTraceId);
+		then(LongUtils.valueOf(getHeader(response, Trace.TRACE_ID_NAME))).isEqualTo(currentTraceId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 
-	private String generatedId() {
-		return new JdkIdGenerator().generateId().toString();
+	private Long generatedId() {
+		return new RandomLongSpanIdGenerator().generateId();
 	}
 
 	private String getHeader(ResponseEntity<String> response, String name) {

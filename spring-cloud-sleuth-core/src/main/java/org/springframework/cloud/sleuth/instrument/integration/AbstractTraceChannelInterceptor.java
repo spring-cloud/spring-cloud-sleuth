@@ -4,6 +4,7 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
@@ -29,11 +30,11 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 * trace id passed initially.
 	 */
 	Span buildSpan(Message<?> message) {
-		String spanId = getHeader(message, Trace.SPAN_ID_NAME);
-		String traceId = getHeader(message, Trace.TRACE_ID_NAME);
-		if (StringUtils.hasText(traceId)) {
+		Long spanId = getHeader(message, Trace.SPAN_ID_NAME, Long.class);
+		Long traceId = getHeader(message, Trace.TRACE_ID_NAME, Long.class);
+		if (traceId != null) {
 			MilliSpan.MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
-			String parentId = getHeader(message, Trace.PARENT_ID_NAME);
+			Long parentId = getHeader(message, Trace.PARENT_ID_NAME, Long.class);
 			if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
 				span.exportable(false);
 			}
@@ -55,7 +56,11 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	String getHeader(Message<?> message, String name) {
-		return (String) message.getHeaders().get(name);
+		return getHeader(message, name, String.class);
+	}
+
+	<T> T getHeader(Message<?> message, String name, Class<T> type) {
+		return message.getHeaders().get(name, type);
 	}
 
 	String getChannelName(MessageChannel channel) {

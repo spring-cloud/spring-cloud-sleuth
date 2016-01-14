@@ -15,30 +15,20 @@
  */
 package tools;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
-
 import io.zipkin.Codec;
 import io.zipkin.Span;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -47,29 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractIntegrationTest {
 
 	protected static int pollInterval = 1;
-	protected static int timeout = 120;
+	protected static int timeout = 20;
 	protected RestTemplate restTemplate = new AssertingRestTemplate();
 
 	public static ConditionFactory await() {
 		return Awaitility.await().pollInterval(pollInterval, SECONDS).atMost(timeout, SECONDS);
-	}
-
-	protected long zipkinHashedTraceId(String string) {
-		long h = 1125899906842597L;
-		if (string == null) {
-			return h;
-		}
-		int len = string.length();
-
-		for (int i = 0; i < len; i++) {
-			h = 31 * h + string.charAt(i);
-		}
-		return h;
-	}
-
-	protected String zipkinHashedHexStringTraceId(String traceId) {
-		long hashedTraceId = zipkinHashedTraceId(traceId);
-		return Long.toHexString(hashedTraceId);
 	}
 
 	protected Runnable zipkinQueryServerIsUp() {
@@ -109,10 +81,9 @@ public abstract class AbstractIntegrationTest {
 		return 9411;
 	}
 
-	protected ResponseEntity<String> checkStateOfTheTraceId(String traceId) {
-		String hexTraceId = zipkinHashedHexStringTraceId(traceId);
-		URI uri = URI.create(getZipkinTraceQueryUrl() + hexTraceId);
-		log.info("Sending request to the Zipkin query service [{}]. Checking presence of trace id [{}] and its hex version [{}]", uri, traceId, hexTraceId);
+	protected ResponseEntity<String> checkStateOfTheTraceId(Long traceId) {
+		URI uri = URI.create(getZipkinTraceQueryUrl() + Long.toHexString(traceId));
+		log.info("Sending request to the Zipkin query service [{}]. Checking presence of trace id [{}]", uri, traceId);
 		return exchangeRequest(uri);
 	}
 
@@ -130,11 +101,11 @@ public abstract class AbstractIntegrationTest {
 		return "http://localhost:"+getZipkinServerPort()+"/api/v1/services";
 	}
 
-	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, String traceId) {
+	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, Long traceId) {
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId);
 	}
 
-	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(String traceId) {
+	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(Long traceId) {
 		return () -> {
 			ResponseEntity<String> response = checkStateOfTheTraceId(traceId);
 			log.info("Response from the Zipkin query service about the trace id [{}] for trace with id [{}]", response, traceId);

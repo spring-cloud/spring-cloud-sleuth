@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.cloud.sleuth.zipkin.HttpZipkinSpanReporter;
 import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
@@ -31,7 +32,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.JdkIdGenerator;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
 
@@ -53,9 +53,8 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@SneakyThrows
 	public void should_propagate_spans_to_zipkin() {
-		String traceId = new JdkIdGenerator().generateId().toString();
+		Long traceId = new RandomLongSpanIdGenerator().generateId();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
 				sampleAppUrl + "/hi2", traceId));

@@ -1,10 +1,5 @@
 package org.springframework.cloud.sleuth.instrument;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,15 +10,20 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.util.JdkIdGenerator;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRunnableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
-			new JdkIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
+			new RandomLongSpanIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@After
 	public void cleanup() {

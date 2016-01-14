@@ -16,19 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.Map;
-
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
+import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.ReflectionUtils;
 
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.context.RequestContext;
+import java.util.Map;
 
 /**
  * @author Dave Syer
@@ -89,8 +89,8 @@ ApplicationEventPublisherAware {
 		return this.accessor.getCurrentSpan();
 	}
 
-	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty() ? span
+	private Long getParentId(Span span) {
+		return !span.getParents().isEmpty() ? span
 				.getParents().get(0) : null;
 	}
 
@@ -98,6 +98,9 @@ ApplicationEventPublisherAware {
 		if (value != null && !request.containsKey(name) && this.accessor.isTracing()) {
 			request.put(name, value);
 		}
+	}
+	public void setHeader(Map<String, String> request, String name, Long value) {
+		setHeader(request, name, LongUtils.toString(value));
 	}
 
 	@Override

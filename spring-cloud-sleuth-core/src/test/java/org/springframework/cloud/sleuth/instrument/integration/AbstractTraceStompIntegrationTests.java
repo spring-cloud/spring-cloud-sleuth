@@ -50,19 +50,19 @@ abstract class AbstractTraceStompIntegrationTests {
 		then(stompMessageHandler.message).isNotNull();
 	}
 
-	String thenSpanIdFromHeadersIsNotEmpty() {
-		String header = getValueFromHeaders(Trace.SPAN_ID_NAME);
-		then(header).as("Span id should not be empty").isNotEmpty();
+	Long thenSpanIdFromHeadersIsNotEmpty() {
+		Long header = getValueFromHeaders(Trace.SPAN_ID_NAME, Long.class);
+		then(header).as("Span id should not be empty").isNotNull();
 		return header;
 	}
 
-	String thenTraceIdFromHeadersIsNotEmpty() {
-		String header = getValueFromHeaders(Trace.TRACE_ID_NAME);
-		then(header).as("Trace id should not be empty").isNotEmpty();
+	Long thenTraceIdFromHeadersIsNotEmpty() {
+		Long header = getValueFromHeaders(Trace.TRACE_ID_NAME, Long.class);
+		then(header).as("Trace id should not be empty").isNotNull();
 		return header;
 	}
 
-	String getValueFromHeaders(String headerName) {
-		return stompMessageHandler.message.getHeaders().get(headerName, String.class);
+	<T> T getValueFromHeaders(String headerName, Class<T> type) {
+		return stompMessageHandler.message.getHeaders().get(headerName, type);
 	}
 }

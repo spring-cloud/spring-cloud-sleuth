@@ -16,6 +16,7 @@
 package integration;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +30,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.MessageChannel;
@@ -60,13 +62,13 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 		await().until(zipkinServerIsUp());
 
-		String traceId = new JdkIdGenerator().generateId().toString();
+		Long traceId = new RandomLongSpanIdGenerator().generateId();
 		Span span = MilliSpan.builder().traceId(traceId).spanId(traceId).name("test")
 				.build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");
 
 		this.input.send(MessageBuilder.withPayload(
-				new Spans(new Host(getAppName(), "127.0.0.1", 8080), Arrays.asList(span)))
+				new Spans(new Host(getAppName(), "127.0.0.1", 8080), Collections.singletonList(span)))
 				.build());
 
 		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));

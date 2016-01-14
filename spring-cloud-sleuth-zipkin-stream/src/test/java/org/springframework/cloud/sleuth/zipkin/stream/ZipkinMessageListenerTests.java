@@ -25,11 +25,12 @@ import java.util.Objects;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.stream.Host;
+import org.springframework.cloud.sleuth.util.LongUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ZipkinMessageListenerTests {
-	MilliSpan span = new MilliSpan(1, 3, "name", "traceId", Collections.<String>emptyList(), "spanId", true, true, "processId");
+	MilliSpan span = new MilliSpan(1, 3, "name", 1L, Collections.<Long>emptyList(), 2L, true, true, "process");
 	Host host = new Host("myservice", "1.2.3.4", 8080);
 	Endpoint endpoint = Endpoint.create("myservice", 1 << 24 | 2 << 16 | 3 << 8 | 4, 8080);
 
@@ -75,13 +76,13 @@ public class ZipkinMessageListenerTests {
 
 		assertThat(result.binaryAnnotations).hasSize(1);
 		assertThat(result.binaryAnnotations.get(0)).isEqualToComparingFieldByField(
-				BinaryAnnotation.create("lc", span.getProcessId().toLowerCase(), endpoint));
+				BinaryAnnotation.create("lc", span.getProcessId(), endpoint));
 	}
 
 	// TODO: "unknown" bc process id, documented as not nullable, is null in some tests.
 	@Test
 	public void nullProcessIdCoercesToUnknownServiceName() {
-		MilliSpan noProcessId = MilliSpan.builder().traceId("xxxx").name("parent").remote(true).build();
+		MilliSpan noProcessId = MilliSpan.builder().traceId(1L).name("parent").remote(true).build();
 
 		io.zipkin.Span result = ZipkinMessageListener.convert(noProcessId, host);
 

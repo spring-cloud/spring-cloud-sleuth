@@ -7,14 +7,14 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.util.JdkIdGenerator;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 public class TraceTemplateTests {
 
-	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(), new JdkIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
+	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(), new RandomLongSpanIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@Test
 	public void should_pass_trace_to_the_callback_if_tracing_is_active() {

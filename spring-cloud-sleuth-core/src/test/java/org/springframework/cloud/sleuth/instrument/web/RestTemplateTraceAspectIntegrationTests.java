@@ -122,7 +122,7 @@ public class RestTemplateTraceAspectIntegrationTests extends AbstractMvcWiremock
 		};
 
 		private String callWiremockAndReturnOk() {
-			this.restTemplate.getForObject("http://localhost:"+this.httpMockServer.port(), String.class);
+			this.restTemplate.getForObject("http://localhost:" + this.httpMockServer.port(), String.class);
 			return "OK";
 		}
 	}

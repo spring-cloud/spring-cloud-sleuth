@@ -18,8 +18,10 @@ package org.springframework.cloud.sleuth.instrument.integration;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -88,13 +90,18 @@ public class SpanMessageHeaders {
 
 	private static void addHeader(Map<String, String> headers, String name,
 			String value) {
-		if (value != null) {
+		if (StringUtils.hasText(value)) {
 			headers.put(name, value);
 		}
 	}
 
-	private static String getFirst(List<String> parents) {
-		return parents == null || parents.isEmpty() ? null : parents.get(0);
+	private static void addHeader(Map<String, String> headers, String name,
+			Long value) {
+		addHeader(headers, name, LongUtils.toString(value));
+	}
+
+	private static Long getFirst(List<Long> parents) {
+		return parents.isEmpty() ? null : parents.get(0);
 	}
 
 }

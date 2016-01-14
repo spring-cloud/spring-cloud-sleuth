@@ -22,12 +22,12 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.JdkIdGenerator;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
 
@@ -52,7 +52,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_for_messaging() {
-		String traceId = new JdkIdGenerator().generateId().toString();
+		Long traceId = new RandomLongSpanIdGenerator().generateId();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId));
 
@@ -63,7 +63,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_for_messaging_with_async() {
-		String traceId = new JdkIdGenerator().generateId().toString();
+		Long traceId = new RandomLongSpanIdGenerator().generateId();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId));
 
@@ -80,8 +80,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
 	}
 
-	private void thenAllSpansHaveTraceIdEqualTo(String traceId) {
-		then(integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == zipkinHashedTraceId(traceId))).isTrue();
+	private void thenAllSpansHaveTraceIdEqualTo(Long traceId) {
+		then(this.integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == traceId)).isTrue();
 	}
 
 	@Configuration

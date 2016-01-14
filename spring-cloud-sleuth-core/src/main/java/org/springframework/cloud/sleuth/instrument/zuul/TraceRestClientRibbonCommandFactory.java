@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.io.InputStream;
-import java.net.URISyntaxException;
-
+import com.netflix.client.http.HttpRequest;
+import com.netflix.niws.client.http.RestClient;
+import lombok.SneakyThrows;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
@@ -27,15 +27,14 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
+import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.MultiValueMap;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.niws.client.http.RestClient;
-
-import lombok.SneakyThrows;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 
 /**
  * @author Spencer Gibb
@@ -118,8 +117,8 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			}
 		}
 
-		private String getParentId(Span span) {
-			return span.getParents() != null && !span.getParents().isEmpty()
+		private Long getParentId(Span span) {
+			return !span.getParents().isEmpty()
 					? span.getParents().get(0) : null;
 		}
 
@@ -127,6 +126,10 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			if (value != null && this.accessor.isTracing()) {
 				builder.header(name, value);
 			}
+		}
+
+		public void setHeader(HttpRequest.Builder builder, String name, Long value) {
+			setHeader(builder, name, LongUtils.toString(value));
 		}
 
 		private Span getCurrentSpan() {

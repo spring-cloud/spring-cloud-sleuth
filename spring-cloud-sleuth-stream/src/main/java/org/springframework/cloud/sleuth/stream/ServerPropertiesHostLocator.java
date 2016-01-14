@@ -80,8 +80,8 @@ public class ServerPropertiesHostLocator implements HostLocator {
 
 	private String getServiceName(Span span) {
 		String serviceName;
-		if (span.getProcessId() != null) { // TODO: javadocs say this isn't nullable!
-			serviceName = span.getProcessId().toLowerCase();
+		if (span.getProcessId() != null) {
+			serviceName = span.getProcessId();
 		}
 		else {
 			serviceName = this.appName;

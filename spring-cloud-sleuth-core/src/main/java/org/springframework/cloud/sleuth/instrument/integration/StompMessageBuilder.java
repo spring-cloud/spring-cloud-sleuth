@@ -22,6 +22,7 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -64,12 +65,12 @@ public class StompMessageBuilder {
 			setHeaderIfAbsent(Trace.SPAN_ID_NAME, span.getSpanId());
 			setHeaderIfAbsent(Trace.TRACE_ID_NAME, span.getTraceId());
 			setHeaderIfAbsent(Trace.SPAN_NAME_NAME, span.getName());
-			String parentId = getParentId(TraceContextHolder.getCurrentSpan());
+			Long parentId = getParentId(TraceContextHolder.getCurrentSpan());
 			if (parentId != null)
 				setHeaderIfAbsent(Trace.PARENT_ID_NAME, parentId);
 
 			String processId = span.getProcessId();
-			if (processId != null)
+			if (StringUtils.hasText(processId))
 				setHeaderIfAbsent(Trace.PROCESS_ID_NAME, processId);
 		}
 		return this;
@@ -113,8 +114,8 @@ public class StompMessageBuilder {
 		}
 	}
 
-	private String getParentId(final Span currentSpan) {
-		List<String> parents = currentSpan.getParents();
-		return parents == null || parents.isEmpty() ? null : parents.get(0);
+	private Long getParentId(final Span currentSpan) {
+		List<Long> parents = currentSpan.getParents();
+		return parents.isEmpty() ? null : parents.get(0);
 	}
 }

@@ -16,13 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -31,6 +29,10 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The {@link ExecutorChannelInterceptor} implementation responsible for the {@link Span}
@@ -92,8 +94,8 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 		return postReceive(message, channel);
 	}
 
-	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty()
+	private Long getParentId(Span span) {
+		return !span.getParents().isEmpty()
 				? span.getParents().get(0) : null;
 	}
 
@@ -130,12 +132,12 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 			setHeader(headers, Trace.SPAN_ID_NAME, this.span.getSpanId());
 			setHeader(headers, Trace.TRACE_ID_NAME, this.span.getTraceId());
 			setHeader(headers, Trace.SPAN_NAME_NAME, this.span.getName());
-			String parentId = getParentId(span);
+			Long parentId = getParentId(span);
 			if (parentId != null) {
 				setHeader(headers, Trace.PARENT_ID_NAME, parentId);
 			}
-			String processId = this.span.getProcessId();
-			if (processId != null) {
+			String processId = span.getProcessId();
+			if (StringUtils.hasText(processId)) {
 				setHeader(headers, Trace.PROCESS_ID_NAME, processId);
 			}
 			this.messageHeaders = new MessageHeaders(headers);
@@ -145,6 +147,9 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 			if (!headers.containsKey(name)) {
 				headers.put(name, value);
 			}
+		}
+		public void setHeader(Map<String, Object> headers, String name, long value) {
+			setHeader(headers, name, LongUtils.toString(value));
 		}
 
 		@Override

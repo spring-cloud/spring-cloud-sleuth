@@ -1,9 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.util.UUID;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +8,15 @@ import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
+import org.springframework.cloud.sleuth.util.LongUtils;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterIntegartionTests.class)
@@ -30,13 +30,13 @@ public class TraceFilterIntegartionTests extends AbstractMvcIntegrationTest {
 	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
 		MvcResult mvcResult = whenSentPingWithoutTracingData();
 
-		then(tracingHeaderFrom(mvcResult)).isNotNull().isNotEmpty();
+		then(tracingHeaderFrom(mvcResult)).isNotNull();
 	}
 
 	@Test
 	public void when_correlationId_is_sent_should_not_create_a_new_one_but_return_the_existing_one_instead()
 			throws Exception {
-		String expectedTraceId = "passedCorId";
+		Long expectedTraceId = new RandomLongSpanIdGenerator().generateId();
 
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
@@ -54,21 +54,21 @@ public class TraceFilterIntegartionTests extends AbstractMvcIntegrationTest {
 				.andReturn();
 	}
 
-	private MvcResult whenSentPingWithTraceId(String passedCorrelationId)
+	private MvcResult whenSentPingWithTraceId(Long passedCorrelationId)
 			throws Exception {
 		return sendPingWithTraceId(Trace.TRACE_ID_NAME, passedCorrelationId);
 	}
 
-	private MvcResult sendPingWithTraceId(String headerName, String passedCorrelationId)
+	private MvcResult sendPingWithTraceId(String headerName, Long passedCorrelationId)
 			throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
 						.header(headerName, passedCorrelationId)
-						.header(Trace.SPAN_ID_NAME, UUID.randomUUID().toString()))
+						.header(Trace.SPAN_ID_NAME, new RandomLongSpanIdGenerator().generateId()))
 				.andReturn();
 	}
 
-	private String tracingHeaderFrom(MvcResult mvcResult) {
-		return mvcResult.getResponse().getHeader(Trace.TRACE_ID_NAME);
+	private Long tracingHeaderFrom(MvcResult mvcResult) {
+		return LongUtils.valueOf(mvcResult.getResponse().getHeader(Trace.TRACE_ID_NAME));
 	}
 }

@@ -31,8 +31,8 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.SpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.util.IdGenerator;
 
 /**
  * @author Spencer Gibb
@@ -41,11 +41,11 @@ public class DefaultTraceManager implements TraceManager {
 
 	private final Sampler<Void> defaultSampler;
 
-	private final IdGenerator idGenerator;
+	private final SpanIdGenerator idGenerator;
 
 	private final ApplicationEventPublisher publisher;
 
-	public DefaultTraceManager(Sampler<Void> defaultSampler, IdGenerator idGenerator,
+	public DefaultTraceManager(Sampler<Void> defaultSampler, SpanIdGenerator idGenerator,
 			ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
 		this.idGenerator = idGenerator;
@@ -79,7 +79,7 @@ public class DefaultTraceManager implements TraceManager {
 		}
 		else {
 			// Non-exportable so we keep the trace but not other data
-			String id = createId();
+			long id = createId();
 			span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(id).spanId(id).exportable(false).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
@@ -149,7 +149,7 @@ public class DefaultTraceManager implements TraceManager {
 	}
 
 	protected Span createChild(Span parent, String name) {
-		String id = createId();
+		long id = createId();
 		if (parent == null) {
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
 					.name(name).traceId(id).spanId(id).build();
@@ -169,8 +169,8 @@ public class DefaultTraceManager implements TraceManager {
 		}
 	}
 
-	private String createId() {
-		return this.idGenerator.generateId().toString();
+	private long createId() {
+		return this.idGenerator.generateId();
 	}
 
 	@Override

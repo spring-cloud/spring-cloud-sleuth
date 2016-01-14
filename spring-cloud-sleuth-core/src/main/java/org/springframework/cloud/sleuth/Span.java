@@ -41,18 +41,17 @@ public interface Span {
 	 * The spanId is immutable and cannot be changed. It is safe to access this from
 	 * multiple threads.
 	 */
-	String getSpanId();
+	Long getSpanId();
 
 	/**
 	 * A pseudo-unique (random) number assigned to the trace associated with this span
 	 */
-	String getTraceId();
+	long getTraceId();
 
 	/**
 	 * Return a unique id for the process from which this Span originated.
 	 * <p/>
 	 * <p/>
-	 * Will never be null.
 	 */
 	String getProcessId();
 
@@ -62,7 +61,7 @@ public interface Span {
 	 * <p/>
 	 * The collection will be empty if there are no parents.
 	 */
-	List<String> getParents();
+	List<Long> getParents();
 
 	/**
 	 * Flag that tells us whether the span was started in another process. Useful in RPC

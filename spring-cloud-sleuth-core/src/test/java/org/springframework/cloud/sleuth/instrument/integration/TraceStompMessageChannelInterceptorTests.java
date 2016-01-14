@@ -55,8 +55,8 @@ public class TraceStompMessageChannelInterceptorTests extends AbstractTraceStomp
 		whenTheMessageWasSent(message);
 		this.traceManager.close(trace);
 
-		String spanId = thenSpanIdFromHeadersIsNotEmpty();
-		String traceId = thenTraceIdFromHeadersIsNotEmpty();
+		Long spanId = thenSpanIdFromHeadersIsNotEmpty();
+		Long traceId = thenTraceIdFromHeadersIsNotEmpty();
 		then(traceId).isEqualTo(trace.getSpan().getTraceId());
 		then(spanId).isEqualTo(trace.getSpan().getSpanId());
 		then(TraceContextHolder.getCurrentTrace()).isNull();
@@ -67,7 +67,7 @@ public class TraceStompMessageChannelInterceptorTests extends AbstractTraceStomp
 	}
 
 	private String thenSpanIdFromHeadersIsEmpty() {
-		String header = getValueFromHeaders(Trace.SPAN_ID_NAME);
+		String header = getValueFromHeaders(Trace.SPAN_ID_NAME, String.class);
 		then(header).as("Span id should be empty").isNullOrEmpty();
 		return header;
 	}

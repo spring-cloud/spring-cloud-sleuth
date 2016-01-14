@@ -13,8 +13,8 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.util.JdkIdGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +39,7 @@ public class TraceableExecutorServiceTests {
 
 	@Before
 	public void setup() {
-		//traceManager = new DefaultTraceManager(new AlwaysSampler(), new RandomLongSpanIdGenerator(), publisher);
-		traceManager = new DefaultTraceManager(new AlwaysSampler(), new JdkIdGenerator(), publisher);
+		traceManager = new DefaultTraceManager(new AlwaysSampler(), new RandomLongSpanIdGenerator(), publisher);
 		traceManagerableExecutorService = new TraceableExecutorService(executorService, traceManager);
 		TraceContextHolder.removeCurrentTrace();
 	}
@@ -74,8 +73,8 @@ public class TraceableExecutorServiceTests {
 
 	class SpanVerifyingRunnable implements Runnable {
 
-		Queue<String> traceIds = new ConcurrentLinkedQueue<>();
-		Queue<String> spanIds = new ConcurrentLinkedQueue<>();
+		Queue<Long> traceIds = new ConcurrentLinkedQueue<>();
+		Queue<Long> spanIds = new ConcurrentLinkedQueue<>();
 
 		@Override
 		public void run() {

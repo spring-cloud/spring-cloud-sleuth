@@ -26,12 +26,10 @@ public class PercentageBasedSampler implements Sampler<Void> {
 
 	private final SamplerConfiguration configuration;
 	private final TraceAccessor traceAccessor;
-	private final StringToUuidConverter converter;
 
-	public PercentageBasedSampler(SamplerConfiguration configuration, TraceAccessor traceAccessor, StringToUuidConverter converter) {
+	public PercentageBasedSampler(SamplerConfiguration configuration, TraceAccessor traceAccessor) {
 		this.configuration = configuration;
 		this.traceAccessor = traceAccessor;
-		this.converter = converter;
 	}
 
 	@Override
@@ -40,7 +38,7 @@ public class PercentageBasedSampler implements Sampler<Void> {
 		if (currentSpan == null) {
 			return false;
 		}
-		return new UuidTraceIdToThresholdComparable(configuration.getPercentage(), converter)
+		return new TraceIdToThresholdComparable(configuration.getPercentage())
 				.compareTo(currentSpan.getTraceId()) <= 0;
 	}
 

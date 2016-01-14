@@ -15,13 +15,12 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.io.IOException;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
+import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -29,6 +28,9 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.StringUtils;
+
+import java.io.IOException;
 
 /**
  * Interceptor that verifies whether the trance and span id has been set on the request
@@ -91,15 +93,19 @@ ApplicationEventPublisherAware {
 		}
 	}
 
-	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty() ? span
+	private Long getParentId(Span span) {
+		return !span.getParents().isEmpty() ? span
 				.getParents().get(0) : null;
 	}
 
 	public void setHeader(HttpRequest request, String name, String value) {
-		if (value != null && !request.getHeaders().containsKey(name) && this.accessor.isTracing()) {
+		if (StringUtils.hasText(value) && !request.getHeaders().containsKey(name) && this.accessor.isTracing()) {
 			request.getHeaders().add(name, value);
 		}
+	}
+
+	public void setHeader(HttpRequest request, String name, Long value) {
+		setHeader(request, name, LongUtils.toString(value));
 	}
 
 	private Span getCurrentSpan() {
