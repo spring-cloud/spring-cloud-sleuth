@@ -21,7 +21,7 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerInitial
 import org.springframework.cloud.util.InetUtils;
 import org.springframework.context.event.EventListener;
 
-import com.twitter.zipkin.gen.Endpoint;
+import io.zipkin.Endpoint;
 
 /**
  * @author Dave Syer
@@ -43,7 +43,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	public Endpoint local() {
 		int address = getAddress();
 		Integer port = getPort();
-		Endpoint ep = new Endpoint(address, port.shortValue(), this.appName);
+		Endpoint ep = Endpoint.create(this.appName, address, port);
 		return ep;
 	}
 
@@ -71,7 +71,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 			return InetUtils.getIpAddressAsInt(this.serverProperties.getAddress().getHostAddress());
 		}
 		else {
-			return 127 <<24|1;
+			return 127 << 24 | 1;
 		}
 	}
 }

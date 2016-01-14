@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import com.twitter.zipkin.gen.Endpoint;
+import io.zipkin.Endpoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
@@ -14,7 +14,7 @@ public class FallbackHavingEndpointLocatorTests {
 
 	@Mock DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
 	@Mock ServerPropertiesEndpointLocator serverPropertiesEndpointLocator;
-	Endpoint expectedEndpoint = new Endpoint();
+	Endpoint expectedEndpoint = Endpoint.create("my-tomcat", 127 << 24 | 1, 8080);
 
 	@Test
 	public void should_use_system_property_locator_if_discovery_client_locator_is_not_present() {

@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import com.github.kristofa.brave.HttpSpanCollector;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Data;
@@ -32,5 +31,5 @@ public class ZipkinProperties {
 	private String host = "localhost";
 	private int port = 9411;
 	private boolean enabled = true;
-	private HttpSpanCollector.Config httpConfig = HttpSpanCollector.Config.builder().build();
+	private int flushInterval = 1;
 }

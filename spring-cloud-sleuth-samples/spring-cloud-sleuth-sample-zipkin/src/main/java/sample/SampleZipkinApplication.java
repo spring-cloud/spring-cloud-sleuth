@@ -16,17 +16,17 @@
 
 package sample;
 
+import io.zipkin.Span;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
-
-import com.github.kristofa.brave.LoggingSpanCollector;
-import com.github.kristofa.brave.SpanCollector;
 
 /**
  * @author Spencer Gibb
@@ -34,6 +34,7 @@ import com.github.kristofa.brave.SpanCollector;
 @SpringBootApplication
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableAsync
+@Slf4j
 public class SampleZipkinApplication {
 
 	public static final String CLIENT_NAME = "testApp";
@@ -50,8 +51,13 @@ public class SampleZipkinApplication {
 	// Use this for debugging (or if there is no Zipkin server running on port 9411)
 	@Bean
 	@ConditionalOnProperty(value="sample.zipkin.enabled", havingValue="false")
-	public SpanCollector spanCollector() {
-		return new LoggingSpanCollector();
+	public ZipkinSpanReporter spanCollector() {
+		return new ZipkinSpanReporter() {
+			@Override
+			public void report(Span span) {
+				log.info("Reporting span [{}]", span);
+			}
+		};
 	}
 
 }

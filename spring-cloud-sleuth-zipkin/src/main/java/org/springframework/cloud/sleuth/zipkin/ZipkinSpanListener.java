@@ -31,12 +31,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
 
-import com.github.kristofa.brave.SpanCollector;
-import com.twitter.zipkin.gen.Annotation;
-import com.twitter.zipkin.gen.AnnotationType;
-import com.twitter.zipkin.gen.BinaryAnnotation;
-import com.twitter.zipkin.gen.Endpoint;
-import com.twitter.zipkin.gen.zipkinCoreConstants;
+import io.zipkin.Annotation;
+import io.zipkin.BinaryAnnotation;
+import io.zipkin.Constants;
+import io.zipkin.Endpoint;
 
 import lombok.extern.apachecommons.CommonsLog;
 
@@ -48,7 +46,7 @@ public class ZipkinSpanListener {
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 	private static final byte[] UNKNOWN_BYTES = "unknown".getBytes(UTF_8);
 
-	private SpanCollector spanCollector;
+	private ZipkinSpanReporter reporter;
 	/**
 	 * Endpoint is the visible IP address of this service, the port it is listening on and
 	 * the service name from discovery.
@@ -56,8 +54,8 @@ public class ZipkinSpanListener {
 	// Visible for testing
 	Endpoint localEndpoint;
 
-	public ZipkinSpanListener(SpanCollector spanCollector, Endpoint localEndpoint) {
-		this.spanCollector = spanCollector;
+	public ZipkinSpanListener(ZipkinSpanReporter reporter, Endpoint localEndpoint) {
+		this.reporter = reporter;
 		this.localEndpoint = localEndpoint;
 	}
 
@@ -75,7 +73,7 @@ public class ZipkinSpanListener {
 			// If an inbound RPC call, it should log a "sr" annotation.
 			// If possible, it should log a binary annotation of "ca", indicating the
 			// caller's address (ex X-Forwarded-For header)
-			event.getParent().log(zipkinCoreConstants.SERVER_RECV);
+			event.getParent().log(Constants.SERVER_RECV);
 		}
 	}
 
@@ -85,21 +83,21 @@ public class ZipkinSpanListener {
 		// For an outbound RPC call, it should log a "cs" annotation.
 		// If possible, it should log a binary annotation of "sa", indicating the
 		// destination address.
-		event.getSpan().log(zipkinCoreConstants.CLIENT_SEND);
+		event.getSpan().log(Constants.CLIENT_SEND);
 	}
 
 	@EventListener
 	@Order(0)
 	public void clientReceive(ClientReceivedEvent event) {
-		event.getSpan().log(zipkinCoreConstants.CLIENT_RECV);
+		event.getSpan().log(Constants.CLIENT_RECV);
 	}
 
 	@EventListener
 	@Order(0)
 	public void serverSend(ServerSentEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
-			event.getParent().log(zipkinCoreConstants.SERVER_SEND);
-			this.spanCollector.collect(convert(event.getParent()));
+			event.getParent().log(Constants.SERVER_SEND);
+			this.reporter.report(convert(event.getParent()));
 		}
 	}
 
@@ -110,7 +108,7 @@ public class ZipkinSpanListener {
 		// Zipkin Span.duration corresponds with Sleuth's Span.begin and end
 		assert event.getSpan().getEnd() != 0;
 		if (event.getSpan().isExportable()) {
-			this.spanCollector.collect(convert(event.getSpan()));
+			this.reporter.report(convert(event.getSpan()));
 		}
 	}
 
@@ -123,8 +121,8 @@ public class ZipkinSpanListener {
 	 * </ul>
 	 */
 	// Visible for testing
-	com.twitter.zipkin.gen.Span convert(Span span) {
-		com.twitter.zipkin.gen.Span zipkinSpan = new com.twitter.zipkin.gen.Span();
+	io.zipkin.Span convert(Span span) {
+		io.zipkin.Span.Builder zipkinSpan = new io.zipkin.Span.Builder();
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
 		if (span.logs().isEmpty() && span.tags().isEmpty()) {
@@ -132,45 +130,45 @@ public class ZipkinSpanListener {
 			byte[] processId = span.getProcessId() != null
 					? span.getProcessId().toLowerCase().getBytes(UTF_8)
 					: UNKNOWN_BYTES;
-			BinaryAnnotation component = new BinaryAnnotation()
-					.setAnnotation_type(AnnotationType.STRING)
-					.setKey("lc") // LOCAL_COMPONENT
-					.setValue(processId)
-					.setHost(this.localEndpoint);
-			zipkinSpan.addToBinary_annotations(component);
+			BinaryAnnotation component = new BinaryAnnotation.Builder()
+					.type(BinaryAnnotation.Type.STRING)
+					.key("lc") // LOCAL_COMPONENT
+					.value(processId)
+					.endpoint(this.localEndpoint).build();
+			zipkinSpan.addBinaryAnnotation(component);
 		} else {
 			addZipkinAnnotations(zipkinSpan, span, this.localEndpoint);
 			addZipkinBinaryAnnotations(zipkinSpan, span, this.localEndpoint);
 		}
 
-		zipkinSpan.setTimestamp(span.getBegin() * 1000L);
-		zipkinSpan.setDuration((span.getEnd() - span.getBegin()) * 1000L);
-		zipkinSpan.setTrace_id(hash(span.getTraceId()));
+		zipkinSpan.timestamp(span.getBegin() * 1000L);
+		zipkinSpan.duration((span.getEnd() - span.getBegin()) * 1000L);
+		zipkinSpan.traceId(hash(span.getTraceId()));
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
 				log.error("Zipkin doesn't support spans with multiple parents. Omitting "
 						+ "other parents for " + span);
 			}
-			zipkinSpan.setParent_id(hash(span.getParents().get(0)));
+			zipkinSpan.parentId(hash(span.getParents().get(0)));
 		}
-		zipkinSpan.setId(hash(span.getSpanId()));
+		zipkinSpan.id(hash(span.getSpanId()));
 		if (StringUtils.hasText(span.getName())) {
-			zipkinSpan.setName(span.getName());
+			zipkinSpan.name(span.getName());
 		}
-		return zipkinSpan;
+		return zipkinSpan.build();
 	}
 
 	/**
 	 * Add annotations from the sleuth Span.
 	 */
-	private void addZipkinAnnotations(com.twitter.zipkin.gen.Span zipkinSpan,
+	private void addZipkinAnnotations(io.zipkin.Span.Builder zipkinSpan,
 			Span span, Endpoint endpoint) {
 		for (Log ta : span.logs()) {
-			Annotation zipkinAnnotation = new Annotation()
-					.setHost(endpoint)
-					.setTimestamp(ta.getTime() * 1000) // Zipkin is in microseconds
-					.setValue(ta.getMsg());
-			zipkinSpan.addToAnnotations(zipkinAnnotation);
+			Annotation zipkinAnnotation = new Annotation.Builder()
+					.endpoint(endpoint)
+					.timestamp(ta.getTime() * 1000) // Zipkin is in microseconds
+					.value(ta.getMsg()).build();
+			zipkinSpan.addAnnotation(zipkinAnnotation);
 		}
 	}
 
@@ -179,15 +177,15 @@ public class ZipkinSpanListener {
 	 *
 	 * @return list of Annotations that could be added to Zipkin Span.
 	 */
-	private void addZipkinBinaryAnnotations(com.twitter.zipkin.gen.Span zipkinSpan,
+	private void addZipkinBinaryAnnotations(io.zipkin.Span.Builder zipkinSpan,
 			Span span, Endpoint endpoint) {
 		for (Map.Entry<String, String> e : span.tags().entrySet()) {
-			BinaryAnnotation binaryAnn = new BinaryAnnotation()
-					.setAnnotation_type(AnnotationType.STRING)
-					.setKey(e.getKey())
-					.setValue(e.getValue().getBytes(UTF_8))
-					.setHost(endpoint);
-			zipkinSpan.addToBinary_annotations(binaryAnn);
+			BinaryAnnotation binaryAnn = new BinaryAnnotation.Builder()
+					.type(BinaryAnnotation.Type.STRING)
+					.key(e.getKey())
+					.value(e.getValue().getBytes(UTF_8))
+					.endpoint(endpoint).build();
+			zipkinSpan.addBinaryAnnotation(binaryAnn);
 		}
 	}
 

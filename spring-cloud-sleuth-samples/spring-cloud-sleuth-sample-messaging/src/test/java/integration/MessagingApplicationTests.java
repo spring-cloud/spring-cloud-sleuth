@@ -15,30 +15,25 @@
  */
 package integration;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.util.Collection;
-
+import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
-import org.springframework.util.StringUtils;
-
-import com.github.kristofa.brave.SpanCollector;
-import com.twitter.zipkin.gen.BinaryAnnotation;
-import com.twitter.zipkin.gen.Span;
-
-import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
+
+import java.util.Collection;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class })
@@ -48,7 +43,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private static int port = 3381;
 	private static String sampleAppUrl = "http://localhost:" + port;
-	@Autowired IntegrationTestSpanCollector integrationTestSpanCollector;
+	@Autowired IntegrationTestZipkinSpanReporter integrationTestSpanCollector;
 
 	@After
 	public void cleanup() {
@@ -79,24 +74,21 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenThereIsAtLeastOneBinaryAnnotationWithKey(String binaryAnnotationKey) {
-		then(this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(Span::isSetBinary_annotations)
-				.map(Span::getBinary_annotations)
+		then(integrationTestSpanCollector.hashedSpans.stream()
+				.map(s -> s.binaryAnnotations)
 				.flatMap(Collection::stream)
-				.filter(binaryAnnotation -> StringUtils.hasText(binaryAnnotation.getKey()))
-				.map(BinaryAnnotation::getKey)
-				.anyMatch(binaryAnnotationKey::equals)).isTrue();
+				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(String traceId) {
-		then(this.integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.getTrace_id() == zipkinHashedTraceId(traceId))).isTrue();
+		then(integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == zipkinHashedTraceId(traceId))).isTrue();
 	}
 
 	@Configuration
 	public static class IntegrationSpanCollectorConfig {
 		@Bean
-		SpanCollector integrationTestSpanCollector() {
-			return new IntegrationTestSpanCollector();
+		ZipkinSpanReporter integrationTestZipkinSpanReporter() {
+			return new IntegrationTestZipkinSpanReporter();
 		}
 	}
 

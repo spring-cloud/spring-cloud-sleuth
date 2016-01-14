@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import com.twitter.zipkin.gen.Endpoint;
+import io.zipkin.Endpoint;
 import lombok.extern.slf4j.Slf4j;
 
 /**
