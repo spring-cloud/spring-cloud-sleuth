@@ -83,14 +83,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-http</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-spring-web-servlet-interceptor</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>io.zipkin</groupId>
 			<artifactId>zipkin-java-server</artifactId>
 		</dependency>

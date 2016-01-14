@@ -63,17 +63,6 @@
 				<artifactId>brave-core</artifactId>
 				<version>${brave.version}</version>
 			</dependency>
-      		<!-- TODO: remove brave dependencies -->
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-http</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-spring-web-servlet-interceptor</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
 			<dependency>
 				<groupId>org.aspectj</groupId>
 				<artifactId>aspectjrt</artifactId>

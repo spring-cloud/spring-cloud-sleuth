@@ -50,14 +50,6 @@
 			<artifactId>spring-cloud-stream-binder-rabbit</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-http</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-spring-web-servlet-interceptor</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<optional>true</optional>
