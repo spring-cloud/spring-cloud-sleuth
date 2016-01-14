@@ -86,6 +86,11 @@
 			<groupId>io.zipkin</groupId>
 			<artifactId>zipkin-java-server</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.github.kristofa</groupId>
+			<artifactId>brave-core</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 </project>

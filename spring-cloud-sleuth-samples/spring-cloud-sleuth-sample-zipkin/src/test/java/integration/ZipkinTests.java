@@ -15,27 +15,23 @@
  */
 package integration;
 
+import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
+import io.zipkin.server.ZipkinServer;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.zipkin.HttpZipkinSpanReporter;
 import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
+import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
-
-import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
-import com.github.kristofa.brave.HttpSpanCollector;
-import com.github.kristofa.brave.SpanCollector;
-import com.github.kristofa.brave.SpanCollectorMetricsHandler;
-
-import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
-import io.zipkin.server.ZipkinServer;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
 
@@ -77,7 +73,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	public static class WaitUntilZipkinIsUpConfig {
 		@Bean
 		@SneakyThrows
-		public SpanCollector spanCollector(final ZipkinProperties zipkin) {
+		public ZipkinSpanReporter spanCollector(final ZipkinProperties zipkin) {
 			await().until(new Runnable() {
 				@Override
 				public void run() {
@@ -94,11 +90,9 @@ public class ZipkinTests extends AbstractIntegrationTest {
 			return getSpanCollector(zipkin);
 		}
 
-		private SpanCollector getSpanCollector(ZipkinProperties zipkin) {
+		private ZipkinSpanReporter getSpanCollector(ZipkinProperties zipkin) {
 			String url = "http://localhost:" + zipkin.getPort();
-			// TODO: parameterize this
-			SpanCollectorMetricsHandler metrics = new EmptySpanCollectorMetricsHandler();
-			return HttpSpanCollector.create(url, zipkin.getHttpConfig(), metrics);
+			return new HttpZipkinSpanReporter(url, zipkin.getFlushInterval());
 		}
 	}
 }
