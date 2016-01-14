@@ -19,9 +19,7 @@ package org.springframework.cloud.sleuth.zipkin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.twitter.zipkin.gen.Endpoint;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -48,9 +46,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.github.kristofa.brave.EmptySpanCollector;
-import com.github.kristofa.brave.SpanCollector;
 
 /**
  * @author Dave Syer
@@ -85,7 +80,7 @@ public class ZipkinSpanListenerTests {
 		long start = System.currentTimeMillis();
 		parent.log("http/request/retry"); // System.currentTimeMillis
 
-		com.twitter.zipkin.gen.Span result = listener.convert(parent);
+		io.zipkin.Span result = listener.convert(parent);
 
 		assertThat(result.timestamp)
 				.isEqualTo(parent.getBegin() * 1000);
@@ -102,18 +97,18 @@ public class ZipkinSpanListenerTests {
 		parent.log("http/request/retry");
 		parent.tag("spring-boot/version", "1.3.1.RELEASE");
 
-		com.twitter.zipkin.gen.Span result = listener.convert(parent);
+		io.zipkin.Span result = listener.convert(parent);
 
-		assertThat(result.annotations.get(0).host)
+		assertThat(result.annotations.get(0).endpoint)
 				.isEqualTo(listener.localEndpoint);
-		assertThat(result.binary_annotations.get(0).host)
-				.isEqualTo(result.annotations.get(0).host);
+		assertThat(result.binaryAnnotations.get(0).endpoint)
+				.isEqualTo(result.annotations.get(0).endpoint);
 	}
 
 	/** zipkin's Endpoint.serviceName should never be null. */
 	@Test
 	public void localEndpointIncludesServiceName() {
-		assertThat(listener.localEndpoint.service_name)
+		assertThat(listener.localEndpoint.serviceName)
 				.isNotEmpty();
 	}
 
@@ -127,7 +122,7 @@ public class ZipkinSpanListenerTests {
 		Trace context = this.traceManager.startSpan("foo");
 		this.traceManager.close(context);
 		assertEquals(1, this.test.spans.size());
-		assertThat(this.test.spans.get(0).getBinary_annotations().get(0).getHost().getService_name())
+		assertThat(this.test.spans.get(0).binaryAnnotations.get(0).endpoint.serviceName)
 				.isEqualTo("unknown"); // TODO: "unknown" bc process id, documented as not nullable, is null.
 	}
 
@@ -151,7 +146,7 @@ public class ZipkinSpanListenerTests {
 	@Configuration
 	protected static class ZipkinTestConfiguration {
 
-		private List<com.twitter.zipkin.gen.Span> spans = new ArrayList<>();
+		private List<io.zipkin.Span> spans = new ArrayList<>();
 
 		@Bean
 		public Sampler<?> defaultSampler() {
@@ -159,13 +154,9 @@ public class ZipkinSpanListenerTests {
 		}
 
 		@Bean
-		public SpanCollector collector() {
-			return new EmptySpanCollector() {
-				@Override
-				public void collect(com.twitter.zipkin.gen.Span span) {
-					ZipkinTestConfiguration.this.spans.add(span);
-				}
-			};
+		public ZipkinSpanReporter reporter() {
+			return this.spans::add;
 		}
 
-	}}
+	}
+}

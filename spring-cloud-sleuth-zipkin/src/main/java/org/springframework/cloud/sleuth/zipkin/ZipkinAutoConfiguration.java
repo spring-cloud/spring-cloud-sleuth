@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
-import com.github.kristofa.brave.HttpSpanCollector;
-import com.github.kristofa.brave.SpanCollectorMetricsHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -31,25 +28,21 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.github.kristofa.brave.SpanCollector;
 
 /**
  * @author Spencer Gibb
  */
 @Configuration
 @EnableConfigurationProperties
-@ConditionalOnClass(SpanCollector.class)
 @ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
 public class ZipkinAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean(SpanCollector.class)
-	public SpanCollector spanCollector() {
+	@ConditionalOnMissingBean(ZipkinSpanReporter.class)
+	public ZipkinSpanReporter reporter() {
 		ZipkinProperties zipkin = zipkinProperties();
 		String url = "http://" + zipkin.getHost() + ":" + zipkin.getPort();
-    // TODO: parameterize this
-    SpanCollectorMetricsHandler metrics = new EmptySpanCollectorMetricsHandler();
-    return HttpSpanCollector.create(url, zipkin.getHttpConfig(), metrics);
+    return new HttpZipkinSpanReporter(url, zipkin.getFlushInterval());
 	}
 
 	@Bean
@@ -58,8 +51,8 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	public ZipkinSpanListener sleuthTracer(SpanCollector spanCollector, EndpointLocator endpointLocator) {
-		return new ZipkinSpanListener(spanCollector, endpointLocator.local());
+	public ZipkinSpanListener sleuthTracer(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
+		return new ZipkinSpanListener(reporter, endpointLocator.local());
 	}
 
 	@Configuration

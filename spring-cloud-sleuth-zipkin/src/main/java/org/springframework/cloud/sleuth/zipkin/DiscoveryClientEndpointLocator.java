@@ -20,7 +20,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.util.InetUtils;
 
-import com.twitter.zipkin.gen.Endpoint;
+import io.zipkin.Endpoint;
 
 /**
  * An {@link EndpointLocator} that tries to find local service information from a
@@ -43,8 +43,7 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 		if (instance == null) {
 			throw new NoServiceInstanceAvailableException();
 		}
-		return new Endpoint(getIpAddress(instance),
-				new Integer(instance.getPort()).shortValue(), instance.getServiceId());
+		return Endpoint.create(instance.getServiceId(), getIpAddress(instance), instance.getPort());
 	}
 
 	private int getIpAddress(ServiceInstance instance) {

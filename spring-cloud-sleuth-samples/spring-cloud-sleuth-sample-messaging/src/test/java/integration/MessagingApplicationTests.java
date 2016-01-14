@@ -79,13 +79,10 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenThereIsAtLeastOneBinaryAnnotationWithKey(String binaryAnnotationKey) {
-		then(this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(Span::isSetBinary_annotations)
-				.map(Span::getBinary_annotations)
+		then(reporter.hashedSpans.stream()
+				.map(s -> s.binaryAnnotations)
 				.flatMap(Collection::stream)
-				.filter(binaryAnnotation -> StringUtils.hasText(binaryAnnotation.getKey()))
-				.map(BinaryAnnotation::getKey)
-				.anyMatch(binaryAnnotationKey::equals)).isTrue();
+				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(String traceId) {
