@@ -91,8 +91,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 		}
 
 		private ZipkinSpanReporter getSpanCollector(ZipkinProperties zipkin) {
-			String url = "http://localhost:" + zipkin.getPort();
-			return new HttpZipkinSpanReporter(url, zipkin.getFlushInterval());
+			return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval());
 		}
 	}
 }
