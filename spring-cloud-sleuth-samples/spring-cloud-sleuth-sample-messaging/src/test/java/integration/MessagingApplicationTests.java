@@ -15,8 +15,6 @@
  */
 package integration;
 
-import com.twitter.zipkin.gen.BinaryAnnotation;
-import com.twitter.zipkin.gen.Span;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Test;
@@ -27,17 +25,16 @@ import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.JdkIdGenerator;
-import org.springframework.util.StringUtils;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
-import tools.IntegrationTestSpanCollector;
+import tools.IntegrationTestZipkinSpanReporter;
 
 import java.util.Collection;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { AbstractIntegrationTest.IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class })
+@SpringApplicationConfiguration(classes = { AbstractIntegrationTest.ZipkinSpanReporterConfig.class, SampleMessagingApplication.class })
 @WebIntegrationTest
 @TestPropertySource(properties="sample.zipkin.enabled=true")
 @Slf4j
@@ -45,11 +42,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private static int port = 3381;
 	private static String sampleAppUrl = "http://localhost:" + port;
-	@Autowired IntegrationTestSpanCollector integrationTestSpanCollector;
+	@Autowired IntegrationTestZipkinSpanReporter reporter;
 
 	@After
 	public void cleanup() {
-		integrationTestSpanCollector.hashedSpans.clear();
+		reporter.hashedSpans.clear();
 	}
 
 	@Test
@@ -76,17 +73,14 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenThereIsAtLeastOneBinaryAnnotationWithKey(String binaryAnnotationKey) {
-		then(integrationTestSpanCollector.hashedSpans.stream()
-				.filter(Span::isSetBinary_annotations)
-				.map(Span::getBinary_annotations)
+		then(reporter.hashedSpans.stream()
+				.map(s -> s.binaryAnnotations)
 				.flatMap(Collection::stream)
-				.filter(binaryAnnotation -> StringUtils.hasText(binaryAnnotation.getKey()))
-				.map(BinaryAnnotation::getKey)
-				.anyMatch(binaryAnnotationKey::equals)).isTrue();
+				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(String traceId) {
-		then(integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.getTrace_id() == zipkinHashedTraceId(traceId))).isTrue();
+		then(reporter.hashedSpans.stream().allMatch(span -> span.traceId == zipkinHashedTraceId(traceId))).isTrue();
 	}
 
 }

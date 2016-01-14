@@ -15,25 +15,26 @@
  */
 package tools;
 
-import com.github.kristofa.brave.LoggingSpanCollector;
-import com.twitter.zipkin.gen.Span;
-
+import io.zipkin.Span;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import lombok.extern.apachecommons.CommonsLog;
+import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 
 /**
  * Span Collector that logs spans and adds Spans to a list
  *
  * @author Marcin Grzejszczak
  */
-public class IntegrationTestSpanCollector extends LoggingSpanCollector {
+@CommonsLog
+public class IntegrationTestZipkinSpanReporter implements ZipkinSpanReporter {
 
-	public List<Span> hashedSpans = Collections.<Span>synchronizedList(new LinkedList<Span>());
+	public List<Span> hashedSpans = Collections.synchronizedList(new LinkedList<>());
 
 	@Override
-	public void collect(Span span) {
-		super.collect(span);
+	public void report(Span span) {
+		log.info(span);
 		hashedSpans.add(span);
 	}
 

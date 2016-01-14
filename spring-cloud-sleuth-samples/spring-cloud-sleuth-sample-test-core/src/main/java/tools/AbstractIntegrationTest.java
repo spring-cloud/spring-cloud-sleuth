@@ -26,7 +26,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.cloud.sleuth.zipkin.HttpZipkinSpanReporter;
 import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
+import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -36,10 +38,6 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import com.github.kristofa.brave.EmptySpanCollectorMetricsHandler;
-import com.github.kristofa.brave.HttpSpanCollector;
-import com.github.kristofa.brave.SpanCollector;
-import com.github.kristofa.brave.SpanCollectorMetricsHandler;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
 
@@ -202,10 +200,10 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	@Configuration
-	public static class IntegrationSpanCollectorConfig {
+	public static class ZipkinSpanReporterConfig {
 		@Bean
-		SpanCollector integrationTestSpanCollector() {
-			return new IntegrationTestSpanCollector();
+		ZipkinSpanReporter integrationTestZipkinSpanReporter() {
+			return new IntegrationTestZipkinSpanReporter();
 		}
 	}
 
@@ -214,26 +212,24 @@ public abstract class AbstractIntegrationTest {
 	public static class WaitUntilZipkinIsUpConfig {
 		@Bean
 		@SneakyThrows
-		public SpanCollector spanCollector(final ZipkinProperties zipkin) {
+		public ZipkinSpanReporter reporter(final ZipkinProperties zipkin) {
 			await().until(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						WaitUntilZipkinIsUpConfig.this.getSpanCollector(zipkin);
+						WaitUntilZipkinIsUpConfig.this.getZipkinSpanReporter(zipkin);
 					} catch (Exception e) {
 						log.error("Exception occurred while trying to connect to zipkin [" + e.getCause() + "]");
 						throw new AssertionError(e);
 					}
 				}
 			});
-			return getSpanCollector(zipkin);
+			return getZipkinSpanReporter(zipkin);
 		}
 
-		private SpanCollector getSpanCollector(ZipkinProperties zipkin) {
+		private ZipkinSpanReporter getZipkinSpanReporter(ZipkinProperties zipkin) {
 			String url = "http://localhost:" + zipkin.getPort();
-			// TODO: parameterize this
-			SpanCollectorMetricsHandler metrics = new EmptySpanCollectorMetricsHandler();
-			return HttpSpanCollector.create(url, zipkin.getHttpConfig(), metrics);
+			return new HttpZipkinSpanReporter(url, zipkin.getFlushInterval());
 		}
 	}
 }
