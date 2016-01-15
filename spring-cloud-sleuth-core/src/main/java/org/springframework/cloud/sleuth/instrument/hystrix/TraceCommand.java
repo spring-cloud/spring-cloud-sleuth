@@ -71,7 +71,7 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
 	@Override
 	protected R run() throws Exception {
-		enforceThatHystrixThreadIsNotPolutedByPreviousTraces();
+		enforceThatHystrixThreadIsNotPollutedByPreviousTraces();
 		Trace trace = this.traceManager.startSpan(getCommandKey().name(), parentSpan);
 		try {
 			return doRun();
@@ -80,8 +80,8 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 		}
 	}
 
-	// TODO: Do more analysis why this is nor removed properly
-	private void enforceThatHystrixThreadIsNotPolutedByPreviousTraces() {
+	// TODO: Do more analysis why this is not removed properly
+	private void enforceThatHystrixThreadIsNotPollutedByPreviousTraces() {
 		TraceContextHolder.removeCurrentTrace();
 	}
 
