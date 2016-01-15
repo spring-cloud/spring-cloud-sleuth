@@ -11,9 +11,6 @@ before_install:
 install:
 - ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
 - 'if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then ./docs/src/main/asciidoc/ghpages.sh; fi'
-script:
-- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || ./mvnw -s .settings.xml deploy -nsu'
-- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] || ./mvnw install -nsu'
 env:
   global:
   - GIT_NAME="Spencer Gibb"
@@ -21,4 +18,14 @@ env:
   - CI_DEPLOY_USERNAME=sgibb
   - secure: dxec/7oFht2WMaw4GNFNvuWHlnkm1wmFagE3ZrtCcU2SHUW/P2FgG5tiNW9hT2eXHf2H0YUF1ROkL4BrH5qpIlOBtYd0J8Q/67vBqyB112IN2FqoB/F6Erkfp1FKMBBrXXYaGoSvqzmJs6zqS3JRpyr010W2aU8klK0QfqRoJ0g=
   - TERM=dumb
+script: |
+  echo "Current Branch: ${TRAVIS_BRANCH}"
+  echo "Pull Request: ${TRAVIS_PULL_REQUEST}"
+  if [ "${TRAVIS_BRANCH}" = master ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
+    echo "[Publishing] Pushing snapshot to Sonatype"
+    ./mvnw -s .settings.xml deploy -nsu
+  else
+    echo "[Installing] Intalling snapshot to local maven repo"
+    ./mvnw install -nsu
+  fi
 
