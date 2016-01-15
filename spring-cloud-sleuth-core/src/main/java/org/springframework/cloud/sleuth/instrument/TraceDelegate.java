@@ -21,6 +21,7 @@ import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 
 import lombok.Getter;
+import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 
 /**
  * @author Spencer Gibb
@@ -61,5 +62,9 @@ public abstract class TraceDelegate<T> {
 
 	protected String getSpanName() {
 		return this.name == null ? Thread.currentThread().getName() : this.name;
+	}
+
+	protected void ensureThatThreadIsNotPollutedByPreviousTraces() {
+		TraceContextHolder.removeCurrentTrace();
 	}
 }
