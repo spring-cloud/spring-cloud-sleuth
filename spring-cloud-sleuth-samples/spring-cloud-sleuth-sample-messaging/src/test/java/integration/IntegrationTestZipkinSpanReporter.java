@@ -35,7 +35,7 @@ public class IntegrationTestZipkinSpanReporter implements ZipkinSpanReporter {
 
 	@Override
 	public void report(Span span) {
-		log.info(span);
+		log.debug(span);
 		hashedSpans.add(span);
 	}
 
