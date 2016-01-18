@@ -20,7 +20,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +34,7 @@ import java.util.Random;
  */
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)
-@ConditionalOnBean(TraceManager.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 public class TraceSpringIntegrationAutoConfiguration {
@@ -41,25 +42,25 @@ public class TraceSpringIntegrationAutoConfiguration {
 	@Bean
 	@GlobalChannelInterceptor
 	public TraceContextPropagationChannelInterceptor traceContextPropagationChannelInterceptor(
-			TraceManager traceManager) {
-		return new TraceContextPropagationChannelInterceptor(traceManager);
+			Tracer tracer) {
+		return new TraceContextPropagationChannelInterceptor(tracer);
 	}
 
 	@Bean
 	@GlobalChannelInterceptor
-	public TraceChannelInterceptor traceChannelInterceptor(TraceManager traceManager, Random random) {
-		return new TraceChannelInterceptor(traceManager, random);
+	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer, Random random) {
+		return new TraceChannelInterceptor(tracer, random);
 	}
 
 	@Bean
-	public TraceStompMessageChannelInterceptor traceStompMessageChannelInterceptor(TraceManager traceManager, Random random) {
-		return new TraceStompMessageChannelInterceptor(traceManager, random);
+	public TraceStompMessageChannelInterceptor traceStompMessageChannelInterceptor(Tracer tracer, Random random) {
+		return new TraceStompMessageChannelInterceptor(tracer, random);
 	}
 
 	@Bean
 	public TraceStompMessageContextPropagationChannelInterceptor traceStompMessageContextPropagationChannelInteceptor(
-			TraceManager traceManager) {
-		return new TraceStompMessageContextPropagationChannelInterceptor(traceManager);
+			Tracer tracer) {
+		return new TraceStompMessageContextPropagationChannelInterceptor(tracer);
 	}
 
 }

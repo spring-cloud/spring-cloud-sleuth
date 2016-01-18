@@ -19,7 +19,8 @@ package org.springframework.cloud.sleuth.instrument;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 
 import java.util.concurrent.Callable;
 
@@ -31,12 +32,12 @@ import java.util.concurrent.Callable;
 public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Callable<V> {
 
 
-	public TraceCallable(TraceManager traceManager, Callable<V> delegate) {
-		super(traceManager, delegate);
+	public TraceCallable(Tracer tracer, Callable<V> delegate) {
+		super(tracer, delegate);
 	}
 
-	public TraceCallable(TraceManager traceManager, Callable<V> delegate, String name) {
-		super(traceManager, delegate, name);
+	public TraceCallable(Tracer tracer, Callable<V> delegate, String name) {
+		super(tracer, delegate, name);
 	}
 
 	@Override

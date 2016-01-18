@@ -53,7 +53,7 @@ public class TraceStompMessageChannelInterceptorTests extends AbstractTraceStomp
 		Message<?> message = givenMessageToBeSampled();
 
 		whenTheMessageWasSent(message);
-		this.traceManager.close(trace);
+		this.tracer.close(trace);
 
 		Long spanId = thenSpanIdFromHeadersIsNotEmpty();
 		long traceId = thenTraceIdFromHeadersIsNotEmpty();

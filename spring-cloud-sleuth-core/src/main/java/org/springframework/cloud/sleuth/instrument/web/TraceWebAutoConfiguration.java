@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.TraceAccessor;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -45,7 +45,7 @@ import org.springframework.util.StringUtils;
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
-@ConditionalOnBean(TraceManager.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceWebAutoConfiguration {
 
@@ -56,14 +56,14 @@ public class TraceWebAutoConfiguration {
 	private String skipPattern;
 
 	@Autowired
-	private TraceManager traceManager;
+	private Tracer tracer;
 
 	@Autowired
 	private TraceAccessor accessor;
 
 	@Bean
 	public TraceWebAspect traceWebAspect() {
-		return new TraceWebAspect(this.traceManager, this.accessor);
+		return new TraceWebAspect(this.tracer, this.accessor);
 	}
 
 	@Bean
@@ -71,7 +71,7 @@ public class TraceWebAutoConfiguration {
 	public TraceFilter traceFilter(ApplicationEventPublisher publisher, Random random) {
 		Pattern pattern = StringUtils.hasText(this.skipPattern) ? Pattern.compile(this.skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
-		TraceFilter filter = new TraceFilter(this.traceManager, pattern, random);
+		TraceFilter filter = new TraceFilter(this.tracer, pattern, random);
 		filter.setApplicationEventPublisher(publisher);
 		return filter;
 	}

@@ -24,7 +24,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
@@ -35,7 +36,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @Configuration
 @ConditionalOnMissingBean(AsyncConfigurer.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
-@ConditionalOnBean(TraceManager.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(AsyncCustomAutoConfiguration.class)
 public class AsyncDefaultAutoConfiguration extends AsyncConfigurerSupport {
 

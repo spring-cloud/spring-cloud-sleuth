@@ -25,7 +25,7 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
@@ -37,7 +37,7 @@ import org.springframework.context.ApplicationEventPublisher;
 /**
  * @author Spencer Gibb
  */
-public class DefaultTraceManager implements TraceManager {
+public class DefaultTracer implements Tracer {
 
 	private final Sampler<Void> defaultSampler;
 
@@ -45,17 +45,17 @@ public class DefaultTraceManager implements TraceManager {
 
 	private final Random random;
 
-	public DefaultTraceManager(Sampler<Void> defaultSampler,
-							   Random random, ApplicationEventPublisher publisher) {
+	public DefaultTracer(Sampler<Void> defaultSampler,
+						 Random random, ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.publisher = publisher;
 	}
 
 	@Override
-	public Trace startSpan(String name, Span parent) {
+	public Trace joinTrace(String name, Span parent) {
 		if (parent == null) {
-			return startSpan(name);
+			return startTrace(name);
 		}
 		Span currentSpan = getCurrentSpan();
 		if (currentSpan != null && !parent.equals(currentSpan)) {
@@ -67,12 +67,12 @@ public class DefaultTraceManager implements TraceManager {
 	}
 
 	@Override
-	public Trace startSpan(String name) {
-		return this.startSpan(name, this.defaultSampler);
+	public Trace startTrace(String name) {
+		return this.startTrace(name, this.defaultSampler);
 	}
 
 	@Override
-	public <T> Trace startSpan(String name, Sampler<T> s) {
+	public <T> Trace startTrace(String name, Sampler<T> s) {
 		Span span = null;
 		if (isTracing() || s.next()) {
 			span = createChild(getCurrentSpan(), name);

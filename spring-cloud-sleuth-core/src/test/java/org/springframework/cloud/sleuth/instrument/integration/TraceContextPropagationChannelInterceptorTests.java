@@ -26,7 +26,7 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.integration.TraceContextPropagationChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
@@ -56,7 +56,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 	private PollableChannel channel;
 
 	@Autowired
-	private TraceManager traceManager;
+	private Tracer tracer;
 
 	@After
 	public void close() {
@@ -66,10 +66,10 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@Test
 	public void testSpanPropagation() {
 
-		Trace trace = this.traceManager.startSpan("testSendMessage", new AlwaysSampler());
+		Trace trace = this.tracer.startTrace("testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		Long expectedSpanId = trace.getSpan().getSpanId();
-		this.traceManager.close(trace);
+		this.tracer.close(trace);
 
 		Message<?> message = this.channel.receive(0);
 

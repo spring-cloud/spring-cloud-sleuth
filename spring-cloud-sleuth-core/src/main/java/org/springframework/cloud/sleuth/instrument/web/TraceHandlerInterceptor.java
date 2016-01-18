@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -31,10 +31,10 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 
 	private static final String ATTR_NAME = "__CURRENT_TRACE_HANDLER_TRACE_ATTR___";
 
-	private final TraceManager traceManager;
+	private final Tracer tracer;
 
-	public TraceHandlerInterceptor(TraceManager traceManager) {
-		this.traceManager = traceManager;
+	public TraceHandlerInterceptor(Tracer tracer) {
+		this.tracer = tracer;
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 			Object handler) throws Exception {
 		// TODO: get trace data from request?
 		// TODO: what is the description?
-		Trace trace = this.traceManager.startSpan("traceHandlerInterceptor");
+		Trace trace = this.tracer.startTrace("traceHandlerInterceptor");
 		request.setAttribute(ATTR_NAME, trace);
 		return true;
 	}
@@ -57,6 +57,6 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
 			Object handler, Exception ex) throws Exception {
 		Trace trace = Trace.class.cast(request.getAttribute(ATTR_NAME));
-		this.traceManager.close(trace);
+		this.tracer.close(trace);
 	}
 }

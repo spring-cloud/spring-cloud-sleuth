@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 
 import lombok.Getter;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
@@ -29,35 +29,35 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 @Getter
 public abstract class TraceDelegate<T> {
 
-	private final TraceManager traceManager;
+	private final Tracer tracer;
 	private final T delegate;
 	private final String name;
 	private final Span parent;
 
-	public TraceDelegate(TraceManager traceManager, T delegate) {
-		this(traceManager, delegate, null);
+	public TraceDelegate(Tracer tracer, T delegate) {
+		this(tracer, delegate, null);
 	}
 
-	public TraceDelegate(TraceManager traceManager, T delegate, String name) {
-		this.traceManager = traceManager;
+	public TraceDelegate(Tracer tracer, T delegate, String name) {
+		this.tracer = tracer;
 		this.delegate = delegate;
 		this.name = name;
-		this.parent = traceManager.getCurrentSpan();
+		this.parent = tracer.getCurrentSpan();
 	}
 
 	protected void close(Trace trace) {
-		this.traceManager.close(trace);
+		this.tracer.close(trace);
 	}
 
 	protected void closeAll(Trace trace) {
-		trace = this.traceManager.close(trace);
+		trace = this.tracer.close(trace);
 		while (trace != null) {
-			trace = this.traceManager.detach(trace);
+			trace = this.tracer.detach(trace);
 		}
 	}
 
 	protected Trace startSpan() {
-		return this.traceManager.startSpan(getSpanName(), this.parent);
+		return this.tracer.joinTrace(getSpanName(), this.parent);
 	}
 
 	protected String getSpanName() {

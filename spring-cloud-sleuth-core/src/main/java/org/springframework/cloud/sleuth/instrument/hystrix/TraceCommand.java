@@ -21,14 +21,14 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 
 /**
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
  *
  * @see HystrixCommand
- * @see TraceManager
+ * @see Tracer
  *
  * @author Tomasz Nurkiewicz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT
@@ -36,47 +36,47 @@ import org.springframework.cloud.sleuth.trace.TraceContextHolder;
  */
 public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
-	private final TraceManager traceManager;
+	private final Tracer tracer;
 	private final Span parentSpan;
 
-	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group) {
+	protected TraceCommand(Tracer tracer, HystrixCommandGroupKey group) {
 		super(group);
-		this.traceManager = traceManager;
-		this.parentSpan = traceManager.getCurrentSpan();
+		this.tracer = tracer;
+		this.parentSpan = tracer.getCurrentSpan();
 	}
 
-	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool) {
+	protected TraceCommand(Tracer tracer, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool) {
 		super(group, threadPool);
-		this.traceManager = traceManager;
-		this.parentSpan = traceManager.getCurrentSpan();
+		this.tracer = tracer;
+		this.parentSpan = tracer.getCurrentSpan();
 	}
 
-	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, int executionIsolationThreadTimeoutInMilliseconds) {
+	protected TraceCommand(Tracer tracer, HystrixCommandGroupKey group, int executionIsolationThreadTimeoutInMilliseconds) {
 		super(group, executionIsolationThreadTimeoutInMilliseconds);
-		this.traceManager = traceManager;
-		this.parentSpan = traceManager.getCurrentSpan();
+		this.tracer = tracer;
+		this.parentSpan = tracer.getCurrentSpan();
 	}
 
-	protected TraceCommand(TraceManager traceManager, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool, int executionIsolationThreadTimeoutInMilliseconds) {
+	protected TraceCommand(Tracer tracer, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool, int executionIsolationThreadTimeoutInMilliseconds) {
 		super(group, threadPool, executionIsolationThreadTimeoutInMilliseconds);
-		this.traceManager = traceManager;
-		this.parentSpan = traceManager.getCurrentSpan();
+		this.tracer = tracer;
+		this.parentSpan = tracer.getCurrentSpan();
 	}
 
-	protected TraceCommand(TraceManager traceManager, Setter setter) {
+	protected TraceCommand(Tracer tracer, Setter setter) {
 		super(setter);
-		this.traceManager = traceManager;
-		this.parentSpan = traceManager.getCurrentSpan();
+		this.tracer = tracer;
+		this.parentSpan = tracer.getCurrentSpan();
 	}
 
 	@Override
 	protected R run() throws Exception {
 		enforceThatHystrixThreadIsNotPollutedByPreviousTraces();
-		Trace trace = this.traceManager.startSpan(getCommandKey().name(), parentSpan);
+		Trace trace = this.tracer.joinTrace(getCommandKey().name(), parentSpan);
 		try {
 			return doRun();
 		} finally {
-			this.traceManager.close(trace);
+			this.tracer.close(trace);
 		}
 	}
 

@@ -24,7 +24,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 /**
@@ -34,16 +35,16 @@ import org.springframework.cloud.sleuth.instrument.TraceRunnable;
  */
 public class TraceableExecutorService implements ExecutorService {
 	final ExecutorService delegate;
-	final TraceManager traceManager;
+	final Tracer tracer;
 
-	public TraceableExecutorService(final ExecutorService delegate, final TraceManager traceManager) {
+	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer) {
 		this.delegate = delegate;
-		this.traceManager = traceManager;
+		this.tracer = tracer;
 	}
 
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new TraceRunnable(this.traceManager, command);
+		final Runnable r = new TraceRunnable(this.tracer, command);
 		this.delegate.execute(r);
 	}
 
@@ -74,19 +75,19 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new TraceCallable<>(this.traceManager, task);
+		Callable<T> c = new TraceCallable<>(this.tracer, task);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new TraceRunnable(this.traceManager, task);
+		Runnable r = new TraceRunnable(this.tracer, task);
 		return this.delegate.submit(r, result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = new TraceRunnable(this.traceManager, task);
+		Runnable r = new TraceRunnable(this.tracer, task);
 		return this.delegate.submit(r);
 	}
 

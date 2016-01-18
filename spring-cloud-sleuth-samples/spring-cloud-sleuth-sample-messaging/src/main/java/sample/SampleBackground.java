@@ -18,7 +18,7 @@ package sample;
 
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +31,7 @@ import java.util.Random;
 public class SampleBackground {
 
 	@Autowired
-	private TraceManager traceManager;
+	private Tracer tracer;
 	@Autowired
 	private Random random;
 
@@ -40,7 +40,7 @@ public class SampleBackground {
 	public void background() {
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
-		this.traceManager.addTag("background-sleep-millis", String.valueOf(millis));
+		this.tracer.addTag("background-sleep-millis", String.valueOf(millis));
 	}
 
 }

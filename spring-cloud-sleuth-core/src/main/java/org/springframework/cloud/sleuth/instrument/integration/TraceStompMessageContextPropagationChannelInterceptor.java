@@ -21,7 +21,8 @@ import java.util.Map;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -40,11 +41,11 @@ import org.springframework.util.Assert;
 public class TraceStompMessageContextPropagationChannelInterceptor extends ChannelInterceptorAdapter
 		implements ExecutorChannelInterceptor {
 
-	private final TraceManager traceManager;
+	private final Tracer tracer;
 	private final static ThreadLocal<Trace> ORIGINAL_CONTEXT = new ThreadLocal<>();
 
-	public TraceStompMessageContextPropagationChannelInterceptor(TraceManager traceManager) {
-		this.traceManager = traceManager;
+	public TraceStompMessageContextPropagationChannelInterceptor(Tracer tracer) {
+		this.tracer = tracer;
 	}
 
 	@Override
@@ -52,7 +53,7 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 		if (DirectChannel.class.isAssignableFrom(AopUtils.getTargetClass(channel))) {
 			return message;
 		}
-		Span span = this.traceManager.getCurrentSpan();
+		Span span = this.tracer.getCurrentSpan();
 		if (span != null) {
 			return new MessageWithSpan(message, span);
 		} else {
@@ -82,13 +83,13 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 
 	protected void populatePropagatedContext(Span span) {
 		if (span != null) {
-			ORIGINAL_CONTEXT.set(this.traceManager.continueSpan(span).getSaved());
+			ORIGINAL_CONTEXT.set(this.tracer.continueSpan(span).getSaved());
 		}
 	}
 
 	protected void resetPropagatedContext() {
 		Trace originalContext = ORIGINAL_CONTEXT.get();
-		this.traceManager.detach(originalContext);
+		this.tracer.detach(originalContext);
 		ORIGINAL_CONTEXT.remove();
 	}
 

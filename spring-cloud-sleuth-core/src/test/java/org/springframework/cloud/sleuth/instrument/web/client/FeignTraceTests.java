@@ -17,7 +17,8 @@ import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
@@ -54,7 +55,7 @@ public class FeignTraceTests {
 	Listener listener;
 
 	@Autowired
-	TraceManager traceManager;
+	Tracer tracer;
 
 	@After
 	public void close() {
@@ -77,7 +78,7 @@ public class FeignTraceTests {
 		// given
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
-		this.traceManager.continueSpan(MilliSpan.builder().traceId(currentTraceId)
+		this.tracer.continueSpan(MilliSpan.builder().traceId(currentTraceId)
 				.spanId(generatedId()).parent(currentParentId).build());
 
 		// when

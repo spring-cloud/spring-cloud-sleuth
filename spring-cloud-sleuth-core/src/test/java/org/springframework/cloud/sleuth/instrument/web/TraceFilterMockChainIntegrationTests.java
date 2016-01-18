@@ -20,9 +20,11 @@ import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.MediaType;
@@ -45,7 +47,7 @@ public class TraceFilterMockChainIntegrationTests {
 
 	private StaticApplicationContext context = new StaticApplicationContext();
 
-	private TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
+	private Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), this.context);
 
 	private MockHttpServletRequest request;
@@ -70,7 +72,7 @@ public class TraceFilterMockChainIntegrationTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.tracer);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
@@ -80,7 +82,7 @@ public class TraceFilterMockChainIntegrationTests {
 		Random generator = new Random();
 		this.request = builder().header(Trace.SPAN_ID_NAME, generator.nextLong())
 				.header(Trace.TRACE_ID_NAME, generator.nextLong()).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.tracer);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TraceContextHolder.getCurrentSpan());
 	}

@@ -27,7 +27,7 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.integration.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -64,7 +64,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	private DirectChannel channel;
 
 	@Autowired
-	private TraceManager traceManager;
+	private Tracer tracer;
 
 	@Autowired
 	private MessagingTemplate messagingTemplate;
@@ -136,10 +136,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void headerCreation() {
-		Trace trace = this.traceManager.startSpan("testSendMessage",
+		Trace trace = this.tracer.startTrace("testSendMessage",
 				new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
-		this.traceManager.close(trace);
+		this.tracer.close(trace);
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
@@ -153,10 +153,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	// TODO: Refactor to parametrized test together with sending messages via channel
 	@Test
 	public void headerCreationViaMessagingTemplate() {
-		Trace trace = this.traceManager.startSpan("testSendMessage",
+		Trace trace = this.tracer.startTrace("testSendMessage",
 				new AlwaysSampler());
 		this.messagingTemplate.send(MessageBuilder.withPayload("hi").build());
-		this.traceManager.close(trace);
+		this.tracer.close(trace);
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);

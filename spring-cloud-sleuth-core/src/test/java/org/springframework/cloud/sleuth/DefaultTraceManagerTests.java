@@ -24,7 +24,7 @@ import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -65,9 +65,9 @@ public class DefaultTraceManagerTests {
 	public void tracingWorks() {
 		ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
 
-		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(), new Random(), publisher);
+		DefaultTracer traceManager = new DefaultTracer(new IsTracingSampler(), new Random(), publisher);
 
-		Trace trace = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
+		Trace trace = traceManager.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
 			importantWork1(traceManager);
 		}
@@ -121,22 +121,22 @@ public class DefaultTraceManagerTests {
 		return found;
 	}
 
-	private void importantWork1(TraceManager traceManager) {
-		Trace cur = traceManager.startSpan(IMPORTANT_WORK_1);
+	private void importantWork1(Tracer tracer) {
+		Trace cur = tracer.startTrace(IMPORTANT_WORK_1);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
-			importantWork2(traceManager);
+			importantWork2(tracer);
 		}
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
 		finally {
-			traceManager.close(cur);
+			tracer.close(cur);
 		}
 	}
 
-	private void importantWork2(TraceManager traceManager) {
-		Trace cur = traceManager.startSpan(IMPORTANT_WORK_2);
+	private void importantWork2(Tracer tracer) {
+		Trace cur = tracer.startTrace(IMPORTANT_WORK_2);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
 		}
@@ -144,7 +144,7 @@ public class DefaultTraceManagerTests {
 			Thread.currentThread().interrupt();
 		}
 		finally {
-			traceManager.close(cur);
+			tracer.close(cur);
 		}
 	}
 

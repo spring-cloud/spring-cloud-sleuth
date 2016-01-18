@@ -23,7 +23,7 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerInitial
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +43,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@Autowired
 	private RestTemplate restTemplate;
 	@Autowired
-	private TraceManager traceManager;
+	private Tracer tracer;
 	@Autowired
 	private TraceAccessor accessor;
 	@Autowired
@@ -69,7 +69,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 			public String call() throws Exception {
 				int millis = random.nextInt(1000);
 				Thread.sleep(millis);
-				SampleController.this.traceManager.addTag("callable-sleep-millis", String.valueOf(millis));
+				SampleController.this.tracer.addTag("callable-sleep-millis", String.valueOf(millis));
 				Span currentSpan = SampleController.this.accessor.getCurrentSpan();
 				return "async hi: " + currentSpan;
 			}
@@ -87,23 +87,23 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	public String hi2() {
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
-		this.traceManager.addTag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		Trace trace = this.traceManager.startSpan("customTraceEndpoint",
+		Trace trace = this.tracer.startTrace("customTraceEndpoint",
 				new AlwaysSampler());
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.traceManager.addTag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
-		this.traceManager.close(trace);
+		this.tracer.close(trace);
 		return "traced/" + s;
 	}
 
@@ -113,7 +113,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.traceManager.addTag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);

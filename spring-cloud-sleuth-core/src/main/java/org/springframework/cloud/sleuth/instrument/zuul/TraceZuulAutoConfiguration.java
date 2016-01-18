@@ -23,7 +23,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.sleuth.TraceAccessor;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,7 +39,7 @@ import com.netflix.zuul.ZuulFilter;
 @ConditionalOnProperty(value = "spring.sleuth.zuul.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 @ConditionalOnClass(ZuulFilter.class)
-@ConditionalOnBean(TraceManager.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceZuulAutoConfiguration {
 

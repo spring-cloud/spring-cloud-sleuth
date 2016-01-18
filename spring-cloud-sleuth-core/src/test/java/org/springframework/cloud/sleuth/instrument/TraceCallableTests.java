@@ -6,9 +6,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -23,7 +23,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceCallableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
-	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
+	Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@After
@@ -71,7 +71,7 @@ public class TraceCallableTests {
 	}
 
 	private Trace givenSpanIsAlreadyActive() {
-		return this.traceManager.startSpan("parent");
+		return this.tracer.startTrace("parent");
 	}
 
 	private Callable<Trace> thatRetrievesTraceFromThreadLocal() {
@@ -90,7 +90,7 @@ public class TraceCallableTests {
 
 	private Trace whenCallableGetsSubmitted(Callable<Trace> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.traceManager, callable))
+		return this.executor.submit(new TraceCallable<>(this.tracer, callable))
 				.get();
 	}
 

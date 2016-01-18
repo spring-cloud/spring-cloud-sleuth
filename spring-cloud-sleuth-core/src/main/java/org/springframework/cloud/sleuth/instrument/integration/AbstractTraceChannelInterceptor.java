@@ -3,7 +3,7 @@ package org.springframework.cloud.sleuth.instrument.integration;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
@@ -19,12 +19,12 @@ import java.util.Random;
  */
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter {
 
-	protected final TraceManager traceManager;
+	protected final Tracer tracer;
 
 	protected final Random random;
 
-	protected AbstractTraceChannelInterceptor(TraceManager traceManager, Random random) {
-		this.traceManager = traceManager;
+	protected AbstractTraceChannelInterceptor(Tracer tracer, Random random) {
+		this.tracer = tracer;
 		this.random = random;
 	}
 

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.http.MediaType;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Autowired
-	TraceManager traceManager;
+	Tracer tracer;
 
 	@Test
 	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
@@ -46,7 +46,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.traceManager));
+		mockMvcBuilder.addFilters(new TraceFilter(this.tracer));
 	}
 
 	private MvcResult whenSentPingWithoutTracingData() throws Exception {

@@ -33,7 +33,7 @@ public class TraceStompMessageContextPropagationChannelInterceptorTests extends 
 
 		whenTheMessageWasSent(m);
 		Long expectedTraceId = trace.getSpan().getTraceId();
-		this.traceManager.close(trace);
+		this.tracer.close(trace);
 
 		thenReceivedMessageIsNotNull();
 		long traceId = thenTraceIdFromHeadersIsNotEmpty();
