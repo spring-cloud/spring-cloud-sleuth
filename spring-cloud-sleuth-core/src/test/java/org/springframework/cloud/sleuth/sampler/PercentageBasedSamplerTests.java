@@ -10,6 +10,7 @@ import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.util.JdkIdGenerator;
 
 import java.util.Random;
+import java.util.stream.Stream;
 
 public class PercentageBasedSamplerTests {
 

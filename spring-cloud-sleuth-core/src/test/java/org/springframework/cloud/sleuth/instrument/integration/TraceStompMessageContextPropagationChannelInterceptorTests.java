@@ -10,7 +10,6 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.instrument.integration.TraceStompMessageContextPropagationChannelInterceptorTests.TestApplication;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -37,7 +36,7 @@ public class TraceStompMessageContextPropagationChannelInterceptorTests extends 
 		this.traceManager.close(trace);
 
 		thenReceivedMessageIsNotNull();
-		Long traceId = thenTraceIdFromHeadersIsNotEmpty();
+		long traceId = thenTraceIdFromHeadersIsNotEmpty();
 		then(traceId).isEqualTo(expectedTraceId);
 		thenSpanIdFromHeadersIsNotEmpty();
 	}

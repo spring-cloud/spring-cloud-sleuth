@@ -54,7 +54,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_to_zipkin() {
-		Long traceId = new RandomLongSpanIdGenerator().generateId();
+		long traceId = new RandomLongSpanIdGenerator().generateId();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
 				sampleAppUrl + "/hi2", traceId));

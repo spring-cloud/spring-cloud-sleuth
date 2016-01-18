@@ -32,7 +32,6 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.integration.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
@@ -109,13 +108,15 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void parentSpanIncluded() {
 		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Trace.TRACE_ID_NAME, 10L)
+				.setHeader(Trace.SPAN_ID_NAME, 20L)
 				.build());
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
-		Long traceId = LongUtils.valueOf(this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
+		long traceId = Span.Converter.fromHexString(this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
+		then(spanId).isNotEqualTo(20L);
 		assertNull(TraceContextHolder.getCurrentTrace());
 		assertEquals(1, this.app.events.size());
 	}

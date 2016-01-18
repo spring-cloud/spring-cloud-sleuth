@@ -19,13 +19,10 @@ package org.springframework.cloud.sleuth.zipkin.stream;
 import io.zipkin.BinaryAnnotation;
 import io.zipkin.Endpoint;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Objects;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.stream.Host;
-import org.springframework.cloud.sleuth.util.LongUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

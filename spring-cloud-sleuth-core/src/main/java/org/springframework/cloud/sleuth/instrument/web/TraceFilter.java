@@ -19,6 +19,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
@@ -35,7 +36,6 @@ import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -107,16 +107,16 @@ public class TraceFilter extends OncePerRequestFilter
 			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 		}
 
-		Long spanId = LongUtils.valueOf(getHeader(request, response, Trace.SPAN_ID_NAME));
-		Long traceId = LongUtils.valueOf(getHeader(request, response, Trace.TRACE_ID_NAME));
 		String name = "http" + uri;
-		if (traceId != null) {
+		if (hasHeader(request, response, Trace.TRACE_ID_NAME)) {
+			long traceId = Span.Converter.fromHexString(getHeader(request, response, Trace.TRACE_ID_NAME));
+			long spanId = hasHeader(request, response, Trace.SPAN_ID_NAME) ?
+					Span.Converter.fromHexString(getHeader(request, response, Trace.SPAN_ID_NAME)) : new Random().nextLong();
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			if (skip) {
 				span.exportable(false);
 			}
-			Long parentId = LongUtils.valueOf(getHeader(request, response, Trace.PARENT_ID_NAME));
 			String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
 			String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
 			if (StringUtils.hasText(parentName)) {
@@ -127,8 +127,8 @@ public class TraceFilter extends OncePerRequestFilter
 			if (StringUtils.hasText(processId)) {
 				span.processId(processId);
 			}
-			if (parentId != null) {
-				span.parent(parentId);
+			if (hasHeader(request, response, Trace.PARENT_ID_NAME)) {
+				span.parent(Span.Converter.fromHexString(getHeader(request, response, Trace.PARENT_ID_NAME)));
 			}
 			span.remote(true);
 
@@ -183,8 +183,8 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private void addResponseHeaders(HttpServletResponse response, Span span) {
 		if (span != null) {
-			response.addHeader(Trace.SPAN_ID_NAME, LongUtils.toString(span.getSpanId()));
-			response.addHeader(Trace.TRACE_ID_NAME, LongUtils.toString(span.getTraceId()));
+			response.addHeader(Trace.SPAN_ID_NAME, Span.Converter.toHexString(span.getSpanId()));
+			response.addHeader(Trace.TRACE_ID_NAME, Span.Converter.toHexString(span.getTraceId()));
 		}
 	}
 
@@ -233,6 +233,12 @@ public class TraceFilter extends OncePerRequestFilter
 				this.traceManager.addAnnotation(key, value);
 			}
 		}
+	}
+
+	private boolean hasHeader(HttpServletRequest request, HttpServletResponse response,
+			String name) {
+		String value = request.getHeader(name);
+		return value != null || response.getHeader(name) != null;
 	}
 
 	private String getHeader(HttpServletRequest request, HttpServletResponse response,

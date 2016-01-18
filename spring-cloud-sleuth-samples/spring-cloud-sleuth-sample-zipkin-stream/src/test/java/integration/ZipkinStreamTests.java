@@ -62,7 +62,7 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 		await().until(zipkinServerIsUp());
 
-		Long traceId = new RandomLongSpanIdGenerator().generateId();
+		long traceId = new RandomLongSpanIdGenerator().generateId();
 		Span span = MilliSpan.builder().traceId(traceId).spanId(traceId).name("test")
 				.build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");

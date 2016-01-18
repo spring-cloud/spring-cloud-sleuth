@@ -39,13 +39,13 @@ import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConcurrencyStrategy;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -119,12 +119,7 @@ public class TraceFeignClientAutoConfiguration {
 					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
 					return;
 				}
-				if (span.getSpanId() == null) {
-					setHeader(template, Trace.TRACE_ID_NAME, span.getTraceId());
-					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
-					return;
-				}
-				template.header(Trace.TRACE_ID_NAME, LongUtils.toString(span.getTraceId()));
+				template.header(Trace.TRACE_ID_NAME, Span.Converter.toHexString(span.getTraceId()));
 				setHeader(template, Trace.SPAN_NAME_NAME, span.getName());
 				setHeader(template, Trace.SPAN_ID_NAME, span.getSpanId());
 				setHeader(template, Trace.PARENT_ID_NAME, getParentId(span));
@@ -153,7 +148,9 @@ public class TraceFeignClientAutoConfiguration {
 	}
 
 	public void setHeader(RequestTemplate request, String name, Long value) {
-		setHeader(request, name, LongUtils.toString(value));
+		if (value != null) {
+			setHeader(request, name, Span.Converter.toHexString(value));
+		}
 	}
 
 	private Map<String, Collection<String>> headersWithTraceId(
@@ -165,11 +162,6 @@ public class TraceFeignClientAutoConfiguration {
 			setHeader(newHeaders, Trace.NOT_SAMPLED_NAME, "");
 			return newHeaders;
 		}
-		if (span.getSpanId() == null) {
-			setHeader(newHeaders, Trace.TRACE_ID_NAME, span.getTraceId());
-			setHeader(newHeaders, Trace.NOT_SAMPLED_NAME, "");
-			return newHeaders;
-		}
 		setHeader(newHeaders, Trace.TRACE_ID_NAME, span.getTraceId());
 		setHeader(newHeaders, Trace.SPAN_ID_NAME, span.getSpanId());
 		setHeader(newHeaders, Trace.PARENT_ID_NAME, getParentId(span));
@@ -178,13 +170,15 @@ public class TraceFeignClientAutoConfiguration {
 
 	public void setHeader(Map<String, Collection<String>> headers, String name,
 			String value) {
-		if (value != null && !headers.containsKey(name) && this.accessor.isTracing()) {
+		if (StringUtils.hasText(value) && !headers.containsKey(name) && this.accessor.isTracing()) {
 			headers.put(name, singletonList(value));
 		}
 	}
 	public void setHeader(Map<String, Collection<String>> headers, String name,
 			Long value) {
-		setHeader(headers, name, LongUtils.toString(value));
+		if (value != null ){
+			setHeader(headers, name, Span.Converter.toHexString(value));
+		}
 	}
 
 	private Span getCurrentSpan() {

@@ -4,13 +4,13 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
-import org.springframework.util.StringUtils;
+
+import java.util.Random;
 
 /**
  * Abstraction over classes related to channel intercepting
@@ -30,29 +30,30 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 * trace id passed initially.
 	 */
 	Span buildSpan(Message<?> message) {
-		Long spanId = getHeader(message, Trace.SPAN_ID_NAME, Long.class);
-		Long traceId = getHeader(message, Trace.TRACE_ID_NAME, Long.class);
-		if (traceId != null) {
-			MilliSpan.MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
-			Long parentId = getHeader(message, Trace.PARENT_ID_NAME, Long.class);
-			if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-				span.exportable(false);
-			}
-			String processId = getHeader(message, Trace.PROCESS_ID_NAME);
-			String spanName = getHeader(message, Trace.SPAN_NAME_NAME);
-			if (spanName != null) {
-				span.name(spanName);
-			}
-			if (processId != null) {
-				span.processId(processId);
-			}
-			if (parentId != null) {
-				span.parent(parentId);
-			}
-			span.remote(true);
-			return span.build();
+		if (!hasHeader(message, Trace.TRACE_ID_NAME) || !hasHeader(message, Trace.SPAN_ID_NAME)) {
+			return null;
 		}
-		return null;
+		long spanId = hasHeader(message, Trace.SPAN_ID_NAME) ?
+				getHeader(message, Trace.SPAN_ID_NAME, Long.class) : new Random().nextLong();
+		long traceId = getHeader(message, Trace.TRACE_ID_NAME, Long.class);
+		MilliSpan.MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
+		Long parentId = getHeader(message, Trace.PARENT_ID_NAME, Long.class);
+		if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+			span.exportable(false);
+		}
+		String processId = getHeader(message, Trace.PROCESS_ID_NAME);
+		String spanName = getHeader(message, Trace.SPAN_NAME_NAME);
+		if (spanName != null) {
+			span.name(spanName);
+		}
+		if (processId != null) {
+			span.processId(processId);
+		}
+		if (parentId != null) {
+			span.parent(parentId);
+		}
+		span.remote(true);
+		return span.build();
 	}
 
 	String getHeader(Message<?> message, String name) {
@@ -61,6 +62,10 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	<T> T getHeader(Message<?> message, String name, Class<T> type) {
 		return message.getHeaders().get(name, type);
+	}
+
+	boolean hasHeader(Message<?> message, String name) {
+		return message.getHeaders().containsKey(name);
 	}
 
 	String getChannelName(MessageChannel channel) {

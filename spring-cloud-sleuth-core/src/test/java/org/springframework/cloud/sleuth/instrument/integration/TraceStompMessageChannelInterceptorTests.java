@@ -56,7 +56,7 @@ public class TraceStompMessageChannelInterceptorTests extends AbstractTraceStomp
 		this.traceManager.close(trace);
 
 		Long spanId = thenSpanIdFromHeadersIsNotEmpty();
-		Long traceId = thenTraceIdFromHeadersIsNotEmpty();
+		long traceId = thenTraceIdFromHeadersIsNotEmpty();
 		then(traceId).isEqualTo(trace.getSpan().getTraceId());
 		then(spanId).isEqualTo(trace.getSpan().getSpanId());
 		then(TraceContextHolder.getCurrentTrace()).isNull();

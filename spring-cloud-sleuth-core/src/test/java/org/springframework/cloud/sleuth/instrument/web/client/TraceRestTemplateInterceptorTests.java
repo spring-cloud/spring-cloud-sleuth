@@ -83,8 +83,8 @@ public class TraceRestTemplateInterceptorTests {
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
-		then(Long.valueOf(headers.get(Trace.SPAN_ID_NAME))).isEqualTo(2L);
 		then(Long.valueOf(headers.get(Trace.TRACE_ID_NAME))).isEqualTo(1L);
+		then(Long.valueOf(headers.get(Trace.SPAN_ID_NAME))).isEqualTo(2L);
 	}
 
 	@Test

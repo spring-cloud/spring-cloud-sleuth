@@ -52,7 +52,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_for_messaging() {
-		Long traceId = new RandomLongSpanIdGenerator().generateId();
+		long traceId = new RandomLongSpanIdGenerator().generateId();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId));
 
@@ -63,7 +63,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_for_messaging_with_async() {
-		Long traceId = new RandomLongSpanIdGenerator().generateId();
+		long traceId = new RandomLongSpanIdGenerator().generateId();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId));
 
@@ -80,7 +80,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
 	}
 
-	private void thenAllSpansHaveTraceIdEqualTo(Long traceId) {
+	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
 		then(this.integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == traceId)).isTrue();
 	}
 

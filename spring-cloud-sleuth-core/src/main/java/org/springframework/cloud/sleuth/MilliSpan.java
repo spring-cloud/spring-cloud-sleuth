@@ -38,7 +38,7 @@ public class MilliSpan implements Span {
 	private final long traceId;
 	@Singular
 	private List<Long> parents = new ArrayList<>();
-	private final Long spanId;
+	private final long spanId;
 	private boolean remote = false;
 	private boolean exportable = true;
 	private final Map<String, String> tags = new LinkedHashMap<>();
@@ -50,7 +50,7 @@ public class MilliSpan implements Span {
 		return new MilliSpan().toBuilder();
 	}
 
-	public MilliSpan(long begin, long end, String name, long traceId, List<Long> parents, Long spanId, boolean remote, boolean exportable, String processId) {
+	public MilliSpan(long begin, long end, String name, long traceId, List<Long> parents, long spanId, boolean remote, boolean exportable, String processId) {
 		this.begin = begin<=0 ? System.currentTimeMillis() : begin;
 		this.end = end;
 		this.name = name;
@@ -67,7 +67,7 @@ public class MilliSpan implements Span {
 		this.begin = 0;
 		this.name = null;
 		this.traceId = 0;
-		this.spanId = null;
+		this.spanId = 0;
 		this.processId = null;
 		this.parents = new ArrayList<>();
 	}

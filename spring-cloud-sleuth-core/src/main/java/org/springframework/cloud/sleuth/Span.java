@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth;
 
+import org.springframework.util.Assert;
+
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +44,7 @@ public interface Span {
 	 * The spanId is immutable and cannot be changed. It is safe to access this from
 	 * multiple threads.
 	 */
-	Long getSpanId();
+	long getSpanId();
 
 	/**
 	 * A pseudo-unique (random) number assigned to the trace associated with this span
@@ -126,4 +129,26 @@ public interface Span {
 	 * Will never be null.
 	 */
 	List<Log> logs();
+
+
+	/**
+	 * Class used for conversions of long ids to their String representation
+	 */
+	class Converter {
+
+		/**
+		 * Represents given long id as hex string
+		 */
+		public static String toHexString(long id) {
+			return Long.toHexString(id);
+		}
+
+		/**
+		 * Represents hex string as long
+		 */
+		public static long fromHexString(String hexString) {
+			Assert.hasText(hexString, "Can't convert empty hex string to long");
+			return new BigInteger(hexString, 16).longValue();
+		}
+	}
 }

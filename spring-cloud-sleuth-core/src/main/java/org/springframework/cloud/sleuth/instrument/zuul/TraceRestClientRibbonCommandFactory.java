@@ -27,7 +27,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -95,12 +94,6 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 				setHeader(requestBuilder, Trace.NOT_SAMPLED_NAME, "");
 				return;
 			}
-			if (span.getSpanId()==null) {
-				setHeader(requestBuilder, Trace.TRACE_ID_NAME, span.getTraceId());
-				setHeader(requestBuilder, Trace.NOT_SAMPLED_NAME, "");
-				return;
-			}
-
 			setHeader(requestBuilder, Trace.TRACE_ID_NAME, span.getTraceId());
 			setHeader(requestBuilder, Trace.SPAN_ID_NAME, span.getSpanId());
 			setHeader(requestBuilder, Trace.SPAN_NAME_NAME, span.getName());
@@ -129,7 +122,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 		}
 
 		public void setHeader(HttpRequest.Builder builder, String name, Long value) {
-			setHeader(builder, name, LongUtils.toString(value));
+			setHeader(builder, name, Span.Converter.toHexString(value));
 		}
 
 		private Span getCurrentSpan() {

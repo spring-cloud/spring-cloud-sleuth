@@ -81,7 +81,7 @@ public abstract class AbstractIntegrationTest {
 		return 9411;
 	}
 
-	protected ResponseEntity<String> checkStateOfTheTraceId(Long traceId) {
+	protected ResponseEntity<String> checkStateOfTheTraceId(long traceId) {
 		URI uri = URI.create(getZipkinTraceQueryUrl() + Long.toHexString(traceId));
 		log.info("Sending request to the Zipkin query service [{}]. Checking presence of trace id [{}]", uri, traceId);
 		return exchangeRequest(uri);
@@ -101,11 +101,11 @@ public abstract class AbstractIntegrationTest {
 		return "http://localhost:"+getZipkinServerPort()+"/api/v1/services";
 	}
 
-	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, Long traceId) {
+	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId) {
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId);
 	}
 
-	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(Long traceId) {
+	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(long traceId) {
 		return () -> {
 			ResponseEntity<String> response = checkStateOfTheTraceId(traceId);
 			log.info("Response from the Zipkin query service about the trace id [{}] for trace with id [{}]", response, traceId);

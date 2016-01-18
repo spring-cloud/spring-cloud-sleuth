@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.integration;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.util.StringUtils;
@@ -97,7 +96,9 @@ public class SpanMessageHeaders {
 
 	private static void addHeader(Map<String, String> headers, String name,
 			Long value) {
-		addHeader(headers, name, LongUtils.toString(value));
+		if (value != null) {
+			addHeader(headers, name, Span.Converter.toHexString(value));
+		}
 	}
 
 	private static Long getFirst(List<Long> parents) {

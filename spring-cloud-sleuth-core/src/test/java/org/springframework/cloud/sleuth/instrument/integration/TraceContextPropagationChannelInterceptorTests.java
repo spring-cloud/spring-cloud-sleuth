@@ -24,12 +24,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.integration.TraceContextPropagationChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.QueueChannel;
@@ -75,10 +75,10 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 		assertNotNull("message was null", message);
 
-		Long spanId = LongUtils.valueOf(message.getHeaders().get(Trace.SPAN_ID_NAME, String.class));
+		Long spanId = Span.Converter.fromHexString(message.getHeaders().get(Trace.SPAN_ID_NAME, String.class));
 		assertEquals("spanId was wrong", expectedSpanId,  spanId);
 
-		Long traceId = LongUtils.valueOf(message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
+		long traceId = Span.Converter.fromHexString(message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
 		assertNotNull("traceId was null", traceId);
 	}
 

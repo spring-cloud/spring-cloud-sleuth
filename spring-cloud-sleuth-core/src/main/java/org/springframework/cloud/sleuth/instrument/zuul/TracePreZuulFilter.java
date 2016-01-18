@@ -22,7 +22,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -65,11 +64,6 @@ ApplicationEventPublisherAware {
 			setHeader(response, Trace.NOT_SAMPLED_NAME, "");
 			return null;
 		}
-		if (span.getSpanId()==null) {
-			setHeader(response, Trace.TRACE_ID_NAME, span.getTraceId());
-			setHeader(response, Trace.NOT_SAMPLED_NAME, "");
-			return null;
-		}
 		try {
 			setHeader(response, Trace.SPAN_ID_NAME, span.getSpanId());
 			setHeader(response, Trace.TRACE_ID_NAME, span.getTraceId());
@@ -100,7 +94,7 @@ ApplicationEventPublisherAware {
 		}
 	}
 	public void setHeader(Map<String, String> request, String name, Long value) {
-		setHeader(request, name, LongUtils.toString(value));
+		setHeader(request, name, Span.Converter.toHexString(value));
 	}
 
 	@Override

@@ -20,7 +20,6 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
-import org.springframework.cloud.sleuth.util.LongUtils;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -149,7 +148,7 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 			}
 		}
 		public void setHeader(Map<String, Object> headers, String name, long value) {
-			setHeader(headers, name, LongUtils.toString(value));
+			setHeader(headers, name, Span.Converter.toHexString(value));
 		}
 
 		@Override
