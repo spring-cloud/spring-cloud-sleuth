@@ -109,9 +109,9 @@ public class TraceFilter extends OncePerRequestFilter
 
 		String name = "http" + uri;
 		if (hasHeader(request, response, Trace.TRACE_ID_NAME)) {
-			long traceId = Span.Converter.fromHexString(getHeader(request, response, Trace.TRACE_ID_NAME));
+			long traceId = Span.IdConverter.fromHex(getHeader(request, response, Trace.TRACE_ID_NAME));
 			long spanId = hasHeader(request, response, Trace.SPAN_ID_NAME) ?
-					Span.Converter.fromHexString(getHeader(request, response, Trace.SPAN_ID_NAME)) : new Random().nextLong();
+					Span.IdConverter.fromHex(getHeader(request, response, Trace.SPAN_ID_NAME)) : new Random().nextLong();
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			if (skip) {
@@ -128,7 +128,7 @@ public class TraceFilter extends OncePerRequestFilter
 				span.processId(processId);
 			}
 			if (hasHeader(request, response, Trace.PARENT_ID_NAME)) {
-				span.parent(Span.Converter.fromHexString(getHeader(request, response, Trace.PARENT_ID_NAME)));
+				span.parent(Span.IdConverter.fromHex(getHeader(request, response, Trace.PARENT_ID_NAME)));
 			}
 			span.remote(true);
 
@@ -183,8 +183,8 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private void addResponseHeaders(HttpServletResponse response, Span span) {
 		if (span != null) {
-			response.addHeader(Trace.SPAN_ID_NAME, Span.Converter.toHexString(span.getSpanId()));
-			response.addHeader(Trace.TRACE_ID_NAME, Span.Converter.toHexString(span.getTraceId()));
+			response.addHeader(Trace.SPAN_ID_NAME, Span.IdConverter.toHex(span.getSpanId()));
+			response.addHeader(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
 		}
 	}
 

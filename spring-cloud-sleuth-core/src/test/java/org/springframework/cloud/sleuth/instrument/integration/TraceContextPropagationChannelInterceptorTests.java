@@ -75,10 +75,10 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 		assertNotNull("message was null", message);
 
-		Long spanId = Span.Converter.fromHexString(message.getHeaders().get(Trace.SPAN_ID_NAME, String.class));
+		Long spanId = Span.IdConverter.fromHex(message.getHeaders().get(Trace.SPAN_ID_NAME, String.class));
 		assertEquals("spanId was wrong", expectedSpanId,  spanId);
 
-		long traceId = Span.Converter.fromHexString(message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
+		long traceId = Span.IdConverter.fromHex(message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
 		assertNotNull("traceId was null", traceId);
 	}
 

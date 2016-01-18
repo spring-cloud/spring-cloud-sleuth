@@ -64,12 +64,12 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
-						.header(headerName, Span.Converter.toHexString(passedCorrelationId))
-						.header(Trace.SPAN_ID_NAME, Span.Converter.toHexString(new Random().nextLong())))
+						.header(headerName, Span.IdConverter.toHex(passedCorrelationId))
+						.header(Trace.SPAN_ID_NAME, Span.IdConverter.toHex(new Random().nextLong())))
 				.andReturn();
 	}
 
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.Converter.fromHexString(mvcResult.getResponse().getHeader(Trace.TRACE_ID_NAME));
+		return Span.IdConverter.fromHex(mvcResult.getResponse().getHeader(Trace.TRACE_ID_NAME));
 	}
 }

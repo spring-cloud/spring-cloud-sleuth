@@ -53,7 +53,7 @@ public class RequestSendingRunnable implements Runnable {
 
 	private RequestEntity requestWithTraceId(long traceId) {
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(Trace.TRACE_ID_NAME, Span.Converter.toHexString(traceId));
+		headers.add(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(traceId));
 		URI uri = URI.create(url);
 		RequestEntity requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
 		log.info("Request [" + requestEntity + "] is ready");

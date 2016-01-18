@@ -84,7 +84,7 @@ public class FeignTraceTests {
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		// then
-		then(Span.Converter.fromHexString(getHeader(response, Trace.TRACE_ID_NAME))).isEqualTo(currentTraceId);
+		then(Span.IdConverter.fromHex(getHeader(response, Trace.TRACE_ID_NAME))).isEqualTo(currentTraceId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 

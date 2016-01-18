@@ -13,7 +13,7 @@ public class SpanTest {
 	public void should_convert_long_to_hex_string() throws Exception {
 		long someLong = 123123L;
 
-		String hexString = Span.Converter.toHexString(someLong);
+		String hexString = Span.IdConverter.toHex(someLong);
 
 		then(hexString).isEqualTo("1e0f3");
 	}
@@ -22,13 +22,13 @@ public class SpanTest {
 	public void should_convert_hex_string_to_long() throws Exception {
 		String hexString = "1e0f3";
 
-		long someLong = Span.Converter.fromHexString(hexString);
+		long someLong = Span.IdConverter.fromHex(hexString);
 
 		then(someLong).isEqualTo(123123L);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void should_throw_exception_when_null_string_is_to_be_converted_to_long() throws Exception {
-		Span.Converter.fromHexString(null);
+		Span.IdConverter.fromHex(null);
 	}
 }

@@ -38,7 +38,6 @@ public class TraceAutoConfiguration {
 		return new IsTracingSampler();
 	}
 
-
 	@Bean
 	@ConditionalOnMissingBean
 	public DefaultTraceManager traceManager(Sampler<Void> sampler,

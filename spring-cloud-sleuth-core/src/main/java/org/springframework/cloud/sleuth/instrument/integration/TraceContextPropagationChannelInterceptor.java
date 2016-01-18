@@ -148,7 +148,7 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 			}
 		}
 		public void setHeader(Map<String, Object> headers, String name, long value) {
-			setHeader(headers, name, Span.Converter.toHexString(value));
+			setHeader(headers, name, Span.IdConverter.toHex(value));
 		}
 
 		@Override

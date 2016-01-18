@@ -94,7 +94,7 @@ ApplicationEventPublisherAware {
 		}
 	}
 	public void setHeader(Map<String, String> request, String name, Long value) {
-		setHeader(request, name, Span.Converter.toHexString(value));
+		setHeader(request, name, Span.IdConverter.toHex(value));
 	}
 
 	@Override

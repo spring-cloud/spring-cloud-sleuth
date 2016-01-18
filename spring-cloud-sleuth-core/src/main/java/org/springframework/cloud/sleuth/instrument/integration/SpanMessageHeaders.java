@@ -97,7 +97,7 @@ public class SpanMessageHeaders {
 	private static void addHeader(Map<String, String> headers, String name,
 			Long value) {
 		if (value != null) {
-			addHeader(headers, name, Span.Converter.toHexString(value));
+			addHeader(headers, name, Span.IdConverter.toHex(value));
 		}
 	}
 

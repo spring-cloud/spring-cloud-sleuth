@@ -119,7 +119,7 @@ public class TraceFeignClientAutoConfiguration {
 					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
 					return;
 				}
-				template.header(Trace.TRACE_ID_NAME, Span.Converter.toHexString(span.getTraceId()));
+				template.header(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
 				setHeader(template, Trace.SPAN_NAME_NAME, span.getName());
 				setHeader(template, Trace.SPAN_ID_NAME, span.getSpanId());
 				setHeader(template, Trace.PARENT_ID_NAME, getParentId(span));
@@ -149,7 +149,7 @@ public class TraceFeignClientAutoConfiguration {
 
 	public void setHeader(RequestTemplate request, String name, Long value) {
 		if (value != null) {
-			setHeader(request, name, Span.Converter.toHexString(value));
+			setHeader(request, name, Span.IdConverter.toHex(value));
 		}
 	}
 
@@ -177,7 +177,7 @@ public class TraceFeignClientAutoConfiguration {
 	public void setHeader(Map<String, Collection<String>> headers, String name,
 			Long value) {
 		if (value != null ){
-			setHeader(headers, name, Span.Converter.toHexString(value));
+			setHeader(headers, name, Span.IdConverter.toHex(value));
 		}
 	}
 

@@ -114,7 +114,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
-		long traceId = Span.Converter.fromHexString(this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
+		long traceId = Span.IdConverter.fromHex(this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		assertNull(TraceContextHolder.getCurrentTrace());

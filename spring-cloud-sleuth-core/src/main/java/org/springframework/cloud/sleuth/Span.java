@@ -135,19 +135,19 @@ public interface Span {
 	/**
 	 * Class used for conversions of long ids to their String representation
 	 */
-	class Converter {
+	class IdConverter {
 
 		/**
 		 * Represents given long id as hex string
 		 */
-		public static String toHexString(long id) {
+		public static String toHex(long id) {
 			return Long.toHexString(id);
 		}
 
 		/**
 		 * Represents hex string as long
 		 */
-		public static long fromHexString(String hexString) {
+		public static long fromHex(String hexString) {
 			Assert.hasText(hexString, "Can't convert empty hex string to long");
 			return new BigInteger(hexString, 16).longValue();
 		}
