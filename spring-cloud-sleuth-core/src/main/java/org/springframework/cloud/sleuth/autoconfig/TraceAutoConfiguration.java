@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
@@ -26,16 +25,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Random;
-
 /**
  * @author Spencer Gibb
  */
 @Configuration
 @ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
 public class TraceAutoConfiguration {
-
-	@Autowired(required = false) Random random;
 
 	@Bean
 	@ConditionalOnMissingBean
