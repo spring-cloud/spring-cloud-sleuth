@@ -31,11 +31,15 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Spencer Gibb
@@ -61,7 +65,7 @@ public class DefaultTraceManagerTests {
 	public void tracingWorks() {
 		ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
 
-		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(), publisher);
+		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(), new Random(), publisher);
 
 		Trace trace = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
 		try {

@@ -16,14 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +34,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Dave Syer
@@ -62,7 +62,7 @@ public class TraceRestTemplateInterceptorTests {
 	@Before
 	public void setup() {
 		this.publisher.refresh();
-		this.traces = new DefaultTraceManager(new AlwaysSampler(), this.publisher);
+		this.traces = new DefaultTraceManager(new AlwaysSampler(), new Random(), this.publisher);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.traces)));
 		TraceContextHolder.removeCurrentTrace();

@@ -43,9 +43,12 @@ public class DefaultTraceManager implements TraceManager {
 
 	private final ApplicationEventPublisher publisher;
 
+	private final Random random;
+
 	public DefaultTraceManager(Sampler<Void> defaultSampler,
-			ApplicationEventPublisher publisher) {
+							   Random random, ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
+		this.random = random;
 		this.publisher = publisher;
 	}
 
@@ -167,7 +170,7 @@ public class DefaultTraceManager implements TraceManager {
 	}
 
 	private long createId() {
-		return new Random().nextLong();
+		return random.nextLong();
 	}
 
 	@Override

@@ -25,12 +25,19 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Random;
+
 /**
  * @author Spencer Gibb
  */
 @Configuration
 @ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
 public class TraceAutoConfiguration {
+
+	@Bean
+	public Random random() {
+		return new Random();
+	}
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -42,6 +49,6 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	public DefaultTraceManager traceManager(Sampler<Void> sampler,
 			ApplicationEventPublisher publisher) {
-		return new DefaultTraceManager(sampler, publisher);
+		return new DefaultTraceManager(sampler, random(), publisher);
 	}
 }

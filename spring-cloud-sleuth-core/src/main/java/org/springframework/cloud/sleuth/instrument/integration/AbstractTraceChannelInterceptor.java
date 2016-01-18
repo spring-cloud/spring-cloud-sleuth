@@ -21,8 +21,11 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	protected final TraceManager traceManager;
 
-	protected AbstractTraceChannelInterceptor(TraceManager traceManager) {
+	protected final Random random;
+
+	protected AbstractTraceChannelInterceptor(TraceManager traceManager, Random random) {
 		this.traceManager = traceManager;
+		this.random = random;
 	}
 
 	/**
@@ -31,10 +34,10 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 */
 	Span buildSpan(Message<?> message) {
 		if (!hasHeader(message, Trace.TRACE_ID_NAME) || !hasHeader(message, Trace.SPAN_ID_NAME)) {
-			return null;
+			return null; // cannot build a span without ids
 		}
 		long spanId = hasHeader(message, Trace.SPAN_ID_NAME) ?
-				getHeader(message, Trace.SPAN_ID_NAME, Long.class) : new Random().nextLong();
+				getHeader(message, Trace.SPAN_ID_NAME, Long.class) : random.nextLong();
 		long traceId = getHeader(message, Trace.TRACE_ID_NAME, Long.class);
 		MilliSpan.MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 		Long parentId = getHeader(message, Trace.PARENT_ID_NAME, Long.class);

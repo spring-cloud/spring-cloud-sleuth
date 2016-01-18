@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -38,7 +39,7 @@ public class TraceableExecutorServiceTests {
 
 	@Before
 	public void setup() {
-		traceManager = new DefaultTraceManager(new AlwaysSampler(), publisher);
+		traceManager = new DefaultTraceManager(new AlwaysSampler(), new Random(), publisher);
 		traceManagerableExecutorService = new TraceableExecutorService(executorService, traceManager);
 		TraceContextHolder.removeCurrentTrace();
 	}

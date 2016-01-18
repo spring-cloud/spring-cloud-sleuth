@@ -16,14 +16,13 @@
 
 package sample;
 
-import java.util.Random;
-
 import lombok.SneakyThrows;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Random;
 
 /**
  * @author Spencer Gibb
@@ -34,11 +33,12 @@ public class SampleController  {
 
 	@Autowired
 	private RestTemplate restTemplate;
+	@Autowired
+	private Random random;
 
 	@SneakyThrows
 	@RequestMapping("/")
 	public String hi() {
-		final Random random = new Random();
 		Thread.sleep(random.nextInt(1000));
 		String s = this.restTemplate.getForObject("http://zipkin/hi2", String.class);
 		return "hi/" + s;

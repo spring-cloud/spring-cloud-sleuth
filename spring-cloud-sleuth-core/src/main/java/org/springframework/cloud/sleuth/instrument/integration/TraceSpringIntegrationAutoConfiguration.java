@@ -26,6 +26,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.GlobalChannelInterceptor;
 
+import java.util.Random;
+
 /**
  * @author Spencer Gibb
  */
@@ -45,13 +47,13 @@ public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor
-	public TraceChannelInterceptor traceChannelInterceptor(TraceManager traceManager) {
-		return new TraceChannelInterceptor(traceManager);
+	public TraceChannelInterceptor traceChannelInterceptor(TraceManager traceManager, Random random) {
+		return new TraceChannelInterceptor(traceManager, random);
 	}
 
 	@Bean
-	public TraceStompMessageChannelInterceptor traceStompMessageChannelInterceptor(TraceManager traceManager) {
-		return new TraceStompMessageChannelInterceptor(traceManager);
+	public TraceStompMessageChannelInterceptor traceStompMessageChannelInterceptor(TraceManager traceManager, Random random) {
+		return new TraceStompMessageChannelInterceptor(traceManager, random);
 	}
 
 	@Bean

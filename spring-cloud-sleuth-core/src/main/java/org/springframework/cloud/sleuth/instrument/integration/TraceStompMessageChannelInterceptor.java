@@ -22,6 +22,8 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
 
+import java.util.Random;
+
 /**
  * Interceptor for Stomp Messages sent over websocket
  * 
@@ -32,8 +34,8 @@ import org.springframework.messaging.support.ChannelInterceptor;
 public class TraceStompMessageChannelInterceptor extends AbstractTraceChannelInterceptor implements ChannelInterceptor {
 	private ThreadLocal<Trace> traceScopeHolder = new ThreadLocal<Trace>();
 
-	public TraceStompMessageChannelInterceptor(final TraceManager traceManager) {
-		super(traceManager);
+	public TraceStompMessageChannelInterceptor(TraceManager traceManager, Random random) {
+		super(traceManager, random);
 	}
 
 	@Override

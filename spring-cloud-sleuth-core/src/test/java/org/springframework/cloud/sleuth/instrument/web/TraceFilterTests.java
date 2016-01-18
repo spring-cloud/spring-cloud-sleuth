@@ -37,7 +37,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import static org.junit.Assert.*;
+import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -62,7 +66,7 @@ public class TraceFilterTests {
 	@SneakyThrows
 	public void init() {
 		initMocks(this);
-		this.traceManager = new DefaultTraceManager(new DelegateSampler(), this.publisher) {
+		this.traceManager = new DefaultTraceManager(new DelegateSampler(), new Random(), this.publisher) {
 			@Override
 			protected Trace createTrace(Trace trace, Span span) {
 				TraceFilterTests.this.span = span;

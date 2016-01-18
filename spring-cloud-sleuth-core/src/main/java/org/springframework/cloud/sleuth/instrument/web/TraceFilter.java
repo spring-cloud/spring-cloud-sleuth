@@ -70,18 +70,22 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private final TraceManager traceManager;
 	private final Pattern skipPattern;
-	private UrlPathHelper urlPathHelper = new UrlPathHelper();
+	private final Random random;
 
+	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 	private ApplicationEventPublisher publisher;
+
 
 	public TraceFilter(TraceManager traceManager) {
 		this.traceManager = traceManager;
 		this.skipPattern = DEFAULT_SKIP_PATTERN;
+		this.random = new Random();
 	}
 
-	public TraceFilter(TraceManager traceManager, Pattern skipPattern) {
+	public TraceFilter(TraceManager traceManager, Pattern skipPattern, Random random) {
 		this.traceManager = traceManager;
 		this.skipPattern = skipPattern;
+		this.random = random;
 	}
 
 	@Override
@@ -111,7 +115,7 @@ public class TraceFilter extends OncePerRequestFilter
 		if (hasHeader(request, response, Trace.TRACE_ID_NAME)) {
 			long traceId = Span.IdConverter.fromHex(getHeader(request, response, Trace.TRACE_ID_NAME));
 			long spanId = hasHeader(request, response, Trace.SPAN_ID_NAME) ?
-					Span.IdConverter.fromHex(getHeader(request, response, Trace.SPAN_ID_NAME)) : new Random().nextLong();
+					Span.IdConverter.fromHex(getHeader(request, response, Trace.SPAN_ID_NAME)) : random.nextLong();
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			if (skip) {

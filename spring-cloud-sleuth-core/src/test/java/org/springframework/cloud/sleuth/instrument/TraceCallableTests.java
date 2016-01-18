@@ -12,6 +12,7 @@ import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,7 +24,7 @@ public class TraceCallableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
-			Mockito.mock(ApplicationEventPublisher.class));
+			new Random(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@After
 	public void clean() {

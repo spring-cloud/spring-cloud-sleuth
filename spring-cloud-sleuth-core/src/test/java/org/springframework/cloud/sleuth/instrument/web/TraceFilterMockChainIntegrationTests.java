@@ -46,7 +46,7 @@ public class TraceFilterMockChainIntegrationTests {
 	private StaticApplicationContext context = new StaticApplicationContext();
 
 	private TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
-			this.context);
+			new Random(), this.context);
 
 	private MockHttpServletRequest request;
 	private MockHttpServletResponse response;
