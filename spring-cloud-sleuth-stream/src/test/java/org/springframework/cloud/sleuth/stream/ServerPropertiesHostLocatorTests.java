@@ -16,17 +16,18 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Collections;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.sleuth.MilliSpan;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Collections;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ServerPropertiesHostLocatorTests {
-  MilliSpan span = new MilliSpan(1, 3, "name", "traceId", Collections.<String>emptyList(), "spanId", true, true, "processId");
+  MilliSpan span = new MilliSpan(1, 3, "name", 1L, Collections.<Long>emptyList(), 2L, true, true, "process");
 
   @Test
   public void portDefaultsTo8080() {

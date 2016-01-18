@@ -72,7 +72,7 @@ public class ZipkinSpanListenerTests {
 		this.test.spans.clear();
 	}
 
-	Span parent = MilliSpan.builder().traceId("xxxx").name("parent").remote(true).build();
+	Span parent = MilliSpan.builder().traceId(1L).name("parent").remote(true).build();
 
 	/** Sleuth timestamps are millisecond granularity while zipkin is microsecond. */
 	@Test

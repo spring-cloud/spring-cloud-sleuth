@@ -16,13 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,11 +30,18 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.util.JdkIdGenerator;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Dave Syer
@@ -62,8 +62,7 @@ public class TraceRestTemplateInterceptorTests {
 	@Before
 	public void setup() {
 		this.publisher.refresh();
-		this.traces = new DefaultTraceManager(new AlwaysSampler(),
-				new JdkIdGenerator(), this.publisher);
+		this.traces = new DefaultTraceManager(new AlwaysSampler(), new Random(), this.publisher);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.traces)));
 		TraceContextHolder.removeCurrentTrace();
@@ -76,12 +75,12 @@ public class TraceRestTemplateInterceptorTests {
 
 	@Test
 	public void headersAddedWhenTracing() {
-		this.traces.continueSpan(MilliSpan.builder().traceId("foo").spanId("bar").build());
+		this.traces.continueSpan(MilliSpan.builder().traceId(1L).spanId(2L).build());
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
-		assertEquals("bar", headers.get(Trace.SPAN_ID_NAME));
-		assertEquals("foo", headers.get(Trace.TRACE_ID_NAME));
+		then(Long.valueOf(headers.get(Trace.TRACE_ID_NAME))).isEqualTo(1L);
+		then(Long.valueOf(headers.get(Trace.SPAN_ID_NAME))).isEqualTo(2L);
 	}
 
 	@Test

@@ -15,8 +15,8 @@
  */
 package integration;
 
-import java.util.Arrays;
-
+import example.ZipkinStreamServerApplication;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +34,10 @@ import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.JdkIdGenerator;
-
-import example.ZipkinStreamServerApplication;
-import lombok.SneakyThrows;
 import tools.AbstractIntegrationTest;
+
+import java.util.Collections;
+import java.util.Random;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { TestSupportBinderAutoConfiguration.class,
@@ -60,13 +59,13 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 		await().until(zipkinServerIsUp());
 
-		String traceId = new JdkIdGenerator().generateId().toString();
+		long traceId = new Random().nextLong();
 		Span span = MilliSpan.builder().traceId(traceId).spanId(traceId).name("test")
 				.build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");
 
 		this.input.send(MessageBuilder.withPayload(
-				new Spans(new Host(getAppName(), "127.0.0.1", 8080), Arrays.asList(span)))
+				new Spans(new Host(getAppName(), "127.0.0.1", 8080), Collections.singletonList(span)))
 				.build());
 
 		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));

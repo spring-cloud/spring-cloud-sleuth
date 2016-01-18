@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth;
 
+import org.springframework.util.Assert;
+
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -41,18 +44,18 @@ public interface Span {
 	 * The spanId is immutable and cannot be changed. It is safe to access this from
 	 * multiple threads.
 	 */
-	String getSpanId();
+	long getSpanId();
 
 	/**
 	 * A pseudo-unique (random) number assigned to the trace associated with this span
 	 */
-	String getTraceId();
+	long getTraceId();
 
 	/**
 	 * Return a unique id for the process from which this Span originated.
 	 * <p/>
 	 * <p/>
-	 * Will never be null.
+	 * // TODO: Check when this is going to be null (cause it may be null)
 	 */
 	String getProcessId();
 
@@ -62,7 +65,7 @@ public interface Span {
 	 * <p/>
 	 * The collection will be empty if there are no parents.
 	 */
-	List<String> getParents();
+	List<Long> getParents();
 
 	/**
 	 * Flag that tells us whether the span was started in another process. Useful in RPC
@@ -127,4 +130,26 @@ public interface Span {
 	 * Will never be null.
 	 */
 	List<Log> logs();
+
+
+	/**
+	 * Class used for conversions of long ids to their String representation
+	 */
+	class IdConverter {
+
+		/**
+		 * Represents given long id as hex string
+		 */
+		public static String toHex(long id) {
+			return Long.toHexString(id);
+		}
+
+		/**
+		 * Represents hex string as long
+		 */
+		public static long fromHex(String hexString) {
+			Assert.hasText(hexString, "Can't convert empty hex string to long");
+			return new BigInteger(hexString, 16).longValue();
+		}
+	}
 }

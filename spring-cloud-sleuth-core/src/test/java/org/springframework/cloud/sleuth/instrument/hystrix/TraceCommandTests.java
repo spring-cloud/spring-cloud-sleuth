@@ -1,9 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
-import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
-import static org.assertj.core.api.BDDAssertions.then;
-
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,16 +13,18 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.util.JdkIdGenerator;
 
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixThreadPoolProperties;
+import java.util.Random;
+
+import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
+import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class TraceCommandTests {
 
-	static final String EXPECTED_TRACE_ID = "A";
+	static final long EXPECTED_TRACE_ID = 1L;
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
-			new JdkIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
+			new Random(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@Before
 	public void setup() {

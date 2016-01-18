@@ -26,22 +26,22 @@ public class PercentageBasedSampler implements Sampler<Void> {
 
 	private final SamplerConfiguration configuration;
 	private final TraceAccessor traceAccessor;
-	private final StringToUuidConverter converter;
 
-	public PercentageBasedSampler(SamplerConfiguration configuration, TraceAccessor traceAccessor, StringToUuidConverter converter) {
+	public PercentageBasedSampler(SamplerConfiguration configuration, TraceAccessor traceAccessor) {
 		this.configuration = configuration;
 		this.traceAccessor = traceAccessor;
-		this.converter = converter;
 	}
 
 	@Override
 	public boolean next(Void info) {
 		Span currentSpan = traceAccessor.getCurrentSpan();
-		if (currentSpan == null) {
+		long threshold = Math.abs(Long.MAX_VALUE * (int) (configuration.getPercentage() * 100)); // drops fractional percentage.
+		if (currentSpan == null || threshold == 0L) {
 			return false;
 		}
-		return new UuidTraceIdToThresholdComparable(configuration.getPercentage(), converter)
-				.compareTo(currentSpan.getTraceId()) <= 0;
+		long traceId = currentSpan.getTraceId();
+		Long mod = Math.abs(traceId % 100);
+		return mod.compareTo(threshold) <= 0;
 	}
 
 }

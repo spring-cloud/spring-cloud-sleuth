@@ -1,13 +1,9 @@
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import io.zipkin.Sampler;
-import java.io.UnsupportedEncodingException;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
+import io.zipkin.*;
+import io.zipkin.BinaryAnnotation.Type;
+import io.zipkin.Span.Builder;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
@@ -16,17 +12,13 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.Cloud;
 import org.springframework.cloud.CloudFactory;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Log;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.cloud.sleuth.zipkin.stream.ZipkinMessageListener.NotSleuthStreamClient;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.*;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
@@ -35,19 +27,18 @@ import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.util.StringUtils;
 
-import io.zipkin.Annotation;
-import io.zipkin.BinaryAnnotation;
-import io.zipkin.BinaryAnnotation.Type;
-import io.zipkin.Constants;
-import io.zipkin.Endpoint;
-import io.zipkin.Span.Builder;
-import io.zipkin.SpanStore;
-import lombok.extern.apachecommons.CommonsLog;
+import javax.sql.DataSource;
+import java.io.UnsupportedEncodingException;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 
 @MessageEndpoint
 @CommonsLog
 @Conditional(NotSleuthStreamClient.class)
 public class ZipkinMessageListener {
+
+	private static final String UNKNOWN_PROCESS_ID = "unknown";
 
 	@Autowired
 	SpanStore spanStore;
@@ -80,10 +71,9 @@ public class ZipkinMessageListener {
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
 		if (span.logs().isEmpty() && span.tags().isEmpty()) {
-			// TODO: javadocs say this isn't nullable!
 			String processId = span.getProcessId() != null
 					? span.getProcessId().toLowerCase()
-					: "unknown";
+					: UNKNOWN_PROCESS_ID;
 			zipkinSpan.addBinaryAnnotation(
 					BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep)
 			);
@@ -94,15 +84,15 @@ public class ZipkinMessageListener {
 
 		zipkinSpan.timestamp(span.getBegin() * 1000);
 		zipkinSpan.duration((span.getEnd() - span.getBegin()) * 1000);
-		zipkinSpan.traceId(hash(span.getTraceId()));
+		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
 				log.error("zipkin doesn't support spans with multiple parents.  Omitting "
 						+ "other parents for " + span);
 			}
-			zipkinSpan.parentId(hash(span.getParents().get(0)));
+			zipkinSpan.parentId(span.getParents().get(0));
 		}
-		zipkinSpan.id(hash(span.getSpanId()));
+		zipkinSpan.id(span.getSpanId());
 		if (StringUtils.hasText(span.getName())) {
 			zipkinSpan.name(span.getName());
 		}
@@ -143,19 +133,6 @@ public class ZipkinMessageListener {
 			binaryAnn.endpoint(endpoint);
 			zipkinSpan.addBinaryAnnotation(binaryAnn.build());
 		}
-	}
-
-	private static long hash(String string) {
-		long h = 1125899906842597L;
-		if (string == null) {
-			return h;
-		}
-		int len = string.length();
-
-		for (int i = 0; i < len; i++) {
-			h = 31 * h + string.charAt(i);
-		}
-		return h;
 	}
 
 	protected static class NotSleuthStreamClient extends SpringBootCondition {

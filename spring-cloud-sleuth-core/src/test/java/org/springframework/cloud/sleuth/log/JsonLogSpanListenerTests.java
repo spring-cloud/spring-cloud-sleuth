@@ -40,9 +40,9 @@ public class JsonLogSpanListenerTests {
 		JsonLogSpanListener listener = new JsonLogSpanListener();
 		Span span = MilliSpan.builder()
 				.name("testSpan")
-				.spanId("spanId1")
-				.parent("parentId1")
-				.traceId("traceId1")
+				.spanId(1L)
+				.parent(2L)
+				.traceId(3L)
 				.begin(1)
 				.end(10)
 				.build();

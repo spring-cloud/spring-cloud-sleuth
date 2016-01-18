@@ -31,9 +31,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.JdkIdGenerator;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
+
+import java.util.Random;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { WaitUntilZipkinIsUpConfig.class,
@@ -53,9 +54,8 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	}
 
 	@Test
-	@SneakyThrows
 	public void should_propagate_spans_to_zipkin() {
-		String traceId = new JdkIdGenerator().generateId().toString();
+		long traceId = new Random().nextLong();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
 				sampleAppUrl + "/hi2", traceId));

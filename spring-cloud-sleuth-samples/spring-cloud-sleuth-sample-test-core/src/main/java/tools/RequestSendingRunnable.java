@@ -16,6 +16,7 @@
 package tools;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
@@ -34,9 +35,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class RequestSendingRunnable implements Runnable {
 	private final RestTemplate restTemplate;
 	private final String url;
-	private final String traceId;
+	private final long traceId;
 
-	public RequestSendingRunnable(RestTemplate restTemplate, String url, String traceId) {
+	public RequestSendingRunnable(RestTemplate restTemplate, String url, long traceId) {
 		this.restTemplate = restTemplate;
 		this.url = url;
 		this.traceId = traceId;
@@ -50,9 +51,9 @@ public class RequestSendingRunnable implements Runnable {
 		log.info("Received the following response [{}]", responseEntity);
 	}
 
-	private RequestEntity requestWithTraceId(String traceId) {
+	private RequestEntity requestWithTraceId(long traceId) {
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(Trace.TRACE_ID_NAME, traceId);
+		headers.add(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(traceId));
 		URI uri = URI.create(url);
 		RequestEntity requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
 		log.info("Request [" + requestEntity + "] is ready");

@@ -27,11 +27,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.JdkIdGenerator;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
 
 import java.util.Collection;
+import java.util.Random;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -52,7 +52,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_for_messaging() {
-		String traceId = new JdkIdGenerator().generateId().toString();
+		long traceId = new Random().nextLong();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId));
 
@@ -63,7 +63,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_for_messaging_with_async() {
-		String traceId = new JdkIdGenerator().generateId().toString();
+		long traceId = new Random().nextLong();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId));
 
@@ -80,8 +80,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
 	}
 
-	private void thenAllSpansHaveTraceIdEqualTo(String traceId) {
-		then(integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == zipkinHashedTraceId(traceId))).isTrue();
+	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
+		then(this.integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == traceId)).isTrue();
 	}
 
 	@Configuration

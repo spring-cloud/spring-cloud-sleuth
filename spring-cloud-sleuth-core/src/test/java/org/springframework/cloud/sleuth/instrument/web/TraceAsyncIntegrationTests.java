@@ -1,10 +1,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
-import java.util.concurrent.atomic.AtomicReference;
-
+import com.jayway.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,7 +17,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.jayway.awaitility.Awaitility;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
@@ -79,24 +78,22 @@ public class TraceAsyncIntegrationTests {
 
 	static class ClassPerformingAsyncLogic {
 
-		AtomicReference<Span> span;
+		AtomicReference<Span> span = new AtomicReference<>();
 
 		@Async
 		public void invokeAsynchronousLogic() {
-			span = new AtomicReference<>(TraceContextHolder.getCurrentSpan());
+			span.set(TraceContextHolder.getCurrentSpan());
 		}
 
-		public String getTraceId() {
-			if (span == null || (span.get() != null
-					&& span.get().getTraceId() == null)) {
+		public Long getTraceId() {
+			if (span.get() == null) {
 				return null;
 			}
 			return span.get().getTraceId();
 		}
 
 		public String getSpanName() {
-			if (span == null
-					|| (span.get() != null && span.get().getName() == null)) {
+			if (span.get() != null && span.get().getName() == null) {
 				return null;
 			}
 			return span.get().getName();

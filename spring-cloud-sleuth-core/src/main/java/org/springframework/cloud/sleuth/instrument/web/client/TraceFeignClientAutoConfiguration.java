@@ -16,14 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static java.util.Collections.singletonList;
-
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.netflix.hystrix.HystrixCommand;
+import feign.*;
+import feign.codec.Decoder;
+import feign.hystrix.HystrixFeign;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -49,17 +45,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
+import org.springframework.util.StringUtils;
 
-import com.netflix.hystrix.HystrixCommand;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import feign.Client;
-import feign.Feign;
-import feign.FeignException;
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
-import feign.Response;
-import feign.codec.Decoder;
-import feign.hystrix.HystrixFeign;
+import static java.util.Collections.singletonList;
 
 /**
  *
@@ -125,12 +119,7 @@ public class TraceFeignClientAutoConfiguration {
 					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
 					return;
 				}
-				if (span.getSpanId() == null) {
-					setHeader(template, Trace.TRACE_ID_NAME, span.getTraceId());
-					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
-					return;
-				}
-				template.header(Trace.TRACE_ID_NAME, span.getTraceId());
+				template.header(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
 				setHeader(template, Trace.SPAN_NAME_NAME, span.getName());
 				setHeader(template, Trace.SPAN_ID_NAME, span.getSpanId());
 				setHeader(template, Trace.PARENT_ID_NAME, getParentId(span));
@@ -146,8 +135,8 @@ public class TraceFeignClientAutoConfiguration {
 		}
 	}
 
-	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty()
+	private Long getParentId(Span span) {
+		return !span.getParents().isEmpty()
 				? span.getParents().get(0) : null;
 	}
 
@@ -155,6 +144,12 @@ public class TraceFeignClientAutoConfiguration {
 		if (value != null && !request.headers().containsKey(name)
 				&& this.accessor.isTracing()) {
 			request.header(name, value);
+		}
+	}
+
+	public void setHeader(RequestTemplate request, String name, Long value) {
+		if (value != null) {
+			setHeader(request, name, Span.IdConverter.toHex(value));
 		}
 	}
 
@@ -167,11 +162,6 @@ public class TraceFeignClientAutoConfiguration {
 			setHeader(newHeaders, Trace.NOT_SAMPLED_NAME, "");
 			return newHeaders;
 		}
-		if (span.getSpanId() == null) {
-			setHeader(newHeaders, Trace.TRACE_ID_NAME, span.getTraceId());
-			setHeader(newHeaders, Trace.NOT_SAMPLED_NAME, "");
-			return newHeaders;
-		}
 		setHeader(newHeaders, Trace.TRACE_ID_NAME, span.getTraceId());
 		setHeader(newHeaders, Trace.SPAN_ID_NAME, span.getSpanId());
 		setHeader(newHeaders, Trace.PARENT_ID_NAME, getParentId(span));
@@ -180,8 +170,14 @@ public class TraceFeignClientAutoConfiguration {
 
 	public void setHeader(Map<String, Collection<String>> headers, String name,
 			String value) {
-		if (value != null && !headers.containsKey(name) && this.accessor.isTracing()) {
+		if (StringUtils.hasText(value) && !headers.containsKey(name) && this.accessor.isTracing()) {
 			headers.put(name, singletonList(value));
+		}
+	}
+	public void setHeader(Map<String, Collection<String>> headers, String name,
+			Long value) {
+		if (value != null ){
+			setHeader(headers, name, Span.IdConverter.toHex(value));
 		}
 	}
 

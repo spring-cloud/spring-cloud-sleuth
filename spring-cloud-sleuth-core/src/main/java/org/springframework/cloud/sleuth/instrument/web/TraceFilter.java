@@ -19,6 +19,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
@@ -40,6 +41,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -68,18 +70,22 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private final TraceManager traceManager;
 	private final Pattern skipPattern;
-	private UrlPathHelper urlPathHelper = new UrlPathHelper();
+	private final Random random;
 
+	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 	private ApplicationEventPublisher publisher;
+
 
 	public TraceFilter(TraceManager traceManager) {
 		this.traceManager = traceManager;
 		this.skipPattern = DEFAULT_SKIP_PATTERN;
+		this.random = new Random();
 	}
 
-	public TraceFilter(TraceManager traceManager, Pattern skipPattern) {
+	public TraceFilter(TraceManager traceManager, Pattern skipPattern, Random random) {
 		this.traceManager = traceManager;
 		this.skipPattern = skipPattern;
+		this.random = random;
 	}
 
 	@Override
@@ -105,28 +111,28 @@ public class TraceFilter extends OncePerRequestFilter
 			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 		}
 
-		String spanId = getHeader(request, response, Trace.SPAN_ID_NAME);
-		String traceId = getHeader(request, response, Trace.TRACE_ID_NAME);
 		String name = "http" + uri;
-		if (hasText(traceId)) {
+		if (hasHeader(request, response, Trace.TRACE_ID_NAME)) {
+			long traceId = Span.IdConverter.fromHex(getHeader(request, response, Trace.TRACE_ID_NAME));
+			long spanId = hasHeader(request, response, Trace.SPAN_ID_NAME) ?
+					Span.IdConverter.fromHex(getHeader(request, response, Trace.SPAN_ID_NAME)) : random.nextLong();
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			if (skip) {
 				span.exportable(false);
 			}
-			String parentId = getHeader(request, response, Trace.PARENT_ID_NAME);
 			String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
 			String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
-			if (parentName != null) {
+			if (StringUtils.hasText(parentName)) {
 				span.name(parentName);
 			} else {
 				span.name("parent/" + name);
 			}
-			if (processId != null) {
+			if (StringUtils.hasText(processId)) {
 				span.processId(processId);
 			}
-			if (parentId != null) {
-				span.parent(parentId);
+			if (hasHeader(request, response, Trace.PARENT_ID_NAME)) {
+				span.parent(Span.IdConverter.fromHex(getHeader(request, response, Trace.PARENT_ID_NAME)));
 			}
 			span.remote(true);
 
@@ -181,8 +187,8 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private void addResponseHeaders(HttpServletResponse response, Span span) {
 		if (span != null) {
-			response.addHeader(Trace.SPAN_ID_NAME, span.getSpanId());
-			response.addHeader(Trace.TRACE_ID_NAME, span.getTraceId());
+			response.addHeader(Trace.SPAN_ID_NAME, Span.IdConverter.toHex(span.getSpanId()));
+			response.addHeader(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
 		}
 	}
 
@@ -231,6 +237,12 @@ public class TraceFilter extends OncePerRequestFilter
 				this.traceManager.addAnnotation(key, value);
 			}
 		}
+	}
+
+	private boolean hasHeader(HttpServletRequest request, HttpServletResponse response,
+			String name) {
+		String value = request.getHeader(name);
+		return value != null || response.getHeader(name) != null;
 	}
 
 	private String getHeader(HttpServletRequest request, HttpServletResponse response,

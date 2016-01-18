@@ -16,11 +16,13 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.nio.charset.Charset;
-import java.util.Map;
-
-import org.springframework.cloud.sleuth.Span;
+import io.zipkin.Annotation;
+import io.zipkin.BinaryAnnotation;
+import io.zipkin.Constants;
+import io.zipkin.Endpoint;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.cloud.sleuth.Log;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
@@ -31,12 +33,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
 
-import io.zipkin.Annotation;
-import io.zipkin.BinaryAnnotation;
-import io.zipkin.Constants;
-import io.zipkin.Endpoint;
-
-import lombok.extern.apachecommons.CommonsLog;
+import java.nio.charset.Charset;
+import java.util.Map;
 
 /**
  * @author Spencer Gibb
@@ -126,7 +124,6 @@ public class ZipkinSpanListener {
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
 		if (span.logs().isEmpty() && span.tags().isEmpty()) {
-			// TODO: javadocs say this isn't nullable!
 			byte[] processId = span.getProcessId() != null
 					? span.getProcessId().toLowerCase().getBytes(UTF_8)
 					: UNKNOWN_BYTES;
@@ -143,15 +140,15 @@ public class ZipkinSpanListener {
 
 		zipkinSpan.timestamp(span.getBegin() * 1000L);
 		zipkinSpan.duration((span.getEnd() - span.getBegin()) * 1000L);
-		zipkinSpan.traceId(hash(span.getTraceId()));
+		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
 				log.error("Zipkin doesn't support spans with multiple parents. Omitting "
 						+ "other parents for " + span);
 			}
-			zipkinSpan.parentId(hash(span.getParents().get(0)));
+			zipkinSpan.parentId(span.getParents().get(0));
 		}
-		zipkinSpan.id(hash(span.getSpanId()));
+		zipkinSpan.id(span.getSpanId());
 		if (StringUtils.hasText(span.getName())) {
 			zipkinSpan.name(span.getName());
 		}
@@ -187,19 +184,6 @@ public class ZipkinSpanListener {
 					.endpoint(endpoint).build();
 			zipkinSpan.addBinaryAnnotation(binaryAnn);
 		}
-	}
-
-	private static long hash(String string) {
-		long h = 1125899906842597L;
-		if (string == null) {
-			return h;
-		}
-		int len = string.length();
-
-		for (int i = 0; i < len; i++) {
-			h = 31 * h + string.charAt(i);
-		}
-		return h;
 	}
 
 }

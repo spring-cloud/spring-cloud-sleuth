@@ -23,6 +23,8 @@ import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 
+import java.util.Random;
+
 /**
  * @author Dave Syer
  *
@@ -31,8 +33,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private ThreadLocal<Trace> traceHolder = new ThreadLocal<>();
 
-	public TraceChannelInterceptor(TraceManager traceManager) {
-		super(traceManager);
+	public TraceChannelInterceptor(TraceManager traceManager, Random random) {
+		super(traceManager, random);
 	}
 
 	@Override

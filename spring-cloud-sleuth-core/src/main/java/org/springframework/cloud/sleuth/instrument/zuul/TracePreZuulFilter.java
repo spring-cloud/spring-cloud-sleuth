@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.Map;
-
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
@@ -27,8 +27,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.ReflectionUtils;
 
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.context.RequestContext;
+import java.util.Map;
 
 /**
  * @author Dave Syer
@@ -65,11 +64,6 @@ ApplicationEventPublisherAware {
 			setHeader(response, Trace.NOT_SAMPLED_NAME, "");
 			return null;
 		}
-		if (span.getSpanId()==null) {
-			setHeader(response, Trace.TRACE_ID_NAME, span.getTraceId());
-			setHeader(response, Trace.NOT_SAMPLED_NAME, "");
-			return null;
-		}
 		try {
 			setHeader(response, Trace.SPAN_ID_NAME, span.getSpanId());
 			setHeader(response, Trace.TRACE_ID_NAME, span.getTraceId());
@@ -89,8 +83,8 @@ ApplicationEventPublisherAware {
 		return this.accessor.getCurrentSpan();
 	}
 
-	private String getParentId(Span span) {
-		return span.getParents() != null && !span.getParents().isEmpty() ? span
+	private Long getParentId(Span span) {
+		return !span.getParents().isEmpty() ? span
 				.getParents().get(0) : null;
 	}
 
@@ -98,6 +92,9 @@ ApplicationEventPublisherAware {
 		if (value != null && !request.containsKey(name) && this.accessor.isTracing()) {
 			request.put(name, value);
 		}
+	}
+	public void setHeader(Map<String, String> request, String name, Long value) {
+		setHeader(request, name, Span.IdConverter.toHex(value));
 	}
 
 	@Override

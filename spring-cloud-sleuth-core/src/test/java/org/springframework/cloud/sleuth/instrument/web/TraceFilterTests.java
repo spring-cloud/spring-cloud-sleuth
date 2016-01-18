@@ -16,12 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -41,9 +36,14 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.util.JdkIdGenerator;
 
-import lombok.SneakyThrows;
+import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
  * @author Spencer Gibb
@@ -66,8 +66,7 @@ public class TraceFilterTests {
 	@SneakyThrows
 	public void init() {
 		initMocks(this);
-		this.traceManager = new DefaultTraceManager(new DelegateSampler(),
-				new JdkIdGenerator(), this.publisher) {
+		this.traceManager = new DefaultTraceManager(new DelegateSampler(), new Random(), this.publisher) {
 			@Override
 			protected Trace createTrace(Trace trace, Span span) {
 				TraceFilterTests.this.span = span;
@@ -123,8 +122,8 @@ public class TraceFilterTests {
 
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
-		this.request = builder().header(Trace.SPAN_ID_NAME, "myspan")
-				.header(Trace.TRACE_ID_NAME, "mytrace")
+		this.request = builder().header(Trace.SPAN_ID_NAME, 10L)
+				.header(Trace.TRACE_ID_NAME, 20L)
 				.buildRequest(new MockServletContext());
 
 		TraceFilter filter = new TraceFilter(this.traceManager);

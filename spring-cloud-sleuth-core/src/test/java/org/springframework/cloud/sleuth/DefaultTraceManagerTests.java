@@ -28,15 +28,18 @@ import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.util.JdkIdGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Spencer Gibb
@@ -62,8 +65,7 @@ public class DefaultTraceManagerTests {
 	public void tracingWorks() {
 		ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
 
-		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(),
-				new JdkIdGenerator(), publisher);
+		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(), new Random(), publisher);
 
 		Trace trace = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
 		try {
@@ -97,7 +99,7 @@ public class DefaultTraceManagerTests {
 		assertThat("gen4 was non-empty", gen4.isEmpty(), is(true));
 	}
 
-	private Span assertSpan(List<Span> spans, String parentId, String name) {
+	private Span assertSpan(List<Span> spans, Long parentId, String name) {
 		List<Span> found = findSpans(spans, parentId);
 		assertThat("more than one span with parentId " + parentId, found.size(), is(1));
 		Span span = found.get(0);
@@ -106,7 +108,7 @@ public class DefaultTraceManagerTests {
 		return span;
 	}
 
-	private List<Span> findSpans(List<Span> spans, String parentId) {
+	private List<Span> findSpans(List<Span> spans, Long parentId) {
 		List<Span> found = new ArrayList<>();
 		for (Span span : spans) {
 			if (parentId == null && span.getParents().isEmpty()) {

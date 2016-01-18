@@ -1,87 +1,75 @@
-/*
- * Copyright 2013-2015 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.junit.Assert.assertNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.context.support.StaticApplicationContext;
+import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockFilterChain;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.mock.web.MockServletContext;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.util.JdkIdGenerator;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 
-import lombok.SneakyThrows;
+import java.util.Random;
 
-/**
- * @author Spencer Gibb
- * @author Dave Syer
- */
-public class TraceFilterIntegrationTests {
+import static org.assertj.core.api.BDDAssertions.then;
 
-	private StaticApplicationContext context = new StaticApplicationContext();
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(TraceFilterIntegrationTests.class)
+@DefaultTestAutoConfiguration
+public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
-	private TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
-			new JdkIdGenerator(), this.context);
+	@Autowired
+	TraceManager traceManager;
 
-	private MockHttpServletRequest request;
-	private MockHttpServletResponse response;
-	private MockFilterChain filterChain;
+	@Test
+	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
+		MvcResult mvcResult = whenSentPingWithoutTracingData();
 
-	@Before
-	@SneakyThrows
-	public void init() {
-		TraceContextHolder.removeCurrentTrace();
-		this.context.refresh();
-		this.request = builder().buildRequest(new MockServletContext());
-		this.response = new MockHttpServletResponse();
-		this.response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-		this.filterChain = new MockFilterChain();
-	}
-
-	public MockHttpServletRequestBuilder builder() {
-		return get("/").accept(MediaType.APPLICATION_JSON)
-				.header("User-Agent", "MockMvc");
+		then(tracingHeaderFrom(mvcResult)).isNotNull();
 	}
 
 	@Test
-	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.traceManager);
-		filter.doFilter(this.request, this.response, this.filterChain);
-		assertNull(TraceContextHolder.getCurrentTrace());
+	public void when_correlationId_is_sent_should_not_create_a_new_one_but_return_the_existing_one_instead()
+			throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+
+		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
+
+		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 	}
 
-	@Test
-	public void continuesSpanFromHeaders() throws Exception {
-		this.request = builder().header(Trace.SPAN_ID_NAME, "myspan")
-				.header(Trace.TRACE_ID_NAME, "mytraceManager").buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.traceManager);
-		filter.doFilter(this.request, this.response, this.filterChain);
-		assertNull(TraceContextHolder.getCurrentSpan());
+	@Override
+	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
+		mockMvcBuilder.addFilters(new TraceFilter(this.traceManager));
 	}
 
+	private MvcResult whenSentPingWithoutTracingData() throws Exception {
+		return this.mockMvc
+				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN))
+				.andReturn();
+	}
+
+	private MvcResult whenSentPingWithTraceId(Long passedTraceId)
+			throws Exception {
+		return sendPingWithTraceId(Trace.TRACE_ID_NAME, passedTraceId);
+	}
+
+	private MvcResult sendPingWithTraceId(String headerName, Long passedCorrelationId)
+			throws Exception {
+		return this.mockMvc
+				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
+						.header(headerName, Span.IdConverter.toHex(passedCorrelationId))
+						.header(Trace.SPAN_ID_NAME, Span.IdConverter.toHex(new Random().nextLong())))
+				.andReturn();
+	}
+
+	private Long tracingHeaderFrom(MvcResult mvcResult) {
+		return Span.IdConverter.fromHex(mvcResult.getResponse().getHeader(Trace.TRACE_ID_NAME));
+	}
 }

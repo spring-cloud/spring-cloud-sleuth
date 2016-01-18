@@ -1,11 +1,8 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,6 +15,7 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.MilliSpan;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -31,15 +29,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.JdkIdGenerator;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { FeignTraceTests.TestConfiguration.class })
@@ -75,8 +75,8 @@ public class FeignTraceTests {
 	@Test
 	public void shouldAttachTraceIdWhenUsingFeignClient() {
 		// given
-		String currentTraceId = "currentTraceId";
-		String currentParentId = "currentParentId";
+		Long currentTraceId = 1L;
+		Long currentParentId = 2L;
 		this.traceManager.continueSpan(MilliSpan.builder().traceId(currentTraceId)
 				.spanId(generatedId()).parent(currentParentId).build());
 
@@ -84,12 +84,12 @@ public class FeignTraceTests {
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		// then
-		then(getHeader(response, Trace.TRACE_ID_NAME)).isEqualTo(currentTraceId);
+		then(Span.IdConverter.fromHex(getHeader(response, Trace.TRACE_ID_NAME))).isEqualTo(currentTraceId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 
-	private String generatedId() {
-		return new JdkIdGenerator().generateId().toString();
+	private Long generatedId() {
+		return new Random().nextLong();
 	}
 
 	private String getHeader(ResponseEntity<String> response, String name) {

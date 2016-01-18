@@ -16,9 +16,8 @@
 
 package sample;
 
-import java.util.Random;
-import java.util.concurrent.Callable;
-
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
@@ -31,8 +30,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Random;
+import java.util.concurrent.Callable;
 
 /**
  * @author Spencer Gibb
@@ -49,12 +48,13 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	private TraceAccessor accessor;
 	@Autowired
 	private SampleBackground controller;
+	@Autowired
+	private Random random;
 	private int port;
 
 	@SneakyThrows
 	@RequestMapping("/")
 	public String hi() {
-		final Random random = new Random();
 		Thread.sleep(random.nextInt(1000));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
@@ -67,7 +67,6 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		return new Callable<String>() {
 			@Override
 			public String call() throws Exception {
-				final Random random = new Random();
 				int millis = random.nextInt(1000);
 				Thread.sleep(millis);
 				SampleController.this.traceManager.addAnnotation("callable-sleep-millis", String.valueOf(millis));
@@ -86,7 +85,6 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/hi2")
 	public String hi2() {
-		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
 		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
@@ -98,7 +96,6 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	public String traced() {
 		Trace trace = this.traceManager.startSpan("customTraceEndpoint",
 				new AlwaysSampler(), null);
-		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
@@ -113,7 +110,6 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/start")
 	public String start() {
-		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);

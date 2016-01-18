@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.trace;
 
 import static org.springframework.cloud.sleuth.util.ExceptionUtils.warn;
 
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.MilliSpan;
@@ -32,7 +33,6 @@ import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.util.IdGenerator;
 
 /**
  * @author Spencer Gibb
@@ -41,14 +41,14 @@ public class DefaultTraceManager implements TraceManager {
 
 	private final Sampler<Void> defaultSampler;
 
-	private final IdGenerator idGenerator;
-
 	private final ApplicationEventPublisher publisher;
 
-	public DefaultTraceManager(Sampler<Void> defaultSampler, IdGenerator idGenerator,
-			ApplicationEventPublisher publisher) {
+	private final Random random;
+
+	public DefaultTraceManager(Sampler<Void> defaultSampler,
+							   Random random, ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
-		this.idGenerator = idGenerator;
+		this.random = random;
 		this.publisher = publisher;
 	}
 
@@ -79,7 +79,7 @@ public class DefaultTraceManager implements TraceManager {
 		}
 		else {
 			// Non-exportable so we keep the trace but not other data
-			String id = createId();
+			long id = createId();
 			span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(id).spanId(id).exportable(false).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
@@ -149,7 +149,7 @@ public class DefaultTraceManager implements TraceManager {
 	}
 
 	protected Span createChild(Span parent, String name) {
-		String id = createId();
+		long id = createId();
 		if (parent == null) {
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
 					.name(name).traceId(id).spanId(id).build();
@@ -169,8 +169,8 @@ public class DefaultTraceManager implements TraceManager {
 		}
 	}
 
-	private String createId() {
-		return this.idGenerator.generateId().toString();
+	private long createId() {
+		return random.nextLong();
 	}
 
 	@Override

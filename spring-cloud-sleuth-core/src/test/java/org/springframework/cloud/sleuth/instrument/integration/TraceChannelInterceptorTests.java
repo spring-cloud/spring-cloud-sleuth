@@ -16,14 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +43,12 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.*;
 
 /**
  * @author Dave Syer
@@ -109,14 +107,16 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void parentSpanIncluded() {
-		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Trace.TRACE_ID_NAME, "parent")
+		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Trace.TRACE_ID_NAME, 10L)
+				.setHeader(Trace.SPAN_ID_NAME, 20L)
 				.build());
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
-		String traceId = this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
-		assertEquals("parent", traceId);
+		long traceId = Span.IdConverter.fromHex(this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
+		then(traceId).isEqualTo(10L);
+		then(spanId).isNotEqualTo(20L);
 		assertNull(TraceContextHolder.getCurrentTrace());
 		assertEquals(1, this.app.events.size());
 	}

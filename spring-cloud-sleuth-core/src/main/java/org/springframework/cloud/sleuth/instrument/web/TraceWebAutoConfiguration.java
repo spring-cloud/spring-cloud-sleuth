@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,10 +66,10 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public FilterRegistrationBean traceWebFilter(ApplicationEventPublisher publisher) {
+	public FilterRegistrationBean traceWebFilter(ApplicationEventPublisher publisher, Random random) {
 		Pattern pattern = StringUtils.hasText(this.skipPattern) ? Pattern.compile(this.skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
-		TraceFilter filter = new TraceFilter(this.traceManager, pattern);
+		TraceFilter filter = new TraceFilter(this.traceManager, pattern, random);
 		filter.setApplicationEventPublisher(publisher);
 		return new FilterRegistrationBean(filter);
 	}

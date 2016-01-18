@@ -19,15 +19,13 @@ package org.springframework.cloud.sleuth.autoconfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.sampler.DefaultStringToUuidConverter;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.sampler.StringToUuidConverter;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.IdGenerator;
-import org.springframework.util.JdkIdGenerator;
+
+import java.util.Random;
 
 /**
  * @author Spencer Gibb
@@ -37,9 +35,8 @@ import org.springframework.util.JdkIdGenerator;
 public class TraceAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean
-	public IdGenerator traceIdGenerator() {
-		return new JdkIdGenerator();
+	public Random random() {
+		return new Random();
 	}
 
 	@Bean
@@ -50,14 +47,8 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public StringToUuidConverter stringToUuidConverter() {
-		return new DefaultStringToUuidConverter();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public DefaultTraceManager traceManager(Sampler<Void> sampler, IdGenerator idGenerator,
+	public DefaultTraceManager traceManager(Sampler<Void> sampler,
 			ApplicationEventPublisher publisher) {
-		return new DefaultTraceManager(sampler, idGenerator, publisher);
+		return new DefaultTraceManager(sampler, random(), publisher);
 	}
 }
