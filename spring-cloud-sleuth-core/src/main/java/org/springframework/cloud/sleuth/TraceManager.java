@@ -90,9 +90,9 @@ public interface TraceManager extends TraceAccessor {
 	Trace continueSpan(Span s);
 
 	/**
-	 * Adds a data annotation to the current span if tracing is currently on.
+	 * Adds a tag to the current span if tracing is currently on.
 	 */
-	void addAnnotation(String key, String value);
+	void addTag(String key, String value);
 
 	/**
 	 * Remove this span from the current thread, but don't stop it yet or send it for

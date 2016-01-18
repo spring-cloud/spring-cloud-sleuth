@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
@@ -66,12 +67,17 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public FilterRegistrationBean traceWebFilter(ApplicationEventPublisher publisher, Random random) {
+	@ConditionalOnMissingBean
+	public TraceFilter traceFilter(ApplicationEventPublisher publisher, Random random) {
 		Pattern pattern = StringUtils.hasText(this.skipPattern) ? Pattern.compile(this.skipPattern)
 				: TraceFilter.DEFAULT_SKIP_PATTERN;
 		TraceFilter filter = new TraceFilter(this.traceManager, pattern, random);
 		filter.setApplicationEventPublisher(publisher);
-		return new FilterRegistrationBean(filter);
+		return filter;
 	}
 
+	@Bean
+	public FilterRegistrationBean traceWebFilter(TraceFilter filter) {
+		return new FilterRegistrationBean(filter);
+	}
 }

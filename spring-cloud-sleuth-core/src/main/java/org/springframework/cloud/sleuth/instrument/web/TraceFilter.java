@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -34,6 +33,7 @@ import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEvent;
@@ -50,7 +50,13 @@ import org.springframework.web.util.UrlPathHelper;
  * {@link Trace#TRACE_ID_NAME} header from either request or response and uses them to
  * create a new span.
  *
+ * <p>In order to keep the size of spans manageable, this only add tags defined in {@link TraceKeys}.
+ * If you need to add additional tags, such as headers subtype this and override
+ * {@link #addRequestTags} or {@link #addResponseTags}.
+ *
  * @see TraceManager
+ * @see TraceKeys
+ * @see TraceWebAutoConfiguration#traceWebFilter(TraceFilter)
  *
  * @author Jakub Nabrdalik, 4financeIT
  * @author Tomasz Nurkiewicz, 4financeIT
@@ -156,7 +162,7 @@ public class TraceFilter extends OncePerRequestFilter
 		Throwable exception = null;
 		try {
 
-			addRequestAnnotations(request);
+			addRequestTags(request);
 			filterChain.doFilter(request, response);
 
 		}
@@ -173,7 +179,7 @@ public class TraceFilter extends OncePerRequestFilter
 				addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
 			}
 			if (trace != null) {
-				addResponseAnnotations(response, exception);
+				addResponseTags(response, exception);
 				addResponseHeaders(response, trace.getSpan());
 				if (trace.getSaved() != null) {
 					publish(new ServerSentEvent(this, trace.getSaved().getSpan(),
@@ -198,44 +204,27 @@ public class TraceFilter extends OncePerRequestFilter
 		}
 	}
 
-	// TODO: move annotation keys to constants
-	protected void addRequestAnnotations(HttpServletRequest request) {
+	/** Override to add annotations not defined in {@link TraceKeys}. */
+	protected void addRequestTags(HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.traceManager.addAnnotation("/http/request/uri",
-				request.getRequestURL().toString());
-		this.traceManager.addAnnotation("/http/request/endpoint", uri);
-		this.traceManager.addAnnotation("/http/request/method", request.getMethod());
-
-		Enumeration<String> headerNames = request.getHeaderNames();
-		while (headerNames.hasMoreElements()) {
-			String name = headerNames.nextElement();
-			Enumeration<String> values = request.getHeaders(name);
-			while (values.hasMoreElements()) {
-				String value = values.nextElement();
-				String key = "/http/request/headers/" + name.toLowerCase();
-				this.traceManager.addAnnotation(key, value);
-
-			}
-		}
+		this.traceManager.addTag(TraceKeys.HTTP_URL, getFullUrl(request));
+		this.traceManager.addTag(TraceKeys.HTTP_HOST, request.getServerName());
+		this.traceManager.addTag(TraceKeys.HTTP_PATH, uri);
+		this.traceManager.addTag(TraceKeys.HTTP_METHOD, request.getMethod());
 	}
 
-	private void addResponseAnnotations(HttpServletResponse response, Throwable e) {
-		if (response.getStatus() == HttpServletResponse.SC_OK && e != null) {
+	/** Override to add annotations not defined in {@link TraceKeys}. */
+	protected void addResponseTags(HttpServletResponse response, Throwable e) {
+		int httpStatus = response.getStatus();
+		if (httpStatus == HttpServletResponse.SC_OK && e != null) {
 			// Filter chain threw exception but the response status may not have been set
 			// yet, so we have to guess.
-			this.traceManager.addAnnotation("/http/response/status_code",
+			this.traceManager.addTag(TraceKeys.HTTP_STATUS_CODE,
 					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
-		else {
-			this.traceManager.addAnnotation("/http/response/status_code",
+		else if ((httpStatus < 200) || (httpStatus > 299)){
+			this.traceManager.addTag(TraceKeys.HTTP_STATUS_CODE,
 					String.valueOf(response.getStatus()));
-		}
-
-		for (String name : response.getHeaderNames()) {
-			for (String value : response.getHeaders(name)) {
-				String key = "/http/response/headers/" + name.toLowerCase();
-				this.traceManager.addAnnotation(key, value);
-			}
 		}
 	}
 
@@ -261,5 +250,16 @@ public class TraceFilter extends OncePerRequestFilter
 	@Override
 	protected boolean shouldNotFilterAsyncDispatch() {
 		return false;
+	}
+
+	private String getFullUrl(HttpServletRequest request) {
+		StringBuffer requestURI = request.getRequestURL();
+		String queryString = request.getQueryString();
+
+		if (queryString == null) {
+			return requestURI.toString();
+		} else {
+			return requestURI.append('?').append(queryString).toString();
+		}
 	}
 }
