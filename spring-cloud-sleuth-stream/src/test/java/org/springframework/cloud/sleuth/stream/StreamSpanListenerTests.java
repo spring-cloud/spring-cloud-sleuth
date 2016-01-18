@@ -100,7 +100,7 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void nullSpanName() {
-		Trace context = this.traceManager.startSpan(null, null);
+		Trace context = this.traceManager.startSpan(null, (Sampler) null);
 		this.application.publishEvent(new ClientSentEvent(this, context.getSpan()));
 		this.traceManager.close(context);
 		assertEquals(1, this.test.spans.size());

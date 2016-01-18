@@ -144,8 +144,8 @@ public class TraceFilter extends OncePerRequestFilter
 		}
 		else {
 			if (skip) {
-				trace = this.traceManager.startSpan(name, IsTracingSampler.INSTANCE,
-						null);
+				trace = this.traceManager.startSpan(name, IsTracingSampler.INSTANCE
+				);
 			}
 			else {
 				trace = this.traceManager.startSpan(name);

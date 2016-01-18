@@ -137,7 +137,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void headerCreation() {
 		Trace trace = this.traceManager.startSpan("testSendMessage",
-				new AlwaysSampler(), null);
+				new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		this.traceManager.close(trace);
 		assertNotNull("message was null", this.message);
@@ -154,7 +154,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void headerCreationViaMessagingTemplate() {
 		Trace trace = this.traceManager.startSpan("testSendMessage",
-				new AlwaysSampler(), null);
+				new AlwaysSampler());
 		this.messagingTemplate.send(MessageBuilder.withPayload("hi").build());
 		this.traceManager.close(trace);
 		assertNotNull("message was null", this.message);

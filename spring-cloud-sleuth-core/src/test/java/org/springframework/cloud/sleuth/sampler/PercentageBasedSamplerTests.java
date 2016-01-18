@@ -7,10 +7,8 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceAccessor;
-import org.springframework.util.JdkIdGenerator;
 
 import java.util.Random;
-import java.util.stream.Stream;
 
 public class PercentageBasedSamplerTests {
 
@@ -23,7 +21,7 @@ public class PercentageBasedSamplerTests {
 		this.samplerConfiguration.setPercentage(1f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).next(null)).isTrue();
+			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).next()).isTrue();
 		}
 
 	}
@@ -33,7 +31,7 @@ public class PercentageBasedSamplerTests {
 		this.samplerConfiguration.setPercentage(0f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).next(null)).isFalse();
+			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).next()).isFalse();
 		}
 	}
 
@@ -51,7 +49,7 @@ public class PercentageBasedSamplerTests {
 	private int countNumberOfSampledElements(int numberOfIterations) {
 		int passedCounter = 0;
 		for (int i = 0; i < numberOfIterations; i++) {
-			boolean passed = new PercentageBasedSampler(this.samplerConfiguration, traceReturningSpanWithUuid()).next(null);
+			boolean passed = new PercentageBasedSampler(this.samplerConfiguration, traceReturningSpanWithUuid()).next();
 			passedCounter = passedCounter + (passed ? 1 : 0);
 		}
 		return passedCounter;

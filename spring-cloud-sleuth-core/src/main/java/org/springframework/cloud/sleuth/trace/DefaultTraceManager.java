@@ -68,13 +68,13 @@ public class DefaultTraceManager implements TraceManager {
 
 	@Override
 	public Trace startSpan(String name) {
-		return this.startSpan(name, this.defaultSampler, null);
+		return this.startSpan(name, this.defaultSampler);
 	}
 
 	@Override
-	public <T> Trace startSpan(String name, Sampler<T> s, T info) {
+	public <T> Trace startSpan(String name, Sampler<T> s) {
 		Span span = null;
-		if (isTracing() || s.next(info)) {
+		if (isTracing() || s.next()) {
 			span = createChild(getCurrentSpan(), name);
 		}
 		else {

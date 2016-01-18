@@ -77,12 +77,10 @@ public interface TraceManager extends TraceAccessor {
 	/**
 	 * Start a new span if the sampler allows it or if we are already tracing in this
 	 * thread. A sampler can be used to limit the number of traces created.
-	 *
-	 * @param name the name of the span
+	 *  @param name the name of the span
 	 * @param sampler a sampler to decide whether to create the span or not
-	 * @param info the samplers context information
 	 */
-	<T> Trace startSpan(String name, Sampler<T> sampler, T info);
+	<T> Trace startSpan(String name, Sampler<T> sampler);
 
 	/**
 	 * Pick up an existing span from another thread.

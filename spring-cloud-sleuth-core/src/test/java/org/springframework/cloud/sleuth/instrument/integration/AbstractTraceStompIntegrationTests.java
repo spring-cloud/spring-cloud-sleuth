@@ -38,7 +38,7 @@ abstract class AbstractTraceStompIntegrationTests {
 	}
 
 	Trace givenALocallyStartedSpan() {
-		return traceManager.startSpan("testSendMessage", sampler, null);
+		return traceManager.startSpan("testSendMessage", sampler);
 	}
 
 	Message<?> givenMessageToBeSampled() {
