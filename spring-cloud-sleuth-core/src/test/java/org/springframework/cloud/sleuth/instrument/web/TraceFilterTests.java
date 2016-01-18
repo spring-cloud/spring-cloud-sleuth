@@ -28,7 +28,6 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -63,8 +62,7 @@ public class TraceFilterTests {
 	@SneakyThrows
 	public void init() {
 		initMocks(this);
-		this.traceManager = new DefaultTraceManager(new DelegateSampler(),
-				new RandomLongSpanIdGenerator(), this.publisher) {
+		this.traceManager = new DefaultTraceManager(new DelegateSampler(), this.publisher) {
 			@Override
 			protected Trace createTrace(Trace trace, Span span) {
 				TraceFilterTests.this.span = span;

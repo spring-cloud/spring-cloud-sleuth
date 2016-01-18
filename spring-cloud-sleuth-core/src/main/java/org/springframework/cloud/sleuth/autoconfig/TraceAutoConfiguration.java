@@ -22,8 +22,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
-import org.springframework.cloud.sleuth.util.SpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,14 +39,6 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public SpanIdGenerator traceIdGenerator() {
-		RandomLongSpanIdGenerator randomLongSpanIdGenerator = new RandomLongSpanIdGenerator();
-		randomLongSpanIdGenerator.setRandom(random);
-		return randomLongSpanIdGenerator;
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
 	public Sampler<Void> defaultTraceSampler() {
 		return new IsTracingSampler();
 	}
@@ -56,8 +46,8 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DefaultTraceManager traceManager(Sampler<Void> sampler, SpanIdGenerator idGenerator,
+	public DefaultTraceManager traceManager(Sampler<Void> sampler,
 			ApplicationEventPublisher publisher) {
-		return new DefaultTraceManager(sampler, idGenerator, publisher);
+		return new DefaultTraceManager(sampler, publisher);
 	}
 }

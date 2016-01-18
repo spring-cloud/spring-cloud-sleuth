@@ -9,12 +9,13 @@ import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
+
+import java.util.Random;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -36,7 +37,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	@Test
 	public void when_correlationId_is_sent_should_not_create_a_new_one_but_return_the_existing_one_instead()
 			throws Exception {
-		Long expectedTraceId = new RandomLongSpanIdGenerator().generateId();
+		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
@@ -64,7 +65,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
 						.header(headerName, Span.Converter.toHexString(passedCorrelationId))
-						.header(Trace.SPAN_ID_NAME, Span.Converter.toHexString(new RandomLongSpanIdGenerator().generateId())))
+						.header(Trace.SPAN_ID_NAME, Span.Converter.toHexString(new Random().nextLong())))
 				.andReturn();
 	}
 

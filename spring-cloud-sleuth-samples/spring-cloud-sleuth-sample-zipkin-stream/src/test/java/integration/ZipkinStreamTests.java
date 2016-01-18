@@ -15,9 +15,8 @@
  */
 package integration;
 
-import java.util.Arrays;
-import java.util.Collections;
-
+import example.ZipkinStreamServerApplication;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,17 +29,15 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.JdkIdGenerator;
-
-import example.ZipkinStreamServerApplication;
-import lombok.SneakyThrows;
 import tools.AbstractIntegrationTest;
+
+import java.util.Collections;
+import java.util.Random;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { TestSupportBinderAutoConfiguration.class,
@@ -62,7 +59,7 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 		await().until(zipkinServerIsUp());
 
-		long traceId = new RandomLongSpanIdGenerator().generateId();
+		long traceId = new Random().nextLong();
 		Span span = MilliSpan.builder().traceId(traceId).spanId(traceId).name("test")
 				.build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");

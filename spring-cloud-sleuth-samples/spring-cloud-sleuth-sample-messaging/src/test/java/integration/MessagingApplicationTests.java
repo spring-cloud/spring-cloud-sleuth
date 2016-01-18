@@ -22,7 +22,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +31,7 @@ import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
 
 import java.util.Collection;
+import java.util.Random;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -52,7 +52,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_for_messaging() {
-		long traceId = new RandomLongSpanIdGenerator().generateId();
+		long traceId = new Random().nextLong();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId));
 
@@ -63,7 +63,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_for_messaging_with_async() {
-		long traceId = new RandomLongSpanIdGenerator().generateId();
+		long traceId = new Random().nextLong();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId));
 

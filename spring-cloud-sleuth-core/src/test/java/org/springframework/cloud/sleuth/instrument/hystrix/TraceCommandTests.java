@@ -14,9 +14,7 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.util.JdkIdGenerator;
 
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
@@ -25,7 +23,7 @@ public class TraceCommandTests {
 
 	static final long EXPECTED_TRACE_ID = 1L;
 	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
-			new RandomLongSpanIdGenerator(), Mockito.mock(ApplicationEventPublisher.class));
+			Mockito.mock(ApplicationEventPublisher.class));
 
 	@Before
 	public void setup() {

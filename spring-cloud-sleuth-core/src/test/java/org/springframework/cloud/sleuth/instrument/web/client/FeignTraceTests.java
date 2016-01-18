@@ -21,7 +21,6 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -89,7 +89,7 @@ public class FeignTraceTests {
 	}
 
 	private Long generatedId() {
-		return new RandomLongSpanIdGenerator().generateId();
+		return new Random().nextLong();
 	}
 
 	private String getHeader(ResponseEntity<String> response, String name) {

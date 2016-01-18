@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.trace;
 
 import static org.springframework.cloud.sleuth.util.ExceptionUtils.warn;
 
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.MilliSpan;
@@ -31,7 +32,6 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
-import org.springframework.cloud.sleuth.util.SpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
@@ -41,14 +41,11 @@ public class DefaultTraceManager implements TraceManager {
 
 	private final Sampler<Void> defaultSampler;
 
-	private final SpanIdGenerator idGenerator;
-
 	private final ApplicationEventPublisher publisher;
 
-	public DefaultTraceManager(Sampler<Void> defaultSampler, SpanIdGenerator idGenerator,
+	public DefaultTraceManager(Sampler<Void> defaultSampler,
 			ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
-		this.idGenerator = idGenerator;
 		this.publisher = publisher;
 	}
 
@@ -170,7 +167,7 @@ public class DefaultTraceManager implements TraceManager {
 	}
 
 	private long createId() {
-		return this.idGenerator.generateId();
+		return new Random().nextLong();
 	}
 
 	@Override

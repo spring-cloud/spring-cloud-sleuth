@@ -26,7 +26,6 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -62,8 +61,7 @@ public class DefaultTraceManagerTests {
 	public void tracingWorks() {
 		ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
 
-		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(),
-				new RandomLongSpanIdGenerator(), publisher);
+		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(), publisher);
 
 		Trace trace = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
 		try {

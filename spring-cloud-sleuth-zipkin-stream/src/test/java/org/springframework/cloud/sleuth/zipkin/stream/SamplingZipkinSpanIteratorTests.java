@@ -21,11 +21,11 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.Spans;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,7 +70,7 @@ public class SamplingZipkinSpanIteratorTests {
   }
 
   Span span(String name) {
-    Long id = new RandomLongSpanIdGenerator().generateId();
+    Long id = new Random().nextLong();
     return new MilliSpan(1, 3, name, id, Collections.<Long>emptyList(), id, true, true, "process");
   }
 }

@@ -55,6 +55,7 @@ public interface Span {
 	 * Return a unique id for the process from which this Span originated.
 	 * <p/>
 	 * <p/>
+	 * // TODO: Check when this is going to be null (cause it may be null)
 	 */
 	String getProcessId();
 

@@ -24,7 +24,6 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -32,6 +31,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+
+import java.util.Random;
 
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,7 +46,7 @@ public class TraceFilterMockChainIntegrationTests {
 	private StaticApplicationContext context = new StaticApplicationContext();
 
 	private TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
-			new RandomLongSpanIdGenerator(), this.context);
+			this.context);
 
 	private MockHttpServletRequest request;
 	private MockHttpServletResponse response;
@@ -76,9 +77,9 @@ public class TraceFilterMockChainIntegrationTests {
 
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
-		RandomLongSpanIdGenerator generator = new RandomLongSpanIdGenerator();
-		this.request = builder().header(Trace.SPAN_ID_NAME, generator.generateId())
-				.header(Trace.TRACE_ID_NAME, generator.generateId()).buildRequest(new MockServletContext());
+		Random generator = new Random();
+		this.request = builder().header(Trace.SPAN_ID_NAME, generator.nextLong())
+				.header(Trace.TRACE_ID_NAME, generator.nextLong()).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TraceContextHolder.getCurrentSpan());

@@ -13,7 +13,6 @@ import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
-import org.springframework.cloud.sleuth.util.RandomLongSpanIdGenerator;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.ArrayList;
@@ -39,7 +38,7 @@ public class TraceableExecutorServiceTests {
 
 	@Before
 	public void setup() {
-		traceManager = new DefaultTraceManager(new AlwaysSampler(), new RandomLongSpanIdGenerator(), publisher);
+		traceManager = new DefaultTraceManager(new AlwaysSampler(), publisher);
 		traceManagerableExecutorService = new TraceableExecutorService(executorService, traceManager);
 		TraceContextHolder.removeCurrentTrace();
 	}

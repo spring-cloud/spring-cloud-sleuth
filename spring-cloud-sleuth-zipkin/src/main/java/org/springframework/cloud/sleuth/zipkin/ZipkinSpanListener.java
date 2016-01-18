@@ -23,7 +23,12 @@ import io.zipkin.Endpoint;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.event.*;
+import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
+import org.springframework.cloud.sleuth.event.ClientSentEvent;
+import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
+import org.springframework.cloud.sleuth.event.ServerSentEvent;
+import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
+import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
@@ -38,7 +43,6 @@ import java.util.Map;
 public class ZipkinSpanListener {
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 	private static final byte[] UNKNOWN_BYTES = "unknown".getBytes(UTF_8);
-	private static final long DEFAULT_SPAN_VALUE_IF_MISSING = 1125899906842597L;
 
 	private ZipkinSpanReporter reporter;
 	/**
@@ -144,7 +148,7 @@ public class ZipkinSpanListener {
 			}
 			zipkinSpan.parentId(span.getParents().get(0));
 		}
-		zipkinSpan.id(valueOrDefault(span.getSpanId()));
+		zipkinSpan.id(span.getSpanId());
 		if (StringUtils.hasText(span.getName())) {
 			zipkinSpan.name(span.getName());
 		}
@@ -182,7 +186,4 @@ public class ZipkinSpanListener {
 		}
 	}
 
-	private long valueOrDefault(Long value) {
-		return value == null ? DEFAULT_SPAN_VALUE_IF_MISSING : value;
-	}
 }

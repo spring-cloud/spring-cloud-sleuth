@@ -39,7 +39,6 @@ import java.util.Map;
 public class ZipkinMessageListener {
 
 	private static final String UNKNOWN_PROCESS_ID = "unknown";
-	private static final long DEFAULT_SPAN_VALUE_IF_MISSING = 1125899906842597L;
 
 	@Autowired
 	SpanStore spanStore;
@@ -93,7 +92,7 @@ public class ZipkinMessageListener {
 			}
 			zipkinSpan.parentId(span.getParents().get(0));
 		}
-		zipkinSpan.id(valueOrDefault(span.getSpanId()));
+		zipkinSpan.id(span.getSpanId());
 		if (StringUtils.hasText(span.getName())) {
 			zipkinSpan.name(span.getName());
 		}
@@ -134,10 +133,6 @@ public class ZipkinMessageListener {
 			binaryAnn.endpoint(endpoint);
 			zipkinSpan.addBinaryAnnotation(binaryAnn.build());
 		}
-	}
-
-	private static long valueOrDefault(Long value) {
-		return value == null ? DEFAULT_SPAN_VALUE_IF_MISSING : value;
 	}
 
 	protected static class NotSleuthStreamClient extends SpringBootCondition {
