@@ -179,8 +179,8 @@ public class TraceFilterTests {
 
 	private class DelegateSampler implements Sampler<Void> {
 		@Override
-		public boolean next(Void info) {
-			return TraceFilterTests.this.sampler.next(info);
+		public boolean next() {
+			return TraceFilterTests.this.sampler.next();
 		}
 	}
 }

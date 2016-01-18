@@ -95,7 +95,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@RequestMapping("/traced")
 	public String traced() {
 		Trace trace = this.traceManager.startSpan("customTraceEndpoint",
-				new AlwaysSampler(), null);
+				new AlwaysSampler());
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);

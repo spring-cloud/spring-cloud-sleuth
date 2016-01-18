@@ -33,7 +33,7 @@ public class PercentageBasedSampler implements Sampler<Void> {
 	}
 
 	@Override
-	public boolean next(Void info) {
+	public boolean next() {
 		Span currentSpan = traceAccessor.getCurrentSpan();
 		long threshold = Math.abs(Long.MAX_VALUE * (int) (configuration.getPercentage() * 100)); // drops fractional percentage.
 		if (currentSpan == null || threshold == 0L) {

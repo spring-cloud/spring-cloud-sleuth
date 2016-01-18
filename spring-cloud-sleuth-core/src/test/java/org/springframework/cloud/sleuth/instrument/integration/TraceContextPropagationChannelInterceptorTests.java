@@ -66,7 +66,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@Test
 	public void testSpanPropagation() {
 
-		Trace trace = this.traceManager.startSpan("testSendMessage", new AlwaysSampler(), null);
+		Trace trace = this.traceManager.startSpan("testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		Long expectedSpanId = trace.getSpan().getSpanId();
 		this.traceManager.close(trace);

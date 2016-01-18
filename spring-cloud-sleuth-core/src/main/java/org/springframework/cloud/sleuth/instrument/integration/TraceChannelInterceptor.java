@@ -62,7 +62,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			return traceManager.startSpan(name, span);
 		}
 		if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-			return traceManager.startSpan(name, IsTracingSampler.INSTANCE, null);
+			return traceManager.startSpan(name, IsTracingSampler.INSTANCE);
 		}
 		return this.traceManager.startSpan(name);
 	}

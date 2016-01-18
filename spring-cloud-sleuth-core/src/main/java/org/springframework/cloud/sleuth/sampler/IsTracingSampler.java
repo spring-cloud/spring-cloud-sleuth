@@ -27,7 +27,7 @@ public class IsTracingSampler implements Sampler<Void> {
 	public static IsTracingSampler INSTANCE = new IsTracingSampler();
 
 	@Override
-	public boolean next(Void info) {
+	public boolean next() {
 		return TraceContextHolder.isTracing();
 	}
 }

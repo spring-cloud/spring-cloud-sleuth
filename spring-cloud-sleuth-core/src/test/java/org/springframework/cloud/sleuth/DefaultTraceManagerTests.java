@@ -67,7 +67,7 @@ public class DefaultTraceManagerTests {
 
 		DefaultTraceManager traceManager = new DefaultTraceManager(new IsTracingSampler(), new Random(), publisher);
 
-		Trace trace = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler(), null);
+		Trace trace = traceManager.startSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
 			importantWork1(traceManager);
 		}
