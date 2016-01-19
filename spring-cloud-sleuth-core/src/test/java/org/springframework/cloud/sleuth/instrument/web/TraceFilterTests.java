@@ -39,6 +39,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.util.Random;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -80,7 +82,7 @@ public class TraceFilterTests {
 	}
 
 	public MockHttpServletRequestBuilder builder() {
-		return get("/").accept(MediaType.APPLICATION_JSON).header("User-Agent",
+		return get("/?foo=bar").accept(MediaType.APPLICATION_JSON).header("User-Agent",
 				"MockMvc");
 	}
 
@@ -102,7 +104,7 @@ public class TraceFilterTests {
 	public void startsNewTrace() throws Exception {
 		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
-		verifyHttpAnnotations();
+		verifyHttpTags();
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
@@ -115,7 +117,7 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyHttpAnnotations();
+		verifyHttpTags();
 
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
@@ -129,7 +131,7 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(this.traceManager);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyHttpAnnotations();
+		verifyHttpTags();
 
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
@@ -151,30 +153,34 @@ public class TraceFilterTests {
 		catch (RuntimeException e) {
 			assertEquals("Planned", e.getMessage());
 		}
-		verifyHttpAnnotations(HttpStatus.INTERNAL_SERVER_ERROR);
+		verifyHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
 
-	public void verifyHttpAnnotations() {
-		verifyHttpAnnotations(HttpStatus.OK);
+	public void verifyHttpTags() {
+		verifyHttpTags(HttpStatus.OK);
 	}
 
-	public void verifyHttpAnnotations(HttpStatus status) {
-		hasAnnotation(this.span, "/http/request/uri", "http://localhost/");
-		hasAnnotation(this.span, "/http/request/endpoint", "/");
-		hasAnnotation(this.span, "/http/request/method", "GET");
-		hasAnnotation(this.span, "/http/request/headers/accept",
-				MediaType.APPLICATION_JSON_VALUE);
-		hasAnnotation(this.span, "/http/request/headers/user-agent", "MockMvc");
+	/**
+	 * Shows the expansion of {@link import org.springframework.cloud.sleuth.instrument.TraceKeys}.
+	 */
+	public void verifyHttpTags(HttpStatus status) {
+		assertThat(this.span.tags()).contains(
+				entry("http/host", "localhost"),
+				entry("http/url", "http://localhost/?foo=bar"),
+				entry("http/path", "/"),
+				entry("http/method", "GET")
+		);
 
-		hasAnnotation(this.span, "/http/response/status_code", status.toString());
-		hasAnnotation(this.span, "/http/response/headers/content-type",
-				MediaType.APPLICATION_JSON_VALUE);
-	}
-
-	private void hasAnnotation(Span span, String name, String value) {
-		assertEquals(value, span.tags().get(name));
+		// Status is only interesting in non-success case. Omitting it saves at least 20bytes per span.
+		if (status.is2xxSuccessful()) {
+			assertThat(this.span.tags())
+					.doesNotContainKey("http/status_code");
+		} else {
+			assertThat(this.span.tags())
+					.containsEntry("http/status_code", status.toString());
+		}
 	}
 
 	private class DelegateSampler implements Sampler<Void> {

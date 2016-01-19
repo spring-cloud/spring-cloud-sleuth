@@ -40,7 +40,7 @@ public class SampleBackground {
 		final Random random = new Random();
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
-		this.traceManager.addAnnotation("background-sleep-millis", String.valueOf(millis));
+		this.traceManager.addTag("background-sleep-millis", String.valueOf(millis));
 	}
 
 }

@@ -69,7 +69,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 			public String call() throws Exception {
 				int millis = random.nextInt(1000);
 				Thread.sleep(millis);
-				SampleController.this.traceManager.addAnnotation("callable-sleep-millis", String.valueOf(millis));
+				SampleController.this.traceManager.addTag("callable-sleep-millis", String.valueOf(millis));
 				Span currentSpan = SampleController.this.accessor.getCurrentSpan();
 				return "async hi: " + currentSpan;
 			}
@@ -87,7 +87,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	public String hi2() {
 		int millis = random.nextInt(1000);
 		Thread.sleep(millis);
-		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addTag("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
@@ -99,7 +99,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addTag("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
@@ -113,7 +113,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
-		this.traceManager.addAnnotation("random-sleep-millis", String.valueOf(millis));
+		this.traceManager.addTag("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);

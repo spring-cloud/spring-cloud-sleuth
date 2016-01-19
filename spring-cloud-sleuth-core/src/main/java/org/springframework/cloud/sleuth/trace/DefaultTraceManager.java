@@ -198,7 +198,7 @@ public class DefaultTraceManager implements TraceManager {
 	}
 
 	@Override
-	public void addAnnotation(String key, String value) {
+	public void addTag(String key, String value) {
 		Span s = getCurrentSpan();
 		if (s != null && s.isExportable()) {
 			s.tag(key, value);
