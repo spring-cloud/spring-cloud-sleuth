@@ -61,7 +61,7 @@ public interface Tracer extends TraceAccessor {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	Trace startTrace(String name);
+	Span startTrace(String name);
 
 	/**
 	 * Creates a new trace scope with a specific parent. The parent might be in another
@@ -73,7 +73,7 @@ public interface Tracer extends TraceAccessor {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	Trace joinTrace(String name, Span parent);
+	Span joinTrace(String name, Span parent);
 
 	/**
 	 * Start a new span if the sampler allows it or if we are already tracing in this
@@ -81,12 +81,12 @@ public interface Tracer extends TraceAccessor {
 	 *  @param name the name of the span
 	 * @param sampler a sampler to decide whether to create the span or not
 	 */
-	<T> Trace startTrace(String name, Sampler<T> sampler);
+	<T> Span startTrace(String name, Sampler<T> sampler);
 
 	/**
 	 * Pick up an existing span from another thread.
 	 */
-	Trace continueSpan(Span s);
+	Span continueSpan(Span s);
 
 	/**
 	 * Adds a tag to the current span if tracing is currently on.
@@ -100,7 +100,7 @@ public interface Tracer extends TraceAccessor {
 	 *
 	 * @return the saved trace if there was one before the trace started (null otherwise)
 	 */
-	Trace detach(Trace trace);
+	Span detach(Span trace);
 
 	/**
 	 * Remove this span from the current thread, stop it and send it for collection.
@@ -108,7 +108,7 @@ public interface Tracer extends TraceAccessor {
 	 * @param trace the trace to close
 	 * @return the saved trace if there was one before the trace started (null otherwise)
 	 */
-	Trace close(Trace trace);
+	Span close(Span trace);
 
 	<V> Callable<V> wrap(Callable<V> callable);
 

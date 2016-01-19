@@ -16,45 +16,39 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.core.NamedThreadLocal;
-
 import lombok.extern.apachecommons.CommonsLog;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.core.NamedThreadLocal;
 
 /**
  * @author Spencer Gibb
  */
 @CommonsLog
-public class TraceContextHolder {
+public class SpanContextHolder {
 
-	private static final ThreadLocal<Trace> currentTrace = new NamedThreadLocal<>("Trace Context");
-
-	public static Trace getCurrentTrace() {
-		return currentTrace.get();
-	}
+	private static final ThreadLocal<Span> CURRENT_SPAN = new NamedThreadLocal<>("Trace Context");
 
 	public static Span getCurrentSpan() {
-		return isTracing() ? currentTrace.get().getSpan() : null;
+		return isTracing() ? CURRENT_SPAN.get() : null;
 	}
 
-	public static void setCurrentTrace(Trace trace) {
+	public static void setCurrentSpan(Span span) {
 		// backwards compatibility
-		if (trace == null) {
-			currentTrace.remove();
+		if (span == null) {
+			CURRENT_SPAN.remove();
 			return;
 		}
 		if (log.isTraceEnabled()) {
-			log.trace("Setting current trace " + trace);
+			log.trace("Setting current span " + span);
 		}
-		currentTrace.set(trace);
+		CURRENT_SPAN.set(span);
 	}
 
-	public static void removeCurrentTrace() {
-		currentTrace.remove();
+	public static void removeCurrentSpan() {
+		CURRENT_SPAN.remove();
 	}
 
 	public static boolean isTracing() {
-		return currentTrace.get() != null;
+		return CURRENT_SPAN.get() != null;
 	}
 }

@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.integration.TraceStompMessageContextPropagationChannelInterceptorTests.TestApplication;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
@@ -28,11 +28,11 @@ public class TraceStompMessageContextPropagationChannelInterceptorTests extends 
 
 	@Test
 	public void should_propagate_span_information() {
-		Trace trace = givenALocallyStartedSpan();
+		Span trace = givenALocallyStartedSpan();
 		Message<?> m = givenMessageToBeSampled();
 
 		whenTheMessageWasSent(m);
-		Long expectedTraceId = trace.getSpan().getTraceId();
+		Long expectedTraceId = trace.getTraceId();
 		this.tracer.close(trace);
 
 		thenReceivedMessageIsNotNull();

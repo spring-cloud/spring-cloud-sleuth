@@ -24,7 +24,6 @@ import java.util.concurrent.Callable;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
@@ -53,7 +52,7 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Trace joinTrace(String name, Span parent) {
+	public Span joinTrace(String name, Span parent) {
 		if (parent == null) {
 			return startTrace(name);
 		}
@@ -67,12 +66,12 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Trace startTrace(String name) {
+	public Span startTrace(String name) {
 		return this.startTrace(name, this.defaultSampler);
 	}
 
 	@Override
-	public <T> Trace startTrace(String name, Sampler<T> s) {
+	public <T> Span startTrace(String name, Sampler<T> s) {
 		Span span = null;
 		if (isTracing() || s.next()) {
 			span = createChild(getCurrentSpan(), name);
@@ -88,12 +87,11 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Trace detach(Trace trace) {
-		if (trace == null) {
+	public Span detach(Span span) {
+		if (span == null) {
 			return null;
 		}
-		Span cur = TraceContextHolder.getCurrentSpan();
-		Span span = trace.getSpan();
+		Span cur = SpanContextHolder.getCurrentSpan();
 		if (cur != span) {
 			ExceptionUtils.warn("Tried to detach trace span but "
 					+ "it is not the current span for the '"
@@ -101,24 +99,23 @@ public class DefaultTracer implements Tracer {
 					+ ". You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
-			if (trace.getSaved() != null) {
-				TraceContextHolder.setCurrentTrace(trace.getSaved());
+			if (span.hasSavedSpan()) {
+				SpanContextHolder.setCurrentSpan(span.getSavedSpan());
 			}
 			else {
-				TraceContextHolder.removeCurrentTrace();
+				SpanContextHolder.removeCurrentSpan();
 			}
 		}
-		return trace.getSaved();
+		return span.getSavedSpan();
 	}
 
 	@Override
-	public Trace close(Trace trace) {
-		if (trace == null) {
+	public Span close(Span span) {
+		if (span == null) {
 			return null;
 		}
-		Span cur = TraceContextHolder.getCurrentSpan();
-		Span span = trace.getSpan();
-		Trace savedTrace = trace.getSaved();
+		Span cur = SpanContextHolder.getCurrentSpan();
+		Span savedSpan = span.getSavedSpan();
 		if (cur != span) {
 			ExceptionUtils.warn("Tried to close trace span but "
 					+ "it is not the current span for the '"
@@ -128,24 +125,24 @@ public class DefaultTracer implements Tracer {
 		else {
 			if (span != null) {
 				span.stop();
-				if (savedTrace != null
-						&& span.getParents().contains(savedTrace.getSpan().getSpanId())) {
+				if (savedSpan != null
+						&& span.getParents().contains(savedSpan.getSpanId())) {
 					this.publisher.publishEvent(
-							new SpanReleasedEvent(this, savedTrace.getSpan(), span));
-					TraceContextHolder.setCurrentTrace(savedTrace);
+							new SpanReleasedEvent(this, savedSpan, span));
+					SpanContextHolder.setCurrentSpan(savedSpan);
 				}
 				else {
 					if (!span.isRemote()) {
 						this.publisher.publishEvent(new SpanReleasedEvent(this, span));
 					}
-					TraceContextHolder.removeCurrentTrace();
+					SpanContextHolder.removeCurrentSpan();
 				}
 			}
 			else {
-				TraceContextHolder.removeCurrentTrace();
+				SpanContextHolder.removeCurrentSpan();
 			}
 		}
-		return savedTrace;
+		return savedSpan;
 	}
 
 	protected Span createChild(Span parent, String name) {
@@ -157,9 +154,9 @@ public class DefaultTracer implements Tracer {
 			return span;
 		}
 		else {
-			if (TraceContextHolder.getCurrentTrace() == null) {
-				Trace trace = createTrace(null, parent);
-				TraceContextHolder.setCurrentTrace(trace);
+			if (SpanContextHolder.getCurrentSpan() == null) {
+				Span span = createSpan(null, parent);
+				SpanContextHolder.setCurrentSpan(span);
 			}
 			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
 					.name(name).traceId(parent.getTraceId()).parent(parent.getSpanId())
@@ -174,27 +171,27 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Trace continueSpan(Span span) {
+	public Span continueSpan(Span span) {
 		if (span != null) {
 			this.publisher.publishEvent(new SpanContinuedEvent(this, span));
 		}
-		Trace trace = createTrace(TraceContextHolder.getCurrentTrace(), span);
-		TraceContextHolder.setCurrentTrace(trace);
-		return trace;
+		Span newSpan = createSpan(SpanContextHolder.getCurrentSpan(), span);
+		SpanContextHolder.setCurrentSpan(newSpan);
+		return newSpan;
 	}
 
-	protected Trace createTrace(Trace trace, Span span) {
-		return new Trace(trace, span);
+	protected Span createSpan(Span saved, Span span) {
+		return new MilliSpan(span, saved);
 	}
 
 	@Override
 	public Span getCurrentSpan() {
-		return TraceContextHolder.getCurrentSpan();
+		return SpanContextHolder.getCurrentSpan();
 	}
 
 	@Override
 	public boolean isTracing() {
-		return TraceContextHolder.isTracing();
+		return SpanContextHolder.isTracing();
 	}
 
 	@Override

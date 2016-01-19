@@ -9,7 +9,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -60,7 +59,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private MvcResult whenSentPingWithTraceId(Long passedTraceId)
 			throws Exception {
-		return sendPingWithTraceId(Trace.TRACE_ID_NAME, passedTraceId);
+		return sendPingWithTraceId(Span.TRACE_ID_NAME, passedTraceId);
 	}
 
 	private MvcResult sendPingWithTraceId(String headerName, Long passedCorrelationId)
@@ -68,11 +67,11 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
 						.header(headerName, Span.IdConverter.toHex(passedCorrelationId))
-						.header(Trace.SPAN_ID_NAME, Span.IdConverter.toHex(new Random().nextLong())))
+						.header(Span.SPAN_ID_NAME, Span.IdConverter.toHex(new Random().nextLong())))
 				.andReturn();
 	}
 
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.IdConverter.fromHex(mvcResult.getResponse().getHeader(Trace.TRACE_ID_NAME));
+		return Span.IdConverter.fromHex(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
 	}
 }

@@ -16,7 +16,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
@@ -62,14 +61,14 @@ ApplicationEventPublisherAware {
 			ClientHttpRequestExecution execution) throws IOException {
 		Span span = getCurrentSpan();
 		if (span == null) {
-			setHeader(request, Trace.NOT_SAMPLED_NAME, "");
+			setHeader(request, Span.NOT_SAMPLED_NAME, "");
 			return execution.execute(request, body);
 		}
-		setHeader(request, Trace.TRACE_ID_NAME, span.getTraceId());
-		setHeader(request, Trace.SPAN_ID_NAME, span.getSpanId());
-		setHeader(request, Trace.SPAN_NAME_NAME, span.getName());
-		setHeader(request, Trace.PARENT_ID_NAME, getParentId(span));
-		setHeader(request, Trace.PROCESS_ID_NAME, span.getProcessId());
+		setHeader(request, Span.TRACE_ID_NAME, span.getTraceId());
+		setHeader(request, Span.SPAN_ID_NAME, span.getSpanId());
+		setHeader(request, Span.SPAN_NAME_NAME, span.getName());
+		setHeader(request, Span.PARENT_ID_NAME, getParentId(span));
+		setHeader(request, Span.PROCESS_ID_NAME, span.getProcessId());
 		publish(new ClientSentEvent(this, span));
 		return new TraceHttpResponse(this, execution.execute(request, body));
 	}

@@ -45,12 +45,32 @@ public class MilliSpan implements Span {
 	private final String processId;
 	@Singular
 	private final List<Log> logs = new ArrayList<>();
+	private final Span savedSpan;
 
 	public static MilliSpan.MilliSpanBuilder builder() {
 		return new MilliSpan().toBuilder();
 	}
 
+	public MilliSpan(Span current, Span savedSpan) {
+		this.begin = current.getBegin();
+		this.end = current.getEnd();
+		this.name = current.getName();
+		this.traceId = current.getTraceId();
+		this.parents = current.getParents();
+		this.spanId = current.getSpanId();
+		this.remote = current.isRemote();
+		this.exportable = current.isExportable();
+		this.processId = current.getProcessId();
+		this.tags.putAll(current.tags());
+		this.logs.addAll(current.logs());
+		this.savedSpan = savedSpan;
+	}
+
 	public MilliSpan(long begin, long end, String name, long traceId, List<Long> parents, long spanId, boolean remote, boolean exportable, String processId) {
+		this(begin, end, name, traceId, parents, spanId, remote, exportable, processId, null);
+	}
+
+	public MilliSpan(long begin, long end, String name, long traceId, List<Long> parents, long spanId, boolean remote, boolean exportable, String processId, Span savedSpan) {
 		this.begin = begin<=0 ? System.currentTimeMillis() : begin;
 		this.end = end;
 		this.name = name;
@@ -60,6 +80,7 @@ public class MilliSpan implements Span {
 		this.remote = remote;
 		this.exportable = exportable;
 		this.processId = processId;
+		this.savedSpan = savedSpan;
 	}
 
 	//for serialization
@@ -70,6 +91,7 @@ public class MilliSpan implements Span {
 		this.spanId = 0;
 		this.processId = null;
 		this.parents = new ArrayList<>();
+		this.savedSpan = null;
 	}
 
 	@Override
@@ -118,6 +140,11 @@ public class MilliSpan implements Span {
 	@Override
 	public List<Log> logs() {
 		return Collections.unmodifiableList(this.logs);
+	}
+
+	@Override
+	public boolean hasSavedSpan() {
+		return savedSpan != null;
 	}
 
 }

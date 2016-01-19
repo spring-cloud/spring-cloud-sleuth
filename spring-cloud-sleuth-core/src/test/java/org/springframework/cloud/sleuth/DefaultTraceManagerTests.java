@@ -25,7 +25,7 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -53,12 +53,12 @@ public class DefaultTraceManagerTests {
 
 	@Before
 	public void setup() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@After
 	public void clean() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
@@ -67,7 +67,7 @@ public class DefaultTraceManagerTests {
 
 		DefaultTracer traceManager = new DefaultTracer(new IsTracingSampler(), new Random(), publisher);
 
-		Trace trace = traceManager.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
+		Span trace = traceManager.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
 			importantWork1(traceManager);
 		}
@@ -122,7 +122,7 @@ public class DefaultTraceManagerTests {
 	}
 
 	private void importantWork1(Tracer tracer) {
-		Trace cur = tracer.startTrace(IMPORTANT_WORK_1);
+		Span cur = tracer.startTrace(IMPORTANT_WORK_1);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
 			importantWork2(tracer);
@@ -136,7 +136,7 @@ public class DefaultTraceManagerTests {
 	}
 
 	private void importantWork2(Tracer tracer) {
-		Trace cur = tracer.startTrace(IMPORTANT_WORK_2);
+		Span cur = tracer.startTrace(IMPORTANT_WORK_2);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
 		}

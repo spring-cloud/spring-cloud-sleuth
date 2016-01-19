@@ -25,7 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -61,7 +61,7 @@ public class SleuthStreamAutoConfiguration {
 			@Override
 			public Message<?> preSend(Message<?> message, MessageChannel channel) {
 				return MessageBuilder.fromMessage(message)
-						.setHeader(Trace.NOT_SAMPLED_NAME, "").build();
+						.setHeader(Span.NOT_SAMPLED_NAME, "").build();
 			}
 		};
 	}

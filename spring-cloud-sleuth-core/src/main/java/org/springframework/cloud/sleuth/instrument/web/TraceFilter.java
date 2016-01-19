@@ -32,13 +32,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -49,15 +48,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
 
 /**
- * Filter that takes the value of the {@link Trace#SPAN_ID_NAME} and
- * {@link Trace#TRACE_ID_NAME} header from either request or response and uses them to
+ * Filter that takes the value of the {@link Span#SPAN_ID_NAME} and
+ * {@link Span#TRACE_ID_NAME} header from either request or response and uses them to
  * create a new span.
  *
  * <p>In order to keep the size of spans manageable, this only add tags defined in {@link TraceKeys}.
  * If you need to add additional tags, such as headers subtype this and override
  * {@link #addRequestTags} or {@link #addResponseTags}.
  *
- * @see TraceManager
+ * @see Tracer
  * @see TraceKeys
  * @see TraceWebAutoConfiguration#traceWebFilter(TraceFilter)
  *
@@ -106,32 +105,32 @@ public class TraceFilter extends OncePerRequestFilter
 	protected void doFilterInternal(HttpServletRequest request,
 			HttpServletResponse response, FilterChain filterChain)
 					throws ServletException, IOException {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| getHeader(request, response, Trace.NOT_SAMPLED_NAME) != null;
+				|| getHeader(request, response, Span.NOT_SAMPLED_NAME) != null;
 
-		Trace trace = (Trace) request.getAttribute(TRACE_REQUEST_ATTR);
+		Span trace = (Span) request.getAttribute(TRACE_REQUEST_ATTR);
 		if (trace != null) {
-			this.tracer.continueSpan(trace.getSpan());
+			this.tracer.continueSpan(trace);
 		}
 		else if (skip) {
-			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
+			addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
 		}
 
 		String name = "http" + uri;
-		if (hasHeader(request, response, Trace.TRACE_ID_NAME)) {
-			long traceId = Span.IdConverter.fromHex(getHeader(request, response, Trace.TRACE_ID_NAME));
-			long spanId = hasHeader(request, response, Trace.SPAN_ID_NAME) ?
-					Span.IdConverter.fromHex(getHeader(request, response, Trace.SPAN_ID_NAME)) : this.random.nextLong();
+		if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
+			long traceId = Span.IdConverter.fromHex(getHeader(request, response, Span.TRACE_ID_NAME));
+			long spanId = hasHeader(request, response, Span.SPAN_ID_NAME) ?
+					Span.IdConverter.fromHex(getHeader(request, response, Span.SPAN_ID_NAME)) : this.random.nextLong();
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			if (skip) {
 				span.exportable(false);
 			}
-			String processId = getHeader(request, response, Trace.PROCESS_ID_NAME);
-			String parentName = getHeader(request, response, Trace.SPAN_NAME_NAME);
+			String processId = getHeader(request, response, Span.PROCESS_ID_NAME);
+			String parentName = getHeader(request, response, Span.SPAN_NAME_NAME);
 			if (StringUtils.hasText(parentName)) {
 				span.name(parentName);
 			} else {
@@ -140,14 +139,14 @@ public class TraceFilter extends OncePerRequestFilter
 			if (StringUtils.hasText(processId)) {
 				span.processId(processId);
 			}
-			if (hasHeader(request, response, Trace.PARENT_ID_NAME)) {
-				span.parent(Span.IdConverter.fromHex(getHeader(request, response, Trace.PARENT_ID_NAME)));
+			if (hasHeader(request, response, Span.PARENT_ID_NAME)) {
+				span.parent(Span.IdConverter.fromHex(getHeader(request, response, Span.PARENT_ID_NAME)));
 			}
 			span.remote(true);
 
 			Span parent = span.build();
 			trace = this.tracer.joinTrace(name, parent);
-			publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
+			publish(new ServerReceivedEvent(this, parent, trace));
 			request.setAttribute(TRACE_REQUEST_ATTR, trace);
 
 		}
@@ -179,14 +178,14 @@ public class TraceFilter extends OncePerRequestFilter
 				return;
 			}
 			if (skip) {
-				addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
+				addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
 			}
 			if (trace != null) {
 				addResponseTags(response, exception);
-				addResponseHeaders(response, trace.getSpan());
-				if (trace.getSaved() != null) {
-					publish(new ServerSentEvent(this, trace.getSaved().getSpan(),
-							trace.getSpan()));
+				addResponseHeaders(response, trace);
+				if (trace.hasSavedSpan()) {
+					publish(new ServerSentEvent(this, trace.getSavedSpan(),
+							trace));
 				}
 				// Double close to clean up the parent (remote span as well)
 				this.tracer.close(this.tracer.close(trace));
@@ -196,8 +195,8 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private void addResponseHeaders(HttpServletResponse response, Span span) {
 		if (span != null) {
-			response.addHeader(Trace.SPAN_ID_NAME, Span.IdConverter.toHex(span.getSpanId()));
-			response.addHeader(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
+			response.addHeader(Span.SPAN_ID_NAME, Span.IdConverter.toHex(span.getSpanId()));
+			response.addHeader(Span.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
 		}
 	}
 

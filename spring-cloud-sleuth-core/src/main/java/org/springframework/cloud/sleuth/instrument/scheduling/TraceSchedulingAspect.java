@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -46,7 +46,7 @@ public class TraceSchedulingAspect {
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		Trace trace = this.tracer.startTrace(pjp.toShortString());
+		Span trace = this.tracer.startTrace(pjp.toShortString());
 		try {
 			return pjp.proceed();
 		}

@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -35,9 +35,9 @@ import org.springframework.util.ClassUtils;
 public class TraceBootstrapEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
-	private static String[] headers = new String[] { Trace.SPAN_ID_NAME,
-			Trace.TRACE_ID_NAME, Trace.PARENT_ID_NAME, Trace.PROCESS_ID_NAME,
-			Trace.NOT_SAMPLED_NAME, Trace.SPAN_NAME_NAME };
+	private static String[] headers = new String[] { Span.SPAN_ID_NAME,
+			Span.TRACE_ID_NAME, Span.PARENT_ID_NAME, Span.PROCESS_ID_NAME,
+			Span.NOT_SAMPLED_NAME, Span.SPAN_NAME_NAME };
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,

@@ -36,7 +36,6 @@ import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -123,14 +122,14 @@ public class TraceFeignClientAutoConfiguration {
 			public void apply(RequestTemplate template) {
 				Span span = getCurrentSpan();
 				if (span == null) {
-					setHeader(template, Trace.NOT_SAMPLED_NAME, "");
+					setHeader(template, Span.NOT_SAMPLED_NAME, "");
 					return;
 				}
-				template.header(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
-				setHeader(template, Trace.SPAN_NAME_NAME, span.getName());
-				setHeader(template, Trace.SPAN_ID_NAME, span.getSpanId());
-				setHeader(template, Trace.PARENT_ID_NAME, getParentId(span));
-				setHeader(template, Trace.PROCESS_ID_NAME, span.getProcessId());
+				template.header(Span.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
+				setHeader(template, Span.SPAN_NAME_NAME, span.getName());
+				setHeader(template, Span.SPAN_ID_NAME, span.getSpanId());
+				setHeader(template, Span.PARENT_ID_NAME, getParentId(span));
+				setHeader(template, Span.PROCESS_ID_NAME, span.getProcessId());
 				publish(new ClientSentEvent(this, span));
 			}
 		};
@@ -166,12 +165,12 @@ public class TraceFeignClientAutoConfiguration {
 		newHeaders.putAll(headers);
 		Span span = getCurrentSpan();
 		if (span == null) {
-			setHeader(newHeaders, Trace.NOT_SAMPLED_NAME, "");
+			setHeader(newHeaders, Span.NOT_SAMPLED_NAME, "");
 			return newHeaders;
 		}
-		setHeader(newHeaders, Trace.TRACE_ID_NAME, span.getTraceId());
-		setHeader(newHeaders, Trace.SPAN_ID_NAME, span.getSpanId());
-		setHeader(newHeaders, Trace.PARENT_ID_NAME, getParentId(span));
+		setHeader(newHeaders, Span.TRACE_ID_NAME, span.getTraceId());
+		setHeader(newHeaders, Span.SPAN_ID_NAME, span.getSpanId());
+		setHeader(newHeaders, Span.PARENT_ID_NAME, getParentId(span));
 		return newHeaders;
 	}
 

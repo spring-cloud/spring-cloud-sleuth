@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth;
 import org.springframework.util.Assert;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,16 @@ import java.util.Map;
  * <p/>
  */
 public interface Span {
+
+	String NOT_SAMPLED_NAME = "X-Not-Sampled";
+	String PROCESS_ID_NAME = "X-Process-Id";
+	String PARENT_ID_NAME = "X-Parent-Id";
+	String TRACE_ID_NAME = "X-Trace-Id";
+	String SPAN_NAME_NAME = "X-Span-Name";
+	String SPAN_ID_NAME = "X-Span-Id";
+	List<String> HEADERS = Arrays.asList(SPAN_ID_NAME, TRACE_ID_NAME,
+			SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
+	String SPAN_EXPORT_NAME = "X-Span-Export";
 
 	/**
 	 * A human-readable name assigned to this span instance.
@@ -152,4 +163,15 @@ public interface Span {
 			return new BigInteger(hexString, 16).longValue();
 		}
 	}
+
+	/**
+	 * The span that was "current" before this span was entered
+	 */
+	Span getSavedSpan();
+
+	/**
+	 *
+	 * @return true if there was a "current" span before this span was entered
+	 */
+	boolean hasSavedSpan();
 }
