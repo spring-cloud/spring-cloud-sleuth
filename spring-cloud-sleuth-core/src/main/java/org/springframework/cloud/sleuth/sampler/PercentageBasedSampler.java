@@ -1,6 +1,5 @@
 package org.springframework.cloud.sleuth.sampler;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceAccessor;
@@ -21,7 +20,6 @@ import org.springframework.cloud.sleuth.TraceAccessor;
  * @author Marcin Grzejszczak
  * @author Adrian Cole
  */
-@Slf4j
 public class PercentageBasedSampler implements Sampler<Void> {
 
 	private final SamplerConfiguration configuration;
@@ -34,8 +32,8 @@ public class PercentageBasedSampler implements Sampler<Void> {
 
 	@Override
 	public boolean next() {
-		Span currentSpan = traceAccessor.getCurrentSpan();
-		long threshold = Math.abs(Long.MAX_VALUE * (int) (configuration.getPercentage() * 100)); // drops fractional percentage.
+		Span currentSpan = this.traceAccessor.getCurrentSpan();
+		long threshold = Math.abs(Long.MAX_VALUE * (int) (this.configuration.getPercentage() * 100)); // drops fractional percentage.
 		if (currentSpan == null || threshold == 0L) {
 			return false;
 		}

@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.template;
 
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceDelegate;
 
 /**

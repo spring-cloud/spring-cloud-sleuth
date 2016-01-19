@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -14,10 +16,8 @@ import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 @RunWith(SpringJUnit4ClassRunner.class)
-abstract class AbstractTraceStompIntegrationTests {
+public abstract class AbstractTraceStompIntegrationTests {
 
 	@Autowired
 	@Qualifier("executorSubscribableChannel")
@@ -29,17 +29,17 @@ abstract class AbstractTraceStompIntegrationTests {
 
 	@Before
 	public void init() {
-		this.channel.subscribe(stompMessageHandler);
+		this.channel.subscribe(this.stompMessageHandler);
 	}
 
 	@After
 	public void close() {
 		TraceContextHolder.removeCurrentTrace();
-		this.channel.unsubscribe(stompMessageHandler);
+		this.channel.unsubscribe(this.stompMessageHandler);
 	}
 
 	Trace givenALocallyStartedSpan() {
-		return tracer.startTrace("testSendMessage", sampler);
+		return this.tracer.startTrace("testSendMessage", this.sampler);
 	}
 
 	Message<?> givenMessageToBeSampled() {
@@ -48,7 +48,7 @@ abstract class AbstractTraceStompIntegrationTests {
 
 	void whenTheMessageWasSent(Message<?> message) {
 		this.channel.send(message);
-		then(stompMessageHandler.message).isNotNull();
+		then(this.stompMessageHandler.message).isNotNull();
 	}
 
 	Long thenSpanIdFromHeadersIsNotEmpty() {
@@ -64,6 +64,6 @@ abstract class AbstractTraceStompIntegrationTests {
 	}
 
 	<T> T getValueFromHeaders(String headerName, Class<T> type) {
-		return stompMessageHandler.message.getHeaders().get(headerName, type);
+		return this.stompMessageHandler.message.getHeaders().get(headerName, type);
 	}
 }

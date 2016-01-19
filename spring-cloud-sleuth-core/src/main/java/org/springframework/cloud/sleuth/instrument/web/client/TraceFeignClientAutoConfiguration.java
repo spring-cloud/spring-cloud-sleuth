@@ -16,10 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import com.netflix.hystrix.HystrixCommand;
-import feign.*;
-import feign.codec.Decoder;
-import feign.hystrix.HystrixFeign;
+import static java.util.Collections.singletonList;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -35,7 +39,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
@@ -48,13 +51,16 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.util.StringUtils;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import com.netflix.hystrix.HystrixCommand;
 
-import static java.util.Collections.singletonList;
+import feign.Client;
+import feign.Feign;
+import feign.FeignException;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+import feign.Response;
+import feign.codec.Decoder;
+import feign.hystrix.HystrixFeign;
 
 /**
  *

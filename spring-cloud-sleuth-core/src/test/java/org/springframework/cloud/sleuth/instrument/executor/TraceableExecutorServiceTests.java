@@ -1,6 +1,17 @@
 package org.springframework.cloud.sleuth.instrument.executor;
 
-import lombok.SneakyThrows;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,17 +26,7 @@ import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.BDDAssertions.then;
+import lombok.SneakyThrows;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceableExecutorServiceTests {
@@ -39,34 +40,34 @@ public class TraceableExecutorServiceTests {
 
 	@Before
 	public void setup() {
-		tracer = new DefaultTracer(new AlwaysSampler(), new Random(), publisher);
-		traceManagerableExecutorService = new TraceableExecutorService(executorService, tracer);
+		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		this.traceManagerableExecutorService = new TraceableExecutorService(this.executorService, this.tracer);
 		TraceContextHolder.removeCurrentTrace();
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		tracer = null;
-		traceManagerableExecutorService.shutdown();
-		executorService.shutdown();
+		this.tracer = null;
+		this.traceManagerableExecutorService.shutdown();
+		this.executorService.shutdown();
 		TraceContextHolder.removeCurrentTrace();
 	}
 
 	@Test
 	@SneakyThrows
 	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed() {
-		Trace trace = tracer.startTrace("PARENT");
+		Trace trace = this.tracer.startTrace("PARENT");
 		CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
-		tracer.close(trace);
+		this.tracer.close(trace);
 
-		then(spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).containsOnly(trace.getSpan().getTraceId());
-		then(spanVerifyingRunnable.spanIds.stream().distinct().collect(toList())).hasSize(TOTAL_THREADS);
+		then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).containsOnly(trace.getSpan().getTraceId());
+		then(this.spanVerifyingRunnable.spanIds.stream().distinct().collect(toList())).hasSize(TOTAL_THREADS);
 	}
 
-	private CompletableFuture[] runnablesExecutedViaTraceManagerableExecutorService() {
-		List<CompletableFuture> futures = new ArrayList<>();
+	private CompletableFuture<?>[] runnablesExecutedViaTraceManagerableExecutorService() {
+		List<CompletableFuture<?>> futures = new ArrayList<>();
 		for (int i = 0; i < TOTAL_THREADS; i++) {
-			futures.add(CompletableFuture.runAsync(spanVerifyingRunnable, traceManagerableExecutorService));
+			futures.add(CompletableFuture.runAsync(this.spanVerifyingRunnable, this.traceManagerableExecutorService));
 		}
 		return futures.toArray(new CompletableFuture[futures.size()]);
 	}
@@ -79,8 +80,8 @@ public class TraceableExecutorServiceTests {
 		@Override
 		public void run() {
 			Span span = TraceContextHolder.getCurrentSpan();
-			traceIds.add(span.getTraceId());
-			spanIds.add(span.getSpanId());
+			this.traceIds.add(span.getTraceId());
+			this.spanIds.add(span.getSpanId());
 		}
 
 	}

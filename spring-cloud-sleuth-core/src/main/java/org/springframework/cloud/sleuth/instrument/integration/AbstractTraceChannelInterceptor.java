@@ -1,16 +1,17 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import java.util.Random;
+
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
-
-import java.util.Random;
 
 /**
  * Abstraction over classes related to channel intercepting
@@ -19,13 +20,24 @@ import java.util.Random;
  */
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter {
 
-	protected final Tracer tracer;
+	private final Tracer tracer;
 
-	protected final Random random;
+	private final Random random;
 
-	protected AbstractTraceChannelInterceptor(Tracer tracer, Random random) {
+	private final TraceKeys traceKeys;
+
+	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
 		this.tracer = tracer;
+		this.traceKeys = traceKeys;
 		this.random = random;
+	}
+
+	protected Tracer getTracer() {
+		return this.tracer;
+	}
+
+	protected TraceKeys getTraceKeys() {
+		return this.traceKeys;
 	}
 
 	/**
@@ -37,7 +49,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 			return null; // cannot build a span without ids
 		}
 		long spanId = hasHeader(message, Trace.SPAN_ID_NAME) ?
-				getHeader(message, Trace.SPAN_ID_NAME, Long.class) : random.nextLong();
+				getHeader(message, Trace.SPAN_ID_NAME, Long.class) : this.random.nextLong();
 		long traceId = getHeader(message, Trace.TRACE_ID_NAME, Long.class);
 		MilliSpan.MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 		Long parentId = getHeader(message, Trace.PARENT_ID_NAME, Long.class);

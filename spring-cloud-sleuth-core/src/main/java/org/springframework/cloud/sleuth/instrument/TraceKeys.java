@@ -54,6 +54,39 @@ public class TraceKeys {
 
 	private Http http = new Http();
 
+	private Message message = new Message();
+
+	@Data
+	public static class Message {
+
+		private Payload payload = new Payload();
+
+		@Data
+		public static class Payload {
+			/**
+			 * An estimate of the size of the payload if available.
+			 */
+			private String size = "message/payload-size";
+			/**
+			 * The type of the payload.
+			 */
+			private String type = "message/payload-type";
+		}
+
+		/**
+		 * Prefix for header names if they are added as tags.
+		 */
+		private String prefix = "message/";
+
+		/**
+		 * Additional headers that should be added as tags if they exist. If the header
+		 * value is not a String it will be converted to a String using its toString()
+		 * method.
+		 */
+		private Collection<String> headers = new LinkedHashSet<String>();
+
+	}
+
 	@Data
 	public static class Http {
 

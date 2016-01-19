@@ -16,14 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import java.util.Random;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-
-import java.util.Random;
 
 /**
  * @author Dave Syer
@@ -33,38 +34,38 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private ThreadLocal<Trace> traceHolder = new ThreadLocal<>();
 
-	public TraceChannelInterceptor(Tracer tracer, Random random) {
-		super(tracer, random);
+	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
+		super(tracer, traceKeys, random);
 	}
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
 		Trace trace = this.traceHolder.get();
 		// Double close to clean up the parent (remote span as well)
-		this.tracer.close(this.tracer.close(trace));
+		getTracer().close(getTracer().close(trace));
 		this.traceHolder.remove();
 	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (this.tracer.isTracing()) {
-			return SpanMessageHeaders.addSpanHeaders(message,
-					this.tracer.getCurrentSpan());
+		if (getTracer().isTracing()) {
+			return SpanMessageHeaders.addSpanHeaders(getTraceKeys(), message,
+					getTracer().getCurrentSpan());
 		}
 		String name = getMessageChannelName(channel);
 		Trace trace = startSpan(buildSpan(message), name, message);
 		this.traceHolder.set(trace);
-		return SpanMessageHeaders.addSpanHeaders(message, trace.getSpan());
+		return SpanMessageHeaders.addSpanHeaders(getTraceKeys(), message, trace.getSpan());
 	}
 
-	private Trace startSpan(Span span, String name, Message message) {
+	private Trace startSpan(Span span, String name, Message<?> message) {
 		if (span != null) {
-			return tracer.joinTrace(name, span);
+			return getTracer().joinTrace(name, span);
 		}
 		if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-			return tracer.startTrace(name, IsTracingSampler.INSTANCE);
+			return getTracer().startTrace(name, IsTracingSampler.INSTANCE);
 		}
-		return this.tracer.startTrace(name);
+		return getTracer().startTrace(name);
 	}
 
 }

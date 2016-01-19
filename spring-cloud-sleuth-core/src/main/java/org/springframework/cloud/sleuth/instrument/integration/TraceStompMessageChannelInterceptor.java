@@ -15,33 +15,34 @@
  */
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import java.util.Random;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
 
-import java.util.Random;
-
 /**
  * Interceptor for Stomp Messages sent over websocket
- * 
+ *
  * @author Gaurav Rai Mazra
  * @author Marcin Grzejszczak
- * 
+ *
  */
 public class TraceStompMessageChannelInterceptor extends AbstractTraceChannelInterceptor implements ChannelInterceptor {
 	private ThreadLocal<Trace> traceScopeHolder = new ThreadLocal<Trace>();
 
-	public TraceStompMessageChannelInterceptor(Tracer tracer, Random random) {
-		super(tracer, random);
+	public TraceStompMessageChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
+		super(tracer, traceKeys, random);
 	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (tracer.isTracing() || message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-			return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(tracer.getCurrentSpan()).build();
+		if (getTracer().isTracing() || message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+			return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(getTracer().getCurrentSpan()).build();
 		}
 		String name = getMessageChannelName(channel);
 		Trace trace = startSpan(buildSpan(message), name);
@@ -51,16 +52,16 @@ public class TraceStompMessageChannelInterceptor extends AbstractTraceChannelInt
 
 	private Trace startSpan(Span span, String name) {
 		if (span != null) {
-			return tracer.joinTrace(name, span);
+			return getTracer().joinTrace(name, span);
 		}
-		return tracer.startTrace(name);
+		return getTracer().startTrace(name);
 	}
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
 		final ThreadLocal<Trace> traceScopeHolder = this.traceScopeHolder;
 		Trace traceInScope = traceScopeHolder.get();
-		this.tracer.close(traceInScope);
+		getTracer().close(traceInScope);
 		traceScopeHolder.remove();
 	}
 }

@@ -21,7 +21,6 @@ import org.springframework.cloud.sleuth.Tracer;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * @author Spencer Gibb

@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
@@ -24,18 +28,14 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 /**
  * Builder class to create STOMP message
- * 
+ *
  * @author Gaurav Rai Mazra
  *
  */
 public class StompMessageBuilder {
-	
+
 	public static StompMessageBuilder fromMessage(Message<?> message) {
 		return new StompMessageBuilder(message);
 	}
@@ -89,7 +89,7 @@ public class StompMessageBuilder {
 				headerAccessor.getMessageHeaders());
 	}
 
-	private void pushHeaders(final SimpMessageHeaderAccessor assessor, final String key, final Object value) {
+	private void pushHeaders(final SimpMessageHeaderAccessor accessor, final String key, final Object value) {
 		switch (key) {
 		case SimpMessageHeaderAccessor.DESTINATION_HEADER:
 		case SimpMessageHeaderAccessor.MESSAGE_TYPE_HEADER:
@@ -107,10 +107,10 @@ public class StompMessageBuilder {
 		case Trace.SPAN_ID_NAME:
 		case Trace.SPAN_NAME_NAME:
 		case Trace.TRACE_ID_NAME:
-			assessor.setHeader(key, value);
+			accessor.setHeader(key, value);
 			break;
 		default:
-			assessor.setNativeHeader(key, value == null ? null : value.toString());
+			accessor.setNativeHeader(key, value == null ? null : value.toString());
 		}
 	}
 

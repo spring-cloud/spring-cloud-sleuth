@@ -16,15 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
-import org.springframework.util.StringUtils;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.integration.support.MessageBuilder;
+import org.springframework.messaging.Message;
+import org.springframework.util.StringUtils;
 
 /**
  * Utility for manipulating message headers related to span data.
@@ -34,7 +35,8 @@ import java.util.Map;
  */
 public class SpanMessageHeaders {
 
-	public static Message<?> addSpanHeaders(Message<?> message, Span span) {
+	public static Message<?> addSpanHeaders(TraceKeys traceKeys, Message<?> message,
+			Span span) {
 		if (span == null) {
 			if (!message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
 				return MessageBuilder.fromMessage(message)
@@ -48,40 +50,42 @@ public class SpanMessageHeaders {
 		addHeader(headers, Trace.SPAN_ID_NAME, span.getSpanId());
 
 		if (span.isExportable()) {
-			addAnnotations(message, span);
+			addAnnotations(traceKeys, message, span);
 			addHeader(headers, Trace.PARENT_ID_NAME, getFirst(span.getParents()));
 			addHeader(headers, Trace.SPAN_NAME_NAME, span.getName());
 			addHeader(headers, Trace.PROCESS_ID_NAME, span.getProcessId());
-		} else {
+		}
+		else {
 			addHeader(headers, Trace.NOT_SAMPLED_NAME, "");
 		}
 		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
 	}
 
-	public static void addAnnotations(Message<?> message, Span span) {
-		for (Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
-			if (!Trace.HEADERS.contains(entry.getKey())) { // filter out trace headers
-				String key = "/messaging/headers/" + entry.getKey().toLowerCase();
-				String value = null;
-				if (entry.getValue() != null) {
-					value = entry.getValue().toString(); // TODO: better way to serialize?
+	public static void addAnnotations(TraceKeys traceKeys, Message<?> message,
+			Span span) {
+		for (String name : traceKeys.getMessage().getHeaders()) {
+			if (message.getHeaders().containsKey(name)) {
+				String key = traceKeys.getMessage().getPrefix() + name.toLowerCase();
+				Object value = message.getHeaders().get(name);
+				if (value == null) {
+					value = "null";
 				}
-				span.tag(key, value);
+				span.tag(key, value.toString());  // TODO: better way to serialize?
 			}
 		}
-		addPayloadAnnotations(message.getPayload(), span);
+		addPayloadAnnotations(traceKeys, message.getPayload(), span);
 	}
 
-	static void addPayloadAnnotations(Object payload, Span span) {
+	static void addPayloadAnnotations(TraceKeys traceKeys, Object payload, Span span) {
 		if (payload != null) {
-			span.tag("/messaging/payload/type",
+			span.tag(traceKeys.getMessage().getPayload().getType(),
 					payload.getClass().getCanonicalName());
 			if (payload instanceof String) {
-				span.tag("/messaging/payload/size",
+				span.tag(traceKeys.getMessage().getPayload().getSize(),
 						String.valueOf(((String) payload).length()));
 			}
 			else if (payload instanceof byte[]) {
-				span.tag("/messaging/payload/size",
+				span.tag(traceKeys.getMessage().getPayload().getSize(),
 						String.valueOf(((byte[]) payload).length));
 			}
 		}
@@ -94,8 +98,7 @@ public class SpanMessageHeaders {
 		}
 	}
 
-	private static void addHeader(Map<String, String> headers, String name,
-			Long value) {
+	private static void addHeader(Map<String, String> headers, String name, Long value) {
 		if (value != null) {
 			addHeader(headers, name, Span.IdConverter.toHex(value));
 		}

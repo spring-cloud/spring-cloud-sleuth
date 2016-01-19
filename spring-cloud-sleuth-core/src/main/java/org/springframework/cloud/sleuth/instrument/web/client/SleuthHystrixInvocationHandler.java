@@ -22,7 +22,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommand;
 
 import com.netflix.hystrix.HystrixCommand;
@@ -38,11 +37,11 @@ import feign.Target;
  */
 final class SleuthHystrixInvocationHandler implements InvocationHandler {
 
-  private final Target target;
+  private final Target<?> target;
   private final Map<Method, MethodHandler> dispatch;
   private final Tracer tracer;
 
-  SleuthHystrixInvocationHandler(Target target, Map<Method, MethodHandler> dispatch, Tracer tracer) {
+  SleuthHystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch, Tracer tracer) {
     this.tracer = checkNotNull(tracer, "traceManager");
     this.target = checkNotNull(target, "target");
     this.dispatch = checkNotNull(dispatch, "dispatch");
@@ -56,7 +55,7 @@ final class SleuthHystrixInvocationHandler implements InvocationHandler {
         .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
         .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
 
-    HystrixCommand<Object> hystrixCommand = new TraceCommand<Object>(tracer, setter) {
+    HystrixCommand<Object> hystrixCommand = new TraceCommand<Object>(this.tracer, setter) {
       @Override
       public Object doRun() throws Exception {
         try {
@@ -84,8 +83,8 @@ final class SleuthHystrixInvocationHandler implements InvocationHandler {
     }
 
     @Override
-    public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
-      return new SleuthHystrixInvocationHandler(target, dispatch, tracer);
+    public InvocationHandler create(@SuppressWarnings("rawtypes") Target target, Map<Method, MethodHandler> dispatch) {
+      return new SleuthHystrixInvocationHandler(target, dispatch, this.tracer);
     }
   }
 }

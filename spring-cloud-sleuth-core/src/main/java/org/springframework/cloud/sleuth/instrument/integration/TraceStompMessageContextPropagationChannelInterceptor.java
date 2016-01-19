@@ -16,13 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.Map;
-
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -43,9 +41,11 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 
 	private final Tracer tracer;
 	private final static ThreadLocal<Trace> ORIGINAL_CONTEXT = new ThreadLocal<>();
+	private TraceKeys traceKeys;
 
-	public TraceStompMessageContextPropagationChannelInterceptor(Tracer tracer) {
+	public TraceStompMessageContextPropagationChannelInterceptor(Tracer tracer, TraceKeys traceKeys) {
 		this.tracer = tracer;
+		this.traceKeys = traceKeys;
 	}
 
 	@Override
@@ -55,10 +55,21 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 		}
 		Span span = this.tracer.getCurrentSpan();
 		if (span != null) {
-			return new MessageWithSpan(message, span);
+			return createMessageWithSpan(message, span);
 		} else {
 			return message;
 		}
+	}
+
+	private Message<?> createMessageWithSpan(Message<?> message, Span span) {
+		MessageWithSpan output = new MessageWithSpan(message, span);
+		addAnnotationsToSpanFromMessage(output, span);
+		return output;
+	}
+
+	private void addAnnotationsToSpanFromMessage(Message<?> message, Span span) {
+		SpanMessageHeaders.addAnnotations(this.traceKeys, message, span);
+		SpanMessageHeaders.addPayloadAnnotations(this.traceKeys, message.getPayload(), span);
 	}
 
 	@Override
@@ -103,18 +114,6 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 			Assert.notNull(span, "span can not be null");
 			this.span = span;
 			this.message = StompMessageBuilder.fromMessage(message).setHeadersFromSpan(this.span).build();
-			addAnnotationsToSpanFromMessage(this.message, this.span);
-		}
-
-		private void addAnnotationsToSpanFromMessage(Message<?> message, Span span) {
-			for (Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
-				if (!Trace.HEADERS.contains(entry.getKey())) {
-					String key = "/messaging/headers/" + entry.getKey().toLowerCase();
-					String value = entry.getValue() == null ? null : entry.getValue().toString();
-					span.tag(key, value);
-				}
-			}
-			SpanMessageHeaders.addPayloadAnnotations(message.getPayload(), span);
 		}
 
 		@Override

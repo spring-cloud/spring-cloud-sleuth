@@ -16,13 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument;
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
+import java.util.concurrent.Callable;
+
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.Tracer;
 
-import java.util.concurrent.Callable;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 /**
  * @author Spencer Gibb
