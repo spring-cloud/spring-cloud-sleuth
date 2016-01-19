@@ -1,5 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.util.Random;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,16 +12,13 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
-
-import java.util.Random;
-
-import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterIntegrationTests.class)
@@ -26,6 +27,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Autowired
 	Tracer tracer;
+	@Autowired
+	TraceKeys traceKeys;
 
 	@Test
 	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
@@ -46,7 +49,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.tracer));
+		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys));
 	}
 
 	private MvcResult whenSentPingWithoutTracingData() throws Exception {

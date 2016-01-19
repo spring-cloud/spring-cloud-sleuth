@@ -15,8 +15,25 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import org.springframework.cloud.sleuth.*;
+import static org.springframework.util.StringUtils.hasText;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Random;
+import java.util.regex.Pattern;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -30,16 +47,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Random;
-import java.util.regex.Pattern;
-
-import static org.springframework.util.StringUtils.hasText;
 
 /**
  * Filter that takes the value of the {@link Trace#SPAN_ID_NAME} and
@@ -71,6 +78,7 @@ public class TraceFilter extends OncePerRequestFilter
 			"/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream");
 
 	private final Tracer tracer;
+	private final TraceKeys traceKeys;
 	private final Pattern skipPattern;
 	private final Random random;
 
@@ -78,14 +86,13 @@ public class TraceFilter extends OncePerRequestFilter
 	private ApplicationEventPublisher publisher;
 
 
-	public TraceFilter(Tracer tracer) {
-		this.tracer = tracer;
-		this.skipPattern = DEFAULT_SKIP_PATTERN;
-		this.random = new Random();
+	public TraceFilter(Tracer tracer, TraceKeys traceKeys) {
+		this(tracer, traceKeys, DEFAULT_SKIP_PATTERN, new Random());
 	}
 
-	public TraceFilter(Tracer tracer, Pattern skipPattern, Random random) {
+	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern, Random random) {
 		this.tracer = tracer;
+		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
 		this.random = random;
 	}
@@ -117,7 +124,7 @@ public class TraceFilter extends OncePerRequestFilter
 		if (hasHeader(request, response, Trace.TRACE_ID_NAME)) {
 			long traceId = Span.IdConverter.fromHex(getHeader(request, response, Trace.TRACE_ID_NAME));
 			long spanId = hasHeader(request, response, Trace.SPAN_ID_NAME) ?
-					Span.IdConverter.fromHex(getHeader(request, response, Trace.SPAN_ID_NAME)) : random.nextLong();
+					Span.IdConverter.fromHex(getHeader(request, response, Trace.SPAN_ID_NAME)) : this.random.nextLong();
 
 			MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
 			if (skip) {
@@ -203,10 +210,22 @@ public class TraceFilter extends OncePerRequestFilter
 	/** Override to add annotations not defined in {@link TraceKeys}. */
 	protected void addRequestTags(HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.tracer.addTag(TraceKeys.HTTP_URL, getFullUrl(request));
-		this.tracer.addTag(TraceKeys.HTTP_HOST, request.getServerName());
-		this.tracer.addTag(TraceKeys.HTTP_PATH, uri);
-		this.tracer.addTag(TraceKeys.HTTP_METHOD, request.getMethod());
+		this.tracer.addTag(this.traceKeys.getHttp().getUrl(), getFullUrl(request));
+		this.tracer.addTag(this.traceKeys.getHttp().getHost(),
+				request.getServerName());
+		this.tracer.addTag(this.traceKeys.getHttp().getPath(), uri);
+		this.tracer.addTag(this.traceKeys.getHttp().getMethod(),
+				request.getMethod());
+		for (String name : this.traceKeys.getHttp().getHeaders()) {
+			Enumeration<String> values = request.getHeaders(name);
+			if (values.hasMoreElements()) {
+				String key = this.traceKeys.getHttp().getPrefix() + name.toLowerCase();
+				ArrayList<String> list = Collections.list(values);
+				String value = list.size() == 1 ? list.get(0)
+						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
+				this.tracer.addTag(key, value);
+			}
+		}
 	}
 
 	/** Override to add annotations not defined in {@link TraceKeys}. */
@@ -215,11 +234,11 @@ public class TraceFilter extends OncePerRequestFilter
 		if (httpStatus == HttpServletResponse.SC_OK && e != null) {
 			// Filter chain threw exception but the response status may not have been set
 			// yet, so we have to guess.
-			this.tracer.addTag(TraceKeys.HTTP_STATUS_CODE,
+			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
 					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
 		else if ((httpStatus < 200) || (httpStatus > 299)){
-			this.tracer.addTag(TraceKeys.HTTP_STATUS_CODE,
+			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
 					String.valueOf(response.getStatus()));
 		}
 	}

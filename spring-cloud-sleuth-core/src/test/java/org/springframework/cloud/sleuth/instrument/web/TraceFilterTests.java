@@ -16,7 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import lombok.SneakyThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+import java.util.Random;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -24,6 +33,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -37,15 +47,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.util.Random;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import lombok.SneakyThrows;
 
 /**
  * @author Spencer Gibb
@@ -56,6 +58,7 @@ public class TraceFilterTests {
 	private ApplicationEventPublisher publisher;
 
 	private Tracer tracer;
+	private TraceKeys traceKeys = new TraceKeys();
 
 	private Span span;
 
@@ -68,7 +71,8 @@ public class TraceFilterTests {
 	@SneakyThrows
 	public void init() {
 		initMocks(this);
-		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(), this.publisher) {
+		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),
+				this.publisher) {
 			@Override
 			protected Trace createTrace(Trace trace, Span span) {
 				TraceFilterTests.this.span = span;
@@ -89,7 +93,7 @@ public class TraceFilterTests {
 	@Test
 	public void notTraced() throws Exception {
 		this.sampler = new IsTracingSampler();
-		TraceFilter filter = new TraceFilter(this.tracer);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
@@ -102,7 +106,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpTags();
 		assertNull(TraceContextHolder.getCurrentTrace());
@@ -114,7 +118,7 @@ public class TraceFilterTests {
 		Trace trace = this.tracer.startTrace("foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, trace);
 
-		TraceFilter filter = new TraceFilter(this.tracer);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
@@ -125,10 +129,9 @@ public class TraceFilterTests {
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
 		this.request = builder().header(Trace.SPAN_ID_NAME, 10L)
-				.header(Trace.TRACE_ID_NAME, 20L)
-				.buildRequest(new MockServletContext());
+				.header(Trace.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
-		TraceFilter filter = new TraceFilter(this.tracer);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
@@ -137,8 +140,39 @@ public class TraceFilterTests {
 	}
 
 	@Test
+	public void addsAdditionalHeaders() throws Exception {
+		this.request = builder().header(Trace.SPAN_ID_NAME, 10L)
+				.header(Trace.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+
+		this.traceKeys.getHttp().getHeaders().add("x-foo");
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		this.request.addHeader("X-Foo", "bar");
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		assertThat(this.span.tags()).contains(entry("http/x-foo", "bar"));
+
+		assertNull(TraceContextHolder.getCurrentTrace());
+	}
+
+	@Test
+	public void additionalMultiValuedHeader() throws Exception {
+		this.request = builder().header(Trace.SPAN_ID_NAME, 10L)
+				.header(Trace.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+
+		this.traceKeys.getHttp().getHeaders().add("x-foo");
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		this.request.addHeader("X-Foo", "bar");
+		this.request.addHeader("X-Foo", "spam");
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		assertThat(this.span.tags()).contains(entry("http/x-foo", "'bar','spam'"));
+
+		assertNull(TraceContextHolder.getCurrentTrace());
+	}
+
+	@Test
 	public void catchesException() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		this.filterChain = new MockFilterChain() {
 			@Override
 			public void doFilter(javax.servlet.ServletRequest request,
@@ -163,23 +197,22 @@ public class TraceFilterTests {
 	}
 
 	/**
-	 * Shows the expansion of {@link import org.springframework.cloud.sleuth.instrument.TraceKeys}.
+	 * Shows the expansion of {@link import
+	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
 	 */
 	public void verifyHttpTags(HttpStatus status) {
-		assertThat(this.span.tags()).contains(
-				entry("http/host", "localhost"),
-				entry("http/url", "http://localhost/?foo=bar"),
-				entry("http/path", "/"),
-				entry("http/method", "GET")
-		);
+		assertThat(this.span.tags()).contains(entry("http/host", "localhost"),
+				entry("http/url", "http://localhost/?foo=bar"), entry("http/path", "/"),
+				entry("http/method", "GET"));
 
-		// Status is only interesting in non-success case. Omitting it saves at least 20bytes per span.
+		// Status is only interesting in non-success case. Omitting it saves at least
+		// 20bytes per span.
 		if (status.is2xxSuccessful()) {
-			assertThat(this.span.tags())
-					.doesNotContainKey("http/status_code");
-		} else {
-			assertThat(this.span.tags())
-					.containsEntry("http/status_code", status.toString());
+			assertThat(this.span.tags()).doesNotContainKey("http/status_code");
+		}
+		else {
+			assertThat(this.span.tags()).containsEntry("http/status_code",
+					status.toString());
 		}
 	}
 

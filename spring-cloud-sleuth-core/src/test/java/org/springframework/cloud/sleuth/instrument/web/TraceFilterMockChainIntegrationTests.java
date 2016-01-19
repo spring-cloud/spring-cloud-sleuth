@@ -16,14 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import lombok.SneakyThrows;
+import static org.junit.Assert.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+import java.util.Random;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.support.StaticApplicationContext;
@@ -34,10 +37,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.util.Random;
-
-import static org.junit.Assert.assertNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import lombok.SneakyThrows;
 
 /**
  * @author Spencer Gibb
@@ -49,6 +49,7 @@ public class TraceFilterMockChainIntegrationTests {
 
 	private Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), this.context);
+	private TraceKeys traceKeys = new TraceKeys();
 
 	private MockHttpServletRequest request;
 	private MockHttpServletResponse response;
@@ -72,7 +73,7 @@ public class TraceFilterMockChainIntegrationTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TraceContextHolder.getCurrentTrace());
 	}
@@ -82,7 +83,7 @@ public class TraceFilterMockChainIntegrationTests {
 		Random generator = new Random();
 		this.request = builder().header(Trace.SPAN_ID_NAME, generator.nextLong())
 				.header(Trace.TRACE_ID_NAME, generator.nextLong()).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TraceContextHolder.getCurrentSpan());
 	}
