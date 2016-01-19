@@ -31,7 +31,27 @@ A sampler can be installed just by creating a bean definition, e.g:
 public Sampler<?> defaultSampler() {
     return new AlwaysSampler();
 }
----- 
+----
+
+== Instrumentation
+
+Spring Cloud Sleuth instruments all your Spring application
+automatically, so you shouldn't have to do anything to activate
+it. The instrumentation is added using a variety of technologies
+according to the stack that is available, e.g. for a servlet web
+application we use a `Filter`, and for Spring Integration we use
+`ChannelInterceptors`.
+
+You can customize the keys used in span tags. To limit the volume of
+span data, by default an HTTP request will be tagged only with a
+handful of metadata like the status code, host and URL. You can add
+request headers by configuring `spring.sleuth.keys.http.headers` (a
+list of header names).
+
+NOTE: Remember that tags are only collected and exported if there is a
+`Sampler` that allows it (by default there is not, so there is no
+danger of accidentally collecting too much data without configuring
+something).
 
 == Span Data as Messages
 
