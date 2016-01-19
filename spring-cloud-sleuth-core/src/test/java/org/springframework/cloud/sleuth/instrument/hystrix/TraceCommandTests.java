@@ -6,7 +6,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -40,13 +39,13 @@ public class TraceCommandTests {
 	public void should_remove_span_from_thread_local_after_finishing_work()
 			throws Exception {
 		SpanContextHolder.removeCurrentSpan();
-		Span firstTraceFromHystrix = givenACommandWasExecuted(traceReturningCommand());
+		Span firstSpanFromHystrix = givenACommandWasExecuted(traceReturningCommand());
 
-		Span secondTraceFromHystrix = whenCommandIsExecuted(traceReturningCommand());
+		Span secondSpanFromHystrix = whenCommandIsExecuted(traceReturningCommand());
 
-		then(secondTraceFromHystrix.getTraceId()).as("second trace id")
-				.isNotEqualTo(firstTraceFromHystrix.getTraceId()).as("first trace id");
-		then(secondTraceFromHystrix.getSavedSpan()).as("saved trace as remnant of first trace")
+		then(secondSpanFromHystrix.getTraceId()).as("second span id")
+				.isNotEqualTo(firstSpanFromHystrix.getTraceId()).as("first span id");
+		then(secondSpanFromHystrix.getSavedSpan()).as("saved span as remnant of first span")
 				.isNull();
 	}
 
@@ -55,10 +54,10 @@ public class TraceCommandTests {
 		givenATraceIsPresentInTheCurrentThread();
 		TraceCommand<Span> command = traceReturningCommand();
 
-		Span traceFromCommand = whenCommandIsExecuted(command);
+		Span spanFromCommand = whenCommandIsExecuted(command);
 
-		then(traceFromCommand).as("Span from the Hystrix Thread").isNotNull();
-		then(traceFromCommand.getTraceId()).isEqualTo(EXPECTED_TRACE_ID);
+		then(spanFromCommand).as("Span from the Hystrix Thread").isNotNull();
+		then(spanFromCommand.getTraceId()).isEqualTo(EXPECTED_TRACE_ID);
 	}
 
 	@After
@@ -67,7 +66,8 @@ public class TraceCommandTests {
 	}
 
 	private Span givenATraceIsPresentInTheCurrentThread() {
-		return this.tracer.joinTrace("test", MilliSpan.builder().traceId(EXPECTED_TRACE_ID).build());
+		return this.tracer
+				.joinTrace("test", Span.builder().traceId(EXPECTED_TRACE_ID).build());
 	}
 
 	private TraceCommand<Span> traceReturningCommand() {

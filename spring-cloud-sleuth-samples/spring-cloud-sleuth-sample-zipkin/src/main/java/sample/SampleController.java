@@ -93,7 +93,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		Span trace = this.tracer.startTrace("customTraceEndpoint",
+		Span span = this.tracer.startTrace("customTraceEndpoint",
 				new AlwaysSampler());
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
@@ -102,7 +102,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
-		this.tracer.close(trace);
+		this.tracer.close(span);
 		return "traced/" + s;
 	}
 

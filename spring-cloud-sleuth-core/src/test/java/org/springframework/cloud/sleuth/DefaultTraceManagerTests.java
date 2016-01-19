@@ -67,12 +67,12 @@ public class DefaultTraceManagerTests {
 
 		DefaultTracer traceManager = new DefaultTracer(new IsTracingSampler(), new Random(), publisher);
 
-		Span trace = traceManager.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
+		Span span = traceManager.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
 			importantWork1(traceManager);
 		}
 		finally {
-			traceManager.close(trace);
+			traceManager.close(span);
 		}
 
 		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));

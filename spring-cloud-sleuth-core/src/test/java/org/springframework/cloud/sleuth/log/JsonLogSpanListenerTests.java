@@ -16,17 +16,18 @@
 
 package org.springframework.cloud.sleuth.log;
 
-import static org.junit.Assert.*;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.test.OutputCapture;
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Spencer Gibb
@@ -38,7 +39,7 @@ public class JsonLogSpanListenerTests {
 	@Test
 	public void jsonSpanIsOnOneLine() throws IOException {
 		JsonLogSpanListener listener = new JsonLogSpanListener();
-		Span span = MilliSpan.builder()
+		Span span = Span.builder()
 				.name("testSpan")
 				.spanId(1L)
 				.parent(2L)
@@ -61,7 +62,7 @@ public class JsonLogSpanListenerTests {
 		assertFalse("json contains linefeed", output.contains("\n"));
 		assertFalse("json contains carriage return", output.contains("\r"));
 
-		MilliSpan read = listener.getObjectMapper().readValue(json, MilliSpan.class);
+		Span read = listener.getObjectMapper().readValue(json, Span.class);
 		assertEquals("span not equals", read, span);
 	}
 }

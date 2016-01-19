@@ -34,15 +34,15 @@ public class TraceCallableTests {
 	@Test
 	public void should_not_see_same_trace_id_in_successive_tasks()
 			throws Exception {
-		Span firstTrace = givenCallableGetsSubmitted(
+		Span firstSpan = givenCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		Span secondTrace = whenCallableGetsSubmitted(
+		Span secondSpan = whenCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		then(secondTrace.getTraceId())
-				.isNotEqualTo(firstTrace.getTraceId());
-		then(secondTrace.getSavedSpan()).isNull();
+		then(secondSpan.getTraceId())
+				.isNotEqualTo(firstSpan.getTraceId());
+		then(secondSpan.getSavedSpan()).isNull();
 	}
 
 	@Test
@@ -50,10 +50,10 @@ public class TraceCallableTests {
 			throws Exception {
 		givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
-		Span secondTrace = whenNonTraceableCallableGetsSubmitted(
+		Span secondSpan = whenNonTraceableCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		then(secondTrace).isNull();
+		then(secondSpan).isNull();
 	}
 
 	@Test
@@ -64,10 +64,10 @@ public class TraceCallableTests {
 		then(parent).as("parent").isNotNull();
 		then(child.getSavedSpan()).isEqualTo(parent);
 
-		Span secondTrace = whenNonTraceableCallableGetsSubmitted(
+		Span secondSpan = whenNonTraceableCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		then(secondTrace).isNull();
+		then(secondSpan).isNull();
 	}
 
 	private Span givenSpanIsAlreadyActive() {

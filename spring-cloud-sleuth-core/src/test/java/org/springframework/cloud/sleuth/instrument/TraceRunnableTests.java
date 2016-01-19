@@ -1,22 +1,22 @@
 package org.springframework.cloud.sleuth.instrument;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
+
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRunnableTests {
@@ -27,7 +27,7 @@ public class TraceRunnableTests {
 
 	@After
 	public void cleanup() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
@@ -36,19 +36,19 @@ public class TraceRunnableTests {
 		// given
 		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
 		givenRunnableGetsSubmitted(traceKeepingRunnable);
-		Trace firstTrace = traceKeepingRunnable.trace;
-		then(firstTrace).as("first trace").isNotNull();
+		Span firstSpan = traceKeepingRunnable.span;
+		then(firstSpan).as("first span").isNotNull();
 
 		// when
 		whenRunnableGetsSubmitted(traceKeepingRunnable);
 
 		// then
-		Trace secondTrace = traceKeepingRunnable.trace;
-		then(secondTrace.getSpan().getTraceId()).as("second trace id")
-				.isNotEqualTo(firstTrace.getSpan().getTraceId()).as("first trace id");
+		Span secondSpan = traceKeepingRunnable.span;
+		then(secondSpan.getTraceId()).as("second span id")
+				.isNotEqualTo(firstSpan.getTraceId()).as("first span id");
 
 		// and
-		then(secondTrace.getSaved()).as("saved trace as remnant of first trace")
+		then(secondSpan.getSavedSpan()).as("saved span as remnant of first span")
 				.isNull();
 	}
 
@@ -58,15 +58,15 @@ public class TraceRunnableTests {
 		// given
 		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
 		givenRunnableGetsSubmitted(traceKeepingRunnable);
-		Trace firstTrace = traceKeepingRunnable.trace;
-		then(firstTrace).as("expected trace").isNotNull();
+		Span firstSpan = traceKeepingRunnable.span;
+		then(firstSpan).as("expected span").isNotNull();
 
 		// when
 		whenNonTraceableRunnableGetsSubmitted(traceKeepingRunnable);
 
 		// then
-		Trace secondTrace = traceKeepingRunnable.trace;
-		then(secondTrace).as("unexpected trace").isNull();
+		Span secondSpan = traceKeepingRunnable.span;
+		then(secondSpan).as("unexpected span").isNull();
 	}
 
 	private TraceKeepingRunnable runnableThatRetrievesTraceFromThreadLocal() {
@@ -87,11 +87,11 @@ public class TraceRunnableTests {
 	}
 
 	static class TraceKeepingRunnable implements Runnable {
-		public Trace trace;
+		public Span span;
 
 		@Override
 		public void run() {
-			this.trace = TraceContextHolder.getCurrentTrace();
+			this.span = SpanContextHolder.getCurrentSpan();
 		}
 	}
 

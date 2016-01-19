@@ -121,7 +121,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 		}
 
 		public void setHeader(HttpRequest.Builder builder, String name, Long value) {
-			setHeader(builder, name, Span.IdConverter.toHex(value));
+			setHeader(builder, name, Span.toHex(value));
 		}
 
 		private Span getCurrentSpan() {

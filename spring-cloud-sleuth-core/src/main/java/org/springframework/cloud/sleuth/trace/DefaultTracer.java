@@ -16,12 +16,6 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import static org.springframework.cloud.sleuth.util.ExceptionUtils.warn;
-
-import java.util.Random;
-import java.util.concurrent.Callable;
-
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -33,18 +27,23 @@ import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.Random;
+import java.util.concurrent.Callable;
+
+import static org.springframework.cloud.sleuth.util.ExceptionUtils.warn;
+
 /**
  * @author Spencer Gibb
  */
 public class DefaultTracer implements Tracer {
 
-	private final Sampler<Void> defaultSampler;
+	private final Sampler defaultSampler;
 
 	private final ApplicationEventPublisher publisher;
 
 	private final Random random;
 
-	public DefaultTracer(Sampler<Void> defaultSampler,
+	public DefaultTracer(Sampler defaultSampler,
 						 Random random, ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
@@ -58,7 +57,7 @@ public class DefaultTracer implements Tracer {
 		}
 		Span currentSpan = getCurrentSpan();
 		if (currentSpan != null && !parent.equals(currentSpan)) {
-			warn("Trace client warn: thread " + Thread.currentThread().getName()
+			warn("Warn during joining trace: thread " + Thread.currentThread().getName()
 					+ " tried to start a new Span " + "with parent " + parent.toString()
 					+ ", but there is already a " + "currentSpan " + currentSpan);
 		}
@@ -71,15 +70,15 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public <T> Span startTrace(String name, Sampler<T> s) {
-		Span span = null;
+	public Span startTrace(String name, Sampler s) {
+		Span span;
 		if (isTracing() || s.next()) {
 			span = createChild(getCurrentSpan(), name);
 		}
 		else {
 			// Non-exportable so we keep the trace but not other data
 			long id = createId();
-			span = MilliSpan.builder().begin(System.currentTimeMillis()).name(name)
+			span = Span.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(id).spanId(id).exportable(false).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 		}
@@ -123,22 +122,15 @@ public class DefaultTracer implements Tracer {
 					+ ".  You have " + "probably forgotten to close or detach " + cur);
 		}
 		else {
-			if (span != null) {
-				span.stop();
-				if (savedSpan != null
-						&& span.getParents().contains(savedSpan.getSpanId())) {
-					this.publisher.publishEvent(
-							new SpanReleasedEvent(this, savedSpan, span));
-					SpanContextHolder.setCurrentSpan(savedSpan);
-				}
-				else {
-					if (!span.isRemote()) {
-						this.publisher.publishEvent(new SpanReleasedEvent(this, span));
-					}
-					SpanContextHolder.removeCurrentSpan();
-				}
+			span.stop();
+			if (savedSpan != null && span.getParents().contains(savedSpan.getSpanId())) {
+				this.publisher.publishEvent(new SpanReleasedEvent(this, savedSpan, span));
+				SpanContextHolder.setCurrentSpan(savedSpan);
 			}
 			else {
+				if (!span.isRemote()) {
+					this.publisher.publishEvent(new SpanReleasedEvent(this, span));
+				}
 				SpanContextHolder.removeCurrentSpan();
 			}
 		}
@@ -148,7 +140,7 @@ public class DefaultTracer implements Tracer {
 	protected Span createChild(Span parent, String name) {
 		long id = createId();
 		if (parent == null) {
-			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
+			Span span = Span.builder().begin(System.currentTimeMillis())
 					.name(name).traceId(id).spanId(id).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 			return span;
@@ -158,7 +150,7 @@ public class DefaultTracer implements Tracer {
 				Span span = createSpan(null, parent);
 				SpanContextHolder.setCurrentSpan(span);
 			}
-			MilliSpan span = MilliSpan.builder().begin(System.currentTimeMillis())
+			Span span = Span.builder().begin(System.currentTimeMillis())
 					.name(name).traceId(parent.getTraceId()).parent(parent.getSpanId())
 					.spanId(id).processId(parent.getProcessId()).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
@@ -181,7 +173,7 @@ public class DefaultTracer implements Tracer {
 	}
 
 	protected Span createSpan(Span saved, Span span) {
-		return new MilliSpan(span, saved);
+		return new Span(span, saved);
 	}
 
 	@Override

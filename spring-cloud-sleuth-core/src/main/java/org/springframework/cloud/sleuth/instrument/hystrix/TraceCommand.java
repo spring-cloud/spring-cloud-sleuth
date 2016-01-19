@@ -71,11 +71,11 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 	@Override
 	protected R run() throws Exception {
 		enforceThatHystrixThreadIsNotPollutedByPreviousTraces();
-		Span trace = this.tracer.joinTrace(getCommandKey().name(), parentSpan);
+		Span span = this.tracer.joinTrace(getCommandKey().name(), parentSpan);
 		try {
 			return doRun();
 		} finally {
-			this.tracer.close(trace);
+			this.tracer.close(span);
 		}
 	}
 

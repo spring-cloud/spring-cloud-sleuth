@@ -63,7 +63,7 @@ public class TraceFilterTests {
 	private MockHttpServletRequest request;
 	private MockHttpServletResponse response;
 	private MockFilterChain filterChain;
-	private Sampler<Void> sampler = new AlwaysSampler();
+	private Sampler sampler = new AlwaysSampler();
 
 	@Before
 	@SneakyThrows
@@ -72,8 +72,8 @@ public class TraceFilterTests {
 		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),
 				this.publisher) {
 			@Override
-			protected Span createSpan(Span trace, Span span) {
-				TraceFilterTests.this.span = super.createSpan(trace, span);
+			protected Span createSpan(Span saved, Span span) {
+				TraceFilterTests.this.span = super.createSpan(saved, span);
 				return TraceFilterTests.this.span;
 			}
 		};
@@ -113,8 +113,8 @@ public class TraceFilterTests {
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
 
-		Span trace = this.tracer.startTrace("foo");
-		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, trace);
+		Span span = this.tracer.startTrace("foo");
+		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -214,7 +214,7 @@ public class TraceFilterTests {
 		}
 	}
 
-	private class DelegateSampler implements Sampler<Void> {
+	private class DelegateSampler implements Sampler {
 		@Override
 		public boolean next() {
 			return TraceFilterTests.this.sampler.next();

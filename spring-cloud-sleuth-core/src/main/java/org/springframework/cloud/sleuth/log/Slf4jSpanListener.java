@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.log;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
@@ -24,8 +25,6 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Spencer Gibb
@@ -37,9 +36,9 @@ public class Slf4jSpanListener {
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void start(SpanAcquiredEvent event) {
 		Span span = event.getSpan();
-		MDC.put(Span.SPAN_ID_NAME, Span.IdConverter.toHex(span.getSpanId()));
+		MDC.put(Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
-		MDC.put(Span.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
+		MDC.put(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
 		log.trace("Starting span: {}", span);
 		if (event.getParent() != null) {
 			log.trace("With parent: {}", event.getParent());
@@ -50,8 +49,8 @@ public class Slf4jSpanListener {
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void continued(SpanContinuedEvent event) {
 		Span span = event.getSpan();
-		MDC.put(Span.SPAN_ID_NAME, Span.IdConverter.toHex(span.getSpanId()));
-		MDC.put(Span.TRACE_ID_NAME, Span.IdConverter.toHex(span.getTraceId()));
+		MDC.put(Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
+		MDC.put(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
 		log.trace("Continued span: {}", event.getSpan());
 	}
@@ -62,7 +61,7 @@ public class Slf4jSpanListener {
 		log.trace("Stopped span: {}", event.getSpan());
 		if (event.getParent() != null) {
 			log.trace("With parent: {}", event.getParent());
-			MDC.put(Span.SPAN_ID_NAME, Span.IdConverter.toHex(event.getParent().getSpanId()));
+			MDC.put(Span.SPAN_ID_NAME, Span.toHex(event.getParent().getSpanId()));
 			MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(event.getParent().isExportable()));
 		}
 		else {

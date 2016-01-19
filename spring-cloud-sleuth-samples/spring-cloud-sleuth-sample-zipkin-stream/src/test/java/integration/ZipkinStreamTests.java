@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
@@ -60,7 +59,7 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 		await().until(zipkinServerIsUp());
 
 		long traceId = new Random().nextLong();
-		Span span = MilliSpan.builder().traceId(traceId).spanId(traceId).name("test")
+		Span span = Span.builder().traceId(traceId).spanId(traceId).name("test")
 				.build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");
 

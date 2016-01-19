@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.integration;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.integration.channel.DirectChannel;
@@ -40,7 +39,7 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 		implements ExecutorChannelInterceptor {
 
 	private final Tracer tracer;
-	private final static ThreadLocal<Trace> ORIGINAL_CONTEXT = new ThreadLocal<>();
+	private final static ThreadLocal<Span> ORIGINAL_CONTEXT = new ThreadLocal<>();
 	private TraceKeys traceKeys;
 
 	public TraceStompMessageContextPropagationChannelInterceptor(Tracer tracer, TraceKeys traceKeys) {
@@ -94,12 +93,12 @@ public class TraceStompMessageContextPropagationChannelInterceptor extends Chann
 
 	protected void populatePropagatedContext(Span span) {
 		if (span != null) {
-			ORIGINAL_CONTEXT.set(this.tracer.continueSpan(span).getSaved());
+			ORIGINAL_CONTEXT.set(this.tracer.continueSpan(span).getSavedSpan());
 		}
 	}
 
 	protected void resetPropagatedContext() {
-		Trace originalContext = ORIGINAL_CONTEXT.get();
+		Span originalContext = ORIGINAL_CONTEXT.get();
 		this.tracer.detach(originalContext);
 		ORIGINAL_CONTEXT.remove();
 	}

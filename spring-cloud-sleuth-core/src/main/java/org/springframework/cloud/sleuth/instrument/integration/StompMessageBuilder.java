@@ -16,17 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Builder class to create STOMP message
@@ -62,16 +61,16 @@ public class StompMessageBuilder {
 
 	public StompMessageBuilder setHeadersFromSpan(final Span span) {
 		if (span != null) {
-			setHeaderIfAbsent(Trace.SPAN_ID_NAME, span.getSpanId());
-			setHeaderIfAbsent(Trace.TRACE_ID_NAME, span.getTraceId());
-			setHeaderIfAbsent(Trace.SPAN_NAME_NAME, span.getName());
-			Long parentId = getParentId(TraceContextHolder.getCurrentSpan());
+			setHeaderIfAbsent(Span.SPAN_ID_NAME, span.getSpanId());
+			setHeaderIfAbsent(Span.TRACE_ID_NAME, span.getTraceId());
+			setHeaderIfAbsent(Span.SPAN_NAME_NAME, span.getName());
+			Long parentId = getParentId(SpanContextHolder.getCurrentSpan());
 			if (parentId != null)
-				setHeaderIfAbsent(Trace.PARENT_ID_NAME, parentId);
+				setHeaderIfAbsent(Span.PARENT_ID_NAME, parentId);
 
 			String processId = span.getProcessId();
 			if (StringUtils.hasText(processId))
-				setHeaderIfAbsent(Trace.PROCESS_ID_NAME, processId);
+				setHeaderIfAbsent(Span.PROCESS_ID_NAME, processId);
 		}
 		return this;
 	}
@@ -101,12 +100,12 @@ public class StompMessageBuilder {
 		case SimpMessageHeaderAccessor.HEART_BEAT_HEADER:
 		case SimpMessageHeaderAccessor.ORIGINAL_DESTINATION:
 		case SimpMessageHeaderAccessor.IGNORE_ERROR:
-		case Trace.NOT_SAMPLED_NAME:
-		case Trace.PARENT_ID_NAME:
-		case Trace.PROCESS_ID_NAME:
-		case Trace.SPAN_ID_NAME:
-		case Trace.SPAN_NAME_NAME:
-		case Trace.TRACE_ID_NAME:
+		case Span.NOT_SAMPLED_NAME:
+		case Span.PARENT_ID_NAME:
+		case Span.PROCESS_ID_NAME:
+		case Span.SPAN_ID_NAME:
+		case Span.SPAN_NAME_NAME:
+		case Span.TRACE_ID_NAME:
 			accessor.setHeader(key, value);
 			break;
 		default:

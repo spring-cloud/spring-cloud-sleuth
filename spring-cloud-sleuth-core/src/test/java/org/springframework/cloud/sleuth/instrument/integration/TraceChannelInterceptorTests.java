@@ -47,7 +47,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Dave Syer
@@ -113,7 +116,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
-		long traceId = Span.IdConverter.fromHex(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+		long traceId = Span
+				.fromHex(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		assertNull(SpanContextHolder.getCurrentSpan());
@@ -135,10 +139,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void headerCreation() {
-		Span trace = this.tracer.startTrace("testSendMessage",
+		Span span = this.tracer.startTrace("testSendMessage",
 				new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
-		this.tracer.close(trace);
+		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
@@ -152,10 +156,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	// TODO: Refactor to parametrized test together with sending messages via channel
 	@Test
 	public void headerCreationViaMessagingTemplate() {
-		Span trace = this.tracer.startTrace("testSendMessage",
+		Span span = this.tracer.startTrace("testSendMessage",
 				new AlwaysSampler());
 		this.messagingTemplate.send(MessageBuilder.withPayload("hi").build());
-		this.tracer.close(trace);
+		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);

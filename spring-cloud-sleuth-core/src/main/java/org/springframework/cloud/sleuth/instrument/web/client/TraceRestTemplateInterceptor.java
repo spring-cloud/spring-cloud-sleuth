@@ -99,7 +99,7 @@ ApplicationEventPublisherAware {
 
 	public void setHeader(HttpRequest request, String name, Long value) {
 		if (value != null) {
-			setHeader(request, name, Span.IdConverter.toHex(value));
+			setHeader(request, name, Span.toHex(value));
 		}
 	}
 

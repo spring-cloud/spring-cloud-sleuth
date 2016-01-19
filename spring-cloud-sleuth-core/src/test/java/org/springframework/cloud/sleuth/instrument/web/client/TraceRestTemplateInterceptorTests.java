@@ -16,22 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertFalse;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.MilliSpan;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -42,6 +33,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Dave Syer
@@ -65,22 +64,22 @@ public class TraceRestTemplateInterceptorTests {
 		this.traces = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.traces)));
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@After
 	public void clean() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
 	public void headersAddedWhenTracing() {
-		this.traces.continueSpan(MilliSpan.builder().traceId(1L).spanId(2L).build());
+		this.traces.continueSpan(Span.builder().traceId(1L).spanId(2L).build());
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
-		then(Long.valueOf(headers.get(Trace.TRACE_ID_NAME))).isEqualTo(1L);
-		then(Long.valueOf(headers.get(Trace.SPAN_ID_NAME))).isEqualTo(2L);
+		then(Long.valueOf(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
+		then(Long.valueOf(headers.get(Span.SPAN_ID_NAME))).isEqualTo(2L);
 	}
 
 	@Test
@@ -88,7 +87,7 @@ public class TraceRestTemplateInterceptorTests {
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
-		assertFalse("Wrong headers: " + headers, headers.containsKey(Trace.SPAN_ID_NAME));
+		assertFalse("Wrong headers: " + headers, headers.containsKey(Span.SPAN_ID_NAME));
 	}
 
 	@RestController
@@ -96,8 +95,8 @@ public class TraceRestTemplateInterceptorTests {
 		@RequestMapping("/")
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
 			Map<String, String> map = new HashMap<String, String>();
-			addHeaders(map, headers, Trace.SPAN_ID_NAME, Trace.TRACE_ID_NAME,
-					Trace.PARENT_ID_NAME);
+			addHeaders(map, headers, Span.SPAN_ID_NAME, Span.TRACE_ID_NAME,
+					Span.PARENT_ID_NAME);
 			return map;
 		}
 

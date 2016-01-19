@@ -19,5 +19,5 @@ package org.springframework.cloud.sleuth.template;
 import org.springframework.cloud.sleuth.Span;
 
 public interface TraceCallback<T> {
-	T doInTrace(Span trace);
+	T doInTrace(Span span);
 }

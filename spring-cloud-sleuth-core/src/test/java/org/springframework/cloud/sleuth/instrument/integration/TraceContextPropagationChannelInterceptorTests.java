@@ -65,19 +65,21 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@Test
 	public void testSpanPropagation() {
 
-		Span trace = this.tracer.startTrace("testSendMessage", new AlwaysSampler());
+		Span span = this.tracer.startTrace("testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
-		Long expectedSpanId = trace.getSpanId();
-		this.tracer.close(trace);
+		Long expectedSpanId = span.getSpanId();
+		this.tracer.close(span);
 
 		Message<?> message = this.channel.receive(0);
 
 		assertNotNull("message was null", message);
 
-		Long spanId = Span.IdConverter.fromHex(message.getHeaders().get(Span.SPAN_ID_NAME, String.class));
+		Long spanId = Span
+				.fromHex(message.getHeaders().get(Span.SPAN_ID_NAME, String.class));
 		assertEquals("spanId was wrong", expectedSpanId,  spanId);
 
-		long traceId = Span.IdConverter.fromHex(message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+		long traceId = Span
+				.fromHex(message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
 		assertNotNull("traceId was null", traceId);
 	}
 

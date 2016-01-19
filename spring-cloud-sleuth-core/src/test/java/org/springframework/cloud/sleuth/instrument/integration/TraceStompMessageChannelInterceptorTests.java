@@ -49,16 +49,16 @@ public class TraceStompMessageChannelInterceptorTests extends AbstractTraceStomp
 
 	@Test
 	public void should_propagate_headers_when_message_was_sent_during_local_span_starting() {
-		Span trace = givenALocallyStartedSpan();
+		Span span = givenALocallyStartedSpan();
 		Message<?> message = givenMessageToBeSampled();
 
 		whenTheMessageWasSent(message);
-		this.tracer.close(trace);
+		this.tracer.close(span);
 
 		Long spanId = thenSpanIdFromHeadersIsNotEmpty();
 		long traceId = thenTraceIdFromHeadersIsNotEmpty();
-		then(traceId).isEqualTo(trace.getTraceId());
-		then(spanId).isEqualTo(trace.getSpanId());
+		then(traceId).isEqualTo(span.getTraceId());
+		then(spanId).isEqualTo(span.getSpanId());
 		then(SpanContextHolder.getCurrentSpan()).isNull();
 	}
 

@@ -28,12 +28,12 @@ public class TraceStompMessageContextPropagationChannelInterceptorTests extends 
 
 	@Test
 	public void should_propagate_span_information() {
-		Span trace = givenALocallyStartedSpan();
+		Span span = givenALocallyStartedSpan();
 		Message<?> m = givenMessageToBeSampled();
 
 		whenTheMessageWasSent(m);
-		Long expectedTraceId = trace.getTraceId();
-		this.tracer.close(trace);
+		Long expectedTraceId = span.getTraceId();
+		this.tracer.close(span);
 
 		thenReceivedMessageIsNotNull();
 		long traceId = thenTraceIdFromHeadersIsNotEmpty();

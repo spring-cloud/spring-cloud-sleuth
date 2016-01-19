@@ -40,12 +40,12 @@ public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 	@Override
 	public void run() {
 		ensureThatThreadIsNotPollutedByPreviousTraces();
-		Span trace = startSpan();
+		Span span = startSpan();
 		try {
 			this.getDelegate().run();
 		}
 		finally {
-			closeAll(trace);
+			closeAll(span);
 		}
 	}
 }

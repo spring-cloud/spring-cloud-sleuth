@@ -41,13 +41,13 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public Sampler<Void> defaultTraceSampler() {
+	public Sampler defaultTraceSampler() {
 		return new IsTracingSampler();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DefaultTracer traceManager(Sampler<Void> sampler,
+	public DefaultTracer traceManager(Sampler sampler,
 									  ApplicationEventPublisher publisher) {
 		return new DefaultTracer(sampler, random(), publisher);
 	}

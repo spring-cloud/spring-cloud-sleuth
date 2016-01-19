@@ -26,19 +26,19 @@ public class TraceTemplateTests {
 
 	@Test
 	public void should_pass_trace_to_the_callback_if_tracing_is_active() {
-		Span initialTrace = this.tracer.startTrace("test");
+		Span initialSpan = this.tracer.startTrace("test");
 		TraceTemplate traceTemplate = new TraceTemplate(this.tracer);
 
-		Span traceFromCallback = whenTraceCallbackReturningCurrentTraceIsExecuted(traceTemplate);
+		Span spanFromCallback = whenTraceCallbackReturningCurrentTraceIsExecuted(traceTemplate);
 
-		then(traceFromCallback).isNotNull();
-		then(traceFromCallback.getTraceId()).isEqualTo(initialTrace.getTraceId());
+		then(spanFromCallback).isNotNull();
+		then(spanFromCallback.getTraceId()).isEqualTo(initialSpan.getTraceId());
 	}
 
 	private Span whenTraceCallbackReturningCurrentTraceIsExecuted(TraceTemplate traceTemplate) {
 		return traceTemplate.trace(new TraceCallback<Span>() {
 				@Override
-				public Span doInTrace(Span trace) {
+				public Span doInTrace(Span span) {
 					return SpanContextHolder.getCurrentSpan();
 				}
 			});

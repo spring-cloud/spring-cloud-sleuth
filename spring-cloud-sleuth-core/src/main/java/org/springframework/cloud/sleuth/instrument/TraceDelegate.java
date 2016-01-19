@@ -43,14 +43,14 @@ public abstract class TraceDelegate<T> {
 		this.parent = tracer.getCurrentSpan();
 	}
 
-	protected void close(Span trace) {
-		this.tracer.close(trace);
+	protected void close(Span span) {
+		this.tracer.close(span);
 	}
 
-	protected void closeAll(Span trace) {
-		trace = this.tracer.close(trace);
-		while (trace != null) {
-			trace = this.tracer.detach(trace);
+	protected void closeAll(Span span) {
+		span = this.tracer.close(span);
+		while (span != null) {
+			span = this.tracer.detach(span);
 		}
 	}
 
