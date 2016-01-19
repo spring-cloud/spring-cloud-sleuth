@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +27,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 public class TraceAsyncIntegrationTests {
 
 	@Autowired ClassPerformingAsyncLogic classPerformingAsyncLogic;
-	@Autowired TraceManager traceManager;
+	@Autowired
+	Tracer tracer;
 
 	@Test
 	public void should_set_span_on_an_async_annotated_method() {
@@ -39,8 +40,8 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = traceManager.startSpan("existing").getSpan();
-		traceManager.continueSpan(span);
+		Span span = tracer.startTrace("existing").getSpan();
+		tracer.continueSpan(span);
 		return span;
 	}
 

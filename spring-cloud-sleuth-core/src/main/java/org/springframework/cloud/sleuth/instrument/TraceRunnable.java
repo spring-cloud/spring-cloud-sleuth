@@ -17,10 +17,11 @@
 package org.springframework.cloud.sleuth.instrument;
 
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * @author Spencer Gibb
@@ -29,12 +30,12 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = false)
 public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 
-	public TraceRunnable(TraceManager traceManager, Runnable delegate) {
-		super(traceManager, delegate);
+	public TraceRunnable(Tracer tracer, Runnable delegate) {
+		super(tracer, delegate);
 	}
 
-	public TraceRunnable(TraceManager traceManager, Runnable delegate, String name) {
-		super(traceManager, delegate, name);
+	public TraceRunnable(Tracer tracer, Runnable delegate, String name) {
+		super(tracer, delegate, name);
 	}
 
 	@Override

@@ -23,10 +23,10 @@ import org.mockito.Mock;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -55,7 +55,7 @@ public class TraceFilterTests {
 	@Mock
 	private ApplicationEventPublisher publisher;
 
-	private TraceManager traceManager;
+	private Tracer tracer;
 
 	private Span span;
 
@@ -68,7 +68,7 @@ public class TraceFilterTests {
 	@SneakyThrows
 	public void init() {
 		initMocks(this);
-		this.traceManager = new DefaultTraceManager(new DelegateSampler(), new Random(), this.publisher) {
+		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(), this.publisher) {
 			@Override
 			protected Trace createTrace(Trace trace, Span span) {
 				TraceFilterTests.this.span = span;
@@ -89,7 +89,7 @@ public class TraceFilterTests {
 	@Test
 	public void notTraced() throws Exception {
 		this.sampler = new IsTracingSampler();
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.tracer);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
@@ -102,7 +102,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.tracer);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpTags();
 		assertNull(TraceContextHolder.getCurrentTrace());
@@ -111,10 +111,10 @@ public class TraceFilterTests {
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
 
-		Trace trace = this.traceManager.startSpan("foo");
+		Trace trace = this.tracer.startTrace("foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, trace);
 
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.tracer);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
@@ -128,7 +128,7 @@ public class TraceFilterTests {
 				.header(Trace.TRACE_ID_NAME, 20L)
 				.buildRequest(new MockServletContext());
 
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.tracer);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
@@ -138,7 +138,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void catchesException() throws Exception {
-		TraceFilter filter = new TraceFilter(this.traceManager);
+		TraceFilter filter = new TraceFilter(this.tracer);
 		this.filterChain = new MockFilterChain() {
 			@Override
 			public void doFilter(javax.servlet.ServletRequest request,

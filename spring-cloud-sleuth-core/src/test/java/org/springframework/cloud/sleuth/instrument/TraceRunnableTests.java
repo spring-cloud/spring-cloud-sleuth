@@ -6,9 +6,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -22,7 +24,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceRunnableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
-	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
+	Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@After
@@ -78,7 +80,7 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable callable) throws Exception {
-		this.executor.submit(new TraceRunnable(this.traceManager, callable)).get();
+		this.executor.submit(new TraceRunnable(this.tracer, callable)).get();
 	}
 
 	private void whenNonTraceableRunnableGetsSubmitted(Runnable callable)

@@ -9,9 +9,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -32,21 +32,21 @@ public class TraceableExecutorServiceTests {
 	private static int TOTAL_THREADS = 10;
 
 	@Mock ApplicationEventPublisher publisher;
-	TraceManager traceManager;
+	Tracer tracer;
 	ExecutorService executorService = Executors.newFixedThreadPool(3);
 	ExecutorService traceManagerableExecutorService;
 	SpanVerifyingRunnable spanVerifyingRunnable = new SpanVerifyingRunnable();
 
 	@Before
 	public void setup() {
-		traceManager = new DefaultTraceManager(new AlwaysSampler(), new Random(), publisher);
-		traceManagerableExecutorService = new TraceableExecutorService(executorService, traceManager);
+		tracer = new DefaultTracer(new AlwaysSampler(), new Random(), publisher);
+		traceManagerableExecutorService = new TraceableExecutorService(executorService, tracer);
 		TraceContextHolder.removeCurrentTrace();
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		traceManager = null;
+		tracer = null;
 		traceManagerableExecutorService.shutdown();
 		executorService.shutdown();
 		TraceContextHolder.removeCurrentTrace();
@@ -55,9 +55,9 @@ public class TraceableExecutorServiceTests {
 	@Test
 	@SneakyThrows
 	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed() {
-		Trace trace = traceManager.startSpan("PARENT");
+		Trace trace = tracer.startTrace("PARENT");
 		CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
-		traceManager.close(trace);
+		tracer.close(trace);
 
 		then(spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).containsOnly(trace.getSpan().getTraceId());
 		then(spanVerifyingRunnable.spanIds.stream().distinct().collect(toList())).hasSize(TOTAL_THREADS);

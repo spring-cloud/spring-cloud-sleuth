@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument.integration;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -33,23 +33,23 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private ThreadLocal<Trace> traceHolder = new ThreadLocal<>();
 
-	public TraceChannelInterceptor(TraceManager traceManager, Random random) {
-		super(traceManager, random);
+	public TraceChannelInterceptor(Tracer tracer, Random random) {
+		super(tracer, random);
 	}
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
 		Trace trace = this.traceHolder.get();
 		// Double close to clean up the parent (remote span as well)
-		this.traceManager.close(this.traceManager.close(trace));
+		this.tracer.close(this.tracer.close(trace));
 		this.traceHolder.remove();
 	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (this.traceManager.isTracing()) {
+		if (this.tracer.isTracing()) {
 			return SpanMessageHeaders.addSpanHeaders(message,
-					this.traceManager.getCurrentSpan());
+					this.tracer.getCurrentSpan());
 		}
 		String name = getMessageChannelName(channel);
 		Trace trace = startSpan(buildSpan(message), name, message);
@@ -59,12 +59,12 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private Trace startSpan(Span span, String name, Message message) {
 		if (span != null) {
-			return traceManager.startSpan(name, span);
+			return tracer.joinTrace(name, span);
 		}
 		if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-			return traceManager.startSpan(name, IsTracingSampler.INSTANCE);
+			return tracer.startTrace(name, IsTracingSampler.INSTANCE);
 		}
-		return this.traceManager.startSpan(name);
+		return this.tracer.startTrace(name);
 	}
 
 }

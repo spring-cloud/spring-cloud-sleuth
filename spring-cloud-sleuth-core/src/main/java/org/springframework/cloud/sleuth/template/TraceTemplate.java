@@ -17,7 +17,8 @@
 package org.springframework.cloud.sleuth.template;
 
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceDelegate;
 
 /**
@@ -25,21 +26,21 @@ import org.springframework.cloud.sleuth.instrument.TraceDelegate;
  */
 public class TraceTemplate implements TraceOperations  {
 
-	private final TraceManager traceManager;
+	private final Tracer tracer;
 
-	public TraceTemplate(TraceManager traceManager) {
-		this.traceManager = traceManager;
+	public TraceTemplate(Tracer tracer) {
+		this.tracer = tracer;
 	}
 
 	@Override
 	public <T> T trace(final TraceCallback<T> callback) {
-		if (this.traceManager.isTracing()) {
-			DelegateCallback<T> delegate = new DelegateCallback<>(this.traceManager);
+		if (this.tracer.isTracing()) {
+			DelegateCallback<T> delegate = new DelegateCallback<>(this.tracer);
 			Trace trace = delegate.startSpan();
 			try {
 				return callback.doInTrace(trace);
 			} finally {
-				this.traceManager.close(trace);
+				this.tracer.close(trace);
 			}
 		} else {
 			return callback.doInTrace(null);
@@ -48,8 +49,8 @@ public class TraceTemplate implements TraceOperations  {
 
 	class DelegateCallback<T> extends TraceDelegate<TraceCallback<T>> {
 
-		public DelegateCallback(TraceManager traceManager) {
-			super(traceManager, null);
+		public DelegateCallback(Tracer tracer) {
+			super(tracer, null);
 		}
 
 		@Override

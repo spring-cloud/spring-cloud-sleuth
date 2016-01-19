@@ -33,7 +33,7 @@ import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
@@ -56,7 +56,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class ZipkinSpanListenerTests {
 
 	@Autowired
-	private TraceManager traceManager;
+	private Tracer tracer;
 
 	@Autowired
 	private ApplicationContext application;
@@ -119,8 +119,8 @@ public class ZipkinSpanListenerTests {
 	 */
 	@Test
 	public void spanWithoutAnnotationsLogsComponent() {
-		Trace context = this.traceManager.startSpan("foo");
-		this.traceManager.close(context);
+		Trace context = this.tracer.startTrace("foo");
+		this.tracer.close(context);
 		assertEquals(1, this.test.spans.size());
 		assertThat(this.test.spans.get(0).binaryAnnotations.get(0).endpoint.serviceName)
 				.isEqualTo("unknown"); // TODO: "unknown" bc process id, documented as not nullable, is null.
@@ -128,12 +128,12 @@ public class ZipkinSpanListenerTests {
 
 	@Test
 	public void rpcAnnotations() {
-		Trace context = this.traceManager.startSpan("child", parent);
+		Trace context = this.tracer.joinTrace("child", parent);
 		this.application.publishEvent(new ClientSentEvent(this, context.getSpan()));
 		this.application.publishEvent(new ServerReceivedEvent(this, parent, context.getSpan()));
 		this.application.publishEvent(new ServerSentEvent(this, parent, context.getSpan()));
 		this.application.publishEvent(new ClientReceivedEvent(this, context.getSpan()));
-		this.traceManager.close(context);
+		this.tracer.close(context);
 		assertEquals(2, this.test.spans.size());
 	}
 

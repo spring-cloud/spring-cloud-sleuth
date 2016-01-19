@@ -20,7 +20,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,8 +47,8 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DefaultTraceManager traceManager(Sampler<Void> sampler,
-			ApplicationEventPublisher publisher) {
-		return new DefaultTraceManager(sampler, random(), publisher);
+	public DefaultTracer traceManager(Sampler<Void> sampler,
+									  ApplicationEventPublisher publisher) {
+		return new DefaultTracer(sampler, random(), publisher);
 	}
 }

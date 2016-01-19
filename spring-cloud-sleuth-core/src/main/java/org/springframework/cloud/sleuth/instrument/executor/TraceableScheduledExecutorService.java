@@ -21,7 +21,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 
@@ -32,8 +33,8 @@ import org.springframework.cloud.sleuth.instrument.TraceRunnable;
  */
 public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
 
-	public TraceableScheduledExecutorService(final ScheduledExecutorService delegate, final TraceManager traceManager) {
-		super(delegate, traceManager);
+	public TraceableScheduledExecutorService(final ScheduledExecutorService delegate, final Tracer tracer) {
+		super(delegate, tracer);
 	}
 
 	private ScheduledExecutorService getScheduledExecutorService() {
@@ -42,7 +43,7 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.traceManager, command);
+		Runnable r = new TraceRunnable(this.tracer, command);
 		return getScheduledExecutorService().schedule(r, delay, unit);
 	}
 
@@ -50,19 +51,19 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 
 	@Override
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-		Callable<V> c = new TraceCallable<>(this.traceManager,callable);
+		Callable<V> c = new TraceCallable<>(this.tracer,callable);
 		return getScheduledExecutorService().schedule(c, delay, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.traceManager, command);
+		Runnable r = new TraceRunnable(this.tracer, command);
 		return getScheduledExecutorService().scheduleAtFixedRate(r, initialDelay, period, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.traceManager, command);
+		Runnable r = new TraceRunnable(this.tracer, command);
 		return getScheduledExecutorService().scheduleWithFixedDelay(r, initialDelay, delay, unit);
 	}
 

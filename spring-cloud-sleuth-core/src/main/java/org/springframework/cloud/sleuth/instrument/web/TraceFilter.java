@@ -15,22 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.springframework.util.StringUtils.hasText;
-
-import java.io.IOException;
-import java.util.Random;
-import java.util.regex.Pattern;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.cloud.sleuth.MilliSpan;
+import org.springframework.cloud.sleuth.*;
 import org.springframework.cloud.sleuth.MilliSpan.MilliSpanBuilder;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -44,6 +30,16 @@ import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Random;
+import java.util.regex.Pattern;
+
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * Filter that takes the value of the {@link Trace#SPAN_ID_NAME} and
@@ -74,7 +70,7 @@ public class TraceFilter extends OncePerRequestFilter
 	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern.compile(
 			"/api-docs.*|/autoconfig|/configprops|/dump|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream");
 
-	private final TraceManager traceManager;
+	private final Tracer tracer;
 	private final Pattern skipPattern;
 	private final Random random;
 
@@ -82,14 +78,14 @@ public class TraceFilter extends OncePerRequestFilter
 	private ApplicationEventPublisher publisher;
 
 
-	public TraceFilter(TraceManager traceManager) {
-		this.traceManager = traceManager;
+	public TraceFilter(Tracer tracer) {
+		this.tracer = tracer;
 		this.skipPattern = DEFAULT_SKIP_PATTERN;
 		this.random = new Random();
 	}
 
-	public TraceFilter(TraceManager traceManager, Pattern skipPattern, Random random) {
-		this.traceManager = traceManager;
+	public TraceFilter(Tracer tracer, Pattern skipPattern, Random random) {
+		this.tracer = tracer;
 		this.skipPattern = skipPattern;
 		this.random = random;
 	}
@@ -111,7 +107,7 @@ public class TraceFilter extends OncePerRequestFilter
 
 		Trace trace = (Trace) request.getAttribute(TRACE_REQUEST_ATTR);
 		if (trace != null) {
-			this.traceManager.continueSpan(trace.getSpan());
+			this.tracer.continueSpan(trace.getSpan());
 		}
 		else if (skip) {
 			addToResponseIfNotPresent(response, Trace.NOT_SAMPLED_NAME, "");
@@ -143,18 +139,18 @@ public class TraceFilter extends OncePerRequestFilter
 			span.remote(true);
 
 			Span parent = span.build();
-			trace = this.traceManager.startSpan(name, parent);
+			trace = this.tracer.joinTrace(name, parent);
 			publish(new ServerReceivedEvent(this, parent, trace.getSpan()));
 			request.setAttribute(TRACE_REQUEST_ATTR, trace);
 
 		}
 		else {
 			if (skip) {
-				trace = this.traceManager.startSpan(name, IsTracingSampler.INSTANCE
+				trace = this.tracer.startTrace(name, IsTracingSampler.INSTANCE
 				);
 			}
 			else {
-				trace = this.traceManager.startSpan(name);
+				trace = this.tracer.startTrace(name);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, trace);
 		}
@@ -186,7 +182,7 @@ public class TraceFilter extends OncePerRequestFilter
 							trace.getSpan()));
 				}
 				// Double close to clean up the parent (remote span as well)
-				this.traceManager.close(this.traceManager.close(trace));
+				this.tracer.close(this.tracer.close(trace));
 			}
 		}
 	}
@@ -207,10 +203,10 @@ public class TraceFilter extends OncePerRequestFilter
 	/** Override to add annotations not defined in {@link TraceKeys}. */
 	protected void addRequestTags(HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.traceManager.addTag(TraceKeys.HTTP_URL, getFullUrl(request));
-		this.traceManager.addTag(TraceKeys.HTTP_HOST, request.getServerName());
-		this.traceManager.addTag(TraceKeys.HTTP_PATH, uri);
-		this.traceManager.addTag(TraceKeys.HTTP_METHOD, request.getMethod());
+		this.tracer.addTag(TraceKeys.HTTP_URL, getFullUrl(request));
+		this.tracer.addTag(TraceKeys.HTTP_HOST, request.getServerName());
+		this.tracer.addTag(TraceKeys.HTTP_PATH, uri);
+		this.tracer.addTag(TraceKeys.HTTP_METHOD, request.getMethod());
 	}
 
 	/** Override to add annotations not defined in {@link TraceKeys}. */
@@ -219,11 +215,11 @@ public class TraceFilter extends OncePerRequestFilter
 		if (httpStatus == HttpServletResponse.SC_OK && e != null) {
 			// Filter chain threw exception but the response status may not have been set
 			// yet, so we have to guess.
-			this.traceManager.addTag(TraceKeys.HTTP_STATUS_CODE,
+			this.tracer.addTag(TraceKeys.HTTP_STATUS_CODE,
 					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
 		else if ((httpStatus < 200) || (httpStatus > 299)){
-			this.traceManager.addTag(TraceKeys.HTTP_STATUS_CODE,
+			this.tracer.addTag(TraceKeys.HTTP_STATUS_CODE,
 					String.valueOf(response.getStatus()));
 		}
 	}

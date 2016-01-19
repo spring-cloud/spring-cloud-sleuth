@@ -34,7 +34,8 @@ import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
@@ -82,9 +83,9 @@ public class TraceFeignClientAutoConfiguration {
 	@ConditionalOnClass(HystrixCommand.class)
 	@ConditionalOnMissingBean(SleuthHystrixConcurrencyStrategy.class)
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
-	public Feign.Builder feignHystrixBuilder(TraceManager traceManager) {
+	public Feign.Builder feignHystrixBuilder(Tracer tracer) {
 		return HystrixFeign.builder()
-				.invocationHandlerFactory(new SleuthHystrixInvocationHandler.Factory(traceManager));
+				.invocationHandlerFactory(new SleuthHystrixInvocationHandler.Factory(tracer));
 	}
 
 	@Bean

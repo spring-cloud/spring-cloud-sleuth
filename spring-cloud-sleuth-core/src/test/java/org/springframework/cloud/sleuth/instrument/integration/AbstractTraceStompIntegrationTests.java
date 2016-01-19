@@ -6,7 +6,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.messaging.Message;
@@ -22,7 +22,8 @@ abstract class AbstractTraceStompIntegrationTests {
 	@Autowired
 	@Qualifier("executorSubscribableChannel")
 	ExecutorSubscribableChannel channel;
-	@Autowired TraceManager traceManager;
+	@Autowired
+	Tracer tracer;
 	@Autowired StompMessageHandler stompMessageHandler;
 	@Autowired AlwaysSampler sampler;
 
@@ -38,7 +39,7 @@ abstract class AbstractTraceStompIntegrationTests {
 	}
 
 	Trace givenALocallyStartedSpan() {
-		return traceManager.startSpan("testSendMessage", sampler);
+		return tracer.startTrace("testSendMessage", sampler);
 	}
 
 	Message<?> givenMessageToBeSampled() {

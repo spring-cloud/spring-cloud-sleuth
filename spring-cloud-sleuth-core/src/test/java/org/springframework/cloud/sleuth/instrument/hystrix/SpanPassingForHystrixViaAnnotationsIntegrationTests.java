@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +26,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 
 	@Autowired HystrixCommandInvocationSpanCatcher hystrixCommandInvocationSpanCatcher;
-	@Autowired TraceManager traceManager;
+	@Autowired
+	Tracer tracer;
 
 	@Test
 	public void should_set_span_on_an_hystrix_command_annotated_method() {
@@ -38,8 +39,8 @@ public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = traceManager.startSpan("existing").getSpan();
-		traceManager.continueSpan(span);
+		Span span = tracer.startTrace("existing").getSpan();
+		tracer.continueSpan(span);
 		return span;
 	}
 

@@ -22,7 +22,8 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -55,14 +56,14 @@ public class TraceRestTemplateInterceptorTests {
 	private RestTemplate template = new RestTemplate(
 			new MockMvcClientHttpRequestFactory(this.mockMvc));
 
-	private DefaultTraceManager traces;
+	private DefaultTracer traces;
 
 	private StaticApplicationContext publisher = new StaticApplicationContext();
 
 	@Before
 	public void setup() {
 		this.publisher.refresh();
-		this.traces = new DefaultTraceManager(new AlwaysSampler(), new Random(), this.publisher);
+		this.traces = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.traces)));
 		TraceContextHolder.removeCurrentTrace();

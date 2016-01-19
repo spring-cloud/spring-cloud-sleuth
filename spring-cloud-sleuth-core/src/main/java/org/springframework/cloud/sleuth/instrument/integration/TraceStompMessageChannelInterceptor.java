@@ -17,7 +17,7 @@ package org.springframework.cloud.sleuth.instrument.integration;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -34,14 +34,14 @@ import java.util.Random;
 public class TraceStompMessageChannelInterceptor extends AbstractTraceChannelInterceptor implements ChannelInterceptor {
 	private ThreadLocal<Trace> traceScopeHolder = new ThreadLocal<Trace>();
 
-	public TraceStompMessageChannelInterceptor(TraceManager traceManager, Random random) {
-		super(traceManager, random);
+	public TraceStompMessageChannelInterceptor(Tracer tracer, Random random) {
+		super(tracer, random);
 	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (traceManager.isTracing() || message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
-			return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(traceManager.getCurrentSpan()).build();
+		if (tracer.isTracing() || message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+			return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(tracer.getCurrentSpan()).build();
 		}
 		String name = getMessageChannelName(channel);
 		Trace trace = startSpan(buildSpan(message), name);
@@ -51,16 +51,16 @@ public class TraceStompMessageChannelInterceptor extends AbstractTraceChannelInt
 
 	private Trace startSpan(Span span, String name) {
 		if (span != null) {
-			return traceManager.startSpan(name, span);
+			return tracer.joinTrace(name, span);
 		}
-		return traceManager.startSpan(name);
+		return tracer.startTrace(name);
 	}
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
 		final ThreadLocal<Trace> traceScopeHolder = this.traceScopeHolder;
 		Trace traceInScope = traceScopeHolder.get();
-		this.traceManager.close(traceInScope);
+		this.tracer.close(traceInScope);
 		traceScopeHolder.remove();
 	}
 }

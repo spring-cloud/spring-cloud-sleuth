@@ -24,7 +24,8 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.sleuth.TraceAccessor;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,7 +51,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * @see Controller
  * @see RestOperations
  * @see TraceCallable
- * @see TraceManager
+ * @see Tracer
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT
@@ -61,11 +62,11 @@ import lombok.extern.apachecommons.CommonsLog;
 @CommonsLog
 public class TraceWebAspect {
 
-	private final TraceManager traceManager;
+	private final Tracer tracer;
 	private final TraceAccessor accessor;
 
-	public TraceWebAspect(TraceManager traceManager, TraceAccessor accessor) {
-		this.traceManager = traceManager;
+	public TraceWebAspect(Tracer tracer, TraceAccessor accessor) {
+		this.tracer = tracer;
 		this.accessor = accessor;
 	}
 
@@ -100,7 +101,7 @@ public class TraceWebAspect {
 		if (this.accessor.isTracing()) {
 			log.debug("Wrapping callable with span ["
 					+ this.accessor.getCurrentSpan() + "]");
-			return new TraceCallable<>(this.traceManager, callable);
+			return new TraceCallable<>(this.tracer, callable);
 		}
 		else {
 			return callable;
@@ -116,7 +117,7 @@ public class TraceWebAspect {
 						+ this.accessor.getCurrentSpan() + "]");
 				Field callableField = WebAsyncTask.class.getDeclaredField("callable");
 				callableField.setAccessible(true);
-				callableField.set(webAsyncTask, new TraceCallable<>(this.traceManager, webAsyncTask.getCallable()));
+				callableField.set(webAsyncTask, new TraceCallable<>(this.tracer, webAsyncTask.getCallable()));
 			} catch (NoSuchFieldException ex) {
 				log.warn("Cannot wrap webAsyncTask's callable with TraceCallable", ex);
 			}

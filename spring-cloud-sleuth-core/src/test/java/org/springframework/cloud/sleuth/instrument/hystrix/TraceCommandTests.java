@@ -8,9 +8,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.TraceManager;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTraceManager;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TraceContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -23,7 +23,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceCommandTests {
 
 	static final long EXPECTED_TRACE_ID = 1L;
-	TraceManager traceManager = new DefaultTraceManager(new AlwaysSampler(),
+	Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), Mockito.mock(ApplicationEventPublisher.class));
 
 	@Before
@@ -67,11 +67,11 @@ public class TraceCommandTests {
 	}
 
 	private Trace givenATraceIsPresentInTheCurrentThread() {
-		return this.traceManager.startSpan("test", MilliSpan.builder().traceId(EXPECTED_TRACE_ID).build());
+		return this.tracer.joinTrace("test", MilliSpan.builder().traceId(EXPECTED_TRACE_ID).build());
 	}
 
 	private TraceCommand<Trace> traceReturningCommand() {
-		return new TraceCommand<Trace>(this.traceManager,  withGroupKey(asKey(""))
+		return new TraceCommand<Trace>(this.tracer,  withGroupKey(asKey(""))
 				.andCommandKey(HystrixCommandKey.Factory.asKey("")).andThreadPoolPropertiesDefaults(
 						HystrixThreadPoolProperties.Setter().withMaxQueueSize(1).withCoreSize(1))) {
 			@Override
