@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -37,9 +37,9 @@ ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
 
-	private final TraceAccessor accessor;
+	private final SpanAccessor accessor;
 
-	public TracePreZuulFilter(TraceAccessor accessor) {
+	public TracePreZuulFilter(SpanAccessor accessor) {
 		this.accessor = accessor;
 	}
 

@@ -28,7 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,13 +41,13 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(RestTemplate.class)
-@ConditionalOnBean(TraceAccessor.class)
+@ConditionalOnBean(SpanAccessor.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceWebClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(TraceAccessor accessor) {
+	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(SpanAccessor accessor) {
 		return new TraceRestTemplateInterceptor(accessor);
 	}
 

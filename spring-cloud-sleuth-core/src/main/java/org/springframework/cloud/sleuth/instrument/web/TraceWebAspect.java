@@ -21,7 +21,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
@@ -62,9 +62,9 @@ import java.util.concurrent.Callable;
 public class TraceWebAspect {
 
 	private final Tracer tracer;
-	private final TraceAccessor accessor;
+	private final SpanAccessor accessor;
 
-	public TraceWebAspect(Tracer tracer, TraceAccessor accessor) {
+	public TraceWebAspect(Tracer tracer, SpanAccessor accessor) {
 		this.tracer = tracer;
 		this.accessor = accessor;
 	}

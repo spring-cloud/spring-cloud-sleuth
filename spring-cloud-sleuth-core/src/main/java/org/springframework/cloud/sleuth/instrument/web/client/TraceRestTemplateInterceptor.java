@@ -16,7 +16,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
@@ -35,7 +35,7 @@ import java.io.IOException;
  * and sets them if one or both of them are missing.
  *
  * @see org.springframework.web.client.RestTemplate
- * @see TraceAccessor
+ * @see SpanAccessor
  *
  * @author Marcin Grzejszczak, 4financeIT
  * @author Spencer Gibb
@@ -45,9 +45,9 @@ ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
 
-	private TraceAccessor accessor;
+	private SpanAccessor accessor;
 
-	public TraceRestTemplateInterceptor(TraceAccessor accessor) {
+	public TraceRestTemplateInterceptor(SpanAccessor accessor) {
 		this.accessor = accessor;
 	}
 

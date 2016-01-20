@@ -24,7 +24,7 @@ package org.springframework.cloud.sleuth;
  * @author Dave Syer
  *
  */
-public interface TraceAccessor {
+public interface SpanAccessor {
 
 	Span getCurrentSpan();
 

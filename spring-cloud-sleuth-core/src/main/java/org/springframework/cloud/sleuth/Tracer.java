@@ -44,7 +44,7 @@ import java.util.concurrent.Callable;
  * <li>Set currentSpan to the previous currentSpan (which may be null).</li>
  * </ul>
  */
-public interface Tracer extends TraceAccessor {
+public interface Tracer extends SpanAccessor {
 
 	/**
 	 * Creates a new Span.

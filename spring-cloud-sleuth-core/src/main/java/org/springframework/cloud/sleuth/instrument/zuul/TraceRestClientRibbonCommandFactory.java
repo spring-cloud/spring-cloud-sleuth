@@ -24,7 +24,7 @@ import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonComm
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,10 +42,10 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 
 	private ApplicationEventPublisher publisher;
 
-	private final TraceAccessor accessor;
+	private final SpanAccessor accessor;
 
 	public TraceRestClientRibbonCommandFactory(SpringClientFactory clientFactory,
-			TraceAccessor accessor) {
+			SpanAccessor accessor) {
 		super(clientFactory);
 		this.accessor = accessor;
 	}
@@ -71,14 +71,14 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 
 		private ApplicationEventPublisher publisher;
 
-		private final TraceAccessor accessor;
+		private final SpanAccessor accessor;
 
 		@SuppressWarnings("deprecation")
 		public TraceRestClientRibbonCommand(String commandKey, RestClient restClient,
 				HttpRequest.Verb verb, String uri, Boolean retryable,
 				MultiValueMap<String, String> headers,
 				MultiValueMap<String, String> params, InputStream requestEntity,
-				ApplicationEventPublisher publisher, TraceAccessor accessor)
+				ApplicationEventPublisher publisher, SpanAccessor accessor)
 						throws URISyntaxException {
 			super(commandKey, restClient, verb, uri, retryable, headers, params,
 					requestEntity);

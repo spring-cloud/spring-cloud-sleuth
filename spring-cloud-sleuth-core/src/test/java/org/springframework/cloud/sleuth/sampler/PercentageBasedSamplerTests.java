@@ -2,7 +2,7 @@ package org.springframework.cloud.sleuth.sampler;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.SpanAccessor;
 
 import java.util.Random;
 
@@ -12,7 +12,7 @@ import static org.assertj.core.data.Percentage.withPercentage;
 public class PercentageBasedSamplerTests {
 
 	SamplerConfiguration samplerConfiguration = new SamplerConfiguration();
-	TraceAccessor traceAccessor = traceReturningSpanWithUuid();
+	SpanAccessor spanAccessor = traceReturningSpanWithUuid();
 	private static Random RANDOM = new Random();
 
 	@Test
@@ -20,7 +20,7 @@ public class PercentageBasedSamplerTests {
 		this.samplerConfiguration.setPercentage(1f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).isSampled()).isTrue();
+			then(new PercentageBasedSampler(this.samplerConfiguration, this.spanAccessor).isSampled()).isTrue();
 		}
 
 	}
@@ -30,7 +30,7 @@ public class PercentageBasedSamplerTests {
 		this.samplerConfiguration.setPercentage(0f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).isSampled()).isFalse();
+			then(new PercentageBasedSampler(this.samplerConfiguration, this.spanAccessor).isSampled()).isFalse();
 		}
 	}
 
@@ -54,8 +54,8 @@ public class PercentageBasedSamplerTests {
 		return passedCounter;
 	}
 
-	private TraceAccessor traceReturningSpanWithUuid() {
-		return new TraceAccessor() {
+	private SpanAccessor traceReturningSpanWithUuid() {
+		return new SpanAccessor() {
 			@Override
 			public Span getCurrentSpan() {
 				return Span.builder().traceId(RANDOM.nextLong()).build();

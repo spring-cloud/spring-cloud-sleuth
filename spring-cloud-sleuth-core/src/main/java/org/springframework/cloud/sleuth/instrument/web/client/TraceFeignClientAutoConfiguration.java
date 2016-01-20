@@ -36,7 +36,7 @@ import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
@@ -81,7 +81,7 @@ public class TraceFeignClientAutoConfiguration {
 	private ApplicationEventPublisher publisher;
 
 	@Autowired
-	private TraceAccessor accessor;
+	private SpanAccessor accessor;
 
 	@Bean
 	@Scope("prototype")

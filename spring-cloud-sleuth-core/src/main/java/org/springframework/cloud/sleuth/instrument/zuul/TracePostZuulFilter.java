@@ -17,7 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceAccessor;
+import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -34,9 +34,9 @@ public class TracePostZuulFilter extends ZuulFilter
 
 	private ApplicationEventPublisher publisher;
 
-	private final TraceAccessor accessor;
+	private final SpanAccessor accessor;
 
-	public TracePostZuulFilter(TraceAccessor accessor) {
+	public TracePostZuulFilter(SpanAccessor accessor) {
 		this.accessor = accessor;
 	}
 
