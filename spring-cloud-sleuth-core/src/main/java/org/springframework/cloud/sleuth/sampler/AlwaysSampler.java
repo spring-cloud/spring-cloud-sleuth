@@ -23,7 +23,7 @@ import org.springframework.cloud.sleuth.Sampler;
  */
 public class AlwaysSampler implements Sampler {
 	@Override
-	public boolean next() {
+	public boolean isSampled() {
 		return true;
 	}
 }
