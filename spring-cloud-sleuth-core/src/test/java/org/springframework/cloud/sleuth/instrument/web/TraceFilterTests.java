@@ -216,8 +216,8 @@ public class TraceFilterTests {
 
 	private class DelegateSampler implements Sampler {
 		@Override
-		public boolean next() {
-			return TraceFilterTests.this.sampler.next();
+		public boolean isSampled() {
+			return TraceFilterTests.this.sampler.isSampled();
 		}
 	}
 }

@@ -20,5 +20,5 @@ package org.springframework.cloud.sleuth;
  * Extremely simple callback to determine the frequency that an action should be
  */
 public interface Sampler {
-	boolean next();
+	boolean isSampled();
 }

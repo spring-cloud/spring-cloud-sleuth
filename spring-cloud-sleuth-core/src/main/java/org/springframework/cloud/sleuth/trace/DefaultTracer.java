@@ -72,7 +72,7 @@ public class DefaultTracer implements Tracer {
 	@Override
 	public Span startTrace(String name, Sampler s) {
 		Span span;
-		if (isTracing() || s.next()) {
+		if (isTracing() || s.isSampled()) {
 			span = createChild(getCurrentSpan(), name);
 		}
 		else {

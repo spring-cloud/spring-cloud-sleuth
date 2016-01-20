@@ -20,7 +20,7 @@ public class PercentageBasedSamplerTests {
 		this.samplerConfiguration.setPercentage(1f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).next()).isTrue();
+			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).isSampled()).isTrue();
 		}
 
 	}
@@ -30,7 +30,7 @@ public class PercentageBasedSamplerTests {
 		this.samplerConfiguration.setPercentage(0f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).next()).isFalse();
+			then(new PercentageBasedSampler(this.samplerConfiguration, this.traceAccessor).isSampled()).isFalse();
 		}
 	}
 
@@ -48,7 +48,7 @@ public class PercentageBasedSamplerTests {
 	private int countNumberOfSampledElements(int numberOfIterations) {
 		int passedCounter = 0;
 		for (int i = 0; i < numberOfIterations; i++) {
-			boolean passed = new PercentageBasedSampler(this.samplerConfiguration, traceReturningSpanWithUuid()).next();
+			boolean passed = new PercentageBasedSampler(this.samplerConfiguration, traceReturningSpanWithUuid()).isSampled();
 			passedCounter = passedCounter + (passed ? 1 : 0);
 		}
 		return passedCounter;

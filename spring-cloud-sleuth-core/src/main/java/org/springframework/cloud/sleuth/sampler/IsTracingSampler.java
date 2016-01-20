@@ -27,7 +27,7 @@ public class IsTracingSampler implements Sampler {
 	public static IsTracingSampler INSTANCE = new IsTracingSampler();
 
 	@Override
-	public boolean next() {
+	public boolean isSampled() {
 		return SpanContextHolder.isTracing();
 	}
 }
