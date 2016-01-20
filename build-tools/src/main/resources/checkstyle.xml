@@ -15,5 +15,6 @@
 			<property name="ignoreComments" value="true"/>
 		</module>
 		<module name="UnusedImports"/>
+		<module name="RedundantImport"/>
 	</module>
 </module>

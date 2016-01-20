@@ -21,12 +21,11 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
- * {@link Scheduled} annotation. For every execution of scheduled method a new trace will
- * be started.
+ * {@link org.springframework.scheduling.annotation.Scheduled} annotation.
+ * For every execution of scheduled method a new trace will be started.
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Michal Chmielarz, 4financeIT

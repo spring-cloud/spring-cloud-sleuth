@@ -16,9 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.lang.reflect.Field;
-import java.util.concurrent.Callable;
-
+import lombok.extern.apachecommons.CommonsLog;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -26,29 +24,31 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestOperations;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
-import lombok.extern.apachecommons.CommonsLog;
+import java.lang.reflect.Field;
+import java.util.concurrent.Callable;
 
 /**
  * Aspect that adds correlation id to
  * <p/>
  * <ul>
- * <li>{@link RestController} annotated classes with public {@link Callable} methods</li>
- * <li>{@link Controller} annotated classes with public {@link Callable} methods</li>
- * <li>{@link Controller} or {@link RestController} annotated classes with public {@link WebAsyncTask} methods</li>
+ * <li>{@link org.springframework.web.bind.annotation.RestController} annotated classes
+ * with public {@link Callable} methods</li>
+ * <li>{@link org.springframework.stereotype.Controller} annotated classes with public
+ * {@link Callable} methods</li>
+ * <li>{@link org.springframework.stereotype.Controller} or
+ * {@link org.springframework.web.bind.annotation.RestController} annotated classes with
+ * public {@link WebAsyncTask} methods</li>
  * </ul>
  * <p/>
  * For controllers an around aspect is created that wraps the {@link Callable#call()}
  * method execution in {@link TraceCallable}
  * <p/>
  *
- * @see RestController
- * @see Controller
- * @see RestOperations
+ * @see org.springframework.web.bind.annotation.RestController
+ * @see org.springframework.stereotype.Controller
+ * @see org.springframework.web.client.RestOperations
  * @see TraceCallable
  * @see Tracer
  *
