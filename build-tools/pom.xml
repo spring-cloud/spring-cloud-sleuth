@@ -9,4 +9,18 @@
 	<name>build-tools</name>
 	<packaging>jar</packaging>
 	<description>Spring Cloud Sleuth Build Tools</description>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<!--skip deploy (this is just a build-tools module) -->
+					<artifactId>maven-deploy-plugin</artifactId>
+					<configuration>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 </project>
