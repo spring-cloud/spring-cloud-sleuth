@@ -14,5 +14,6 @@
 			<property name="message" value="Indent must use tab characters"/>
 			<property name="ignoreComments" value="true"/>
 		</module>
+		<module name="UnusedImports"/>
 	</module>
 </module>
