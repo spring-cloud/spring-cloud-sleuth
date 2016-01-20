@@ -1,8 +1,5 @@
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import io.zipkin.*;
-import io.zipkin.BinaryAnnotation.Type;
-import io.zipkin.Span.Builder;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +23,9 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.util.StringUtils;
+import zipkin.*;
+import zipkin.BinaryAnnotation.Type;
+import zipkin.Span.Builder;
 
 import javax.sql.DataSource;
 import java.io.UnsupportedEncodingException;
@@ -48,7 +48,7 @@ public class ZipkinMessageListener {
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
 	public void sink(Spans input) {
-		Iterator<io.zipkin.Span> sampled = new SamplingZipkinSpanIterator(sampler, input);
+		Iterator<zipkin.Span> sampled = new SamplingZipkinSpanIterator(sampler, input);
 		if (sampled.hasNext()) {
 			this.spanStore.accept(sampled);
 		}
@@ -63,8 +63,8 @@ public class ZipkinMessageListener {
 	 * </ul>
 	 */
 	// VisibleForTesting
-	static io.zipkin.Span convert(Span span, Host host) {
-		Builder zipkinSpan = new io.zipkin.Span.Builder();
+	static zipkin.Span convert(Span span, Host host) {
+		Builder zipkinSpan = new zipkin.Span.Builder();
 
 		Endpoint ep = Endpoint.create(host.getServiceName(), host.getIpv4(),
 				host.getPort().shortValue());

@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import io.zipkin.Endpoint;
+import zipkin.Endpoint;
 
 /**
  * Strategy for locating a zipkin {@linkplain Endpoint} for the current process.

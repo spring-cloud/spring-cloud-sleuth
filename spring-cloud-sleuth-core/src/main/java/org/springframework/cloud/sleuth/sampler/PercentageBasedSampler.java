@@ -11,7 +11,7 @@ import org.springframework.cloud.sleuth.TraceAccessor;
  *
  * <ul>
  *     <li>We're taking the TraceID into consideration for sampling to be consistent</li>
- *     <li>We apply the Zipkin algorithm to define whether we should sample or not (we're comparing against thresholdg) - https://github.com/openzipkin/zipkin-java/blob/master/zipkin-java-core/src/main/java/io/zipkin/TraceIdSampler.java#L78</li>
+ *     <li>We apply the Zipkin algorithm to define whether we should sample or not (we're comparing against thresholdg) - https://github.com/openzipkin/zipkin-java/blob/master/zipkin/src/main/java/zipkin/Sampler.java</li>
  * </ul>
  *
  * The value provided from SamplerConfiguration in terms of percentage is an estimation. It might occur that amount

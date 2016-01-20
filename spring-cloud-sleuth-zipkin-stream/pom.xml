@@ -58,12 +58,12 @@
 			<artifactId>spring-boot-starter-cloud-connectors</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin</groupId>
-			<artifactId>zipkin-java-server</artifactId>
+			<groupId>io.zipkin.java</groupId>
+			<artifactId>zipkin-server</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin</groupId>
-			<artifactId>zipkin-java-jdbc</artifactId>
+			<groupId>io.zipkin.java</groupId>
+			<artifactId>spanstore-jdbc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>

@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import io.zipkin.Annotation;
-import io.zipkin.BinaryAnnotation;
-import io.zipkin.Constants;
-import io.zipkin.Endpoint;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
@@ -32,6 +28,10 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
+import zipkin.Annotation;
+import zipkin.BinaryAnnotation;
+import zipkin.Constants;
+import zipkin.Endpoint;
 
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -119,8 +119,8 @@ public class ZipkinSpanListener {
 	 * </ul>
 	 */
 	// Visible for testing
-	io.zipkin.Span convert(Span span) {
-		io.zipkin.Span.Builder zipkinSpan = new io.zipkin.Span.Builder();
+	zipkin.Span convert(Span span) {
+		zipkin.Span.Builder zipkinSpan = new zipkin.Span.Builder();
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
 		if (span.logs().isEmpty() && span.tags().isEmpty()) {
@@ -158,7 +158,7 @@ public class ZipkinSpanListener {
 	/**
 	 * Add annotations from the sleuth Span.
 	 */
-	private void addZipkinAnnotations(io.zipkin.Span.Builder zipkinSpan,
+	private void addZipkinAnnotations(zipkin.Span.Builder zipkinSpan,
 			Span span, Endpoint endpoint) {
 		for (Log ta : span.logs()) {
 			Annotation zipkinAnnotation = new Annotation.Builder()
@@ -174,7 +174,7 @@ public class ZipkinSpanListener {
 	 *
 	 * @return list of Annotations that could be added to Zipkin Span.
 	 */
-	private void addZipkinBinaryAnnotations(io.zipkin.Span.Builder zipkinSpan,
+	private void addZipkinBinaryAnnotations(zipkin.Span.Builder zipkinSpan,
 			Span span, Endpoint endpoint) {
 		for (Map.Entry<String, String> e : span.tags().entrySet()) {
 			BinaryAnnotation binaryAnn = new BinaryAnnotation.Builder()

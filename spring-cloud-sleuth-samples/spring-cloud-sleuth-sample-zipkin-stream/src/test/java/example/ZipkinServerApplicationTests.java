@@ -11,7 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import example.ZipkinStreamServerApplication;
-import io.zipkin.SpanStore;
+import zipkin.SpanStore;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ZipkinStreamServerApplication.class)

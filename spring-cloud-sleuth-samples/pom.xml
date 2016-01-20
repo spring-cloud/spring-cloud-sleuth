@@ -83,15 +83,15 @@
 				<scope>compile</scope>
 			</dependency>
 			<dependency>
-				<groupId>io.zipkin</groupId>
-				<artifactId>zipkin-java-core</artifactId>
-				<version>0.4.1</version>
+				<groupId>io.zipkin.java</groupId>
+				<artifactId>zipkin</artifactId>
+				<version>0.4.3</version>
 				<scope>compile</scope>
 			</dependency>
 			<dependency>
-				<groupId>io.zipkin</groupId>
-				<artifactId>zipkin-java-server</artifactId>
-				<version>0.4.1</version>
+				<groupId>io.zipkin.java</groupId>
+				<artifactId>zipkin-server</artifactId>
+				<version>0.4.3</version>
 				<scope>compile</scope>
 			</dependency>
 		</dependencies>

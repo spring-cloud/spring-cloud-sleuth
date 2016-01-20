@@ -1,7 +1,7 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import io.zipkin.Endpoint;
 import lombok.extern.slf4j.Slf4j;
+import zipkin.Endpoint;
 
 /**
  * Endpoint locator that will try to call an endpoint via Discovery Client

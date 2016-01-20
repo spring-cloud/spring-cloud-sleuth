@@ -21,7 +21,7 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerInitial
 import org.springframework.cloud.util.InetUtils;
 import org.springframework.context.event.EventListener;
 
-import io.zipkin.Endpoint;
+import zipkin.Endpoint;
 
 /**
  * @author Dave Syer

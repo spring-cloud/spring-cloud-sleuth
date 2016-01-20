@@ -108,8 +108,8 @@
 			<artifactId>docker-compose</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin</groupId>
-			<artifactId>zipkin-java-core</artifactId>
+			<groupId>io.zipkin.java</groupId>
+			<artifactId>zipkin</artifactId>
 		</dependency>
 	</dependencies>
 

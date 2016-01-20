@@ -15,12 +15,12 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import io.zipkin.Sampler;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.Spans;
+import zipkin.Sampler;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +38,7 @@ public class SamplingZipkinSpanIteratorTests {
   public void skipsInputSpans() {
     Spans spans = new Spans(host, Arrays.asList(span("message/sleuth")));
 
-    Iterator<io.zipkin.Span> result = new SamplingZipkinSpanIterator(Sampler.create(1.0f), spans);
+    Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(Sampler.create(1.0f), spans);
 
     assertThat(result).isEmpty();
   }
@@ -47,7 +47,7 @@ public class SamplingZipkinSpanIteratorTests {
   public void retainsValidSpans() {
     Spans spans = new Spans(host, Arrays.asList(span("foo"), span("bar"), span("baz")));
 
-    Iterator<io.zipkin.Span> result = new SamplingZipkinSpanIterator(Sampler.create(1.0f), spans);
+    Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(Sampler.create(1.0f), spans);
 
     assertThat(result).extracting(s -> s.name).containsExactly("foo", "bar", "baz");
   }
@@ -64,7 +64,7 @@ public class SamplingZipkinSpanIteratorTests {
       }
     };
 
-    Iterator<io.zipkin.Span> result = new SamplingZipkinSpanIterator(everyOtherSampler, spans);
+    Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(everyOtherSampler, spans);
 
     assertThat(result).extracting(s -> s.name).containsExactly("foo", "baz");
   }

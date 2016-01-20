@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import io.zipkin.BinaryAnnotation;
-import io.zipkin.Endpoint;
 import java.util.Collections;
+import zipkin.BinaryAnnotation;
+import zipkin.Endpoint;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.MilliSpan;
@@ -37,7 +37,7 @@ public class ZipkinMessageListenerTests {
 		long start = System.currentTimeMillis();
 		span.log("http/request/retry"); // System.currentTimeMillis
 
-		io.zipkin.Span result = ZipkinMessageListener.convert(span, host);
+		zipkin.Span result = ZipkinMessageListener.convert(span, host);
 
 		assertThat(result.timestamp)
 				.isEqualTo(span.getBegin() * 1000);
@@ -54,7 +54,7 @@ public class ZipkinMessageListenerTests {
 		span.log("http/request/retry");
 		span.tag("spring-boot/version", "1.3.1.RELEASE");
 
-		io.zipkin.Span result = ZipkinMessageListener.convert(span, host);
+		zipkin.Span result = ZipkinMessageListener.convert(span, host);
 
 		assertThat(result.annotations.get(0).endpoint)
 				.isEqualTo(endpoint);
@@ -69,7 +69,7 @@ public class ZipkinMessageListenerTests {
 	 */
 	@Test
 	public void spanWithoutAnnotationsLogsComponent() {
-		io.zipkin.Span result = ZipkinMessageListener.convert(span, host);
+		zipkin.Span result = ZipkinMessageListener.convert(span, host);
 
 		assertThat(result.binaryAnnotations).hasSize(1);
 		assertThat(result.binaryAnnotations.get(0)).isEqualToComparingFieldByField(
@@ -81,7 +81,7 @@ public class ZipkinMessageListenerTests {
 	public void nullProcessIdCoercesToUnknownServiceName() {
 		MilliSpan noProcessId = MilliSpan.builder().traceId(1L).name("parent").remote(true).build();
 
-		io.zipkin.Span result = ZipkinMessageListener.convert(noProcessId, host);
+		zipkin.Span result = ZipkinMessageListener.convert(noProcessId, host);
 
 		assertThat(result.binaryAnnotations)
 				.containsOnly(BinaryAnnotation.create("lc", "unknown", endpoint));

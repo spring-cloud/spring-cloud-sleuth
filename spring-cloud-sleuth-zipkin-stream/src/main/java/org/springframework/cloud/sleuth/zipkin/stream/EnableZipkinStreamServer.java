@@ -23,7 +23,7 @@ import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Import;
 
-import io.zipkin.server.EnableZipkinServer;
+import zipkin.server.EnableZipkinServer;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

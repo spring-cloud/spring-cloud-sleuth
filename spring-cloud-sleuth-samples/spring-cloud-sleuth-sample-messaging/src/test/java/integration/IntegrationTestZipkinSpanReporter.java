@@ -15,9 +15,9 @@
  */
 package integration;
 
-import io.zipkin.Span;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
+import zipkin.Span;
 
 import java.util.Collections;
 import java.util.LinkedList;

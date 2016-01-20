@@ -1,11 +1,11 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import io.zipkin.Endpoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import zipkin.Endpoint;
 
 import static org.assertj.core.api.BDDAssertions.then;
 

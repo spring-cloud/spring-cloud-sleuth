@@ -83,8 +83,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin</groupId>
-			<artifactId>zipkin-java-server</artifactId>
+			<groupId>io.zipkin.java</groupId>
+			<artifactId>zipkin-server</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.github.kristofa</groupId>

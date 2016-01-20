@@ -42,8 +42,8 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin</groupId>
-			<artifactId>zipkin-java-core</artifactId>
+			<groupId>io.zipkin.java</groupId>
+			<artifactId>zipkin</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>

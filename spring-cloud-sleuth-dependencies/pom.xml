@@ -17,7 +17,7 @@
 		<brave.version>3.4.0</brave.version>
 		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
-		<zipkin-java.version>0.4.1</zipkin-java.version>
+		<zipkin-java.version>0.4.3</zipkin-java.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -74,18 +74,18 @@
 				<version>${aspectj.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>io.zipkin</groupId>
-				<artifactId>zipkin-java-core</artifactId>
+				<groupId>io.zipkin.java</groupId>
+				<artifactId>zipkin</artifactId>
 				<version>${zipkin-java.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>io.zipkin</groupId>
-				<artifactId>zipkin-java-server</artifactId>
+				<groupId>io.zipkin.java</groupId>
+				<artifactId>zipkin-server</artifactId>
 				<version>${zipkin-java.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>io.zipkin</groupId>
-				<artifactId>zipkin-java-jdbc</artifactId>
+				<groupId>io.zipkin.java</groupId>
+				<artifactId>spanstore-jdbc</artifactId>
 				<version>${zipkin-java.version}</version>
 			</dependency>
 		</dependencies>

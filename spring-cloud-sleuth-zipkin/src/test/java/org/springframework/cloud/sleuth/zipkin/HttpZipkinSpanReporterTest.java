@@ -4,11 +4,11 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import okhttp3.mockwebserver.SocketPolicy;
-import io.zipkin.Codec;
-import io.zipkin.Span;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
+import zipkin.Codec;
+import zipkin.Span;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,7 +59,7 @@ public class HttpZipkinSpanReporterTest {
     assertThat(request.getHeader("Content-Type")).isEqualTo("application/json");
 
     // Now, let's read back the spans we sent!
-    List<io.zipkin.Span> zipkinSpans = Codec.JSON.readSpans(request.getBody().readByteArray());
+    List<Span> zipkinSpans = Codec.JSON.readSpans(request.getBody().readByteArray());
     assertThat(zipkinSpans).containsExactly(
         span(1L, "foo"),
         span(2L, "bar")
@@ -91,6 +91,6 @@ public class HttpZipkinSpanReporterTest {
   }
 
   static Span span(long traceId, String spanName) {
-    return new io.zipkin.Span.Builder().traceId(traceId).id(traceId).name(spanName).build();
+    return new Span.Builder().traceId(traceId).id(traceId).name(spanName).build();
   }
 }

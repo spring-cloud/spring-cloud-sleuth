@@ -13,7 +13,7 @@ import org.springframework.cloud.sleuth.zipkin.stream.ZipkinServerApplicationTes
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.zipkin.SpanStore;
+import zipkin.SpanStore;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ZipkinStreamServerApplication.class)

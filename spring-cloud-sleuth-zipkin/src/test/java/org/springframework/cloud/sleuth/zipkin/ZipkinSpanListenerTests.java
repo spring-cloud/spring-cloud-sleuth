@@ -80,7 +80,7 @@ public class ZipkinSpanListenerTests {
 		long start = System.currentTimeMillis();
 		parent.log("http/request/retry"); // System.currentTimeMillis
 
-		io.zipkin.Span result = listener.convert(parent);
+		zipkin.Span result = listener.convert(parent);
 
 		assertThat(result.timestamp)
 				.isEqualTo(parent.getBegin() * 1000);
@@ -97,7 +97,7 @@ public class ZipkinSpanListenerTests {
 		parent.log("http/request/retry");
 		parent.tag("spring-boot/version", "1.3.1.RELEASE");
 
-		io.zipkin.Span result = listener.convert(parent);
+		zipkin.Span result = listener.convert(parent);
 
 		assertThat(result.annotations.get(0).endpoint)
 				.isEqualTo(listener.localEndpoint);
@@ -146,7 +146,7 @@ public class ZipkinSpanListenerTests {
 	@Configuration
 	protected static class ZipkinTestConfiguration {
 
-		private List<io.zipkin.Span> spans = new ArrayList<>();
+		private List<zipkin.Span> spans = new ArrayList<>();
 
 		@Bean
 		public Sampler<?> defaultSampler() {

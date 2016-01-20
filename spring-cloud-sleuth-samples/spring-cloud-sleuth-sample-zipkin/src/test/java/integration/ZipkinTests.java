@@ -16,7 +16,6 @@
 package integration;
 
 import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
-import io.zipkin.server.ZipkinServer;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -33,6 +32,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
+import zipkin.server.ZipkinServer;
 
 import java.util.Random;
 

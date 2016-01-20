@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import io.zipkin.Codec;
-import io.zipkin.Span;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
@@ -17,6 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import lombok.extern.apachecommons.CommonsLog;
+import zipkin.Codec;
+import zipkin.Span;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 

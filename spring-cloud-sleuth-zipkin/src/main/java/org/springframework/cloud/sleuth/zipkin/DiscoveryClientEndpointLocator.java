@@ -20,7 +20,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.util.InetUtils;
 
-import io.zipkin.Endpoint;
+import zipkin.Endpoint;
 
 /**
  * An {@link EndpointLocator} that tries to find local service information from a

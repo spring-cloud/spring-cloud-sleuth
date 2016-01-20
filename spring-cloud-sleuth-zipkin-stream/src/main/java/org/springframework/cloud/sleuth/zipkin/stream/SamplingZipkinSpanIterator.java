@@ -15,7 +15,6 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import io.zipkin.Sampler;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import lombok.extern.apachecommons.CommonsLog;
@@ -23,17 +22,18 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
+import zipkin.Sampler;
 
 /**
  * This converts sleuth spans to zipkin ones, skipping invalid or unsampled.
  */
 @CommonsLog
-final class SamplingZipkinSpanIterator implements Iterator<io.zipkin.Span> {
+final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 
   private final Sampler sampler;
   private final Iterator<Span> delegate;
   private final Host host;
-  private io.zipkin.Span peeked;
+  private zipkin.Span peeked;
 
   SamplingZipkinSpanIterator(Sampler sampler, Spans input) {
     this.sampler = sampler;
@@ -50,10 +50,10 @@ final class SamplingZipkinSpanIterator implements Iterator<io.zipkin.Span> {
   }
 
   @Override
-  public io.zipkin.Span next() {
+  public zipkin.Span next() {
     // implicitly peeks
     if (!hasNext()) throw new NoSuchElementException();
-    io.zipkin.Span result = peeked;
+    zipkin.Span result = peeked;
     peeked = null;
     return result;
   }
@@ -64,9 +64,9 @@ final class SamplingZipkinSpanIterator implements Iterator<io.zipkin.Span> {
   }
 
   /** returns a converted span or null if it is invalid or unsampled. */
-  io.zipkin.Span convertAndSample(Span input, Host host) {
+  zipkin.Span convertAndSample(Span input, Host host) {
     if (!input.getName().equals("message/" + SleuthSink.INPUT)) {
-      io.zipkin.Span result = ZipkinMessageListener.convert(input, host);
+      zipkin.Span result = ZipkinMessageListener.convert(input, host);
       if (this.sampler.isSampled(result.traceId)) {
         return result;
       }

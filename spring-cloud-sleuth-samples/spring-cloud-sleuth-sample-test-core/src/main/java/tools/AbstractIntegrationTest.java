@@ -17,11 +17,11 @@ package tools;
 
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
-import io.zipkin.Codec;
-import io.zipkin.Span;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
+import zipkin.Codec;
+import zipkin.Span;
 
 import java.net.URI;
 import java.util.*;
@@ -122,7 +122,7 @@ public abstract class AbstractIntegrationTest {
 		};
 	}
 
-	protected List<String> serviceNamesNotFoundInZipkin(List<io.zipkin.Span> spans) {
+	protected List<String> serviceNamesNotFoundInZipkin(List<zipkin.Span> spans) {
 		List<String> serviceNamesFoundInAnnotations = spans.stream()
 				.filter(span -> span.annotations != null)
 				.map(span -> span.annotations)
@@ -151,7 +151,7 @@ public abstract class AbstractIntegrationTest {
 		return "unknown";
 	}
 
-	protected List<String> annotationsNotFoundInZipkin(List<io.zipkin.Span> spans) {
+	protected List<String> annotationsNotFoundInZipkin(List<zipkin.Span> spans) {
 		String binaryAnnotationName = getRequiredBinaryAnnotationName();
 		Optional<String> names = spans.stream()
 				.filter(span -> span.binaryAnnotations != null)
