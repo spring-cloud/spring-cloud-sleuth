@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -94,7 +93,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		Trace trace = this.tracer.startTrace("customTraceEndpoint",
+		Span span = this.tracer.startTrace("customTraceEndpoint",
 				new AlwaysSampler());
 		int millis = random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
@@ -103,7 +102,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
-		this.tracer.close(trace);
+		this.tracer.close(span);
 		return "traced/" + s;
 	}
 

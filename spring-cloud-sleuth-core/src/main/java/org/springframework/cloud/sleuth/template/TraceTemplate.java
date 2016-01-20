@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.template;
 
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceDelegate;
 
@@ -35,11 +35,11 @@ public class TraceTemplate implements TraceOperations  {
 	public <T> T trace(final TraceCallback<T> callback) {
 		if (this.tracer.isTracing()) {
 			DelegateCallback<T> delegate = new DelegateCallback<>(this.tracer);
-			Trace trace = delegate.startSpan();
+			Span span = delegate.startSpan();
 			try {
-				return callback.doInTrace(trace);
+				return callback.doInTrace(span);
 			} finally {
-				this.tracer.close(trace);
+				this.tracer.close(span);
 			}
 		} else {
 			return callback.doInTrace(null);
@@ -53,7 +53,7 @@ public class TraceTemplate implements TraceOperations  {
 		}
 
 		@Override
-		protected Trace startSpan() {
+		protected Span startSpan() {
 			return super.startSpan();
 		}
 

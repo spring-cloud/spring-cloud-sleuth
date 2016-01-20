@@ -16,22 +16,13 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -50,6 +41,12 @@ import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Dave Syer
@@ -78,30 +75,30 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void acquireAndRelease() {
-		Trace context = this.tracer.startTrace("foo");
+		Span context = this.tracer.startTrace("foo");
 		this.tracer.close(context);
 		assertEquals(1, this.test.spans.size());
 	}
 
 	@Test
 	public void rpcAnnotations() {
-		Span parent = MilliSpan.builder().traceId(1L).name("parent").remote(true)
+		Span parent = Span.builder().traceId(1L).name("parent").remote(true)
 				.build();
-		Trace context = this.tracer.joinTrace("child", parent);
-		this.application.publishEvent(new ClientSentEvent(this, context.getSpan()));
+		Span context = this.tracer.joinTrace("child", parent);
+		this.application.publishEvent(new ClientSentEvent(this, context));
 		this.application
-				.publishEvent(new ServerReceivedEvent(this, parent, context.getSpan()));
+				.publishEvent(new ServerReceivedEvent(this, parent, context));
 		this.application
-				.publishEvent(new ServerSentEvent(this, parent, context.getSpan()));
-		this.application.publishEvent(new ClientReceivedEvent(this, context.getSpan()));
+				.publishEvent(new ServerSentEvent(this, parent, context));
+		this.application.publishEvent(new ClientReceivedEvent(this, context));
 		this.tracer.close(context);
 		assertEquals(2, this.test.spans.size());
 	}
 
 	@Test
 	public void nullSpanName() {
-		Trace context = this.tracer.startTrace(null, (Sampler) null);
-		this.application.publishEvent(new ClientSentEvent(this, context.getSpan()));
+		Span context = this.tracer.startTrace(null, null);
+		this.application.publishEvent(new ClientSentEvent(this, context));
 		this.tracer.close(context);
 		assertEquals(1, this.test.spans.size());
 		this.listener.poll();
@@ -129,7 +126,7 @@ public class StreamSpanListenerTests {
 		}
 
 		@Bean
-		public Sampler<?> defaultSampler() {
+		public Sampler defaultSampler() {
 			return new AlwaysSampler();
 		}
 

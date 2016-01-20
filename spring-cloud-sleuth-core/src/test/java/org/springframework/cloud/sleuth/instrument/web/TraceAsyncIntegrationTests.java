@@ -10,7 +10,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
@@ -40,7 +40,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = tracer.startTrace("existing").getSpan();
+		Span span = tracer.startTrace("existing");
 		tracer.continueSpan(span);
 		return span;
 	}
@@ -62,7 +62,7 @@ public class TraceAsyncIntegrationTests {
 
 	@After
 	public void cleanTrace() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@DefaultTestAutoConfiguration
@@ -83,7 +83,7 @@ public class TraceAsyncIntegrationTests {
 
 		@Async
 		public void invokeAsynchronousLogic() {
-			span.set(TraceContextHolder.getCurrentSpan());
+			span.set(SpanContextHolder.getCurrentSpan());
 		}
 
 		public Long getTraceId() {

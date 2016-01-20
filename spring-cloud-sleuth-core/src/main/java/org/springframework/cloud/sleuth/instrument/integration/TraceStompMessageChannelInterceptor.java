@@ -15,15 +15,14 @@
  */
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.Random;
-
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
+
+import java.util.Random;
 
 /**
  * Interceptor for Stomp Messages sent over websocket
@@ -33,7 +32,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
  *
  */
 public class TraceStompMessageChannelInterceptor extends AbstractTraceChannelInterceptor implements ChannelInterceptor {
-	private ThreadLocal<Trace> traceScopeHolder = new ThreadLocal<Trace>();
+	private ThreadLocal<Span> traceScopeHolder = new ThreadLocal<>();
 
 	public TraceStompMessageChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
 		super(tracer, traceKeys, random);
@@ -41,16 +40,16 @@ public class TraceStompMessageChannelInterceptor extends AbstractTraceChannelInt
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (getTracer().isTracing() || message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+		if (getTracer().isTracing() || message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
 			return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(getTracer().getCurrentSpan()).build();
 		}
 		String name = getMessageChannelName(channel);
-		Trace trace = startSpan(buildSpan(message), name);
-		this.traceScopeHolder.set(trace);
-		return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(trace.getSpan()).build();
+		Span span = startSpan(buildSpan(message), name);
+		this.traceScopeHolder.set(span);
+		return StompMessageBuilder.fromMessage(message).setHeadersFromSpan(span).build();
 	}
 
-	private Trace startSpan(Span span, String name) {
+	private Span startSpan(Span span, String name) {
 		if (span != null) {
 			return getTracer().joinTrace(name, span);
 		}
@@ -59,8 +58,8 @@ public class TraceStompMessageChannelInterceptor extends AbstractTraceChannelInt
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		final ThreadLocal<Trace> traceScopeHolder = this.traceScopeHolder;
-		Trace traceInScope = traceScopeHolder.get();
+		final ThreadLocal<Span> traceScopeHolder = this.traceScopeHolder;
+		Span traceInScope = traceScopeHolder.get();
 		getTracer().close(traceInScope);
 		traceScopeHolder.remove();
 	}

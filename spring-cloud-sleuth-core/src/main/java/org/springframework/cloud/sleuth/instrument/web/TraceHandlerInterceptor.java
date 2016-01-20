@@ -16,13 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Spencer Gibb
@@ -42,8 +42,8 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 			Object handler) throws Exception {
 		// TODO: get trace data from request?
 		// TODO: what is the description?
-		Trace trace = this.tracer.startTrace("traceHandlerInterceptor");
-		request.setAttribute(ATTR_NAME, trace);
+		Span span = this.tracer.startTrace("traceHandlerInterceptor");
+		request.setAttribute(ATTR_NAME, span);
 		return true;
 	}
 
@@ -56,7 +56,7 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
 			Object handler, Exception ex) throws Exception {
-		Trace trace = Trace.class.cast(request.getAttribute(ATTR_NAME));
-		this.tracer.close(trace);
+		Span span = Span.class.cast(request.getAttribute(ATTR_NAME));
+		this.tracer.close(span);
 	}
 }

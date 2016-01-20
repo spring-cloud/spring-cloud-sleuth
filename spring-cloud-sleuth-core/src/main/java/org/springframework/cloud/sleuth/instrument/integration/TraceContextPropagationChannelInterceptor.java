@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.integration;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
@@ -50,7 +49,7 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 
 	private final Tracer tracer;
 
-	private final static ThreadLocal<Trace> ORIGINAL_CONTEXT = new ThreadLocal<>();
+	private final static ThreadLocal<Span> ORIGINAL_CONTEXT = new ThreadLocal<>();
 
 	public TraceContextPropagationChannelInterceptor(Tracer tracer) {
 		this.tracer = tracer;
@@ -101,12 +100,12 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 	protected void populatePropagatedContext(Span span, Message<?> message,
 			MessageChannel channel) {
 		if (span != null) {
-			ORIGINAL_CONTEXT.set(this.tracer.continueSpan(span).getSaved());
+			ORIGINAL_CONTEXT.set(this.tracer.continueSpan(span).getSavedSpan());
 		}
 	}
 
 	protected void resetPropagatedContext() {
-		Trace originalContext = ORIGINAL_CONTEXT.get();
+		Span originalContext = ORIGINAL_CONTEXT.get();
 		this.tracer.detach(originalContext);
 		ORIGINAL_CONTEXT.remove();
 	}
@@ -128,16 +127,16 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 			Map<String, Object> headers = new HashMap<>();
 			headers.putAll(message.getHeaders());
 
-			setHeader(headers, Trace.SPAN_ID_NAME, this.span.getSpanId());
-			setHeader(headers, Trace.TRACE_ID_NAME, this.span.getTraceId());
-			setHeader(headers, Trace.SPAN_NAME_NAME, this.span.getName());
+			setHeader(headers, Span.SPAN_ID_NAME, this.span.getSpanId());
+			setHeader(headers, Span.TRACE_ID_NAME, this.span.getTraceId());
+			setHeader(headers, Span.SPAN_NAME_NAME, this.span.getName());
 			Long parentId = getParentId(span);
 			if (parentId != null) {
-				setHeader(headers, Trace.PARENT_ID_NAME, parentId);
+				setHeader(headers, Span.PARENT_ID_NAME, parentId);
 			}
 			String processId = span.getProcessId();
 			if (StringUtils.hasText(processId)) {
-				setHeader(headers, Trace.PROCESS_ID_NAME, processId);
+				setHeader(headers, Span.PROCESS_ID_NAME, processId);
 			}
 			this.messageHeaders = new MessageHeaders(headers);
 		}
@@ -148,7 +147,7 @@ public class TraceContextPropagationChannelInterceptor extends ChannelIntercepto
 			}
 		}
 		public void setHeader(Map<String, Object> headers, String name, long value) {
-			setHeader(headers, name, Span.IdConverter.toHex(value));
+			setHeader(headers, name, Span.toHex(value));
 		}
 
 		@Override

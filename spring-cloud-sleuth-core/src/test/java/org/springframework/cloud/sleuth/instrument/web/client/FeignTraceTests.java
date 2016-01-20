@@ -1,12 +1,8 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,13 +14,11 @@ import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,9 +32,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { FeignTraceTests.TestConfiguration.class })
@@ -59,7 +56,7 @@ public class FeignTraceTests {
 
 	@After
 	public void close() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 		this.listener.getEvents().clear();
 	}
 
@@ -69,7 +66,7 @@ public class FeignTraceTests {
 		ResponseEntity<String> response = this.testFeignInterface.getNoTrace();
 
 		// then
-		then(getHeader(response, Trace.TRACE_ID_NAME)).isNotNull();
+		then(getHeader(response, Span.TRACE_ID_NAME)).isNotNull();
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
@@ -78,14 +75,14 @@ public class FeignTraceTests {
 		// given
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
-		this.tracer.continueSpan(MilliSpan.builder().traceId(currentTraceId)
+		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
 				.spanId(generatedId()).parent(currentParentId).build());
 
 		// when
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		// then
-		then(Span.IdConverter.fromHex(getHeader(response, Trace.TRACE_ID_NAME))).isEqualTo(currentTraceId);
+		then(Span.fromHex(getHeader(response, Span.TRACE_ID_NAME))).isEqualTo(currentTraceId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 
@@ -148,15 +145,15 @@ public class FeignTraceTests {
 
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
-				@RequestHeader(name = Trace.TRACE_ID_NAME, required = false) String traceId) {
+				@RequestHeader(name = Span.TRACE_ID_NAME, required = false) String traceId) {
 			then(traceId).isNotNull();
 			return "OK";
 		}
 
 		@RequestMapping(value = "/traceid", method = RequestMethod.GET)
-		public String traceId(@RequestHeader(Trace.TRACE_ID_NAME) String traceId,
-				@RequestHeader(Trace.SPAN_ID_NAME) String spanId,
-				@RequestHeader(Trace.PARENT_ID_NAME) String parentId) {
+		public String traceId(@RequestHeader(Span.TRACE_ID_NAME) String traceId,
+				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
+				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();

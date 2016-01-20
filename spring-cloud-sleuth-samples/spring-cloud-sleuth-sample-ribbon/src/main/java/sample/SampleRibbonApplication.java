@@ -39,7 +39,7 @@ import com.github.kristofa.brave.SpanCollector;
 public class SampleRibbonApplication {
 
 	@Bean
-	public Sampler<?> defaultSampler() {
+	public Sampler defaultSampler() {
 		return new AlwaysSampler();
 	}
 

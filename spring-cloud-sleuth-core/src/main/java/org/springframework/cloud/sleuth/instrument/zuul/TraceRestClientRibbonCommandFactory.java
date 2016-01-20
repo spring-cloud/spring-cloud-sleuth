@@ -24,7 +24,6 @@ import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonComm
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.TraceAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
@@ -91,15 +90,15 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 		protected void customizeRequest(HttpRequest.Builder requestBuilder) {
 			Span span = getCurrentSpan();
 			if (span == null) {
-				setHeader(requestBuilder, Trace.NOT_SAMPLED_NAME, "");
+				setHeader(requestBuilder, Span.NOT_SAMPLED_NAME, "");
 				return;
 			}
-			setHeader(requestBuilder, Trace.TRACE_ID_NAME, span.getTraceId());
-			setHeader(requestBuilder, Trace.SPAN_ID_NAME, span.getSpanId());
-			setHeader(requestBuilder, Trace.SPAN_NAME_NAME, span.getName());
-			setHeader(requestBuilder, Trace.PARENT_ID_NAME,
+			setHeader(requestBuilder, Span.TRACE_ID_NAME, span.getTraceId());
+			setHeader(requestBuilder, Span.SPAN_ID_NAME, span.getSpanId());
+			setHeader(requestBuilder, Span.SPAN_NAME_NAME, span.getName());
+			setHeader(requestBuilder, Span.PARENT_ID_NAME,
 					getParentId(span));
-			setHeader(requestBuilder, Trace.PROCESS_ID_NAME,
+			setHeader(requestBuilder, Span.PROCESS_ID_NAME,
 					span.getProcessId());
 			publish(new ClientSentEvent(this, span));
 		}
@@ -122,7 +121,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 		}
 
 		public void setHeader(HttpRequest.Builder builder, String name, Long value) {
-			setHeader(builder, name, Span.IdConverter.toHex(value));
+			setHeader(builder, name, Span.toHex(value));
 		}
 
 		private Span getCurrentSpan() {

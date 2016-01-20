@@ -1,14 +1,13 @@
 package org.springframework.cloud.sleuth.sampler;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.data.Percentage.withPercentage;
-
 import org.junit.Test;
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceAccessor;
 
 import java.util.Random;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.data.Percentage.withPercentage;
 
 public class PercentageBasedSamplerTests {
 
@@ -59,7 +58,7 @@ public class PercentageBasedSamplerTests {
 		return new TraceAccessor() {
 			@Override
 			public Span getCurrentSpan() {
-				return MilliSpan.builder().traceId(RANDOM.nextLong()).build();
+				return Span.builder().traceId(RANDOM.nextLong()).build();
 			}
 
 			@Override

@@ -1,10 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.Random;
-
-import org.springframework.cloud.sleuth.MilliSpan;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.integration.channel.AbstractMessageChannel;
@@ -12,6 +8,8 @@ import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
+
+import java.util.Random;
 
 /**
  * Abstraction over classes related to channel intercepting
@@ -45,19 +43,19 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 * trace id passed initially.
 	 */
 	Span buildSpan(Message<?> message) {
-		if (!hasHeader(message, Trace.TRACE_ID_NAME) || !hasHeader(message, Trace.SPAN_ID_NAME)) {
+		if (!hasHeader(message, Span.TRACE_ID_NAME) || !hasHeader(message, Span.SPAN_ID_NAME)) {
 			return null; // cannot build a span without ids
 		}
-		long spanId = hasHeader(message, Trace.SPAN_ID_NAME) ?
-				getHeader(message, Trace.SPAN_ID_NAME, Long.class) : this.random.nextLong();
-		long traceId = getHeader(message, Trace.TRACE_ID_NAME, Long.class);
-		MilliSpan.MilliSpanBuilder span = MilliSpan.builder().traceId(traceId).spanId(spanId);
-		Long parentId = getHeader(message, Trace.PARENT_ID_NAME, Long.class);
-		if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+		long spanId = hasHeader(message, Span.SPAN_ID_NAME) ?
+				getHeader(message, Span.SPAN_ID_NAME, Long.class) : this.random.nextLong();
+		long traceId = getHeader(message, Span.TRACE_ID_NAME, Long.class);
+		Span.SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
+		Long parentId = getHeader(message, Span.PARENT_ID_NAME, Long.class);
+		if (message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
 			span.exportable(false);
 		}
-		String processId = getHeader(message, Trace.PROCESS_ID_NAME);
-		String spanName = getHeader(message, Trace.SPAN_NAME_NAME);
+		String processId = getHeader(message, Span.PROCESS_ID_NAME);
+		String spanName = getHeader(message, Span.SPAN_NAME_NAME);
 		if (spanName != null) {
 			span.name(spanName);
 		}

@@ -9,7 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.HttpMockServer;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcWiremockIntegrationTest;
@@ -71,7 +71,7 @@ public class RestTemplateTraceAspectIntegrationTests extends AbstractMvcWiremock
 	}
 
 	private void thenTraceIdHasBeenSetOnARequestHeader() {
-		this.wireMock.verifyThat(getRequestedFor(urlMatching(".*")).withHeader(Trace.TRACE_ID_NAME, matching("^(?!\\s*$).+")));
+		this.wireMock.verifyThat(getRequestedFor(urlMatching(".*")).withHeader(Span.TRACE_ID_NAME, matching("^(?!\\s*$).+")));
 	}
 
 	private void whenARequestIsSentToAnAsyncEndpoint(String url) throws Exception {

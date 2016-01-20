@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -70,7 +70,7 @@ class TestBeanWithScheduledMethod {
 
 	@Scheduled(fixedDelay = 1L)
 	public void scheduledMethod() {
-		this.span = TraceContextHolder.getCurrentSpan();
+		this.span = SpanContextHolder.getCurrentSpan();
 	}
 
 	public Span getSpan() {

@@ -16,12 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.cloud.sleuth.Tracer;
-
 import lombok.Getter;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 
 /**
  * @author Spencer Gibb
@@ -45,18 +43,18 @@ public abstract class TraceDelegate<T> {
 		this.parent = tracer.getCurrentSpan();
 	}
 
-	protected void close(Trace trace) {
-		this.tracer.close(trace);
+	protected void close(Span span) {
+		this.tracer.close(span);
 	}
 
-	protected void closeAll(Trace trace) {
-		trace = this.tracer.close(trace);
-		while (trace != null) {
-			trace = this.tracer.detach(trace);
+	protected void closeAll(Span span) {
+		span = this.tracer.close(span);
+		while (span != null) {
+			span = this.tracer.detach(span);
 		}
 	}
 
-	protected Trace startSpan() {
+	protected Span startSpan() {
 		return this.tracer.joinTrace(getSpanName(), this.parent);
 	}
 
@@ -65,6 +63,6 @@ public abstract class TraceDelegate<T> {
 	}
 
 	protected void ensureThatThreadIsNotPollutedByPreviousTraces() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 }

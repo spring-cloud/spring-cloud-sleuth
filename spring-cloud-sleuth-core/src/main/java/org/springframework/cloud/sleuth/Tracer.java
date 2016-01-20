@@ -31,14 +31,8 @@ import java.util.concurrent.Callable;
  * With care, it is possible to safely pass a Span object between threads, but in most
  * cases this is not necessary.
  *
- * A 'TraceScope' can either be empty, or contain a Span. TraceScope objects implement the
- * Java's Closeable interface. Similar to file descriptors, they must be closed after they
- * are created. When a TraceScope contains a Span, this span is closed when the scope is
- * closed.
+ * The 'startTrace' method in this class starts a new span.
  *
- * The 'startTrace' methods in this class do a few things:
- * <ul>
- * <li>Set currentSpan to the new Span.</li>
  * <li>Create a TraceSpan object to manage the new Span.</li>
  * </ul>
  *
@@ -53,18 +47,18 @@ import java.util.concurrent.Callable;
 public interface Tracer extends TraceAccessor {
 
 	/**
-	 * Creates a trace wrapping a new span.
+	 * Creates a new Span.
 	 * <p/>
 	 * If this thread has a currently active span, it will be the parent of the span we
-	 * create here, and the trace scope will contain the new span and the parent. If there
-	 * is no currently active trace span, the trace scope we create will be empty.
+	 * create here. If there is no currently active trace span, the trace scope we
+	 * create will be empty.
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	Trace startTrace(String name);
+	Span startTrace(String name);
 
 	/**
-	 * Creates a new trace scope with a specific parent. The parent might be in another
+	 * Creates a new Span with a specific parent. The parent might be in another
 	 * process or thread.
 	 * <p/>
 	 * If this thread has a currently active trace span, it must be the 'parent' span that
@@ -73,7 +67,7 @@ public interface Tracer extends TraceAccessor {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	Trace joinTrace(String name, Span parent);
+	Span joinTrace(String name, Span parent);
 
 	/**
 	 * Start a new span if the sampler allows it or if we are already tracing in this
@@ -81,12 +75,12 @@ public interface Tracer extends TraceAccessor {
 	 *  @param name the name of the span
 	 * @param sampler a sampler to decide whether to create the span or not
 	 */
-	<T> Trace startTrace(String name, Sampler<T> sampler);
+	Span startTrace(String name, Sampler sampler);
 
 	/**
 	 * Pick up an existing span from another thread.
 	 */
-	Trace continueSpan(Span s);
+	Span continueSpan(Span span);
 
 	/**
 	 * Adds a tag to the current span if tracing is currently on.
@@ -96,19 +90,19 @@ public interface Tracer extends TraceAccessor {
 	/**
 	 * Remove this span from the current thread, but don't stop it yet or send it for
 	 * collection. This is useful if the span object is then passed to another thread for
-	 * use with Trace.continueTrace().
+	 * use with Span.continueTrace().
 	 *
 	 * @return the saved trace if there was one before the trace started (null otherwise)
 	 */
-	Trace detach(Trace trace);
+	Span detach(Span span);
 
 	/**
 	 * Remove this span from the current thread, stop it and send it for collection.
 	 *
-	 * @param trace the trace to close
-	 * @return the saved trace if there was one before the trace started (null otherwise)
+	 * @param span the span to close
+	 * @return the saved span if there was one before the trace started (null otherwise)
 	 */
-	Trace close(Trace trace);
+	Span close(Span span);
 
 	<V> Callable<V> wrap(Callable<V> callable);
 

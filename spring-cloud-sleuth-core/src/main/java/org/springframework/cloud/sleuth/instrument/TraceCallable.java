@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument;
 
 import java.util.concurrent.Callable;
 
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 
 import lombok.EqualsAndHashCode;
@@ -43,12 +43,12 @@ public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Call
 	@Override
 	public V call() throws Exception {
 		ensureThatThreadIsNotPollutedByPreviousTraces();
-		Trace trace = startSpan();
+		Span span = startSpan();
 		try {
 			return this.getDelegate().call();
 		}
 		finally {
-			closeAll(trace);
+			closeAll(span);
 		}
 	}
 

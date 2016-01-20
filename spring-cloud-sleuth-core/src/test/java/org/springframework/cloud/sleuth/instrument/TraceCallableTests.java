@@ -5,11 +5,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Random;
@@ -28,21 +28,21 @@ public class TraceCallableTests {
 
 	@After
 	public void clean() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
 	public void should_not_see_same_trace_id_in_successive_tasks()
 			throws Exception {
-		Trace firstTrace = givenCallableGetsSubmitted(
+		Span firstSpan = givenCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		Trace secondTrace = whenCallableGetsSubmitted(
+		Span secondSpan = whenCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		then(secondTrace.getSpan().getTraceId())
-				.isNotEqualTo(firstTrace.getSpan().getTraceId());
-		then(secondTrace.getSaved()).isNull();
+		then(secondSpan.getTraceId())
+				.isNotEqualTo(firstSpan.getTraceId());
+		then(secondSpan.getSavedSpan()).isNull();
 	}
 
 	@Test
@@ -50,51 +50,51 @@ public class TraceCallableTests {
 			throws Exception {
 		givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
-		Trace secondTrace = whenNonTraceableCallableGetsSubmitted(
+		Span secondSpan = whenNonTraceableCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		then(secondTrace).isNull();
+		then(secondSpan).isNull();
 	}
 
 	@Test
 	public void should_remove_parent_span_from_thread_local_after_finishing_work()
 			throws Exception {
-		Trace parent = givenSpanIsAlreadyActive();
-		Trace child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
+		Span parent = givenSpanIsAlreadyActive();
+		Span child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 		then(parent).as("parent").isNotNull();
-		then(child.getSaved()).isEqualTo(parent);
+		then(child.getSavedSpan()).isEqualTo(parent);
 
-		Trace secondTrace = whenNonTraceableCallableGetsSubmitted(
+		Span secondSpan = whenNonTraceableCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		then(secondTrace).isNull();
+		then(secondSpan).isNull();
 	}
 
-	private Trace givenSpanIsAlreadyActive() {
+	private Span givenSpanIsAlreadyActive() {
 		return this.tracer.startTrace("parent");
 	}
 
-	private Callable<Trace> thatRetrievesTraceFromThreadLocal() {
-		return new Callable<Trace>() {
+	private Callable<Span> thatRetrievesTraceFromThreadLocal() {
+		return new Callable<Span>() {
 			@Override
-			public Trace call() throws Exception {
-				return TraceContextHolder.getCurrentTrace();
+			public Span call() throws Exception {
+				return SpanContextHolder.getCurrentSpan();
 			}
 		};
 	}
 
-	private Trace givenCallableGetsSubmitted(Callable<Trace> callable)
+	private Span givenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
 		return whenCallableGetsSubmitted(callable);
 	}
 
-	private Trace whenCallableGetsSubmitted(Callable<Trace> callable)
+	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
 		return this.executor.submit(new TraceCallable<>(this.tracer, callable))
 				.get();
 	}
 
-	private Trace whenNonTraceableCallableGetsSubmitted(Callable<Trace> callable)
+	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
 		return this.executor.submit(callable).get();
 	}

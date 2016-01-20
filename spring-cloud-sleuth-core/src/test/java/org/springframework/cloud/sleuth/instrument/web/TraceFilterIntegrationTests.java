@@ -1,15 +1,10 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.util.Random;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -19,6 +14,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
+
+import java.util.Random;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterIntegrationTests.class)
@@ -60,19 +59,19 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private MvcResult whenSentPingWithTraceId(Long passedTraceId)
 			throws Exception {
-		return sendPingWithTraceId(Trace.TRACE_ID_NAME, passedTraceId);
+		return sendPingWithTraceId(Span.TRACE_ID_NAME, passedTraceId);
 	}
 
 	private MvcResult sendPingWithTraceId(String headerName, Long passedCorrelationId)
 			throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
-						.header(headerName, Span.IdConverter.toHex(passedCorrelationId))
-						.header(Trace.SPAN_ID_NAME, Span.IdConverter.toHex(new Random().nextLong())))
+						.header(headerName, Span.toHex(passedCorrelationId))
+						.header(Span.SPAN_ID_NAME, Span.toHex(new Random().nextLong())))
 				.andReturn();
 	}
 
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.IdConverter.fromHex(mvcResult.getResponse().getHeader(Trace.TRACE_ID_NAME));
+		return Span.fromHex(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
 	}
 }

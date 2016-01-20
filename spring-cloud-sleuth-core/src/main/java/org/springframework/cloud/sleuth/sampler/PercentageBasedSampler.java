@@ -20,7 +20,7 @@ import org.springframework.cloud.sleuth.TraceAccessor;
  * @author Marcin Grzejszczak
  * @author Adrian Cole
  */
-public class PercentageBasedSampler implements Sampler<Void> {
+public class PercentageBasedSampler implements Sampler {
 
 	private final SamplerConfiguration configuration;
 	private final TraceAccessor traceAccessor;

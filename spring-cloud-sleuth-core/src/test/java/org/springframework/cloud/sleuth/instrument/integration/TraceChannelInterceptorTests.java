@@ -26,12 +26,11 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.integration.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
@@ -48,7 +47,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Dave Syer
@@ -79,7 +81,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
 		this.message = message;
-		this.span = TraceContextHolder.getCurrentSpan();
+		this.span = SpanContextHolder.getCurrentSpan();
 	}
 
 	@Before
@@ -89,35 +91,36 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@After
 	public void close() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 		this.channel.unsubscribe(this);
 	}
 
 	@Test
 	public void nonExportableSpanCreation() {
-		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Trace.NOT_SAMPLED_NAME, "")
+		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Span.NOT_SAMPLED_NAME, "")
 				.build());
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
-		assertNull(TraceContextHolder.getCurrentTrace());
+		assertNull(SpanContextHolder.getCurrentSpan());
 		assertFalse(this.span.isExportable());
 	}
 
 	@Test
 	public void parentSpanIncluded() {
-		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Trace.TRACE_ID_NAME, 10L)
-				.setHeader(Trace.SPAN_ID_NAME, 20L)
+		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Span.TRACE_ID_NAME, 10L)
+				.setHeader(Span.SPAN_ID_NAME, 20L)
 				.build());
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
-		long traceId = Span.IdConverter.fromHex(this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
+		long traceId = Span
+				.fromHex(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
-		assertNull(TraceContextHolder.getCurrentTrace());
+		assertNull(SpanContextHolder.getCurrentSpan());
 		assertEquals(1, this.app.events.size());
 	}
 
@@ -126,45 +129,45 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 
-		String traceId = this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
-		assertNull(TraceContextHolder.getCurrentTrace());
+		assertNull(SpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
 	public void headerCreation() {
-		Trace trace = this.tracer.startTrace("testSendMessage",
+		Span span = this.tracer.startTrace("testSendMessage",
 				new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
-		this.tracer.close(trace);
+		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 
-		String traceId = this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
-		assertNull(TraceContextHolder.getCurrentTrace());
+		assertNull(SpanContextHolder.getCurrentSpan());
 	}
 
 	// TODO: Refactor to parametrized test together with sending messages via channel
 	@Test
 	public void headerCreationViaMessagingTemplate() {
-		Trace trace = this.tracer.startTrace("testSendMessage",
+		Span span = this.tracer.startTrace("testSendMessage",
 				new AlwaysSampler());
 		this.messagingTemplate.send(MessageBuilder.withPayload("hi").build());
-		this.tracer.close(trace);
+		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Trace.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 
-		String traceId = this.message.getHeaders().get(Trace.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
-		assertNull(TraceContextHolder.getCurrentTrace());
+		assertNull(SpanContextHolder.getCurrentSpan());
 	}
 
 	@Configuration

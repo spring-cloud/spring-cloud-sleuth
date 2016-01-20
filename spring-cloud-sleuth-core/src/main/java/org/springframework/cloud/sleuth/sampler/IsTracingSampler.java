@@ -17,17 +17,17 @@
 package org.springframework.cloud.sleuth.sampler;
 
 import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 
 /**
  * @author Spencer Gibb
  */
-public class IsTracingSampler implements Sampler<Void> {
+public class IsTracingSampler implements Sampler {
 
 	public static IsTracingSampler INSTANCE = new IsTracingSampler();
 
 	@Override
 	public boolean next() {
-		return TraceContextHolder.isTracing();
+		return SpanContextHolder.isTracing();
 	}
 }

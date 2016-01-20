@@ -21,7 +21,7 @@ import org.springframework.cloud.sleuth.Sampler;
 /**
  * @author Spencer Gibb
  */
-public class AlwaysSampler implements Sampler<Void> {
+public class AlwaysSampler implements Sampler {
 	@Override
 	public boolean next() {
 		return true;

@@ -6,10 +6,10 @@ import org.junit.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.integration.TraceStompMessageChannelInterceptorTests.TestApplication;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -44,30 +44,30 @@ public class TraceStompMessageChannelInterceptorTests extends AbstractTraceStomp
 
 		thenSpanIdFromHeadersIsNotEmpty();
 		thenTraceIdFromHeadersIsNotEmpty();
-		then(TraceContextHolder.getCurrentTrace()).isNull();
+		then(SpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Test
 	public void should_propagate_headers_when_message_was_sent_during_local_span_starting() {
-		Trace trace = givenALocallyStartedSpan();
+		Span span = givenALocallyStartedSpan();
 		Message<?> message = givenMessageToBeSampled();
 
 		whenTheMessageWasSent(message);
-		this.tracer.close(trace);
+		this.tracer.close(span);
 
 		Long spanId = thenSpanIdFromHeadersIsNotEmpty();
 		long traceId = thenTraceIdFromHeadersIsNotEmpty();
-		then(traceId).isEqualTo(trace.getSpan().getTraceId());
-		then(spanId).isEqualTo(trace.getSpan().getSpanId());
-		then(TraceContextHolder.getCurrentTrace()).isNull();
+		then(traceId).isEqualTo(span.getTraceId());
+		then(spanId).isEqualTo(span.getSpanId());
+		then(SpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	private Message<?> givenMessageNotToBeSampled() {
-		return StompMessageBuilder.fromMessage(new GenericMessage<>("Message2")).setHeader(Trace.NOT_SAMPLED_NAME, "").build();
+		return StompMessageBuilder.fromMessage(new GenericMessage<>("Message2")).setHeader(Span.NOT_SAMPLED_NAME, "").build();
 	}
 
 	private String thenSpanIdFromHeadersIsEmpty() {
-		String header = getValueFromHeaders(Trace.SPAN_ID_NAME, String.class);
+		String header = getValueFromHeaders(Span.SPAN_ID_NAME, String.class);
 		then(header).as("Span id should be empty").isNullOrEmpty();
 		return header;
 	}

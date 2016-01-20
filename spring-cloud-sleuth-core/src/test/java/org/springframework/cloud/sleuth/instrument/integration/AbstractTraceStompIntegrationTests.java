@@ -1,20 +1,20 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractTraceStompIntegrationTests {
@@ -34,11 +34,11 @@ public abstract class AbstractTraceStompIntegrationTests {
 
 	@After
 	public void close() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 		this.channel.unsubscribe(this.stompMessageHandler);
 	}
 
-	Trace givenALocallyStartedSpan() {
+	Span givenALocallyStartedSpan() {
 		return this.tracer.startTrace("testSendMessage", this.sampler);
 	}
 
@@ -52,13 +52,13 @@ public abstract class AbstractTraceStompIntegrationTests {
 	}
 
 	Long thenSpanIdFromHeadersIsNotEmpty() {
-		Long header = getValueFromHeaders(Trace.SPAN_ID_NAME, Long.class);
+		Long header = getValueFromHeaders(Span.SPAN_ID_NAME, Long.class);
 		then(header).as("Span id should not be empty").isNotNull();
 		return header;
 	}
 
 	Long thenTraceIdFromHeadersIsNotEmpty() {
-		Long header = getValueFromHeaders(Trace.TRACE_ID_NAME, Long.class);
+		Long header = getValueFromHeaders(Span.TRACE_ID_NAME, Long.class);
 		then(header).as("Trace id should not be empty").isNotNull();
 		return header;
 	}

@@ -17,8 +17,11 @@ package tools;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -53,7 +56,7 @@ public class RequestSendingRunnable implements Runnable {
 
 	private RequestEntity requestWithTraceId(long traceId) {
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(Trace.TRACE_ID_NAME, Span.IdConverter.toHex(traceId));
+		headers.add(Span.TRACE_ID_NAME, Span.toHex(traceId));
 		URI uri = URI.create(url);
 		RequestEntity requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
 		log.info("Request [" + requestEntity + "] is ready");

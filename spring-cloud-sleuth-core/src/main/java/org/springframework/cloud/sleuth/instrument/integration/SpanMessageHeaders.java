@@ -16,16 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.util.StringUtils;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility for manipulating message headers related to span data.
@@ -38,25 +37,25 @@ public class SpanMessageHeaders {
 	public static Message<?> addSpanHeaders(TraceKeys traceKeys, Message<?> message,
 			Span span) {
 		if (span == null) {
-			if (!message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+			if (!message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
 				return MessageBuilder.fromMessage(message)
-						.setHeader(Trace.NOT_SAMPLED_NAME, "").build();
+						.setHeader(Span.NOT_SAMPLED_NAME, "").build();
 			}
 			return message;
 		}
 
 		Map<String, String> headers = new HashMap<>();
-		addHeader(headers, Trace.TRACE_ID_NAME, span.getTraceId());
-		addHeader(headers, Trace.SPAN_ID_NAME, span.getSpanId());
+		addHeader(headers, Span.TRACE_ID_NAME, span.getTraceId());
+		addHeader(headers, Span.SPAN_ID_NAME, span.getSpanId());
 
 		if (span.isExportable()) {
 			addAnnotations(traceKeys, message, span);
-			addHeader(headers, Trace.PARENT_ID_NAME, getFirst(span.getParents()));
-			addHeader(headers, Trace.SPAN_NAME_NAME, span.getName());
-			addHeader(headers, Trace.PROCESS_ID_NAME, span.getProcessId());
+			addHeader(headers, Span.PARENT_ID_NAME, getFirst(span.getParents()));
+			addHeader(headers, Span.SPAN_NAME_NAME, span.getName());
+			addHeader(headers, Span.PROCESS_ID_NAME, span.getProcessId());
 		}
 		else {
-			addHeader(headers, Trace.NOT_SAMPLED_NAME, "");
+			addHeader(headers, Span.NOT_SAMPLED_NAME, "");
 		}
 		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
 	}
@@ -100,7 +99,7 @@ public class SpanMessageHeaders {
 
 	private static void addHeader(Map<String, String> headers, String name, Long value) {
 		if (value != null) {
-			addHeader(headers, name, Span.IdConverter.toHex(value));
+			addHeader(headers, name, Span.toHex(value));
 		}
 	}
 

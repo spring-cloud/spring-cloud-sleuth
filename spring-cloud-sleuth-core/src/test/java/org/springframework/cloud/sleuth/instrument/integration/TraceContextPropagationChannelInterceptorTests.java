@@ -25,11 +25,10 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.integration.TraceContextPropagationChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TraceContextHolder;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.QueueChannel;
@@ -60,25 +59,27 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 	@After
 	public void close() {
-		TraceContextHolder.removeCurrentTrace();
+		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
 	public void testSpanPropagation() {
 
-		Trace trace = this.tracer.startTrace("testSendMessage", new AlwaysSampler());
+		Span span = this.tracer.startTrace("testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
-		Long expectedSpanId = trace.getSpan().getSpanId();
-		this.tracer.close(trace);
+		Long expectedSpanId = span.getSpanId();
+		this.tracer.close(span);
 
 		Message<?> message = this.channel.receive(0);
 
 		assertNotNull("message was null", message);
 
-		Long spanId = Span.IdConverter.fromHex(message.getHeaders().get(Trace.SPAN_ID_NAME, String.class));
+		Long spanId = Span
+				.fromHex(message.getHeaders().get(Span.SPAN_ID_NAME, String.class));
 		assertEquals("spanId was wrong", expectedSpanId,  spanId);
 
-		long traceId = Span.IdConverter.fromHex(message.getHeaders().get(Trace.TRACE_ID_NAME, String.class));
+		long traceId = Span
+				.fromHex(message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
 		assertNotNull("traceId was null", traceId);
 	}
 

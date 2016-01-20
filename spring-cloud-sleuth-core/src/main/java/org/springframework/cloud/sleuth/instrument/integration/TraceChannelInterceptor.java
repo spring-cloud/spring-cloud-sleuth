@@ -16,15 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import java.util.Random;
-
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Trace;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+
+import java.util.Random;
 
 /**
  * @author Dave Syer
@@ -32,7 +31,7 @@ import org.springframework.messaging.MessageChannel;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
-	private ThreadLocal<Trace> traceHolder = new ThreadLocal<>();
+	private ThreadLocal<Span> traceHolder = new ThreadLocal<>();
 
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
 		super(tracer, traceKeys, random);
@@ -40,7 +39,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		Trace trace = this.traceHolder.get();
+		Span trace = this.traceHolder.get();
 		// Double close to clean up the parent (remote span as well)
 		getTracer().close(getTracer().close(trace));
 		this.traceHolder.remove();
@@ -53,16 +52,16 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 					getTracer().getCurrentSpan());
 		}
 		String name = getMessageChannelName(channel);
-		Trace trace = startSpan(buildSpan(message), name, message);
-		this.traceHolder.set(trace);
-		return SpanMessageHeaders.addSpanHeaders(getTraceKeys(), message, trace.getSpan());
+		Span span = startSpan(buildSpan(message), name, message);
+		this.traceHolder.set(span);
+		return SpanMessageHeaders.addSpanHeaders(getTraceKeys(), message, span);
 	}
 
-	private Trace startSpan(Span span, String name, Message<?> message) {
+	private Span startSpan(Span span, String name, Message<?> message) {
 		if (span != null) {
 			return getTracer().joinTrace(name, span);
 		}
-		if (message.getHeaders().containsKey(Trace.NOT_SAMPLED_NAME)) {
+		if (message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
 			return getTracer().startTrace(name, IsTracingSampler.INSTANCE);
 		}
 		return getTracer().startTrace(name);

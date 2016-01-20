@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument;
 
-import org.springframework.cloud.sleuth.Trace;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 
 import lombok.EqualsAndHashCode;
@@ -40,12 +40,12 @@ public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 	@Override
 	public void run() {
 		ensureThatThreadIsNotPollutedByPreviousTraces();
-		Trace trace = startSpan();
+		Span span = startSpan();
 		try {
 			this.getDelegate().run();
 		}
 		finally {
-			closeAll(trace);
+			closeAll(span);
 		}
 	}
 }
