@@ -40,13 +40,13 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = tracer.startTrace("existing");
-		tracer.continueSpan(span);
+		Span span = this.tracer.startTrace("existing");
+		this.tracer.continueSpan(span);
 		return span;
 	}
 
 	private void whenAsyncProcessingTakesPlace() {
-		classPerformingAsyncLogic.invokeAsynchronousLogic();
+		this.classPerformingAsyncLogic.invokeAsynchronousLogic();
 	}
 
 	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOne(final Span span) {
@@ -54,8 +54,8 @@ public class TraceAsyncIntegrationTests {
 			@Override
 			public void run() {
 				then(span)
-						.hasTraceIdEqualTo(classPerformingAsyncLogic.getTraceId())
-						.hasNameNotEqualTo(classPerformingAsyncLogic.getSpanName());
+						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
+						.hasNameNotEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
 			}
 		});
 	}
@@ -83,21 +83,21 @@ public class TraceAsyncIntegrationTests {
 
 		@Async
 		public void invokeAsynchronousLogic() {
-			span.set(SpanContextHolder.getCurrentSpan());
+			this.span.set(SpanContextHolder.getCurrentSpan());
 		}
 
 		public Long getTraceId() {
-			if (span.get() == null) {
+			if (this.span.get() == null) {
 				return null;
 			}
-			return span.get().getTraceId();
+			return this.span.get().getTraceId();
 		}
 
 		public String getSpanName() {
-			if (span.get() != null && span.get().getName() == null) {
+			if (this.span.get() != null && this.span.get().getName() == null) {
 				return null;
 			}
-			return span.get().getName();
+			return this.span.get().getName();
 		}
 	}
 }

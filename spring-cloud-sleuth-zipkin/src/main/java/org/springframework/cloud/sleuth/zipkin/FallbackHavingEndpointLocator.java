@@ -14,21 +14,21 @@ public class FallbackHavingEndpointLocator implements EndpointLocator {
 	private final ServerPropertiesEndpointLocator serverPropertiesEndpointLocator;
 
 	public FallbackHavingEndpointLocator(DiscoveryClientEndpointLocator discoveryClientEndpointLocator,
-										 ServerPropertiesEndpointLocator serverPropertiesEndpointLocator) {
+										ServerPropertiesEndpointLocator serverPropertiesEndpointLocator) {
 		this.discoveryClientEndpointLocator = discoveryClientEndpointLocator;
 		this.serverPropertiesEndpointLocator = serverPropertiesEndpointLocator;
 	}
 
 	@Override
 	public Endpoint local() {
-		if (discoveryClientEndpointLocator == null) {
-			return serverPropertiesEndpointLocator.local();
+		if (this.discoveryClientEndpointLocator == null) {
+			return this.serverPropertiesEndpointLocator.local();
 		}
 		try {
-			return discoveryClientEndpointLocator.local();
+			return this.discoveryClientEndpointLocator.local();
 		} catch (Exception e) {
 			log.warn("Exception occurred while trying to fetch the Zipkin process endpoint. Falling back to server properties endpoint locator.", e);
-			return serverPropertiesEndpointLocator.local();
+			return this.serverPropertiesEndpointLocator.local();
 		}
 	}
 }

@@ -36,14 +36,14 @@ public class ZipkinMessageListenerTests {
 	@Test
 	public void convertsTimestampAndDurationToMicroseconds() {
 		long start = System.currentTimeMillis();
-		span.log("http/request/retry"); // System.currentTimeMillis
+		this.span.log("http/request/retry"); // System.currentTimeMillis
 
-		zipkin.Span result = ZipkinMessageListener.convert(span, host);
+		zipkin.Span result = ZipkinMessageListener.convert(this.span, this.host);
 
 		assertThat(result.timestamp)
-				.isEqualTo(span.getBegin() * 1000);
+				.isEqualTo(this.span.getBegin() * 1000);
 		assertThat(result.duration)
-				.isEqualTo((span.getEnd() - span.getBegin()) * 1000);
+				.isEqualTo((this.span.getEnd() - this.span.getBegin()) * 1000);
 		assertThat(result.annotations.get(0).timestamp)
 				.isGreaterThanOrEqualTo(start * 1000)
 				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);
@@ -52,13 +52,13 @@ public class ZipkinMessageListenerTests {
 	/** Sleuth host corresponds to annotation/binaryAnnotation.host in zipkin. */
 	@Test
 	public void annotationsIncludeHost() {
-		span.log("http/request/retry");
-		span.tag("spring-boot/version", "1.3.1.RELEASE");
+		this.span.log("http/request/retry");
+		this.span.tag("spring-boot/version", "1.3.1.RELEASE");
 
-		zipkin.Span result = ZipkinMessageListener.convert(span, host);
+		zipkin.Span result = ZipkinMessageListener.convert(this.span, this.host);
 
 		assertThat(result.annotations.get(0).endpoint)
-				.isEqualTo(endpoint);
+				.isEqualTo(this.endpoint);
 		assertThat(result.binaryAnnotations.get(0).endpoint)
 				.isEqualTo(result.annotations.get(0).endpoint);
 	}
@@ -70,11 +70,11 @@ public class ZipkinMessageListenerTests {
 	 */
 	@Test
 	public void spanWithoutAnnotationsLogsComponent() {
-		zipkin.Span result = ZipkinMessageListener.convert(span, host);
+		zipkin.Span result = ZipkinMessageListener.convert(this.span, this.host);
 
 		assertThat(result.binaryAnnotations).hasSize(1);
 		assertThat(result.binaryAnnotations.get(0)).isEqualToComparingFieldByField(
-				BinaryAnnotation.create("lc", span.getProcessId(), endpoint));
+				BinaryAnnotation.create("lc", this.span.getProcessId(), this.endpoint));
 	}
 
 	// TODO: "unknown" bc process id, documented as not nullable, is null in some tests.
@@ -82,9 +82,9 @@ public class ZipkinMessageListenerTests {
 	public void nullProcessIdCoercesToUnknownServiceName() {
 		Span noProcessId = Span.builder().traceId(1L).name("parent").remote(true).build();
 
-		zipkin.Span result = ZipkinMessageListener.convert(noProcessId, host);
+		zipkin.Span result = ZipkinMessageListener.convert(noProcessId, this.host);
 
 		assertThat(result.binaryAnnotations)
-				.containsOnly(BinaryAnnotation.create("lc", "unknown", endpoint));
+				.containsOnly(BinaryAnnotation.create("lc", "unknown", this.endpoint));
 	}
 }

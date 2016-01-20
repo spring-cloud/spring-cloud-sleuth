@@ -41,7 +41,7 @@ public class ZipkinAutoConfiguration {
 	@ConditionalOnMissingBean(ZipkinSpanReporter.class)
 	public ZipkinSpanReporter reporter() {
 		ZipkinProperties zipkin = zipkinProperties();
-    return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval());
+		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval());
 	}
 
 	@Bean

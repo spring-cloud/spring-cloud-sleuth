@@ -16,48 +16,51 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ServerPropertiesEndpointLocatorTests {
 
-  @Test
-  public void portDefaultsTo8080() {
-    ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(new ServerProperties(), "unknown");
+	@Test
+	public void portDefaultsTo8080() {
+		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
+				new ServerProperties(), "unknown");
 
-    assertThat(locator.local().port).isEqualTo((short) 8080);
-  }
+		assertThat(locator.local().port).isEqualTo((short) 8080);
+	}
 
-  @Test
-  public void portFromServerProperties() {
-    ServerProperties properties = new ServerProperties();
-    properties.setPort(1234);
+	@Test
+	public void portFromServerProperties() {
+		ServerProperties properties = new ServerProperties();
+		properties.setPort(1234);
 
-    ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(properties, "unknown");
+		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
+				properties, "unknown");
 
-    assertThat(locator.local().port).isEqualTo((short) 1234);
-  }
+		assertThat(locator.local().port).isEqualTo((short) 1234);
+	}
 
-  @Test
-  public void portDefaultsToLocalhost() {
-    ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(new ServerProperties(), "unknown");
+	@Test
+	public void portDefaultsToLocalhost() {
+		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
+				new ServerProperties(), "unknown");
 
-    assertThat(locator.local().ipv4)
-        .isEqualTo(127 << 24 | 1);
-  }
+		assertThat(locator.local().ipv4).isEqualTo(127 << 24 | 1);
+	}
 
-  @Test
-  public void hostFromServerPropertiesIp() throws UnknownHostException {
-    ServerProperties properties = new ServerProperties();
-    properties.setAddress(InetAddress.getByAddress(new byte[]{1, 2, 3, 4}));
+	@Test
+	public void hostFromServerPropertiesIp() throws UnknownHostException {
+		ServerProperties properties = new ServerProperties();
+		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
 
-    ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(properties, "unknown");
+		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
+				properties, "unknown");
 
-    assertThat(locator.local().ipv4)
-        .isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
-  }
+		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
+	}
 }

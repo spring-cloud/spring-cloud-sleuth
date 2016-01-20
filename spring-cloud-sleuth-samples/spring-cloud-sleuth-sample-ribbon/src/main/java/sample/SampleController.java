@@ -39,7 +39,7 @@ public class SampleController  {
 	@SneakyThrows
 	@RequestMapping("/")
 	public String hi() {
-		Thread.sleep(random.nextInt(1000));
+		Thread.sleep(this.random.nextInt(1000));
 		String s = this.restTemplate.getForObject("http://zipkin/hi2", String.class);
 		return "hi/" + s;
 	}

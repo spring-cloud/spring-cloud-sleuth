@@ -106,17 +106,19 @@
 				</dependencies>
 				<executions>
 					<execution>
-						<id>verify-style</id>
-						<phase>process-classes</phase>
+						<id>validate</id>
+						<phase>validate</phase>
+						<configuration>
+							<configLocation>checkstyle.xml</configLocation>
+							<headerLocation>LICENSE.txt</headerLocation>
+							<consoleOutput>true</consoleOutput>
+							<failsOnError>true</failsOnError>
+						</configuration>
 						<goals>
 							<goal>check</goal>
 						</goals>
 					</execution>
 				</executions>
-				<configuration>
-					<logViolationsToConsole>true</logViolationsToConsole>
-					<failOnViolation>false</failOnViolation>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

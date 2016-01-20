@@ -27,42 +27,44 @@ import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ServerPropertiesHostLocatorTests {
-  Span span = new Span(1, 3, "name", 1L, Collections.<Long>emptyList(), 2L, true, true,
-          "process");
+	Span span = new Span(1, 3, "name", 1L, Collections.<Long>emptyList(), 2L, true, true,
+			"process");
 
-  @Test
-  public void portDefaultsTo8080() {
-    ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(new ServerProperties(), "unknown");
+	@Test
+	public void portDefaultsTo8080() {
+		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(
+				new ServerProperties(), "unknown");
 
-    assertThat(locator.locate(span).getPort()).isEqualTo((short) 8080);
-  }
+		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 8080);
+	}
 
-  @Test
-  public void portFromServerProperties() {
-    ServerProperties properties = new ServerProperties();
-    properties.setPort(1234);
+	@Test
+	public void portFromServerProperties() {
+		ServerProperties properties = new ServerProperties();
+		properties.setPort(1234);
 
-    ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties, "unknown");
+		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
+				"unknown");
 
-    assertThat(locator.locate(span).getPort()).isEqualTo((short) 1234);
-  }
+		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 1234);
+	}
 
-  @Test
-  public void portDefaultsToLocalhost() {
-    ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(new ServerProperties(), "unknown");
+	@Test
+	public void portDefaultsToLocalhost() {
+		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(
+				new ServerProperties(), "unknown");
 
-    assertThat(locator.locate(span).getAddress())
-        .isEqualTo("127.0.0.1");
-  }
+		assertThat(locator.locate(this.span).getAddress()).isEqualTo("127.0.0.1");
+	}
 
-  @Test
-  public void hostFromServerPropertiesIp() throws UnknownHostException {
-    ServerProperties properties = new ServerProperties();
-    properties.setAddress(InetAddress.getByAddress(new byte[]{1, 2, 3, 4}));
+	@Test
+	public void hostFromServerPropertiesIp() throws UnknownHostException {
+		ServerProperties properties = new ServerProperties();
+		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
 
-    ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties, "unknown");
+		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
+				"unknown");
 
-    assertThat(locator.locate(span).getAddress())
-        .isEqualTo("1.2.3.4");
-  }
+		assertThat(locator.locate(this.span).getAddress()).isEqualTo("1.2.3.4");
+	}
 }

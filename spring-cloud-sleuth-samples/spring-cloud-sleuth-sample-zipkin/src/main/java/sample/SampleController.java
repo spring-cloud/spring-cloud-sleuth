@@ -54,7 +54,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/")
 	public String hi() {
-		Thread.sleep(random.nextInt(1000));
+		Thread.sleep(this.random.nextInt(1000));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/hi2", String.class);
@@ -66,7 +66,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		return new Callable<String>() {
 			@Override
 			public String call() throws Exception {
-				int millis = random.nextInt(1000);
+				int millis = SampleController.this.random.nextInt(1000);
 				Thread.sleep(millis);
 				SampleController.this.tracer.addTag("callable-sleep-millis", String.valueOf(millis));
 				Span currentSpan = SampleController.this.accessor.getCurrentSpan();
@@ -84,7 +84,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/hi2")
 	public String hi2() {
-		int millis = random.nextInt(1000);
+		int millis = this.random.nextInt(1000);
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
@@ -95,7 +95,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	public String traced() {
 		Span span = this.tracer.startTrace("customTraceEndpoint",
 				new AlwaysSampler());
-		int millis = random.nextInt(1000);
+		int millis = this.random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
@@ -109,7 +109,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/start")
 	public String start() {
-		int millis = random.nextInt(1000);
+		int millis = this.random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));

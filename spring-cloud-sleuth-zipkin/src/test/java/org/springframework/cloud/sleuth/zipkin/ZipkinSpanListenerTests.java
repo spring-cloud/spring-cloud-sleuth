@@ -75,14 +75,14 @@ public class ZipkinSpanListenerTests {
 	@Test
 	public void convertsTimestampAndDurationToMicroseconds() {
 		long start = System.currentTimeMillis();
-		parent.log("http/request/retry"); // System.currentTimeMillis
+		this.parent.log("http/request/retry"); // System.currentTimeMillis
 
-		zipkin.Span result = listener.convert(parent);
+		zipkin.Span result = this.listener.convert(this.parent);
 
 		assertThat(result.timestamp)
-				.isEqualTo(parent.getBegin() * 1000);
+				.isEqualTo(this.parent.getBegin() * 1000);
 		assertThat(result.duration)
-				.isEqualTo((parent.getEnd() - parent.getBegin()) * 1000);
+				.isEqualTo((this.parent.getEnd() - this.parent.getBegin()) * 1000);
 		assertThat(result.annotations.get(0).timestamp)
 				.isGreaterThanOrEqualTo(start * 1000)
 				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);
@@ -91,13 +91,13 @@ public class ZipkinSpanListenerTests {
 	/** Sleuth host corresponds to annotation/binaryAnnotation.host in zipkin. */
 	@Test
 	public void annotationsIncludeHost() {
-		parent.log("http/request/retry");
-		parent.tag("spring-boot/version", "1.3.1.RELEASE");
+		this.parent.log("http/request/retry");
+		this.parent.tag("spring-boot/version", "1.3.1.RELEASE");
 
-		zipkin.Span result = listener.convert(parent);
+		zipkin.Span result = this.listener.convert(this.parent);
 
 		assertThat(result.annotations.get(0).endpoint)
-				.isEqualTo(listener.localEndpoint);
+				.isEqualTo(this.listener.localEndpoint);
 		assertThat(result.binaryAnnotations.get(0).endpoint)
 				.isEqualTo(result.annotations.get(0).endpoint);
 	}
@@ -105,7 +105,7 @@ public class ZipkinSpanListenerTests {
 	/** zipkin's Endpoint.serviceName should never be null. */
 	@Test
 	public void localEndpointIncludesServiceName() {
-		assertThat(listener.localEndpoint.serviceName)
+		assertThat(this.listener.localEndpoint.serviceName)
 				.isNotEmpty();
 	}
 
@@ -125,10 +125,10 @@ public class ZipkinSpanListenerTests {
 
 	@Test
 	public void rpcAnnotations() {
-		Span context = this.tracer.joinTrace("child", parent);
+		Span context = this.tracer.joinTrace("child", this.parent);
 		this.application.publishEvent(new ClientSentEvent(this, context));
-		this.application.publishEvent(new ServerReceivedEvent(this, parent, context));
-		this.application.publishEvent(new ServerSentEvent(this, parent, context));
+		this.application.publishEvent(new ServerReceivedEvent(this, this.parent, context));
+		this.application.publishEvent(new ServerSentEvent(this, this.parent, context));
 		this.application.publishEvent(new ClientReceivedEvent(this, context));
 		this.tracer.close(context);
 		assertEquals(2, this.test.spans.size());

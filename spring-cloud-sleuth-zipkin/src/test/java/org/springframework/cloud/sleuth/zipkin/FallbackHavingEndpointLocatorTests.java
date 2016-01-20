@@ -18,36 +18,36 @@ public class FallbackHavingEndpointLocatorTests {
 
 	@Test
 	public void should_use_system_property_locator_if_discovery_client_locator_is_not_present() {
-		BDDMockito.given(serverPropertiesEndpointLocator.local()).willReturn(expectedEndpoint);
+		BDDMockito.given(this.serverPropertiesEndpointLocator.local()).willReturn(this.expectedEndpoint);
 		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(null,
-				serverPropertiesEndpointLocator);
+				this.serverPropertiesEndpointLocator);
 
 		Endpoint endpoint = sut.local();
 
-		then(endpoint).isSameAs(expectedEndpoint);
+		then(endpoint).isSameAs(this.expectedEndpoint);
 	}
 
 	@Test
 	public void should_use_system_property_locator_if_discovery_client_locator_throws_an_exception() {
-		BDDMockito.given(discoveryClientEndpointLocator.local()).willThrow(new RuntimeException());
-		BDDMockito.given(serverPropertiesEndpointLocator.local()).willReturn(expectedEndpoint);
-		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(discoveryClientEndpointLocator,
-				serverPropertiesEndpointLocator);
+		BDDMockito.given(this.discoveryClientEndpointLocator.local()).willThrow(new RuntimeException());
+		BDDMockito.given(this.serverPropertiesEndpointLocator.local()).willReturn(this.expectedEndpoint);
+		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(this.discoveryClientEndpointLocator,
+				this.serverPropertiesEndpointLocator);
 
 		Endpoint endpoint = sut.local();
 
-		then(endpoint).isSameAs(expectedEndpoint);
+		then(endpoint).isSameAs(this.expectedEndpoint);
 	}
 
 	@Test
 	public void should_use_discovery_client_locator_by_default() {
-		BDDMockito.given(discoveryClientEndpointLocator.local()).willReturn(expectedEndpoint);
-		BDDMockito.given(serverPropertiesEndpointLocator.local()).willThrow(new RuntimeException());
-		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(discoveryClientEndpointLocator,
-				serverPropertiesEndpointLocator);
+		BDDMockito.given(this.discoveryClientEndpointLocator.local()).willReturn(this.expectedEndpoint);
+		BDDMockito.given(this.serverPropertiesEndpointLocator.local()).willThrow(new RuntimeException());
+		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(this.discoveryClientEndpointLocator,
+				this.serverPropertiesEndpointLocator);
 
 		Endpoint endpoint = sut.local();
 
-		then(endpoint).isSameAs(expectedEndpoint);
+		then(endpoint).isSameAs(this.expectedEndpoint);
 	}
 }

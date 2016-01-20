@@ -15,8 +15,6 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
@@ -24,55 +22,62 @@ import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
 import zipkin.Sampler;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 /**
  * This converts sleuth spans to zipkin ones, skipping invalid or unsampled.
  */
 @CommonsLog
 final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 
-  private final Sampler sampler;
-  private final Iterator<Span> delegate;
-  private final Host host;
-  private zipkin.Span peeked;
+	private final Sampler sampler;
+	private final Iterator<Span> delegate;
+	private final Host host;
+	private zipkin.Span peeked;
 
-  SamplingZipkinSpanIterator(Sampler sampler, Spans input) {
-    this.sampler = sampler;
-    this.delegate = input.getSpans().iterator();
-    this.host = input.getHost();
-  }
+	SamplingZipkinSpanIterator(Sampler sampler, Spans input) {
+		this.sampler = sampler;
+		this.delegate = input.getSpans().iterator();
+		this.host = input.getHost();
+	}
 
-  @Override
-  public boolean hasNext() {
-    while (peeked == null && delegate.hasNext()) {
-      peeked = convertAndSample(delegate.next(), host);
-    }
-    return peeked != null;
-  }
+	@Override
+	public boolean hasNext() {
+		while (this.peeked == null && this.delegate.hasNext()) {
+			this.peeked = convertAndSample(this.delegate.next(), this.host);
+		}
+		return this.peeked != null;
+	}
 
-  @Override
-  public zipkin.Span next() {
-    // implicitly peeks
-    if (!hasNext()) throw new NoSuchElementException();
-    zipkin.Span result = peeked;
-    peeked = null;
-    return result;
-  }
+	@Override
+	public zipkin.Span next() {
+		// implicitly peeks
+		if (!hasNext())
+			throw new NoSuchElementException();
+		zipkin.Span result = this.peeked;
+		this.peeked = null;
+		return result;
+	}
 
-  @Override
-  public void remove() {
-    throw new UnsupportedOperationException("remove");
-  }
+	@Override
+	public void remove() {
+		throw new UnsupportedOperationException("remove");
+	}
 
-  /** returns a converted span or null if it is invalid or unsampled. */
-  zipkin.Span convertAndSample(Span input, Host host) {
-    if (!input.getName().equals("message/" + SleuthSink.INPUT)) {
-      zipkin.Span result = ZipkinMessageListener.convert(input, host);
-      if (this.sampler.isSampled(result.traceId)) {
-        return result;
-      }
-    } else {
-      log.warn("Message tracing cycle detected for: " + input);
-    }
-    return null;
-  }
+	/**
+	 * returns a converted span or null if it is invalid or unsampled.
+	 */
+	zipkin.Span convertAndSample(Span input, Host host) {
+		if (!input.getName().equals("message/" + SleuthSink.INPUT)) {
+			zipkin.Span result = ZipkinMessageListener.convert(input, host);
+			if (this.sampler.isSampled(result.traceId)) {
+				return result;
+			}
+		}
+		else {
+			log.warn("Message tracing cycle detected for: " + input);
+		}
+		return null;
+	}
 }

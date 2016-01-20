@@ -74,7 +74,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenThereIsAtLeastOneBinaryAnnotationWithKey(String binaryAnnotationKey) {
-		then(integrationTestSpanCollector.hashedSpans.stream()
+		then(this.integrationTestSpanCollector.hashedSpans.stream()
 				.map(s -> s.binaryAnnotations)
 				.flatMap(Collection::stream)
 				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();

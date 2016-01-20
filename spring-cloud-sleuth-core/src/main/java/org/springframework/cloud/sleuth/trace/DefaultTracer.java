@@ -44,7 +44,7 @@ public class DefaultTracer implements Tracer {
 	private final Random random;
 
 	public DefaultTracer(Sampler defaultSampler,
-						 Random random, ApplicationEventPublisher publisher) {
+						Random random, ApplicationEventPublisher publisher) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.publisher = publisher;
@@ -159,7 +159,7 @@ public class DefaultTracer implements Tracer {
 	}
 
 	private long createId() {
-		return random.nextLong();
+		return this.random.nextLong();
 	}
 
 	@Override

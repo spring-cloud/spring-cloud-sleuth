@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import java.util.ArrayList;
-
 import lombok.Value;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.ApplicationListener;
+
+import java.util.ArrayList;
 
 /**
  * @author Spencer Gibb
@@ -32,6 +31,6 @@ public class ArrayListSpanAccumulator implements ApplicationListener<SpanRelease
 
 	@Override
 	public void onApplicationEvent(SpanReleasedEvent event) {
-		spans.add(event.getSpan());
+		this.spans.add(event.getSpan());
 	}
 }

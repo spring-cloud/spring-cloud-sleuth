@@ -38,7 +38,7 @@ public class SampleBackground {
 	@SneakyThrows
 	@Async
 	public void background() {
-		int millis = random.nextInt(1000);
+		int millis = this.random.nextInt(1000);
 		Thread.sleep(millis);
 		this.tracer.addTag("background-sleep-millis", String.valueOf(millis));
 	}

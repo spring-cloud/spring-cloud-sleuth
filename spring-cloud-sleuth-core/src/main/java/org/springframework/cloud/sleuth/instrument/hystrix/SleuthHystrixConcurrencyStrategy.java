@@ -25,6 +25,6 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 
 	@Override
 	public <T> Callable<T> wrapCallable(Callable<T> callable) {
-		return new TraceCallable<>(tracer, callable);
+		return new TraceCallable<>(this.tracer, callable);
 	}
 }

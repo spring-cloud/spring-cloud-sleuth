@@ -39,13 +39,13 @@ public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = tracer.startTrace("existing");
-		tracer.continueSpan(span);
+		Span span = this.tracer.startTrace("existing");
+		this.tracer.continueSpan(span);
 		return span;
 	}
 
 	private void whenHystrixCommandAnnotatedMethodGetsExecuted() {
-		hystrixCommandInvocationSpanCatcher.invokeLogicWrappedInHystrixCommand();
+		this.hystrixCommandInvocationSpanCatcher.invokeLogicWrappedInHystrixCommand();
 	}
 
 	private void thenTraceIdIsPassedFromTheCurrentThreadToTheHystrixOne(final Span span) {
@@ -53,8 +53,8 @@ public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 			@Override
 			public void run() {
 				then(span)
-						.hasTraceIdEqualTo(hystrixCommandInvocationSpanCatcher.getTraceId())
-						.hasNameNotEqualTo(hystrixCommandInvocationSpanCatcher.getSpanName());
+						.hasTraceIdEqualTo(SpanPassingForHystrixViaAnnotationsIntegrationTests.this.hystrixCommandInvocationSpanCatcher.getTraceId())
+						.hasNameNotEqualTo(SpanPassingForHystrixViaAnnotationsIntegrationTests.this.hystrixCommandInvocationSpanCatcher.getSpanName());
 			}
 		});
 	}
@@ -81,24 +81,24 @@ public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 
 		@HystrixCommand
 		public void invokeLogicWrappedInHystrixCommand() {
-			spanCaughtFromHystrixThread = new AtomicReference<>(SpanContextHolder.getCurrentSpan());
+			this.spanCaughtFromHystrixThread = new AtomicReference<>(SpanContextHolder.getCurrentSpan());
 		}
 
 		public Long getTraceId() {
-			if (spanCaughtFromHystrixThread == null ||
-					spanCaughtFromHystrixThread.get() == null) {
+			if (this.spanCaughtFromHystrixThread == null ||
+					this.spanCaughtFromHystrixThread.get() == null) {
 				return null;
 			}
-			return spanCaughtFromHystrixThread.get().getTraceId();
+			return this.spanCaughtFromHystrixThread.get().getTraceId();
 		}
 
 		public String getSpanName() {
-			if (spanCaughtFromHystrixThread == null ||
-					(spanCaughtFromHystrixThread.get() != null &&
-							spanCaughtFromHystrixThread.get().getName() == null)) {
+			if (this.spanCaughtFromHystrixThread == null ||
+					(this.spanCaughtFromHystrixThread.get() != null &&
+							this.spanCaughtFromHystrixThread.get().getName() == null)) {
 				return null;
 			}
-			return spanCaughtFromHystrixThread.get().getName();
+			return this.spanCaughtFromHystrixThread.get().getName();
 		}
 	}
 }

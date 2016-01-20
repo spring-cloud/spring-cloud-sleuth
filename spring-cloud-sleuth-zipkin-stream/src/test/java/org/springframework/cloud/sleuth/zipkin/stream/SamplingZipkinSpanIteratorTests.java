@@ -31,46 +31,52 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class SamplingZipkinSpanIteratorTests {
 
-  Host host = new Host("myservice", "1.2.3.4", 8080);
+	Host host = new Host("myservice", "1.2.3.4", 8080);
 
-  @Test
-  public void skipsInputSpans() {
-    Spans spans = new Spans(host, Collections.singletonList(span("message/sleuth")));
+	@Test
+	public void skipsInputSpans() {
+		Spans spans = new Spans(this.host,
+				Collections.singletonList(span("message/sleuth")));
 
-    Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(Sampler.create(1.0f), spans);
+		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
+				Sampler.create(1.0f), spans);
 
-    assertThat(result).isEmpty();
-  }
+		assertThat(result).isEmpty();
+	}
 
-  @Test
-  public void retainsValidSpans() {
-    Spans spans = new Spans(host, Arrays.asList(span("foo"), span("bar"), span("baz")));
+	@Test
+	public void retainsValidSpans() {
+		Spans spans = new Spans(this.host,
+				Arrays.asList(span("foo"), span("bar"), span("baz")));
 
-    Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(Sampler.create(1.0f), spans);
+		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
+				Sampler.create(1.0f), spans);
 
-    assertThat(result).extracting(s -> s.name).containsExactly("foo", "bar", "baz");
-  }
+		assertThat(result).extracting(s -> s.name).containsExactly("foo", "bar", "baz");
+	}
 
-  @Test
-  public void retainsOnlySampledSpans() {
-    Spans spans = new Spans(host, Arrays.asList(span("foo"), span("bar"), span("baz")));
+	@Test
+	public void retainsOnlySampledSpans() {
+		Spans spans = new Spans(this.host,
+				Arrays.asList(span("foo"), span("bar"), span("baz")));
 
-    Sampler everyOtherSampler = new Sampler() {
-      AtomicInteger counter = new AtomicInteger();
+		Sampler everyOtherSampler = new Sampler() {
+			AtomicInteger counter = new AtomicInteger();
 
-      public boolean isSampled(long l) {
-        return counter.getAndIncrement() % 2 == 0;
-      }
-    };
+			public boolean isSampled(long l) {
+				return counter.getAndIncrement() % 2 == 0;
+			}
+		};
 
-    Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(everyOtherSampler, spans);
+		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(everyOtherSampler,
+				spans);
 
-    assertThat(result).extracting(s -> s.name).containsExactly("foo", "baz");
-  }
+		assertThat(result).extracting(s -> s.name).containsExactly("foo", "baz");
+	}
 
-  Span span(String name) {
-    Long id = new Random().nextLong();
-    return new Span(1, 3, name, id, Collections.<Long>emptyList(), id, true, true,
-            "process");
-  }
+	Span span(String name) {
+		Long id = new Random().nextLong();
+		return new Span(1, 3, name, id, Collections.<Long>emptyList(), id, true, true,
+				"process");
+	}
 }

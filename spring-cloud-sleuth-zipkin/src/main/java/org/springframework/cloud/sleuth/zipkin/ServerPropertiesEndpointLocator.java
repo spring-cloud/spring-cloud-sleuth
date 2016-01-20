@@ -30,11 +30,11 @@ import zipkin.Endpoint;
 public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	private final ServerProperties serverProperties;
-  private final String appName;
+	private final String appName;
 	private Integer port;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-																				 String appName) {
+																				String appName) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
 	}
@@ -43,8 +43,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	public Endpoint local() {
 		int address = getAddress();
 		Integer port = getPort();
-		Endpoint ep = Endpoint.create(this.appName, address, port);
-		return ep;
+		return Endpoint.create(this.appName, address, port);
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)

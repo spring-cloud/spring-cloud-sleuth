@@ -48,7 +48,7 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public DefaultTracer traceManager(Sampler sampler,
-									  ApplicationEventPublisher publisher) {
+									ApplicationEventPublisher publisher) {
 		return new DefaultTracer(sampler, random(), publisher);
 	}
 }

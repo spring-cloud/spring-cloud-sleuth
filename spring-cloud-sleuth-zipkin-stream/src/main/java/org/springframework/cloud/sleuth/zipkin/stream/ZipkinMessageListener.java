@@ -48,7 +48,7 @@ public class ZipkinMessageListener {
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
 	public void sink(Spans input) {
-		Iterator<zipkin.Span> sampled = new SamplingZipkinSpanIterator(sampler, input);
+		Iterator<zipkin.Span> sampled = new SamplingZipkinSpanIterator(this.sampler, input);
 		if (sampled.hasNext()) {
 			this.spanStore.accept(sampled);
 		}
