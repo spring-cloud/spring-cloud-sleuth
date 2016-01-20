@@ -17,8 +17,10 @@
 package org.springframework.cloud.sleuth.stream;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -45,14 +47,14 @@ public class StreamSpanListener {
 	public static final String SERVER_RECV = "sr";
 	public static final String SERVER_SEND = "ss";
 
-	private List<Span> queue = new ArrayList<>();
+	private Collection<Span> queue = new ConcurrentLinkedQueue<>();
 	private HostLocator endpointLocator;
 
 	public StreamSpanListener(HostLocator endpointLocator) {
 		this.endpointLocator = endpointLocator;
 	}
 
-	public void setQueue(List<Span> queue) {
+	public void setQueue(Collection<Span> queue) {
 		this.queue = queue;
 	}
 
