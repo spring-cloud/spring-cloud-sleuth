@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.cloud.sleuth.zipkin.HttpZipkinSpanReporter;
 import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
@@ -73,12 +74,14 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	public static class WaitUntilZipkinIsUpConfig {
 		@Bean
 		@SneakyThrows
-		public ZipkinSpanReporter spanCollector(final ZipkinProperties zipkin) {
+		public ZipkinSpanReporter spanCollector(final ZipkinProperties zipkin,
+				final SpanReporterService spanReporterService) {
 			await().until(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						WaitUntilZipkinIsUpConfig.this.getSpanCollector(zipkin);
+						WaitUntilZipkinIsUpConfig.this.getSpanCollector(zipkin,
+								spanReporterService);
 					}
 					catch (Exception e) {
 						log.error("Exception occurred while trying to connect to zipkin ["
@@ -87,11 +90,13 @@ public class ZipkinTests extends AbstractIntegrationTest {
 					}
 				}
 			});
-			return getSpanCollector(zipkin);
+			return getSpanCollector(zipkin, spanReporterService);
 		}
 
-		private ZipkinSpanReporter getSpanCollector(ZipkinProperties zipkin) {
-			return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval());
+		private ZipkinSpanReporter getSpanCollector(ZipkinProperties zipkin,
+				SpanReporterService spanReporterService) {
+			return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
+					spanReporterService);
 		}
 	}
 }

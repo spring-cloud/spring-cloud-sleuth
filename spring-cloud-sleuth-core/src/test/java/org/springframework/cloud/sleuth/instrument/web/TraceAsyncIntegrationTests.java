@@ -27,8 +27,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 public class TraceAsyncIntegrationTests {
 
 	@Autowired ClassPerformingAsyncLogic classPerformingAsyncLogic;
-	@Autowired
-	Tracer tracer;
+	@Autowired Tracer tracer;
 
 	@Test
 	public void should_set_span_on_an_async_annotated_method() {

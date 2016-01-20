@@ -16,12 +16,6 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
@@ -29,10 +23,18 @@ import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
+import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.MessageEndpoint;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 
 /**
  * A message source for spans. Also handles RPC flavoured annotations.
@@ -48,10 +50,12 @@ public class StreamSpanListener {
 	public static final String SERVER_SEND = "ss";
 
 	private Collection<Span> queue = new ConcurrentLinkedQueue<>();
-	private HostLocator endpointLocator;
+	private final HostLocator endpointLocator;
+	private final SpanReporterService spanReporterService;
 
-	public StreamSpanListener(HostLocator endpointLocator) {
+	public StreamSpanListener(HostLocator endpointLocator, SpanReporterService spanReporterService) {
 		this.endpointLocator = endpointLocator;
+		this.spanReporterService = spanReporterService;
 	}
 
 	public void setQueue(Collection<Span> queue) {
@@ -112,8 +116,11 @@ public class StreamSpanListener {
 				iterator.remove();
 			}
 		}
-		return result.isEmpty() ? null
-				: new Spans(this.endpointLocator.locate(result.get(0)), result);
+		if (result.isEmpty()) {
+			return null;
+		}
+		this.spanReporterService.incrementAcceptedSpans(result.size());
+		return new Spans(this.endpointLocator.locate(result.get(0)), result);
 	}
 
 }

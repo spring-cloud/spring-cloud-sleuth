@@ -18,10 +18,18 @@ package org.springframework.cloud.sleuth.autoconfig;
 
 import java.util.Random;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.metrics.CounterService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanReporterService;
+import org.springframework.cloud.sleuth.metric.NoOpSpanReporterService;
+import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.context.ApplicationEventPublisher;
@@ -53,4 +61,31 @@ public class TraceAutoConfiguration {
 									ApplicationEventPublisher publisher) {
 		return new DefaultTracer(sampler, random, publisher);
 	}
+
+	@Configuration
+	@ConditionalOnClass(CounterService.class)
+	@ConditionalOnMissingBean(SpanReporterService.class)
+	protected static class CounterServiceSpanReporterConfig {
+		@Bean
+		@ConditionalOnBean(CounterService.class)
+		public SpanReporterService spanReporterCounterService(CounterService counterService,
+				@Value("${spring.sleuth.metric.span.accepted.name:metric.span.accepted}") String acceptedSpansMetricName,
+				@Value("${spring.sleuth.metric.span.dropped.name:metric.span.dropped}") String droppedSpansMetricName) {
+			return new CounterServiceBasedSpanReporterService(acceptedSpansMetricName, droppedSpansMetricName, counterService);
+		}
+
+		@Bean
+		@ConditionalOnMissingBean(CounterService.class)
+		public SpanReporterService noOpSpanReporterCounterService() {
+			return new NoOpSpanReporterService();
+		}
+	}
+
+	@Bean
+	@ConditionalOnMissingClass("org.springframework.boot.actuate.metrics.CounterService")
+	@ConditionalOnMissingBean(SpanReporterService.class)
+	public SpanReporterService noOpSpanReporterCounterService() {
+		return new NoOpSpanReporterService();
+	}
+
 }
