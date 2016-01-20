@@ -41,6 +41,11 @@ import java.util.Map;
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
  */
+/*
+ OpenTracing spans can affect the trace tree by creating children. In this way,
+ they are like scoped tracers. Sleuth spans are DTOs, whose sole responsibility
+ is the current span in the trace tree.
+*/
 @Builder(toBuilder = true)
 @ToString
 @EqualsAndHashCode
