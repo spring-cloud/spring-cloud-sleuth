@@ -6,6 +6,8 @@ import okhttp3.mockwebserver.RecordedRequest;
 import okhttp3.mockwebserver.SocketPolicy;
 import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanReporterService;
+import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import zipkin.Codec;
 import zipkin.Span;
 
@@ -16,10 +18,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class HttpZipkinSpanReporterTest {
 
 	@Rule public final MockWebServer server = new MockWebServer();
+	InMemorySpanCounter inMemorySpanCounter = new InMemorySpanCounter();
+	SpanReporterService spanReporterService = new CounterServiceBasedSpanReporterService("accepted", "dropped",
+			this.inMemorySpanCounter);
 
 	// set flush interval to 0 so that tests can drive flushing explicitly
 	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(
-			this.server.url("").toString(), 0);
+			this.server.url("").toString(), 0, this.spanReporterService);
 
 	@Test 
 	public void reportDoesntDoIO() throws Exception {
@@ -32,8 +37,8 @@ public class HttpZipkinSpanReporterTest {
 	public void reportIncrementsAcceptedMetrics() throws Exception {
 		this.reporter.report(span(1L, "foo"));
 
-		// TODO: assertThat(metrics.acceptedSpans.get()).isEqualTo(1);
-		// TODO: assertThat(metrics.droppedSpans.get()).isZero();
+		assertThat(this.inMemorySpanCounter.getAcceptedSpans()).isEqualTo(1);
+		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isZero();
 	}
 
 	@Test 
@@ -41,8 +46,8 @@ public class HttpZipkinSpanReporterTest {
 		for (int i = 0; i < 1001; i++)
 			this.reporter.report(span(1L, "foo"));
 
-		// TODO: assertThat(metrics.acceptedSpans.get()).isEqualTo(1001);
-		// TODO: assertThat(metrics.droppedSpans.get()).isEqualTo(1);
+		assertThat(this.inMemorySpanCounter.getAcceptedSpans()).isEqualTo(1001);
+		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isEqualTo(1);
 	}
 
 	@Test
@@ -73,7 +78,7 @@ public class HttpZipkinSpanReporterTest {
 
 		this.reporter.flush(); // manually flush the spans
 
-		// TODO: assertThat(metrics.droppedSpans.get()).isEqualTo(2);
+		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isEqualTo(2);
 	}
 
 	@Test 
@@ -86,7 +91,7 @@ public class HttpZipkinSpanReporterTest {
 
 		this.reporter.flush(); // manually flush the spans
 
-		// TODO: assertThat(metrics.droppedSpans.get()).isEqualTo(2);
+		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isEqualTo(2);
 	}
 
 	static Span span(long traceId, String spanName) {

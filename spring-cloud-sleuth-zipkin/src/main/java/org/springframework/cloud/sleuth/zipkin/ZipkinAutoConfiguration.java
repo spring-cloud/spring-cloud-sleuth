@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,9 +40,10 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(ZipkinSpanReporter.class)
-	public ZipkinSpanReporter reporter() {
+	public ZipkinSpanReporter reporter(SpanReporterService spanReporterService) {
 		ZipkinProperties zipkin = zipkinProperties();
-		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval());
+		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
+				spanReporterService);
 	}
 
 	@Bean

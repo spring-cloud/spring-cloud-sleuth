@@ -16,16 +16,11 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
@@ -49,6 +44,15 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+
 /**
  * @author Dave Syer
  *
@@ -57,17 +61,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class StreamSpanListenerTests {
 
-	@Autowired
-	private Tracer tracer;
-
-	@Autowired
-	private ApplicationContext application;
-
-	@Autowired
-	private ZipkinTestConfiguration test;
-
-	@Autowired
-	StreamSpanListener listener;
+	@Autowired Tracer tracer;
+	@Autowired ApplicationContext application;
+	@Autowired ZipkinTestConfiguration test;
+	@Autowired StreamSpanListener listener;
+	@Autowired CounterService counterService;
 
 	@PostConstruct
 	public void init() {
@@ -106,12 +104,20 @@ public class StreamSpanListenerTests {
 		assertEquals(0, this.test.spans.size());
 	}
 
+	@Test
+	public void shouldIncreaseNumberOfAcceptedSpans() {
+		Span context = this.tracer.startTrace("foo");
+		this.tracer.close(context);
+		this.listener.poll();
+
+		verify(this.counterService, atLeastOnce()).increment(anyString());
+	}
+
 	@Configuration
 	@Import({ ZipkinTestConfiguration.class, SleuthStreamAutoConfiguration.class,
 			TestSupportBinderAutoConfiguration.class, ChannelBindingAutoConfiguration.class,
 			TraceAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class })
-	protected static class TestConfiguration {
-	}
+	protected static class TestConfiguration {}
 
 	@Configuration
 	@MessageEndpoint
@@ -129,6 +135,10 @@ public class StreamSpanListenerTests {
 		@Bean
 		public Sampler defaultSampler() {
 			return new AlwaysSampler();
+		}
+
+		@Bean CounterService counterService() {
+			return Mockito.mock(CounterService.class);
 		}
 
 		@PostConstruct

@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -55,7 +56,7 @@ public class SleuthStreamAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = SleuthSource.OUTPUT, order = Ordered.HIGHEST_PRECEDENCE)
-	public ChannelInterceptor zipkinChannelInterceptor() {
+	public ChannelInterceptor zipkinChannelInterceptor(final SpanReporterService spanReporterService) {
 		// don't trace the tracer (suppress spans originating from our own source)
 		return new ChannelInterceptorAdapter() {
 			@Override
@@ -63,12 +64,28 @@ public class SleuthStreamAutoConfiguration {
 				return MessageBuilder.fromMessage(message)
 						.setHeader(Span.NOT_SAMPLED_NAME, "").build();
 			}
+
+			@Override
+			public void afterSendCompletion(Message<?> message, MessageChannel channel,
+					boolean sent, Exception ex) {
+				if (!(message.getPayload() instanceof Spans)) {
+					return;
+				}
+				Spans spans = (Spans) message.getPayload();
+				int spanNumber = spans.getSpans().size();
+				if (sent) {
+					spanReporterService.incrementAcceptedSpans(spanNumber);
+				} else {
+					spanReporterService.incrementDroppedSpans(spanNumber);
+				}
+			}
 		};
 	}
 
 	@Bean
-	public StreamSpanListener sleuthTracer(HostLocator endpointLocator) {
-		return new StreamSpanListener(endpointLocator);
+	public StreamSpanListener sleuthTracer(HostLocator endpointLocator,
+			SpanReporterService spanReporterService) {
+		return new StreamSpanListener(endpointLocator, spanReporterService);
 	}
 
 	@Configuration
