@@ -16,15 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.util.StringUtils;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Utility for manipulating message headers related to span data.
@@ -45,12 +45,15 @@ public class SpanMessageHeaders {
 		}
 
 		Map<String, String> headers = new HashMap<>();
-		addHeader(headers, Span.TRACE_ID_NAME, span.getTraceId());
-		addHeader(headers, Span.SPAN_ID_NAME, span.getSpanId());
+		addHeader(headers, Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
+		addHeader(headers, Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
 
 		if (span.isExportable()) {
 			addAnnotations(traceKeys, message, span);
-			addHeader(headers, Span.PARENT_ID_NAME, getFirst(span.getParents()));
+			Long parentId = getFirst(span.getParents());
+			if (parentId != null) {
+				addHeader(headers, Span.PARENT_ID_NAME, Span.toHex(parentId));
+			}
 			addHeader(headers, Span.SPAN_NAME_NAME, span.getName());
 			addHeader(headers, Span.PROCESS_ID_NAME, span.getProcessId());
 		}
@@ -69,7 +72,7 @@ public class SpanMessageHeaders {
 				if (value == null) {
 					value = "null";
 				}
-				span.tag(key, value.toString());  // TODO: better way to serialize?
+				span.tag(key, value.toString()); // TODO: better way to serialize?
 			}
 		}
 		addPayloadAnnotations(traceKeys, message.getPayload(), span);

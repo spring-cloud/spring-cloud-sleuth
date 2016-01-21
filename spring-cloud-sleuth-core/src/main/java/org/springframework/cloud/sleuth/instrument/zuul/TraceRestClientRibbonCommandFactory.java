@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.niws.client.http.RestClient;
-import lombok.SneakyThrows;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
@@ -31,8 +31,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.MultiValueMap;
 
-import java.io.InputStream;
-import java.net.URISyntaxException;
+import com.netflix.client.http.HttpRequest;
+import com.netflix.niws.client.http.RestClient;
+
+import lombok.SneakyThrows;
 
 /**
  * @author Spencer Gibb
@@ -93,11 +95,11 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 				setHeader(requestBuilder, Span.NOT_SAMPLED_NAME, "");
 				return;
 			}
-			setHeader(requestBuilder, Span.TRACE_ID_NAME, span.getTraceId());
-			setHeader(requestBuilder, Span.SPAN_ID_NAME, span.getSpanId());
+			setHeader(requestBuilder, Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
+			setHeader(requestBuilder, Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
 			setHeader(requestBuilder, Span.SPAN_NAME_NAME, span.getName());
 			setHeader(requestBuilder, Span.PARENT_ID_NAME,
-					getParentId(span));
+					Span.toHex(getParentId(span)));
 			setHeader(requestBuilder, Span.PROCESS_ID_NAME,
 					span.getProcessId());
 			publish(new ClientSentEvent(this, span));

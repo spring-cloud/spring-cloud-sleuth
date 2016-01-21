@@ -16,16 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Builder class to create STOMP message
@@ -61,12 +61,12 @@ public class StompMessageBuilder {
 
 	public StompMessageBuilder setHeadersFromSpan(final Span span) {
 		if (span != null) {
-			setHeaderIfAbsent(Span.SPAN_ID_NAME, span.getSpanId());
-			setHeaderIfAbsent(Span.TRACE_ID_NAME, span.getTraceId());
+			setHeaderIfAbsent(Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
+			setHeaderIfAbsent(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
 			setHeaderIfAbsent(Span.SPAN_NAME_NAME, span.getName());
 			Long parentId = getParentId(SpanContextHolder.getCurrentSpan());
 			if (parentId != null)
-				setHeaderIfAbsent(Span.PARENT_ID_NAME, parentId);
+				setHeaderIfAbsent(Span.PARENT_ID_NAME, Span.toHex(parentId));
 
 			String processId = span.getProcessId();
 			if (StringUtils.hasText(processId))

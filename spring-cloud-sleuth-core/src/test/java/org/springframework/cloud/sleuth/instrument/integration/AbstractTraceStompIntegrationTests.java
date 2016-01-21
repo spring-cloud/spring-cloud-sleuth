@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -13,8 +15,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractTraceStompIntegrationTests {
@@ -52,13 +52,13 @@ public abstract class AbstractTraceStompIntegrationTests {
 	}
 
 	Long thenSpanIdFromHeadersIsNotEmpty() {
-		Long header = getValueFromHeaders(Span.SPAN_ID_NAME, Long.class);
+		Long header = Span.fromHex(getValueFromHeaders(Span.SPAN_ID_NAME, String.class));
 		then(header).as("Span id should not be empty").isNotNull();
 		return header;
 	}
 
 	Long thenTraceIdFromHeadersIsNotEmpty() {
-		Long header = getValueFromHeaders(Span.TRACE_ID_NAME, Long.class);
+		Long header = Span.fromHex(getValueFromHeaders(Span.TRACE_ID_NAME, String.class));
 		then(header).as("Trace id should not be empty").isNotNull();
 		return header;
 	}

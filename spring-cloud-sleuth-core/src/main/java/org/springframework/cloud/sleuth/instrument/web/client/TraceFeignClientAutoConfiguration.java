@@ -89,8 +89,8 @@ public class TraceFeignClientAutoConfiguration {
 	@ConditionalOnMissingBean(SleuthHystrixConcurrencyStrategy.class)
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
 	public Feign.Builder feignHystrixBuilder(Tracer tracer) {
-		return HystrixFeign.builder()
-				.invocationHandlerFactory(new SleuthHystrixInvocationHandler.Factory(tracer));
+		return HystrixFeign.builder().invocationHandlerFactory(
+				new SleuthHystrixInvocationHandler.Factory(tracer));
 	}
 
 	@Bean
@@ -127,8 +127,11 @@ public class TraceFeignClientAutoConfiguration {
 				}
 				template.header(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
 				setHeader(template, Span.SPAN_NAME_NAME, span.getName());
-				setHeader(template, Span.SPAN_ID_NAME, span.getSpanId());
-				setHeader(template, Span.PARENT_ID_NAME, getParentId(span));
+				setHeader(template, Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
+				Long parentId = getParentId(span);
+				if (parentId != null) {
+					setHeader(template, Span.PARENT_ID_NAME, Span.toHex(parentId));
+				}
 				setHeader(template, Span.PROCESS_ID_NAME, span.getProcessId());
 				publish(new ClientSentEvent(this, span));
 			}
@@ -142,8 +145,7 @@ public class TraceFeignClientAutoConfiguration {
 	}
 
 	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty()
-				? span.getParents().get(0) : null;
+		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
 	}
 
 	public void setHeader(RequestTemplate request, String name, String value) {
@@ -176,13 +178,15 @@ public class TraceFeignClientAutoConfiguration {
 
 	public void setHeader(Map<String, Collection<String>> headers, String name,
 			String value) {
-		if (StringUtils.hasText(value) && !headers.containsKey(name) && this.accessor.isTracing()) {
+		if (StringUtils.hasText(value) && !headers.containsKey(name)
+				&& this.accessor.isTracing()) {
 			headers.put(name, singletonList(value));
 		}
 	}
+
 	public void setHeader(Map<String, Collection<String>> headers, String name,
 			Long value) {
-		if (value != null ){
+		if (value != null) {
 			setHeader(headers, name, Span.toHex(value));
 		}
 	}

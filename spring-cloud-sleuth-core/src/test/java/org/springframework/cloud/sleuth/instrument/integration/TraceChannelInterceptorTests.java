@@ -16,6 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,15 +51,6 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author Dave Syer
@@ -97,8 +97,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void nonExportableSpanCreation() {
-		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Span.NOT_SAMPLED_NAME, "")
-				.build());
+		this.channel.send(MessageBuilder.withPayload("hi")
+				.setHeader(Span.NOT_SAMPLED_NAME, "").build());
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
@@ -109,9 +109,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void parentSpanIncluded() {
-		this.channel.send(MessageBuilder.withPayload("hi").setHeader(Span.TRACE_ID_NAME, 10L)
-				.setHeader(Span.SPAN_ID_NAME, 20L)
-				.build());
+		this.channel.send(MessageBuilder.withPayload("hi")
+				.setHeader(Span.TRACE_ID_NAME, Span.toHex(10L))
+				.setHeader(Span.SPAN_ID_NAME, Span.toHex(20L)).build());
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
@@ -139,8 +139,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void headerCreation() {
-		Span span = this.tracer.startTrace("testSendMessage",
-				new AlwaysSampler());
+		Span span = this.tracer.startTrace("testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
@@ -156,8 +155,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	// TODO: Refactor to parametrized test together with sending messages via channel
 	@Test
 	public void headerCreationViaMessagingTemplate() {
-		Span span = this.tracer.startTrace("testSendMessage",
-				new AlwaysSampler());
+		Span span = this.tracer.startTrace("testSendMessage", new AlwaysSampler());
 		this.messagingTemplate.send(MessageBuilder.withPayload("hi").build());
 		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
@@ -177,7 +175,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		private List<SpanReleasedEvent> events = new ArrayList<>();
 
 		@EventListener
-		public void  handle(SpanReleasedEvent event) {
+		public void handle(SpanReleasedEvent event) {
 			this.events.add(event);
 		}
 
