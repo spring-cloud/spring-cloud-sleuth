@@ -4,6 +4,8 @@ image::https://api.travis-ci.org/spring-cloud/spring-cloud-sleuth.svg?branch=mas
 
 == Spring Cloud Sleuth
 
+image:https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
+
 Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.spring.io[Spring Cloud].
 
 === Terminology
