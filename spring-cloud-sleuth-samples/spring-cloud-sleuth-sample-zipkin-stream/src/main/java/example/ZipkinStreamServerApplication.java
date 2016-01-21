@@ -9,7 +9,7 @@ import org.springframework.cloud.sleuth.zipkin.stream.EnableZipkinStreamServer;
 public class ZipkinStreamServerApplication {
 
 	public static void main(String[] args) throws Exception {
-		SpringApplication.run(ZipkinStreamServerApplication.class, "--debug");
+		SpringApplication.run(ZipkinStreamServerApplication.class, args);
 	}
 
 }
