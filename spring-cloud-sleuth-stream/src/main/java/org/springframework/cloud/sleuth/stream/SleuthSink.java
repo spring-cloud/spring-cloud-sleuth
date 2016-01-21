@@ -20,6 +20,12 @@ import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.messaging.SubscribableChannel;
 
 /**
+ * Defines a message channel for accepting and processing span data from remote,
+ * instrumented applications. Span data comes into the channel in the form of
+ * {@link Spans}, buffering multiple actual spans into a single payload.
+ *
+ * @see SleuthSource
+ *
  * @author Dave Syer
  *
  */

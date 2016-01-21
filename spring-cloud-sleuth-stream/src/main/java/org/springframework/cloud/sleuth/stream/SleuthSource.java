@@ -20,6 +20,13 @@ import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.messaging.MessageChannel;
 
 /**
+ * Defines a message channel for instrumented applications to use to send span data to a
+ * message broker. The channel accepts data in the form of {@link Spans} to buffer
+ * multiple actual Span instances in a single message. A client app may occasionally drop
+ * spans, and if it does it should attempt to account for and report the number dropped.
+ *
+ * @see SleuthSink
+ *
  * @author Dave Syer
  *
  */
