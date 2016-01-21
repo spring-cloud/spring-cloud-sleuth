@@ -16,16 +16,17 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import java.util.Random;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Random;
 
 /**
  * @author Spencer Gibb
@@ -35,7 +36,8 @@ import java.util.Random;
 public class TraceAutoConfiguration {
 
 	@Bean
-	public Random random() {
+	@ConditionalOnMissingBean
+	public Random randomForSpanIds() {
 		return new Random();
 	}
 
@@ -46,9 +48,9 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
-	public DefaultTracer traceManager(Sampler sampler,
+	@ConditionalOnMissingBean(Tracer.class)
+	public DefaultTracer traceManager(Sampler sampler, Random random,
 									ApplicationEventPublisher publisher) {
-		return new DefaultTracer(sampler, random(), publisher);
+		return new DefaultTracer(sampler, random, publisher);
 	}
 }
