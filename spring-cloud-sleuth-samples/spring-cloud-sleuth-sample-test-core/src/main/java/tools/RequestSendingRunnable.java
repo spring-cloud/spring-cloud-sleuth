@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.util.Random;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -39,25 +40,30 @@ public class RequestSendingRunnable implements Runnable {
 	private final RestTemplate restTemplate;
 	private final String url;
 	private final long traceId;
+	private final Random random = new Random();
+	private final long spanId;
 
-	public RequestSendingRunnable(RestTemplate restTemplate, String url, long traceId) {
+	public RequestSendingRunnable(RestTemplate restTemplate, String url, long traceId,
+			Long spanId) {
 		this.restTemplate = restTemplate;
 		this.url = url;
 		this.traceId = traceId;
+		this.spanId = spanId != null ? spanId : this.random.nextLong();
 	}
 
 	@Override
 	public void run() {
 		log.info("Sending the request to url [{}] with trace id in headers [{}]", this.url, this.traceId);
 		ResponseEntity<String> responseEntity =
-				this.restTemplate.exchange(requestWithTraceId(this.traceId), String.class);
+				this.restTemplate.exchange(requestWithTraceId(), String.class);
 		then(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		log.info("Received the following response [{}]", responseEntity);
 	}
 
-	private RequestEntity requestWithTraceId(long traceId) {
+	private RequestEntity requestWithTraceId() {
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(Span.TRACE_ID_NAME, Span.toHex(traceId));
+		headers.add(Span.TRACE_ID_NAME, Span.toHex(this.traceId));
+		headers.add(Span.SPAN_ID_NAME, Span.toHex(this.spanId));
 		URI uri = URI.create(this.url);
 		RequestEntity requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
 		log.info("Request [" + requestEntity + "] is ready");

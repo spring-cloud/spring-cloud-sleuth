@@ -60,6 +60,11 @@ public class SampleMessagingApplication {
 		return msg;
 	}
 
+	@RequestMapping("/foo")
+	public String foo() {
+		return "foo";
+	}
+
 	@RequestMapping("/xform")
 	public String xform() {
 		String msg = "Hello";

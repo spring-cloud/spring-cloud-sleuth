@@ -18,9 +18,13 @@ package sample;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dave Syer
@@ -28,11 +32,19 @@ import org.springframework.messaging.Message;
  */
 @MessageEndpoint
 @Slf4j
-public class SampleService {
+public class SampleService implements
+		ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+	@Autowired private RestTemplate restTemplate;
+	private int port;
 
 	@ServiceActivator(inputChannel="messages")
 	public void log(Message<?> message) {
 		log.info("Received: " + message);
+		this.restTemplate.getForObject("http://localhost:" + this.port + "/foo", String.class);
 	}
 
+	@Override public void onApplicationEvent(
+			EmbeddedServletContainerInitializedEvent event) {
+		this.port = event.getEmbeddedServletContainer().getPort();
+	}
 }

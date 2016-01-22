@@ -16,7 +16,7 @@
 package integration;
 
 import example.ZipkinStreamServerApplication;
-import lombok.SneakyThrows;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +30,7 @@ import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
 import org.springframework.integration.support.MessageBuilder;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -47,27 +48,32 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 	@Value("${local.server.port}")
 	private int zipkinServerPort = 9411;
+	long traceId = new Random().nextLong();
+	long spanId = new Random().nextLong();
 
 	@Autowired
 	@Qualifier(SleuthSink.INPUT)
 	private MessageChannel input;
 
-	@Test
-	@SneakyThrows
-	public void should_propagate_spans_to_zipkin() {
-
+	@Before
+	public void setup() {
 		await().until(zipkinServerIsUp());
+	}
 
-		long traceId = new Random().nextLong();
-		Span span = Span.builder().traceId(traceId).spanId(traceId).name("test")
-				.build();
+	@Test
+	public void should_propagate_spans_to_zipkin() {
+		Span span = Span.builder().traceId(traceId).spanId(spanId).name("test").build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");
 
-		this.input.send(MessageBuilder.withPayload(
-				new Spans(new Host(getAppName(), "127.0.0.1", 8080), Collections.singletonList(span)))
-				.build());
+		this.input.send(messageWithSpan(span));
 
 		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
+	}
+
+	private Message<Spans> messageWithSpan(Span span) {
+		return MessageBuilder.withPayload(
+				new Spans(new Host(getAppName(), "127.0.0.1", 8080), Collections.singletonList(span)))
+				.build();
 	}
 
 	@Override

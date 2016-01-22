@@ -18,6 +18,9 @@ package tools;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
+import org.junit.Before;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import zipkin.Codec;
@@ -39,6 +42,16 @@ public abstract class AbstractIntegrationTest {
 	protected static int pollInterval = 1;
 	protected static int timeout = 20;
 	protected RestTemplate restTemplate = new AssertingRestTemplate();
+
+	@Before
+	public void clearSpanBefore() {
+		SpanContextHolder.removeCurrentSpan();
+	}
+
+	@After
+	public void clearSpanAfter() {
+		SpanContextHolder.removeCurrentSpan();
+	}
 
 	public static ConditionFactory await() {
 		return Awaitility.await().pollInterval(pollInterval, SECONDS).atMost(timeout, SECONDS);
@@ -102,7 +115,11 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId) {
-		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId);
+		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, null);
+	}
+
+	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId, Long spanId) {
+		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, spanId);
 	}
 
 	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(long traceId) {

@@ -29,8 +29,10 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
+import zipkin.Span;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Random;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -51,7 +53,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	@Test
-	public void should_propagate_spans_for_messaging() {
+	public void should_have_passed_trace_id_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId));
@@ -62,7 +64,20 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	@Test
-	public void should_propagate_spans_for_messaging_with_async() {
+	public void should_have_passed_trace_id_and_generate_new_span_id_when_message_is_about_to_be_sent() {
+		long traceId = new Random().nextLong();
+		long spanId = new Random().nextLong();
+
+		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId));
+
+		await().until(() -> {
+			thenAllSpansHaveTraceIdEqualTo(traceId);
+			thenTheLastSpansParentHasIdEqualToFirstSpansId();
+		});
+	}
+
+	@Test
+	public void should_have_passed_trace_id_with_annotations_in_async_thread_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId));
@@ -82,6 +97,16 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
 		then(this.integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == traceId)).isTrue();
+	}
+
+	private void thenTheLastSpansParentHasIdEqualToFirstSpansId() {
+		Optional<Span> firstSpan = this.integrationTestSpanCollector.hashedSpans.stream()
+				.filter(span -> "http/".equals(span.name) && span.parentId != null).findFirst();
+		Optional<Span> lastSpan = this.integrationTestSpanCollector.hashedSpans.stream()
+				.filter(span -> "http/foo".equals(span.name)).findFirst();
+		then(firstSpan.isPresent()).isTrue();
+		then(lastSpan.isPresent()).isTrue();
+		then(lastSpan.get().parentId).isEqualTo(firstSpan.get().id);
 	}
 
 	@Configuration
