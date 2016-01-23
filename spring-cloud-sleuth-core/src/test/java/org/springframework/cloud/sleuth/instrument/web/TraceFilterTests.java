@@ -147,7 +147,7 @@ public class TraceFilterTests {
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertThat(this.span.tags()).contains(entry("http/x-foo", "bar"));
+		assertThat(this.span.tags()).contains(entry("http.x-foo", "bar"));
 
 		assertNull(SpanContextHolder.getCurrentSpan());
 	}
@@ -163,7 +163,7 @@ public class TraceFilterTests {
 		this.request.addHeader("X-Foo", "spam");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertThat(this.span.tags()).contains(entry("http/x-foo", "'bar','spam'"));
+		assertThat(this.span.tags()).contains(entry("http.x-foo", "'bar','spam'"));
 
 		assertNull(SpanContextHolder.getCurrentSpan());
 	}
@@ -199,17 +199,17 @@ public class TraceFilterTests {
 	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
 	 */
 	public void verifyHttpTags(HttpStatus status) {
-		assertThat(this.span.tags()).contains(entry("http/host", "localhost"),
-				entry("http/url", "http://localhost/?foo=bar"), entry("http/path", "/"),
-				entry("http/method", "GET"));
+		assertThat(this.span.tags()).contains(entry("http.host", "localhost"),
+				entry("http.url", "http://localhost/?foo=bar"), entry("http.path", "/"),
+				entry("http.method", "GET"));
 
 		// Status is only interesting in non-success case. Omitting it saves at least
 		// 20bytes per span.
 		if (status.is2xxSuccessful()) {
-			assertThat(this.span.tags()).doesNotContainKey("http/status_code");
+			assertThat(this.span.tags()).doesNotContainKey("http.status_code");
 		}
 		else {
-			assertThat(this.span.tags()).containsEntry("http/status_code",
+			assertThat(this.span.tags()).containsEntry("http.status_code",
 					status.toString());
 		}
 	}
