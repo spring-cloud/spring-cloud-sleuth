@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.bootstrap;
+package org.springframework.cloud.sleuth.stream;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
@@ -26,13 +30,17 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
-import org.springframework.util.ClassUtils;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 /**
  * @author Dave Syer
  *
  */
-public class TraceBootstrapEnvironmentPostProcessor implements EnvironmentPostProcessor {
+public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
 	private static String[] headers = new String[] { Span.SPAN_ID_NAME,
@@ -43,20 +51,35 @@ public class TraceBootstrapEnvironmentPostProcessor implements EnvironmentPostPr
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
 			SpringApplication application) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		addHeaders(map,
-				"org.springframework.cloud.stream.binder.redis.RedisMessageChannelBinder",
-				"redis");
-		addHeaders(map,
-				"org.springframework.cloud.stream.binder.rabbit.RabbitMessageChannelBinder",
-				"rabbit");
-		addHeaders(map,
-				"org.springframework.cloud.stream.binder.kafka.KafkaMessageChannelBinder",
-				"kafka");
-		// This doesn't work with all logging systems but it's a useful default so you see
-		// traces in logs without having to configure it.
-		map.put("logging.pattern.level",
-				"%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}");
+		ResourceLoader resourceLoader = application.getResourceLoader();
+		resourceLoader = resourceLoader==null ? new DefaultResourceLoader() : resourceLoader;
+		PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(
+				resourceLoader);
+		try {
+			for (Resource resource : resolver
+					.getResources("classpath:META-INF/spring.binders")) {
+				for (String binderType : parseBinderConfigurations(resource)) {
+					addHeaders(map, binderType);
+				}
+			}
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Cannot load META-INF/spring.binders", e);
+		}
 		addOrReplace(environment.getPropertySources(), map);
+	}
+
+	private Collection<String> parseBinderConfigurations(Resource resource) {
+		Collection<String> keys = new HashSet<>();
+		try {
+			Properties props = PropertiesLoaderUtils.loadProperties(resource);
+			for (Object object : props.keySet()) {
+				keys.add(object.toString());
+			}
+		}
+		catch (IOException e) {
+		}
+		return keys;
 	}
 
 	private void addOrReplace(MutablePropertySources propertySources,
@@ -81,14 +104,11 @@ public class TraceBootstrapEnvironmentPostProcessor implements EnvironmentPostPr
 		}
 	}
 
-	private void addHeaders(Map<String, Object> map, String type, String binder) {
-		if (ClassUtils.isPresent(type, null)) {
-			String stem = "spring.cloud.stream.binder." + binder + ".headers";
-			for (int i = 0; i < headers.length; i++) {
-				map.put(stem + "[" + i + "]", headers[i]);
-			}
+	private void addHeaders(Map<String, Object> map, String binder) {
+		String stem = "spring.cloud.stream.binder." + binder + ".headers";
+		for (int i = 0; i < headers.length; i++) {
+			map.put(stem + "[" + i + "]", headers[i]);
 		}
-
 	}
 
 }

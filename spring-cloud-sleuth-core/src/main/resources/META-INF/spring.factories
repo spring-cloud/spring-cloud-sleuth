@@ -14,4 +14,4 @@ org.springframework.cloud.sleuth.instrument.zuul.TraceZuulAutoConfiguration
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.bootstrap.TraceBootstrapEnvironmentPostProcessor
+org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor
