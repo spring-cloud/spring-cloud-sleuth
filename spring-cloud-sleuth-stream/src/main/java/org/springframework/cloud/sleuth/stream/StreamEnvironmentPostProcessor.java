@@ -57,7 +57,7 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 				resourceLoader);
 		try {
 			for (Resource resource : resolver
-					.getResources("classpath:META-INF/spring.binders")) {
+					.getResources("classpath*:META-INF/spring.binders")) {
 				for (String binderType : parseBinderConfigurations(resource)) {
 					addHeaders(map, binderType);
 				}
