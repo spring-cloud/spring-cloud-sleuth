@@ -94,13 +94,13 @@ public class TraceKeys {
 		 * The domain portion of the URL or host header. Example:
 		 * "mybucket.s3.amazonaws.com". Used to filter by host as opposed to ip address.
 		 */
-		private String host = "http/host";
+		private String host = "http.host";
 
 		/**
 		 * The HTTP method, or verb, such as "GET" or "POST". Used to filter against an
 		 * http route.
 		 */
-		private String method = "http/method";
+		private String method = "http.method";
 
 		/**
 		 * The absolute http path, without any query parameters. Example:
@@ -115,29 +115,43 @@ public class TraceKeys {
 		 * "/resource/abcd-ff". Historical note: This was commonly expressed as "http.uri"
 		 * in zipkin, eventhough it was most often just a path.
 		 */
-		private String path = "http/path";
+		private String path = "http.path";
 
 		/**
 		 * The entire URL, including the scheme, host and query parameters if available.
 		 * Ex.
 		 * "https://mybucket.s3.amazonaws.com/objects/abcd-ff?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Algorithm=AWS4-HMAC-SHA256..."
-		 * Combined with {@link #HTTP_METHOD}, you can understand the fully-qualified
+		 * Combined with {@link #method}, you can understand the fully-qualified
 		 * request line. This is optional as it may include private data or be of
 		 * considerable length.
 		 */
-		private String url = "http/url";
+		private String url = "http.url";
 
 		/**
 		 * The HTTP response code, when not in 2xx range. Ex. "503" Used to filter for
 		 * error status. 2xx range are not logged as success codes are less interesting
 		 * for latency troubleshooting. Omitting saves at least 20 bytes per span.
 		 */
-		private String statusCode = "http/status_code";
+		private String statusCode = "http.status_code";
+
+		/**
+		 * The size of the non-empty HTTP request body, in bytes. Ex. "16384"
+		 *
+		 * <p>Large uploads can exceed limits or contribute directly to latency.
+		 */
+		private String requestSize = "http.request.size";
+
+		/**
+		 * The size of the non-empty HTTP response body, in bytes. Ex. "16384"
+		 *
+		 * <p>Large downloads can exceed limits or contribute directly to latency.
+		 */
+		private String responseSize = "http.response.size";
 
 		/**
 		 * Prefix for header names if they are added as tags.
 		 */
-		private String prefix = "http/";
+		private String prefix = "http.";
 
 		/**
 		 * Additional headers that should be added as tags if they exist. If the header
