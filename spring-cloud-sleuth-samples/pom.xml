@@ -85,13 +85,13 @@
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin</artifactId>
-				<version>0.4.3</version>
+				<version>0.4.4</version>
 				<scope>compile</scope>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin-server</artifactId>
-				<version>0.4.3</version>
+				<version>0.4.4</version>
 				<scope>compile</scope>
 			</dependency>
 		</dependencies>
