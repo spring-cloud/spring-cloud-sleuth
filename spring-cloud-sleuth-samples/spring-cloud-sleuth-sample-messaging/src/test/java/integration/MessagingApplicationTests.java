@@ -35,6 +35,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
+import zipkin.Constants;
 import zipkin.Span;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -45,8 +46,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 @TestPropertySource(properties="sample.zipkin.enabled=true")
 public class MessagingApplicationTests extends AbstractIntegrationTest {
 
-	private static final String SERVER_SENT = "ss";
-	private static final String CLIENT_RECEIVED = "cr";
 	private static int port = 3381;
 	private static String sampleAppUrl = "http://localhost:" + port;
 	@Autowired IntegrationTestZipkinSpanReporter integrationTestSpanCollector;
@@ -106,8 +105,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	private void thenTheSpansHaveProperParentStructure() {
 		Optional<Span> firstHttpSpan = findFirstHttpRequestSpan();
 		List<Span> eventSpans = findAllEventRelatedSpans();
-		Optional<Span> eventSentSpan = findSpanWithServerSentAnnotation(eventSpans);
-		Optional<Span> eventReceivedSpan = findSpanWithClientReceivedAnnotation(eventSpans);
+		Optional<Span> eventSentSpan = findSpanWithAnnotation(eventSpans, Constants.SERVER_SEND);
+		Optional<Span> eventReceivedSpan = findSpanWithAnnotation(eventSpans, Constants.CLIENT_RECV);
 		Optional<Span> lastHttpSpan = findLastHttpSpan();
 		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpan, eventSentSpan, eventReceivedSpan);
 		then(lastHttpSpan.get().parentId).isEqualTo(eventSentSpan.get().id);
@@ -120,16 +119,9 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 				.filter(span -> "http/foo".equals(span.name)).findFirst();
 	}
 
-	private Optional<Span> findSpanWithClientReceivedAnnotation(List<Span> eventSpans) {
+	private Optional<Span> findSpanWithAnnotation(List<Span> eventSpans, String annotationName) {
 		return eventSpans.stream()
-				.filter(span -> span.annotations.stream().filter(annotation -> CLIENT_RECEIVED
-						.equals(annotation.value)).findFirst().isPresent())
-				.findFirst();
-	}
-
-	private Optional<Span> findSpanWithServerSentAnnotation(List<Span> eventSpans) {
-		return eventSpans.stream()
-				.filter(span -> span.annotations.stream().filter(annotation -> SERVER_SENT
+				.filter(span -> span.annotations.stream().filter(annotation -> annotationName
 						.equals(annotation.value)).findFirst().isPresent())
 				.findFirst();
 	}
