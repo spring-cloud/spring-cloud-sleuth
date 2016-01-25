@@ -36,8 +36,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @Slf4j
 public class SampleZipkinApplication {
 
-	public static final String CLIENT_NAME = "testApp";
-
+	/**
+	 * Sleuth will not report trace data unless you define a sampler like below.
+	 */
 	@Bean
 	public Sampler defaultSampler() {
 		return new AlwaysSampler();

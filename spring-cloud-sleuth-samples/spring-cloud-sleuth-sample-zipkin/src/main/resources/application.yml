@@ -3,8 +3,13 @@ server:
 
 spring:
   application:
-    name: testSleuthZipkin
+    # This ends up as the service name in zipkin
+    name: my-boot
+  zipkin:
+    # Uncomment to send to zipkin, replacing 192.168.99.100 with your docker-machine's IP address
+    # baseUrl: http://192.168.99.100:9411/
 
 sample:
   zipkin:
+    # When enabled=false, traces log to the console. Comment to send to zipkin
     enabled: false
