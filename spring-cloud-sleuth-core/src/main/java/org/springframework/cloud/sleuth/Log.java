@@ -25,12 +25,25 @@ import lombok.RequiredArgsConstructor;
 @Data
 @RequiredArgsConstructor
 public class Log {
-	private final long time;
-	private final String msg;
+	/**
+	 * The epoch timestamp of the log record; often set via {@link System#currentTimeMillis()}.
+	 */
+	private final long timestamp;
+
+	/**
+	 * Event (if not null) should be the stable name of some notable moment in the lifetime of a Span.
+	 * For instance, a Span representing a browser page load might add an Event for each of the
+	 * Performance.timing moments here: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceTiming
+	 *
+	 * <p>While it is not a formal requirement, Event strings will be most useful if they are *not*
+	 * unique; rather, tracing systems should be able to use them to understand how two similar Spans
+	 * relate from an internal timing perspective.
+	 */
+	private final String event;
 
 	@SuppressWarnings("unused")
 	private Log() {
-		this.time = 0;
-		this.msg = null;
+		this.timestamp = 0;
+		this.event = null;
 	}
 }

@@ -48,7 +48,7 @@ public class JsonLogSpanListenerTests {
 				.end(10)
 				.build();
 		span.tag("myKey", "myVal");
-		span.log("myTimelineAnnotation");
+		span.logEvent("myTimelineAnnotation");
 		listener.stop(new SpanReleasedEvent(this, span));
 
 		String output = this.output.toString().trim();

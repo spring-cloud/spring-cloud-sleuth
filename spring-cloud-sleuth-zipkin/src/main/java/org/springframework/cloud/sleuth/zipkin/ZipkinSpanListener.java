@@ -71,7 +71,7 @@ public class ZipkinSpanListener {
 			// If an inbound RPC call, it should log a "sr" annotation.
 			// If possible, it should log a binary annotation of "ca", indicating the
 			// caller's address (ex X-Forwarded-For header)
-			event.getParent().log(Constants.SERVER_RECV);
+			event.getParent().logEvent(Constants.SERVER_RECV);
 		}
 	}
 
@@ -81,20 +81,20 @@ public class ZipkinSpanListener {
 		// For an outbound RPC call, it should log a "cs" annotation.
 		// If possible, it should log a binary annotation of "sa", indicating the
 		// destination address.
-		event.getSpan().log(Constants.CLIENT_SEND);
+		event.getSpan().logEvent(Constants.CLIENT_SEND);
 	}
 
 	@EventListener
 	@Order(0)
 	public void clientReceive(ClientReceivedEvent event) {
-		event.getSpan().log(Constants.CLIENT_RECV);
+		event.getSpan().logEvent(Constants.CLIENT_RECV);
 	}
 
 	@EventListener
 	@Order(0)
 	public void serverSend(ServerSentEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
-			event.getParent().log(Constants.SERVER_SEND);
+			event.getParent().logEvent(Constants.SERVER_SEND);
 			this.reporter.report(convert(event.getParent()));
 		}
 	}
@@ -163,8 +163,8 @@ public class ZipkinSpanListener {
 		for (Log ta : span.logs()) {
 			Annotation zipkinAnnotation = new Annotation.Builder()
 					.endpoint(endpoint)
-					.timestamp(ta.getTime() * 1000) // Zipkin is in microseconds
-					.value(ta.getMsg()).build();
+					.timestamp(ta.getTimestamp() * 1000) // Zipkin is in microseconds
+					.value(ta.getEvent()).build();
 			zipkinSpan.addAnnotation(zipkinAnnotation);
 		}
 	}
