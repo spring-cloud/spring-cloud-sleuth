@@ -62,12 +62,12 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_to_zipkin() {
-		Span span = Span.builder().traceId(traceId).spanId(spanId).name("test").build();
+		Span span = Span.builder().traceId(this.traceId).spanId(this.spanId).name("test").build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");
 
 		this.input.send(messageWithSpan(span));
 
-		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
+		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(this.traceId));
 	}
 
 	private Message<Spans> messageWithSpan(Span span) {

@@ -15,6 +15,12 @@
  */
 package integration;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collectors;
+
 import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import org.junit.After;
 import org.junit.Test;
@@ -29,11 +35,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
+import zipkin.Constants;
 import zipkin.Span;
-
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Random;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -72,7 +75,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 		await().until(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
-			thenTheLastSpansParentHasIdEqualToFirstSpansId();
+			thenTheSpansHaveProperParentStructure();
 		});
 	}
 
@@ -99,14 +102,49 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		then(this.integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == traceId)).isTrue();
 	}
 
-	private void thenTheLastSpansParentHasIdEqualToFirstSpansId() {
-		Optional<Span> firstSpan = this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "http/".equals(span.name) && span.parentId != null).findFirst();
-		Optional<Span> lastSpan = this.integrationTestSpanCollector.hashedSpans.stream()
+	private void thenTheSpansHaveProperParentStructure() {
+		Optional<Span> firstHttpSpan = findFirstHttpRequestSpan();
+		List<Span> eventSpans = findAllEventRelatedSpans();
+		Optional<Span> eventSentSpan = findSpanWithAnnotation(eventSpans, Constants.SERVER_SEND);
+		Optional<Span> eventReceivedSpan = findSpanWithAnnotation(eventSpans, Constants.CLIENT_RECV);
+		Optional<Span> lastHttpSpan = findLastHttpSpan();
+		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpan, eventSentSpan, eventReceivedSpan);
+		then(lastHttpSpan.get().parentId).isEqualTo(eventSentSpan.get().id);
+		then(eventSentSpan.get().parentId).isEqualTo(firstHttpSpan.get().id);
+		then(eventSentSpan.get()).isNotEqualTo(eventReceivedSpan.get());
+	}
+
+	private Optional<Span> findLastHttpSpan() {
+		return this.integrationTestSpanCollector.hashedSpans.stream()
 				.filter(span -> "http/foo".equals(span.name)).findFirst();
-		then(firstSpan.isPresent()).isTrue();
-		then(lastSpan.isPresent()).isTrue();
-		then(lastSpan.get().parentId).isEqualTo(firstSpan.get().id);
+	}
+
+	private Optional<Span> findSpanWithAnnotation(List<Span> eventSpans, String annotationName) {
+		return eventSpans.stream()
+				.filter(span -> span.annotations.stream().filter(annotation -> annotationName
+						.equals(annotation.value)).findFirst().isPresent())
+				.findFirst();
+	}
+
+	private List<Span> findAllEventRelatedSpans() {
+		return this.integrationTestSpanCollector.hashedSpans.stream()
+				.filter(span -> "message/messages".equals(span.name) && span.parentId != null).collect(
+						Collectors.toList());
+	}
+
+	private Optional<Span> findFirstHttpRequestSpan() {
+		return this.integrationTestSpanCollector.hashedSpans.stream()
+				.filter(span -> "http/".equals(span.name) && span.parentId != null).findFirst();
+	}
+
+	private void thenAllSpansArePresent(Optional<Span> firstHttpSpan,
+			List<Span> eventSpans, Optional<Span> lastHttpSpan,
+			Optional<Span> eventSentSpan, Optional<Span> eventReceivedSpan) {
+		then(firstHttpSpan.isPresent()).isTrue();
+		then(eventSpans).isNotEmpty();
+		then(eventSentSpan.isPresent()).isTrue();
+		then(eventReceivedSpan.isPresent()).isTrue();
+		then(lastHttpSpan.isPresent()).isTrue();
 	}
 
 	@Configuration

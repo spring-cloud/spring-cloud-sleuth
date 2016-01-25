@@ -16,12 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +45,12 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Dave Syer
@@ -120,7 +120,6 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 				.fromHex(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
-		assertNull(SpanContextHolder.getCurrentSpan());
 		assertEquals(1, this.app.events.size());
 	}
 
