@@ -106,8 +106,8 @@ public class ZipkinMessageListener {
 		for (Log ta : span.logs()) {
 			Annotation zipkinAnnotation = new Annotation.Builder()
 					.endpoint(endpoint)
-					.timestamp(ta.getTime() * 1000) // Zipkin is in microseconds
-					.value(ta.getMsg())
+					.timestamp(ta.getTimestamp() * 1000) // Zipkin is in microseconds
+					.value(ta.getEvent())
 					.build();
 			zipkinSpan.addAnnotation(zipkinAnnotation);
 		}

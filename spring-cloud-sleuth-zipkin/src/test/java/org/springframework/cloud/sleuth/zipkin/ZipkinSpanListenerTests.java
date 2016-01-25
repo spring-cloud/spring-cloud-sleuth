@@ -75,7 +75,7 @@ public class ZipkinSpanListenerTests {
 	@Test
 	public void convertsTimestampAndDurationToMicroseconds() {
 		long start = System.currentTimeMillis();
-		this.parent.log("hystrix/retry"); // System.currentTimeMillis
+		this.parent.logEvent("hystrix/retry"); // System.currentTimeMillis
 
 		zipkin.Span result = this.listener.convert(this.parent);
 
@@ -91,7 +91,7 @@ public class ZipkinSpanListenerTests {
 	/** Sleuth host corresponds to annotation/binaryAnnotation.host in zipkin. */
 	@Test
 	public void annotationsIncludeHost() {
-		this.parent.log("hystrix/retry");
+		this.parent.logEvent("hystrix/retry");
 		this.parent.tag("spring-boot/version", "1.3.1.RELEASE");
 
 		zipkin.Span result = this.listener.convert(this.parent);

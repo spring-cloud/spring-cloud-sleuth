@@ -65,34 +65,34 @@ public class StreamSpanListener {
 	@EventListener
 	@Order(0)
 	public void start(SpanAcquiredEvent event) {
-		event.getSpan().log("acquire");
+		event.getSpan().logEvent("acquire");
 	}
 
 	@EventListener
 	@Order(0)
 	public void serverReceived(ServerReceivedEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
-			event.getParent().log(SERVER_RECV);
+			event.getParent().logEvent(SERVER_RECV);
 		}
 	}
 
 	@EventListener
 	@Order(0)
 	public void clientSend(ClientSentEvent event) {
-		event.getSpan().log(CLIENT_SEND);
+		event.getSpan().logEvent(CLIENT_SEND);
 	}
 
 	@EventListener
 	@Order(0)
 	public void clientReceive(ClientReceivedEvent event) {
-		event.getSpan().log(CLIENT_RECV);
+		event.getSpan().logEvent(CLIENT_RECV);
 	}
 
 	@EventListener
 	@Order(0)
 	public void serverSend(ServerSentEvent event) {
 		if (event.getParent() != null && event.getParent().isRemote()) {
-			event.getParent().log(SERVER_SEND);
+			event.getParent().logEvent(SERVER_SEND);
 			this.queue.add(event.getParent());
 		}
 	}
@@ -100,7 +100,7 @@ public class StreamSpanListener {
 	@EventListener
 	@Order(0)
 	public void release(SpanReleasedEvent event) {
-		event.getSpan().log("release");
+		event.getSpan().logEvent("release");
 		if (event.getSpan().isExportable()) {
 			this.queue.add(event.getSpan());
 		}

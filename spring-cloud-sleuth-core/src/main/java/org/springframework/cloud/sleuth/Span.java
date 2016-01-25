@@ -170,11 +170,10 @@ public class Span {
 	}
 
 	/**
-	 * Add a log or timeline annotation associated with this span
+	 * Add an {@link Log#event event} to the timeline associated with this span.
 	 */
-	public void log(String msg) {
-		this.logs.add(new Log(System.currentTimeMillis(),
-				msg));
+	public void logEvent(String event) {
+		this.logs.add(new Log(System.currentTimeMillis(), event));
 	}
 
 	/**
@@ -188,7 +187,7 @@ public class Span {
 	}
 
 	/**
-	 * Get any logs or annotations (read only)
+	 * Get any timestamped events (read only)
 	 * <p/>
 	 * <p/>
 	 * Will never be null.
