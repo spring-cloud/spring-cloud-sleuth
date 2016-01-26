@@ -22,6 +22,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 
@@ -31,7 +32,7 @@ import org.springframework.messaging.MessageChannel;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
-	private ThreadLocal<Span> traceHolder = new ThreadLocal<>();
+	private final ThreadLocal<Span> traceHolder = new ThreadLocal<>();
 
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
 		super(tracer, traceKeys, random);
@@ -39,9 +40,20 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		Span trace = this.traceHolder.get();
-		getTracer().close(trace);
+		Span trace = closeAllParentMessageRelatedSpans(this.traceHolder.get());
 		this.traceHolder.remove();
+		if (trace != null) {
+			SpanContextHolder.setCurrentSpan(trace);
+		}
+	}
+
+	private Span closeAllParentMessageRelatedSpans(Span trace) {
+		Span traceToClose = trace;
+		while (traceToClose != null && traceToClose.getName() != null &&
+				traceToClose.getName().startsWith(MESSAGE_NAME_PREFIX)) {
+			traceToClose = getTracer().close(traceToClose);
+		}
+		return traceToClose;
 	}
 
 	@Override

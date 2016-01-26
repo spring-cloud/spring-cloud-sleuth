@@ -18,6 +18,8 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
  */
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter {
 
+	protected static final String MESSAGE_NAME_PREFIX = "message/";
+
 	private final Tracer tracer;
 
 	private final Random random;
@@ -96,7 +98,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	String getMessageChannelName(MessageChannel channel) {
-		return "message/" + getChannelName(channel);
+		return MESSAGE_NAME_PREFIX + getChannelName(channel);
 	}
 
 }
