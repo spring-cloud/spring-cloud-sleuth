@@ -34,6 +34,19 @@ import org.springframework.util.StringUtils;
  */
 public class SpanMessageHeaders {
 
+	public static final String SPAN_HEADER = "X-Current-Span";
+
+	public static Span getSpanFromHeader(Message<?> message) {
+		if (message==null) {
+			return null;
+		}
+		Object object = message.getHeaders().get(SPAN_HEADER);
+		if (object instanceof Span) {
+			return (Span) object;
+		}
+		return null;
+	}
+
 	public static Message<?> addSpanHeaders(TraceKeys traceKeys, Message<?> message,
 			Span span) {
 		if (span == null) {
@@ -60,7 +73,8 @@ public class SpanMessageHeaders {
 		else {
 			addHeader(headers, Span.NOT_SAMPLED_NAME, "");
 		}
-		return MessageBuilder.fromMessage(message).copyHeaders(headers).build();
+		return MessageBuilder.fromMessage(message).copyHeaders(headers)
+				.setHeader(SPAN_HEADER, span).build();
 	}
 
 	public static void addAnnotations(TraceKeys traceKeys, Message<?> message,
@@ -97,12 +111,6 @@ public class SpanMessageHeaders {
 			String value) {
 		if (StringUtils.hasText(value)) {
 			headers.put(name, value);
-		}
-	}
-
-	private static void addHeader(Map<String, String> headers, String name, Long value) {
-		if (value != null) {
-			addHeader(headers, name, Span.toHex(value));
 		}
 	}
 

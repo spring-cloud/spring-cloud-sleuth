@@ -22,7 +22,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 
@@ -32,36 +31,21 @@ import org.springframework.messaging.MessageChannel;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
-	private final ThreadLocal<Span> traceHolder = new ThreadLocal<>();
-
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
 		super(tracer, traceKeys, random);
 	}
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		Span trace = closeAllParentMessageRelatedSpans(this.traceHolder.get());
-		this.traceHolder.remove();
-		if (trace != null) {
-			SpanContextHolder.setCurrentSpan(trace);
-		}
-	}
-
-	private Span closeAllParentMessageRelatedSpans(Span trace) {
-		Span traceToClose = trace;
-		while (traceToClose != null && traceToClose.getName() != null &&
-				traceToClose.getName().startsWith(MESSAGE_NAME_PREFIX)) {
-			traceToClose = getTracer().close(traceToClose);
-		}
-		return traceToClose;
+		getTracer().close(SpanMessageHeaders.getSpanFromHeader(message));
 	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		Span parentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan() : buildSpan(message);
+		Span parentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
+				: buildSpan(message);
 		String name = getMessageChannelName(channel);
 		Span span = startSpan(parentSpan, name, message);
-		this.traceHolder.set(span);
 		return SpanMessageHeaders.addSpanHeaders(getTraceKeys(), message, span);
 	}
 
