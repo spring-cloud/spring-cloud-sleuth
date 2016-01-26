@@ -43,28 +43,9 @@ public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor
-	public TraceContextPropagationChannelInterceptor traceContextPropagationChannelInterceptor(
-			Tracer tracer) {
-		return new TraceContextPropagationChannelInterceptor(tracer);
-	}
-
-	@Bean
-	@GlobalChannelInterceptor
 	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
 			TraceKeys traceKeys, Random random) {
 		return new TraceChannelInterceptor(tracer, traceKeys, random);
-	}
-
-	@Bean
-	public TraceStompMessageChannelInterceptor traceStompMessageChannelInterceptor(
-			Tracer tracer, TraceKeys traceKeys, Random random) {
-		return new TraceStompMessageChannelInterceptor(tracer, traceKeys, random);
-	}
-
-	@Bean
-	public TraceStompMessageContextPropagationChannelInterceptor traceStompMessageContextPropagationChannelInteceptor(
-			Tracer tracer, TraceKeys traceKeys) {
-		return new TraceStompMessageContextPropagationChannelInterceptor(tracer, traceKeys);
 	}
 
 }
