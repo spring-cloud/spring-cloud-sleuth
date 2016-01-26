@@ -15,15 +15,21 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import lombok.extern.apachecommons.CommonsLog;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
-import zipkin.Sampler;
+import org.springframework.util.StringUtils;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import lombok.extern.apachecommons.CommonsLog;
+import zipkin.BinaryAnnotation;
+import zipkin.Constants;
+import zipkin.Endpoint;
+import zipkin.Sampler;
+import zipkin.Span.Builder;
 
 /**
  * This converts sleuth spans to zipkin ones, skipping invalid or unsampled.
@@ -70,7 +76,7 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 	 */
 	zipkin.Span convertAndSample(Span input, Host host) {
 		if (!input.getName().equals("message/" + SleuthSink.INPUT)) {
-			zipkin.Span result = ZipkinMessageListener.convert(input, host);
+			zipkin.Span result = SamplingZipkinSpanIterator.convert(input, host);
 			if (this.sampler.isSampled(result.traceId)) {
 				return result;
 			}
@@ -79,5 +85,52 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 			log.warn("Message tracing cycle detected for: " + input);
 		}
 		return null;
+	}
+
+	/**
+	 * Converts a given Sleuth span to a Zipkin Span.
+	 * <ul>
+	 * <li>Set ids, etc
+	 * <li>Create timeline annotations based on data from Span object.
+	 * <li>Create binary annotations based on data from Span object.
+	 * </ul>
+	 */
+	// VisibleForTesting
+	static zipkin.Span convert(Span span, Host host) {
+		Builder zipkinSpan = new zipkin.Span.Builder();
+
+		Endpoint ep = Endpoint.create(host.getServiceName(), host.getIpv4(),
+				host.getPort().shortValue());
+
+		// A zipkin span without any annotations cannot be queried, add special "lc" to
+		// avoid that.
+		if (span.logs().isEmpty() && span.tags().isEmpty()) {
+			String processId = span.getProcessId() != null
+					? span.getProcessId().toLowerCase()
+					: ZipkinMessageListener.UNKNOWN_PROCESS_ID;
+			zipkinSpan.addBinaryAnnotation(
+					BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep));
+		}
+		else {
+			ZipkinMessageListener.addZipkinAnnotations(zipkinSpan, span, ep);
+			ZipkinMessageListener.addZipkinBinaryAnnotations(zipkinSpan, span, ep);
+		}
+
+		zipkinSpan.timestamp(span.getBegin() * 1000);
+		zipkinSpan.duration(span.getAccumulatedMillis() * 1000);
+		zipkinSpan.traceId(span.getTraceId());
+		if (span.getParents().size() > 0) {
+			if (span.getParents().size() > 1) {
+				SamplingZipkinSpanIterator.log
+						.debug("zipkin doesn't support spans with multiple parents.  Omitting "
+								+ "other parents for " + span);
+			}
+			zipkinSpan.parentId(span.getParents().get(0));
+		}
+		zipkinSpan.id(span.getSpanId());
+		if (StringUtils.hasText(span.getName())) {
+			zipkinSpan.name(span.getName());
+		}
+		return zipkinSpan.build();
 	}
 }

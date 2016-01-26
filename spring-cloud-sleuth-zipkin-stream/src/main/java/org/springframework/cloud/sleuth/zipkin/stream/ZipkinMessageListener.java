@@ -11,7 +11,6 @@ import org.springframework.cloud.Cloud;
 import org.springframework.cloud.CloudFactory;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.cloud.sleuth.zipkin.stream.ZipkinMessageListener.NotSleuthStreamClient;
@@ -22,7 +21,7 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.util.StringUtils;
+
 import zipkin.*;
 import zipkin.BinaryAnnotation.Type;
 import zipkin.Span.Builder;
@@ -38,7 +37,7 @@ import java.util.Map;
 @Conditional(NotSleuthStreamClient.class)
 public class ZipkinMessageListener {
 
-	private static final String UNKNOWN_PROCESS_ID = "unknown";
+	static final String UNKNOWN_PROCESS_ID = "unknown";
 
 	@Autowired
 	SpanStore spanStore;
@@ -55,54 +54,9 @@ public class ZipkinMessageListener {
 	}
 
 	/**
-	 * Converts a given Sleuth span to a Zipkin Span.
-	 * <ul>
-	 * <li>Set ids, etc
-	 * <li>Create timeline annotations based on data from Span object.
-	 * <li>Create binary annotations based on data from Span object.
-	 * </ul>
-	 */
-	// VisibleForTesting
-	static zipkin.Span convert(Span span, Host host) {
-		Builder zipkinSpan = new zipkin.Span.Builder();
-
-		Endpoint ep = Endpoint.create(host.getServiceName(), host.getIpv4(),
-				host.getPort().shortValue());
-
-		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
-		if (span.logs().isEmpty() && span.tags().isEmpty()) {
-			String processId = span.getProcessId() != null
-					? span.getProcessId().toLowerCase()
-					: UNKNOWN_PROCESS_ID;
-			zipkinSpan.addBinaryAnnotation(
-					BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep)
-			);
-		} else {
-			addZipkinAnnotations(zipkinSpan, span, ep);
-			addZipkinBinaryAnnotations(zipkinSpan, span, ep);
-		}
-
-		zipkinSpan.timestamp(span.getBegin() * 1000);
-		zipkinSpan.duration((span.getEnd() - span.getBegin()) * 1000);
-		zipkinSpan.traceId(span.getTraceId());
-		if (span.getParents().size() > 0) {
-			if (span.getParents().size() > 1) {
-				log.error("zipkin doesn't support spans with multiple parents.  Omitting "
-						+ "other parents for " + span);
-			}
-			zipkinSpan.parentId(span.getParents().get(0));
-		}
-		zipkinSpan.id(span.getSpanId());
-		if (StringUtils.hasText(span.getName())) {
-			zipkinSpan.name(span.getName());
-		}
-		return zipkinSpan.build();
-	}
-
-	/**
 	 * Add annotations from the sleuth Span.
 	 */
-	private static void addZipkinAnnotations(Builder zipkinSpan, Span span, Endpoint endpoint) {
+	static void addZipkinAnnotations(Builder zipkinSpan, Span span, Endpoint endpoint) {
 		for (Log ta : span.logs()) {
 			Annotation zipkinAnnotation = new Annotation.Builder()
 					.endpoint(endpoint)
@@ -118,7 +72,7 @@ public class ZipkinMessageListener {
 	 *
 	 * @return list of Annotations that could be added to Zipkin Span.
 	 */
-	private static void addZipkinBinaryAnnotations(Builder zipkinSpan, Span span,
+	static void addZipkinBinaryAnnotations(Builder zipkinSpan, Span span,
 			Endpoint endpoint) {
 		for (Map.Entry<String, String> e : span.tags().entrySet()) {
 			BinaryAnnotation.Builder binaryAnn = new BinaryAnnotation.Builder();

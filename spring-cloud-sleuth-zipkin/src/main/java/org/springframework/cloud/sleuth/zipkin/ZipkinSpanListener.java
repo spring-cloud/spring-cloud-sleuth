@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import lombok.extern.apachecommons.CommonsLog;
+import java.nio.charset.Charset;
+import java.util.Map;
+
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -28,13 +30,12 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
+
+import lombok.extern.apachecommons.CommonsLog;
 import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
 import zipkin.Endpoint;
-
-import java.nio.charset.Charset;
-import java.util.Map;
 
 /**
  * @author Spencer Gibb
@@ -139,7 +140,7 @@ public class ZipkinSpanListener {
 		}
 
 		zipkinSpan.timestamp(span.getBegin() * 1000L);
-		zipkinSpan.duration((span.getEnd() - span.getBegin()) * 1000L);
+		zipkinSpan.duration(span.getAccumulatedMillis() * 1000L);
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {

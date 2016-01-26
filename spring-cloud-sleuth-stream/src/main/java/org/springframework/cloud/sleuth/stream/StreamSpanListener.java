@@ -16,6 +16,12 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
@@ -28,12 +34,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.MessageEndpoint;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 /**
@@ -112,7 +112,7 @@ public class StreamSpanListener {
 		this.queue.clear();
 		for (Iterator<Span> iterator = result.iterator(); iterator.hasNext();) {
 			Span span = iterator.next();
-			if (span.getName() != null && span.getName().equals("message/zipkin")) {
+			if (span.getName() != null && span.getName().equals("message/" + SleuthSource.OUTPUT)) {
 				iterator.remove();
 			}
 		}
