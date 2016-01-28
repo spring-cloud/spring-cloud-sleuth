@@ -16,13 +16,6 @@
 
 package org.springframework.cloud.sleuth;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Singular;
-import lombok.ToString;
-import org.springframework.util.Assert;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +23,14 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.util.Assert;
+
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Singular;
+import lombok.ToString;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.

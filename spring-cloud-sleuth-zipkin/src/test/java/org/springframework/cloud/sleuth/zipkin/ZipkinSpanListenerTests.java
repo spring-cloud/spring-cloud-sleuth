@@ -16,6 +16,14 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +44,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Dave Syer
@@ -76,6 +77,7 @@ public class ZipkinSpanListenerTests {
 	public void convertsTimestampAndDurationToMicroseconds() {
 		long start = System.currentTimeMillis();
 		this.parent.logEvent("hystrix/retry"); // System.currentTimeMillis
+		this.parent.stop();
 
 		zipkin.Span result = this.listener.convert(this.parent);
 
