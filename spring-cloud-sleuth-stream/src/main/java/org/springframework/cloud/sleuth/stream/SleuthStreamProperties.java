@@ -27,4 +27,5 @@ import lombok.Data;
 @Data
 public class SleuthStreamProperties {
 	private boolean enabled = true;
+	private String group = SleuthSink.INPUT;
 }
