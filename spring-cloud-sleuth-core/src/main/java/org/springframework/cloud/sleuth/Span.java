@@ -27,10 +27,8 @@ import java.util.Map;
 import org.springframework.util.Assert;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Singular;
-import lombok.ToString;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -43,13 +41,11 @@ import lombok.ToString;
  * @author Marcin Grzejszczak
  */
 /*
- OpenTracing spans can affect the trace tree by creating children. In this way,
- they are like scoped tracers. Sleuth spans are DTOs, whose sole responsibility
- is the current span in the trace tree.
-*/
+ * OpenTracing spans can affect the trace tree by creating children. In this way, they are
+ * like scoped tracers. Sleuth spans are DTOs, whose sole responsibility is the current
+ * span in the trace tree.
+ */
 @Builder(toBuilder = true)
-@ToString
-@EqualsAndHashCode
 @Getter
 public class Span {
 
@@ -59,9 +55,8 @@ public class Span {
 	public static final String TRACE_ID_NAME = "X-Trace-Id";
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
 	public static final String SPAN_ID_NAME = "X-Span-Id";
-	public static final List<String> HEADERS = Arrays
-			.asList(SPAN_ID_NAME, TRACE_ID_NAME, SPAN_NAME_NAME, PARENT_ID_NAME,
-					PROCESS_ID_NAME, NOT_SAMPLED_NAME);
+	public static final List<String> HEADERS = Arrays.asList(SPAN_ID_NAME, TRACE_ID_NAME,
+			SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
 
 	private final long begin;
@@ -100,13 +95,14 @@ public class Span {
 
 	public Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId) {
-		this(begin, end, name, traceId, parents, spanId, remote, exportable, processId, null);
+		this(begin, end, name, traceId, parents, spanId, remote, exportable, processId,
+				null);
 	}
 
 	public Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId,
 			Span savedSpan) {
-		this.begin = begin<=0 ? System.currentTimeMillis() : begin;
+		this.begin = begin <= 0 ? System.currentTimeMillis() : begin;
 		this.end = end;
 		this.name = name;
 		this.traceId = traceId;
@@ -118,7 +114,7 @@ public class Span {
 		this.savedSpan = savedSpan;
 	}
 
-	//for serialization
+	// for serialization
 	private Span() {
 		this.begin = 0;
 		this.name = null;
@@ -135,8 +131,8 @@ public class Span {
 	public synchronized void stop() {
 		if (this.end == 0) {
 			if (this.begin == 0) {
-				throw new IllegalStateException("Span for " + this.name
-						+ " has not been started");
+				throw new IllegalStateException(
+						"Span for " + this.name + " has not been started");
 			}
 			this.end = System.currentTimeMillis();
 		}
@@ -299,5 +295,35 @@ public class Span {
 	public static long fromHex(String hexString) {
 		Assert.hasText(hexString, "Can't convert empty hex string to long");
 		return new BigInteger(hexString, 16).longValue();
+	}
+
+	@Override
+	public String toString() {
+		return "[Trace: " + toHex(this.traceId) + ", Span: " + toHex(this.spanId) + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (this.spanId ^ (this.spanId >>> 32));
+		result = prime * result + (int) (this.traceId ^ (this.traceId >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Span other = (Span) obj;
+		if (this.spanId != other.spanId)
+			return false;
+		if (this.traceId != other.traceId)
+			return false;
+		return true;
 	}
 }

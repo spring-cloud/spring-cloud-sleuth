@@ -23,7 +23,14 @@ import lombok.extern.apachecommons.CommonsLog;
  */
 @CommonsLog
 public abstract class ExceptionUtils {
+	private static boolean fail = false;
 	public static void warn(String msg) {
+		if (fail) {
+			throw new IllegalStateException(msg);
+		}
 		log.warn(msg);
+	}
+	public static void setFail(boolean fail) {
+		ExceptionUtils.fail = fail;
 	}
 }
