@@ -62,7 +62,7 @@ public class SleuthStreamAutoConfiguration {
 			@Override
 			public Message<?> preSend(Message<?> message, MessageChannel channel) {
 				return MessageBuilder.fromMessage(message)
-						.setHeader(Span.NOT_SAMPLED_NAME, "").build();
+						.setHeader(Span.NOT_SAMPLED_NAME, "true").build();
 			}
 
 			@Override

@@ -16,6 +16,18 @@
 
 package org.springframework.cloud.sleuth;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,18 +41,6 @@ import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 /**
  * @author Spencer Gibb
  */
@@ -50,10 +50,12 @@ public class DefaultTraceManagerTests {
 	public static final String IMPORTANT_WORK_1 = "important work 1";
 	public static final String IMPORTANT_WORK_2 = "important work 2";
 	public static final int NUM_SPANS = 3;
+	private ApplicationEventPublisher publisher;
 
 	@Before
 	public void setup() {
 		SpanContextHolder.removeCurrentSpan();
+		this.publisher = mock(ApplicationEventPublisher.class);
 	}
 
 	@After
@@ -63,24 +65,23 @@ public class DefaultTraceManagerTests {
 
 	@Test
 	public void tracingWorks() {
-		ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
 
-		DefaultTracer traceManager = new DefaultTracer(new IsTracingSampler(), new Random(), publisher);
+		DefaultTracer tracer = new DefaultTracer(new IsTracingSampler(), new Random(), this.publisher);
 
-		Span span = traceManager.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
+		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
-			importantWork1(traceManager);
+			importantWork1(tracer);
 		}
 		finally {
-			traceManager.close(span);
+			tracer.close(span);
 		}
 
-		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));
-		verify(publisher, times(NUM_SPANS)).publishEvent(isA(SpanReleasedEvent.class));
+		verify(this.publisher, times(NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));
+		verify(this.publisher, times(NUM_SPANS)).publishEvent(isA(SpanReleasedEvent.class));
 
 		ArgumentCaptor<ApplicationEvent> captor = ArgumentCaptor
 				.forClass(ApplicationEvent.class);
-		verify(publisher, atLeast(NUM_SPANS)).publishEvent(captor.capture());
+		verify(this.publisher, atLeast(NUM_SPANS)).publishEvent(captor.capture());
 
 		List<Span> spans = new ArrayList<>();
 		for (ApplicationEvent event : captor.getAllValues()) {
@@ -97,6 +98,22 @@ public class DefaultTraceManagerTests {
 
 		List<Span> gen4 = findSpans(spans, grandChild.getSpanId());
 		assertThat("gen4 was non-empty", gen4.isEmpty(), is(true));
+	}
+
+	@Test
+	public void nonExportable() {
+		DefaultTracer tracer = new DefaultTracer(new IsTracingSampler(), new Random(), this.publisher);
+		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
+		assertThat(span.isExportable(), is(false));
+	}
+
+	@Test
+	public void exportableInheritedFromParent() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, new IsTracingSampler());
+		assertThat(span.isExportable(), is(false));
+		Span child = tracer.joinTrace(CREATE_SIMPLE_TRACE + "/child", span);
+		assertThat(child.isExportable(), is(false));
 	}
 
 	private Span assertSpan(List<Span> spans, Long parentId, String name) {

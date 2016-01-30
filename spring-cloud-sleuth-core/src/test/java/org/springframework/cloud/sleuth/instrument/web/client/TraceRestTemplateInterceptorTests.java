@@ -16,6 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertFalse;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,14 +41,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertFalse;
 
 /**
  * @author Dave Syer
@@ -83,6 +83,17 @@ public class TraceRestTemplateInterceptorTests {
 	}
 
 	@Test
+	public void notSampledHeaderAddedWhenNotExportable() {
+		this.traces.continueSpan(Span.builder().traceId(1L).spanId(2L).exportable(false).build());
+		@SuppressWarnings("unchecked")
+		Map<String, String> headers = this.template.getForEntity("/", Map.class)
+				.getBody();
+		then(Long.valueOf(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
+		then(Long.valueOf(headers.get(Span.SPAN_ID_NAME))).isEqualTo(2L);
+		then(headers.get(Span.NOT_SAMPLED_NAME)).isEqualTo("true");
+	}
+
+	@Test
 	public void headersNotAddedWhenNotTracing() {
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
@@ -96,7 +107,7 @@ public class TraceRestTemplateInterceptorTests {
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
 			Map<String, String> map = new HashMap<String, String>();
 			addHeaders(map, headers, Span.SPAN_ID_NAME, Span.TRACE_ID_NAME,
-					Span.PARENT_ID_NAME);
+					Span.PARENT_ID_NAME, Span.NOT_SAMPLED_NAME);
 			return map;
 		}
 

@@ -15,6 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.io.IOException;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -26,9 +28,6 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.util.StringUtils;
-
-import java.io.IOException;
 
 /**
  * Interceptor that verifies whether the trance and span id has been set on the request
@@ -40,8 +39,8 @@ import java.io.IOException;
  * @author Marcin Grzejszczak, 4financeIT
  * @author Spencer Gibb
  */
-public class TraceRestTemplateInterceptor implements ClientHttpRequestInterceptor,
-ApplicationEventPublisherAware {
+public class TraceRestTemplateInterceptor
+		implements ClientHttpRequestInterceptor, ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
 
@@ -61,11 +60,14 @@ ApplicationEventPublisherAware {
 			ClientHttpRequestExecution execution) throws IOException {
 		Span span = getCurrentSpan();
 		if (span == null) {
-			setHeader(request, Span.NOT_SAMPLED_NAME, "");
+			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
 			return execution.execute(request, body);
 		}
 		setHeader(request, Span.TRACE_ID_NAME, span.getTraceId());
 		setHeader(request, Span.SPAN_ID_NAME, span.getSpanId());
+		if (!span.isExportable()) {
+			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
+		}
 		setHeader(request, Span.SPAN_NAME_NAME, span.getName());
 		setHeader(request, Span.PARENT_ID_NAME, getParentId(span));
 		setHeader(request, Span.PROCESS_ID_NAME, span.getProcessId());
@@ -87,12 +89,11 @@ ApplicationEventPublisherAware {
 	}
 
 	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty() ? span
-				.getParents().get(0) : null;
+		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
 	}
 
 	public void setHeader(HttpRequest request, String name, String value) {
-		if (StringUtils.hasText(value) && !request.getHeaders().containsKey(name) && this.accessor.isTracing()) {
+		if (value!=null && !request.getHeaders().containsKey(name) && this.accessor.isTracing()) {
 			request.getHeaders().add(name, value);
 		}
 	}

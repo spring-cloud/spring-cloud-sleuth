@@ -166,9 +166,6 @@ public class TraceFilter extends OncePerRequestFilter
 				request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 			}
 		}
-		else {
-			this.tracer.continueSpan(spanFromRequest);
-		}
 
 		Throwable exception = null;
 		try {

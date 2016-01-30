@@ -122,12 +122,15 @@ public class TraceFeignClientAutoConfiguration {
 			public void apply(RequestTemplate template) {
 				Span span = getCurrentSpan();
 				if (span == null) {
-					setHeader(template, Span.NOT_SAMPLED_NAME, "");
+					setHeader(template, Span.NOT_SAMPLED_NAME, "true");
 					return;
 				}
 				template.header(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
 				setHeader(template, Span.SPAN_NAME_NAME, span.getName());
 				setHeader(template, Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
+				if (!span.isExportable()) {
+					setHeader(template, Span.NOT_SAMPLED_NAME, "true");
+				}
 				Long parentId = getParentId(span);
 				if (parentId != null) {
 					setHeader(template, Span.PARENT_ID_NAME, Span.toHex(parentId));
@@ -167,7 +170,7 @@ public class TraceFeignClientAutoConfiguration {
 		newHeaders.putAll(headers);
 		Span span = getCurrentSpan();
 		if (span == null) {
-			setHeader(newHeaders, Span.NOT_SAMPLED_NAME, "");
+			setHeader(newHeaders, Span.NOT_SAMPLED_NAME, "true");
 			return newHeaders;
 		}
 		setHeader(newHeaders, Span.TRACE_ID_NAME, span.getTraceId());

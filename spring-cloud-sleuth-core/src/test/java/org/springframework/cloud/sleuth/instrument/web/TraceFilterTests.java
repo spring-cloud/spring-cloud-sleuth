@@ -72,8 +72,8 @@ public class TraceFilterTests {
 		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),
 				this.publisher) {
 			@Override
-			protected Span createSpan(Span saved, Span span) {
-				TraceFilterTests.this.span = super.createSpan(saved, span);
+			protected Span createSpan(Span span, Span saved) {
+				TraceFilterTests.this.span = super.createSpan(span, saved);
 				return TraceFilterTests.this.span;
 			}
 		};

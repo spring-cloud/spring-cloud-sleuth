@@ -16,6 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.integration;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,12 +51,6 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author Dave Syer
@@ -98,7 +98,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void nonExportableSpanCreation() {
 		this.channel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.NOT_SAMPLED_NAME, "").build());
+				.setHeader(Span.NOT_SAMPLED_NAME, "true").build());
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);

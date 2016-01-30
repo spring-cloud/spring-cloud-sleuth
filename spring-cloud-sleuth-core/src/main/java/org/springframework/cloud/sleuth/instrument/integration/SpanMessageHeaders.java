@@ -52,7 +52,7 @@ public class SpanMessageHeaders {
 		if (span == null) {
 			if (!message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
 				return MessageBuilder.fromMessage(message)
-						.setHeader(Span.NOT_SAMPLED_NAME, "").build();
+						.setHeader(Span.NOT_SAMPLED_NAME, "true").build();
 			}
 			return message;
 		}
@@ -71,7 +71,7 @@ public class SpanMessageHeaders {
 			addHeader(headers, Span.PROCESS_ID_NAME, span.getProcessId());
 		}
 		else {
-			addHeader(headers, Span.NOT_SAMPLED_NAME, "");
+			addHeader(headers, Span.NOT_SAMPLED_NAME, "true");
 		}
 		return MessageBuilder.fromMessage(message).copyHeaders(headers)
 				.setHeader(SPAN_HEADER, span).build();

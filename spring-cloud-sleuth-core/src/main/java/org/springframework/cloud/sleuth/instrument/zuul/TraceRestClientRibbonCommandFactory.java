@@ -92,7 +92,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 		protected void customizeRequest(HttpRequest.Builder requestBuilder) {
 			Span span = getCurrentSpan();
 			if (span == null) {
-				setHeader(requestBuilder, Span.NOT_SAMPLED_NAME, "");
+				setHeader(requestBuilder, Span.NOT_SAMPLED_NAME, "true");
 				return;
 			}
 			setHeader(requestBuilder, Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));

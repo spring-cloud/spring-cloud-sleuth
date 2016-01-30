@@ -299,7 +299,7 @@ public class Span {
 
 	@Override
 	public String toString() {
-		return "[Trace: " + toHex(this.traceId) + ", Span: " + toHex(this.spanId) + "]";
+		return "[Trace: " + toHex(this.traceId) + ", Span: " + toHex(this.spanId) + ", exportable=" + this.exportable + "]";
 	}
 
 	@Override

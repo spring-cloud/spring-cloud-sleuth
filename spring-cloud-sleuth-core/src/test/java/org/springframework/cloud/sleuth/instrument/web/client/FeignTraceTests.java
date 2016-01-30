@@ -1,8 +1,14 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +29,7 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.test.annotation.DirtiesContext;
@@ -32,12 +39,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
-import static org.assertj.core.api.BDDAssertions.then;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { FeignTraceTests.TestConfiguration.class })
@@ -71,6 +75,22 @@ public class FeignTraceTests {
 	}
 
 	@Test
+	public void shouldPropagateNotSamplingHeader() {
+		// given
+		Long currentTraceId = 1L;
+		Long currentParentId = 2L;
+		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
+				.spanId(generatedId()).exportable(false).parent(currentParentId).build());
+		// when
+		ResponseEntity<Map<String, String>> response = this.testFeignInterface.headers();
+
+		// then
+		then(response.getBody().get(Span.TRACE_ID_NAME)).isNotNull();
+		then(response.getBody().get(Span.NOT_SAMPLED_NAME)).isNotNull();
+		then(this.listener.getEvents()).isNotEmpty();
+	}
+
+	@Test
 	public void shouldAttachTraceIdWhenUsingFeignClient() {
 		// given
 		Long currentTraceId = 1L;
@@ -82,7 +102,8 @@ public class FeignTraceTests {
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		// then
-		then(Span.fromHex(getHeader(response, Span.TRACE_ID_NAME))).isEqualTo(currentTraceId);
+		then(Span.fromHex(getHeader(response, Span.TRACE_ID_NAME)))
+				.isEqualTo(currentTraceId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 
@@ -102,6 +123,9 @@ public class FeignTraceTests {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/notrace")
 		ResponseEntity<String> getNoTrace();
+
+		@RequestMapping(method = RequestMethod.GET, value = "/")
+		ResponseEntity<Map<String, String>> headers();
 	}
 
 	@Configuration
@@ -159,6 +183,16 @@ public class FeignTraceTests {
 			then(spanId).isNotEmpty();
 			return traceId;
 		}
+
+		@RequestMapping("/")
+		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
+			Map<String, String> map = new HashMap<String, String>();
+			for (String key : headers.keySet()) {
+				map.put(key, headers.getFirst(key));
+			}
+			return map;
+		}
+
 	}
 
 	@Configuration

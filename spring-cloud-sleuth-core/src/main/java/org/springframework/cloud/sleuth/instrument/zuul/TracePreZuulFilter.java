@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.context.RequestContext;
+import java.util.Map;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
@@ -26,7 +26,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.ReflectionUtils;
 
-import java.util.Map;
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
 
 /**
  * @author Dave Syer
@@ -60,7 +61,7 @@ ApplicationEventPublisherAware {
 		// N.B. this will only work with the simple host filter (not ribbon) unless you set hystrix.execution.isolation.strategy=SEMAPHORE
 		Span span = getCurrentSpan();
 		if (span == null) {
-			setHeader(response, Span.NOT_SAMPLED_NAME, "");
+			setHeader(response, Span.NOT_SAMPLED_NAME, "true");
 			return null;
 		}
 		try {

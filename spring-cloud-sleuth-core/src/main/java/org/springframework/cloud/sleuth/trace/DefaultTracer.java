@@ -69,9 +69,9 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Span startTrace(String name, Sampler s) {
+	public Span startTrace(String name, Sampler sampler) {
 		Span span;
-		if (isTracing() || s.isSampled()) {
+		if (isTracing() || sampler.isSampled()) {
 			span = createChild(getCurrentSpan(), name);
 		}
 		else {
@@ -144,12 +144,13 @@ public class DefaultTracer implements Tracer {
 		}
 		else {
 			if (SpanContextHolder.getCurrentSpan() == null) {
-				Span span = createSpan(null, parent);
+				Span span = createSpan(parent, null);
 				SpanContextHolder.setCurrentSpan(span);
 			}
 			Span span = Span.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
-					.processId(parent.getProcessId()).build();
+					.processId(parent.getProcessId()).exportable(parent.isExportable())
+					.build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
 			return span;
 		}
@@ -164,12 +165,12 @@ public class DefaultTracer implements Tracer {
 		if (span != null) {
 			this.publisher.publishEvent(new SpanContinuedEvent(this, span));
 		}
-		Span newSpan = createSpan(SpanContextHolder.getCurrentSpan(), span);
+		Span newSpan = createSpan(span, SpanContextHolder.getCurrentSpan());
 		SpanContextHolder.setCurrentSpan(newSpan);
 		return newSpan;
 	}
 
-	protected Span createSpan(Span saved, Span span) {
+	protected Span createSpan(Span span, Span saved) {
 		if (saved == null && span.getSavedSpan() != null) {
 			saved = span.getSavedSpan();
 		}
