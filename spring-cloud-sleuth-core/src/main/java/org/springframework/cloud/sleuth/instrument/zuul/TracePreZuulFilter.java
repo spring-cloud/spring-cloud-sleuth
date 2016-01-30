@@ -33,8 +33,8 @@ import com.netflix.zuul.context.RequestContext;
  * @author Dave Syer
  *
  */
-public class TracePreZuulFilter extends ZuulFilter implements
-ApplicationEventPublisherAware {
+public class TracePreZuulFilter extends ZuulFilter
+		implements ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
 
@@ -58,7 +58,8 @@ ApplicationEventPublisherAware {
 	public Object run() {
 		RequestContext ctx = RequestContext.getCurrentContext();
 		Map<String, String> response = ctx.getZuulRequestHeaders();
-		// N.B. this will only work with the simple host filter (not ribbon) unless you set hystrix.execution.isolation.strategy=SEMAPHORE
+		// N.B. this will only work with the simple host filter (not ribbon) unless you
+		// set hystrix.execution.isolation.strategy=SEMAPHORE
 		Span span = getCurrentSpan();
 		if (span == null) {
 			setHeader(response, Span.NOT_SAMPLED_NAME, "true");
@@ -68,6 +69,9 @@ ApplicationEventPublisherAware {
 			setHeader(response, Span.SPAN_ID_NAME, span.getSpanId());
 			setHeader(response, Span.TRACE_ID_NAME, span.getTraceId());
 			setHeader(response, Span.SPAN_NAME_NAME, span.getName());
+			if (!span.isExportable()) {
+				setHeader(response, Span.NOT_SAMPLED_NAME, "true");
+			}
 			setHeader(response, Span.PARENT_ID_NAME, getParentId(span));
 			setHeader(response, Span.PROCESS_ID_NAME, span.getProcessId());
 			// TODO: the client sent event should come from the client not the filter!
@@ -84,8 +88,7 @@ ApplicationEventPublisherAware {
 	}
 
 	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty() ? span
-				.getParents().get(0) : null;
+		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
 	}
 
 	public void setHeader(Map<String, String> request, String name, String value) {
@@ -93,8 +96,11 @@ ApplicationEventPublisherAware {
 			request.put(name, value);
 		}
 	}
+
 	public void setHeader(Map<String, String> request, String name, Long value) {
-		setHeader(request, name, Span.toHex(value));
+		if (value != null) {
+			setHeader(request, name, Span.toHex(value));
+		}
 	}
 
 	@Override
