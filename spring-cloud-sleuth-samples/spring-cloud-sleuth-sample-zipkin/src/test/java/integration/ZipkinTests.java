@@ -15,12 +15,12 @@
  */
 package integration;
 
-import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Random;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
@@ -31,26 +31,29 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
 import zipkin.server.ZipkinServer;
-
-import java.util.Random;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { WaitUntilZipkinIsUpConfig.class,
 		SampleZipkinApplication.class })
 @WebIntegrationTest
-@TestPropertySource(properties = "sample.zipkin.enabled=true")
+@TestPropertySource(properties = {"sample.zipkin.enabled=true"})
 public class ZipkinTests extends AbstractIntegrationTest {
 
 	private static final String APP_NAME = "testsleuthzipkin";
-	private static int port = 3380;
-	private static String sampleAppUrl = "http://localhost:" + port;
+	@Value("${local.server.port}")
+	private int port = 3380;
+	private String sampleAppUrl = "http://localhost:" + this.port;
 
 	@Before
 	public void setup() {
-		ZipkinServer.main(new String[] { "server.port=9411" });
+		ZipkinServer.main(new String[] { "--server.port=9411" });
 		await().until(zipkinQueryServerIsUp());
 	}
 
@@ -59,7 +62,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 		long traceId = new Random().nextLong();
 
 		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
-				sampleAppUrl + "/hi2", traceId));
+				this.sampleAppUrl + "/hi2", traceId));
 
 		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
 	}

@@ -59,40 +59,14 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.testcontainers</groupId>
-				<artifactId>docker-compose</artifactId>
-				<version>0.9.8</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-databind</artifactId>
-				<version>${testcontainers.jackson.version}</version>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-core</artifactId>
-				<version>${testcontainers.jackson.version}</version>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-annotations</artifactId>
-				<version>${testcontainers.jackson.version}</version>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin</artifactId>
 				<version>0.4.4</version>
-				<scope>compile</scope>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin-server</artifactId>
 				<version>0.4.4</version>
-				<scope>compile</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
