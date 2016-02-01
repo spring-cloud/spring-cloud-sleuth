@@ -71,14 +71,18 @@ public class DefaultTracer implements Tracer {
 	@Override
 	public Span startTrace(String name, Sampler sampler) {
 		Span span;
-		if (isTracing() || sampler.isSampled(getCurrentSpan())) {
+		if (isTracing()) {
 			span = createChild(getCurrentSpan(), name);
 		}
 		else {
-			// Non-exportable so we keep the trace but not other data
 			long id = createId();
 			span = Span.builder().begin(System.currentTimeMillis()).name(name).traceId(id)
-					.spanId(id).exportable(false).build();
+					.spanId(id).build();
+			if (!sampler.isSampled(span)) {
+				// Non-exportable so we keep the trace but not other data
+				span = Span.builder().begin(span.getBegin()).name(name).traceId(id)
+						.spanId(id).exportable(false).build();
+			}
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 		}
 		return continueSpan(span);

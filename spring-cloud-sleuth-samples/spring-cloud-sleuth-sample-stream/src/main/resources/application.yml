@@ -4,3 +4,6 @@ server:
 spring:
   application:
     name: testSleuthApp
+  sleuth:
+    sampler:
+      percentage: 1.0

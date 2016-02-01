@@ -16,8 +16,9 @@
 
 package sample;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Random;
+import java.util.concurrent.Callable;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
@@ -29,8 +30,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Random;
-import java.util.concurrent.Callable;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Spencer Gibb
@@ -55,7 +56,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@RequestMapping("/")
 	public String hi() {
 		Thread.sleep(this.random.nextInt(1000));
-
+		log.info("Home page");
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/hi2", String.class);
 		return "hi/" + s;
@@ -77,6 +78,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 
 	@RequestMapping("/async")
 	public String async() {
+		log.info("async");
 		this.controller.background();
 		return "ho";
 	}
@@ -84,6 +86,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/hi2")
 	public String hi2() {
+		log.info("hi2");
 		int millis = this.random.nextInt(1000);
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
