@@ -16,7 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import lombok.SneakyThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+import java.util.Random;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -37,15 +46,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.util.Random;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import lombok.SneakyThrows;
 
 /**
  * @author Spencer Gibb
@@ -216,8 +217,8 @@ public class TraceFilterTests {
 
 	private class DelegateSampler implements Sampler {
 		@Override
-		public boolean isSampled() {
-			return TraceFilterTests.this.sampler.isSampled();
+		public boolean isSampled(Span span) {
+			return TraceFilterTests.this.sampler.isSampled(span);
 		}
 	}
 }

@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.sampler;
 
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 
 /**
@@ -27,7 +28,7 @@ public class IsTracingSampler implements Sampler {
 	public static IsTracingSampler INSTANCE = new IsTracingSampler();
 
 	@Override
-	public boolean isSampled() {
+	public boolean isSampled(Span span) {
 		return SpanContextHolder.isTracing();
 	}
 }

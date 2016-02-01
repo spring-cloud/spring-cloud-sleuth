@@ -20,13 +20,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
+import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
+import org.springframework.cloud.sleuth.sampler.SamplerConfiguration;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -48,11 +52,17 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
  * @author Dave Syer
  */
 @Configuration
-@EnableConfigurationProperties(SleuthStreamProperties.class)
+@EnableConfigurationProperties({SleuthStreamProperties.class, SamplerConfiguration.class})
 @AutoConfigureBefore(ChannelBindingAutoConfiguration.class)
 @EnableBinding(SleuthSource.class)
 @ConditionalOnProperty(value = "spring.sleuth.stream.enabled", matchIfMissing = true)
 public class SleuthStreamAutoConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean
+	public Sampler defaultTraceSampler(SamplerConfiguration config) {
+		return new PercentageBasedSampler(config);
+	}
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = SleuthSource.OUTPUT, order = Ordered.HIGHEST_PRECEDENCE)

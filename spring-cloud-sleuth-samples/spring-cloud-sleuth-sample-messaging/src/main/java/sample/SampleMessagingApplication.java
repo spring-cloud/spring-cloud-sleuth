@@ -20,8 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.integration.annotation.IntegrationComponentScan;
@@ -47,11 +45,6 @@ public class SampleMessagingApplication {
 
 	@Autowired
 	private SampleRequestResponse transformer;
-
-	@Bean
-	public Sampler defaultSampler() {
-		return new AlwaysSampler();
-	}
 
 	@RequestMapping("/")
 	public String home() {

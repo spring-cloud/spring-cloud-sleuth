@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -25,7 +26,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
+import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
+import org.springframework.cloud.sleuth.sampler.SamplerConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,21 +39,22 @@ import org.springframework.context.annotation.Configuration;
  * @author Spencer Gibb
  */
 @Configuration
-@EnableConfigurationProperties
+@EnableConfigurationProperties({ZipkinProperties.class, SamplerConfiguration.class})
 @ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
+@AutoConfigureBefore(TraceAutoConfiguration.class)
 public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(ZipkinSpanReporter.class)
-	public ZipkinSpanReporter reporter(SpanReporterService spanReporterService) {
-		ZipkinProperties zipkin = zipkinProperties();
+	public ZipkinSpanReporter reporter(SpanReporterService spanReporterService, ZipkinProperties zipkin) {
 		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
 				spanReporterService);
 	}
 
 	@Bean
-	public ZipkinProperties zipkinProperties() {
-		return new ZipkinProperties();
+	@ConditionalOnMissingBean
+	public Sampler defaultTraceSampler(SamplerConfiguration config) {
+		return new PercentageBasedSampler(config);
 	}
 
 	@Bean

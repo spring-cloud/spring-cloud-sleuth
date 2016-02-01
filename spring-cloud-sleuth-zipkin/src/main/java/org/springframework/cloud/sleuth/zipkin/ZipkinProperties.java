@@ -26,8 +26,6 @@ import lombok.Data;
 @ConfigurationProperties("spring.zipkin")
 @Data
 public class ZipkinProperties {
-	// Sample rate = 1.0 means 100% of requests will get traced.
-	private float fixedSampleRate = 1.0f;
 	/** URL of the zipkin query server instance. */
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;

@@ -16,16 +16,15 @@
 
 package sample;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Spencer Gibb
@@ -35,14 +34,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 @Slf4j
 public class SampleZipkinApplication {
-
-	/**
-	 * Sleuth will not report trace data unless you define a sampler like below.
-	 */
-	@Bean
-	public Sampler defaultSampler() {
-		return new AlwaysSampler();
-	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(SampleZipkinApplication.class, args);

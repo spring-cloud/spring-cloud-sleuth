@@ -13,15 +13,9 @@ import lombok.Data;
 public class SamplerConfiguration {
 
 	/**
-	 * Percentage of requests that should be sampled.
-	 * E.g.
-	 * <ul>
-	 * <li> 1.0 - 100% requests should be sampled </li>
-	 * <li> 0.8 - 80% of requests should be sampled </li>
-	 * <li> 0.0 - 0% requests should be sampled </li>
-	 * </ul>
-	 *
-	 * The precision is whole-numbers only. We don't support 0.1% of the trace rate.
+	 * Percentage of requests that should be sampled. E.g. 1.0 - 100% requests should be
+	 * sampled. The precision is whole-numbers only (i.e. there's no support for 0.1% of
+	 * the traces).
 	 */
 	private float percentage = 0.1f;
 }

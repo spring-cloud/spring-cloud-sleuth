@@ -17,13 +17,14 @@
 package org.springframework.cloud.sleuth.sampler;
 
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.Span;
 
 /**
  * @author Spencer Gibb
  */
 public class AlwaysSampler implements Sampler {
 	@Override
-	public boolean isSampled() {
+	public boolean isSampled(Span span) {
 		return true;
 	}
 }

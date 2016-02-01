@@ -17,8 +17,11 @@
 package org.springframework.cloud.sleuth;
 
 /**
- * Extremely simple callback to determine the frequency that an action should be
+ * Extremely simple callback to determine the frequency that an action should be traced.
  */
 public interface Sampler {
-	boolean isSampled();
+	/**
+	 * @param span the current span (or null if there is none)
+	 */
+	boolean isSampled(Span span);
 }

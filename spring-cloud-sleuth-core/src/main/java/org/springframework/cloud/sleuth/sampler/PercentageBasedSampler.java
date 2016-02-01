@@ -2,7 +2,6 @@ package org.springframework.cloud.sleuth.sampler;
 
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
 
 /**
  * Sampler that based on the given percentage rate will allow sampling.
@@ -23,16 +22,13 @@ import org.springframework.cloud.sleuth.SpanAccessor;
 public class PercentageBasedSampler implements Sampler {
 
 	private final SamplerConfiguration configuration;
-	private final SpanAccessor spanAccessor;
 
-	public PercentageBasedSampler(SamplerConfiguration configuration, SpanAccessor spanAccessor) {
+	public PercentageBasedSampler(SamplerConfiguration configuration) {
 		this.configuration = configuration;
-		this.spanAccessor = spanAccessor;
 	}
 
 	@Override
-	public boolean isSampled() {
-		Span currentSpan = this.spanAccessor.getCurrentSpan();
+	public boolean isSampled(Span currentSpan) {
 		long threshold = Math.abs(Long.MAX_VALUE * (int) (this.configuration.getPercentage() * 100)); // drops fractional percentage.
 		if (currentSpan == null || threshold == 0L) {
 			return false;
