@@ -44,7 +44,7 @@ import org.springframework.context.ApplicationEventPublisher;
 /**
  * @author Spencer Gibb
  */
-public class DefaultTraceManagerTests {
+public class DefaultTracerTests {
 
 	public static final String CREATE_SIMPLE_TRACE = "createSimpleTrace";
 	public static final String IMPORTANT_WORK_1 = "important work 1";
@@ -105,6 +105,13 @@ public class DefaultTraceManagerTests {
 		DefaultTracer tracer = new DefaultTracer(new IsTracingSampler(), new Random(), this.publisher);
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(false));
+	}
+
+	@Test
+	public void exportable() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
+		assertThat(span.isExportable(), is(true));
 	}
 
 	@Test
