@@ -19,12 +19,8 @@ package org.springframework.cloud.sleuth.stream;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.cloud.sleuth.Span;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.springframework.cloud.sleuth.Span;
 
 /**
  * Data transfer object for a collection of spans from a given host.
@@ -33,11 +29,67 @@ import lombok.Data;
  *
  */
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-@Data
-@AllArgsConstructor
 public class Spans {
 
 	private Host host;
 	private List<Span> spans = Collections.emptyList();
 
+	public Spans(Host host, List<Span> spans) {
+		this.host = host;
+		this.spans = spans;
+	}
+
+	public Host getHost() {
+		return this.host;
+	}
+
+	public List<Span> getSpans() {
+		return this.spans;
+	}
+
+	public void setHost(Host host) {
+		this.host = host;
+	}
+
+	public void setSpans(List<Span> spans) {
+		this.spans = spans;
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof Spans))
+			return false;
+		final Spans other = (Spans) o;
+		if (!other.canEqual((Object) this))
+			return false;
+		final Object this$host = this.host;
+		final Object other$host = other.host;
+		if (this$host == null ? other$host != null : !this$host.equals(other$host))
+			return false;
+		final Object this$spans = this.spans;
+		final Object other$spans = other.spans;
+		if (this$spans == null ? other$spans != null : !this$spans.equals(other$spans))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		final Object $host = this.host;
+		result = result * PRIME + ($host == null ? 0 : $host.hashCode());
+		final Object $spans = this.spans;
+		result = result * PRIME + ($spans == null ? 0 : $spans.hashCode());
+		return result;
+	}
+
+	protected boolean canEqual(Object other) {
+		return other instanceof Spans;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.stream.Spans(host=" + this.host
+				+ ", spans=" + this.spans + ")";
+	}
 }

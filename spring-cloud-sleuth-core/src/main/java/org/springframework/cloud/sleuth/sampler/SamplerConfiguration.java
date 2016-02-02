@@ -2,14 +2,11 @@ package org.springframework.cloud.sleuth.sampler;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import lombok.Data;
-
 /**
  * @author Marcin Grzejszczak
  * @author Adrian Cole
  */
 @ConfigurationProperties("spring.sleuth.sampler")
-@Data
 public class SamplerConfiguration {
 
 	/**
@@ -18,4 +15,44 @@ public class SamplerConfiguration {
 	 * the traces).
 	 */
 	private float percentage = 0.1f;
+
+	public SamplerConfiguration() {
+	}
+
+	public float getPercentage() {
+		return this.percentage;
+	}
+
+	public void setPercentage(float percentage) {
+		this.percentage = percentage;
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof SamplerConfiguration))
+			return false;
+		final SamplerConfiguration other = (SamplerConfiguration) o;
+		if (!other.canEqual((Object) this))
+			return false;
+		if (Float.compare(this.percentage, other.percentage) != 0)
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		result = result * PRIME + Float.floatToIntBits(this.percentage);
+		return result;
+	}
+
+	protected boolean canEqual(Object other) {
+		return other instanceof SamplerConfiguration;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.sampler.SamplerConfiguration(percentage="
+				+ this.percentage + ")";
+	}
 }

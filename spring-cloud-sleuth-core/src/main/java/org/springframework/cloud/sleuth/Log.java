@@ -16,14 +16,9 @@
 
 package org.springframework.cloud.sleuth;
 
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-
 /**
  * @author Spencer Gibb
  */
-@Data
-@RequiredArgsConstructor
 public class Log {
 	/**
 	 * The epoch timestamp of the log record; often set via {@link System#currentTimeMillis()}.
@@ -45,5 +40,54 @@ public class Log {
 	private Log() {
 		this.timestamp = 0;
 		this.event = null;
+	}
+
+	public Log(long timestamp, String event) {
+		this.timestamp = timestamp;
+		this.event = event;
+	}
+
+	public long getTimestamp() {
+		return this.timestamp;
+	}
+
+	public String getEvent() {
+		return this.event;
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof Log))
+			return false;
+		final Log other = (Log) o;
+		if (!other.canEqual((Object) this))
+			return false;
+		if (this.timestamp != other.timestamp)
+			return false;
+		final Object this$event = this.event;
+		final Object other$event = other.event;
+		if (this$event == null ? other$event != null : !this$event.equals(other$event))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		final long $timestamp = this.timestamp;
+		result = result * PRIME + (int) ($timestamp >>> 32 ^ $timestamp);
+		final Object $event = this.event;
+		result = result * PRIME + ($event == null ? 0 : $event.hashCode());
+		return result;
+	}
+
+	protected boolean canEqual(Object other) {
+		return other instanceof Log;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.Log(timestamp=" + this.timestamp
+				+ ", event=" + this.event + ")";
 	}
 }

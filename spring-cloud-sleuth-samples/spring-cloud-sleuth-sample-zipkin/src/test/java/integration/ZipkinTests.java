@@ -19,8 +19,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.Random;
 
 import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -21,7 +21,6 @@ import java.lang.invoke.MethodHandles;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
@@ -32,7 +31,6 @@ import org.springframework.core.annotation.Order;
 /**
  * @author Spencer Gibb
  */
-@Data
 public class JsonLogSpanListener {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
@@ -60,4 +58,66 @@ public class JsonLogSpanListener {
 		}
 	}
 
+	public String getPrefix() {
+		return this.prefix;
+	}
+
+	public String getSuffix() {
+		return this.suffix;
+	}
+
+	public ObjectMapper getObjectMapper() {
+		return this.objectMapper;
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof JsonLogSpanListener))
+			return false;
+		final JsonLogSpanListener other = (JsonLogSpanListener) o;
+		if (!other.canEqual((Object) this))
+			return false;
+		final Object this$prefix = this.prefix;
+		final Object other$prefix = other.prefix;
+		if (this$prefix == null ?
+				other$prefix != null :
+				!this$prefix.equals(other$prefix))
+			return false;
+		final Object this$suffix = this.suffix;
+		final Object other$suffix = other.suffix;
+		if (this$suffix == null ?
+				other$suffix != null :
+				!this$suffix.equals(other$suffix))
+			return false;
+		final Object this$objectMapper = this.objectMapper;
+		final Object other$objectMapper = other.objectMapper;
+		if (this$objectMapper == null ?
+				other$objectMapper != null :
+				!this$objectMapper.equals(other$objectMapper))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		final Object $prefix = this.prefix;
+		result = result * PRIME + ($prefix == null ? 0 : $prefix.hashCode());
+		final Object $suffix = this.suffix;
+		result = result * PRIME + ($suffix == null ? 0 : $suffix.hashCode());
+		final Object $objectMapper = this.objectMapper;
+		result = result * PRIME + ($objectMapper == null ? 0 : $objectMapper.hashCode());
+		return result;
+	}
+
+	protected boolean canEqual(Object other) {
+		return other instanceof JsonLogSpanListener;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.log.JsonLogSpanListener(prefix="
+				+ this.prefix + ", suffix=" + this.suffix + ", objectMapper="
+				+ this.objectMapper + ")";
+	}
 }

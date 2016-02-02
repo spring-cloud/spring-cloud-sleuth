@@ -16,17 +16,12 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.ApplicationEvent;
 
 /**
  * @author Spencer Gibb
  */
-@Data
-@EqualsAndHashCode(callSuper=false)
 @SuppressWarnings("serial")
 public class SpanAcquiredEvent extends ApplicationEvent {
 
@@ -41,5 +36,53 @@ public class SpanAcquiredEvent extends ApplicationEvent {
 		super(source);
 		this.parent = parent;
 		this.span = span;
+	}
+
+	public Span getParent() {
+		return this.parent;
+	}
+
+	public Span getSpan() {
+		return this.span;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.event.SpanAcquiredEvent(parent="
+				+ this.parent + ", span=" + this.span + ")";
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof SpanAcquiredEvent))
+			return false;
+		final SpanAcquiredEvent other = (SpanAcquiredEvent) o;
+		if (!other.canEqual((Object) this))
+			return false;
+		final Object this$parent = this.getParent();
+		final Object other$parent = other.getParent();
+		if (this$parent == null ?
+				other$parent != null :
+				!this$parent.equals(other$parent))
+			return false;
+		final Object this$span = this.getSpan();
+		final Object other$span = other.getSpan();
+		if (this$span == null ? other$span != null : !this$span.equals(other$span))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		final Object $parent = this.getParent();
+		result = result * PRIME + ($parent == null ? 0 : $parent.hashCode());
+		final Object $span = this.getSpan();
+		result = result * PRIME + ($span == null ? 0 : $span.hashCode());
+		return result;
+	}
+
+	protected boolean canEqual(Object other) {
+		return other instanceof SpanAcquiredEvent;
 	}
 }

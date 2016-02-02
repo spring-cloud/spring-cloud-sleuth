@@ -65,10 +65,6 @@
 			<artifactId>spring-cloud-starter-eureka</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.github.kristofa</groupId>
 			<artifactId>brave-core</artifactId>
 		</dependency>

@@ -16,21 +16,53 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import lombok.Value;
+import java.util.ArrayList;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.ApplicationListener;
-
-import java.util.ArrayList;
 
 /**
  * @author Spencer Gibb
  */
-@Value
 public class ArrayListSpanAccumulator implements ApplicationListener<SpanReleasedEvent> {
+
 	private final ArrayList<Span> spans = new ArrayList<>();
+
+	public ArrayListSpanAccumulator() {
+	}
 
 	@Override
 	public void onApplicationEvent(SpanReleasedEvent event) {
 		this.spans.add(event.getSpan());
+	}
+
+	public ArrayList<Span> getSpans() {
+		return this.spans;
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof ArrayListSpanAccumulator))
+			return false;
+		final ArrayListSpanAccumulator other = (ArrayListSpanAccumulator) o;
+		final Object this$spans = this.spans;
+		final Object other$spans = other.spans;
+		if (this$spans == null ? other$spans != null : !this$spans.equals(other$spans))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		final Object $spans = this.spans;
+		result = result * PRIME + ($spans == null ? 0 : $spans.hashCode());
+		return result;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.event.ArrayListSpanAccumulator(spans="
+				+ this.spans + ")";
 	}
 }
