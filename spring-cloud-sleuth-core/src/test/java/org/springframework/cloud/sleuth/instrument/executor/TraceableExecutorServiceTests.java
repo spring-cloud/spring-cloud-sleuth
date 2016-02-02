@@ -1,6 +1,14 @@
 package org.springframework.cloud.sleuth.instrument.executor;
 
-import lombok.SneakyThrows;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,15 +21,6 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -52,8 +51,8 @@ public class TraceableExecutorServiceTests {
 	}
 
 	@Test
-	@SneakyThrows
-	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed() {
+	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed()
+			throws Exception {
 		Span span = this.tracer.startTrace("PARENT");
 		CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		this.tracer.close(span);

@@ -18,14 +18,65 @@ package org.springframework.cloud.sleuth.stream;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import lombok.Data;
-
 /**
  * @author Dave Syer
  */
 @ConfigurationProperties("spring.sleuth.stream")
-@Data
 public class SleuthStreamProperties {
 	private boolean enabled = true;
 	private String group = SleuthSink.INPUT;
+
+	public SleuthStreamProperties() {
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public String getGroup() {
+		return this.group;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void setGroup(String group) {
+		this.group = group;
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof SleuthStreamProperties))
+			return false;
+		final SleuthStreamProperties other = (SleuthStreamProperties) o;
+		if (!other.canEqual((Object) this))
+			return false;
+		if (this.enabled != other.enabled)
+			return false;
+		final Object this$group = this.group;
+		final Object other$group = other.group;
+		if (this$group == null ? other$group != null : !this$group.equals(other$group))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		result = result * PRIME + (this.enabled ? 79 : 97);
+		final Object $group = this.group;
+		result = result * PRIME + ($group == null ? 0 : $group.hashCode());
+		return result;
+	}
+
+	protected boolean canEqual(Object other) {
+		return other instanceof SleuthStreamProperties;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.stream.SleuthStreamProperties(enabled="
+				+ this.enabled + ", group=" + this.group + ")";
+	}
 }

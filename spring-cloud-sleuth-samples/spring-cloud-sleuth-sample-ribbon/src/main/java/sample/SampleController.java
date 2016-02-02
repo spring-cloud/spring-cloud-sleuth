@@ -16,13 +16,12 @@
 
 package sample;
 
-import lombok.SneakyThrows;
+import java.util.Random;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Random;
 
 /**
  * @author Spencer Gibb
@@ -36,15 +35,13 @@ public class SampleController  {
 	@Autowired
 	private Random random;
 
-	@SneakyThrows
 	@RequestMapping("/")
-	public String hi() {
+	public String hi() throws InterruptedException {
 		Thread.sleep(this.random.nextInt(1000));
 		String s = this.restTemplate.getForObject("http://zipkin/hi2", String.class);
 		return "hi/" + s;
 	}
 
-	@SneakyThrows
 	@RequestMapping("/call")
 	public String traced() {
 		String s = this.restTemplate.getForObject("http://zipkin/call", String.class);

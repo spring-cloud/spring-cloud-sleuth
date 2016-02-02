@@ -26,10 +26,6 @@ import java.util.Map;
 
 import org.springframework.util.Assert;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Singular;
-
 /**
  * Class for gathering and reporting statistics about a block of execution.
  * <p/>
@@ -45,8 +41,6 @@ import lombok.Singular;
  * like scoped tracers. Sleuth spans are DTOs, whose sole responsibility is the current
  * span in the trace tree.
  */
-@Builder(toBuilder = true)
-@Getter
 public class Span {
 
 	public static final String NOT_SAMPLED_NAME = "X-Not-Sampled";
@@ -63,20 +57,14 @@ public class Span {
 	private long end = 0;
 	private final String name;
 	private final long traceId;
-	@Singular
 	private List<Long> parents = new ArrayList<>();
 	private final long spanId;
 	private boolean remote = false;
 	private boolean exportable = true;
 	private final Map<String, String> tags = new LinkedHashMap<>();
 	private final String processId;
-	@Singular
 	private final List<Log> logs = new ArrayList<>();
 	private final Span savedSpan;
-
-	public static Span.SpanBuilder builder() {
-		return new Span().toBuilder();
-	}
 
 	public Span(Span current, Span savedSpan) {
 		this.begin = current.getBegin();
@@ -123,6 +111,10 @@ public class Span {
 		this.processId = null;
 		this.parents = new ArrayList<>();
 		this.savedSpan = null;
+	}
+
+	public static SpanBuilder builder() {
+		return new SpanBuilder();
 	}
 
 	/**
@@ -325,5 +317,94 @@ public class Span {
 		if (this.traceId != other.traceId)
 			return false;
 		return true;
+	}
+
+	public static class SpanBuilder {
+		private long begin;
+		private long end;
+		private String name;
+		private long traceId;
+		private final List<Long> parents = new ArrayList<>();
+		private long spanId;
+		private boolean remote = false;
+		private boolean exportable = true;
+		private String processId;
+		private Span savedSpan;
+		private final List<Log> logs = new ArrayList<>();
+
+		SpanBuilder() {
+		}
+
+		public Span.SpanBuilder begin(long begin) {
+			this.begin = begin;
+			return this;
+		}
+
+		public Span.SpanBuilder end(long end) {
+			this.end = end;
+			return this;
+		}
+
+		public Span.SpanBuilder name(String name) {
+			this.name = name;
+			return this;
+		}
+
+		public Span.SpanBuilder traceId(long traceId) {
+			this.traceId = traceId;
+			return this;
+		}
+
+		public Span.SpanBuilder parent(Long parent) {
+			this.parents.add(parent);
+			return this;
+		}
+
+		public Span.SpanBuilder log(Log log) {
+			this.logs.add(log);
+			return this;
+		}
+
+		public Span.SpanBuilder spanId(long spanId) {
+			this.spanId = spanId;
+			return this;
+		}
+
+		public Span.SpanBuilder remote(boolean remote) {
+			this.remote = remote;
+			return this;
+		}
+
+		public Span.SpanBuilder exportable(boolean exportable) {
+			this.exportable = exportable;
+			return this;
+		}
+
+		public Span.SpanBuilder processId(String processId) {
+			this.processId = processId;
+			return this;
+		}
+
+		public Span.SpanBuilder savedSpan(Span savedSpan) {
+			this.savedSpan = savedSpan;
+			return this;
+		}
+
+		public Span build() {
+			Span span = new Span(this.begin, this.end, this.name, this.traceId,
+					this.parents, this.spanId, this.remote,
+					this.exportable, this.processId, this.savedSpan);
+			span.logs.addAll(this.logs);
+			return span;
+		}
+
+		public String toString() {
+			return "org.springframework.cloud.sleuth.Span.SpanBuilder(begin=" + this.begin
+					+ ", end=" + this.end + ", name=" + this.name + ", traceId="
+					+ this.traceId + ", parents=" + this.parents + ", spanId="
+					+ this.spanId + ", remote=" + this.remote + ", exportable="
+					+ this.exportable + ", processId=" + this.processId + ", savedSpan="
+					+ this.savedSpan + ", logs=" + this.logs + ")";
+		}
 	}
 }

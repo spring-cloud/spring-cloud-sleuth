@@ -21,16 +21,10 @@ import java.util.concurrent.Callable;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-
 /**
  * @author Spencer Gibb
  */
-@Value
-@EqualsAndHashCode(callSuper = false)
 public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Callable<V> {
-
 
 	public TraceCallable(Tracer tracer, Callable<V> delegate) {
 		super(tracer, delegate);
@@ -52,4 +46,19 @@ public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Call
 		}
 	}
 
+	public String toString() {
+		return "org.springframework.cloud.sleuth.instrument.TraceCallable()";
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof TraceCallable))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		return 1;
+	}
 }

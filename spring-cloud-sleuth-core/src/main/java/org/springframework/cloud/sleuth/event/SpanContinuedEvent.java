@@ -16,17 +16,12 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.ApplicationEvent;
 
 /**
  * @author Spencer Gibb
  */
-@Data
-@EqualsAndHashCode(callSuper=false)
 @SuppressWarnings("serial")
 public class SpanContinuedEvent extends ApplicationEvent {
 
@@ -35,5 +30,41 @@ public class SpanContinuedEvent extends ApplicationEvent {
 	public SpanContinuedEvent(Object source, Span span) {
 		super(source);
 		this.span = span;
+	}
+
+	public Span getSpan() {
+		return this.span;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.event.SpanContinuedEvent(span="
+				+ this.span + ")";
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof SpanContinuedEvent))
+			return false;
+		final SpanContinuedEvent other = (SpanContinuedEvent) o;
+		if (!other.canEqual((Object) this))
+			return false;
+		final Object this$span = this.getSpan();
+		final Object other$span = other.getSpan();
+		if (this$span == null ? other$span != null : !this$span.equals(other$span))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		final Object $span = this.getSpan();
+		result = result * PRIME + ($span == null ? 0 : $span.hashCode());
+		return result;
+	}
+
+	protected boolean canEqual(Object other) {
+		return other instanceof SpanContinuedEvent;
 	}
 }

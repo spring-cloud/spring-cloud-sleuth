@@ -16,15 +16,19 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import lombok.extern.apachecommons.CommonsLog;
+import java.lang.invoke.MethodHandles;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.core.NamedThreadLocal;
 
 /**
  * @author Spencer Gibb
  */
-@CommonsLog
 public class SpanContextHolder {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final ThreadLocal<Span> CURRENT_SPAN = new NamedThreadLocal<>("Trace Context");
 

@@ -21,8 +21,6 @@ import java.util.LinkedHashSet;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import lombok.Data;
-
 /**
  * Well-known {@link org.springframework.cloud.sleuth.Span#tag(String, String) span tag}
  * keys.
@@ -49,19 +47,152 @@ import lombok.Data;
  * what's you are storing.
  */
 @ConfigurationProperties("spring.sleuth.keys")
-@Data
 public class TraceKeys {
-
 	private Http http = new Http();
 
 	private Message message = new Message();
 
-	@Data
+	public TraceKeys() {
+	}
+
+	public Http getHttp() {
+		return this.http;
+	}
+
+	public Message getMessage() {
+		return this.message;
+	}
+
+	public void setHttp(Http http) {
+		this.http = http;
+	}
+
+	public void setMessage(Message message) {
+		this.message = message;
+	}
+
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
+		if (!(o instanceof TraceKeys))
+			return false;
+		final TraceKeys other = (TraceKeys) o;
+		if (!other.canEqual((Object) this))
+			return false;
+		final Object this$http = this.http;
+		final Object other$http = other.http;
+		if (this$http == null ? other$http != null : !this$http.equals(other$http))
+			return false;
+		final Object this$message = this.message;
+		final Object other$message = other.message;
+		if (this$message == null ?
+				other$message != null :
+				!this$message.equals(other$message))
+			return false;
+		return true;
+	}
+
+	public int hashCode() {
+		final int PRIME = 59;
+		int result = 1;
+		final Object $http = this.http;
+		result = result * PRIME + ($http == null ? 0 : $http.hashCode());
+		final Object $message = this.message;
+		result = result * PRIME + ($message == null ? 0 : $message.hashCode());
+		return result;
+	}
+
+	protected boolean canEqual(Object other) {
+		return other instanceof TraceKeys;
+	}
+
+	public String toString() {
+		return "org.springframework.cloud.sleuth.instrument.TraceKeys(http=" + this.http
+				+ ", message=" + this.message + ")";
+	}
+
 	public static class Message {
 
 		private Payload payload = new Payload();
 
-		@Data
+		public Message() {
+		}
+
+		public Payload getPayload() {
+			return this.payload;
+		}
+
+		public String getPrefix() {
+			return this.prefix;
+		}
+
+		public Collection<String> getHeaders() {
+			return this.headers;
+		}
+
+		public void setPayload(Payload payload) {
+			this.payload = payload;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public void setHeaders(Collection<String> headers) {
+			this.headers = headers;
+		}
+
+		public boolean equals(Object o) {
+			if (o == this)
+				return true;
+			if (!(o instanceof Message))
+				return false;
+			final Message other = (Message) o;
+			if (!other.canEqual((Object) this))
+				return false;
+			final Object this$payload = this.payload;
+			final Object other$payload = other.payload;
+			if (this$payload == null ?
+					other$payload != null :
+					!this$payload.equals(other$payload))
+				return false;
+			final Object this$prefix = this.prefix;
+			final Object other$prefix = other.prefix;
+			if (this$prefix == null ?
+					other$prefix != null :
+					!this$prefix.equals(other$prefix))
+				return false;
+			final Object this$headers = this.headers;
+			final Object other$headers = other.headers;
+			if (this$headers == null ?
+					other$headers != null :
+					!this$headers.equals(other$headers))
+				return false;
+			return true;
+		}
+
+		public int hashCode() {
+			final int PRIME = 59;
+			int result = 1;
+			final Object $payload = this.payload;
+			result = result * PRIME + ($payload == null ? 0 : $payload.hashCode());
+			final Object $prefix = this.prefix;
+			result = result * PRIME + ($prefix == null ? 0 : $prefix.hashCode());
+			final Object $headers = this.headers;
+			result = result * PRIME + ($headers == null ? 0 : $headers.hashCode());
+			return result;
+		}
+
+		protected boolean canEqual(Object other) {
+			return other instanceof Message;
+		}
+
+		public String toString() {
+			return "org.springframework.cloud.sleuth.instrument.TraceKeys.Message(payload="
+					+ this.payload + ", prefix=" + this.prefix + ", headers="
+					+ this.headers + ")";
+		}
+
 		public static class Payload {
 			/**
 			 * An estimate of the size of the payload if available.
@@ -71,6 +202,67 @@ public class TraceKeys {
 			 * The type of the payload.
 			 */
 			private String type = "message/payload-type";
+
+			public Payload() {
+			}
+
+			public String getSize() {
+				return this.size;
+			}
+
+			public String getType() {
+				return this.type;
+			}
+
+			public void setSize(String size) {
+				this.size = size;
+			}
+
+			public void setType(String type) {
+				this.type = type;
+			}
+
+			public boolean equals(Object o) {
+				if (o == this)
+					return true;
+				if (!(o instanceof Payload))
+					return false;
+				final Payload other = (Payload) o;
+				if (!other.canEqual((Object) this))
+					return false;
+				final Object this$size = this.size;
+				final Object other$size = other.size;
+				if (this$size == null ?
+						other$size != null :
+						!this$size.equals(other$size))
+					return false;
+				final Object this$type = this.type;
+				final Object other$type = other.type;
+				if (this$type == null ?
+						other$type != null :
+						!this$type.equals(other$type))
+					return false;
+				return true;
+			}
+
+			public int hashCode() {
+				final int PRIME = 59;
+				int result = 1;
+				final Object $size = this.size;
+				result = result * PRIME + ($size == null ? 0 : $size.hashCode());
+				final Object $type = this.type;
+				result = result * PRIME + ($type == null ? 0 : $type.hashCode());
+				return result;
+			}
+
+			protected boolean canEqual(Object other) {
+				return other instanceof Payload;
+			}
+
+			public String toString() {
+				return "org.springframework.cloud.sleuth.instrument.TraceKeys.Message.Payload(size="
+						+ this.size + ", type=" + this.type + ")";
+			}
 		}
 
 		/**
@@ -87,7 +279,6 @@ public class TraceKeys {
 
 	}
 
-	@Data
 	public static class Http {
 
 		/**
@@ -160,6 +351,179 @@ public class TraceKeys {
 		 */
 		private Collection<String> headers = new LinkedHashSet<String>();
 
+		public Http() {
+		}
+
+		public String getHost() {
+			return this.host;
+		}
+
+		public String getMethod() {
+			return this.method;
+		}
+
+		public String getPath() {
+			return this.path;
+		}
+
+		public String getUrl() {
+			return this.url;
+		}
+
+		public String getStatusCode() {
+			return this.statusCode;
+		}
+
+		public String getRequestSize() {
+			return this.requestSize;
+		}
+
+		public String getResponseSize() {
+			return this.responseSize;
+		}
+
+		public String getPrefix() {
+			return this.prefix;
+		}
+
+		public Collection<String> getHeaders() {
+			return this.headers;
+		}
+
+		public void setHost(String host) {
+			this.host = host;
+		}
+
+		public void setMethod(String method) {
+			this.method = method;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
+
+		public void setUrl(String url) {
+			this.url = url;
+		}
+
+		public void setStatusCode(String statusCode) {
+			this.statusCode = statusCode;
+		}
+
+		public void setRequestSize(String requestSize) {
+			this.requestSize = requestSize;
+		}
+
+		public void setResponseSize(String responseSize) {
+			this.responseSize = responseSize;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public void setHeaders(Collection<String> headers) {
+			this.headers = headers;
+		}
+
+		public boolean equals(Object o) {
+			if (o == this)
+				return true;
+			if (!(o instanceof Http))
+				return false;
+			final Http other = (Http) o;
+			if (!other.canEqual((Object) this))
+				return false;
+			final Object this$host = this.host;
+			final Object other$host = other.host;
+			if (this$host == null ? other$host != null : !this$host.equals(other$host))
+				return false;
+			final Object this$method = this.method;
+			final Object other$method = other.method;
+			if (this$method == null ?
+					other$method != null :
+					!this$method.equals(other$method))
+				return false;
+			final Object this$path = this.path;
+			final Object other$path = other.path;
+			if (this$path == null ? other$path != null : !this$path.equals(other$path))
+				return false;
+			final Object this$url = this.url;
+			final Object other$url = other.url;
+			if (this$url == null ? other$url != null : !this$url.equals(other$url))
+				return false;
+			final Object this$statusCode = this.statusCode;
+			final Object other$statusCode = other.statusCode;
+			if (this$statusCode == null ?
+					other$statusCode != null :
+					!this$statusCode.equals(other$statusCode))
+				return false;
+			final Object this$requestSize = this.requestSize;
+			final Object other$requestSize = other.requestSize;
+			if (this$requestSize == null ?
+					other$requestSize != null :
+					!this$requestSize.equals(other$requestSize))
+				return false;
+			final Object this$responseSize = this.responseSize;
+			final Object other$responseSize = other.responseSize;
+			if (this$responseSize == null ?
+					other$responseSize != null :
+					!this$responseSize.equals(other$responseSize))
+				return false;
+			final Object this$prefix = this.prefix;
+			final Object other$prefix = other.prefix;
+			if (this$prefix == null ?
+					other$prefix != null :
+					!this$prefix.equals(other$prefix))
+				return false;
+			final Object this$headers = this.headers;
+			final Object other$headers = other.headers;
+			if (this$headers == null ?
+					other$headers != null :
+					!this$headers.equals(other$headers))
+				return false;
+			return true;
+		}
+
+		public int hashCode() {
+			final int PRIME = 59;
+			int result = 1;
+			final Object $host = this.host;
+			result = result * PRIME + ($host == null ? 0 : $host.hashCode());
+			final Object $method = this.method;
+			result = result * PRIME + ($method == null ? 0 : $method.hashCode());
+			final Object $path = this.path;
+			result = result * PRIME + ($path == null ? 0 : $path.hashCode());
+			final Object $url = this.url;
+			result = result * PRIME + ($url == null ? 0 : $url.hashCode());
+			final Object $statusCode = this.statusCode;
+			result = result * PRIME + ($statusCode == null ? 0 : $statusCode.hashCode());
+			final Object $requestSize = this.requestSize;
+			result =
+					result * PRIME + ($requestSize == null ? 0 : $requestSize.hashCode());
+			final Object $responseSize = this.responseSize;
+			result = result * PRIME + ($responseSize == null ?
+					0 :
+					$responseSize.hashCode());
+			final Object $prefix = this.prefix;
+			result = result * PRIME + ($prefix == null ? 0 : $prefix.hashCode());
+			final Object $headers = this.headers;
+			result = result * PRIME + ($headers == null ? 0 : $headers.hashCode());
+			return result;
+		}
+
+		protected boolean canEqual(Object other) {
+			return other instanceof Http;
+		}
+
+		public String toString() {
+			return "org.springframework.cloud.sleuth.instrument.TraceKeys.Http(host="
+					+ this.host + ", method=" + this.method + ", path=" + this.path
+					+ ", url=" + this.url + ", statusCode=" + this.statusCode
+					+ ", requestSize=" + this.requestSize + ", responseSize="
+					+ this.responseSize + ", prefix=" + this.prefix + ", headers="
+					+ this.headers + ")";
+		}
 	}
 
 }

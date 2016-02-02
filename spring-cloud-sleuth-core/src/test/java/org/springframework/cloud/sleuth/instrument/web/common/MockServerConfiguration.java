@@ -1,13 +1,17 @@
 package org.springframework.cloud.sleuth.instrument.web.common;
 
-import lombok.extern.slf4j.Slf4j;
+import java.lang.invoke.MethodHandles;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.SocketUtils;
 
 @Configuration
-@Slf4j
 public class MockServerConfiguration {
+
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Bean(destroyMethod = "shutdownServer")
 	HttpMockServer httpMockServer() {
