@@ -16,13 +16,17 @@
 
 package org.springframework.cloud.sleuth.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import java.lang.invoke.MethodHandles;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Spencer Gibb
  */
-@CommonsLog
 public abstract class ExceptionUtils {
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	private static boolean fail = false;
 	public static void warn(String msg) {
 		if (fail) {

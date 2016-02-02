@@ -15,21 +15,24 @@
  */
 package integration;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
-import zipkin.Span;
-
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
+import zipkin.Span;
 
 /**
  * Span Collector that logs spans and adds Spans to a list
  *
  * @author Marcin Grzejszczak
  */
-@CommonsLog
 public class IntegrationTestZipkinSpanReporter implements ZipkinSpanReporter {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	public List<Span> hashedSpans = Collections.synchronizedList(new LinkedList<>());
 

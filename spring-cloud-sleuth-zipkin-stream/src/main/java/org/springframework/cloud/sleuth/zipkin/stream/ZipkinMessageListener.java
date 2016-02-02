@@ -1,6 +1,13 @@
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import lombok.extern.apachecommons.CommonsLog;
+import javax.sql.DataSource;
+import java.io.UnsupportedEncodingException;
+import java.lang.invoke.MethodHandles;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
@@ -14,29 +21,30 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.cloud.sleuth.zipkin.stream.ZipkinMessageListener.NotSleuthStreamClient;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
-
-import zipkin.*;
+import zipkin.Annotation;
+import zipkin.BinaryAnnotation;
 import zipkin.BinaryAnnotation.Type;
+import zipkin.Endpoint;
+import zipkin.Sampler;
 import zipkin.Span.Builder;
-
-import javax.sql.DataSource;
-import java.io.UnsupportedEncodingException;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import zipkin.SpanStore;
 
 @MessageEndpoint
-@CommonsLog
 @Conditional(NotSleuthStreamClient.class)
 public class ZipkinMessageListener {
-
+	private static final org.apache.commons.logging.Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 	static final String UNKNOWN_PROCESS_ID = "unknown";
 
 	@Autowired

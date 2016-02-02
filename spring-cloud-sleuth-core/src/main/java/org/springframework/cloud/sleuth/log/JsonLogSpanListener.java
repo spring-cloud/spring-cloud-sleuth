@@ -16,11 +16,14 @@
 
 package org.springframework.cloud.sleuth.log;
 
+import java.lang.invoke.MethodHandles;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
-import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
@@ -29,9 +32,10 @@ import org.springframework.core.annotation.Order;
 /**
  * @author Spencer Gibb
  */
-@CommonsLog
 @Data
 public class JsonLogSpanListener {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final String prefix;
 	private final String suffix;

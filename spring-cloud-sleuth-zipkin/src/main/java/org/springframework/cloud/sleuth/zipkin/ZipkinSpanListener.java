@@ -16,9 +16,11 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.lang.invoke.MethodHandles;
 import java.nio.charset.Charset;
 import java.util.Map;
 
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -30,8 +32,6 @@ import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
-
-import lombok.extern.apachecommons.CommonsLog;
 import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
@@ -40,8 +40,9 @@ import zipkin.Endpoint;
 /**
  * @author Spencer Gibb
  */
-@CommonsLog
 public class ZipkinSpanListener {
+	private static final org.apache.commons.logging.Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 	private static final byte[] UNKNOWN_BYTES = "unknown".getBytes(UTF_8);
 

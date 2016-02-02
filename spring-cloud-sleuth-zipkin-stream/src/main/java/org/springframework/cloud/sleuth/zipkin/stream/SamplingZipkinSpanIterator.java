@@ -15,16 +15,17 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.util.StringUtils;
-
-import lombok.extern.apachecommons.CommonsLog;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
 import zipkin.Endpoint;
@@ -34,8 +35,9 @@ import zipkin.Span.Builder;
 /**
  * This converts sleuth spans to zipkin ones, skipping invalid or unsampled.
  */
-@CommonsLog
 final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final Sampler sampler;
 	private final Iterator<Span> delegate;
