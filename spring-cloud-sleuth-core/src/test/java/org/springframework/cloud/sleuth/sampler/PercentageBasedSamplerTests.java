@@ -11,7 +11,7 @@ import org.springframework.cloud.sleuth.Span;
 
 public class PercentageBasedSamplerTests {
 
-	SamplerConfiguration samplerConfiguration = new SamplerConfiguration();
+	SamplerProperties samplerConfiguration = new SamplerProperties();
 	private Span span;
 	private static Random RANDOM = new Random();
 

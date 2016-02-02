@@ -14,14 +14,21 @@ In distributed tracing the data volumes can be very high so sampling
 can be important (you usually don't need to export all spans to get a
 good picture of what is happening). Spring Cloud Sleuth has a
 `Sampler` strategy that you can implement to take control of the
-sampling algorithm. By default you get a strategy that continues to
-trace if a span is already active, but never starts a new one with the
-exportable flag set. If all your apps run with this sampler you will
-see traces in logs, but not in any remote store. For testing the
-default is often enough, and it probably is all you need if you are
-only using the logs (e.g. with an ELK aggregator). If you are
-exporting span data to Zipkin or Spring Cloud Stream, there is also an
-`AlwaysSampler` that exports everything.
+sampling algorithm. Samplers do not stop span (correlation) ids from
+being generated, but they do prevent the tags and events being
+attached and exported. By default you get a strategy that continues to
+trace if a span is already active, but new ones are always marked as
+non-exportable. If all your apps run with this sampler you will see
+traces in logs, but not in any remote store. For testing the default
+is often enough, and it probably is all you need if you are only using
+the logs (e.g. with an ELK aggregator). If you are exporting span data
+to Zipkin or Spring Cloud Stream, there is also an `AlwaysSampler`
+that exports everything and a `PercentageBasedSampler` that samples a
+fixed fraction of spans.
+
+NOTE: the `PercentageBasedSampler` is the default if you are using 
+`spring-cloud-sleuth-zipkin` or `spring-cloud-sleuth-stream`. You can 
+configure the exports using `spring.sleuth.sampler.percentage`.
 
 A sampler can be installed just by creating a bean definition, e.g:
 
@@ -113,6 +120,11 @@ zipkin:
   store:
     type: mysql
 ----
+
+NOTE: The `@EnableZipkinStreamServer` is also annotated with
+`@EnableZipkinServer` so the process will also expose the standard
+Zipkin server endpoints for collecting spans over HTTP, and for
+querying in the Zipkin Web UI.
 
 === Custom Consumer
 

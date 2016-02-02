@@ -10,7 +10,7 @@ import lombok.Data;
  */
 @ConfigurationProperties("spring.sleuth.sampler")
 @Data
-public class SamplerConfiguration {
+public class SamplerProperties {
 
 	/**
 	 * Percentage of requests that should be sampled. E.g. 1.0 - 100% requests should be

@@ -6,7 +6,7 @@ Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.s
 
 Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.
 
-*Span:* The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span's are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.  Spans also have other data, such as descriptions, key-value annotations, the ID of the span that caused them, and process ID's (normally IP address).
+*Span:* The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span's are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.  Spans also have other data, such as descriptions, timestamped events, key-value annotations (tags), the ID of the span that caused them, and process ID's (normally IP address).
 
 Spans are started and stopped, and they keep track of their timing information.  Once you create a span, you must stop it at some point in the future.
 

@@ -21,9 +21,9 @@ import org.springframework.cloud.sleuth.Span;
  */
 public class PercentageBasedSampler implements Sampler {
 
-	private final SamplerConfiguration configuration;
+	private final SamplerProperties configuration;
 
-	public PercentageBasedSampler(SamplerConfiguration configuration) {
+	public PercentageBasedSampler(SamplerProperties configuration) {
 		this.configuration = configuration;
 	}
 

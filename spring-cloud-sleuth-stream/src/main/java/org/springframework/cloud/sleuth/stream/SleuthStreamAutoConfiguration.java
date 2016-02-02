@@ -30,7 +30,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
-import org.springframework.cloud.sleuth.sampler.SamplerConfiguration;
+import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -52,7 +52,7 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
  * @author Dave Syer
  */
 @Configuration
-@EnableConfigurationProperties({SleuthStreamProperties.class, SamplerConfiguration.class})
+@EnableConfigurationProperties({SleuthStreamProperties.class, SamplerProperties.class})
 @AutoConfigureBefore(ChannelBindingAutoConfiguration.class)
 @EnableBinding(SleuthSource.class)
 @ConditionalOnProperty(value = "spring.sleuth.stream.enabled", matchIfMissing = true)
@@ -60,7 +60,7 @@ public class SleuthStreamAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public Sampler defaultTraceSampler(SamplerConfiguration config) {
+	public Sampler defaultTraceSampler(SamplerProperties config) {
 		return new PercentageBasedSampler(config);
 	}
 

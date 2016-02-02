@@ -30,7 +30,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
-import org.springframework.cloud.sleuth.sampler.SamplerConfiguration;
+import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Spencer Gibb
  */
 @Configuration
-@EnableConfigurationProperties({ZipkinProperties.class, SamplerConfiguration.class})
+@EnableConfigurationProperties({ZipkinProperties.class, SamplerProperties.class})
 @ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 public class ZipkinAutoConfiguration {
@@ -53,7 +53,7 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public Sampler defaultTraceSampler(SamplerConfiguration config) {
+	public Sampler defaultTraceSampler(SamplerProperties config) {
 		return new PercentageBasedSampler(config);
 	}
 
