@@ -25,7 +25,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
@@ -80,10 +79,5 @@ public class TraceWebAutoConfiguration {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, pattern, random);
 		filter.setApplicationEventPublisher(publisher);
 		return filter;
-	}
-
-	@Bean
-	public FilterRegistrationBean traceWebFilter(TraceFilter filter) {
-		return new FilterRegistrationBean(filter);
 	}
 }
