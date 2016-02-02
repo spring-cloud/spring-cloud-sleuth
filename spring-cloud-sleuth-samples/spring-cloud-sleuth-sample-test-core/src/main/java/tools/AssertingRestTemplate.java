@@ -15,13 +15,19 @@
  */
 package tools;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.*;
-
-import java.io.IOException;
-import java.net.URI;
+import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 /**
  *
@@ -29,8 +35,9 @@ import java.net.URI;
  *
  * @author Marcin Grzejszczak
  */
-@Slf4j
 public class AssertingRestTemplate extends RestTemplate {
+
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	public AssertingRestTemplate() {
 		setErrorHandler(new DefaultResponseErrorHandler() {

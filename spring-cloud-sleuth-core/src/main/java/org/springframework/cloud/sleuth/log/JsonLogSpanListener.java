@@ -16,17 +16,15 @@
 
 package org.springframework.cloud.sleuth.log;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
-import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
-
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Spencer Gibb
@@ -45,12 +43,17 @@ public class JsonLogSpanListener {
 		this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
-	@SneakyThrows
 	@EventListener(SpanReleasedEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE-10)
 	public void stop(SpanReleasedEvent event) {
-		log.info(this.prefix + this.objectMapper.writeValueAsString(event.getSpan()) +
-				this.suffix);
+		try {
+			log.info(this.prefix + this.objectMapper.writeValueAsString(event.getSpan()) +
+					this.suffix);
+		}
+		catch (JsonProcessingException e) {
+			log.error("Exception occurred while trying to parse JSON", e);
+			throw new RuntimeException(e);
+		}
 	}
 
 }

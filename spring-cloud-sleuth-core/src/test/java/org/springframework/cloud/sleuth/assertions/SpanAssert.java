@@ -1,13 +1,16 @@
 package org.springframework.cloud.sleuth.assertions;
 
-import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.api.AbstractAssert;
-import org.springframework.cloud.sleuth.Span;
-
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 
-@Slf4j
+import org.assertj.core.api.AbstractAssert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cloud.sleuth.Span;
+
 public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
+
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	public SpanAssert(Span actual) {
 		super(actual, SpanAssert.class);

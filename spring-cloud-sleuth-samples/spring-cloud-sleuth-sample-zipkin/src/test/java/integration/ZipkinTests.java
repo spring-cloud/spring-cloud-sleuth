@@ -15,11 +15,17 @@
  */
 package integration;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Random;
 
+import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
@@ -31,10 +37,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
 import zipkin.server.ZipkinServer;
@@ -73,10 +75,11 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	}
 
 	@Configuration
-	@Slf4j
 	public static class WaitUntilZipkinIsUpConfig {
+
+		private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
 		@Bean
-		@SneakyThrows
 		public ZipkinSpanReporter spanCollector(final ZipkinProperties zipkin,
 				final SpanReporterService spanReporterService) {
 			await().until(new Runnable() {

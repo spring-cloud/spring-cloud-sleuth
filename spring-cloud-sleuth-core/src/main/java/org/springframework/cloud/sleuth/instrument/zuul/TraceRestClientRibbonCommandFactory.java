@@ -17,8 +17,13 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 
+import com.netflix.client.http.HttpRequest;
+import com.netflix.niws.client.http.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
@@ -31,16 +36,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.MultiValueMap;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.niws.client.http.RestClient;
-
-import lombok.SneakyThrows;
-
 /**
  * @author Spencer Gibb
  */
 public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommandFactory
 		implements ApplicationEventPublisherAware {
+
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	private ApplicationEventPublisher publisher;
 
@@ -58,15 +60,20 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 	}
 
 	@Override
-	@SneakyThrows
 	@SuppressWarnings("deprecation")
 	public RestClientRibbonCommand create(RibbonCommandContext context) {
 		RestClient restClient = getClientFactory().getClient(context.getServiceId(),
 				RestClient.class);
-		return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
-				getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
-				context.getHeaders(), context.getParams(), context.getRequestEntity(),
-				this.publisher, this.accessor);
+		try {
+			return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
+					getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
+					context.getHeaders(), context.getParams(), context.getRequestEntity(),
+					this.publisher, this.accessor);
+		}
+		catch (URISyntaxException e) {
+			log.error("Exception occurred while trying to create ribbon command", e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	class TraceRestClientRibbonCommand extends RestClientRibbonCommand {
