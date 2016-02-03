@@ -10,7 +10,7 @@ Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.s
 
 Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.
 
-*Span:* The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span's are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.  Spans also have other data, such as descriptions, key-value annotations, the ID of the span that caused them, and process ID's (normally IP address).
+*Span:* The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span's are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.  Spans also have other data, such as descriptions, timestamped events, key-value annotations (tags), the ID of the span that caused them, and process ID's (normally IP address).
 
 Spans are started and stopped, and they keep track of their timing information.  Once you create a span, you must stop it at some point in the future.
 
@@ -20,16 +20,15 @@ Spans are started and stopped, and they keep track of their timing information. 
 
 == Features
 
-* Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator. Example configuration:
+* Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator. Example logs:
 +
-[source,yaml]
 ----
-logging:
-  pattern:
-    level: '[trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}] %5p'
+2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...
 ----
 +
-(notice the `%X` entries from the MDC).
+(notice the `[appname,traceId,spanId,exportable]` entries from the MDC).
 
 * Optionally log span data in JSON format for harvesting in a log aggregator (set `spring.sleuth.log.json.enabled=true`).
 
@@ -40,6 +39,8 @@ logging:
 * If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via HTTP to a Zipkin server on localhost (port 9411). Configure the location of the service using `spring.zipkin.[host,port]`.
 
 * If `spring-cloud-sleuth-stream` then the app will generate and collect traces via Spring Cloud Stream. Your app automatically becomes a producer of tracer messages that are sent over your broker of choice (e.g. RabbitMQ, Apache Kafka, Redis).
+
+If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage` (default 0.1, i.e. 10%).
 
 == Running the samples
 
