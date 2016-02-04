@@ -48,10 +48,6 @@ public abstract class TraceDelegate<T> {
 		this.tracer.close(span);
 	}
 
-	protected void closeAll(Span span) {
-		span = this.tracer.close(span);
-	}
-
 	protected Span startSpan() {
 		return this.tracer.joinTrace(getSpanName(), this.parent);
 	}

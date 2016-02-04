@@ -134,7 +134,7 @@ public class DefaultTracer implements Tracer {
 			return span;
 		}
 		else {
-			if (SpanContextHolder.getCurrentSpan() == null) {
+			if (!isTracing()) {
 				SpanContextHolder.push(parent, true);
 			}
 			Span span = Span.builder().begin(System.currentTimeMillis()).name(name)

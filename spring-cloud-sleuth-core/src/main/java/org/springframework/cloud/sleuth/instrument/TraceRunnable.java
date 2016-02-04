@@ -45,7 +45,7 @@ public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 			this.getDelegate().run();
 		}
 		finally {
-			closeAll(span);
+			close(span);
 		}
 	}
 }

@@ -48,7 +48,7 @@ public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Call
 			return this.getDelegate().call();
 		}
 		finally {
-			closeAll(span);
+			close(span);
 		}
 	}
 
