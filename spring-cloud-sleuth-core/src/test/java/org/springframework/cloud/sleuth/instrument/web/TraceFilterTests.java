@@ -116,6 +116,8 @@ public class TraceFilterTests {
 
 		Span span = this.tracer.startTrace("foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
+		// It should have been removed from the thread local context so simulate that
+		SpanContextHolder.removeCurrentSpan();
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);

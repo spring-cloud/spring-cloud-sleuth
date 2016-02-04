@@ -36,7 +36,6 @@ import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -106,8 +105,6 @@ public class TraceFilter extends OncePerRequestFilter
 			HttpServletResponse response, FilterChain filterChain)
 					throws ServletException, IOException {
 
-		// TODO: this should not be necessary
-		SpanContextHolder.removeCurrentSpan();
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
 				|| getHeader(request, response, Span.NOT_SAMPLED_NAME) != null;
