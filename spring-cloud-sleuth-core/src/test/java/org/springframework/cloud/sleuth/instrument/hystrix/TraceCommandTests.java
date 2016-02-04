@@ -1,7 +1,11 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixThreadPoolProperties;
+import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
+import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.util.Random;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,17 +17,14 @@ import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.Random;
-
-import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
-import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
-import static org.assertj.core.api.BDDAssertions.then;
+import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 public class TraceCommandTests {
 
 	static final long EXPECTED_TRACE_ID = 1L;
-	Tracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), Mockito.mock(ApplicationEventPublisher.class));
+	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+			Mockito.mock(ApplicationEventPublisher.class));
 
 	@Before
 	public void setup() {
@@ -38,15 +39,14 @@ public class TraceCommandTests {
 	@Test
 	public void should_remove_span_from_thread_local_after_finishing_work()
 			throws Exception {
-		SpanContextHolder.removeCurrentSpan();
 		Span firstSpanFromHystrix = givenACommandWasExecuted(traceReturningCommand());
 
 		Span secondSpanFromHystrix = whenCommandIsExecuted(traceReturningCommand());
 
-		then(secondSpanFromHystrix.getTraceId()).as("second span id")
-				.isNotEqualTo(firstSpanFromHystrix.getTraceId()).as("first span id");
-		then(secondSpanFromHystrix.getSavedSpan()).as("saved span as remnant of first span")
-				.isNull();
+		then(secondSpanFromHystrix.getTraceId()).as("second trace id")
+				.isNotEqualTo(firstSpanFromHystrix.getTraceId()).as("first trace id");
+		then(secondSpanFromHystrix.getSavedSpan())
+				.as("saved span as remnant of first span").isNull();
 	}
 
 	@Test
@@ -66,14 +66,17 @@ public class TraceCommandTests {
 	}
 
 	private Span givenATraceIsPresentInTheCurrentThread() {
-		return this.tracer
-				.joinTrace("test", Span.builder().traceId(EXPECTED_TRACE_ID).build());
+		return this.tracer.joinTrace("test",
+				Span.builder().traceId(EXPECTED_TRACE_ID).build());
 	}
 
 	private TraceCommand<Span> traceReturningCommand() {
-		return new TraceCommand<Span>(this.tracer,  withGroupKey(asKey(""))
-				.andCommandKey(HystrixCommandKey.Factory.asKey("")).andThreadPoolPropertiesDefaults(
-						HystrixThreadPoolProperties.Setter().withMaxQueueSize(1).withCoreSize(1))) {
+		return new TraceCommand<Span>(this.tracer,
+				withGroupKey(asKey("group"))
+						.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties
+								.Setter().withCoreSize(1).withMaxQueueSize(1))
+				.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+						.withExecutionTimeoutEnabled(false))) {
 			@Override
 			public Span doRun() throws Exception {
 				return SpanContextHolder.getCurrentSpan();

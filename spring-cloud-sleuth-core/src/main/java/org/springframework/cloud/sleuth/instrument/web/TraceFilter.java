@@ -105,8 +105,9 @@ public class TraceFilter extends OncePerRequestFilter
 	protected void doFilterInternal(HttpServletRequest request,
 			HttpServletResponse response, FilterChain filterChain)
 					throws ServletException, IOException {
-		SpanContextHolder.removeCurrentSpan();
 
+		// TODO: this should not be necessary
+		SpanContextHolder.removeCurrentSpan();
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
 				|| getHeader(request, response, Span.NOT_SAMPLED_NAME) != null;
@@ -195,7 +196,7 @@ public class TraceFilter extends OncePerRequestFilter
 							spanFromRequest));
 				}
 				// Double close to clean up the parent (remote span as well)
-				this.tracer.close(this.tracer.close(spanFromRequest));
+				this.tracer.close(spanFromRequest);
 			}
 		}
 	}

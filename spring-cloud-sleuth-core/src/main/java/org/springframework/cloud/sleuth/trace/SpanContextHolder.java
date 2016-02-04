@@ -16,9 +16,10 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.core.NamedThreadLocal;
+
+import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * @author Spencer Gibb
@@ -26,10 +27,11 @@ import org.springframework.core.NamedThreadLocal;
 @CommonsLog
 public class SpanContextHolder {
 
-	private static final ThreadLocal<Span> CURRENT_SPAN = new NamedThreadLocal<>("Trace Context");
+	private static final ThreadLocal<SpanContext> CURRENT_SPAN = new NamedThreadLocal<>(
+			"Trace Context");
 
 	public static Span getCurrentSpan() {
-		return isTracing() ? CURRENT_SPAN.get() : null;
+		return isTracing() ? CURRENT_SPAN.get().span : null;
 	}
 
 	public static void setCurrentSpan(Span span) {
@@ -41,7 +43,7 @@ public class SpanContextHolder {
 		if (log.isTraceEnabled()) {
 			log.trace("Setting current span " + span);
 		}
-		CURRENT_SPAN.set(span);
+		push(span, false);
 	}
 
 	public static void removeCurrentSpan() {
@@ -50,5 +52,48 @@ public class SpanContextHolder {
 
 	public static boolean isTracing() {
 		return CURRENT_SPAN.get() != null;
+	}
+
+	/**
+	 * Close the current span and all parents that can be auto closed.
+	 */
+	static void close() {
+		SpanContext current = CURRENT_SPAN.get();
+		CURRENT_SPAN.remove();
+		while (current != null) {
+			current = current.parent;
+			if (current != null) {
+				if (!current.autoClose) {
+					CURRENT_SPAN.set(current);
+					current = null;
+				}
+			}
+		}
+	}
+
+	static void push(Span span, boolean autoClose) {
+		if (isCurrent(span)) {
+			return;
+		}
+		CURRENT_SPAN.set(new SpanContext(span, autoClose));
+	}
+
+	private static boolean isCurrent(Span span) {
+		if (span == null || CURRENT_SPAN.get() == null) {
+			return false;
+		}
+		return span.equals(CURRENT_SPAN.get().span);
+	}
+
+	private static class SpanContext {
+		Span span;
+		boolean autoClose;
+		SpanContext parent;
+
+		public SpanContext(Span span, boolean autoClose) {
+			this.span = span;
+			this.autoClose = autoClose;
+			this.parent = CURRENT_SPAN.get();
+		}
 	}
 }

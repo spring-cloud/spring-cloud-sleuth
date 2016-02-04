@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import static org.springframework.cloud.sleuth.util.ExceptionUtils.warn;
-
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -54,11 +52,6 @@ public class DefaultTracer implements Tracer {
 	public Span joinTrace(String name, Span parent) {
 		if (parent == null) {
 			return startTrace(name);
-		}
-		Span currentSpan = getCurrentSpan();
-		if (currentSpan != null && !parent.equals(currentSpan)) {
-			warn("Tried to start a new Span with parent " + parent
-					+ ", but there is already a " + "currentSpan " + currentSpan);
 		}
 		return continueSpan(createChild(parent, name));
 	}
@@ -100,12 +93,7 @@ public class DefaultTracer implements Tracer {
 					+ ". You may have forgotten to close or detach " + cur);
 		}
 		else {
-			if (span.hasSavedSpan()) {
-				SpanContextHolder.setCurrentSpan(span.getSavedSpan());
-			}
-			else {
-				SpanContextHolder.removeCurrentSpan();
-			}
+			SpanContextHolder.removeCurrentSpan();
 		}
 		return span.getSavedSpan();
 	}
@@ -126,14 +114,13 @@ public class DefaultTracer implements Tracer {
 			span.stop();
 			if (savedSpan != null && span.getParents().contains(savedSpan.getSpanId())) {
 				this.publisher.publishEvent(new SpanReleasedEvent(this, savedSpan, span));
-				SpanContextHolder.setCurrentSpan(savedSpan);
 			}
 			else {
 				if (!span.isRemote()) {
 					this.publisher.publishEvent(new SpanReleasedEvent(this, span));
 				}
-				SpanContextHolder.removeCurrentSpan();
 			}
+			SpanContextHolder.close();
 		}
 		return savedSpan;
 	}
@@ -148,13 +135,12 @@ public class DefaultTracer implements Tracer {
 		}
 		else {
 			if (SpanContextHolder.getCurrentSpan() == null) {
-				Span span = createSpan(parent, null);
-				SpanContextHolder.setCurrentSpan(span);
+				SpanContextHolder.push(parent, true);
 			}
 			Span span = Span.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
-					.processId(parent.getProcessId()).exportable(parent.isExportable())
-					.build();
+					.processId(parent.getProcessId()).savedSpan(parent)
+					.exportable(parent.isExportable()).build();
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
 			return span;
 		}

@@ -1,7 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import com.jayway.awaitility.Awaitility;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,20 +16,26 @@ import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import com.jayway.awaitility.Awaitility;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
 		SpanPassingForHystrixViaAnnotationsIntegrationTests.TestConfig.class })
+@TestPropertySource(properties="hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=1000000")
 public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 
 	@Autowired HystrixCommandInvocationSpanCatcher hystrixCommandInvocationSpanCatcher;
 	@Autowired
 	Tracer tracer;
+
+	@After
+	public void clean() {
+		SpanContextHolder.removeCurrentSpan();
+	}
 
 	@Test
 	public void should_set_span_on_an_hystrix_command_annotated_method() {

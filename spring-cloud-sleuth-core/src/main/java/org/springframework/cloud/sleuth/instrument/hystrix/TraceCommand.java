@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixThreadPoolKey;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+
+import com.netflix.hystrix.HystrixCommand;
 
 /**
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
@@ -38,30 +37,6 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 	private final Tracer tracer;
 	private final Span parentSpan;
 
-	protected TraceCommand(Tracer tracer, HystrixCommandGroupKey group) {
-		super(group);
-		this.tracer = tracer;
-		this.parentSpan = tracer.getCurrentSpan();
-	}
-
-	protected TraceCommand(Tracer tracer, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool) {
-		super(group, threadPool);
-		this.tracer = tracer;
-		this.parentSpan = tracer.getCurrentSpan();
-	}
-
-	protected TraceCommand(Tracer tracer, HystrixCommandGroupKey group, int executionIsolationThreadTimeoutInMilliseconds) {
-		super(group, executionIsolationThreadTimeoutInMilliseconds);
-		this.tracer = tracer;
-		this.parentSpan = tracer.getCurrentSpan();
-	}
-
-	protected TraceCommand(Tracer tracer, HystrixCommandGroupKey group, HystrixThreadPoolKey threadPool, int executionIsolationThreadTimeoutInMilliseconds) {
-		super(group, threadPool, executionIsolationThreadTimeoutInMilliseconds);
-		this.tracer = tracer;
-		this.parentSpan = tracer.getCurrentSpan();
-	}
-
 	protected TraceCommand(Tracer tracer, Setter setter) {
 		super(setter);
 		this.tracer = tracer;
@@ -74,7 +49,8 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 		Span span = this.tracer.joinTrace(getCommandKey().name(), this.parentSpan);
 		try {
 			return doRun();
-		} finally {
+		}
+		finally {
 			this.tracer.close(span);
 		}
 	}
