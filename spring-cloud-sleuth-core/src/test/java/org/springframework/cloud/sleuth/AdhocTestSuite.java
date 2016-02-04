@@ -20,7 +20,7 @@ import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.springframework.cloud.sleuth.instrument.hystrix.SpanPassingForHystrixViaAnnotationsIntegrationTests;
+import org.springframework.cloud.sleuth.instrument.hystrix.HystrixAnnotationsIntegrationTests;
 import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommandTests;
 
 /**
@@ -29,7 +29,7 @@ import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommandTests;
  * @author Dave Syer
  */
 @RunWith(Suite.class)
-@SuiteClasses({ SpanPassingForHystrixViaAnnotationsIntegrationTests.class,
+@SuiteClasses({ HystrixAnnotationsIntegrationTests.class,
 		TraceCommandTests.class })
 @Ignore
 public class AdhocTestSuite {

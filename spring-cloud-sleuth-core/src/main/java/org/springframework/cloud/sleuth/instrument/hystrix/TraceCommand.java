@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 
 import com.netflix.hystrix.HystrixCommand;
 
@@ -45,7 +44,6 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
 	@Override
 	protected R run() throws Exception {
-		enforceThatHystrixThreadIsNotPollutedByPreviousTraces();
 		Span span = this.tracer.joinTrace(getCommandKey().name(), this.parentSpan);
 		try {
 			return doRun();
@@ -53,11 +51,6 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 		finally {
 			this.tracer.close(span);
 		}
-	}
-
-	// TODO: Do more analysis why this is not removed properly
-	private void enforceThatHystrixThreadIsNotPollutedByPreviousTraces() {
-		SpanContextHolder.removeCurrentSpan();
 	}
 
 	public abstract R doRun() throws Exception;

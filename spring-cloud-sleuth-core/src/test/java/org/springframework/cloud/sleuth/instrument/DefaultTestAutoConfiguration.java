@@ -8,7 +8,6 @@ import java.lang.annotation.Target;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration;
-import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.integration.TraceSpringIntegrationAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -17,7 +16,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @Retention(RetentionPolicy.RUNTIME)
 @EnableAutoConfiguration(exclude = { LoadBalancerAutoConfiguration.class,
 		JmxAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class,
-		ArchaiusAutoConfiguration.class, LoadBalancerAutoConfiguration.class })
+		LoadBalancerAutoConfiguration.class })
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @Configuration
 public @interface DefaultTestAutoConfiguration {

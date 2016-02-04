@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -16,7 +17,7 @@ import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.jayway.awaitility.Awaitility;
@@ -24,16 +25,17 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
-		SpanPassingForHystrixViaAnnotationsIntegrationTests.TestConfig.class })
-@TestPropertySource(properties="hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=1000000")
-public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
+		HystrixAnnotationsIntegrationTests.TestConfig.class })
+@DirtiesContext
+public class HystrixAnnotationsIntegrationTests {
 
-	@Autowired HystrixCommandInvocationSpanCatcher hystrixCommandInvocationSpanCatcher;
+	@Autowired
+	HystrixCommandInvocationSpanCatcher catcher;
 	@Autowired
 	Tracer tracer;
 
 	@After
-	public void clean() {
+	public void cleanTrace() {
 		SpanContextHolder.removeCurrentSpan();
 	}
 
@@ -53,23 +55,22 @@ public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 	}
 
 	private void whenHystrixCommandAnnotatedMethodGetsExecuted() {
-		this.hystrixCommandInvocationSpanCatcher.invokeLogicWrappedInHystrixCommand();
+		this.catcher.invokeLogicWrappedInHystrixCommand();
 	}
 
 	private void thenTraceIdIsPassedFromTheCurrentThreadToTheHystrixOne(final Span span) {
+		then(span).isNotNull();
 		Awaitility.await().until(new Runnable() {
 			@Override
 			public void run() {
+				then(HystrixAnnotationsIntegrationTests.this.catcher).isNotNull();
 				then(span)
-						.hasTraceIdEqualTo(SpanPassingForHystrixViaAnnotationsIntegrationTests.this.hystrixCommandInvocationSpanCatcher.getTraceId())
-						.hasNameNotEqualTo(SpanPassingForHystrixViaAnnotationsIntegrationTests.this.hystrixCommandInvocationSpanCatcher.getSpanName());
+						.hasTraceIdEqualTo(HystrixAnnotationsIntegrationTests.this.catcher
+								.getTraceId())
+						.hasNameEqualTo(HystrixAnnotationsIntegrationTests.this.catcher
+								.getSpanName());
 			}
 		});
-	}
-
-	@After
-	public void cleanTrace() {
-		SpanContextHolder.removeCurrentSpan();
 	}
 
 	@DefaultTestAutoConfiguration
@@ -77,7 +78,8 @@ public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 	@Configuration
 	static class TestConfig {
 
-		@Bean HystrixCommandInvocationSpanCatcher spanCatcher() {
+		@Bean
+		HystrixCommandInvocationSpanCatcher spanCatcher() {
 			return new HystrixCommandInvocationSpanCatcher();
 		}
 
@@ -89,21 +91,23 @@ public class SpanPassingForHystrixViaAnnotationsIntegrationTests {
 
 		@HystrixCommand
 		public void invokeLogicWrappedInHystrixCommand() {
-			this.spanCaughtFromHystrixThread = new AtomicReference<>(SpanContextHolder.getCurrentSpan());
+			this.spanCaughtFromHystrixThread = new AtomicReference<>(
+					SpanContextHolder.getCurrentSpan());
 		}
 
 		public Long getTraceId() {
-			if (this.spanCaughtFromHystrixThread == null ||
-					this.spanCaughtFromHystrixThread.get() == null) {
+			if (this.spanCaughtFromHystrixThread == null
+					|| this.spanCaughtFromHystrixThread.get() == null) {
 				return null;
 			}
 			return this.spanCaughtFromHystrixThread.get().getTraceId();
 		}
 
 		public String getSpanName() {
-			if (this.spanCaughtFromHystrixThread == null ||
-					(this.spanCaughtFromHystrixThread.get() != null &&
-							this.spanCaughtFromHystrixThread.get().getName() == null)) {
+			if (this.spanCaughtFromHystrixThread == null
+					|| (this.spanCaughtFromHystrixThread.get() != null
+							&& this.spanCaughtFromHystrixThread.get()
+									.getName() == null)) {
 				return null;
 			}
 			return this.spanCaughtFromHystrixThread.get().getName();

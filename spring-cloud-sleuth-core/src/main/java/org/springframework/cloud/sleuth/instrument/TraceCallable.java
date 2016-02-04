@@ -42,7 +42,6 @@ public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Call
 
 	@Override
 	public V call() throws Exception {
-		ensureThatThreadIsNotPollutedByPreviousTraces();
 		Span span = startSpan();
 		try {
 			return this.getDelegate().call();

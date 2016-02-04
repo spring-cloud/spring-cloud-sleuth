@@ -60,11 +60,6 @@ public class TraceCommandTests {
 		then(spanFromCommand.getTraceId()).isEqualTo(EXPECTED_TRACE_ID);
 	}
 
-	@After
-	public void cleanUpTrace() {
-		SpanContextHolder.removeCurrentSpan();
-	}
-
 	private Span givenATraceIsPresentInTheCurrentThread() {
 		return this.tracer.joinTrace("test",
 				Span.builder().traceId(EXPECTED_TRACE_ID).build());

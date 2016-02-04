@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
 
 import lombok.Getter;
 
@@ -56,7 +55,4 @@ public abstract class TraceDelegate<T> {
 		return this.name == null ? Thread.currentThread().getName() : this.name;
 	}
 
-	protected void ensureThatThreadIsNotPollutedByPreviousTraces() {
-		SpanContextHolder.removeCurrentSpan();
-	}
 }

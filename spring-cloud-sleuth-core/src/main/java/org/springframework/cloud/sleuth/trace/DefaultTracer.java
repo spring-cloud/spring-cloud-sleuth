@@ -157,6 +157,8 @@ public class DefaultTracer implements Tracer {
 	public Span continueSpan(Span span) {
 		if (span != null) {
 			this.publisher.publishEvent(new SpanContinuedEvent(this, span));
+		} else {
+			return null;
 		}
 		Span newSpan = createSpan(span, SpanContextHolder.getCurrentSpan());
 		SpanContextHolder.setCurrentSpan(newSpan);
