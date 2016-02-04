@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.isA;
@@ -121,6 +122,34 @@ public class DefaultTracerTests {
 		assertThat(span.isExportable(), is(false));
 		Span child = tracer.joinTrace(CREATE_SIMPLE_TRACE + "/child", span);
 		assertThat(child.isExportable(), is(false));
+	}
+
+	@Test
+	public void parentNotRemovedIfActiveOnJoin() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		Span parent = tracer.startTrace(CREATE_SIMPLE_TRACE);
+		Span span = tracer.joinTrace(IMPORTANT_WORK_1, parent);
+		tracer.close(span);
+		assertThat(tracer.getCurrentSpan(), is(equalTo(parent)));
+	}
+
+	@Test
+	public void parentRemovedIfNotActiveOnJoin() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		Span parent = Span.builder().name(CREATE_SIMPLE_TRACE).traceId(1L).spanId(1L).build();
+		Span span = tracer.joinTrace(IMPORTANT_WORK_1, parent);
+		tracer.close(span);
+		assertThat(tracer.getCurrentSpan(), is(equalTo(null)));
+	}
+
+	@Test
+	public void grandParentRestoredAfterAutoClose() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		Span grandParent = tracer.startTrace(CREATE_SIMPLE_TRACE);
+		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L).build();
+		Span span = tracer.joinTrace(IMPORTANT_WORK_2, parent);
+		tracer.close(span);
+		assertThat(tracer.getCurrentSpan(), is(equalTo(grandParent)));
 	}
 
 	private Span assertSpan(List<Span> spans, Long parentId, String name) {
