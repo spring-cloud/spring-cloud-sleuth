@@ -71,6 +71,9 @@ public class DefaultTracer implements Tracer {
 			long id = createId();
 			span = Span.builder().begin(System.currentTimeMillis()).name(name).traceId(id)
 					.spanId(id).build();
+			if (sampler==null) {
+				sampler = this.defaultSampler;
+			}
 			if (!sampler.isSampled(span)) {
 				// Non-exportable so we keep the trace but not other data
 				span = Span.builder().begin(span.getBegin()).name(name).traceId(id)
