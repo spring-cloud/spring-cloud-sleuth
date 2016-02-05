@@ -27,6 +27,8 @@ import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.TraceRunnable;
+import org.springframework.cloud.sleuth.metric.NoOpSpanDurationReporterService;
+import org.springframework.cloud.sleuth.metric.SpanDurationReporterService;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -41,11 +43,20 @@ public class DefaultTracer implements Tracer {
 
 	private final Random random;
 
+	private final SpanDurationReporterService spanDurationReporterService;
+
 	public DefaultTracer(Sampler defaultSampler, Random random,
-			ApplicationEventPublisher publisher) {
+			ApplicationEventPublisher publisher,
+			SpanDurationReporterService spanDurationReporterService) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.publisher = publisher;
+		this.spanDurationReporterService = spanDurationReporterService;
+	}
+
+	public DefaultTracer(Sampler defaultSampler, Random random,
+			ApplicationEventPublisher publisher) {
+		this(defaultSampler, random, publisher, new NoOpSpanDurationReporterService());
 	}
 
 	@Override
@@ -125,6 +136,7 @@ public class DefaultTracer implements Tracer {
 			}
 			SpanContextHolder.close();
 		}
+		this.spanDurationReporterService.submitDuration(span.getName(), span.getAccumulatedMillis());
 		return savedSpan;
 	}
 

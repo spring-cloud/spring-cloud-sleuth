@@ -16,11 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.verify;
-
-import java.util.Random;
-
+import com.netflix.zuul.context.RequestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +27,10 @@ import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.netflix.zuul.context.RequestContext;
+import java.util.Random;
+
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Dave Syer

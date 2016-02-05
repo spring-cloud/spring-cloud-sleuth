@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import java.util.Random;
-
 import org.springframework.boot.actuate.metrics.CounterService;
+import org.springframework.boot.actuate.metrics.GaugeService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,14 +27,19 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanReporterService;
+import org.springframework.cloud.sleuth.metric.GaugeServiceBasedSpanDurationReporterService;
 import org.springframework.cloud.sleuth.metric.NoOpSpanReporterService;
+import org.springframework.cloud.sleuth.metric.NoOpSpanDurationReporterService;
 import org.springframework.cloud.sleuth.metric.SleuthMetricProperties;
+import org.springframework.cloud.sleuth.metric.SpanDurationReporterService;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Random;
 
 /**
  * @author Spencer Gibb
@@ -60,8 +64,9 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(Tracer.class)
 	public DefaultTracer traceManager(Sampler sampler, Random random,
-									ApplicationEventPublisher publisher) {
-		return new DefaultTracer(sampler, random, publisher);
+									ApplicationEventPublisher publisher,
+									SpanDurationReporterService spanDurationReporterService) {
+		return new DefaultTracer(sampler, random, publisher, spanDurationReporterService);
 	}
 
 	@Bean
@@ -83,9 +88,24 @@ public class TraceAutoConfiguration {
 		}
 
 		@Bean
+		@ConditionalOnBean(GaugeService.class)
+		public SpanDurationReporterService spanDurationReporterService(GaugeService gaugeService,
+				SleuthMetricProperties sleuthMetricProperties) {
+			return new GaugeServiceBasedSpanDurationReporterService(
+					sleuthMetricProperties.getSpan().getDurationPrefixName(),
+					gaugeService);
+		}
+
+		@Bean
 		@ConditionalOnMissingBean(CounterService.class)
 		public SpanReporterService noOpSpanReporterCounterService() {
 			return new NoOpSpanReporterService();
+		}
+
+		@Bean
+		@ConditionalOnMissingBean(SpanDurationReporterService.class)
+		public SpanDurationReporterService noOpSpanDurationReporterService() {
+			return new NoOpSpanDurationReporterService();
 		}
 	}
 
@@ -94,6 +114,13 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean(SpanReporterService.class)
 	public SpanReporterService noOpSpanReporterCounterService() {
 		return new NoOpSpanReporterService();
+	}
+
+	@Bean
+	@ConditionalOnMissingClass("org.springframework.boot.actuate.metrics.GaugeService")
+	@ConditionalOnMissingBean(SpanDurationReporterService.class)
+	public SpanDurationReporterService noOpSpanDurationReporterService() {
+		return new NoOpSpanDurationReporterService();
 	}
 
 }
