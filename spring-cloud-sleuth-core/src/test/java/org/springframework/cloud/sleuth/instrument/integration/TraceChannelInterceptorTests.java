@@ -39,7 +39,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.integration.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
@@ -81,7 +81,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
 		this.message = message;
-		this.span = SpanContextHolder.getCurrentSpan();
+		this.span = TestSpanContextHolder.getCurrentSpan();
 	}
 
 	@Before
@@ -91,7 +91,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@After
 	public void close() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 		this.channel.unsubscribe(this);
 	}
 
@@ -103,7 +103,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 		assertFalse(this.span.isExportable());
 	}
 
@@ -133,7 +133,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -148,7 +148,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	// TODO: Refactor to parametrized test together with sending messages via channel
@@ -164,7 +164,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Configuration

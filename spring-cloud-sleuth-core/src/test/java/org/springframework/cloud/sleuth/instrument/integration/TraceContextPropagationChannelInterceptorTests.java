@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.integration.TraceContextPropagationChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.QueueChannel;
@@ -59,7 +59,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 	@After
 	public void close() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test

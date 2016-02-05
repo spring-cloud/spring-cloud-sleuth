@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.sampler;
+package org.springframework.cloud.sleuth.trace;
 
-import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
 
 /**
- * @author Spencer Gibb
+ * Test utility to access the thread context provided by the (private)
+ * {@link SpanContextHolder}.
+ *
+ * @author Dave Syer
  */
-public class IsTracingSampler implements Sampler {
+public class TestSpanContextHolder {
 
-	private SpanAccessor accessor;
-
-	public IsTracingSampler(SpanAccessor accessor) {
-		super();
-		this.accessor = accessor;
+	public static Span getCurrentSpan() {
+		return SpanContextHolder.getCurrentSpan();
 	}
 
-	@Override
-	public boolean isSampled(Span span) {
-		return this.accessor.isTracing();
+	public static void removeCurrentSpan() {
+		SpanContextHolder.removeCurrentSpan();
+	}
+
+	public static boolean isTracing() {
+		return SpanContextHolder.isTracing();
 	}
 }

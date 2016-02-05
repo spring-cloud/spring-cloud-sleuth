@@ -24,7 +24,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -57,7 +57,7 @@ public class TraceFilterMockChainIntegrationTests {
 	@Before
 	@SneakyThrows
 	public void init() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 		this.context.refresh();
 		this.request = builder().buildRequest(new MockServletContext());
 		this.response = new MockHttpServletResponse();
@@ -74,7 +74,7 @@ public class TraceFilterMockChainIntegrationTests {
 	public void startsNewTrace() throws Exception {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -84,7 +84,7 @@ public class TraceFilterMockChainIntegrationTests {
 				.header(Span.TRACE_ID_NAME, generator.nextLong()).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 }

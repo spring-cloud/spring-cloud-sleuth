@@ -14,7 +14,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.netflix.hystrix.HystrixCommandProperties;
@@ -28,12 +28,12 @@ public class TraceCommandTests {
 
 	@Before
 	public void setup() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@After
 	public void cleanup() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
@@ -74,7 +74,7 @@ public class TraceCommandTests {
 						.withExecutionTimeoutEnabled(false))) {
 			@Override
 			public Span doRun() throws Exception {
-				return SpanContextHolder.getCurrentSpan();
+				return TestSpanContextHolder.getCurrentSpan();
 			}
 		};
 	}

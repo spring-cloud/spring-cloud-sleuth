@@ -18,22 +18,16 @@ package org.springframework.cloud.sleuth.sampler;
 
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
 
 /**
  * @author Spencer Gibb
  */
-public class IsTracingSampler implements Sampler {
+public class NeverSampler implements Sampler {
 
-	private SpanAccessor accessor;
-
-	public IsTracingSampler(SpanAccessor accessor) {
-		super();
-		this.accessor = accessor;
-	}
+	public static NeverSampler INSTANCE = new NeverSampler();
 
 	@Override
 	public boolean isSampled(Span span) {
-		return this.accessor.isTracing();
+		return false;
 	}
 }

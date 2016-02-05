@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.trace;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -33,12 +33,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -55,19 +55,20 @@ public class DefaultTracerTests {
 
 	@Before
 	public void setup() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 		this.publisher = mock(ApplicationEventPublisher.class);
 	}
 
 	@After
 	public void clean() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
 	public void tracingWorks() {
 
-		DefaultTracer tracer = new DefaultTracer(new IsTracingSampler(), new Random(), this.publisher);
+		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
+				this.publisher);
 
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
@@ -77,8 +78,10 @@ public class DefaultTracerTests {
 			tracer.close(span);
 		}
 
-		verify(this.publisher, times(NUM_SPANS)).publishEvent(isA(SpanAcquiredEvent.class));
-		verify(this.publisher, times(NUM_SPANS)).publishEvent(isA(SpanReleasedEvent.class));
+		verify(this.publisher, times(NUM_SPANS))
+				.publishEvent(isA(SpanAcquiredEvent.class));
+		verify(this.publisher, times(NUM_SPANS))
+				.publishEvent(isA(SpanReleasedEvent.class));
 
 		ArgumentCaptor<ApplicationEvent> captor = ArgumentCaptor
 				.forClass(ApplicationEvent.class);
@@ -103,22 +106,25 @@ public class DefaultTracerTests {
 
 	@Test
 	public void nonExportable() {
-		DefaultTracer tracer = new DefaultTracer(new IsTracingSampler(), new Random(), this.publisher);
+		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
+				this.publisher);
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(false));
 	}
 
 	@Test
 	public void exportable() {
-		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.publisher);
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(true));
 	}
 
 	@Test
 	public void exportableInheritedFromParent() {
-		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
-		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, new IsTracingSampler());
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.publisher);
+		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
 		assertThat(span.isExportable(), is(false));
 		Span child = tracer.joinTrace(CREATE_SIMPLE_TRACE + "/child", span);
 		assertThat(child.isExportable(), is(false));
@@ -126,7 +132,8 @@ public class DefaultTracerTests {
 
 	@Test
 	public void parentNotRemovedIfActiveOnJoin() {
-		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.publisher);
 		Span parent = tracer.startTrace(CREATE_SIMPLE_TRACE);
 		Span span = tracer.joinTrace(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
@@ -135,8 +142,10 @@ public class DefaultTracerTests {
 
 	@Test
 	public void parentRemovedIfNotActiveOnJoin() {
-		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
-		Span parent = Span.builder().name(CREATE_SIMPLE_TRACE).traceId(1L).spanId(1L).build();
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.publisher);
+		Span parent = Span.builder().name(CREATE_SIMPLE_TRACE).traceId(1L).spanId(1L)
+				.build();
 		Span span = tracer.joinTrace(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
 		assertThat(tracer.getCurrentSpan(), is(equalTo(null)));
@@ -144,9 +153,11 @@ public class DefaultTracerTests {
 
 	@Test
 	public void grandParentRestoredAfterAutoClose() {
-		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.publisher);
 		Span grandParent = tracer.startTrace(CREATE_SIMPLE_TRACE);
-		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L).build();
+		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
+				.build();
 		Span span = tracer.joinTrace(IMPORTANT_WORK_2, parent);
 		tracer.close(span);
 		assertThat(tracer.getCurrentSpan(), is(equalTo(grandParent)));
@@ -156,8 +167,8 @@ public class DefaultTracerTests {
 		List<Span> found = findSpans(spans, parentId);
 		assertThat("more than one span with parentId " + parentId, found.size(), is(1));
 		Span span = found.get(0);
-		assertThat("name is wrong for span with parentId " + parentId,
-				span.getName(), is(name));
+		assertThat("name is wrong for span with parentId " + parentId, span.getName(),
+				is(name));
 		return span;
 	}
 

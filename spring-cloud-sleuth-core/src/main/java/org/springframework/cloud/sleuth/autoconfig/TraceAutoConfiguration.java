@@ -31,7 +31,7 @@ import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanReporterSe
 import org.springframework.cloud.sleuth.metric.NoOpSpanReporterService;
 import org.springframework.cloud.sleuth.metric.SleuthMetricProperties;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
-import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -54,7 +54,7 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public Sampler defaultTraceSampler() {
-		return new IsTracingSampler();
+		return NeverSampler.INSTANCE;
 	}
 
 	@Bean

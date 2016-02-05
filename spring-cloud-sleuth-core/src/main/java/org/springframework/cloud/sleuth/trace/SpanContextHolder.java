@@ -22,35 +22,47 @@ import org.springframework.core.NamedThreadLocal;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
+ * Utility for managing the thread local state for the {@link DefaultTracer}.
+ *
  * @author Spencer Gibb
+ * @author Dave Syer
  */
 @CommonsLog
-public class SpanContextHolder {
+class SpanContextHolder {
 
 	private static final ThreadLocal<SpanContext> CURRENT_SPAN = new NamedThreadLocal<>(
 			"Trace Context");
 
-	public static Span getCurrentSpan() {
+	/**
+	 * Get the current span out of the thread context
+	 */
+	static Span getCurrentSpan() {
 		return isTracing() ? CURRENT_SPAN.get().span : null;
 	}
 
-	public static void setCurrentSpan(Span span) {
-		// backwards compatibility
-		if (span == null) {
-			CURRENT_SPAN.remove();
-			return;
-		}
+	/**
+	 * Set the current span in the thread context
+	 */
+	static void setCurrentSpan(Span span) {
 		if (log.isTraceEnabled()) {
 			log.trace("Setting current span " + span);
 		}
 		push(span, false);
 	}
 
-	public static void removeCurrentSpan() {
+	/**
+	 * Remove all thread context relating to spans (useful for testing).
+	 *
+	 * @see #close() for a better alternative in instrumetation
+	 */
+	static void removeCurrentSpan() {
 		CURRENT_SPAN.remove();
 	}
 
-	public static boolean isTracing() {
+	/**
+	 * Check if there is already a span in the current thread
+	 */
+	static boolean isTracing() {
 		return CURRENT_SPAN.get() != null;
 	}
 
@@ -71,6 +83,11 @@ public class SpanContextHolder {
 		}
 	}
 
+	/**
+	 * Push a span into the thread context, with the option to have it auto close if any
+	 * child spans are themselves closed. Use autoClose=true if you start a new span with
+	 * a parent that wasn't already in thread context.
+	 */
 	static void push(Span span, boolean autoClose) {
 		if (isCurrent(span)) {
 			return;

@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -64,12 +64,12 @@ public class TraceRestTemplateInterceptorTests {
 		this.traces = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.traces)));
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@After
 	public void clean() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test

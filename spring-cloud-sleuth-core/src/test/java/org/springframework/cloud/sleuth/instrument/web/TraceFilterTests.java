@@ -34,9 +34,9 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -91,7 +91,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void notTraced() throws Exception {
-		this.sampler = new IsTracingSampler();
+		this.sampler = NeverSampler.INSTANCE;
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
@@ -100,7 +100,7 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		assertFalse(this.span.isExportable());
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -108,7 +108,7 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpTags();
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -117,14 +117,14 @@ public class TraceFilterTests {
 		Span span = this.tracer.startTrace("foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
 		// It should have been removed from the thread local context so simulate that
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
 
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -137,7 +137,7 @@ public class TraceFilterTests {
 
 		verifyHttpTags();
 
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -152,7 +152,7 @@ public class TraceFilterTests {
 
 		assertThat(this.span.tags()).contains(entry("http.x-foo", "bar"));
 
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -168,7 +168,7 @@ public class TraceFilterTests {
 
 		assertThat(this.span.tags()).contains(entry("http.x-foo", "'bar','spam'"));
 
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
@@ -190,7 +190,7 @@ public class TraceFilterTests {
 		}
 		verifyHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 
-		assertNull(SpanContextHolder.getCurrentSpan());
+		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	public void verifyHttpTags() {

@@ -9,7 +9,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Random;
@@ -27,7 +27,7 @@ public class TraceRunnableTests {
 
 	@After
 	public void cleanup() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
@@ -91,7 +91,7 @@ public class TraceRunnableTests {
 
 		@Override
 		public void run() {
-			this.span = SpanContextHolder.getCurrentSpan();
+			this.span = TestSpanContextHolder.getCurrentSpan();
 		}
 	}
 

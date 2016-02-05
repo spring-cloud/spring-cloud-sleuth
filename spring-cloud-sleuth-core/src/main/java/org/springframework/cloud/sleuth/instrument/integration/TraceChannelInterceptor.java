@@ -21,7 +21,7 @@ import java.util.Random;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
-import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 
@@ -54,7 +54,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			return getTracer().joinTrace(name, span);
 		}
 		if (message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
-			return getTracer().startTrace(name, IsTracingSampler.INSTANCE);
+			return getTracer().startTrace(name, NeverSampler.INSTANCE);
 		}
 		return getTracer().startTrace(name);
 	}

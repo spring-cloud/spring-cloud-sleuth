@@ -11,7 +11,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class TraceableExecutorServiceTests {
 	public void setup() {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
 		this.traceManagerableExecutorService = new TraceableExecutorService(this.executorService, this.tracer);
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@After
@@ -48,7 +48,7 @@ public class TraceableExecutorServiceTests {
 		this.tracer = null;
 		this.traceManagerableExecutorService.shutdown();
 		this.executorService.shutdown();
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
@@ -77,7 +77,7 @@ public class TraceableExecutorServiceTests {
 
 		@Override
 		public void run() {
-			Span span = SpanContextHolder.getCurrentSpan();
+			Span span = TestSpanContextHolder.getCurrentSpan();
 			this.traceIds.add(span.getTraceId());
 			this.spanIds.add(span.getSpanId());
 		}

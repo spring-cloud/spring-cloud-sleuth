@@ -28,7 +28,7 @@ import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.netflix.zuul.context.RequestContext;
@@ -49,7 +49,7 @@ public class TracePostZuulFilterTests {
 	@Before
 	public void clean() {
 		RequestContext.getCurrentContext().unset();
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test

@@ -35,7 +35,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
-import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -156,7 +156,7 @@ public class TraceFilter extends OncePerRequestFilter
 			else {
 				if (skip) {
 					spanFromRequest = this.tracer.startTrace(name,
-							IsTracingSampler.INSTANCE);
+							NeverSampler.INSTANCE);
 				}
 				else {
 					spanFromRequest = this.tracer.startTrace(name);

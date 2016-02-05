@@ -14,7 +14,7 @@ import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -36,7 +36,7 @@ public class HystrixAnnotationsIntegrationTests {
 
 	@After
 	public void cleanTrace() {
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
@@ -92,7 +92,7 @@ public class HystrixAnnotationsIntegrationTests {
 		@HystrixCommand
 		public void invokeLogicWrappedInHystrixCommand() {
 			this.spanCaughtFromHystrixThread = new AtomicReference<>(
-					SpanContextHolder.getCurrentSpan());
+					TestSpanContextHolder.getCurrentSpan());
 		}
 
 		public Long getTraceId() {

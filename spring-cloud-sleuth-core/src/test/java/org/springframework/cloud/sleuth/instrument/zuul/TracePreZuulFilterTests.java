@@ -29,9 +29,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.sampler.IsTracingSampler;
+import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanContextHolder;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.netflix.zuul.context.RequestContext;
@@ -42,9 +42,11 @@ import com.netflix.zuul.context.RequestContext;
  */
 public class TracePreZuulFilterTests {
 
-	private ApplicationEventPublisher publisher = Mockito.mock(ApplicationEventPublisher.class);
+	private ApplicationEventPublisher publisher = Mockito
+			.mock(ApplicationEventPublisher.class);
 
-	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+			this.publisher);
 
 	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer);
 
@@ -52,7 +54,7 @@ public class TracePreZuulFilterTests {
 	@Before
 	public void clean() {
 		RequestContext.getCurrentContext().unset();
-		SpanContextHolder.removeCurrentSpan();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test
@@ -60,17 +62,21 @@ public class TracePreZuulFilterTests {
 		this.tracer.startTrace("start");
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
-		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME), is(notNullValue()));
-		assertThat(ctx.getZuulRequestHeaders().get(Span.NOT_SAMPLED_NAME), is(nullValue()));
+		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
+				is(notNullValue()));
+		assertThat(ctx.getZuulRequestHeaders().get(Span.NOT_SAMPLED_NAME),
+				is(nullValue()));
 	}
 
 	@Test
 	public void notSampledIfNotExportable() throws Exception {
-		this.tracer.startTrace("start", new IsTracingSampler());
+		this.tracer.startTrace("start", NeverSampler.INSTANCE);
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
-		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME), is(notNullValue()));
-		assertThat(ctx.getZuulRequestHeaders().get(Span.NOT_SAMPLED_NAME), is(notNullValue()));
+		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
+				is(notNullValue()));
+		assertThat(ctx.getZuulRequestHeaders().get(Span.NOT_SAMPLED_NAME),
+				is(notNullValue()));
 	}
 
 }

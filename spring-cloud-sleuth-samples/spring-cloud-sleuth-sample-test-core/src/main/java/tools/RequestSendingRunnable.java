@@ -15,7 +15,11 @@
  */
 package tools;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.net.URI;
+import java.util.Random;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,10 +28,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
-import java.util.Random;
-
-import static org.assertj.core.api.BDDAssertions.then;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Runnable that will send a request via the provide rest template to the
@@ -60,12 +61,12 @@ public class RequestSendingRunnable implements Runnable {
 		log.info("Received the following response [{}]", responseEntity);
 	}
 
-	private RequestEntity requestWithTraceId() {
+	private RequestEntity<Void> requestWithTraceId() {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(Span.TRACE_ID_NAME, Span.toHex(this.traceId));
 		headers.add(Span.SPAN_ID_NAME, Span.toHex(this.spanId));
 		URI uri = URI.create(this.url);
-		RequestEntity requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
+		RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
 		log.info("Request [" + requestEntity + "] is ready");
 		return requestEntity;
 	}
