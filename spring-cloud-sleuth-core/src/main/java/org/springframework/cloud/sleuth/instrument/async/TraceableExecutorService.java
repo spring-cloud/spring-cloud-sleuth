@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.sleuth.instrument.executor;
+package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.Collection;
 import java.util.List;
@@ -25,8 +25,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceCallable;
-import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors
  * @author Gaurav Rai Mazra

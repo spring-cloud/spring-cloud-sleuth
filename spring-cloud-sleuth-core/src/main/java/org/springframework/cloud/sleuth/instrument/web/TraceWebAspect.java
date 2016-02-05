@@ -23,7 +23,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceCallable;
+import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 import java.lang.reflect.Field;

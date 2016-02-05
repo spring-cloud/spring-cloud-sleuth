@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument;
+package org.springframework.cloud.sleuth.instrument.async;
+
+import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -27,24 +29,25 @@ import lombok.Value;
  */
 @Value
 @EqualsAndHashCode(callSuper = false)
-public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
+public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Callable<V> {
 
-	public TraceRunnable(Tracer tracer, Runnable delegate) {
+	public TraceCallable(Tracer tracer, Callable<V> delegate) {
 		super(tracer, delegate);
 	}
 
-	public TraceRunnable(Tracer tracer, Runnable delegate, String name) {
+	public TraceCallable(Tracer tracer, Callable<V> delegate, String name) {
 		super(tracer, delegate, name);
 	}
 
 	@Override
-	public void run() {
+	public V call() throws Exception {
 		Span span = startSpan();
 		try {
-			this.getDelegate().run();
+			return this.getDelegate().call();
 		}
 		finally {
 			close(span);
 		}
 	}
+
 }

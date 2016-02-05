@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.executor;
+package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,8 +22,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceCallable;
-import org.springframework.cloud.sleuth.instrument.TraceRunnable;
 
 /**
  * A decorator class for {@link ScheduledExecutorService} to support tracing in Executors

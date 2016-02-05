@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument;
+package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;

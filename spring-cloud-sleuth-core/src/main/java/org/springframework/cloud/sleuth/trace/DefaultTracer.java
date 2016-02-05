@@ -25,8 +25,8 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
-import org.springframework.cloud.sleuth.instrument.TraceCallable;
-import org.springframework.cloud.sleuth.instrument.TraceRunnable;
+import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
+import org.springframework.cloud.sleuth.instrument.async.TraceRunnable;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
 
