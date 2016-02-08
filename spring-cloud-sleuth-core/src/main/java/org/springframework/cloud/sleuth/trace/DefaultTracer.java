@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
@@ -49,7 +50,7 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Span joinTrace(String name, Span parent) {
+	public Span joinTrace(SpanName name, Span parent) {
 		if (parent == null) {
 			return startTrace(name);
 		}
@@ -57,12 +58,12 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Span startTrace(String name) {
+	public Span startTrace(SpanName name) {
 		return this.startTrace(name, this.defaultSampler);
 	}
 
 	@Override
-	public Span startTrace(String name, Sampler sampler) {
+	public Span startTrace(SpanName name, Sampler sampler) {
 		Span span;
 		if (isTracing()) {
 			span = createChild(getCurrentSpan(), name);
@@ -128,7 +129,7 @@ public class DefaultTracer implements Tracer {
 		return savedSpan;
 	}
 
-	protected Span createChild(Span parent, String name) {
+	protected Span createChild(Span parent, SpanName name) {
 		long id = createId();
 		if (parent == null) {
 			Span span = Span.builder().begin(System.currentTimeMillis()).name(name)

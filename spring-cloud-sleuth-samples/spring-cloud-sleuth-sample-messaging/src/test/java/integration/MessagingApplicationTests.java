@@ -116,7 +116,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private Optional<Span> findLastHttpSpan() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "http/foo".equals(span.name)).findFirst();
+				.filter(span -> "http:/foo".equals(span.name)).findFirst();
 	}
 
 	private Optional<Span> findSpanWithAnnotation(List<Span> eventSpans, String annotationName) {
@@ -128,13 +128,13 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private List<Span> findAllEventRelatedSpans() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "message/messages".equals(span.name) && span.parentId != null).collect(
+				.filter(span -> "message:/messages".equals(span.name) && span.parentId != null).collect(
 						Collectors.toList());
 	}
 
 	private Optional<Span> findFirstHttpRequestSpan() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "http/".equals(span.name) && span.parentId != null).findFirst();
+				.filter(span -> "http:/".equals(span.name) && span.parentId != null).findFirst();
 	}
 
 	private void thenAllSpansArePresent(Optional<Span> firstHttpSpan,

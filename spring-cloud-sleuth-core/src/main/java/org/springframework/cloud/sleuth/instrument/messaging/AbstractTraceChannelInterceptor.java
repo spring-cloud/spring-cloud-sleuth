@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.Random;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.integration.channel.AbstractMessageChannel;
@@ -20,7 +21,7 @@ import org.springframework.util.ClassUtils;
  */
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
 
-	protected static final String MESSAGE_NAME_PREFIX = "message/";
+	protected static final String MESSAGE_PROTOCOL = "message";
 
 	private final Tracer tracer;
 
@@ -64,7 +65,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		String processId = getHeader(message, Span.PROCESS_ID_NAME);
 		String spanName = getHeader(message, Span.SPAN_NAME_NAME);
 		if (spanName != null) {
-			span.name(spanName);
+			span.name(SpanName.fromString(spanName));
 		}
 		if (processId != null) {
 			span.processId(processId);
@@ -106,8 +107,8 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		return name;
 	}
 
-	String getMessageChannelName(MessageChannel channel) {
-		return MESSAGE_NAME_PREFIX + getChannelName(channel);
+	SpanName getMessageChannelName(MessageChannel channel) {
+		return new SpanName(MESSAGE_PROTOCOL, "/" + getChannelName(channel));
 	}
 
 }

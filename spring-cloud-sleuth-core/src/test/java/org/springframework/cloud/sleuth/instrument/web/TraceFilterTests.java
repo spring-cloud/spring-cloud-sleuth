@@ -16,21 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
 import java.util.Random;
 
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -46,7 +40,13 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import lombok.SneakyThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
  * @author Spencer Gibb
@@ -113,8 +113,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
-
-		Span span = this.tracer.startTrace("foo");
+		Span span = this.tracer.startTrace(new SpanName("http", "foo"));
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
 		// It should have been removed from the thread local context so simulate that
 		TestSpanContextHolder.removeCurrentSpan();

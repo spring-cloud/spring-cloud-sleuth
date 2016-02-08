@@ -15,6 +15,9 @@
  */
 package integration;
 
+import java.util.Collections;
+import java.util.Random;
+
 import example.ZipkinStreamServerApplication;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
@@ -35,9 +39,6 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import tools.AbstractIntegrationTest;
-
-import java.util.Collections;
-import java.util.Random;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { TestSupportBinderAutoConfiguration.class,
@@ -62,7 +63,7 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_to_zipkin() {
-		Span span = Span.builder().traceId(this.traceId).spanId(this.spanId).name("test").build();
+		Span span = Span.builder().traceId(this.traceId).spanId(this.spanId).name(new SpanName("http", "test")).build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");
 
 		this.input.send(messageWithSpan(span));

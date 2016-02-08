@@ -35,6 +35,7 @@ import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfigurati
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -75,16 +76,16 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void acquireAndRelease() {
-		Span context = this.tracer.startTrace("foo");
+		Span context = this.tracer.startTrace(new SpanName("http", "foo"));
 		this.tracer.close(context);
 		assertEquals(1, this.test.spans.size());
 	}
 
 	@Test
 	public void rpcAnnotations() {
-		Span parent = Span.builder().traceId(1L).name("parent").remote(true)
+		Span parent = Span.builder().traceId(1L).name(new SpanName("http", "parent")).remote(true)
 				.build();
-		Span context = this.tracer.joinTrace("child", parent);
+		Span context = this.tracer.joinTrace(new SpanName("http", "child"), parent);
 		this.application.publishEvent(new ClientSentEvent(this, context));
 		this.application
 				.publishEvent(new ServerReceivedEvent(this, parent, context));
@@ -107,7 +108,7 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void shouldIncreaseNumberOfAcceptedSpans() {
-		Span context = this.tracer.startTrace("foo");
+		Span context = this.tracer.startTrace(new SpanName("http", "foo"));
 		this.tracer.close(context);
 		this.listener.poll();
 

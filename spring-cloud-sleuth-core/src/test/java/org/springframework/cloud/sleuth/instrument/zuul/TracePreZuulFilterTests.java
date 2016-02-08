@@ -16,25 +16,25 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-
 import java.util.Random;
 
+import com.netflix.zuul.context.RequestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.netflix.zuul.context.RequestContext;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Dave Syer
@@ -59,7 +59,7 @@ public class TracePreZuulFilterTests {
 
 	@Test
 	public void filterAddsHeaders() throws Exception {
-		this.tracer.startTrace("start");
+		this.tracer.startTrace(new SpanName("http", "start"));
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
 		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
@@ -70,7 +70,7 @@ public class TracePreZuulFilterTests {
 
 	@Test
 	public void notSampledIfNotExportable() throws Exception {
-		this.tracer.startTrace("start", NeverSampler.INSTANCE);
+		this.tracer.startTrace(new SpanName("http", "start"), NeverSampler.INSTANCE);
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
 		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),

@@ -16,15 +16,6 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -34,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
@@ -42,14 +34,25 @@ import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 /**
  * @author Spencer Gibb
  */
 public class DefaultTracerTests {
 
-	public static final String CREATE_SIMPLE_TRACE = "createSimpleTrace";
-	public static final String IMPORTANT_WORK_1 = "important work 1";
-	public static final String IMPORTANT_WORK_2 = "important work 2";
+	public static final String CREATE_SIMPLE_TRACE_SPAN_NAME = "createSimpleTrace";
+	public static final SpanName CREATE_SIMPLE_TRACE = new SpanName("http",
+			CREATE_SIMPLE_TRACE_SPAN_NAME);
+	public static final SpanName IMPORTANT_WORK_1 = new SpanName("http", "important work 1");
+	public static final SpanName IMPORTANT_WORK_2 = new SpanName("http", "important work 2");
 	public static final int NUM_SPANS = 3;
 	private ApplicationEventPublisher publisher;
 
@@ -126,7 +129,7 @@ public class DefaultTracerTests {
 				this.publisher);
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
 		assertThat(span.isExportable(), is(false));
-		Span child = tracer.joinTrace(CREATE_SIMPLE_TRACE + "/child", span);
+		Span child = tracer.joinTrace(new SpanName("http", CREATE_SIMPLE_TRACE_SPAN_NAME + "/child"), span);
 		assertThat(child.isExportable(), is(false));
 	}
 
@@ -163,7 +166,7 @@ public class DefaultTracerTests {
 		assertThat(tracer.getCurrentSpan(), is(equalTo(grandParent)));
 	}
 
-	private Span assertSpan(List<Span> spans, Long parentId, String name) {
+	private Span assertSpan(List<Span> spans, Long parentId, SpanName name) {
 		List<Span> found = findSpans(spans, parentId);
 		assertThat("more than one span with parentId " + parentId, found.size(), is(1));
 		Span span = found.get(0);
