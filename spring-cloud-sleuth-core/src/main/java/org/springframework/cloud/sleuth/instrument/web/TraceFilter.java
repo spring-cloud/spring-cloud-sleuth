@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
@@ -57,7 +58,7 @@ import org.springframework.web.util.UrlPathHelper;
  *
  * @see Tracer
  * @see TraceKeys
- * @see TraceWebAutoConfiguration#traceWebFilter(TraceFilter)
+ * @see TraceWebAutoConfiguration#traceFilter(TraceFilter)
  *
  * @author Jakub Nabrdalik, 4financeIT
  * @author Tomasz Nurkiewicz, 4financeIT
@@ -117,7 +118,9 @@ public class TraceFilter extends OncePerRequestFilter
 			addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
 		}
 
-		String name = "http" + uri;
+		String protocol = "http";
+		String address = uri;
+		SpanName name = new SpanName(protocol, address);
 		if (spanFromRequest == null) {
 			if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
 				long traceId = Span
@@ -133,10 +136,10 @@ public class TraceFilter extends OncePerRequestFilter
 				String processId = getHeader(request, response, Span.PROCESS_ID_NAME);
 				String parentName = getHeader(request, response, Span.SPAN_NAME_NAME);
 				if (StringUtils.hasText(parentName)) {
-					span.name(parentName);
+					span.name(SpanName.fromString(parentName));
 				}
 				else {
-					span.name("parent/" + name);
+					span.name(new SpanName(protocol, "/parent" + uri));
 				}
 				if (StringUtils.hasText(processId)) {
 					span.processId(processId);
@@ -272,7 +275,6 @@ public class TraceFilter extends OncePerRequestFilter
 	private String getFullUrl(HttpServletRequest request) {
 		StringBuffer requestURI = request.getRequestURL();
 		String queryString = request.getQueryString();
-
 		if (queryString == null) {
 			return requestURI.toString();
 		}

@@ -1,13 +1,15 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import com.jayway.awaitility.Awaitility;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -17,7 +19,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.concurrent.atomic.AtomicReference;
+import com.jayway.awaitility.Awaitility;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -39,7 +41,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = this.tracer.startTrace("existing");
+		Span span = this.tracer.startTrace(new SpanName("http", "existing"));
 		this.tracer.continueSpan(span);
 		return span;
 	}
@@ -55,6 +57,8 @@ public class TraceAsyncIntegrationTests {
 				then(span)
 						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
 						.hasNameNotEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
+				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName()).
+						isEqualTo(SpanName.fromString("async:ClassPerformingAsyncLogic#method=invokeAsynchronousLogic"));
 			}
 		});
 	}
@@ -92,7 +96,7 @@ public class TraceAsyncIntegrationTests {
 			return this.span.get().getTraceId();
 		}
 
-		public String getSpanName() {
+		public SpanName getSpanName() {
 			if (this.span.get() != null && this.span.get().getName() == null) {
 				return null;
 			}

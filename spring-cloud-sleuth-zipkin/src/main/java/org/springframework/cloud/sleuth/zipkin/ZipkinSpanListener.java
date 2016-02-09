@@ -19,8 +19,10 @@ package org.springframework.cloud.sleuth.zipkin;
 import java.nio.charset.Charset;
 import java.util.Map;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
@@ -29,9 +31,6 @@ import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.util.StringUtils;
-
-import lombok.extern.apachecommons.CommonsLog;
 import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
@@ -150,8 +149,8 @@ public class ZipkinSpanListener {
 			zipkinSpan.parentId(span.getParents().get(0));
 		}
 		zipkinSpan.id(span.getSpanId());
-		if (StringUtils.hasText(span.getName())) {
-			zipkinSpan.name(span.getName());
+		if (!SpanName.NO_NAME.equals(span.getName())) {
+			zipkinSpan.name(span.getName().toString());
 		}
 		return zipkinSpan.build();
 	}

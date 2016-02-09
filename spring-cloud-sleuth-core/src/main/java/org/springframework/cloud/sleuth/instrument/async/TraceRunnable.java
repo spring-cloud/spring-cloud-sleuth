@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * @author Spencer Gibb
@@ -33,7 +33,7 @@ public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 		super(tracer, delegate);
 	}
 
-	public TraceRunnable(Tracer tracer, Runnable delegate, String name) {
+	public TraceRunnable(Tracer tracer, Runnable delegate, SpanName name) {
 		super(tracer, delegate, name);
 	}
 

@@ -16,18 +16,19 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import org.junit.Test;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.cloud.sleuth.Span;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 
+import org.junit.Test;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ServerPropertiesHostLocatorTests {
-	Span span = new Span(1, 3, "name", 1L, Collections.<Long>emptyList(), 2L, true, true,
+	Span span = new Span(1, 3, new SpanName("http", "name"), 1L, Collections.<Long>emptyList(), 2L, true, true,
 			"process");
 
 	@Test

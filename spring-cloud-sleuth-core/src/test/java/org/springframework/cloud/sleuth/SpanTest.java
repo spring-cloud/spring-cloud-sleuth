@@ -1,8 +1,8 @@
 package org.springframework.cloud.sleuth;
 
-import org.junit.Test;
-
 import java.util.Collections;
+
+import org.junit.Test;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -37,14 +37,14 @@ public class SpanTest {
 	}
 
 	@Test(expected = UnsupportedOperationException.class) public void getAnnotationsReadOnly() {
-		Span span = new Span(1, 2, "name", 1L, Collections.<Long>emptyList(), 2L, true,
+		Span span = new Span(1, 2, new SpanName("http", "name"), 1L, Collections.<Long>emptyList(), 2L, true,
 				true, "process");
 
 		span.tags().put("a", "b");
 	}
 
 	@Test(expected = UnsupportedOperationException.class) public void getTimelineAnnotationsReadOnly() {
-		Span span = new Span(1, 2, "name", 1L, Collections.<Long>emptyList(), 2L, true,
+		Span span = new Span(1, 2, new SpanName("http", "name"), 1L, Collections.<Long>emptyList(), 2L, true,
 				true, "process");
 
 		span.logs().add(new Log(1, "1"));

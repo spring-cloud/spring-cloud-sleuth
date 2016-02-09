@@ -61,7 +61,7 @@ public class Span {
 
 	private final long begin;
 	private long end = 0;
-	private final String name;
+	private final SpanName name;
 	private final long traceId;
 	@Singular
 	private List<Long> parents = new ArrayList<>();
@@ -93,18 +93,18 @@ public class Span {
 		this.savedSpan = savedSpan;
 	}
 
-	public Span(long begin, long end, String name, long traceId, List<Long> parents,
+	public Span(long begin, long end, SpanName name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId) {
 		this(begin, end, name, traceId, parents, spanId, remote, exportable, processId,
 				null);
 	}
 
-	public Span(long begin, long end, String name, long traceId, List<Long> parents,
+	public Span(long begin, long end, SpanName name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId,
 			Span savedSpan) {
 		this.begin = begin <= 0 ? System.currentTimeMillis() : begin;
 		this.end = end;
-		this.name = name;
+		this.name = name != null ? name : SpanName.NO_NAME;
 		this.traceId = traceId;
 		this.parents = parents;
 		this.spanId = spanId;
@@ -117,7 +117,7 @@ public class Span {
 	// for serialization
 	private Span() {
 		this.begin = 0;
-		this.name = null;
+		this.name = SpanName.NO_NAME;
 		this.traceId = 0;
 		this.spanId = 0;
 		this.processId = null;
@@ -210,7 +210,7 @@ public class Span {
 	 * A human-readable name assigned to this span instance.
 	 * <p>
 	 */
-	public String getName() {
+	public SpanName getName() {
 		return this.name;
 	}
 

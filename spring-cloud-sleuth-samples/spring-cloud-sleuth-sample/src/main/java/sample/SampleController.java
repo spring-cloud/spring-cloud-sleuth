@@ -16,21 +16,22 @@
 
 package sample;
 
+import java.util.Random;
+import java.util.concurrent.Callable;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Random;
-import java.util.concurrent.Callable;
 
 /**
  * @author Spencer Gibb
@@ -93,7 +94,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@SneakyThrows
 	@RequestMapping("/traced")
 	public String traced() {
-		Span span = this.tracer.startTrace("customTraceEndpoint",
+		Span span = this.tracer.startTrace(new SpanName("http", "customTraceEndpoint"),
 				new AlwaysSampler());
 		int millis = this.random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
