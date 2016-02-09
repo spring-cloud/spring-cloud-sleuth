@@ -6,6 +6,7 @@ import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.Span;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.sleuth.SpanName;
 
 @Slf4j
 public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
@@ -28,7 +29,7 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
-	public SpanAssert hasNameNotEqualTo(String name) {
+	public SpanAssert hasNameNotEqualTo(SpanName name) {
 		isNotNull();
 		if (Objects.equals(this.actual.getName(), name)) {
 			String message = String.format("Expected span's name not to be <%s> but was <%s>", name, this.actual.getName());
@@ -38,7 +39,7 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
-	public SpanAssert hasNameEqualTo(String name) {
+	public SpanAssert hasNameEqualTo(SpanName name) {
 		isNotNull();
 		if (!Objects.equals(this.actual.getName(), name)) {
 			String message = String.format("Expected span's name to be <%s> but it was <%s>", name, this.actual.getName());

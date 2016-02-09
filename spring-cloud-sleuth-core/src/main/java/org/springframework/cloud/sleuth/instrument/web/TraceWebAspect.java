@@ -16,18 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import lombok.extern.apachecommons.CommonsLog;
+import java.lang.reflect.Field;
+import java.util.concurrent.Callable;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
-import java.lang.reflect.Field;
-import java.util.concurrent.Callable;
+import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Aspect that adds correlation id to
@@ -60,6 +62,8 @@ import java.util.concurrent.Callable;
 @Aspect
 @CommonsLog
 public class TraceWebAspect {
+
+	private static final String ASYNC_COMPONENT = "async";
 
 	private final Tracer tracer;
 	private final SpanAccessor accessor;
@@ -100,11 +104,17 @@ public class TraceWebAspect {
 		if (this.accessor.isTracing()) {
 			log.debug("Wrapping callable with span ["
 					+ this.accessor.getCurrentSpan() + "]");
-			return new TraceCallable<>(this.tracer, callable);
+			return new TraceCallable<>(this.tracer, callable, spanName(pjp));
 		}
 		else {
 			return callable;
 		}
+	}
+
+	private SpanName spanName(ProceedingJoinPoint pjp) {
+		return new SpanName(ASYNC_COMPONENT,
+					pjp.getTarget().getClass().getSimpleName(),
+					"method=" + pjp.getSignature().getName());
 	}
 
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
@@ -116,7 +126,8 @@ public class TraceWebAspect {
 						+ this.accessor.getCurrentSpan() + "]");
 				Field callableField = WebAsyncTask.class.getDeclaredField("callable");
 				callableField.setAccessible(true);
-				callableField.set(webAsyncTask, new TraceCallable<>(this.tracer, webAsyncTask.getCallable()));
+				callableField.set(webAsyncTask, new TraceCallable<>(this.tracer,
+						webAsyncTask.getCallable(), spanName(pjp)));
 			} catch (NoSuchFieldException ex) {
 				log.warn("Cannot wrap webAsyncTask's callable with TraceCallable", ex);
 			}

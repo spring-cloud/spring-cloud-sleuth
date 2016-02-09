@@ -1,20 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
-import lombok.SneakyThrows;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.async.TraceableExecutorService;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.context.ApplicationEventPublisher;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -23,6 +8,22 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import lombok.SneakyThrows;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.async.TraceableExecutorService;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -55,7 +56,7 @@ public class TraceableExecutorServiceTests {
 	@Test
 	@SneakyThrows
 	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed() {
-		Span span = this.tracer.startTrace("PARENT");
+		Span span = this.tracer.startTrace(new SpanName("http", "PARENT"));
 		CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		this.tracer.close(span);
 

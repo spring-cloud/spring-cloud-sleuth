@@ -1,22 +1,23 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
-
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -72,7 +73,7 @@ public class TraceCallableTests {
 	}
 
 	private Span givenSpanIsAlreadyActive() {
-		return this.tracer.startTrace("parent");
+		return this.tracer.startTrace(new SpanName("http", "parent"));
 	}
 
 	private Callable<Span> thatRetrievesTraceFromThreadLocal() {

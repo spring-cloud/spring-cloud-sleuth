@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -7,14 +7,14 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.scheduling;
+package org.springframework.cloud.sleuth.instrument.async;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -25,30 +25,26 @@ import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
- * {@link org.springframework.scheduling.annotation.Scheduled} annotation.
- * For every execution of scheduled method a new trace will be started.
+ * {@link org.springframework.scheduling.annotation.Async} annotation.
  *
- * @author Tomasz Nurkewicz, 4financeIT
- * @author Michal Chmielarz, 4financeIT
- * @author Marcin Grzejszczak, 4financeIT
- * @author Spencer Gibb
+ * @author Marcin Grzejszczak
  *
  * @see Tracer
  */
 @Aspect
-public class TraceSchedulingAspect {
+public class TraceAsyncAspect {
 
-	private static final String SCHEDULED_COMPONENT = "scheduled";
+	private static final String ASYNC_COMPONENT = "async";
 
 	private final Tracer tracer;
 
-	public TraceSchedulingAspect(Tracer tracer) {
+	public TraceAsyncAspect(Tracer tracer) {
 		this.tracer = tracer;
 	}
 
-	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
+	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		SpanName spanName = new SpanName(SCHEDULED_COMPONENT,
+		SpanName spanName = new SpanName(ASYNC_COMPONENT,
 				pjp.getTarget().getClass().getSimpleName(),
 				"method=" + pjp.getSignature().getName());
 		Span span = this.tracer.startTrace(spanName);

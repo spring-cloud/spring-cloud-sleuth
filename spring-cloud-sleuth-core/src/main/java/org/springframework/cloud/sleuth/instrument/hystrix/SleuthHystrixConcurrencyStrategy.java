@@ -1,19 +1,19 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import java.util.concurrent.Callable;
-
 import javax.annotation.PreDestroy;
-
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import java.util.concurrent.Callable;
 
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.Tracer;
 
 @Slf4j
 public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
+
+	private static final String HYSTRIX_COMPONENT = "hystrix";
 
 	private final Tracer tracer;
 
@@ -62,7 +62,8 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 				span = this.tracer.continueSpan(span);
 			}
 			else {
-				span = this.tracer.startTrace(Thread.currentThread().getName());
+				span = this.tracer.startTrace(new SpanName(HYSTRIX_COMPONENT,
+						Thread.currentThread().getName()));
 				created = true;
 			}
 			try {

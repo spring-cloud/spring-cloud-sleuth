@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +32,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
 import zipkin.Constants;
@@ -116,7 +117,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private Optional<Span> findLastHttpSpan() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "http/foo".equals(span.name)).findFirst();
+				.filter(span -> "http:/foo".equals(span.name)).findFirst();
 	}
 
 	private Optional<Span> findSpanWithAnnotation(List<Span> eventSpans, String annotationName) {
@@ -128,13 +129,13 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private List<Span> findAllEventRelatedSpans() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "message/messages".equals(span.name) && span.parentId != null).collect(
+				.filter(span -> "message:messages".equals(span.name) && span.parentId != null).collect(
 						Collectors.toList());
 	}
 
 	private Optional<Span> findFirstHttpRequestSpan() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "http/".equals(span.name) && span.parentId != null).findFirst();
+				.filter(span -> "http:/".equals(span.name) && span.parentId != null).findFirst();
 	}
 
 	private void thenAllSpansArePresent(Optional<Span> firstHttpSpan,

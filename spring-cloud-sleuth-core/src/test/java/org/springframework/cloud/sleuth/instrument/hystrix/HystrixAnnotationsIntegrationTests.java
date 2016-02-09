@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -57,7 +58,7 @@ public class HystrixAnnotationsIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = this.tracer.startTrace("existing");
+		Span span = this.tracer.startTrace(new SpanName("http", "existing"));
 		this.tracer.continueSpan(span);
 		return span;
 	}
@@ -111,11 +112,11 @@ public class HystrixAnnotationsIntegrationTests {
 			return this.spanCaughtFromHystrixThread.get().getTraceId();
 		}
 
-		public String getSpanName() {
+		public SpanName getSpanName() {
 			if (this.spanCaughtFromHystrixThread == null
 					|| (this.spanCaughtFromHystrixThread.get() != null
-							&& this.spanCaughtFromHystrixThread.get()
-									.getName() == null)) {
+					&& this.spanCaughtFromHystrixThread.get()
+					.getName() == null)) {
 				return null;
 			}
 			return this.spanCaughtFromHystrixThread.get().getName();

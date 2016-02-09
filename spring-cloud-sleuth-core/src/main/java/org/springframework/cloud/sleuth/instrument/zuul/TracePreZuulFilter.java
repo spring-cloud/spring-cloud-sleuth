@@ -28,6 +28,7 @@ import org.springframework.util.ReflectionUtils;
 
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Dave Syer
@@ -68,7 +69,7 @@ public class TracePreZuulFilter extends ZuulFilter
 		try {
 			setHeader(response, Span.SPAN_ID_NAME, span.getSpanId());
 			setHeader(response, Span.TRACE_ID_NAME, span.getTraceId());
-			setHeader(response, Span.SPAN_NAME_NAME, span.getName());
+			setHeader(response, Span.SPAN_NAME_NAME, span.getName().toString());
 			if (!span.isExportable()) {
 				setHeader(response, Span.NOT_SAMPLED_NAME, "true");
 			}
@@ -92,7 +93,7 @@ public class TracePreZuulFilter extends ZuulFilter
 	}
 
 	public void setHeader(Map<String, String> request, String name, String value) {
-		if (value != null && !request.containsKey(name) && this.accessor.isTracing()) {
+		if (StringUtils.hasText(value) && !request.containsKey(name) && this.accessor.isTracing()) {
 			request.put(name, value);
 		}
 	}

@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -38,7 +39,7 @@ public class SpanMessageHeadersTests {
 
 	@Test
 	public void spanHeadersAdded() {
-		Span span = Span.builder().name("foo").spanId(1L).traceId(2L).build();
+		Span span = Span.builder().name(new SpanName("http", "foo")).spanId(1L).traceId(2L).build();
 		Message<?> message = new GenericMessage<>("Hello World");
 		message = SpanMessageHeaders.addSpanHeaders(this.traceKeys, message, span);
 		assertThat(message.getHeaders()).containsKey(Span.SPAN_ID_NAME);
@@ -46,7 +47,7 @@ public class SpanMessageHeadersTests {
 
 	@Test
 	public void nativeSpanHeadersAdded() {
-		Span span = Span.builder().name("foo").spanId(1L).traceId(2L).build();
+		Span span = Span.builder().name(new SpanName("http", "foo")).spanId(1L).traceId(2L).build();
 		MessageHeaderAccessor accessor = SimpMessageHeaderAccessor.create();
 		Message<?> message = MessageBuilder.createMessage("Hello World", accessor.getMessageHeaders());
 		message = SpanMessageHeaders.addSpanHeaders(this.traceKeys, message, span);

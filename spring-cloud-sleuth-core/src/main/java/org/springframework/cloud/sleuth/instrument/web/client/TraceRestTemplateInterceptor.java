@@ -28,6 +28,7 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.StringUtils;
 
 /**
  * Interceptor that verifies whether the trance and span id has been set on the request
@@ -68,7 +69,7 @@ public class TraceRestTemplateInterceptor
 		if (!span.isExportable()) {
 			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
 		}
-		setHeader(request, Span.SPAN_NAME_NAME, span.getName());
+		setHeader(request, Span.SPAN_NAME_NAME, span.getName().toString());
 		setHeader(request, Span.PARENT_ID_NAME, getParentId(span));
 		setHeader(request, Span.PROCESS_ID_NAME, span.getProcessId());
 		publish(new ClientSentEvent(this, span));
@@ -93,7 +94,7 @@ public class TraceRestTemplateInterceptor
 	}
 
 	public void setHeader(HttpRequest request, String name, String value) {
-		if (value!=null && !request.getHeaders().containsKey(name) && this.accessor.isTracing()) {
+		if (StringUtils.hasText(value) && !request.getHeaders().containsKey(name) && this.accessor.isTracing()) {
 			request.getHeaders().add(name, value);
 		}
 	}
