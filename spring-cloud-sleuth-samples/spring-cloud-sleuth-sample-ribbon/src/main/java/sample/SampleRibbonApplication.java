@@ -16,25 +16,27 @@
 
 package sample;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import com.github.kristofa.brave.LoggingSpanCollector;
-import com.github.kristofa.brave.SpanCollector;
+import zipkin.Span;
 
 /**
  * @author Spencer Gibb
  */
 @SpringBootApplication
-@EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableAsync
 @EnableZuulProxy
 public class SampleRibbonApplication {
+
+	private static Log logger = LogFactory.getLog(SampleRibbonApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(SampleRibbonApplication.class, args);
@@ -43,8 +45,13 @@ public class SampleRibbonApplication {
 	// Use this for debugging (or if there is no Zipkin server running on port 9411)
 	@Bean
 	@ConditionalOnProperty(value="sample.zipkin.enabled", havingValue="false")
-	public SpanCollector spanCollector() {
-		return new LoggingSpanCollector();
+	public ZipkinSpanReporter spanCollector() {
+		return new ZipkinSpanReporter() {
+			@Override
+			public void report(Span span) {
+				logger.info(span);
+			}
+		};
 	}
 
 }
