@@ -26,6 +26,8 @@ public class SleuthMetricProperties {
 
 		private String droppedName = "counter.span.dropped";
 
+		private String durationPrefixName = "histogram.span";
+
 		public String getAcceptedName() {
 			return this.acceptedName;
 		}
@@ -40,6 +42,14 @@ public class SleuthMetricProperties {
 
 		public void setDroppedName(String droppedName) {
 			this.droppedName = droppedName;
+		}
+
+		public String getDurationPrefixName() {
+			return this.durationPrefixName;
+		}
+
+		public void setDurationPrefixName(String durationPrefixName) {
+			this.durationPrefixName = durationPrefixName;
 		}
 	}
 }

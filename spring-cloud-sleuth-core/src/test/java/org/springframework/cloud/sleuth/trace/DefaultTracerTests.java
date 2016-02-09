@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.trace;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyDouble;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
@@ -33,10 +35,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
+import org.springframework.cloud.sleuth.metric.SpanDurationReporterService;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.ApplicationEvent;
@@ -161,6 +166,18 @@ public class DefaultTracerTests {
 		Span span = tracer.joinTrace(IMPORTANT_WORK_2, parent);
 		tracer.close(span);
 		assertThat(tracer.getCurrentSpan(), is(equalTo(grandParent)));
+	}
+
+	@Test
+	public void metricsAreSentOnClose() {
+		SpanDurationReporterService spanDurationReporterService = Mockito.mock(SpanDurationReporterService.class);
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.publisher, spanDurationReporterService);
+		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
+
+		tracer.close(span);
+
+		BDDMockito.then(spanDurationReporterService).should().submitDuration(anyString(), anyDouble());
 	}
 
 	private Span assertSpan(List<Span> spans, Long parentId, String name) {

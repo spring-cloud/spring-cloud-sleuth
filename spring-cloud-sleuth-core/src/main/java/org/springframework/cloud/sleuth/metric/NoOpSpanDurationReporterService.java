@@ -19,19 +19,10 @@ package org.springframework.cloud.sleuth.metric;
 /**
  * @author Marcin Grzejszczak
  */
-public interface SpanReporterService {
+public class NoOpSpanDurationReporterService implements SpanDurationReporterService {
 
-	/**
-	 * Called when spans are submitted to SpanCollector for processing.
-	 *
-	 * @param quantity the number of spans accepted.
-	 */
-	void incrementAcceptedSpans(long quantity);
+	@Override
+	public void submitDuration(String metricName, double duration) {
 
-	/**
-	 * Called when spans become lost for any reason and won't be delivered to the target collector.
-	 *
-	 * @param quantity the number of spans dropped.
-	 */
-	void incrementDroppedSpans(long quantity);
+	}
 }
