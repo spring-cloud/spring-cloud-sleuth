@@ -20,6 +20,7 @@
 		<module>spring-cloud-sleuth-sample</module>
 		<module>spring-cloud-sleuth-sample-test-core</module>
 		<module>spring-cloud-sleuth-sample-messaging</module>
+		<module>spring-cloud-sleuth-sample-websocket</module>
 		<module>spring-cloud-sleuth-sample-ribbon</module>
 		<module>spring-cloud-sleuth-sample-zipkin</module>
 		<module>spring-cloud-sleuth-sample-stream</module>
