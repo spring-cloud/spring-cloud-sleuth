@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
+import com.netflix.hystrix.strategy.HystrixPlugins;
 
 public class TraceCommandTests {
 
@@ -28,6 +29,7 @@ public class TraceCommandTests {
 
 	@Before
 	public void setup() {
+		HystrixPlugins.reset();
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
