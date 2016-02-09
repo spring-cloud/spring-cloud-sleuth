@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.integration;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,8 +22,10 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
-import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.StringUtils;
 
 /**
@@ -37,7 +39,7 @@ public class SpanMessageHeaders {
 	public static final String SPAN_HEADER = "X-Current-Span";
 
 	public static Span getSpanFromHeader(Message<?> message) {
-		if (message==null) {
+		if (message == null) {
 			return null;
 		}
 		Object object = message.getHeaders().get(SPAN_HEADER);
@@ -49,10 +51,14 @@ public class SpanMessageHeaders {
 
 	public static Message<?> addSpanHeaders(TraceKeys traceKeys, Message<?> message,
 			Span span) {
+
+		MessageHeaderAccessor accessor = MessageHeaderAccessor
+				.getMutableAccessor(message);
 		if (span == null) {
 			if (!message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
-				return MessageBuilder.fromMessage(message)
-						.setHeader(Span.NOT_SAMPLED_NAME, "true").build();
+				accessor.setHeader(Span.NOT_SAMPLED_NAME, "true");
+				return MessageBuilder.createMessage(message.getPayload(),
+						accessor.getMessageHeaders());
 			}
 			return message;
 		}
@@ -73,8 +79,16 @@ public class SpanMessageHeaders {
 		else {
 			addHeader(headers, Span.NOT_SAMPLED_NAME, "true");
 		}
-		return MessageBuilder.fromMessage(message).copyHeaders(headers)
-				.setHeader(SPAN_HEADER, span).build();
+		accessor.setHeader(SPAN_HEADER, span);
+		accessor.copyHeaders(headers);
+		if (accessor instanceof NativeMessageHeaderAccessor) {
+			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
+			for (String name : headers.keySet()) {
+				nativeAccessor.setNativeHeader(name, headers.get(name));
+			}
+		}
+		return MessageBuilder.createMessage(message.getPayload(),
+				accessor.getMessageHeaders());
 	}
 
 	public static void addAnnotations(TraceKeys traceKeys, Message<?> message,

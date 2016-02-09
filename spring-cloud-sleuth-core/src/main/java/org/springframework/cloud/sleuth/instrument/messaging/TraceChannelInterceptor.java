@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.integration;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Random;
 
@@ -24,6 +24,7 @@ import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageHandler;
 
 /**
  * @author Dave Syer
@@ -57,6 +58,19 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			return getTracer().startTrace(name, NeverSampler.INSTANCE);
 		}
 		return getTracer().startTrace(name);
+	}
+
+	@Override
+	public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
+			MessageHandler handler) {
+		getTracer().continueSpan(SpanMessageHeaders.getSpanFromHeader(message));
+		return message;
+	}
+
+	@Override
+	public void afterMessageHandled(Message<?> message, MessageChannel channel,
+			MessageHandler handler, Exception ex) {
+		getTracer().detach(SpanMessageHeaders.getSpanFromHeader(message));
 	}
 
 }

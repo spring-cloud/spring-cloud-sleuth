@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.instrument.integration;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Random;
 
@@ -10,13 +10,15 @@ import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
+import org.springframework.messaging.support.ExecutorChannelInterceptor;
+import org.springframework.util.ClassUtils;
 
 /**
  * Abstraction over classes related to channel intercepting
  *
  * @author Marcin Grzejszczak
  */
-abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter {
+abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
 
 	protected static final String MESSAGE_NAME_PREFIX = "message/";
 
@@ -26,7 +28,8 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	private final TraceKeys traceKeys;
 
-	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
+	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
+			Random random) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.random = random;
@@ -44,12 +47,14 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 * Returns a span given the message and a channel. Returns null when there was no
 	 * trace id passed initially.
 	 */
-	Span buildSpan(Message<?> message) {
-		if (!hasHeader(message, Span.TRACE_ID_NAME) || !hasHeader(message, Span.SPAN_ID_NAME)) {
+	protected Span buildSpan(Message<?> message) {
+		if (!hasHeader(message, Span.TRACE_ID_NAME)
+				|| !hasHeader(message, Span.SPAN_ID_NAME)) {
 			return null; // cannot build a span without ids
 		}
-		long spanId = hasHeader(message, Span.SPAN_ID_NAME) ?
-				Span.fromHex(getHeader(message, Span.SPAN_ID_NAME)) : this.random.nextLong();
+		long spanId = hasHeader(message, Span.SPAN_ID_NAME)
+				? Span.fromHex(getHeader(message, Span.SPAN_ID_NAME))
+				: this.random.nextLong();
 		long traceId = Span.fromHex(getHeader(message, Span.TRACE_ID_NAME));
 		Span.SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
 		if (message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
@@ -85,11 +90,15 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	String getChannelName(MessageChannel channel) {
 		String name = null;
-		if (channel instanceof IntegrationObjectSupport) {
-			name = ((IntegrationObjectSupport) channel).getComponentName();
-		}
-		if (name == null && channel instanceof AbstractMessageChannel) {
-			name = ((AbstractMessageChannel) channel).getFullChannelName();
+		if (ClassUtils.isPresent(
+				"org.springframework.integration.context.IntegrationObjectSupport",
+				null)) {
+			if (channel instanceof IntegrationObjectSupport) {
+				name = ((IntegrationObjectSupport) channel).getComponentName();
+			}
+			if (name == null && channel instanceof AbstractMessageChannel) {
+				name = ((AbstractMessageChannel) channel).getFullChannelName();
+			}
 		}
 		if (name == null) {
 			name = channel.toString();
