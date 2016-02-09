@@ -21,7 +21,7 @@ import org.springframework.util.ClassUtils;
  */
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
 
-	protected static final String MESSAGE_PROTOCOL = "message";
+	protected static final String MESSAGE_COMPONENT = "message";
 
 	private final Tracer tracer;
 
@@ -108,7 +108,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	SpanName getMessageChannelName(MessageChannel channel) {
-		return new SpanName(MESSAGE_PROTOCOL, "/" + getChannelName(channel));
+		return new SpanName(MESSAGE_COMPONENT, getChannelName(channel));
 	}
 
 }

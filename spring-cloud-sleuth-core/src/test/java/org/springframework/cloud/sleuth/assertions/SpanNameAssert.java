@@ -18,9 +18,10 @@ package org.springframework.cloud.sleuth.assertions;
 
 import java.util.Objects;
 
-import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.SpanName;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SpanNameAssert extends AbstractAssert<SpanNameAssert, SpanName> {
@@ -33,10 +34,10 @@ public class SpanNameAssert extends AbstractAssert<SpanNameAssert, SpanName> {
 		return new SpanNameAssert(actual);
 	}
 
-	public SpanNameAssert hasProtocolEqualTo(String protocol) {
+	public SpanNameAssert hasComponentEqualTo(String protocol) {
 		isNotNull();
-		if (!Objects.equals(this.actual.protocol, protocol)) {
-			String message = String.format("Expected span name's protocol to be <%s> but was <%s>", protocol, this.actual.protocol);
+		if (!Objects.equals(this.actual.component, protocol)) {
+			String message = String.format("Expected span name's component to be <%s> but was <%s>", protocol, this.actual.component);
 			log.error(message);
 			failWithMessage(message);
 		}

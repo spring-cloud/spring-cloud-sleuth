@@ -34,7 +34,7 @@ import com.netflix.hystrix.HystrixCommand;
  */
 public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
-	private static final String HYSTRIX_PROTOCOL = "hystrix";
+	private static final String HYSTRIX_COMPONENT = "hystrix";
 
 	private final Tracer tracer;
 	private final Span parentSpan;
@@ -47,7 +47,7 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
 	@Override
 	protected R run() throws Exception {
-		SpanName spanName = new SpanName(HYSTRIX_PROTOCOL, getCommandKey().name());
+		SpanName spanName = new SpanName(HYSTRIX_COMPONENT, getCommandKey().name());
 		Span span = this.tracer.joinTrace(spanName, this.parentSpan);
 		try {
 			return doRun();

@@ -48,8 +48,8 @@ public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 			then(this.arrayListSpanAccumulator.getSpans().stream().map(Span::getName)
 					.map(SpanName::toString)
 					.collect(
-					toList())).containsAll(asList("http:/greeting", "message:/greetings",
-													"message:/words", "message:/counts"));
+					toList())).containsAll(asList("http:/greeting", "message:greetings",
+													"message:words", "message:counts"));
 		});
 	}
 

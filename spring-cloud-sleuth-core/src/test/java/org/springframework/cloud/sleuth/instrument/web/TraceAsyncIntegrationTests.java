@@ -3,7 +3,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.jayway.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.jayway.awaitility.Awaitility;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -56,6 +57,8 @@ public class TraceAsyncIntegrationTests {
 				then(span)
 						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
 						.hasNameNotEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
+				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName()).
+						isEqualTo(SpanName.fromString("async:ClassPerformingAsyncLogic#method=invokeAsynchronousLogic"));
 			}
 		});
 	}

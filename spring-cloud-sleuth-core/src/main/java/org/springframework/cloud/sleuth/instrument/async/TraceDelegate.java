@@ -28,7 +28,7 @@ import lombok.Getter;
 @Getter
 public abstract class TraceDelegate<T> {
 
-	private static final String ASYNC_PROTOCOL = "async";
+	private static final String ASYNC_COMPONENT = "async";
 
 	private final Tracer tracer;
 	private final T delegate;
@@ -56,7 +56,7 @@ public abstract class TraceDelegate<T> {
 
 	protected SpanName getSpanName() {
 		return this.name == null ?
-				new SpanName(ASYNC_PROTOCOL, Thread.currentThread().getName())
+				new SpanName(ASYNC_COMPONENT, Thread.currentThread().getName())
 				: this.name;
 	}
 

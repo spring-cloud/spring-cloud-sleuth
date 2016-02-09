@@ -13,7 +13,7 @@ import org.springframework.cloud.sleuth.Tracer;
 @Slf4j
 public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
 
-	private static final String HYSTRIX_PROTOCOL = "hystrix";
+	private static final String HYSTRIX_COMPONENT = "hystrix";
 
 	private final Tracer tracer;
 
@@ -62,7 +62,7 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 				span = this.tracer.continueSpan(span);
 			}
 			else {
-				span = this.tracer.startTrace(new SpanName(HYSTRIX_PROTOCOL,
+				span = this.tracer.startTrace(new SpanName(HYSTRIX_COMPONENT,
 						Thread.currentThread().getName()));
 				created = true;
 			}

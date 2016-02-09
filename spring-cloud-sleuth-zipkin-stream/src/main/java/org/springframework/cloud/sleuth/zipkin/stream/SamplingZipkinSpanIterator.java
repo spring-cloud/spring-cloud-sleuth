@@ -36,7 +36,7 @@ import zipkin.Span.Builder;
 @CommonsLog
 final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 
-	private static final String MESSAGE_PROTOCOL = "message";
+	private static final String MESSAGE_COMPONENT = "message";
 
 	private final Sampler sampler;
 	private final Iterator<Span> delegate;
@@ -90,7 +90,7 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 
 	private boolean protocolWithAddressMatch(Span input) {
 		SpanName spanName = input.getName();
-		return SamplingZipkinSpanIterator.MESSAGE_PROTOCOL.equals(spanName.protocol) &&
+		return SamplingZipkinSpanIterator.MESSAGE_COMPONENT.equals(spanName.component) &&
 				("/" + SleuthSink.INPUT).equals(spanName.address);
 	}
 

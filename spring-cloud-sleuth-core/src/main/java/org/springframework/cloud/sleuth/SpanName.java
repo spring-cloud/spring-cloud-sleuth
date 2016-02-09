@@ -27,14 +27,14 @@ import org.springframework.util.StringUtils;
  * Class representing a name of the span.
  * It consists of
  * <li>
- *     <ul>protocol - means of communication e.g. http, message</ul>
+ *     <ul>component - means of communication e.g. http, message</ul>
  *     <ul>address - what the span is addressing e.g. /some/http/address, someQueueName</ul>
  *     <ul>fragment - additional label e.g. async</ul>
  * </li>
  *
  * The template of the span name is
  *
- * <pre>protocol:address#fragment</pre>
+ * <pre>component:address#fragment</pre>
  *
  * @author Marcin Grzejszczak
  */
@@ -44,7 +44,7 @@ public class SpanName {
 
 	public static final SpanName NO_NAME = new SpanName("", "");
 
-	public final String protocol;
+	public final String component;
 	public final String address;
 	public final String fragment;
 
@@ -53,12 +53,12 @@ public class SpanName {
 		this("", "", "");
 	}
 
-	public SpanName(String protocol, String address) {
-		this(protocol, address, "");
+	public SpanName(String component, String address) {
+		this(component, address, "");
 	}
 
-	public SpanName(String protocol, String address, String fragment) {
-		this.protocol = protocol;
+	public SpanName(String component, String address, String fragment) {
+		this.component = component;
 		this.address = address;
 		this.fragment = fragment;
 	}
@@ -66,7 +66,7 @@ public class SpanName {
 	public static SpanName fromString(String name) {
 		String[] splitString = name.split(":");
 		if (splitString.length < 2) {
-			log.debug("Can't parse [{}]. Returning 'unknown' protocol and passing name to address", name);
+			log.debug("Can't parse [{}]. Returning 'unknown' component and passing name to address", name);
 			return new SpanName("unknown", name);
 		}
 		String protocol = splitString[0];
@@ -85,7 +85,7 @@ public class SpanName {
 		if (this.equals(NO_NAME)) {
 			return "";
 		}
-		String baseName = this.protocol + ":" + this.address;
+		String baseName = this.component + ":" + this.address;
 		if (StringUtils.hasText(this.fragment)) {
 			return baseName + "#" + this.fragment;
 		}
@@ -99,13 +99,13 @@ public class SpanName {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		SpanName spanName = (SpanName) o;
-		return Objects.equals(this.protocol, spanName.protocol) &&
+		return Objects.equals(this.component, spanName.component) &&
 				Objects.equals(this.address, spanName.address) &&
 				Objects.equals(this.fragment, spanName.fragment);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.protocol, this.address, this.fragment);
+		return Objects.hash(this.component, this.address, this.fragment);
 	}
 }
