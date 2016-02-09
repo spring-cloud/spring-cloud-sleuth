@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.log;
 
-import org.apache.commons.logging.Log;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -45,15 +44,4 @@ public class SleuthLogAutoConfiguration {
 			return new Slf4jSpanListener();
 		}
 	}
-
-	@Configuration
-	@ConditionalOnClass(Log.class)
-	protected static class JsonConfiguration {
-		@Bean
-		@ConditionalOnProperty("spring.sleuth.log.json.enabled")
-		public JsonLogSpanListener jsonSlf4jSpanListener() {
-			return new JsonLogSpanListener();
-		}
-	}
-
 }
