@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncListenableTaskExecutor;
+import org.springframework.http.client.AsyncClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -55,6 +61,29 @@ public class TraceWebClientAutoConfiguration {
 	@ConditionalOnMissingBean
 	public RestTemplate restTemplate() {
 		return new RestTemplate();
+	}
+
+
+	@Bean
+	@ConditionalOnMissingBean
+	public AsyncClientHttpRequestFactory asyncClientHttpRequestFactory(Tracer tracer) {
+		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+		simpleClientHttpRequestFactory.setTaskExecutor(asyncListenableTaskExecutor(tracer));
+		return simpleClientHttpRequestFactory;
+	}
+
+	private AsyncListenableTaskExecutor asyncListenableTaskExecutor(Tracer tracer) {
+		ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+		threadPoolTaskScheduler.initialize();
+		return new TraceAsyncListenableTaskExecutor(threadPoolTaskScheduler, tracer);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public AsyncRestTemplate asyncRestTemplate(SpanAccessor spanAccessor,
+			AsyncClientHttpRequestFactory asyncClientHttpRequestFactory, RestTemplate restTemplate) {
+		return new AsyncRestTemplate(new TraceAsyncClientHttpRequestFactoryWrapper(
+				spanAccessor, asyncClientHttpRequestFactory), restTemplate);
 	}
 
 	@Configuration
