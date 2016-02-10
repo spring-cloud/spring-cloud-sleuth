@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,19 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.context.ApplicationEvent;
 
 /**
  * @author Spencer Gibb
  */
-@Data
-@EqualsAndHashCode(callSuper=false)
 @SuppressWarnings("serial")
-public class ServerReceivedEvent extends ApplicationEvent {
-
-	private final Span parent;
-	private final Span span;
+public class ServerReceivedEvent extends SpanParentContainingEvent {
 
 	public ServerReceivedEvent(Object source, Span span) {
 		this(source, null, span);
 	}
 
 	public ServerReceivedEvent(Object source, Span parent, Span span) {
-		super(source);
-		this.parent = parent;
-		this.span = span;
+		super(source, parent, span);
 	}
 }

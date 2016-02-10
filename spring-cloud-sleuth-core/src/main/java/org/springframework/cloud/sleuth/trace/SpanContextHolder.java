@@ -16,10 +16,9 @@
 
 package org.springframework.cloud.sleuth.trace;
 
+import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.core.NamedThreadLocal;
-
-import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Utility for managing the thread local state for the {@link DefaultTracer}.
@@ -27,9 +26,10 @@ import lombok.extern.apachecommons.CommonsLog;
  * @author Spencer Gibb
  * @author Dave Syer
  */
-@CommonsLog
 class SpanContextHolder {
 
+	private static final Log log = org.apache.commons.logging.LogFactory
+			.getLog(SpanContextHolder.class);
 	private static final ThreadLocal<SpanContext> CURRENT_SPAN = new NamedThreadLocal<>(
 			"Trace Context");
 

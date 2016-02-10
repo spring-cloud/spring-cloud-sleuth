@@ -19,8 +19,7 @@ package sample;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
@@ -36,10 +35,11 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Spencer Gibb
  */
-@Slf4j
 @RestController
 public class SampleController implements
 ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(SampleController.class);
 	@Autowired
 	private RestTemplate restTemplate;
 	@Autowired
@@ -52,9 +52,8 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	private Random random;
 	private int port;
 
-	@SneakyThrows
 	@RequestMapping("/")
-	public String hi() {
+	public String hi() throws InterruptedException {
 		Thread.sleep(this.random.nextInt(1000));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
@@ -77,23 +76,21 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	}
 
 	@RequestMapping("/async")
-	public String async() {
+	public String async() throws InterruptedException {
 		this.controller.background();
 		return "ho";
 	}
 
-	@SneakyThrows
 	@RequestMapping("/hi2")
-	public String hi2() {
+	public String hi2() throws InterruptedException {
 		int millis = this.random.nextInt(1000);
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
-	@SneakyThrows
 	@RequestMapping("/traced")
-	public String traced() {
+	public String traced() throws InterruptedException {
 		Span span = this.tracer.startTrace(new SpanName("http", "customTraceEndpoint"),
 				new AlwaysSampler());
 		int millis = this.random.nextInt(1000);
@@ -107,9 +104,8 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		return "traced/" + s;
 	}
 
-	@SneakyThrows
 	@RequestMapping("/start")
-	public String start() {
+	public String start() throws InterruptedException {
 		int millis = this.random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);
 		Thread.sleep(millis);

@@ -22,18 +22,20 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.Tracer;
 
-import lombok.RequiredArgsConstructor;
-
 /**
  * @author Dave Syer
  *
  */
-@RequiredArgsConstructor
 public class LazyTraceExecutor implements Executor {
 
 	private Tracer tracer;
 	private final BeanFactory beanFactory;
 	private final Executor delegate;
+
+	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate) {
+		this.beanFactory = beanFactory;
+		this.delegate = delegate;
+	}
 
 	@Override
 	public void execute(Runnable command) {

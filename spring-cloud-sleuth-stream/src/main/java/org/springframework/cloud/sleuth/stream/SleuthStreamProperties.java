@@ -18,14 +18,27 @@ package org.springframework.cloud.sleuth.stream;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import lombok.Data;
-
 /**
  * @author Dave Syer
  */
 @ConfigurationProperties("spring.sleuth.stream")
-@Data
 public class SleuthStreamProperties {
 	private boolean enabled = true;
 	private String group = SleuthSink.INPUT;
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public String getGroup() {
+		return this.group;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void setGroup(String group) {
+		this.group = group;
+	}
 }

@@ -18,16 +18,37 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import lombok.Data;
-
 /**
  * @author Spencer Gibb
  */
 @ConfigurationProperties("spring.zipkin")
-@Data
 public class ZipkinProperties {
 	/** URL of the zipkin query server instance. */
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;
 	private int flushInterval = 1;
+
+	public String getBaseUrl() {
+		return this.baseUrl;
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public int getFlushInterval() {
+		return this.flushInterval;
+	}
+
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void setFlushInterval(int flushInterval) {
+		this.flushInterval = flushInterval;
+	}
 }

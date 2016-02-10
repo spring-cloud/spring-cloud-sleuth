@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
+import org.slf4j.Logger;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
@@ -34,13 +35,14 @@ import org.springframework.util.MultiValueMap;
 import com.netflix.client.http.HttpRequest;
 import com.netflix.niws.client.http.RestClient;
 
-import lombok.SneakyThrows;
-
 /**
  * @author Spencer Gibb
  */
 public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommandFactory
 		implements ApplicationEventPublisherAware {
+
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(TraceRestClientRibbonCommandFactory.class);
 
 	private ApplicationEventPublisher publisher;
 
@@ -58,15 +60,20 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 	}
 
 	@Override
-	@SneakyThrows
 	@SuppressWarnings("deprecation")
 	public RestClientRibbonCommand create(RibbonCommandContext context) {
 		RestClient restClient = getClientFactory().getClient(context.getServiceId(),
 				RestClient.class);
-		return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
-				getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
-				context.getHeaders(), context.getParams(), context.getRequestEntity(),
-				this.publisher, this.accessor);
+		try {
+			return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
+					getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
+					context.getHeaders(), context.getParams(), context.getRequestEntity(),
+					this.publisher, this.accessor);
+		}
+		catch (URISyntaxException e) {
+			log.error("Exception occurred while trying to create the TraceRestClientRibbonCommand", e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	class TraceRestClientRibbonCommand extends RestClientRibbonCommand {

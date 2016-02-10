@@ -16,24 +16,35 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import java.util.ArrayList;
+import java.util.Objects;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.context.ApplicationListener;
+import org.springframework.context.ApplicationEvent;
 
 /**
- * @author Spencer Gibb
+ * @author Marcin Grzejszczak
  */
-public class ArrayListSpanAccumulator implements ApplicationListener<SpanReleasedEvent> {
-	private final ArrayList<Span> spans = new ArrayList<>();
+class SpanParentContainingEvent extends ApplicationEvent {
 
-	@Override
-	public void onApplicationEvent(SpanReleasedEvent event) {
-		this.spans.add(event.getSpan());
+	private final Span span;
+	private final Span parent;
+
+	public SpanParentContainingEvent(Object source, Span span) {
+		this(source, null, span);
 	}
 
-	public ArrayList<Span> getSpans() {
-		return this.spans;
+	public SpanParentContainingEvent(Object source, Span parent, Span span) {
+		super(source);
+		this.parent = parent;
+		this.span = span;
+	}
+
+	public Span getParent() {
+		return this.parent;
+	}
+
+	public Span getSpan() {
+		return this.span;
 	}
 
 	@Override
@@ -44,19 +55,21 @@ public class ArrayListSpanAccumulator implements ApplicationListener<SpanRelease
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		ArrayListSpanAccumulator that = (ArrayListSpanAccumulator) o;
-		return this.spans.equals(that.spans);
+		SpanParentContainingEvent that = (SpanParentContainingEvent) o;
+		return Objects.equals(this.parent, that.parent) && Objects
+				.equals(this.span, that.span);
 	}
 
 	@Override
 	public int hashCode() {
-		return this.spans.hashCode();
+		return Objects.hash(this.parent, this.span);
 	}
 
 	@Override
 	public String toString() {
-		return "ArrayListSpanAccumulator{" +
-				"spans=" + this.spans +
+		return getClass().getSimpleName() + "{" +
+				"span=" + this.span +
+				", parent=" + this.parent +
 				'}';
 	}
 }

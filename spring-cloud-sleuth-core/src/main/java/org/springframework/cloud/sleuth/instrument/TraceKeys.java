@@ -21,8 +21,6 @@ import java.util.LinkedHashSet;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import lombok.Data;
-
 /**
  * Well-known {@link org.springframework.cloud.sleuth.Span#tag(String, String) span tag}
  * keys.
@@ -49,19 +47,56 @@ import lombok.Data;
  * what's you are storing.
  */
 @ConfigurationProperties("spring.sleuth.keys")
-@Data
 public class TraceKeys {
 
 	private Http http = new Http();
 
 	private Message message = new Message();
 
-	@Data
+	public Http getHttp() {
+		return this.http;
+	}
+
+	public Message getMessage() {
+		return this.message;
+	}
+
+	public void setHttp(Http http) {
+		this.http = http;
+	}
+
+	public void setMessage(Message message) {
+		this.message = message;
+	}
+
 	public static class Message {
 
 		private Payload payload = new Payload();
 
-		@Data
+		public Payload getPayload() {
+			return this.payload;
+		}
+
+		public String getPrefix() {
+			return this.prefix;
+		}
+
+		public Collection<String> getHeaders() {
+			return this.headers;
+		}
+
+		public void setPayload(Payload payload) {
+			this.payload = payload;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public void setHeaders(Collection<String> headers) {
+			this.headers = headers;
+		}
+
 		public static class Payload {
 			/**
 			 * An estimate of the size of the payload if available.
@@ -71,6 +106,22 @@ public class TraceKeys {
 			 * The type of the payload.
 			 */
 			private String type = "message/payload-type";
+
+			public String getSize() {
+				return this.size;
+			}
+
+			public String getType() {
+				return this.type;
+			}
+
+			public void setSize(String size) {
+				this.size = size;
+			}
+
+			public void setType(String type) {
+				this.type = type;
+			}
 		}
 
 		/**
@@ -87,7 +138,6 @@ public class TraceKeys {
 
 	}
 
-	@Data
 	public static class Http {
 
 		/**
@@ -160,6 +210,77 @@ public class TraceKeys {
 		 */
 		private Collection<String> headers = new LinkedHashSet<String>();
 
+		public String getHost() {
+			return this.host;
+		}
+
+		public String getMethod() {
+			return this.method;
+		}
+
+		public String getPath() {
+			return this.path;
+		}
+
+		public String getUrl() {
+			return this.url;
+		}
+
+		public String getStatusCode() {
+			return this.statusCode;
+		}
+
+		public String getRequestSize() {
+			return this.requestSize;
+		}
+
+		public String getResponseSize() {
+			return this.responseSize;
+		}
+
+		public String getPrefix() {
+			return this.prefix;
+		}
+
+		public Collection<String> getHeaders() {
+			return this.headers;
+		}
+
+		public void setHost(String host) {
+			this.host = host;
+		}
+
+		public void setMethod(String method) {
+			this.method = method;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
+
+		public void setUrl(String url) {
+			this.url = url;
+		}
+
+		public void setStatusCode(String statusCode) {
+			this.statusCode = statusCode;
+		}
+
+		public void setRequestSize(String requestSize) {
+			this.requestSize = requestSize;
+		}
+
+		public void setResponseSize(String responseSize) {
+			this.responseSize = responseSize;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public void setHeaders(Collection<String> headers) {
+			this.headers = headers;
+		}
 	}
 
 }

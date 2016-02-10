@@ -16,24 +16,24 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import java.util.ArrayList;
+import java.util.Objects;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.context.ApplicationListener;
+import org.springframework.context.ApplicationEvent;
 
 /**
- * @author Spencer Gibb
+ * @author Marcin Grzejszczak
  */
-public class ArrayListSpanAccumulator implements ApplicationListener<SpanReleasedEvent> {
-	private final ArrayList<Span> spans = new ArrayList<>();
+class SpanContainingEvent extends ApplicationEvent {
+	private final Span span;
 
-	@Override
-	public void onApplicationEvent(SpanReleasedEvent event) {
-		this.spans.add(event.getSpan());
+	public SpanContainingEvent(Object source, Span span) {
+		super(source);
+		this.span = span;
 	}
 
-	public ArrayList<Span> getSpans() {
-		return this.spans;
+	public Span getSpan() {
+		return this.span;
 	}
 
 	@Override
@@ -44,19 +44,19 @@ public class ArrayListSpanAccumulator implements ApplicationListener<SpanRelease
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		ArrayListSpanAccumulator that = (ArrayListSpanAccumulator) o;
-		return this.spans.equals(that.spans);
+		SpanContainingEvent that = (SpanContainingEvent) o;
+		return Objects.equals(this.span, that.span);
 	}
 
 	@Override
 	public int hashCode() {
-		return this.spans.hashCode();
+		return this.span != null ? this.span.hashCode() : 0;
 	}
 
 	@Override
 	public String toString() {
-		return "ArrayListSpanAccumulator{" +
-				"spans=" + this.spans +
+		return getClass().getSimpleName() + "{" +
+				"span=" + this.span +
 				'}';
 	}
 }

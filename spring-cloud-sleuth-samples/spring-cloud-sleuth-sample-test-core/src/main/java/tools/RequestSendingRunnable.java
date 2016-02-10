@@ -15,11 +15,10 @@
  */
 package tools;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.net.URI;
 import java.util.Random;
 
+import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,7 +27,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * Runnable that will send a request via the provide rest template to the
@@ -36,8 +35,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author Marcin Grzejszczak
  */
-@Slf4j
 public class RequestSendingRunnable implements Runnable {
+
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(RequestSendingRunnable.class);
+
 	private final RestTemplate restTemplate;
 	private final String url;
 	private final long traceId;

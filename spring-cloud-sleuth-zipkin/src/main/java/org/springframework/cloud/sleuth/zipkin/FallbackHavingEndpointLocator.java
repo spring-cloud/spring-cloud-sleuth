@@ -1,14 +1,17 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+
 import zipkin.Endpoint;
 
 /**
  * Endpoint locator that will try to call an endpoint via Discovery Client
  * and will fallback to Server Properties if an exception is thrown
  */
-@Slf4j
 public class FallbackHavingEndpointLocator implements EndpointLocator {
+
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(FallbackHavingEndpointLocator.class);
 
 	private final DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
 	private final ServerPropertiesEndpointLocator serverPropertiesEndpointLocator;

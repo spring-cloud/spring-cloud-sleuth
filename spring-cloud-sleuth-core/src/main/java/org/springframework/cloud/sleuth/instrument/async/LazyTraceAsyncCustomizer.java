@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
@@ -29,11 +27,15 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
  * @author Dave Syer
  *
  */
-@RequiredArgsConstructor
 public class LazyTraceAsyncCustomizer extends AsyncConfigurerSupport {
 
 	private final BeanFactory beanFactory;
 	private final AsyncConfigurer delegate;
+
+	public LazyTraceAsyncCustomizer(BeanFactory beanFactory, AsyncConfigurer delegate) {
+		this.beanFactory = beanFactory;
+		this.delegate = delegate;
+	}
 
 	@Override
 	public Executor getAsyncExecutor() {

@@ -16,6 +16,7 @@
 
 package sample;
 
+import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,16 +25,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * @author Spencer Gibb
  */
 @SpringBootApplication
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableAsync
-@Slf4j
 public class SampleZipkinApplication {
+
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(SampleZipkinApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(SampleZipkinApplication.class, args);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,9 @@
 
 package org.springframework.cloud.sleuth;
 
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-
 /**
  * @author Spencer Gibb
  */
-@Data
-@RequiredArgsConstructor
 public class Log {
 	/**
 	 * The epoch timestamp of the log record; often set via {@link System#currentTimeMillis()}.
@@ -45,5 +40,18 @@ public class Log {
 	private Log() {
 		this.timestamp = 0;
 		this.event = null;
+	}
+
+	public Log(long timestamp, String event) {
+		this.timestamp = timestamp;
+		this.event = event;
+	}
+
+	public long getTimestamp() {
+		return this.timestamp;
+	}
+
+	public String getEvent() {
+		return this.event;
 	}
 }

@@ -16,14 +16,16 @@
 
 package org.springframework.cloud.sleuth.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.logging.Log;
 
 /**
  * @author Spencer Gibb
  */
-@CommonsLog
 public abstract class ExceptionUtils {
+	private static final Log log = org.apache.commons.logging.LogFactory
+			.getLog(ExceptionUtils.class);
 	private static boolean fail = false;
+
 	public static void warn(String msg) {
 		if (fail) {
 			throw new IllegalStateException(msg);

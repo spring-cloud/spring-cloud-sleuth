@@ -16,8 +16,7 @@
 
 package sample;
 
-import lombok.extern.slf4j.Slf4j;
-
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -28,14 +27,16 @@ import org.springframework.messaging.Message;
  *
  */
 @MessageEndpoint
-@Slf4j
 public class SampleTransformer {
+
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(SampleTransformer.class);
 
 	@Autowired
 	SampleBackground background;
 
 	@ServiceActivator(inputChannel="xform")
-	public String log(Message<?> message) {
+	public String log(Message<?> message) throws InterruptedException {
 		log.info("Received: " + message);
 		this.background.background();
 		return message.getPayload().toString().toUpperCase();
