@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.cloud.sleuth.instrument.web;
-
-import static org.springframework.util.StringUtils.hasText;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,6 +44,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
 
+import static org.springframework.util.StringUtils.hasText;
+
 /**
  * Filter that takes the value of the {@link Span#SPAN_ID_NAME} and
  * {@link Span#TRACE_ID_NAME} header from either request or response and uses them to
@@ -58,7 +58,7 @@ import org.springframework.web.util.UrlPathHelper;
  *
  * @see Tracer
  * @see TraceKeys
- * @see TraceWebAutoConfiguration#traceFilter(TraceFilter)
+ * @see TraceWebAutoConfiguration#traceFilter
  *
  * @author Jakub Nabrdalik, 4financeIT
  * @author Tomasz Nurkiewicz, 4financeIT
@@ -119,8 +119,7 @@ public class TraceFilter extends OncePerRequestFilter
 		}
 
 		String protocol = "http";
-		String address = uri;
-		SpanName name = new SpanName(protocol, address);
+		SpanName name = new SpanName(protocol, uri);
 		if (spanFromRequest == null) {
 			if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
 				long traceId = Span
