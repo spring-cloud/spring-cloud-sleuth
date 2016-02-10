@@ -22,7 +22,6 @@ import java.net.URI;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.AsyncClientHttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
@@ -39,7 +38,6 @@ import org.springframework.http.client.AsyncClientHttpRequestFactory;
 public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttpRequestInterceptor
 		implements AsyncClientHttpRequestFactory {
 
-	private ApplicationEventPublisher publisher;
 	private final AsyncClientHttpRequestFactory delegate;
 
 	public TraceAsyncClientHttpRequestFactoryWrapper(SpanAccessor accessor,
