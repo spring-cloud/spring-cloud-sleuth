@@ -20,12 +20,9 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 
-import lombok.Getter;
-
 /**
  * @author Spencer Gibb
  */
-@Getter
 public abstract class TraceDelegate<T> {
 
 	private static final String ASYNC_COMPONENT = "async";
@@ -60,4 +57,29 @@ public abstract class TraceDelegate<T> {
 				: this.name;
 	}
 
+	public Tracer getTracer() {
+		return this.tracer;
+	}
+
+	public T getDelegate() {
+		return this.delegate;
+	}
+
+	public SpanName getName() {
+		return this.name;
+	}
+
+	public Span getParent() {
+		return this.parent;
+	}
+
+	@Override
+	public String toString() {
+		return "TraceDelegate{" +
+				"tracer=" + this.tracer +
+				", delegate=" + this.delegate +
+				", name=" + this.name +
+				", parent=" + this.parent +
+				'}';
+	}
 }

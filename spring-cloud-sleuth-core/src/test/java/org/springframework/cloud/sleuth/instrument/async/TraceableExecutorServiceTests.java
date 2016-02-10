@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import lombok.SneakyThrows;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +18,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.async.TraceableExecutorService;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -54,8 +52,8 @@ public class TraceableExecutorServiceTests {
 	}
 
 	@Test
-	@SneakyThrows
-	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed() {
+	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed()
+			throws Exception {
 		Span span = this.tracer.startTrace(new SpanName("http", "PARENT"));
 		CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		this.tracer.close(span);

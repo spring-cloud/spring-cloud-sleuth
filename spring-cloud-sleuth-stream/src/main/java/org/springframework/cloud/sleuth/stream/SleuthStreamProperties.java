@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,59 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import java.util.Objects;
 
-import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * @author Dave Syer
  */
 @ConfigurationProperties("spring.sleuth.stream")
-@Data
 public class SleuthStreamProperties {
 	private boolean enabled = true;
 	private String group = SleuthSink.INPUT;
+
+	public SleuthStreamProperties() {
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public String getGroup() {
+		return this.group;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void setGroup(String group) {
+		this.group = group;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		SleuthStreamProperties that = (SleuthStreamProperties) o;
+		return this.enabled == that.enabled && Objects.equals(this.group, that.group);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.enabled, this.group);
+	}
+
+	@Override
+	public String toString() {
+		return "SleuthStreamProperties{" +
+				"enabled=" + this.enabled +
+				", group='" + this.group + '\'' +
+				'}';
+	}
 }

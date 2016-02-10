@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.Random;
 
-import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -67,7 +66,6 @@ public class TraceFilterTests {
 	private Sampler sampler = new AlwaysSampler();
 
 	@Before
-	@SneakyThrows
 	public void init() {
 		initMocks(this);
 		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),

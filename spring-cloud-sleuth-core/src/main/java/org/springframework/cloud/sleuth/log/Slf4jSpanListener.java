@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.log;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
@@ -29,8 +29,10 @@ import org.springframework.core.annotation.Order;
 /**
  * @author Spencer Gibb
  */
-@Slf4j
 public class Slf4jSpanListener {
+
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(Slf4jSpanListener.class);
 
 	@EventListener(SpanAcquiredEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE)

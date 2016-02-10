@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.logging.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,8 +29,6 @@ import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
-
-import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Aspect that adds correlation id to
@@ -60,10 +59,11 @@ import lombok.extern.apachecommons.CommonsLog;
  * @author Spencer Gibb
  */
 @Aspect
-@CommonsLog
 public class TraceWebAspect {
 
 	private static final String ASYNC_COMPONENT = "async";
+	private static final Log log = org.apache.commons.logging.LogFactory
+			.getLog(TraceWebAspect.class);
 
 	private final Tracer tracer;
 	private final SpanAccessor accessor;

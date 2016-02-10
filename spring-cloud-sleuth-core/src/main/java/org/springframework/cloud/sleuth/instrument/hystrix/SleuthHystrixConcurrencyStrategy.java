@@ -1,19 +1,22 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import javax.annotation.PreDestroy;
 import java.util.concurrent.Callable;
 
-import com.netflix.hystrix.strategy.HystrixPlugins;
-import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
-import lombok.extern.slf4j.Slf4j;
+import javax.annotation.PreDestroy;
+
+import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 
-@Slf4j
+import com.netflix.hystrix.strategy.HystrixPlugins;
+import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
+
 public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
 
 	private static final String HYSTRIX_COMPONENT = "hystrix";
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(SleuthHystrixConcurrencyStrategy.class);
 
 	private final Tracer tracer;
 

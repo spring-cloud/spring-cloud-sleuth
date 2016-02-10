@@ -16,7 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import lombok.SneakyThrows;
+import java.util.Random;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
@@ -32,8 +33,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-
-import java.util.Random;
 
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -55,7 +54,6 @@ public class TraceFilterMockChainIntegrationTests {
 	private MockFilterChain filterChain;
 
 	@Before
-	@SneakyThrows
 	public void init() {
 		TestSpanContextHolder.removeCurrentSpan();
 		this.context.refresh();

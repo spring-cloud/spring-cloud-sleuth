@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ package org.springframework.cloud.sleuth.assertions;
 import java.util.Objects;
 
 import org.assertj.core.api.AbstractAssert;
+import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.SpanName;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class SpanNameAssert extends AbstractAssert<SpanNameAssert, SpanName> {
+
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(SpanNameAssert.class);
 
 	public SpanNameAssert(SpanName actual) {
 		super(actual, SpanNameAssert.class);

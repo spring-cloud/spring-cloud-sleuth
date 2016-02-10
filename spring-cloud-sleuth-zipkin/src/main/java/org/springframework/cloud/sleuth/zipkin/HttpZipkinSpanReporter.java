@@ -1,10 +1,5 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.springframework.cloud.sleuth.metric.SpanReporterService;
-import zipkin.Codec;
-import zipkin.Span;
-
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
@@ -20,14 +15,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.apache.commons.logging.Log;
+import org.springframework.cloud.sleuth.metric.SpanReporterService;
+
+import zipkin.Codec;
+import zipkin.Span;
+
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Submits spans using Zipkin's {@code POST /spans} endpoint.
  */
-@CommonsLog
 public final class HttpZipkinSpanReporter
 		implements ZipkinSpanReporter, Flushable, Closeable {
+	private static final Log log = org.apache.commons.logging.LogFactory
+			.getLog(HttpZipkinSpanReporter.class);
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 
 	private final String url;

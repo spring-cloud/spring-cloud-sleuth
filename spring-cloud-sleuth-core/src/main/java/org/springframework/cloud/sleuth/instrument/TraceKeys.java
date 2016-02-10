@@ -18,10 +18,9 @@ package org.springframework.cloud.sleuth.instrument;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import lombok.Data;
 
 /**
  * Well-known {@link org.springframework.cloud.sleuth.Span#tag(String, String) span tag}
@@ -49,19 +48,61 @@ import lombok.Data;
  * what's you are storing.
  */
 @ConfigurationProperties("spring.sleuth.keys")
-@Data
 public class TraceKeys {
 
 	private Http http = new Http();
 
 	private Message message = new Message();
 
-	@Data
+	public TraceKeys() {
+	}
+
+	public Http getHttp() {
+		return this.http;
+	}
+
+	public Message getMessage() {
+		return this.message;
+	}
+
+	public void setHttp(Http http) {
+		this.http = http;
+	}
+
+	public void setMessage(Message message) {
+		this.message = message;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		TraceKeys traceKeys = (TraceKeys) o;
+		return Objects.equals(this.http, traceKeys.http) && Objects
+				.equals(this.message, traceKeys.message);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.http, this.message);
+	}
+
+	@Override
+	public String toString() {
+		return "TraceKeys{" +
+				"http=" + this.http +
+				", message=" + this.message +
+				'}';
+	}
+
 	public static class Message {
 
 		private Payload payload = new Payload();
 
-		@Data
 		public static class Payload {
 			/**
 			 * An estimate of the size of the payload if available.
@@ -71,6 +112,48 @@ public class TraceKeys {
 			 * The type of the payload.
 			 */
 			private String type = "message/payload-type";
+
+			@Override
+			public boolean equals(Object o) {
+				if (this == o) {
+					return true;
+				}
+				if (o == null || getClass() != o.getClass()) {
+					return false;
+				}
+				Payload payload = (Payload) o;
+				return Objects.equals(this.size, payload.size) && Objects
+						.equals(this.type, payload.type);
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(this.size, this.type);
+			}
+
+			@Override
+			public String toString() {
+				return "Payload{" +
+						"size='" + this.size + '\'' +
+						", type='" + this.type + '\'' +
+						'}';
+			}
+
+			public String getSize() {
+				return this.size;
+			}
+
+			public void setSize(String size) {
+				this.size = size;
+			}
+
+			public String getType() {
+				return this.type;
+			}
+
+			public void setType(String type) {
+				this.type = type;
+			}
 		}
 
 		/**
@@ -85,9 +168,59 @@ public class TraceKeys {
 		 */
 		private Collection<String> headers = new LinkedHashSet<String>();
 
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Message message = (Message) o;
+			return Objects.equals(this.payload, message.payload) &&
+					Objects.equals(this.prefix, message.prefix) &&
+					Objects.equals(this.headers, message.headers);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(this.payload, this.prefix, this.headers);
+		}
+
+		@Override
+		public String toString() {
+			return "Message{" +
+					"payload=" + this.payload +
+					", prefix='" + this.prefix + '\'' +
+					", headers=" + this.headers +
+					'}';
+		}
+
+		public Payload getPayload() {
+			return this.payload;
+		}
+
+		public void setPayload(Payload payload) {
+			this.payload = payload;
+		}
+
+		public String getPrefix() {
+			return this.prefix;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public Collection<String> getHeaders() {
+			return this.headers;
+		}
+
+		public void setHeaders(Collection<String> headers) {
+			this.headers = headers;
+		}
 	}
 
-	@Data
 	public static class Http {
 
 		/**
@@ -160,6 +293,120 @@ public class TraceKeys {
 		 */
 		private Collection<String> headers = new LinkedHashSet<String>();
 
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Http http = (Http) o;
+			return Objects.equals(this.host, http.host) &&
+					Objects.equals(this.method, http.method) &&
+					Objects.equals(this.path, http.path) &&
+					Objects.equals(this.url, http.url) &&
+					Objects.equals(this.statusCode, http.statusCode) &&
+					Objects.equals(this.requestSize, http.requestSize) &&
+					Objects.equals(this.responseSize, http.responseSize) &&
+					Objects.equals(this.prefix, http.prefix) &&
+					Objects.equals(this.headers, http.headers);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects
+					.hash(this.host, this.method, this.path, this.url, this.statusCode,
+							this.requestSize, this.responseSize, this.prefix,
+							this.headers);
+		}
+
+		@Override
+		public String toString() {
+			return "Http{" +
+					"host='" + this.host + '\'' +
+					", method='" + this.method + '\'' +
+					", path='" + this.path + '\'' +
+					", url='" + this.url + '\'' +
+					", statusCode='" + this.statusCode + '\'' +
+					", requestSize='" + this.requestSize + '\'' +
+					", responseSize='" + this.responseSize + '\'' +
+					", prefix='" + this.prefix + '\'' +
+					", headers=" + this.headers +
+					'}';
+		}
+
+		public String getHost() {
+			return this.host;
+		}
+
+		public void setHost(String host) {
+			this.host = host;
+		}
+
+		public String getMethod() {
+			return this.method;
+		}
+
+		public void setMethod(String method) {
+			this.method = method;
+		}
+
+		public String getPath() {
+			return this.path;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
+
+		public String getUrl() {
+			return this.url;
+		}
+
+		public void setUrl(String url) {
+			this.url = url;
+		}
+
+		public String getStatusCode() {
+			return this.statusCode;
+		}
+
+		public void setStatusCode(String statusCode) {
+			this.statusCode = statusCode;
+		}
+
+		public String getRequestSize() {
+			return this.requestSize;
+		}
+
+		public void setRequestSize(String requestSize) {
+			this.requestSize = requestSize;
+		}
+
+		public String getResponseSize() {
+			return this.responseSize;
+		}
+
+		public void setResponseSize(String responseSize) {
+			this.responseSize = responseSize;
+		}
+
+		public String getPrefix() {
+			return this.prefix;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public Collection<String> getHeaders() {
+			return this.headers;
+		}
+
+		public void setHeaders(Collection<String> headers) {
+			this.headers = headers;
+		}
 	}
 
 }

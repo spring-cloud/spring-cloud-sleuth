@@ -16,8 +16,7 @@
 
 package sample;
 
-import lombok.extern.slf4j.Slf4j;
-
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.context.ApplicationListener;
@@ -30,10 +29,11 @@ import org.springframework.web.client.RestTemplate;
  * @author Dave Syer
  *
  */
-@MessageEndpoint
-@Slf4j
-public class SampleService implements
+@MessageEndpoint public class SampleService implements
 		ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(SampleService.class);
+
 	@Autowired private RestTemplate restTemplate;
 	private int port;
 

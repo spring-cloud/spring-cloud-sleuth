@@ -27,8 +27,6 @@ import java.util.Map;
 
 import org.springframework.util.Assert;
 
-import lombok.Getter;
-
 /**
  * Class for gathering and reporting statistics about a block of execution.
  * <p/>
@@ -44,7 +42,6 @@ import lombok.Getter;
  * like scoped tracers. Sleuth spans are DTOs, whose sole responsibility is the current
  * span in the trace tree.
  */
-@Getter
 public class Span {
 
 	public static final String NOT_SAMPLED_NAME = "X-Not-Sampled";
@@ -413,14 +410,22 @@ public class Span {
 			return span;
 		}
 
+		@Override
 		public String toString() {
-			return "org.springframework.cloud.sleuth.Span.SpanBuilder(begin=" + this.begin
-					+ ", end=" + this.end + ", name=" + this.name + ", traceId="
-					+ this.traceId + ", parents=" + this.parents + ", spanId="
-					+ this.spanId + ", remote=" + this.remote + ", exportable="
-					+ this.exportable + ", processId=" + this.processId + ", logs="
-					+ this.logs + ", tags=" + this.tags + ", savedSpan=" + this.savedSpan
-					+ ")";
+			return "SpanBuilder{" +
+					"begin=" + this.begin +
+					", end=" + this.end +
+					", name=" + this.name +
+					", traceId=" + this.traceId +
+					", parents=" + this.parents +
+					", spanId=" + this.spanId +
+					", remote=" + this.remote +
+					", exportable=" + this.exportable +
+					", processId='" + this.processId + '\'' +
+					", savedSpan=" + this.savedSpan +
+					", logs=" + this.logs +
+					", tags=" + this.tags +
+					'}';
 		}
 	}
 }

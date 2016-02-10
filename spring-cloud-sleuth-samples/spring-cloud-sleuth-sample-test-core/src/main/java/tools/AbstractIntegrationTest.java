@@ -15,9 +15,6 @@
  */
 package tools;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +25,7 @@ import java.util.stream.Collectors;
 
 import org.junit.After;
 import org.junit.Before;
+import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.trace.IntegrationTestSpanContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -39,15 +37,19 @@ import org.springframework.web.client.RestTemplate;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
 
-import lombok.extern.slf4j.Slf4j;
 import zipkin.Codec;
 import zipkin.Span;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
-@Slf4j
 public abstract class AbstractIntegrationTest {
+
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(AbstractIntegrationTest.class);
 
 	protected static int pollInterval = 1;
 	protected static int timeout = 20;

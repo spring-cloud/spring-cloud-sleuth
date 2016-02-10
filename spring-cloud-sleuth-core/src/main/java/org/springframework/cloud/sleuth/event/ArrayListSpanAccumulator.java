@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,47 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import lombok.Value;
+import java.util.ArrayList;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.ApplicationListener;
-
-import java.util.ArrayList;
 
 /**
  * @author Spencer Gibb
  */
-@Value
 public class ArrayListSpanAccumulator implements ApplicationListener<SpanReleasedEvent> {
 	private final ArrayList<Span> spans = new ArrayList<>();
 
 	@Override
 	public void onApplicationEvent(SpanReleasedEvent event) {
 		this.spans.add(event.getSpan());
+	}
+
+	public ArrayList<Span> getSpans() {
+		return this.spans;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		ArrayListSpanAccumulator that = (ArrayListSpanAccumulator) o;
+		return this.spans.equals(that.spans);
+	}
+
+	@Override
+	public int hashCode() {
+		return this.spans.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return "ArrayListSpanAccumulator{" +
+				"spans=" + this.spans +
+				'}';
 	}
 }

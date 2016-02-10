@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import java.util.Objects;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.ApplicationEvent;
@@ -25,8 +24,6 @@ import org.springframework.context.ApplicationEvent;
 /**
  * @author Spencer Gibb
  */
-@Data
-@EqualsAndHashCode(callSuper=false)
 @SuppressWarnings("serial")
 public class SpanAcquiredEvent extends ApplicationEvent {
 
@@ -41,5 +38,39 @@ public class SpanAcquiredEvent extends ApplicationEvent {
 		super(source);
 		this.parent = parent;
 		this.span = span;
+	}
+
+	public Span getParent() {
+		return this.parent;
+	}
+
+	public Span getSpan() {
+		return this.span;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		SpanAcquiredEvent that = (SpanAcquiredEvent) o;
+		return Objects.equals(this.parent, that.parent) && Objects
+				.equals(this.span, that.span);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.parent, this.span);
+	}
+
+	@Override
+	public String toString() {
+		return "SpanAcquiredEvent{" +
+				"parent=" + this.parent +
+				", span=" + this.span +
+				'}';
 	}
 }
