@@ -16,24 +16,6 @@ public class SamplerProperties {
 	 */
 	private float percentage = 0.1f;
 
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		SamplerProperties that = (SamplerProperties) o;
-		return Float.compare(that.percentage, this.percentage) == 0;
-	}
-
-	@Override
-	public int hashCode() {
-		return (this.percentage != +0.0f ? Float.floatToIntBits(this.percentage) : 0);
-	}
-
 	public float getPercentage() {
 		return this.percentage;
 	}

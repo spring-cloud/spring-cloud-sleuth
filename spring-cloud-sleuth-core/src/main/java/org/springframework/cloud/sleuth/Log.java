@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth;
 
-import java.util.Objects;
-
 /**
  * @author Spencer Gibb
  */
@@ -55,30 +53,5 @@ public class Log {
 
 	public String getEvent() {
 		return this.event;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		Log log = (Log) o;
-		return this.timestamp == log.timestamp && Objects.equals(this.event, log.event);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(this.timestamp, this.event);
-	}
-
-	@Override
-	public String toString() {
-		return "Log{" +
-				"timestamp=" + this.timestamp +
-				", event='" + this.event + '\'' +
-				'}';
 	}
 }

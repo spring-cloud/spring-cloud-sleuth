@@ -16,49 +16,16 @@
 
 package org.springframework.cloud.sleuth.event;
 
-import java.util.Objects;
-
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.context.ApplicationEvent;
 
 /**
  * @author Spencer Gibb
  */
 @SuppressWarnings("serial")
-public class SpanContinuedEvent extends ApplicationEvent {
-
-	private final Span span;
+public class SpanContinuedEvent extends SpanContainingEvent {
 
 	public SpanContinuedEvent(Object source, Span span) {
-		super(source);
-		this.span = span;
+		super(source, span);
 	}
 
-	public Span getSpan() {
-		return this.span;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		SpanContinuedEvent that = (SpanContinuedEvent) o;
-		return Objects.equals(this.span, that.span);
-	}
-
-	@Override
-	public int hashCode() {
-		return this.span != null ? this.span.hashCode() : 0;
-	}
-
-	@Override
-	public String toString() {
-		return "SpanContinuedEvent{" +
-				"span=" + this.span +
-				'}';
-	}
 }

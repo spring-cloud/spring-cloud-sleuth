@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.stream;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.cloud.sleuth.Span;
 
@@ -55,31 +54,5 @@ public class Spans {
 
 	public void setSpans(List<Span> spans) {
 		this.spans = spans;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		Spans spans1 = (Spans) o;
-		return Objects.equals(this.host, spans1.host) && Objects
-				.equals(this.spans, spans1.spans);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(this.host, this.spans);
-	}
-
-	@Override
-	public String toString() {
-		return "Spans{" +
-				"host=" + this.host +
-				", spans=" + this.spans +
-				'}';
 	}
 }

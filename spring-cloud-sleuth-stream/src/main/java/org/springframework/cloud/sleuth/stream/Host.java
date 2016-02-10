@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.stream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -27,7 +26,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @author Dave Syer
  *
  */
-@JsonInclude(JsonInclude.Include.NON_NULL) public class Host {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class Host {
 
 	private String serviceName;
 	private String address;
@@ -72,33 +72,5 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 	public void setPort(Integer port) {
 		this.port = port;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		Host host = (Host) o;
-		return Objects.equals(this.serviceName, host.serviceName) &&
-				Objects.equals(this.address, host.address) &&
-				Objects.equals(this.port, host.port);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(this.serviceName, this.address, this.port);
-	}
-
-	@Override
-	public String toString() {
-		return "Host{" +
-				"serviceName='" + this.serviceName + '\'' +
-				", address='" + this.address + '\'' +
-				", port=" + this.port +
-				'}';
 	}
 }

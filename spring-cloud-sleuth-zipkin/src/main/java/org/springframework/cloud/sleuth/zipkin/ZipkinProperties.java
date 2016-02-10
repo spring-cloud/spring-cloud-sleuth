@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.util.Objects;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -29,9 +27,6 @@ public class ZipkinProperties {
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;
 	private int flushInterval = 1;
-
-	public ZipkinProperties() {
-	}
 
 	public String getBaseUrl() {
 		return this.baseUrl;
@@ -55,33 +50,5 @@ public class ZipkinProperties {
 
 	public void setFlushInterval(int flushInterval) {
 		this.flushInterval = flushInterval;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		ZipkinProperties that = (ZipkinProperties) o;
-		return this.enabled == that.enabled &&
-				this.flushInterval == that.flushInterval &&
-				Objects.equals(this.baseUrl, that.baseUrl);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(this.baseUrl, this.enabled, this.flushInterval);
-	}
-
-	@Override
-	public String toString() {
-		return "ZipkinProperties{" +
-				"baseUrl='" + this.baseUrl + '\'' +
-				", enabled=" + this.enabled +
-				", flushInterval=" + this.flushInterval +
-				'}';
 	}
 }
