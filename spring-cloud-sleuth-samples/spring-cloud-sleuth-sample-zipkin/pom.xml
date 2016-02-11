@@ -82,16 +82,6 @@
 			<artifactId>zipkin-server</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.github.kristofa</groupId>
-			<artifactId>brave-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.dropwizard.metrics</groupId>
-			<artifactId>metrics-core</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
 </project>

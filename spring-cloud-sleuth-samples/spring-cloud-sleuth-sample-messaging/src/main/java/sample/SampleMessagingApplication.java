@@ -19,16 +19,11 @@ package sample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.github.kristofa.brave.LoggingSpanCollector;
-import com.github.kristofa.brave.SpanCollector;
 
 /**
  * @author Spencer Gibb
@@ -66,13 +61,6 @@ public class SampleMessagingApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SampleMessagingApplication.class, args);
-	}
-
-	// Use this for debugging (or if there is no Zipkin server running on port 9411)
-	@Bean
-	@ConditionalOnProperty(value="sample.zipkin.enabled", havingValue="false")
-	public SpanCollector spanCollector() {
-		return new LoggingSpanCollector();
 	}
 
 }

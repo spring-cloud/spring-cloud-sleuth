@@ -22,6 +22,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
@@ -36,7 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
-import zipkin.server.ZipkinServer;
+import zipkin.server.EnableZipkinServer;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { WaitUntilZipkinIsUpConfig.class,
@@ -101,6 +103,14 @@ public class ZipkinTests extends AbstractIntegrationTest {
 				SpanReporterService spanReporterService) {
 			return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
 					spanReporterService);
+		}
+	}
+
+	@SpringBootApplication
+	@EnableZipkinServer
+	protected static class ZipkinServer {
+		public static void main(String[] args) {
+			SpringApplication.run(ZipkinServer.class, args);
 		}
 	}
 }
