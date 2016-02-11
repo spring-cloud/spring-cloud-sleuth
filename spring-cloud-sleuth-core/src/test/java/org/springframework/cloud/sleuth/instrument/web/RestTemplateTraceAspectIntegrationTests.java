@@ -1,7 +1,8 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -11,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.common.HttpMockServer;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcWiremockIntegrationTest;
+import org.springframework.cloud.sleuth.instrument.web.common.HttpMockServer;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -23,12 +24,18 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
-import java.util.concurrent.Callable;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junitparams.JUnitParamsRunner.$;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
@@ -55,6 +62,13 @@ public class RestTemplateTraceAspectIntegrationTests extends AbstractMvcWiremock
 	}
 
 	@Test
+	public void should_set_span_data_on_headers_when_sending_a_request_via_async_rest_template() throws Exception {
+		whenARequestIsSentToAAsyncRestTemplateEndpoint();
+
+		thenTraceIdHasBeenSetOnARequestHeader();
+	}
+
+	@Test
 	@Parameters
 	public void should_set_span_data_on_headers_via_aspect_in_asynchronous_call(String url) throws Exception {
 		whenARequestIsSentToAnAsyncEndpoint(url);
@@ -64,6 +78,10 @@ public class RestTemplateTraceAspectIntegrationTests extends AbstractMvcWiremock
 
 	public Object[] parametersForShould_set_span_data_on_headers_via_aspect_in_asynchronous_call() {
 		return $("/callablePing", "/webAsyncTaskPing");
+	}
+
+	private void whenARequestIsSentToAAsyncRestTemplateEndpoint() throws Exception {
+		this.mockMvc.perform(MockMvcRequestBuilders.get("/asyncRestTemplate").accept(MediaType.TEXT_PLAIN)).andReturn();
 	}
 
 	private void whenARequestIsSentToASyncEndpoint() throws Exception {
@@ -95,6 +113,13 @@ public class RestTemplateTraceAspectIntegrationTests extends AbstractMvcWiremock
 
 		@Autowired HttpMockServer httpMockServer;
 		@Autowired RestTemplate restTemplate;
+		@Autowired AsyncRestTemplate asyncRestTemplate;
+
+		@RequestMapping(value = "/asyncRestTemplate", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		public String asyncRestTemplate()
+				throws ExecutionException, InterruptedException {
+			return callWiremockViaAsyncRestTemplateAndReturnOk();
+		}
 
 		@RequestMapping(value = "/syncPing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
 		public String syncPing() {
@@ -123,6 +148,12 @@ public class RestTemplateTraceAspectIntegrationTests extends AbstractMvcWiremock
 
 		private String callWiremockAndReturnOk() {
 			this.restTemplate.getForObject("http://localhost:" + this.httpMockServer.port(), String.class);
+			return "OK";
+		}
+
+		private String callWiremockViaAsyncRestTemplateAndReturnOk()
+				throws ExecutionException, InterruptedException {
+			this.asyncRestTemplate.getForEntity("http://localhost:" + this.httpMockServer.port(), String.class).get();
 			return "OK";
 		}
 	}
