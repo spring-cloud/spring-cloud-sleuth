@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
+import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -31,13 +32,13 @@ import org.springframework.util.StringUtils;
  *
  * @author Marcin Grzejszczak
  */
-public abstract class AbstractTraceHttpRequestInterceptor
+abstract class AbstractTraceHttpRequestInterceptor
 		implements ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
 	private final SpanAccessor accessor;
 
-	public AbstractTraceHttpRequestInterceptor(SpanAccessor accessor) {
+	protected AbstractTraceHttpRequestInterceptor(SpanAccessor accessor) {
 		this.accessor = accessor;
 	}
 
@@ -46,17 +47,14 @@ public abstract class AbstractTraceHttpRequestInterceptor
 		this.publisher = publisher;
 	}
 
-	/**
-	 * Adds trace related headers from the span to the request
-	 */
-	public void enrichWithTraceHeaders(HttpRequest request, Span span) {
-		setHeader(request, Span.TRACE_ID_NAME, span.getTraceId());
-		setHeader(request, Span.SPAN_ID_NAME, span.getSpanId());
+	private void enrichWithTraceHeaders(HttpRequest request, Span span) {
+		setIdHeader(request, Span.TRACE_ID_NAME, span.getTraceId());
+		setIdHeader(request, Span.SPAN_ID_NAME, span.getSpanId());
 		if (!span.isExportable()) {
 			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
 		}
 		setHeader(request, Span.SPAN_NAME_NAME, span.getName().toString());
-		setHeader(request, Span.PARENT_ID_NAME, getParentId(span));
+		setIdHeader(request, Span.PARENT_ID_NAME, getParentId(span));
 		setHeader(request, Span.PROCESS_ID_NAME, span.getProcessId());
 	}
 
@@ -64,36 +62,55 @@ public abstract class AbstractTraceHttpRequestInterceptor
 		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
 	}
 
-	public void setHeader(HttpRequest request, String name, String value) {
-		if (StringUtils.hasText(value) && !request.getHeaders().containsKey(name) && this.accessor.isTracing()) {
+	protected void doNotSampleThisSpan(HttpRequest request) {
+		setHeader(request, Span.NOT_SAMPLED_NAME, "true");
+	}
+
+	private void setHeader(HttpRequest request, String name, String value) {
+		if (StringUtils.hasText(value) && !request.getHeaders().containsKey(name) &&
+				this.accessor.isTracing()) {
 			request.getHeaders().add(name, value);
 		}
 	}
 
-	public void setHeader(HttpRequest request, String name, Long value) {
+	private void setIdHeader(HttpRequest request, String name, Long value) {
 		if (value != null) {
 			setHeader(request, name, Span.toHex(value));
 		}
 	}
 
 	/**
-	 * Close the current span and emit the ClientReceivedEvent
+	 * Enriches the request with proper headers and publishes
+	 * the client sent event
 	 */
-	public void close() {
-		if (getCurrentSpan() == null) {
-			return;
-		}
-		publish(new ClientReceivedEvent(this, getCurrentSpan()));
+	protected void publishStartEvent(HttpRequest request) {
+		Span span = currentSpan();
+		enrichWithTraceHeaders(request, span);
+		publish(new ClientSentEvent(this, span));
 	}
 
-	protected void publish(ApplicationEvent event) {
+	/**
+	 * Close the current span and emit the ClientReceivedEvent
+	 */
+	public void finish() {
+		if (!isTracing()) {
+			return;
+		}
+		publish(new ClientReceivedEvent(this, currentSpan()));
+	}
+
+	private void publish(ApplicationEvent event) {
 		if (this.publisher != null) {
 			this.publisher.publishEvent(event);
 		}
 	}
 
-	protected Span getCurrentSpan() {
+	private Span currentSpan() {
 		return this.accessor.getCurrentSpan();
+	}
+
+	protected boolean isTracing() {
+		return this.accessor.isTracing();
 	}
 
 }

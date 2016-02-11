@@ -69,7 +69,7 @@ public class TraceHttpResponse implements ClientHttpResponse {
 			this.delegate.close();
 		}
 		finally {
-			this.interceptor.close();
+			this.interceptor.finish();
 		}
 	}
 }

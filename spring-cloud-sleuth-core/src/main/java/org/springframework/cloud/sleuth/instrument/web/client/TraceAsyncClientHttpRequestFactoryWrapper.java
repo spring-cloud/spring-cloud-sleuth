@@ -19,9 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 import java.net.URI;
 
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.AsyncClientHttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
@@ -50,13 +48,11 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	public AsyncClientHttpRequest createAsyncRequest(URI uri, HttpMethod httpMethod)
 			throws IOException {
 		AsyncClientHttpRequest request = this.delegate.createAsyncRequest(uri, httpMethod);
-		Span span = getCurrentSpan();
-		if (span == null) {
-			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
+		if (!isTracing()) {
+			doNotSampleThisSpan(request);
 			return request;
 		}
-		enrichWithTraceHeaders(request, span);
-		publish(new ClientSentEvent(this, span));
+		publishStartEvent(request);
 		return request;
 	}
 }

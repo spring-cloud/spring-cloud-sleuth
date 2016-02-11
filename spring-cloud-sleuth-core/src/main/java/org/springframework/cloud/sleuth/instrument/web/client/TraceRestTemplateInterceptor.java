@@ -17,9 +17,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
 
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -45,14 +43,13 @@ public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterc
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
-		Span span = getCurrentSpan();
-		if (span == null) {
-			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
+		if (!isTracing()) {
+			doNotSampleThisSpan(request);
 			return execution.execute(request, body);
 		}
-		enrichWithTraceHeaders(request, span);
-		publish(new ClientSentEvent(this, span));
+		publishStartEvent(request);
 		return new TraceHttpResponse(this, execution.execute(request, body));
 	}
+
 
 }
