@@ -36,8 +36,14 @@ public class SpanNameTest {
 
 	@Test
 	public void should_return_span_name_together_with_fragment_when_fragment_was_passed() {
-		then(new SpanName("component", "address", "fragment").toString())
+		then(new SpanName("component", "address", "fragment").toLongString())
 				.isEqualTo("component:address#fragment");
+	}
+
+	@Test
+	public void should_return_span_name_without_fragment_by_default() {
+		then(new SpanName("component", "address", "fragment").toString())
+				.isEqualTo("component:address");
 	}
 
 	@Test

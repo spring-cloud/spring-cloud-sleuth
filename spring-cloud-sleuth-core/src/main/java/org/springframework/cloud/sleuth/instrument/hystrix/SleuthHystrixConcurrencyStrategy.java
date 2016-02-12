@@ -1,16 +1,15 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import java.util.concurrent.Callable;
-
 import javax.annotation.PreDestroy;
-
-import org.slf4j.Logger;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
-import org.springframework.cloud.sleuth.Tracer;
+import java.util.concurrent.Callable;
 
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
+import org.slf4j.Logger;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanHolder;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.Tracer;
 
 public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
 
@@ -59,26 +58,14 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 
 		@Override
 		public S call() throws Exception {
-			Span span = this.parent;
-			boolean created = false;
-			if (span != null) {
-				span = this.tracer.continueSpan(span);
-			}
-			else {
-				span = this.tracer.startTrace(new SpanName(HYSTRIX_COMPONENT,
-						Thread.currentThread().getName()));
-				created = true;
-			}
+			SpanHolder span = SpanHolder.span(this.tracer).startOrContinueSpan(
+					new SpanName(HYSTRIX_COMPONENT, Thread.currentThread().getName()),
+					this.parent);
 			try {
 				return this.callable.call();
 			}
 			finally {
-				if (created) {
-					this.tracer.close(span);
-				}
-				else {
-					this.tracer.detach(span);
-				}
+				span.closeOrDetach();
 			}
 		}
 

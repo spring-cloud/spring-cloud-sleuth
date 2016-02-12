@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanHolder;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 
@@ -47,13 +47,8 @@ public class TraceAsyncAspect {
 		SpanName spanName = new SpanName(ASYNC_COMPONENT,
 				pjp.getTarget().getClass().getSimpleName(),
 				"method=" + pjp.getSignature().getName());
-		Span span = this.tracer.startTrace(spanName);
-		try {
-			return pjp.proceed();
-		}
-		finally {
-			this.tracer.close(span);
-		}
+		SpanHolder.span(this.tracer).startOrContinueSpan(spanName);
+		return pjp.proceed();
 	}
 
 }

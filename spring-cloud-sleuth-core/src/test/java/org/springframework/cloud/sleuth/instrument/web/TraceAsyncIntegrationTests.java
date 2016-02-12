@@ -3,23 +3,25 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.jayway.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanHolder;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.jayway.awaitility.Awaitility;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -57,7 +59,7 @@ public class TraceAsyncIntegrationTests {
 				then(span)
 						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
 						.hasNameNotEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
-				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName()).
+				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanNameFromTag()).
 						isEqualTo(SpanName.fromString("async:ClassPerformingAsyncLogic#method=invokeAsynchronousLogic"));
 			}
 		});
@@ -76,6 +78,11 @@ public class TraceAsyncIntegrationTests {
 		@Bean
 		ClassPerformingAsyncLogic asyncClass() {
 			return new ClassPerformingAsyncLogic();
+		}
+
+		@Bean
+		Sampler defaultSampler() {
+			return new AlwaysSampler();
 		}
 
 	}
@@ -101,6 +108,16 @@ public class TraceAsyncIntegrationTests {
 				return null;
 			}
 			return this.span.get().getName();
+		}
+
+		public SpanName getSpanNameFromTag() {
+			if (this.span.get() != null && this.span.get().getName() == null) {
+				return null;
+			}
+			if (!this.span.get().tags().containsKey(SpanHolder.SPAN_NAME_HEADER)) {
+				return null;
+			}
+			return SpanName.fromString(this.span.get().tags().get(SpanHolder.SPAN_NAME_HEADER));
 		}
 	}
 }

@@ -44,8 +44,6 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 		return getScheduledExecutorService().schedule(r, delay, unit);
 	}
 
-
-
 	@Override
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
 		Callable<V> c = new TraceCallable<>(this.tracer,callable);

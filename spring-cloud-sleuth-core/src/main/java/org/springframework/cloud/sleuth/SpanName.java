@@ -75,8 +75,7 @@ public class SpanName {
 		return new SpanName(protocol, address, fragment);
 	}
 
-	@Override
-	public String toString() {
+	public String toLongString() {
 		if (this.equals(NO_NAME)) {
 			return "";
 		}
@@ -85,6 +84,18 @@ public class SpanName {
 			return baseName + "#" + this.fragment;
 		}
 		return baseName;
+	}
+
+	public boolean hasFragment() {
+		return StringUtils.hasText(this.fragment);
+	}
+
+	@Override
+	public String toString() {
+		if (this.equals(NO_NAME)) {
+			return "";
+		}
+		return this.component + ":" + this.address;
 	}
 
 	@Override

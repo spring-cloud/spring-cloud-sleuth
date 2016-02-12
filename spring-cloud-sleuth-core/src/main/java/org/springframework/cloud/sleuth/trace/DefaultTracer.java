@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanHolder;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
@@ -80,6 +81,9 @@ public class DefaultTracer implements Tracer {
 				span = Span.builder().begin(span.getBegin()).name(name).traceId(id)
 						.spanId(id).exportable(false).build();
 			}
+			if (name.hasFragment()) {
+				SpanHolder.tagWithSpanName(name, this);
+			}
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
 		}
 		return continueSpan(span);
@@ -111,7 +115,7 @@ public class DefaultTracer implements Tracer {
 		Span savedSpan = span.getSavedSpan();
 		if (!span.equals(cur)) {
 			ExceptionUtils.warn(
-					"Tried to close span but " + "it is not the current span: " + span
+					"Tried to close span but it is not the current span: " + span
 							+ ".  You may have forgotten to close or detach " + cur);
 		}
 		else {
