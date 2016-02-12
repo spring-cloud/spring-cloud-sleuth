@@ -43,9 +43,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = this.tracer.startTrace(new SpanName("http", "existing"));
-		this.tracer.continueSpan(span);
-		return span;
+		return this.tracer.startTrace(new SpanName("http", "existing"));
 	}
 
 	private void whenAsyncProcessingTakesPlace() {
@@ -58,7 +56,7 @@ public class TraceAsyncIntegrationTests {
 			public void run() {
 				then(span)
 						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
-						.hasNameNotEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
+						.hasNameEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
 				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanNameFromTag()).
 						isEqualTo(SpanName.fromString("async:ClassPerformingAsyncLogic#method=invokeAsynchronousLogic"));
 			}

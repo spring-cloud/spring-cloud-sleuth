@@ -89,6 +89,13 @@ public class SpanHolder {
 		}
 	}
 
+	public Span closeIfCreated() {
+		if (this.created) {
+			return this.tracer.close(this.span);
+		}
+		return this.span;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {

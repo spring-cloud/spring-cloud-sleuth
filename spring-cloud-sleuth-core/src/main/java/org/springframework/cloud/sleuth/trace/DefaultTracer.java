@@ -26,6 +26,7 @@ import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
+import org.springframework.cloud.sleuth.event.SpanDetachedEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.async.TraceRunnable;
@@ -81,7 +82,7 @@ public class DefaultTracer implements Tracer {
 				span = Span.builder().begin(span.getBegin()).name(name).traceId(id)
 						.spanId(id).exportable(false).build();
 			}
-			if (name.hasFragment()) {
+			if (name != null && name.hasFragment()) {
 				SpanHolder.tagWithSpanName(name, this);
 			}
 			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
@@ -102,6 +103,7 @@ public class DefaultTracer implements Tracer {
 		}
 		else {
 			SpanContextHolder.removeCurrentSpan();
+			this.publisher.publishEvent(new SpanDetachedEvent(this, cur));
 		}
 		return span.getSavedSpan();
 	}

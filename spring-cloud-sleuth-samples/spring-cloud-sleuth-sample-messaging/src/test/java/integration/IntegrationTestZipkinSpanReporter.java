@@ -16,12 +16,11 @@
 package integration;
 
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
-
 import zipkin.Span;
 
 /**
@@ -34,12 +33,17 @@ public class IntegrationTestZipkinSpanReporter implements ZipkinSpanReporter {
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(IntegrationTestZipkinSpanReporter.class);
 
-	public List<Span> hashedSpans = Collections.synchronizedList(new LinkedList<>());
+	public Set<Span> hashedSpans = Collections.synchronizedSet(new HashSet<>());
 
 	@Override
 	public void report(Span span) {
-		log.debug(span);
-		this.hashedSpans.add(span);
+		log.info("Received span [" + span + "]");
+		Span spanToSave = span;
+		if (this.hashedSpans.contains(span)) {
+			Span storedSpan = this.hashedSpans.stream().filter(span1 -> span1.equals(span)).findFirst().get();
+			spanToSave = new Span.Builder(storedSpan).merge(span).build();
+		}
+		this.hashedSpans.add(spanToSave);
 	}
 
 }

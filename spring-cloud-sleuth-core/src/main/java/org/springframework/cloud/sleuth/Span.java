@@ -77,8 +77,8 @@ public class Span {
 		this.remote = current.isRemote();
 		this.exportable = current.isExportable();
 		this.processId = current.getProcessId();
-		this.tags.putAll(current.tags());
-		this.logs.addAll(current.logs());
+		this.tags.putAll(current.tags);
+		this.logs.addAll(current.logs);
 		this.savedSpan = savedSpan;
 	}
 

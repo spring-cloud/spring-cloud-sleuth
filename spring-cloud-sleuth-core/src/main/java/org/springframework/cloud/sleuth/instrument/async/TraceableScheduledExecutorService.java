@@ -40,25 +40,25 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.tracer, command);
+		Runnable r = new TraceContinuingRunnable(this.tracer, command);
 		return getScheduledExecutorService().schedule(r, delay, unit);
 	}
 
 	@Override
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-		Callable<V> c = new TraceCallable<>(this.tracer,callable);
+		Callable<V> c = new TraceContinuingCallable<>(this.tracer,callable);
 		return getScheduledExecutorService().schedule(c, delay, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.tracer, command);
+		Runnable r = new TraceContinuingRunnable(this.tracer, command);
 		return getScheduledExecutorService().scheduleAtFixedRate(r, initialDelay, period, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.tracer, command);
+		Runnable r = new TraceContinuingRunnable(this.tracer, command);
 		return getScheduledExecutorService().scheduleWithFixedDelay(r, initialDelay, delay, unit);
 	}
 

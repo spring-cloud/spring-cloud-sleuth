@@ -47,8 +47,13 @@ public class TraceAsyncAspect {
 		SpanName spanName = new SpanName(ASYNC_COMPONENT,
 				pjp.getTarget().getClass().getSimpleName(),
 				"method=" + pjp.getSignature().getName());
-		SpanHolder.span(this.tracer).startOrContinueSpan(spanName);
-		return pjp.proceed();
+		SpanHolder span = SpanHolder.span(this.tracer).startOrContinueSpan(spanName);
+		try {
+			return pjp.proceed();
+		} finally {
+			// not detaching since the same thread is used by the lazyexecutor
+			span.closeIfCreated();
+		}
 	}
 
 }

@@ -53,7 +53,7 @@ public class TraceSchedulingAspect {
 				pjp.getTarget().getClass().getSimpleName(),
 				"method=" + pjp.getSignature().getName());
 		Span span = this.tracer.startTrace(new SpanName(spanName.component, spanName.address));
-		span.tag(SpanHolder.SPAN_NAME_HEADER, spanName.toString());
+		this.tracer.addTag(SpanHolder.SPAN_NAME_HEADER, spanName.toString());
 		try {
 			return pjp.proceed();
 		}

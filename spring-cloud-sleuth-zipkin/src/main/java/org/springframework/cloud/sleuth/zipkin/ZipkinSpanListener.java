@@ -27,10 +27,10 @@ import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
+import org.springframework.cloud.sleuth.event.SpanDetachedEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-
 import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
@@ -106,6 +106,18 @@ public class ZipkinSpanListener {
 		// Ending a span in zipkin means adding duration and sending it out
 		// Zipkin Span.duration corresponds with Sleuth's Span.begin and end
 		assert event.getSpan().getEnd() != 0;
+		if (event.getSpan().isExportable()) {
+			this.reporter.report(convert(event.getSpan()));
+		}
+	}
+
+	/**
+	 * TODO: Assume that the recipient can merge span?
+	 * @param event
+	 */
+	@EventListener
+	@Order(0)
+	public void release(SpanDetachedEvent event) {
 		if (event.getSpan().isExportable()) {
 			this.reporter.report(convert(event.getSpan()));
 		}
