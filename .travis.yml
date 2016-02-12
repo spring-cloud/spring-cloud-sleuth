@@ -10,22 +10,19 @@ before_install:
   - gem install asciidoctor
 install:
 - ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
-- 'if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then ./docs/src/main/asciidoc/ghpages.sh; fi'
+- '[ "${MVN_GOAL}" == "deploy" ] && ./docs/src/main/asciidoc/ghpages.sh'
+script:
+- './mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu -Dmaven.test.redirectTestOutputToFile=true'
 env:
   global:
-  - GIT_NAME="Spencer Gibb"
-  - GIT_EMAIL=sgibb@pivotal.io
-  - CI_DEPLOY_USERNAME=sgibb
+  - GIT_NAME="Dave Syer"
+  - GIT_EMAIL=dsyer@pivotal.io
+  - CI_DEPLOY_USERNAME=buildmaster
+  - FEATURE_BRANCH=$(echo ${TRAVIS_BRANCH} | grep "^.*/.*$" && echo true || echo false)
+  - MVN_GOAL=$([ "${TRAVIS_PULL_REQUEST}" == "false" -a "${TRAVIS_TAG}" == "" -a "${FEATURE_BRANCH}" == "false" ] && echo deploy || echo install)
+  - VERSION=$(mvn validate | grep Building | head -1 | sed -e 's/.* //')
+  - MILESTONE=$(echo ${VERSION} | egrep 'M|RC' && echo true || echo false)
+  - MVN_PROFILE=$([ "${MILESTONE}" == "true" ] && echo -P milestone)
   - secure: dxec/7oFht2WMaw4GNFNvuWHlnkm1wmFagE3ZrtCcU2SHUW/P2FgG5tiNW9hT2eXHf2H0YUF1ROkL4BrH5qpIlOBtYd0J8Q/67vBqyB112IN2FqoB/F6Erkfp1FKMBBrXXYaGoSvqzmJs6zqS3JRpyr010W2aU8klK0QfqRoJ0g=
   - TERM=dumb
-script: |
-  echo "Current Branch: ${TRAVIS_BRANCH}"
-  echo "Pull Request: ${TRAVIS_PULL_REQUEST}"
-  if [ "${TRAVIS_BRANCH}" = master ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
-    echo "[Publishing] Pushing snapshot to Sonatype"
-    ./mvnw -s .settings.xml deploy -nsu
-  else
-    echo "[Installing] Intalling snapshot to local maven repo"
-    ./mvnw install -nsu
-  fi
 
