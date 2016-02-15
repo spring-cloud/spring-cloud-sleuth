@@ -20,7 +20,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanHolder;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -50,8 +49,7 @@ public class TraceSchedulingAspect {
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
 		String spanName = SCHEDULED_COMPONENT + ":" + pjp.getTarget().getClass().getSimpleName();
 		Span span = this.tracer.startTrace(spanName);
-		SpanHolder.tagWithSpanName(spanName + "#method=" + pjp.getSignature().getName(), this.tracer);
-		this.tracer.addTag(SpanHolder.SPAN_NAME_HEADER, spanName.toString());
+		this.tracer.addTag(Span.SPAN_ORIGIN_TAG, spanName + "#method=" + pjp.getSignature().getName());
 		try {
 			return pjp.proceed();
 		}

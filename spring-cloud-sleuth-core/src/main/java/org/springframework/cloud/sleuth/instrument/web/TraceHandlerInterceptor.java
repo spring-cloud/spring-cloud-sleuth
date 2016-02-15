@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanHolder;
+import org.springframework.cloud.sleuth.SpanStarter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -34,11 +34,12 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 	private static final String ATTR_NAME = "__CURRENT_TRACE_HANDLER_TRACE_ATTR___";
 
 	private final Tracer tracer;
-
+	private final SpanStarter spanStarter;
 	private final UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceHandlerInterceptor(Tracer tracer) {
 		this.tracer = tracer;
+		this.spanStarter = new SpanStarter(tracer);
 	}
 
 	@Override
@@ -49,8 +50,8 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		String spanName = "http:" + uri;
 		String taggedSpanName = spanName + "#interceptor=traceHandlerInterceptor";
-		Span span = SpanHolder.span(this.tracer).startOrContinueSpan(spanName).span;
-		SpanHolder.tagWithSpanName(taggedSpanName, this.tracer);
+		Span span = this.spanStarter.startOrContinueSpan(spanName).span;
+		this.tracer.addTag(Span.SPAN_ORIGIN_TAG, taggedSpanName);
 		request.setAttribute(ATTR_NAME, span);
 		return true;
 	}

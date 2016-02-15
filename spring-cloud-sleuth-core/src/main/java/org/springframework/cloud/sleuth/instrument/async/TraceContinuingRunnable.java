@@ -22,24 +22,25 @@ import org.springframework.cloud.sleuth.Tracer;
 /**
  * @author Spencer Gibb
  */
-public class TraceContinuingRunnable extends TraceDelegate<Runnable> implements Runnable {
+public class TraceContinuingRunnable extends TraceContinuingDelegate<Runnable> implements Runnable {
 
 	public TraceContinuingRunnable(Tracer tracer, Runnable delegate) {
 		super(tracer, delegate);
 	}
 
-	public TraceContinuingRunnable(Tracer tracer, Runnable delegate, String name) {
+	public TraceContinuingRunnable(Tracer tracer, Runnable delegate,
+			String name) {
 		super(tracer, delegate, name);
 	}
 
 	@Override
 	public void run() {
-		SpanHolder span = SpanHolder.span(getTracer()).startOrContinueSpan(getSpanName(), getParent());
+		SpanHolder span = getSpanStarter().startOrContinueSpan(getSpanName(), getParent());
 		try {
 			this.getDelegate().run();
 		}
 		finally {
-			span.closeOrDetach();
+			getSpanStarter().closeOrDetach(span);
 		}
 	}
 }

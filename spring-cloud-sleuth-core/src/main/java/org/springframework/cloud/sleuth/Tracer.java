@@ -72,7 +72,7 @@ public interface Tracer extends SpanAccessor {
 	/**
 	 * Start a new span if the sampler allows it or if we are already tracing in this
 	 * thread. A sampler can be used to limit the number of traces created.
-	 *  @param name the name of the span
+	 * @param name the name of the span
 	 * @param sampler a sampler to decide whether to create the span or not
 	 */
 	Span startTrace(String name, Sampler sampler);

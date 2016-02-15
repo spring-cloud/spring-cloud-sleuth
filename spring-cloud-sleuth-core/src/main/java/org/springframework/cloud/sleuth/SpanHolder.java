@@ -19,81 +19,19 @@ package org.springframework.cloud.sleuth;
 import java.util.Objects;
 
 /**
- *
- * TODO: This class is not the best of solutions
+ * Holder for Spans to keep information about whether the span
+ * was created or continued
  *
  * @author Marcin Grzejszczak
  */
 public class SpanHolder {
 
-	public static final String SPAN_NAME_HEADER = "span.name";
-
 	public final Span span;
-	private final boolean created;
-	private final Tracer tracer;
+	final boolean created;
 
-	protected SpanHolder(Span span, boolean created, Tracer tracer) {
+	SpanHolder(Span span, boolean created) {
 		this.span = span;
 		this.created = created;
-		this.tracer = tracer;
-	}
-
-	private SpanHolder(Tracer tracer) {
-		this.span = null;
-		this.created = false;
-		this.tracer = tracer;
-	}
-
-	public static SpanHolder span(Tracer tracer) {
-		return new SpanHolder(tracer);
-	}
-
-	/**
-	 * TODO: Exists only to easily find executions in the code
-	 */
-	public static void tagWithSpanName(String spanName, Tracer tracer) {
-		if (spanName != null) {
-			tracer.addTag(SPAN_NAME_HEADER, spanName);
-		}
-	}
-
-	public SpanHolder startOrContinueSpan(String spanName) {
-		Span span = this.tracer.getCurrentSpan();
-		return startOrContinueSpan(spanName, span);
-	}
-
-	public SpanHolder startOrContinueSpan(String spanName, Span span) {
-		boolean created = false;
-		if (span != null) {
-			span = this.tracer.continueSpan(span);
-		}
-		else {
-			span = this.tracer.startTrace(spanName);
-			created = true;
-		}
-		SpanHolder newSpan = new SpanHolder(span, created, this.tracer);
-		newSpan.tagSpanName(spanName);
-		return newSpan;
-	}
-
-	private void tagSpanName(String spanName) {
-		tagWithSpanName(spanName, this.tracer);
-	}
-
-	public Span closeOrDetach() {
-		if (this.created) {
-			return this.tracer.close(this.span);
-		}
-		else {
-			return this.tracer.detach(this.span);
-		}
-	}
-
-	public Span closeIfCreated() {
-		if (this.created) {
-			return this.tracer.close(this.span);
-		}
-		return this.span;
 	}
 
 	@Override

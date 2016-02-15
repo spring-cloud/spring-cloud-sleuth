@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,28 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.util.concurrent.Callable;
-
-import org.springframework.cloud.sleuth.SpanHolder;
+import org.springframework.cloud.sleuth.SpanStarter;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * @author Spencer Gibb
+ * TraceDelegate that grants access to SpanStarter's utility methods
+ *
+ * @author Marcin Grzejszczak
  */
-public class TraceContinuingCallable<V> extends TraceContinuingDelegate<Callable<V>> implements Callable<V> {
+public abstract class TraceContinuingDelegate<T> extends TraceDelegate<T> {
 
-	public TraceContinuingCallable(Tracer tracer, Callable<V> delegate) {
-		super(tracer, delegate);
+	private final SpanStarter spanStarter;
+
+	public TraceContinuingDelegate(Tracer tracer, T delegate) {
+		this(tracer, delegate, null);
 	}
 
-	public TraceContinuingCallable(Tracer tracer, Callable<V> delegate, String name) {
+	public TraceContinuingDelegate(Tracer tracer, T delegate, String name) {
 		super(tracer, delegate, name);
+		this.spanStarter = new SpanStarter(tracer);
 	}
 
-	@Override
-	public V call() throws Exception {
-		SpanHolder span = getSpanStarter().startOrContinueSpan(getSpanName(), getParent());
-		try {
-			return this.getDelegate().call();
-		}
-		finally {
-			getSpanStarter().closeOrDetach(span);
-		}
+	public SpanStarter getSpanStarter() {
+		return this.spanStarter;
 	}
 }

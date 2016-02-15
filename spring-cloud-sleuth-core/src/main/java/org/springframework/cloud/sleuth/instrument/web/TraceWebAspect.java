@@ -24,8 +24,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.cloud.sleuth.SpanHolder;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
@@ -104,7 +104,7 @@ public class TraceWebAspect {
 		if (this.accessor.isTracing()) {
 			log.debug("Wrapping callable with span ["
 					+ this.accessor.getCurrentSpan() + "]");
-			SpanHolder.tagWithSpanName(spanName(pjp), this.tracer);
+			this.tracer.addTag(Span.SPAN_ORIGIN_TAG, spanName(pjp));
 			return new TraceContinuingCallable<>(this.tracer, callable);
 		}
 		else {
@@ -127,7 +127,7 @@ public class TraceWebAspect {
 						+ this.accessor.getCurrentSpan() + "]");
 				Field callableField = WebAsyncTask.class.getDeclaredField("callable");
 				callableField.setAccessible(true);
-				SpanHolder.tagWithSpanName(spanName(pjp), this.tracer);
+				this.tracer.addTag(Span.SPAN_ORIGIN_TAG, spanName(pjp));
 				callableField.set(webAsyncTask, new TraceContinuingCallable<>(this.tracer,
 						webAsyncTask.getCallable()));
 			} catch (NoSuchFieldException ex) {

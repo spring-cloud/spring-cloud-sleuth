@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 import com.netflix.hystrix.HystrixCommand;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanHolder;
+import org.springframework.cloud.sleuth.SpanStarter;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -35,24 +36,24 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
 	private static final String HYSTRIX_COMPONENT = "hystrix";
 
-	private final Tracer tracer;
+	private final SpanStarter spanStarter;
 	private final Span parentSpan;
 
 	protected TraceCommand(Tracer tracer, Setter setter) {
 		super(setter);
-		this.tracer = tracer;
+		this.spanStarter = new SpanStarter(tracer);
 		this.parentSpan = tracer.getCurrentSpan();
 	}
 
 	@Override
 	protected R run() throws Exception {
 		String spanName = HYSTRIX_COMPONENT + ":" + getCommandKey().name();
-		SpanHolder span = SpanHolder.span(this.tracer).startOrContinueSpan(spanName, this.parentSpan);
+		SpanHolder span = this.spanStarter.startOrContinueSpan(spanName, this.parentSpan);
 		try {
 			return doRun();
 		}
 		finally {
-			span.closeOrDetach();
+			this.spanStarter.closeOrDetach(span);
 		}
 	}
 

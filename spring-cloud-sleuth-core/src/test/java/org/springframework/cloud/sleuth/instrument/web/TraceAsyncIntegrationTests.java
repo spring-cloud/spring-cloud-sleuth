@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanHolder;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -56,7 +55,7 @@ public class TraceAsyncIntegrationTests {
 				then(span)
 						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
 						.hasNameEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
-				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanNameFromTag()).
+				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanOriginFromTag()).
 						isEqualTo("async:ClassPerformingAsyncLogic#method=invokeAsynchronousLogic");
 			}
 		});
@@ -107,14 +106,14 @@ public class TraceAsyncIntegrationTests {
 			return this.span.get().getName();
 		}
 
-		public String getSpanNameFromTag() {
+		public String getSpanOriginFromTag() {
 			if (this.span.get() != null && this.span.get().getName() == null) {
 				return null;
 			}
-			if (!this.span.get().tags().containsKey(SpanHolder.SPAN_NAME_HEADER)) {
+			if (!this.span.get().tags().containsKey(Span.SPAN_ORIGIN_TAG)) {
 				return null;
 			}
-			return this.span.get().tags().get(SpanHolder.SPAN_NAME_HEADER);
+			return this.span.get().tags().get(Span.SPAN_ORIGIN_TAG);
 		}
 	}
 }
