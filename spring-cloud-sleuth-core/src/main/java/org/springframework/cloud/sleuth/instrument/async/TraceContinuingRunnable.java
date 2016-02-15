@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.cloud.sleuth.SpanHolder;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -29,7 +28,7 @@ public class TraceContinuingRunnable extends TraceDelegate<Runnable> implements 
 		super(tracer, delegate);
 	}
 
-	public TraceContinuingRunnable(Tracer tracer, Runnable delegate, SpanName name) {
+	public TraceContinuingRunnable(Tracer tracer, Runnable delegate, String name) {
 		super(tracer, delegate, name);
 	}
 

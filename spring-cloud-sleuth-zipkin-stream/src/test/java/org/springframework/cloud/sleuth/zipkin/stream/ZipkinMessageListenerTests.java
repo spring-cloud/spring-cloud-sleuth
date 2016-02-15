@@ -18,18 +18,16 @@ package org.springframework.cloud.sleuth.zipkin.stream;
 
 import java.util.Collections;
 
-import org.springframework.cloud.sleuth.SpanName;
-import zipkin.BinaryAnnotation;
-import zipkin.Endpoint;
-
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
+import zipkin.BinaryAnnotation;
+import zipkin.Endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ZipkinMessageListenerTests {
-	Span span = new Span(1, 3, new SpanName("http", "name"), 1L, Collections.<Long>emptyList(), 2L, true, true,
+	Span span = new Span(1, 3, "http:name", 1L, Collections.<Long>emptyList(), 2L, true, true,
 			"process");
 	Host host = new Host("myservice", "1.2.3.4", 8080);
 	Endpoint endpoint = Endpoint.create("myservice", 1 << 24 | 2 << 16 | 3 << 8 | 4, 8080);
@@ -82,7 +80,7 @@ public class ZipkinMessageListenerTests {
 	// TODO: "unknown" bc process id, documented as not nullable, is null in some tests.
 	@Test
 	public void nullProcessIdCoercesToUnknownServiceName() {
-		Span noProcessId = Span.builder().traceId(1L).name(new SpanName("http", "parent")).remote(true).build();
+		Span noProcessId = Span.builder().traceId(1L).name("http:parent").remote(true).build();
 
 		zipkin.Span result = SamplingZipkinSpanIterator.convert(noProcessId, this.host);
 

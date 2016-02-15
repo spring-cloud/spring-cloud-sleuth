@@ -15,6 +15,10 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,14 +26,8 @@ import java.util.Enumeration;
 import java.util.Random;
 import java.util.regex.Pattern;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
@@ -119,7 +117,7 @@ public class TraceFilter extends OncePerRequestFilter
 		}
 
 		String protocol = "http";
-		SpanName name = new SpanName(protocol, uri);
+		String name = protocol + ":" + uri;
 		if (spanFromRequest == null) {
 			if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
 				long traceId = Span
@@ -135,10 +133,10 @@ public class TraceFilter extends OncePerRequestFilter
 				String processId = getHeader(request, response, Span.PROCESS_ID_NAME);
 				String parentName = getHeader(request, response, Span.SPAN_NAME_NAME);
 				if (StringUtils.hasText(parentName)) {
-					span.name(SpanName.fromString(parentName));
+					span.name(parentName);
 				}
 				else {
-					span.name(new SpanName(protocol, "/parent" + uri));
+					span.name(protocol + ":" + "/parent" + uri);
 				}
 				if (StringUtils.hasText(processId)) {
 					span.processId(processId);

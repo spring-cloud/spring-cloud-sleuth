@@ -12,7 +12,6 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanHolder;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -43,7 +42,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		return this.tracer.startTrace(new SpanName("http", "existing"));
+		return this.tracer.startTrace("http:existing");
 	}
 
 	private void whenAsyncProcessingTakesPlace() {
@@ -58,7 +57,7 @@ public class TraceAsyncIntegrationTests {
 						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
 						.hasNameEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
 				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanNameFromTag()).
-						isEqualTo(SpanName.fromString("async:ClassPerformingAsyncLogic#method=invokeAsynchronousLogic"));
+						isEqualTo("async:ClassPerformingAsyncLogic#method=invokeAsynchronousLogic");
 			}
 		});
 	}
@@ -101,21 +100,21 @@ public class TraceAsyncIntegrationTests {
 			return this.span.get().getTraceId();
 		}
 
-		public SpanName getSpanName() {
+		public String getSpanName() {
 			if (this.span.get() != null && this.span.get().getName() == null) {
 				return null;
 			}
 			return this.span.get().getName();
 		}
 
-		public SpanName getSpanNameFromTag() {
+		public String getSpanNameFromTag() {
 			if (this.span.get() != null && this.span.get().getName() == null) {
 				return null;
 			}
 			if (!this.span.get().tags().containsKey(SpanHolder.SPAN_NAME_HEADER)) {
 				return null;
 			}
-			return SpanName.fromString(this.span.get().tags().get(SpanHolder.SPAN_NAME_HEADER));
+			return this.span.get().tags().get(SpanHolder.SPAN_NAME_HEADER);
 		}
 	}
 }

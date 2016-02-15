@@ -51,24 +51,24 @@ public class SpanHolder {
 	/**
 	 * TODO: Exists only to easily find executions in the code
 	 */
-	public static void tagWithSpanName(SpanName spanName, Tracer tracer) {
+	public static void tagWithSpanName(String spanName, Tracer tracer) {
 		if (spanName != null) {
-			tracer.addTag(SPAN_NAME_HEADER, spanName.toLongString());
+			tracer.addTag(SPAN_NAME_HEADER, spanName);
 		}
 	}
 
-	public SpanHolder startOrContinueSpan(SpanName spanName) {
+	public SpanHolder startOrContinueSpan(String spanName) {
 		Span span = this.tracer.getCurrentSpan();
 		return startOrContinueSpan(spanName, span);
 	}
 
-	public SpanHolder startOrContinueSpan(SpanName spanName, Span span) {
+	public SpanHolder startOrContinueSpan(String spanName, Span span) {
 		boolean created = false;
 		if (span != null) {
 			span = this.tracer.continueSpan(span);
 		}
 		else {
-			span = this.tracer.startTrace(new SpanName(spanName.component, spanName.address));
+			span = this.tracer.startTrace(spanName);
 			created = true;
 		}
 		SpanHolder newSpan = new SpanHolder(span, created, this.tracer);
@@ -76,7 +76,7 @@ public class SpanHolder {
 		return newSpan;
 	}
 
-	private void tagSpanName(SpanName spanName) {
+	private void tagSpanName(String spanName) {
 		tagWithSpanName(spanName, this.tracer);
 	}
 

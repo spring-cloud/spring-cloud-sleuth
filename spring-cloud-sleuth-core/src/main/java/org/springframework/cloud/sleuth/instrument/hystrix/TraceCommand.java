@@ -16,12 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import com.netflix.hystrix.HystrixCommand;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanHolder;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
-
-import com.netflix.hystrix.HystrixCommand;
 
 /**
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
@@ -48,7 +46,7 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
 	@Override
 	protected R run() throws Exception {
-		SpanName spanName = new SpanName(HYSTRIX_COMPONENT, getCommandKey().name());
+		String spanName = HYSTRIX_COMPONENT + ":" + getCommandKey().name();
 		SpanHolder span = SpanHolder.span(this.tracer).startOrContinueSpan(spanName, this.parentSpan);
 		try {
 			return doRun();

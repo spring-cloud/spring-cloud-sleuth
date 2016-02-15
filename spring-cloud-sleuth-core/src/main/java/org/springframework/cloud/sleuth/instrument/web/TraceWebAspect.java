@@ -26,7 +26,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.SpanHolder;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
@@ -113,10 +112,10 @@ public class TraceWebAspect {
 		}
 	}
 
-	private SpanName spanName(ProceedingJoinPoint pjp) {
-		return new SpanName(ASYNC_COMPONENT,
-					pjp.getTarget().getClass().getSimpleName(),
-					"method=" + pjp.getSignature().getName());
+	private String spanName(ProceedingJoinPoint pjp) {
+		return ASYNC_COMPONENT + ":" +
+				pjp.getTarget().getClass().getSimpleName() + "#" +
+				"method=" + pjp.getSignature().getName();
 	}
 
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
