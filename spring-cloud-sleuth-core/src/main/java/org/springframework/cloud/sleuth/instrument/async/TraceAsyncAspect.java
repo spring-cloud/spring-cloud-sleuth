@@ -20,7 +20,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.SpanHolder;
+import org.springframework.cloud.sleuth.SpanStarter;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -37,22 +38,23 @@ public class TraceAsyncAspect {
 	private static final String ASYNC_COMPONENT = "async";
 
 	private final Tracer tracer;
+	private final SpanStarter spanStarter;
 
 	public TraceAsyncAspect(Tracer tracer) {
 		this.tracer = tracer;
+		this.spanStarter = new SpanStarter(tracer);
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		SpanName spanName = new SpanName(ASYNC_COMPONENT,
-				pjp.getTarget().getClass().getSimpleName(),
-				"method=" + pjp.getSignature().getName());
-		Span span = this.tracer.startTrace(spanName);
+		String spanName = ASYNC_COMPONENT + ":" + pjp.getTarget().getClass().getSimpleName();
+		SpanHolder span = this.spanStarter.startOrContinueSpan(spanName);
+		this.tracer.addTag(Span.SPAN_ORIGIN_TAG, spanName + "#method=" + pjp.getSignature().getName());
 		try {
 			return pjp.proceed();
-		}
-		finally {
-			this.tracer.close(span);
+		} finally {
+			// not detaching since the same thread is used by the lazyexecutor
+			this.spanStarter.closeIfCreated(span);
 		}
 	}
 

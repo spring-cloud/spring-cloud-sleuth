@@ -96,11 +96,18 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		then(this.integrationTestSpanCollector.hashedSpans.stream()
 				.map(s -> s.binaryAnnotations)
 				.flatMap(Collection::stream)
-				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
+				.anyMatch(b -> b.key.equals(binaryAnnotationKey)))
+				.as("there is at least one binary annotation with key [" +
+						binaryAnnotationKey + "]" + " and the spans are [" +
+						this.integrationTestSpanCollector.hashedSpans + "]")
+				.isTrue();
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
-		then(this.integrationTestSpanCollector.hashedSpans.stream().allMatch(span -> span.traceId == traceId)).isTrue();
+		then(this.integrationTestSpanCollector.hashedSpans.stream()
+				.allMatch(span -> span.traceId == traceId))
+				.as("all spans have equal trace id")
+				.isTrue();
 	}
 
 	private void thenTheSpansHaveProperParentStructure() {

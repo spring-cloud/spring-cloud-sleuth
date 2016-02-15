@@ -16,30 +16,31 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanHolder;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * @author Spencer Gibb
  */
-public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
+public class TraceContinuingRunnable extends TraceContinuingDelegate<Runnable> implements Runnable {
 
-	public TraceRunnable(Tracer tracer, Runnable delegate) {
+	public TraceContinuingRunnable(Tracer tracer, Runnable delegate) {
 		super(tracer, delegate);
 	}
 
-	public TraceRunnable(Tracer tracer, Runnable delegate, String name) {
+	public TraceContinuingRunnable(Tracer tracer, Runnable delegate,
+			String name) {
 		super(tracer, delegate, name);
 	}
 
 	@Override
 	public void run() {
-		Span span = startSpan();
+		SpanHolder span = getSpanStarter().startOrContinueSpan(getSpanName(), getParent());
 		try {
 			this.getDelegate().run();
 		}
 		finally {
-			close(span);
+			getSpanStarter().closeOrDetach(span);
 		}
 	}
 }

@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.ApplicationListener;
@@ -91,7 +90,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 
 	@RequestMapping("/traced")
 	public String traced() throws InterruptedException {
-		Span span = this.tracer.startTrace(new SpanName("http", "customTraceEndpoint"),
+		Span span = this.tracer.startTrace("http:customTraceEndpoint",
 				new AlwaysSampler());
 		int millis = this.random.nextInt(1000);
 		log.info("Sleeping for {} millis", millis);

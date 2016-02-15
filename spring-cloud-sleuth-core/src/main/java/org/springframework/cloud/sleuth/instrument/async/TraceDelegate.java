@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -29,14 +28,14 @@ public abstract class TraceDelegate<T> {
 
 	private final Tracer tracer;
 	private final T delegate;
-	private final SpanName name;
+	private final String name;
 	private final Span parent;
 
 	public TraceDelegate(Tracer tracer, T delegate) {
 		this(tracer, delegate, null);
 	}
 
-	public TraceDelegate(Tracer tracer, T delegate, SpanName name) {
+	public TraceDelegate(Tracer tracer, T delegate, String name) {
 		this.tracer = tracer;
 		this.delegate = delegate;
 		this.name = name;
@@ -51,9 +50,9 @@ public abstract class TraceDelegate<T> {
 		return this.tracer.joinTrace(getSpanName(), this.parent);
 	}
 
-	protected SpanName getSpanName() {
+	protected String getSpanName() {
 		return this.name == null ?
-				new SpanName(ASYNC_COMPONENT, Thread.currentThread().getName())
+				ASYNC_COMPONENT + ":" + Thread.currentThread().getName()
 				: this.name;
 	}
 
@@ -65,7 +64,7 @@ public abstract class TraceDelegate<T> {
 		return this.delegate;
 	}
 
-	public SpanName getName() {
+	public String getName() {
 		return this.name;
 	}
 

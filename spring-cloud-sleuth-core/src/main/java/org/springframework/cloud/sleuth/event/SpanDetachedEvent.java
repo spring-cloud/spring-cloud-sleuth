@@ -14,32 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.event;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * @author Spencer Gibb
+ *
+ * TODO: Don't know if it makes sense
+ *
+ * @author Marcin Grzejszczak
  */
-public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
+@SuppressWarnings("serial")
+public class SpanDetachedEvent extends SpanContainingEvent {
 
-	public TraceRunnable(Tracer tracer, Runnable delegate) {
-		super(tracer, delegate);
+	public SpanDetachedEvent(Object source, Span span) {
+		super(source, span);
 	}
 
-	public TraceRunnable(Tracer tracer, Runnable delegate, String name) {
-		super(tracer, delegate, name);
-	}
-
-	@Override
-	public void run() {
-		Span span = startSpan();
-		try {
-			this.getDelegate().run();
-		}
-		finally {
-			close(span);
-		}
-	}
 }

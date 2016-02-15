@@ -47,7 +47,7 @@ public class LazyTraceExecutor implements Executor {
 				this.delegate.execute(command);
 			}
 		}
-		this.delegate.execute(new TraceRunnable(this.tracer, command));
+		this.delegate.execute(new TraceContinuingRunnable(this.tracer, command));
 	}
 
 }

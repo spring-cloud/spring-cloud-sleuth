@@ -25,7 +25,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceContextPropagationChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -66,7 +65,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@Test
 	public void testSpanPropagation() {
 
-		Span span = this.tracer.startTrace(new SpanName("http", "testSendMessage"), new AlwaysSampler());
+		Span span = this.tracer.startTrace("http:testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		Long expectedSpanId = span.getSpanId();
 		this.tracer.close(span);

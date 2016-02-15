@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -46,7 +45,6 @@ public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 
 		await().until(() -> {
 			then(this.arrayListSpanAccumulator.getSpans().stream().map(Span::getName)
-					.map(SpanName::toString)
 					.collect(
 					toList())).containsAll(asList("http:/greeting", "message:greetings",
 													"message:words", "message:counts"));

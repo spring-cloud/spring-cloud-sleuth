@@ -21,7 +21,6 @@ import java.util.Objects;
 import org.assertj.core.api.AbstractAssert;
 import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 
 public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 
@@ -45,17 +44,7 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
-	public SpanAssert hasNameNotEqualTo(SpanName name) {
-		isNotNull();
-		if (Objects.equals(this.actual.getName(), name)) {
-			String message = String.format("Expected span's name not to be <%s> but was <%s>", name, this.actual.getName());
-			log.error(message);
-			failWithMessage(message);
-		}
-		return this;
-	}
-
-	public SpanAssert hasNameEqualTo(SpanName name) {
+	public SpanAssert hasNameEqualTo(String name) {
 		isNotNull();
 		if (!Objects.equals(this.actual.getName(), name)) {
 			String message = String.format("Expected span's name to be <%s> but it was <%s>", name, this.actual.getName());

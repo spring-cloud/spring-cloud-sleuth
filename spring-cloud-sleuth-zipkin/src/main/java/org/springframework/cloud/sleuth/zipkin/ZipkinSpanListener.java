@@ -21,16 +21,16 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
+import org.springframework.cloud.sleuth.event.SpanDetachedEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-
+import org.springframework.util.StringUtils;
 import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
@@ -112,6 +112,18 @@ public class ZipkinSpanListener {
 	}
 
 	/**
+	 * TODO: Assume that the recipient can merge span?
+	 * @param event
+	 */
+	@EventListener
+	@Order(0)
+	public void release(SpanDetachedEvent event) {
+		if (event.getSpan().isExportable()) {
+			this.reporter.report(convert(event.getSpan()));
+		}
+	}
+
+	/**
 	 * Converts a given Sleuth span to a Zipkin Span.
 	 * <ul>
 	 * <li>Set ids, etc
@@ -150,8 +162,8 @@ public class ZipkinSpanListener {
 			zipkinSpan.parentId(span.getParents().get(0));
 		}
 		zipkinSpan.id(span.getSpanId());
-		if (!SpanName.NO_NAME.equals(span.getName())) {
-			zipkinSpan.name(span.getName().toString());
+		if (StringUtils.hasText(span.getName())) {
+			zipkinSpan.name(span.getName());
 		}
 		return zipkinSpan.build();
 	}

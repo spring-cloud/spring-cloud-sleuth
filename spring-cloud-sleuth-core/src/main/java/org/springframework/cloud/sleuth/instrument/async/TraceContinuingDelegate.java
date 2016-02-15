@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,28 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanStarter;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * @author Spencer Gibb
+ * TraceDelegate that grants access to SpanStarter's utility methods
+ *
+ * @author Marcin Grzejszczak
  */
-public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
+public abstract class TraceContinuingDelegate<T> extends TraceDelegate<T> {
 
-	public TraceRunnable(Tracer tracer, Runnable delegate) {
-		super(tracer, delegate);
+	private final SpanStarter spanStarter;
+
+	public TraceContinuingDelegate(Tracer tracer, T delegate) {
+		this(tracer, delegate, null);
 	}
 
-	public TraceRunnable(Tracer tracer, Runnable delegate, String name) {
+	public TraceContinuingDelegate(Tracer tracer, T delegate, String name) {
 		super(tracer, delegate, name);
+		this.spanStarter = new SpanStarter(tracer);
 	}
 
-	@Override
-	public void run() {
-		Span span = startSpan();
-		try {
-			this.getDelegate().run();
-		}
-		finally {
-			close(span);
-		}
+	public SpanStarter getSpanStarter() {
+		return this.spanStarter;
 	}
 }

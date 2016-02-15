@@ -16,7 +16,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -52,13 +51,22 @@ public class TraceableExecutorServiceTests {
 	}
 
 	@Test
-	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed()
+	public void should_propagate_trace_id_and_continue_previous_span_when_traceable_executor_service_is_executed()
 			throws Exception {
-		Span span = this.tracer.startTrace(new SpanName("http", "PARENT"));
+		Span span = this.tracer.startTrace("http:PARENT");
 		CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		this.tracer.close(span);
 
 		then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).containsOnly(span.getTraceId());
+		then(this.spanVerifyingRunnable.spanIds.stream().distinct().collect(toList())).hasSize(1);
+	}
+
+	@Test
+	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed()
+			throws Exception {
+		CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
+
+		then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).hasSize(TOTAL_THREADS);
 		then(this.spanVerifyingRunnable.spanIds.stream().distinct().collect(toList())).hasSize(TOTAL_THREADS);
 	}
 

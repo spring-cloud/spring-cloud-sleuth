@@ -52,7 +52,7 @@ public abstract class AbstractIntegrationTest {
 			.getLogger(AbstractIntegrationTest.class);
 
 	protected static int pollInterval = 1;
-	protected static int timeout = 20;
+	protected static int timeout = 200;
 	protected RestTemplate restTemplate = new AssertingRestTemplate();
 
 	@Before

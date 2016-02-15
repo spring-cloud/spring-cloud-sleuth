@@ -24,8 +24,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
+
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors
  * @author Gaurav Rai Mazra
@@ -34,13 +34,13 @@ import org.springframework.cloud.sleuth.Tracer;
 public class TraceableExecutorService implements ExecutorService {
 	final ExecutorService delegate;
 	final Tracer tracer;
-	private final SpanName spanName;
+	private final String spanName;
 
 	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer) {
 		this(delegate, tracer, null);
 	}
 
-	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer, SpanName spanName) {
+	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer, String spanName) {
 		this.delegate = delegate;
 		this.tracer = tracer;
 		this.spanName = spanName;
@@ -48,7 +48,7 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new TraceRunnable(this.tracer, command, this.spanName);
+		final Runnable r = new TraceContinuingRunnable(this.tracer, command, this.spanName);
 		this.delegate.execute(r);
 	}
 
@@ -79,19 +79,19 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new TraceCallable<>(this.tracer, task, this.spanName);
+		Callable<T> c = new TraceContinuingCallable<>(this.tracer, task, this.spanName);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new TraceRunnable(this.tracer, task, this.spanName);
+		Runnable r = new TraceContinuingRunnable(this.tracer, task, this.spanName);
 		return this.delegate.submit(r, result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = new TraceRunnable(this.tracer, task, this.spanName);
+		Runnable r = new TraceContinuingRunnable(this.tracer, task, this.spanName);
 		return this.delegate.submit(r);
 	}
 

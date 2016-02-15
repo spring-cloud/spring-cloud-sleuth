@@ -23,7 +23,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -55,7 +54,7 @@ public class TracePostZuulFilterTests {
 	@Test
 	public void filterPublishesEvent() throws Exception {
 		this.filter.setApplicationEventPublisher(this.publisher);
-		this.tracer.startTrace(new SpanName("http", "start"));
+		this.tracer.startTrace("http:start");
 		this.filter.run();
 		verify(this.publisher).publishEvent(isA(ClientReceivedEvent.class));
 	}

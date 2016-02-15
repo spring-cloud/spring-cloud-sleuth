@@ -21,10 +21,10 @@ import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
+import org.springframework.cloud.sleuth.event.SpanDetachedEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.async.TraceRunnable;
@@ -50,7 +50,7 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Span joinTrace(SpanName name, Span parent) {
+	public Span joinTrace(String name, Span parent) {
 		if (parent == null) {
 			return startTrace(name);
 		}
@@ -58,12 +58,12 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Span startTrace(SpanName name) {
+	public Span startTrace(String name) {
 		return this.startTrace(name, this.defaultSampler);
 	}
 
 	@Override
-	public Span startTrace(SpanName name, Sampler sampler) {
+	public Span startTrace(String name, Sampler sampler) {
 		Span span;
 		if (isTracing()) {
 			span = createChild(getCurrentSpan(), name);
@@ -98,6 +98,7 @@ public class DefaultTracer implements Tracer {
 		}
 		else {
 			SpanContextHolder.removeCurrentSpan();
+			this.publisher.publishEvent(new SpanDetachedEvent(this, cur));
 		}
 		return span.getSavedSpan();
 	}
@@ -111,7 +112,7 @@ public class DefaultTracer implements Tracer {
 		Span savedSpan = span.getSavedSpan();
 		if (!span.equals(cur)) {
 			ExceptionUtils.warn(
-					"Tried to close span but " + "it is not the current span: " + span
+					"Tried to close span but it is not the current span: " + span
 							+ ".  You may have forgotten to close or detach " + cur);
 		}
 		else {
@@ -129,7 +130,7 @@ public class DefaultTracer implements Tracer {
 		return savedSpan;
 	}
 
-	protected Span createChild(Span parent, SpanName name) {
+	protected Span createChild(Span parent, String name) {
 		long id = createId();
 		if (parent == null) {
 			Span span = Span.builder().begin(System.currentTimeMillis()).name(name)

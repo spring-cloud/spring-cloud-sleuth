@@ -55,7 +55,7 @@ public interface Tracer extends SpanAccessor {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	Span startTrace(SpanName name);
+	Span startTrace(String name);
 
 	/**
 	 * Creates a new Span with a specific parent. The parent might be in another
@@ -67,15 +67,15 @@ public interface Tracer extends SpanAccessor {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	Span joinTrace(SpanName name, Span parent);
+	Span joinTrace(String name, Span parent);
 
 	/**
 	 * Start a new span if the sampler allows it or if we are already tracing in this
 	 * thread. A sampler can be used to limit the number of traces created.
-	 *  @param name the name of the span
+	 * @param name the name of the span
 	 * @param sampler a sampler to decide whether to create the span or not
 	 */
-	Span startTrace(SpanName name, Sampler sampler);
+	Span startTrace(String name, Sampler sampler);
 
 	/**
 	 * Pick up an existing span from another thread.
