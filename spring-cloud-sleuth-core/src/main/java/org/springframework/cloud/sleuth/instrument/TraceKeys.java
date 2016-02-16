@@ -53,6 +53,10 @@ public class TraceKeys {
 
 	private Message message = new Message();
 
+	private Hystrix hystrix = new Hystrix();
+
+	private Async async = new Async();
+
 	public Http getHttp() {
 		return this.http;
 	}
@@ -61,12 +65,28 @@ public class TraceKeys {
 		return this.message;
 	}
 
+	public Hystrix getHystrix() {
+		return this.hystrix;
+	}
+
+	public Async getAsync() {
+		return this.async;
+	}
+
 	public void setHttp(Http http) {
 		this.http = http;
 	}
 
 	public void setMessage(Message message) {
 		this.message = message;
+	}
+
+	public void setHystrix(Hystrix hystrix) {
+		this.hystrix = hystrix;
+	}
+
+	public void setAsync(Async async) {
+		this.async = async;
 	}
 
 	public static class Message {
@@ -281,6 +301,98 @@ public class TraceKeys {
 		public void setHeaders(Collection<String> headers) {
 			this.headers = headers;
 		}
+	}
+
+	/**
+	 * Trace keys related to Hystrix processing
+	 */
+	public static class Hystrix {
+
+		/**
+		 * Prefix for header names if they are added as tags.
+		 */
+		private String prefix = "";
+
+		/**
+		 * Name of the command key
+		 */
+		private String commandKey = "commandKey";
+
+		public String getPrefix() {
+			return this.prefix;
+		}
+
+		public String getCommandKey() {
+			return this.commandKey;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public void setCommandKey(String commandKey) {
+			this.commandKey = commandKey;
+		}
+
+	}
+
+	/**
+	 * Trace keys related to async processing
+	 */
+	public static class Async {
+
+		/**
+		 * Prefix for header names if they are added as tags.
+		 */
+		private String prefix = "";
+
+		/**
+		 * Name of the thread from which the async processing started
+		 */
+		private String threadNameKey = "thread";
+
+		/**
+		 * Name of the class from which the asynchronous process started
+		 */
+		private String classNameKey = "class";
+
+		/**
+		 * Name of the method from which the asynchronous process started
+		 */
+		private String methodNameKey = "method";
+
+		public String getPrefix() {
+			return this.prefix;
+		}
+
+		public String getThreadNameKey() {
+			return this.threadNameKey;
+		}
+
+		public String getClassNameKey() {
+			return this.classNameKey;
+		}
+
+		public String getMethodNameKey() {
+			return this.methodNameKey;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public void setThreadNameKey(String threadNameKey) {
+			this.threadNameKey = threadNameKey;
+		}
+
+		public void setClassNameKey(String classNameKey) {
+			this.classNameKey = classNameKey;
+		}
+
+		public void setMethodNameKey(String methodNameKey) {
+			this.methodNameKey = methodNameKey;
+		}
+
 	}
 
 }

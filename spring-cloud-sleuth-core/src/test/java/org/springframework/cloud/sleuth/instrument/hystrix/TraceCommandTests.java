@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import java.util.Random;
 
+import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
@@ -11,6 +12,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -18,7 +20,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 public class TraceCommandTests {
 
@@ -49,6 +51,16 @@ public class TraceCommandTests {
 		then(secondSpanFromHystrix.getSavedSpan())
 				.as("saved span as remnant of first span").isNull();
 	}
+	@Test
+	public void should_create_a_local_span_with_proper_tags_when_hystrix_command_gets_executed()
+			throws Exception {
+		Span spanFromHystrix = whenCommandIsExecuted(traceReturningCommand());
+
+		then(spanFromHystrix)
+				.isALocalComponentSpan()
+				.hasNameEqualTo("traceCommandKey")
+				.hasATag("commandKey", "traceCommandKey");
+	}
 
 	@Test
 	public void should_run_Hystrix_command_with_span_passed_from_parent_thread() {
@@ -67,12 +79,13 @@ public class TraceCommandTests {
 	}
 
 	private TraceCommand<Span> traceReturningCommand() {
-		return new TraceCommand<Span>(this.tracer,
+		return new TraceCommand<Span>(this.tracer, new TraceKeys(),
 				withGroupKey(asKey("group"))
 						.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties
 								.Setter().withCoreSize(1).withMaxQueueSize(1))
 						.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-								.withExecutionTimeoutEnabled(false))) {
+								.withExecutionTimeoutEnabled(false))
+				.andCommandKey(HystrixCommandKey.Factory.asKey("traceCommandKey"))) {
 			@Override
 			public Span doRun() throws Exception {
 				return TestSpanContextHolder.getCurrentSpan();

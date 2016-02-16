@@ -24,7 +24,7 @@ import org.springframework.cloud.sleuth.Tracer;
  */
 public abstract class TraceDelegate<T> {
 
-	private static final String ASYNC_COMPONENT = "async";
+	protected static final String ASYNC_COMPONENT = "async";
 
 	private final Tracer tracer;
 	private final T delegate;
@@ -52,7 +52,7 @@ public abstract class TraceDelegate<T> {
 
 	protected String getSpanName() {
 		return this.name == null ?
-				ASYNC_COMPONENT + ":" + Thread.currentThread().getName()
+				ASYNC_COMPONENT
 				: this.name;
 	}
 

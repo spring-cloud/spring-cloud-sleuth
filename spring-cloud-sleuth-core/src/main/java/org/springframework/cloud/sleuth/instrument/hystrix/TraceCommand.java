@@ -20,6 +20,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.hystrix.HystrixCommand;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
 /**
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
@@ -36,18 +37,23 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 	private static final String HYSTRIX_COMPONENT = "hystrix";
 
 	private final Tracer tracer;
+	private final TraceKeys traceKeys;
 	private final Span parentSpan;
 
-	protected TraceCommand(Tracer tracer, Setter setter) {
+	protected TraceCommand(Tracer tracer, TraceKeys traceKeys, Setter setter) {
 		super(setter);
 		this.tracer = tracer;
+		this.traceKeys = traceKeys;
 		this.parentSpan = tracer.getCurrentSpan();
 	}
 
 	@Override
 	protected R run() throws Exception {
-		String spanName = HYSTRIX_COMPONENT + ":" + getCommandKey().name();
-		Span span = this.tracer.joinTrace(spanName, this.parentSpan);
+		String commandKeyName = getCommandKey().name();
+		Span span = this.tracer.joinTrace(commandKeyName, this.parentSpan);
+		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
+		this.tracer.addTag(this.traceKeys.getHystrix().getPrefix() +
+				this.traceKeys.getHystrix().getCommandKey(), commandKeyName);
 		try {
 			return doRun();
 		}

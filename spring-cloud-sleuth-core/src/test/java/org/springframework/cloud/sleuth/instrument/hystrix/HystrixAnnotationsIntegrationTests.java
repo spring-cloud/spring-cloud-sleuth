@@ -6,15 +6,18 @@ import com.jayway.awaitility.Awaitility;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +39,7 @@ public class HystrixAnnotationsIntegrationTests {
 	Tracer tracer;
 
 	@BeforeClass
+	@AfterClass
 	public static void reset() {
 		HystrixPlugins.reset();
 	}
@@ -43,29 +47,33 @@ public class HystrixAnnotationsIntegrationTests {
 	@After
 	public void cleanTrace() {
 		TestSpanContextHolder.removeCurrentSpan();
-		HystrixPlugins.reset();
 	}
 
 	@Test
-	public void should_set_span_on_an_hystrix_command_annotated_method() {
+	public void should_continue_current_span_when_executed_a_hystrix_command_annotated_method() {
 		Span span = givenASpanInCurrentThread();
 
 		whenHystrixCommandAnnotatedMethodGetsExecuted();
 
-		thenTraceIdIsPassedFromTheCurrentThreadToTheHystrixOne(span);
+		thenSpanInHystrixThreadIsContinued(span);
+	}
+
+	@Test
+	public void should_create_new_span_with_thread_name_when_executed_a_hystrix_command_annotated_method() {
+		whenHystrixCommandAnnotatedMethodGetsExecuted();
+
+		thenSpanInHystrixThreadIsCreated();
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = this.tracer.startTrace("http:existing");
-		this.tracer.continueSpan(span);
-		return span;
+		return this.tracer.startTrace("http:existing");
 	}
 
 	private void whenHystrixCommandAnnotatedMethodGetsExecuted() {
 		this.catcher.invokeLogicWrappedInHystrixCommand();
 	}
 
-	private void thenTraceIdIsPassedFromTheCurrentThreadToTheHystrixOne(final Span span) {
+	private void thenSpanInHystrixThreadIsContinued(final Span span) {
 		then(span).isNotNull();
 		Awaitility.await().until(new Runnable() {
 			@Override
@@ -80,6 +88,17 @@ public class HystrixAnnotationsIntegrationTests {
 		});
 	}
 
+	private void thenSpanInHystrixThreadIsCreated() {
+		Awaitility.await().until(new Runnable() {
+			@Override
+			public void run() {
+				then(HystrixAnnotationsIntegrationTests.this.catcher.getSpan())
+						.nameStartsWith("hystrix")
+						.isALocalComponentSpan();
+			}
+		});
+	}
+
 	@DefaultTestAutoConfiguration
 	@EnableHystrix
 	@Configuration
@@ -88,6 +107,11 @@ public class HystrixAnnotationsIntegrationTests {
 		@Bean
 		HystrixCommandInvocationSpanCatcher spanCatcher() {
 			return new HystrixCommandInvocationSpanCatcher();
+		}
+
+		@Bean
+		Sampler sampler() {
+			return new AlwaysSampler();
 		}
 
 	}
@@ -118,6 +142,10 @@ public class HystrixAnnotationsIntegrationTests {
 				return null;
 			}
 			return this.spanCaughtFromHystrixThread.get().getName();
+		}
+
+		public Span getSpan() {
+			return this.spanCaughtFromHystrixThread.get();
 		}
 	}
 }

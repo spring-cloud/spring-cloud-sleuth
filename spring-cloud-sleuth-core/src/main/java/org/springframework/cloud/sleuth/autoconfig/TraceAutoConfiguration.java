@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanReporterService;
 import org.springframework.cloud.sleuth.metric.NoOpSpanReporterService;
 import org.springframework.cloud.sleuth.metric.SleuthMetricProperties;
@@ -68,6 +69,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	public SleuthMetricProperties sleuthMetricProperties() {
 		return new SleuthMetricProperties();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public TraceKeys traceKeys() {
+		return new TraceKeys();
 	}
 
 	@Configuration

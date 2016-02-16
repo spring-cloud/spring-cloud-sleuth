@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
 /**
  * A decorator class for {@link ScheduledExecutorService} to support tracing in Executors
@@ -30,8 +31,9 @@ import org.springframework.cloud.sleuth.Tracer;
  */
 public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
 
-	public TraceableScheduledExecutorService(final ScheduledExecutorService delegate, final Tracer tracer) {
-		super(delegate, tracer);
+	public TraceableScheduledExecutorService(final ScheduledExecutorService delegate,
+			final Tracer tracer, TraceKeys traceKeys) {
+		super(delegate, tracer, traceKeys);
 	}
 
 	private ScheduledExecutorService getScheduledExecutorService() {
@@ -40,27 +42,25 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.tracer, command);
+		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys, command);
 		return getScheduledExecutorService().schedule(r, delay, unit);
 	}
 
-
-
 	@Override
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-		Callable<V> c = new TraceCallable<>(this.tracer,callable);
+		Callable<V> c = new LocalComponentTraceCallable<>(this.tracer, this.traceKeys, callable);
 		return getScheduledExecutorService().schedule(c, delay, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.tracer, command);
+		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys, command);
 		return getScheduledExecutorService().scheduleAtFixedRate(r, initialDelay, period, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-		Runnable r = new TraceRunnable(this.tracer, command);
+		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys, command);
 		return getScheduledExecutorService().scheduleWithFixedDelay(r, initialDelay, delay, unit);
 	}
 
