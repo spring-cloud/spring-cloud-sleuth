@@ -57,7 +57,7 @@ public class SpanTest {
 
 	@Test(expected = UnsupportedOperationException.class)
 	public void getAnnotationsReadOnly() {
-		Span span = new Span(1, 2, new SpanName("http", "name"), 1L, Collections.<Long>emptyList(), 2L, true,
+		Span span = new Span(1, 2, "http:name", 1L, Collections.<Long>emptyList(), 2L, true,
 				true, "process");
 
 		span.tags().put("a", "b");
@@ -65,14 +65,14 @@ public class SpanTest {
 
 	@Test(expected = UnsupportedOperationException.class)
 	public void getTimelineAnnotationsReadOnly() {
-		Span span = new Span(1, 2, new SpanName("http", "name"), 1L, Collections.<Long>emptyList(), 2L, true,
+		Span span = new Span(1, 2, "http:name", 1L, Collections.<Long>emptyList(), 2L, true,
 				true, "process");
 
 		span.logs().add(new Log(1, "1"));
 	}
 
 	@Test public void should_properly_serialize_object() throws JsonProcessingException {
-		Span span = new Span(1, 2, new SpanName("http", "name"), 1L,
+		Span span = new Span(1, 2, "http:name", 1L,
 				Collections.<Long>emptyList(), 2L, true, true, "process");
 		ObjectMapper objectMapper = new ObjectMapper();
 

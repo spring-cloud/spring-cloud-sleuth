@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.Spans;
 import zipkin.Sampler;
@@ -54,7 +53,7 @@ public class SamplingZipkinSpanIteratorTests {
 				Sampler.create(1.0f), spans);
 
 		assertThat(result).extracting(s -> s.name).containsExactly(
-				"message:/foo", "message:/bar", "message:/baz");
+				"message:foo", "message:bar", "message:baz");
 	}
 
 	@Test
@@ -74,12 +73,12 @@ public class SamplingZipkinSpanIteratorTests {
 				spans);
 
 		assertThat(result).extracting(s -> s.name).containsExactly(
-				"message:/foo", "message:/baz");
+				"message:foo", "message:baz");
 	}
 
 	Span span(String name) {
 		Long id = new Random().nextLong();
-		return new Span(1, 3, new SpanName("message", "/" + name), id, Collections.<Long>emptyList(), id, true, true,
+		return new Span(1, 3, "message:" + name, id, Collections.<Long>emptyList(), id, true, true,
 				"process");
 	}
 }

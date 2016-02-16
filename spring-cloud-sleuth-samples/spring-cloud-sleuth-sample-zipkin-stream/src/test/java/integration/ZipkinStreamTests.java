@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
@@ -63,7 +62,7 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_propagate_spans_to_zipkin() {
-		Span span = Span.builder().traceId(this.traceId).spanId(this.spanId).name(new SpanName("http", "test")).build();
+		Span span = Span.builder().traceId(this.traceId).spanId(this.spanId).name("http:test").build();
 		span.tag(getRequiredBinaryAnnotationName(), "10131");
 
 		this.input.send(messageWithSpan(span));

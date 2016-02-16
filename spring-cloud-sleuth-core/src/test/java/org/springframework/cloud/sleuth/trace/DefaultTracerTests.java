@@ -25,7 +25,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
@@ -49,10 +48,10 @@ import static org.mockito.Mockito.verify;
 public class DefaultTracerTests {
 
 	public static final String CREATE_SIMPLE_TRACE_SPAN_NAME = "createSimpleTrace";
-	public static final SpanName CREATE_SIMPLE_TRACE = new SpanName("http",
-			CREATE_SIMPLE_TRACE_SPAN_NAME);
-	public static final SpanName IMPORTANT_WORK_1 = new SpanName("http", "important work 1");
-	public static final SpanName IMPORTANT_WORK_2 = new SpanName("http", "important work 2");
+	public static final String CREATE_SIMPLE_TRACE = "http"  + ":" +
+			CREATE_SIMPLE_TRACE_SPAN_NAME;
+	public static final String IMPORTANT_WORK_1 = "http:important work 1";
+	public static final String IMPORTANT_WORK_2 = "http:important work 2";
 	public static final int NUM_SPANS = 3;
 	private ApplicationEventPublisher publisher;
 
@@ -129,7 +128,7 @@ public class DefaultTracerTests {
 				this.publisher);
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
 		assertThat(span.isExportable(), is(false));
-		Span child = tracer.joinTrace(new SpanName("http", CREATE_SIMPLE_TRACE_SPAN_NAME + "/child"), span);
+		Span child = tracer.joinTrace(CREATE_SIMPLE_TRACE_SPAN_NAME + "/child", span);
 		assertThat(child.isExportable(), is(false));
 	}
 
@@ -166,7 +165,7 @@ public class DefaultTracerTests {
 		assertThat(tracer.getCurrentSpan(), is(equalTo(grandParent)));
 	}
 
-	private Span assertSpan(List<Span> spans, Long parentId, SpanName name) {
+	private Span assertSpan(List<Span> spans, Long parentId, String name) {
 		List<Span> found = findSpans(spans, parentId);
 		assertThat("more than one span with parentId " + parentId, found.size(), is(1));
 		Span span = found.get(0);

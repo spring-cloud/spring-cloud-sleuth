@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.Random;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -46,12 +45,12 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		Span parentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
 				: buildSpan(message);
-		SpanName name = getMessageChannelName(channel);
+		String name = getMessageChannelName(channel);
 		Span span = startSpan(parentSpan, name, message);
 		return SpanMessageHeaders.addSpanHeaders(getTraceKeys(), message, span);
 	}
 
-	private Span startSpan(Span span, SpanName name, Message<?> message) {
+	private Span startSpan(Span span, String name, Message<?> message) {
 		if (span != null) {
 			return getTracer().joinTrace(name, span);
 		}

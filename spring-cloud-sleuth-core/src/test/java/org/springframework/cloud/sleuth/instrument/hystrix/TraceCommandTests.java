@@ -2,21 +2,19 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import java.util.Random;
 
+import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
+import com.netflix.hystrix.strategy.HystrixPlugins;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
-
-import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.HystrixThreadPoolProperties;
-import com.netflix.hystrix.strategy.HystrixPlugins;
 
 import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
@@ -64,7 +62,7 @@ public class TraceCommandTests {
 	}
 
 	private Span givenATraceIsPresentInTheCurrentThread() {
-		return this.tracer.joinTrace(new SpanName("http", "test"),
+		return this.tracer.joinTrace("http:test",
 				Span.builder().traceId(EXPECTED_TRACE_ID).build());
 	}
 

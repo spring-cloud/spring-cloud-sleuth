@@ -2,6 +2,9 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.jayway.awaitility.Awaitility;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.strategy.HystrixPlugins;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -10,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -18,10 +20,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.jayway.awaitility.Awaitility;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import com.netflix.hystrix.strategy.HystrixPlugins;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -58,7 +56,7 @@ public class HystrixAnnotationsIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = this.tracer.startTrace(new SpanName("http", "existing"));
+		Span span = this.tracer.startTrace("http:existing");
 		this.tracer.continueSpan(span);
 		return span;
 	}
@@ -112,7 +110,7 @@ public class HystrixAnnotationsIntegrationTests {
 			return this.spanCaughtFromHystrixThread.get().getTraceId();
 		}
 
-		public SpanName getSpanName() {
+		public String getSpanName() {
 			if (this.spanCaughtFromHystrixThread == null
 					|| (this.spanCaughtFromHystrixThread.get() != null
 					&& this.spanCaughtFromHystrixThread.get()
