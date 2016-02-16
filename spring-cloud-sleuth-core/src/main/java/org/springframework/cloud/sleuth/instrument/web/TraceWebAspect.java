@@ -25,7 +25,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
@@ -104,17 +103,17 @@ public class TraceWebAspect {
 		if (this.accessor.isTracing()) {
 			log.debug("Wrapping callable with span ["
 					+ this.accessor.getCurrentSpan() + "]");
-			return new TraceCallable<>(this.tracer, callable, spanName(pjp));
+			return new TraceCallable<>(this.tracer, callable);
 		}
 		else {
 			return callable;
 		}
 	}
 
-	private SpanName spanName(ProceedingJoinPoint pjp) {
-		return new SpanName(ASYNC_COMPONENT,
-					pjp.getTarget().getClass().getSimpleName(),
-					"method=" + pjp.getSignature().getName());
+	private String spanName(ProceedingJoinPoint pjp) {
+		return ASYNC_COMPONENT + ":" +
+				pjp.getTarget().getClass().getSimpleName() + "#" +
+				"method=" + pjp.getSignature().getName();
 	}
 
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")

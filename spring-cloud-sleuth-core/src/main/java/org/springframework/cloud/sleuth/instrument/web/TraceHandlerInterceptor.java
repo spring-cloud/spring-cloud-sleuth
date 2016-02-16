@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -47,7 +46,7 @@ public class TraceHandlerInterceptor implements HandlerInterceptor {
 		// TODO: get trace data from request?
 		// TODO: what is the description?
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		SpanName spanName = new SpanName("http", uri, "interceptor=traceHandlerInterceptor");
+		String spanName = "http:" + uri;
 		Span span = this.tracer.startTrace(spanName);
 		request.setAttribute(ATTR_NAME, span);
 		return true;

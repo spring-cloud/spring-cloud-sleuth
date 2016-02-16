@@ -8,10 +8,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,9 +42,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		Span span = this.tracer.startTrace(new SpanName("http", "existing"));
-		this.tracer.continueSpan(span);
-		return span;
+		return this.tracer.startTrace("http:existing");
 	}
 
 	private void whenAsyncProcessingTakesPlace() {
@@ -57,8 +56,6 @@ public class TraceAsyncIntegrationTests {
 				then(span)
 						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
 						.hasNameNotEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
-				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName()).
-						isEqualTo(SpanName.fromString("async:ClassPerformingAsyncLogic#method=invokeAsynchronousLogic"));
 			}
 		});
 	}
@@ -76,6 +73,11 @@ public class TraceAsyncIntegrationTests {
 		@Bean
 		ClassPerformingAsyncLogic asyncClass() {
 			return new ClassPerformingAsyncLogic();
+		}
+
+		@Bean
+		Sampler defaultSampler() {
+			return new AlwaysSampler();
 		}
 
 	}
@@ -96,7 +98,7 @@ public class TraceAsyncIntegrationTests {
 			return this.span.get().getTraceId();
 		}
 
-		public SpanName getSpanName() {
+		public String getSpanName() {
 			if (this.span.get() != null && this.span.get().getName() == null) {
 				return null;
 			}

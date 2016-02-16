@@ -27,7 +27,6 @@ import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfigurati
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
@@ -70,7 +69,7 @@ public class ZipkinSpanListenerTests {
 		this.test.spans.clear();
 	}
 
-	Span parent = Span.builder().traceId(1L).name(new SpanName("http", "parent")).remote(true).build();
+	Span parent = Span.builder().traceId(1L).name("http:parent").remote(true).build();
 
 	/** Sleuth timestamps are millisecond granularity while zipkin is microsecond. */
 	@Test
@@ -118,7 +117,7 @@ public class ZipkinSpanListenerTests {
 	 */
 	@Test
 	public void spanWithoutAnnotationsLogsComponent() {
-		Span context = this.tracer.startTrace(new SpanName("http", "foo"));
+		Span context = this.tracer.startTrace("http:foo");
 		this.tracer.close(context);
 		assertEquals(1, this.test.spans.size());
 		assertThat(this.test.spans.get(0).binaryAnnotations.get(0).endpoint.serviceName)
@@ -127,7 +126,7 @@ public class ZipkinSpanListenerTests {
 
 	@Test
 	public void rpcAnnotations() {
-		Span context = this.tracer.joinTrace(new SpanName("http", "child"), this.parent);
+		Span context = this.tracer.joinTrace("http:child", this.parent);
 		this.application.publishEvent(new ClientSentEvent(this, context));
 		this.application.publishEvent(new ServerReceivedEvent(this, this.parent, context));
 		this.application.publishEvent(new ServerSentEvent(this, this.parent, context));

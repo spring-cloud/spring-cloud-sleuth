@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -59,7 +58,7 @@ public class TracePreZuulFilterTests {
 
 	@Test
 	public void filterAddsHeaders() throws Exception {
-		this.tracer.startTrace(new SpanName("http", "start"));
+		this.tracer.startTrace("http:start");
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
 		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
@@ -70,7 +69,7 @@ public class TracePreZuulFilterTests {
 
 	@Test
 	public void notSampledIfNotExportable() throws Exception {
-		this.tracer.startTrace(new SpanName("http", "start"), NeverSampler.INSTANCE);
+		this.tracer.startTrace("http:start", NeverSampler.INSTANCE);
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
 		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),

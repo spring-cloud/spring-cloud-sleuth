@@ -29,7 +29,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTests.App;
@@ -139,7 +138,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void headerCreation() {
-		Span span = this.tracer.startTrace(new SpanName("http", "testSendMessage"), new AlwaysSampler());
+		Span span = this.tracer.startTrace("http:testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
@@ -155,7 +154,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	// TODO: Refactor to parametrized test together with sending messages via channel
 	@Test
 	public void headerCreationViaMessagingTemplate() {
-		Span span = this.tracer.startTrace(new SpanName("http", "testSendMessage"), new AlwaysSampler());
+		Span span = this.tracer.startTrace("http:testSendMessage", new AlwaysSampler());
 		this.messagingTemplate.send(MessageBuilder.withPayload("hi").build());
 		this.tracer.close(span);
 		assertNotNull("message was null", this.message);

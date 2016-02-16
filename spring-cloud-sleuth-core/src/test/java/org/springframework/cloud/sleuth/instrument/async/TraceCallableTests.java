@@ -11,7 +11,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -73,7 +72,7 @@ public class TraceCallableTests {
 	}
 
 	private Span givenSpanIsAlreadyActive() {
-		return this.tracer.startTrace(new SpanName("http", "parent"));
+		return this.tracer.startTrace("http:parent");
 	}
 
 	private Callable<Span> thatRetrievesTraceFromThreadLocal() {

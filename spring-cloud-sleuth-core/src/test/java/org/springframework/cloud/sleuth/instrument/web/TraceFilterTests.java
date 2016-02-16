@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -111,7 +110,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
-		Span span = this.tracer.startTrace(new SpanName("http", "foo"));
+		Span span = this.tracer.startTrace("http:foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
 		// It should have been removed from the thread local context so simulate that
 		TestSpanContextHolder.removeCurrentSpan();

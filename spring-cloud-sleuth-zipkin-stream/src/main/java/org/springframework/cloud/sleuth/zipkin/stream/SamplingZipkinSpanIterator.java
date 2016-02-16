@@ -20,11 +20,10 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
-
+import org.springframework.util.StringUtils;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
 import zipkin.Endpoint;
@@ -78,7 +77,7 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 	 * returns a converted span or null if it is invalid or unsampled.
 	 */
 	zipkin.Span convertAndSample(Span input, Host host) {
-		if (!protocolWithAddressMatch(input)) {
+		if (!input.getName().equals("message:" + SleuthSink.INPUT)) {
 			zipkin.Span result = SamplingZipkinSpanIterator.convert(input, host);
 			if (this.sampler.isSampled(result.traceId)) {
 				return result;
@@ -88,12 +87,6 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 			log.warn("Message tracing cycle detected for: " + input);
 		}
 		return null;
-	}
-
-	private boolean protocolWithAddressMatch(Span input) {
-		SpanName spanName = input.getName();
-		return SamplingZipkinSpanIterator.MESSAGE_COMPONENT.equals(spanName.component) &&
-				("/" + SleuthSink.INPUT).equals(spanName.address);
 	}
 
 	/**
@@ -137,8 +130,8 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 			zipkinSpan.parentId(span.getParents().get(0));
 		}
 		zipkinSpan.id(span.getSpanId());
-		if (!SpanName.NO_NAME.equals(span.getName())) {
-			zipkinSpan.name(span.getName().toString());
+		if (StringUtils.hasText(span.getName())) {
+			zipkinSpan.name(span.getName());
 		}
 		return zipkinSpan.build();
 	}

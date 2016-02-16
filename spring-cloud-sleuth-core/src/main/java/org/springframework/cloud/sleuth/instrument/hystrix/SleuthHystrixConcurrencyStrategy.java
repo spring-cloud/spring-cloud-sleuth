@@ -6,7 +6,6 @@ import javax.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.hystrix.strategy.HystrixPlugins;
@@ -65,8 +64,8 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 				span = this.tracer.continueSpan(span);
 			}
 			else {
-				span = this.tracer.startTrace(new SpanName(HYSTRIX_COMPONENT,
-						Thread.currentThread().getName()));
+				span = this.tracer.startTrace(HYSTRIX_COMPONENT +
+						":" + Thread.currentThread().getName());
 				created = true;
 			}
 			try {
