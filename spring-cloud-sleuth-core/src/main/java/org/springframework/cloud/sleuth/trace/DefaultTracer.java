@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
@@ -41,11 +42,14 @@ public class DefaultTracer implements Tracer {
 
 	private final Random random;
 
+	private final SpanNamer spanNamer;
+
 	public DefaultTracer(Sampler defaultSampler, Random random,
-			ApplicationEventPublisher publisher) {
+			ApplicationEventPublisher publisher, SpanNamer spanNamer) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.publisher = publisher;
+		this.spanNamer = spanNamer;
 	}
 
 	@Override
@@ -198,7 +202,7 @@ public class DefaultTracer implements Tracer {
 	@Override
 	public <V> Callable<V> wrap(Callable<V> callable) {
 		if (isTracing()) {
-			return new TraceCallable<>(this, callable);
+			return new TraceCallable<>(this, this.spanNamer, callable);
 		}
 		return callable;
 	}
@@ -211,7 +215,7 @@ public class DefaultTracer implements Tracer {
 	@Override
 	public Runnable wrap(Runnable runnable) {
 		if (isTracing()) {
-			return new TraceRunnable(this, runnable);
+			return new TraceRunnable(this, this.spanNamer, runnable);
 		}
 		return runnable;
 	}

@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
@@ -32,13 +33,15 @@ public class LocalComponentTraceRunnable extends TraceRunnable {
 
 	private final TraceKeys traceKeys;
 
-	public LocalComponentTraceRunnable(Tracer tracer, TraceKeys traceKeys, Runnable delegate) {
-		super(tracer, delegate);
+	public LocalComponentTraceRunnable(Tracer tracer, TraceKeys traceKeys,
+			SpanNamer spanNamer, Runnable delegate) {
+		super(tracer, spanNamer, delegate);
 		this.traceKeys = traceKeys;
 	}
 
-	public LocalComponentTraceRunnable(Tracer tracer, TraceKeys traceKeys, Runnable delegate, String name) {
-		super(tracer, delegate, name);
+	public LocalComponentTraceRunnable(Tracer tracer, TraceKeys traceKeys,
+			SpanNamer spanNamer, Runnable delegate, String name) {
+		super(tracer, spanNamer, delegate, name);
 		this.traceKeys = traceKeys;
 	}
 

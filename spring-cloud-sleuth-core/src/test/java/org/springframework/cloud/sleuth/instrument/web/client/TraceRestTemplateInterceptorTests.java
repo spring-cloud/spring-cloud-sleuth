@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertFalse;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +24,7 @@ import java.util.Random;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -41,6 +39,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Dave Syer
@@ -61,7 +62,8 @@ public class TraceRestTemplateInterceptorTests {
 	@Before
 	public void setup() {
 		this.publisher.refresh();
-		this.traces = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher);
+		this.traces = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher,
+				new DefaultSpanNamer());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.traces)));
 		TestSpanContextHolder.removeCurrentSpan();

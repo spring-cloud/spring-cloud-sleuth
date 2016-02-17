@@ -53,7 +53,7 @@ abstract class AbstractTraceHttpRequestInterceptor
 		if (!span.isExportable()) {
 			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
 		}
-		setHeader(request, Span.SPAN_NAME_NAME, span.getName().toString());
+		setHeader(request, Span.SPAN_NAME_NAME, span.getName());
 		setIdHeader(request, Span.PARENT_ID_NAME, getParentId(span));
 		setHeader(request, Span.PROCESS_ID_NAME, span.getProcessId());
 	}

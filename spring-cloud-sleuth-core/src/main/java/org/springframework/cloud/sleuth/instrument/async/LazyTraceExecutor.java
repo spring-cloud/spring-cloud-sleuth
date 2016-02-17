@@ -23,6 +23,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
@@ -38,6 +40,7 @@ public class LazyTraceExecutor implements Executor {
 	private final BeanFactory beanFactory;
 	private final Executor delegate;
 	private TraceKeys traceKeys;
+	private SpanNamer spanNamer;
 
 	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate) {
 		this.beanFactory = beanFactory;
@@ -52,20 +55,38 @@ public class LazyTraceExecutor implements Executor {
 			}
 			catch (NoSuchBeanDefinitionException e) {
 				this.delegate.execute(command);
+				return;
 			}
 		}
-		// due to some race conditions trace keys might not be ready yet
+		this.delegate.execute(new LocalComponentTraceRunnable(this.tracer, traceKeys(), spanNamer(), command));
+	}
+
+	// due to some race conditions trace keys might not be ready yet
+	private TraceKeys traceKeys() {
 		if (this.traceKeys == null) {
 			try {
 				this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
 				log.warn("TraceKeys bean not found - will provide a manually created instance");
-				this.delegate.execute(new LocalComponentTraceRunnable(this.tracer, new TraceKeys(), command));
-				return;
+				return new TraceKeys();
 			}
 		}
-		this.delegate.execute(new LocalComponentTraceRunnable(this.tracer, this.traceKeys, command));
+		return this.traceKeys;
+	}
+
+	// due to some race conditions trace keys might not be ready yet
+	private SpanNamer spanNamer() {
+		if (this.spanNamer == null) {
+			try {
+				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
+			}
+			catch (NoSuchBeanDefinitionException e) {
+				log.warn("SpanNamer bean not found - will provide a manually created instance");
+				return new DefaultSpanNamer();
+			}
+		}
+		return this.spanNamer;
 	}
 
 }

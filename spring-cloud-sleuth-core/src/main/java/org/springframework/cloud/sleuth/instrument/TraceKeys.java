@@ -352,12 +352,13 @@ public class TraceKeys {
 		private String threadNameKey = "thread";
 
 		/**
-		 * Name of the class from which the asynchronous process started
+		 * Simple name of the class with a method annotated with {@code @Async}
+		 * from which the asynchronous process started
 		 */
 		private String classNameKey = "class";
 
 		/**
-		 * Name of the method annotated with @Async
+		 * Name of the method annotated with {@code @Async}
 		 */
 		private String methodNameKey = "method";
 

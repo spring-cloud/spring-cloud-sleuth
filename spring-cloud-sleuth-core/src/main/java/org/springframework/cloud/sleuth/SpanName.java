@@ -24,7 +24,13 @@ import java.lang.annotation.Target;
 
 /**
  *
- * Annotation to provide the name for the Span
+ * Annotation to provide the name for the Span. You should annotate all your
+ * custom {@link java.lang.Runnable} or {@link java.util.concurrent.Callable} classes
+ * for the instrumentation logic to pick up how to name the span.
+ *
+ * If you're using anonymous instances for those classes then you should override the
+ * {@code toString()} method. That way that value will be picked as a span name at
+ * runtime.
  *
  * @author Marcin Grzejszczak
  */
@@ -32,5 +38,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface SpanName {
+	/**
+	 * Name of the span to be resolved at runtime
+	 */
 	String value();
 }

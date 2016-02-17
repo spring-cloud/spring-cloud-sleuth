@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.util;
-
-import org.springframework.cloud.sleuth.SpanName;
-import org.springframework.core.annotation.AnnotationUtils;
+package org.springframework.cloud.sleuth;
 
 /**
- * Utility class that tries to get the Span name from
- * SpanName annotation value if one is present. If that's not the case
- * then it delegates to toString() method of the object
- *
- * @see org.springframework.cloud.sleuth.SpanName
+ * Describes how for a given object a span should be named. In the vast majority
+ * of cases a name should be provided explicitly. In case of instrumentation
+ * where the name has to be resolved at runtime this interface will provide
+ * the name of the span.
  *
  * @author Marcin Grzejszczak
  */
-public class SpanNameRetrievalUtil {
+public interface SpanNamer {
 
-	public static String getSpanName(Object object) {
-		SpanName annotation = AnnotationUtils
-				.findAnnotation(object.getClass(), SpanName.class);
-		return annotation != null ? annotation.value() : object.toString();
-	}
+	/**
+	 * Retrieves the span name for the given object.
+	 *
+	 * @param object - object for which span name should be picked
+	 * @param defaultValue - the default valued to be returned if span name can't be calculated
+	 * @return span name
+	 */
+	String name(Object object, String defaultValue);
 }

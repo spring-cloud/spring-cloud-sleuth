@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -67,8 +68,8 @@ public class TraceWebAutoConfiguration {
 	private TraceKeys traceKeys;
 
 	@Bean
-	public TraceWebAspect traceWebAspect() {
-		return new TraceWebAspect(this.tracer, this.accessor);
+	public TraceWebAspect traceWebAspect(SpanNamer spanNamer) {
+		return new TraceWebAspect(this.tracer, this.accessor, spanNamer);
 	}
 
 	@Bean

@@ -10,6 +10,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -26,7 +27,7 @@ public class TraceCommandTests {
 
 	static final long EXPECTED_TRACE_ID = 1L;
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			Mockito.mock(ApplicationEventPublisher.class));
+			Mockito.mock(ApplicationEventPublisher.class), new DefaultSpanNamer());
 
 	@Before
 	public void setup() {

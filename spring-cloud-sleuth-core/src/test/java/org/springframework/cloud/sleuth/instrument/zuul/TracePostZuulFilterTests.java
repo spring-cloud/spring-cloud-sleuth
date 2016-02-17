@@ -23,6 +23,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -40,7 +41,9 @@ public class TracePostZuulFilterTests {
 
 	private ApplicationEventPublisher publisher = Mockito.mock(ApplicationEventPublisher.class);
 
-	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), Mockito.mock(ApplicationEventPublisher.class));
+	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(),
+			new Random(), Mockito.mock(ApplicationEventPublisher.class),
+			new DefaultSpanNamer());
 
 	private TracePostZuulFilter filter = new TracePostZuulFilter(this.tracer);
 

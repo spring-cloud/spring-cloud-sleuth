@@ -21,6 +21,7 @@ import java.util.Random;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -68,7 +69,7 @@ public class TraceFilterTests {
 	public void init() {
 		initMocks(this);
 		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),
-				this.publisher) {
+				this.publisher, new DefaultSpanNamer()) {
 			@Override
 			protected Span createSpan(Span span, Span saved) {
 				TraceFilterTests.this.span = super.createSpan(span, saved);

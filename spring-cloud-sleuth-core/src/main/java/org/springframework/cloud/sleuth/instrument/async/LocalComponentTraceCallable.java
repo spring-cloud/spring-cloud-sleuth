@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
@@ -34,13 +35,15 @@ public class LocalComponentTraceCallable<V> extends TraceCallable<V> {
 
 	private final TraceKeys traceKeys;
 
-	public LocalComponentTraceCallable(Tracer tracer, TraceKeys traceKeys, Callable<V> delegate) {
-		super(tracer, delegate);
+	public LocalComponentTraceCallable(Tracer tracer, TraceKeys traceKeys,
+			SpanNamer spanNamer, Callable<V> delegate) {
+		super(tracer, spanNamer, delegate);
 		this.traceKeys = traceKeys;
 	}
 
-	public LocalComponentTraceCallable(Tracer tracer, TraceKeys traceKeys, Callable<V> delegate, String name) {
-		super(tracer, delegate, name);
+	public LocalComponentTraceCallable(Tracer tracer, TraceKeys traceKeys,
+			SpanNamer spanNamer, String name, Callable<V> delegate) {
+		super(tracer, spanNamer, delegate, name);
 		this.traceKeys = traceKeys;
 	}
 

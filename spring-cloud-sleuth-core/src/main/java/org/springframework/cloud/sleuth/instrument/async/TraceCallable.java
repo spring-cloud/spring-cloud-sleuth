@@ -19,20 +19,13 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.util.SpanNameRetrievalUtil;
 
 /**
  * Callable that passes Span between threads. The Span name is
- * taken in the following order
- *
- * <li>
- *     <ul>from the passed value</ul>
- *     <ul>from the @SpanName annotation if one is present</ul>
- *     <ul>from the toString() of the delegate</ul>
- * </li>
- *
- * @see org.springframework.cloud.sleuth.SpanName
+ * taken either from the passed value or from the {@link SpanNamer}
+ * interface.
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
@@ -40,16 +33,18 @@ import org.springframework.cloud.sleuth.util.SpanNameRetrievalUtil;
 public class TraceCallable<V> implements Callable<V> {
 
 	private final Tracer tracer;
+	private final SpanNamer spanNamer;
 	private final Callable<V> delegate;
 	private final String name;
 	private final Span parent;
 
-	public TraceCallable(Tracer tracer, Callable<V> delegate) {
-		this(tracer, delegate, null);
+	public TraceCallable(Tracer tracer,  SpanNamer spanNamer, Callable<V> delegate) {
+		this(tracer, spanNamer, delegate, null);
 	}
 
-	public TraceCallable(Tracer tracer, Callable<V> delegate, String name) {
+	public TraceCallable(Tracer tracer, SpanNamer spanNamer, Callable<V> delegate, String name) {
 		this.tracer = tracer;
+		this.spanNamer = spanNamer;
 		this.delegate = delegate;
 		this.name = name;
 		this.parent = tracer.getCurrentSpan();
@@ -71,17 +66,10 @@ public class TraceCallable<V> implements Callable<V> {
 	}
 
 	protected String getSpanName() {
-		String spanName = this.name != null ? this.name : SpanNameRetrievalUtil.getSpanName(this.delegate);
-		// If there is no overridden toString method we'll put constant value
-		if (isDefaultToString(spanName)) {
-			return "async";
+		if (this.name != null) {
+			return this.name;
 		}
-		return spanName;
-	}
-
-	private boolean isDefaultToString(String spanName) {
-		return (this.delegate.getClass().getName() + "@" +
-				Integer.toHexString(this.delegate.hashCode())).equals(spanName);
+		return this.spanNamer.name(this.delegate, "async");
 	}
 
 	protected void close(Span span) {

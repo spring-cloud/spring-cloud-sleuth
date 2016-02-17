@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -28,8 +29,8 @@ import org.springframework.cloud.sleuth.Tracer;
  */
 public class TraceContinuingCallable<V> extends TraceCallable<V> implements Callable<V> {
 
-	public TraceContinuingCallable(Tracer tracer, Callable<V> delegate) {
-		super(tracer, delegate);
+	public TraceContinuingCallable(Tracer tracer, SpanNamer spanNamer, Callable<V> delegate) {
+		super(tracer, spanNamer, delegate);
 	}
 
 	@Override

@@ -14,32 +14,36 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.util;
+package org.springframework.cloud.sleuth;
 
 import org.junit.Test;
-import org.springframework.cloud.sleuth.SpanName;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
-public class SpanNameRetrievalUtilTest {
+public class DefaultSpanNamerTest {
+
+	DefaultSpanNamer defaultSpanNamer = new DefaultSpanNamer();
 
 	@Test
 	public void should_return_value_of_span_name_from_annotation() throws Exception {
-		then(SpanNameRetrievalUtil.getSpanName(new ClassWithAnnotation())).isEqualTo("somevalue");
+		then(this.defaultSpanNamer.name(new ClassWithAnnotation(), "default")).isEqualTo("somevalue");
 	}
 
 	@Test
 	public void should_return_value_of_span_name_from_to_string_if_annotation_is_missing() throws Exception {
-		then(SpanNameRetrievalUtil.getSpanName(fromAnonymousClassWithCustomToString())).isEqualTo("some-other-value");
+		then(this.defaultSpanNamer.name(fromAnonymousClassWithCustomToString(), "default")).isEqualTo("some-other-value");
+	}
+
+	@Test
+	public void should_return_default_value_if_tostring_wasnt_overridden() throws Exception {
+		then(this.defaultSpanNamer.name(new ClassWithoutToString(), "default")).isEqualTo("default");
 	}
 
 	@SpanName("somevalue")
-	static class ClassWithAnnotation {
-
-	}
+	static class ClassWithAnnotation {}
 
 	private Runnable fromAnonymousClassWithCustomToString() {
 		return new Runnable() {
@@ -54,4 +58,6 @@ public class SpanNameRetrievalUtilTest {
 			}
 		};
 	}
+
+	static class ClassWithoutToString {}
 }

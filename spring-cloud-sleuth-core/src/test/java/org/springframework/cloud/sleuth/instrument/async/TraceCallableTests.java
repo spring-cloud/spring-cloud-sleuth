@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
@@ -25,7 +26,7 @@ public class TraceCallableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), Mockito.mock(ApplicationEventPublisher.class));
+			new Random(), Mockito.mock(ApplicationEventPublisher.class), new DefaultSpanNamer());
 
 	@After
 	public void clean() {
@@ -113,13 +114,13 @@ public class TraceCallableTests {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracer, callable))
+		return this.executor.submit(new TraceCallable<>(this.tracer, new DefaultSpanNamer(), callable))
 				.get();
 	}
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracer, new TraceKeepingCallable()))
-				.get();
+		return this.executor.submit(new TraceCallable<>(this.tracer, new DefaultSpanNamer(),
+				new TraceKeepingCallable())).get();
 	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)
