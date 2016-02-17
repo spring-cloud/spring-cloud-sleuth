@@ -20,6 +20,7 @@ import java.util.Random;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -46,7 +47,7 @@ public class TraceFilterMockChainIntegrationTests {
 	private StaticApplicationContext context = new StaticApplicationContext();
 
 	private Tracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), this.context);
+			new Random(), this.context, new DefaultSpanNamer());
 	private TraceKeys traceKeys = new TraceKeys();
 
 	private MockHttpServletRequest request;

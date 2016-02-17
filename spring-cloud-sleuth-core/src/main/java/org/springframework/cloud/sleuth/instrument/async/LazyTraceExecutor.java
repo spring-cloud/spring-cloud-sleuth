@@ -16,11 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Executor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
 /**
  * @author Dave Syer
@@ -28,9 +34,13 @@ import org.springframework.cloud.sleuth.Tracer;
  */
 public class LazyTraceExecutor implements Executor {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	private Tracer tracer;
 	private final BeanFactory beanFactory;
 	private final Executor delegate;
+	private TraceKeys traceKeys;
+	private SpanNamer spanNamer;
 
 	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate) {
 		this.beanFactory = beanFactory;
@@ -45,9 +55,38 @@ public class LazyTraceExecutor implements Executor {
 			}
 			catch (NoSuchBeanDefinitionException e) {
 				this.delegate.execute(command);
+				return;
 			}
 		}
-		this.delegate.execute(new TraceRunnable(this.tracer, command));
+		this.delegate.execute(new LocalComponentTraceRunnable(this.tracer, traceKeys(), spanNamer(), command));
+	}
+
+	// due to some race conditions trace keys might not be ready yet
+	private TraceKeys traceKeys() {
+		if (this.traceKeys == null) {
+			try {
+				this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
+			}
+			catch (NoSuchBeanDefinitionException e) {
+				log.warn("TraceKeys bean not found - will provide a manually created instance");
+				return new TraceKeys();
+			}
+		}
+		return this.traceKeys;
+	}
+
+	// due to some race conditions trace keys might not be ready yet
+	private SpanNamer spanNamer() {
+		if (this.spanNamer == null) {
+			try {
+				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
+			}
+			catch (NoSuchBeanDefinitionException e) {
+				log.warn("SpanNamer bean not found - will provide a manually created instance");
+				return new DefaultSpanNamer();
+			}
+		}
+		return this.spanNamer;
 	}
 
 }

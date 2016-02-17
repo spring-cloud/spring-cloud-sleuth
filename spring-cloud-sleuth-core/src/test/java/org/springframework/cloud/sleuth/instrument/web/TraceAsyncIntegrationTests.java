@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.jayway.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,8 +20,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.jayway.awaitility.Awaitility;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -53,9 +52,12 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().until(new Runnable() {
 			@Override
 			public void run() {
-				then(span)
-						.hasTraceIdEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getTraceId())
-						.hasNameNotEqualTo(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpanName());
+				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())
+						.hasTraceIdEqualTo(span.getTraceId())
+						.hasNameEqualTo("invokeAsynchronousLogic")
+						.isALocalComponentSpan()
+						.hasATag("class", "ClassPerformingAsyncLogic")
+						.hasATag("method", "invokeAsynchronousLogic");
 			}
 		});
 	}
@@ -91,18 +93,8 @@ public class TraceAsyncIntegrationTests {
 			this.span.set(TestSpanContextHolder.getCurrentSpan());
 		}
 
-		public Long getTraceId() {
-			if (this.span.get() == null) {
-				return null;
-			}
-			return this.span.get().getTraceId();
-		}
-
-		public String getSpanName() {
-			if (this.span.get() != null && this.span.get().getName() == null) {
-				return null;
-			}
-			return this.span.get().getName();
+		public Span getSpan() {
+			return this.span.get();
 		}
 	}
 }

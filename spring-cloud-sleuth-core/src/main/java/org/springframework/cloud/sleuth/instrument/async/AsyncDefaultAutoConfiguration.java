@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
@@ -49,8 +50,8 @@ public class AsyncDefaultAutoConfiguration extends AsyncConfigurerSupport {
 	}
 
 	@Bean
-	public TraceAsyncAspect traceAsyncAspect(Tracer tracer) {
-		return new TraceAsyncAspect(tracer);
+	public TraceAsyncAspect traceAsyncAspect(Tracer tracer, TraceKeys traceKeys) {
+		return new TraceAsyncAspect(tracer, traceKeys);
 	}
 
 }

@@ -19,19 +19,35 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
+ * Callable that passes Span between threads. The Span name is
+ * taken either from the passed value or from the {@link SpanNamer}
+ * interface.
+ *
  * @author Spencer Gibb
+ * @author Marcin Grzejszczak
  */
-public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Callable<V> {
+public class TraceCallable<V> implements Callable<V> {
 
-	public TraceCallable(Tracer tracer, Callable<V> delegate) {
-		super(tracer, delegate);
+	private final Tracer tracer;
+	private final SpanNamer spanNamer;
+	private final Callable<V> delegate;
+	private final String name;
+	private final Span parent;
+
+	public TraceCallable(Tracer tracer,  SpanNamer spanNamer, Callable<V> delegate) {
+		this(tracer, spanNamer, delegate, null);
 	}
 
-	public TraceCallable(Tracer tracer, Callable<V> delegate, String name) {
-		super(tracer, delegate, name);
+	public TraceCallable(Tracer tracer, SpanNamer spanNamer, Callable<V> delegate, String name) {
+		this.tracer = tracer;
+		this.spanNamer = spanNamer;
+		this.delegate = delegate;
+		this.name = name;
+		this.parent = tracer.getCurrentSpan();
 	}
 
 	@Override
@@ -43,6 +59,37 @@ public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Call
 		finally {
 			close(span);
 		}
+	}
+
+	protected Span startSpan() {
+		return this.tracer.joinTrace(getSpanName(), this.parent);
+	}
+
+	protected String getSpanName() {
+		if (this.name != null) {
+			return this.name;
+		}
+		return this.spanNamer.name(this.delegate, "async");
+	}
+
+	protected void close(Span span) {
+		this.tracer.close(span);
+	}
+
+	public Tracer getTracer() {
+		return this.tracer;
+	}
+
+	public Callable<V> getDelegate() {
+		return this.delegate;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public Span getParent() {
+		return this.parent;
 	}
 
 }

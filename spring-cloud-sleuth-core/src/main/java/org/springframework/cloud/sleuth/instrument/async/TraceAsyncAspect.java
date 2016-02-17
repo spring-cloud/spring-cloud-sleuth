@@ -21,6 +21,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
@@ -36,15 +37,21 @@ public class TraceAsyncAspect {
 	private static final String ASYNC_COMPONENT = "async";
 
 	private final Tracer tracer;
+	private final TraceKeys traceKeys;
 
-	public TraceAsyncAspect(Tracer tracer) {
+	public TraceAsyncAspect(Tracer tracer, TraceKeys traceKeys) {
 		this.tracer = tracer;
+		this.traceKeys = traceKeys;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		String spanName = ASYNC_COMPONENT + ":" + pjp.getTarget().getClass().getSimpleName();
-		Span span = this.tracer.startTrace(spanName);
+		Span span = this.tracer.startTrace(pjp.getSignature().getName());
+		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
+		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
+				this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
+		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
+				this.traceKeys.getAsync().getMethodNameKey(), pjp.getSignature().getName());
 		try {
 			return pjp.proceed();
 		} finally {

@@ -17,23 +17,39 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
+ * Runnable that passes Span between threads. The Span name is
+ * taken either from the passed value or from the {@link SpanNamer}
+ * interface.
+ *
  * @author Spencer Gibb
+ * @author Marcin Grzejszczak
  */
-public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
+public class TraceRunnable implements Runnable {
 
-	public TraceRunnable(Tracer tracer, Runnable delegate) {
-		super(tracer, delegate);
+	private final Tracer tracer;
+	private final SpanNamer spanNamer;
+	private final Runnable delegate;
+	private final String name;
+	private final Span parent;
+
+	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, Runnable delegate) {
+		this(tracer, spanNamer, delegate, null);
 	}
 
-	public TraceRunnable(Tracer tracer, Runnable delegate, String name) {
-		super(tracer, delegate, name);
+	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, Runnable delegate, String name) {
+		this.tracer = tracer;
+		this.spanNamer = spanNamer;
+		this.delegate = delegate;
+		this.name = name;
+		this.parent = tracer.getCurrentSpan();
 	}
 
 	@Override
-	public void run() {
+	public void run()  {
 		Span span = startSpan();
 		try {
 			this.getDelegate().run();
@@ -41,5 +57,36 @@ public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 		finally {
 			close(span);
 		}
+	}
+
+	protected Span startSpan() {
+		return this.tracer.joinTrace(getSpanName(), this.parent);
+	}
+
+	protected String getSpanName() {
+		if (this.name != null) {
+			return this.name;
+		}
+		return this.spanNamer.name(this.delegate, "async");
+	}
+
+	protected void close(Span span) {
+		this.tracer.close(span);
+	}
+
+	public Tracer getTracer() {
+		return this.tracer;
+	}
+
+	public Runnable getDelegate() {
+		return this.delegate;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public Span getParent() {
+		return this.parent;
 	}
 }

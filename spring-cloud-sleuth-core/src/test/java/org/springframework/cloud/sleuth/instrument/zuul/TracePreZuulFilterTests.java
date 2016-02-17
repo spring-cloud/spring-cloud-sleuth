@@ -23,6 +23,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -45,7 +46,7 @@ public class TracePreZuulFilterTests {
 			.mock(ApplicationEventPublisher.class);
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			this.publisher);
+			this.publisher, new DefaultSpanNamer());
 
 	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer);
 

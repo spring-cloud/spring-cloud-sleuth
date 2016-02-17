@@ -24,7 +24,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
+
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors
  * @author Gaurav Rai Mazra
@@ -34,20 +37,27 @@ public class TraceableExecutorService implements ExecutorService {
 	final ExecutorService delegate;
 	final Tracer tracer;
 	private final String spanName;
+	final TraceKeys traceKeys;
+	final SpanNamer spanNamer;
 
-	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer) {
-		this(delegate, tracer, null);
+	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer,
+			TraceKeys traceKeys, SpanNamer spanNamer) {
+		this(delegate, tracer, traceKeys, spanNamer, null);
 	}
 
-	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer, String spanName) {
+	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer,
+			TraceKeys traceKeys, SpanNamer spanNamer, String spanName) {
 		this.delegate = delegate;
 		this.tracer = tracer;
 		this.spanName = spanName;
+		this.traceKeys = traceKeys;
+		this.spanNamer = spanNamer;
 	}
 
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new TraceRunnable(this.tracer, command, this.spanName);
+		final Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys,
+				this.spanNamer, command, this.spanName);
 		this.delegate.execute(r);
 	}
 
@@ -78,19 +88,22 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new TraceCallable<>(this.tracer, task, this.spanName);
+		Callable<T> c = new LocalComponentTraceCallable<>(this.tracer, this.traceKeys,
+				this.spanNamer, this.spanName, task);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new TraceRunnable(this.tracer, task, this.spanName);
+		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys,
+				this.spanNamer, task, this.spanName);
 		return this.delegate.submit(r, result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = new TraceRunnable(this.tracer, task, this.spanName);
+		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys,
+				this.spanNamer, task, this.spanName);
 		return this.delegate.submit(r);
 	}
 

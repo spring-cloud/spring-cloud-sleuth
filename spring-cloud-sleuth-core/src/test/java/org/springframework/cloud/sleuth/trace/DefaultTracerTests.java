@@ -24,7 +24,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
 import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
@@ -54,6 +56,7 @@ public class DefaultTracerTests {
 	public static final String IMPORTANT_WORK_2 = "http:important work 2";
 	public static final int NUM_SPANS = 3;
 	private ApplicationEventPublisher publisher;
+	private SpanNamer spanNamer = new DefaultSpanNamer();
 
 	@Before
 	public void setup() {
@@ -70,7 +73,7 @@ public class DefaultTracerTests {
 	public void tracingWorks() {
 
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
-				this.publisher);
+				this.publisher, new DefaultSpanNamer());
 
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
@@ -109,7 +112,7 @@ public class DefaultTracerTests {
 	@Test
 	public void nonExportable() {
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
-				this.publisher);
+				this.publisher, this.spanNamer);
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(false));
 	}
@@ -117,7 +120,7 @@ public class DefaultTracerTests {
 	@Test
 	public void exportable() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher);
+				this.publisher, this.spanNamer);
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(true));
 	}
@@ -125,7 +128,7 @@ public class DefaultTracerTests {
 	@Test
 	public void exportableInheritedFromParent() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher);
+				this.publisher, this.spanNamer);
 		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
 		assertThat(span.isExportable(), is(false));
 		Span child = tracer.joinTrace(CREATE_SIMPLE_TRACE_SPAN_NAME + "/child", span);
@@ -135,7 +138,7 @@ public class DefaultTracerTests {
 	@Test
 	public void parentNotRemovedIfActiveOnJoin() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher);
+				this.publisher, this.spanNamer);
 		Span parent = tracer.startTrace(CREATE_SIMPLE_TRACE);
 		Span span = tracer.joinTrace(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
@@ -145,7 +148,7 @@ public class DefaultTracerTests {
 	@Test
 	public void parentRemovedIfNotActiveOnJoin() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher);
+				this.publisher, this.spanNamer);
 		Span parent = Span.builder().name(CREATE_SIMPLE_TRACE).traceId(1L).spanId(1L)
 				.build();
 		Span span = tracer.joinTrace(IMPORTANT_WORK_1, parent);
@@ -156,7 +159,7 @@ public class DefaultTracerTests {
 	@Test
 	public void grandParentRestoredAfterAutoClose() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher);
+				this.publisher, this.spanNamer);
 		Span grandParent = tracer.startTrace(CREATE_SIMPLE_TRACE);
 		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
 				.build();

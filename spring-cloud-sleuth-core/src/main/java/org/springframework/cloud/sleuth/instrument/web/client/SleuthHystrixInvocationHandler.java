@@ -15,6 +15,10 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
+
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
@@ -22,11 +26,8 @@ import feign.InvocationHandlerFactory;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommand;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.util.Map;
 
 import static feign.Util.checkNotNull;
 
@@ -38,12 +39,14 @@ final class SleuthHystrixInvocationHandler implements InvocationHandler {
 	private final Target<?> target;
 	private final Map<Method, MethodHandler> dispatch;
 	private final Tracer tracer;
+	private final TraceKeys traceKeys;
 
 	SleuthHystrixInvocationHandler(Target<?> target, Map<Method, MethodHandler> dispatch,
-			Tracer tracer) {
+			Tracer tracer, TraceKeys traceKeys) {
 		this.tracer = checkNotNull(tracer, "traceManager");
 		this.target = checkNotNull(target, "target");
 		this.dispatch = checkNotNull(dispatch, "dispatch");
+		this.traceKeys = checkNotNull(traceKeys, "traceKeys");
 	}
 
 	@Override public Object invoke(final Object proxy, final Method method,
@@ -54,7 +57,7 @@ final class SleuthHystrixInvocationHandler implements InvocationHandler {
 				.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
 				.andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
 
-		HystrixCommand<Object> hystrixCommand = new TraceCommand<Object>(this.tracer,
+		HystrixCommand<Object> hystrixCommand = new TraceCommand<Object>(this.tracer, this.traceKeys,
 				setter) {
 			@Override public Object doRun() throws Exception {
 				try {
@@ -79,15 +82,18 @@ final class SleuthHystrixInvocationHandler implements InvocationHandler {
 	static final class Factory implements InvocationHandlerFactory {
 
 		private final Tracer tracer;
+		private final TraceKeys traceKeys;
 
-		public Factory(Tracer tracer) {
+		public Factory(Tracer tracer, TraceKeys traceKeys) {
 			this.tracer = tracer;
+			this.traceKeys = traceKeys;
 		}
 
 		@Override public InvocationHandler create(
 				@SuppressWarnings("rawtypes") Target target,
 				Map<Method, MethodHandler> dispatch) {
-			return new SleuthHystrixInvocationHandler(target, dispatch, this.tracer);
+			return new SleuthHystrixInvocationHandler(target, dispatch, this.tracer,
+					this.traceKeys);
 		}
 	}
 }

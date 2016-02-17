@@ -40,6 +40,7 @@ import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConcurrencyStrategy;
 import org.springframework.context.ApplicationEvent;
@@ -88,9 +89,9 @@ public class TraceFeignClientAutoConfiguration {
 	@ConditionalOnClass(HystrixCommand.class)
 	@ConditionalOnMissingBean(SleuthHystrixConcurrencyStrategy.class)
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
-	public Feign.Builder feignHystrixBuilder(Tracer tracer) {
+	public Feign.Builder feignHystrixBuilder(Tracer tracer, TraceKeys traceKeys) {
 		return HystrixFeign.builder().invocationHandlerFactory(
-				new SleuthHystrixInvocationHandler.Factory(tracer));
+				new SleuthHystrixInvocationHandler.Factory(tracer, traceKeys));
 	}
 
 	@Bean

@@ -54,10 +54,49 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
+	public SpanAssert nameStartsWith(String string) {
+		isNotNull();
+		if (!this.actual.getName().startsWith(string)) {
+			String message = String.format("Expected span's name to start with <%s> but it was equal to <%s>", string, this.actual.getName());
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
 	public SpanAssert hasNameNotEqualTo(String name) {
 		isNotNull();
 		if (Objects.equals(this.actual.getName(), name)) {
 			String message = String.format("Expected span's name NOT to be <%s> but it was <%s>", name, this.actual.getName());
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
+	public SpanAssert isALocalComponentSpan() {
+		isNotNull();
+		if (!this.actual.tags().containsKey(Span.SPAN_LOCAL_COMPONENT_TAG_NAME)) {
+			String message = String.format("Expected span to be a local component. "
+					+ "LC tag is missing. Found tags are <%s>", this.actual.tags());
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
+	public SpanAssert hasATag(String tagKey, String tagValue) {
+		isNotNull();
+		if (!this.actual.tags().containsKey(tagKey)) {
+			String message = String.format("Expected span to have the tag with key <%s>. "
+					+ "Found tags are <%s>", tagKey, this.actual.tags());
+			log.error(message);
+			failWithMessage(message);
+		}
+		String foundTagValue = this.actual.tags().get(tagKey);
+		if (!foundTagValue.equals(tagValue)) {
+			String message = String.format("Expected span to have the tag with key <%s> and value <%s>. "
+					+ "Found value for that tag is <%s>", tagKey, tagValue, foundTagValue);
 			log.error(message);
 			failWithMessage(message);
 		}
