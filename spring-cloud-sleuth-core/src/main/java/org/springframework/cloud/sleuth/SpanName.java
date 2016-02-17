@@ -14,31 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth;
 
-import java.util.concurrent.Callable;
-
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Trace Callable that continues a span instead of creating a new one
+ *
+ * Annotation to provide the name for the Span
  *
  * @author Marcin Grzejszczak
  */
-public class TraceContinuingCallable<V> extends TraceCallable<V> implements Callable<V> {
-
-	public TraceContinuingCallable(Tracer tracer, Callable<V> delegate) {
-		super(tracer, delegate);
-	}
-
-	@Override
-	protected Span startSpan() {
-		return getTracer().continueSpan(getParent());
-	}
-
-	@Override
-	protected void close(Span span) {
-		getTracer().detach(span);
-	}
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface SpanName {
+	String value();
 }

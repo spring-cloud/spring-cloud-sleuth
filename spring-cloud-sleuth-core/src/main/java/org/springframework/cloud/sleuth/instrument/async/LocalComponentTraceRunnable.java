@@ -28,6 +28,8 @@ import org.springframework.cloud.sleuth.instrument.TraceKeys;
  */
 public class LocalComponentTraceRunnable extends TraceRunnable {
 
+	protected static final String ASYNC_COMPONENT = "async";
+
 	private final TraceKeys traceKeys;
 
 	public LocalComponentTraceRunnable(Tracer tracer, TraceKeys traceKeys, Runnable delegate) {

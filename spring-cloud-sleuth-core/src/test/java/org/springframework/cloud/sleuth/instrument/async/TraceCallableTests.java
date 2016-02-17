@@ -11,14 +11,14 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceCallableTests {
@@ -71,6 +71,23 @@ public class TraceCallableTests {
 		then(secondSpan).isNull();
 	}
 
+	@Test
+	public void should_take_name_of_span_from_span_name_annotation()
+			throws Exception {
+		Span span = whenATraceKeepingCallableGetsSubmitted();
+
+		then(span).hasNameEqualTo("some-callable-name-from-annotation");
+	}
+
+	@Test
+	public void should_take_name_of_span_from_to_string_if_span_name_annotation_is_missing()
+			throws Exception {
+		Span span = whenCallableGetsSubmitted(
+				thatRetrievesTraceFromThreadLocal());
+
+		then(span).hasNameEqualTo("some-callable-name-from-to-string");
+	}
+
 	private Span givenSpanIsAlreadyActive() {
 		return this.tracer.startTrace("http:parent");
 	}
@@ -80,6 +97,11 @@ public class TraceCallableTests {
 			@Override
 			public Span call() throws Exception {
 				return TestSpanContextHolder.getCurrentSpan();
+			}
+
+			@Override
+			public String toString() {
+				return "some-callable-name-from-to-string";
 			}
 		};
 	}
@@ -94,10 +116,26 @@ public class TraceCallableTests {
 		return this.executor.submit(new TraceCallable<>(this.tracer, callable))
 				.get();
 	}
+	private Span whenATraceKeepingCallableGetsSubmitted()
+			throws InterruptedException, java.util.concurrent.ExecutionException {
+		return this.executor.submit(new TraceCallable<>(this.tracer, new TraceKeepingCallable()))
+				.get();
+	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
 		return this.executor.submit(callable).get();
+	}
+
+	@SpanName("some-callable-name-from-annotation")
+	static class TraceKeepingCallable implements Callable<Span> {
+		public Span span;
+
+		@Override
+		public Span call() throws Exception {
+			this.span = TestSpanContextHolder.getCurrentSpan();
+			return this.span;
+		}
 	}
 
 }

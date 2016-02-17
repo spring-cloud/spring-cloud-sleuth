@@ -30,6 +30,8 @@ import org.springframework.cloud.sleuth.instrument.TraceKeys;
  */
 public class LocalComponentTraceCallable<V> extends TraceCallable<V> {
 
+	protected static final String ASYNC_COMPONENT = "async";
+
 	private final TraceKeys traceKeys;
 
 	public LocalComponentTraceCallable(Tracer tracer, TraceKeys traceKeys, Callable<V> delegate) {

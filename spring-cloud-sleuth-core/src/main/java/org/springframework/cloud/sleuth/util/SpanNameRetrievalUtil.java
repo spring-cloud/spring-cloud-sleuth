@@ -14,31 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.util;
 
-import java.util.concurrent.Callable;
-
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.core.annotation.AnnotationUtils;
 
 /**
- * Trace Callable that continues a span instead of creating a new one
+ * Utility class that tries to get the Span name from
+ * SpanName annotation value if one is present. If that's not the case
+ * then it delegates to toString() method of the object
+ *
+ * @see org.springframework.cloud.sleuth.SpanName
  *
  * @author Marcin Grzejszczak
  */
-public class TraceContinuingCallable<V> extends TraceCallable<V> implements Callable<V> {
+public class SpanNameRetrievalUtil {
 
-	public TraceContinuingCallable(Tracer tracer, Callable<V> delegate) {
-		super(tracer, delegate);
-	}
-
-	@Override
-	protected Span startSpan() {
-		return getTracer().continueSpan(getParent());
-	}
-
-	@Override
-	protected void close(Span span) {
-		getTracer().detach(span);
+	public static String getSpanName(Object object) {
+		SpanName annotation = AnnotationUtils
+				.findAnnotation(object.getClass(), SpanName.class);
+		return annotation != null ? annotation.value() : object.toString();
 	}
 }

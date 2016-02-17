@@ -18,13 +18,24 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.util.SpanNameRetrievalUtil;
 
 /**
+ * Runnable that passes Span between threads. The Span name is
+ * taken in the following order
+ *
+ * <li>
+ *     <ul>from the passed value</ul>
+ *     <ul>from the @SpanName annotation if one is present</ul>
+ *     <ul>from the toString() of the delegate</ul>
+ * </li>
+ *
+ * @see org.springframework.cloud.sleuth.SpanName
+ *
  * @author Spencer Gibb
+ * @author Marcin Grzejszczak
  */
 public class TraceRunnable implements Runnable {
-
-	protected static final String ASYNC_COMPONENT = "async";
 
 	private final Tracer tracer;
 	private final Runnable delegate;
@@ -58,9 +69,17 @@ public class TraceRunnable implements Runnable {
 	}
 
 	protected String getSpanName() {
-		return this.name == null ?
-				ASYNC_COMPONENT
-				: this.name;
+		String spanName = this.name != null ? this.name : SpanNameRetrievalUtil.getSpanName(this.delegate);
+		// If there is no overridden toString method we'll put constant value
+		if (isDefaultToString(spanName)) {
+			return "async";
+		}
+		return spanName;
+	}
+
+	private boolean isDefaultToString(String spanName) {
+		return (this.delegate.getClass().getName() + "@" +
+				Integer.toHexString(this.delegate.hashCode())).equals(spanName);
 	}
 
 	protected void close(Span span) {
