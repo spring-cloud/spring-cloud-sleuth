@@ -347,7 +347,7 @@ public class TraceKeys {
 		private String prefix = "";
 
 		/**
-		 * Name of the thread from which the async processing started
+		 * Name of the thread that executed the async method
 		 */
 		private String threadNameKey = "thread";
 
@@ -357,7 +357,7 @@ public class TraceKeys {
 		private String classNameKey = "class";
 
 		/**
-		 * Name of the method from which the asynchronous process started
+		 * Name of the method annotated with @Async
 		 */
 		private String methodNameKey = "method";
 

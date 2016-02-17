@@ -22,18 +22,28 @@ import org.springframework.cloud.sleuth.Tracer;
 /**
  * @author Spencer Gibb
  */
-public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
+public class TraceRunnable implements Runnable {
+
+	protected static final String ASYNC_COMPONENT = "async";
+
+	private final Tracer tracer;
+	private final Runnable delegate;
+	private final String name;
+	private final Span parent;
 
 	public TraceRunnable(Tracer tracer, Runnable delegate) {
-		super(tracer, delegate);
+		this(tracer, delegate, null);
 	}
 
 	public TraceRunnable(Tracer tracer, Runnable delegate, String name) {
-		super(tracer, delegate, name);
+		this.tracer = tracer;
+		this.delegate = delegate;
+		this.name = name;
+		this.parent = tracer.getCurrentSpan();
 	}
 
 	@Override
-	public void run() {
+	public void run()  {
 		Span span = startSpan();
 		try {
 			this.getDelegate().run();
@@ -41,5 +51,35 @@ public class TraceRunnable extends TraceDelegate<Runnable> implements Runnable {
 		finally {
 			close(span);
 		}
+	}
+
+	protected Span startSpan() {
+		return this.tracer.joinTrace(getSpanName(), this.parent);
+	}
+
+	protected String getSpanName() {
+		return this.name == null ?
+				ASYNC_COMPONENT
+				: this.name;
+	}
+
+	protected void close(Span span) {
+		this.tracer.close(span);
+	}
+
+	public Tracer getTracer() {
+		return this.tracer;
+	}
+
+	public Runnable getDelegate() {
+		return this.delegate;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public Span getParent() {
+		return this.parent;
 	}
 }

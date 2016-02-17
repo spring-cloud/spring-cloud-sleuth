@@ -24,14 +24,24 @@ import org.springframework.cloud.sleuth.Tracer;
 /**
  * @author Spencer Gibb
  */
-public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Callable<V> {
+public class TraceCallable<V> implements Callable<V> {
+
+	protected static final String ASYNC_COMPONENT = "async";
+
+	private final Tracer tracer;
+	private final Callable<V> delegate;
+	private final String name;
+	private final Span parent;
 
 	public TraceCallable(Tracer tracer, Callable<V> delegate) {
-		super(tracer, delegate);
+		this(tracer, delegate, null);
 	}
 
 	public TraceCallable(Tracer tracer, Callable<V> delegate, String name) {
-		super(tracer, delegate, name);
+		this.tracer = tracer;
+		this.delegate = delegate;
+		this.name = name;
+		this.parent = tracer.getCurrentSpan();
 	}
 
 	@Override
@@ -43,6 +53,36 @@ public class TraceCallable<V> extends TraceDelegate<Callable<V>> implements Call
 		finally {
 			close(span);
 		}
+	}
+
+	protected Span startSpan() {
+		return this.tracer.joinTrace(getSpanName(), this.parent);
+	}
+
+	protected String getSpanName() {
+		return this.name == null ?
+				ASYNC_COMPONENT
+				: this.name;
+	}
+
+	protected void close(Span span) {
+		this.tracer.close(span);
+	}
+
+	public Tracer getTracer() {
+		return this.tracer;
+	}
+
+	public Callable<V> getDelegate() {
+		return this.delegate;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public Span getParent() {
+		return this.parent;
 	}
 
 }

@@ -26,14 +26,18 @@ import org.springframework.cloud.sleuth.instrument.TraceKeys;
  *
  * @author Marcin Grzejszczak
  */
-public class LocalComponentTraceRunnable extends LocalComponentTraceDelegate<Runnable> implements Runnable {
+public class LocalComponentTraceRunnable extends TraceRunnable {
+
+	private final TraceKeys traceKeys;
 
 	public LocalComponentTraceRunnable(Tracer tracer, TraceKeys traceKeys, Runnable delegate) {
-		super(tracer, traceKeys, delegate);
+		super(tracer, delegate);
+		this.traceKeys = traceKeys;
 	}
 
 	public LocalComponentTraceRunnable(Tracer tracer, TraceKeys traceKeys, Runnable delegate, String name) {
-		super(tracer, traceKeys, delegate, name);
+		super(tracer, delegate, name);
+		this.traceKeys = traceKeys;
 	}
 
 	@Override
@@ -45,5 +49,14 @@ public class LocalComponentTraceRunnable extends LocalComponentTraceDelegate<Run
 		finally {
 			close(span);
 		}
+	}
+
+	@Override
+	protected Span startSpan() {
+		Span span = getTracer().joinTrace(getSpanName(), getParent());
+		getTracer().addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
+		getTracer().addTag(this.traceKeys.getAsync().getPrefix() +
+				this.traceKeys.getAsync().getThreadNameKey(), Thread.currentThread().getName());
+		return span;
 	}
 }

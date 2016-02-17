@@ -22,7 +22,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * @author Spencer Gibb
+ * @author Marcin Grzejszczak
  */
 public class TraceContinuingCallable<V> extends TraceCallable<V> implements Callable<V> {
 

@@ -28,14 +28,18 @@ import org.springframework.cloud.sleuth.instrument.TraceKeys;
  *
  * @author Marcin Grzejszczak
  */
-public class LocalComponentTraceCallable<V> extends LocalComponentTraceDelegate<Callable<V>> implements Callable<V> {
+public class LocalComponentTraceCallable<V> extends TraceCallable<V> {
+
+	private final TraceKeys traceKeys;
 
 	public LocalComponentTraceCallable(Tracer tracer, TraceKeys traceKeys, Callable<V> delegate) {
-		super(tracer, traceKeys, delegate);
+		super(tracer, delegate);
+		this.traceKeys = traceKeys;
 	}
 
 	public LocalComponentTraceCallable(Tracer tracer, TraceKeys traceKeys, Callable<V> delegate, String name) {
-		super(tracer, traceKeys, delegate, name);
+		super(tracer, delegate, name);
+		this.traceKeys = traceKeys;
 	}
 
 	@Override
@@ -47,5 +51,14 @@ public class LocalComponentTraceCallable<V> extends LocalComponentTraceDelegate<
 		finally {
 			close(span);
 		}
+	}
+
+	@Override
+	protected Span startSpan() {
+		Span span = getTracer().joinTrace(getSpanName(), getParent());
+		getTracer().addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
+		getTracer().addTag(this.traceKeys.getAsync().getPrefix() +
+				this.traceKeys.getAsync().getThreadNameKey(), Thread.currentThread().getName());
+		return span;
 	}
 }

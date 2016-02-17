@@ -54,6 +54,7 @@ public class LazyTraceExecutor implements Executor {
 				this.delegate.execute(command);
 			}
 		}
+		// due to lazy nature of bean initialization
 		if (this.traceKeys == null) {
 			try {
 				this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
