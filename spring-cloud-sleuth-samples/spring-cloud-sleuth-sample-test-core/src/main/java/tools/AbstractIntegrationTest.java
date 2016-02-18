@@ -23,9 +23,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.trace.IntegrationTestSpanContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -48,8 +49,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public abstract class AbstractIntegrationTest {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(AbstractIntegrationTest.class);
+	private static final Log log = LogFactory.getLog(AbstractIntegrationTest.class);
 
 	protected static int pollInterval = 1;
 	protected static int timeout = 20;
@@ -80,9 +80,9 @@ public abstract class AbstractIntegrationTest {
 	protected Runnable checkServerHealth(String appName, RequestExchanger requestExchanger) {
 		return () -> {
 			ResponseEntity<String> response = requestExchanger.exchange();
-			log.info("Response from the [{}] health endpoint is [{}]", appName, response);
+			log.info(String.format("Response from the [%s] health endpoint is [%s]", appName, response));
 			then(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-			log.info("[{}] is up!", appName);
+			log.info(String.format("[%s] is up!", appName));
 		};
 	}
 
@@ -92,13 +92,13 @@ public abstract class AbstractIntegrationTest {
 
 	protected ResponseEntity<String> endpointToCheckZipkinQueryHealth() {
 		URI uri = URI.create(getZipkinServicesQueryUrl());
-		log.info("Sending request to the Zipkin query service [{}]", uri);
+		log.info(String.format("Sending request to the Zipkin query service [%s]", uri));
 		return exchangeRequest(uri);
 	}
 
 	protected ResponseEntity<String> endpointToCheckZipkinServerHealth() {
 		URI uri = URI.create("http://localhost:" +getZipkinServerPort()+"/health");
-		log.info("Sending request to the Zipkin Server [{}]", uri);
+		log.info(String.format("Sending request to the Zipkin Server [%s]", uri));
 		return exchangeRequest(uri);
 	}
 
@@ -108,7 +108,8 @@ public abstract class AbstractIntegrationTest {
 
 	protected ResponseEntity<String> checkStateOfTheTraceId(long traceId) {
 		URI uri = URI.create(getZipkinTraceQueryUrl() + Long.toHexString(traceId));
-		log.info("Sending request to the Zipkin query service [{}]. Checking presence of trace id [{}]", uri, traceId);
+		log.info(String.format("Sending request to the Zipkin query service [%s]. "
+				+ "Checking presence of trace id [%d]", uri, traceId));
 		return exchangeRequest(uri);
 	}
 
@@ -137,14 +138,15 @@ public abstract class AbstractIntegrationTest {
 	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(long traceId) {
 		return () -> {
 			ResponseEntity<String> response = checkStateOfTheTraceId(traceId);
-			log.info("Response from the Zipkin query service about the trace id [{}] for trace with id [{}]", response, traceId);
+			log.info(String.format("Response from the Zipkin query service about the "
+					+ "trace id [%s] for trace with id [%d]", response, traceId));
 			then(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 			then(response.hasBody()).isTrue();
 			List<Span> spans = Codec.JSON.readSpans(response.getBody().getBytes());
 			List<String> serviceNamesNotFoundInZipkin = serviceNamesNotFoundInZipkin(spans);
 			List<String> spanNamesNotFoundInZipkin = annotationsNotFoundInZipkin(spans);
-			log.info("The following services were not found in Zipkin {}", serviceNamesNotFoundInZipkin);
-			log.info("The following annotations were not found in Zipkin {}", spanNamesNotFoundInZipkin);
+			log.info(String.format("The following services were not found in Zipkin [%s]", serviceNamesNotFoundInZipkin));
+			log.info(String.format("The following annotations were not found in Zipkin [%s]", spanNamesNotFoundInZipkin));
 			then(serviceNamesNotFoundInZipkin).isEmpty();
 			then(spanNamesNotFoundInZipkin).isEmpty();
 			log.info("Zipkin tracing is working! Sleuth is working! Let's be happy!");

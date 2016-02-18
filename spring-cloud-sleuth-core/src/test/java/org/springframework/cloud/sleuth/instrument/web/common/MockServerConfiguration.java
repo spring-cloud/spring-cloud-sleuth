@@ -1,6 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.web.common;
 
-import org.slf4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.SocketUtils;
@@ -8,8 +9,7 @@ import org.springframework.util.SocketUtils;
 @Configuration
 public class MockServerConfiguration {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(MockServerConfiguration.class);
+	private static final Log log = LogFactory.getLog(MockServerConfiguration.class);
 
 	@Bean(destroyMethod = "shutdownServer")
 	HttpMockServer httpMockServer() {

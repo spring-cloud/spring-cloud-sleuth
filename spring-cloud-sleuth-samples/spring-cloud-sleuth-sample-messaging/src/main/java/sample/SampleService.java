@@ -16,7 +16,8 @@
 
 package sample;
 
-import org.slf4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.context.ApplicationListener;
@@ -31,8 +32,7 @@ import org.springframework.web.client.RestTemplate;
  */
 @MessageEndpoint public class SampleService implements
 		ApplicationListener<EmbeddedServletContainerInitializedEvent> {
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(SampleService.class);
+	private static final Log log = LogFactory.getLog(SampleService.class);
 
 	@Autowired private RestTemplate restTemplate;
 	private int port;

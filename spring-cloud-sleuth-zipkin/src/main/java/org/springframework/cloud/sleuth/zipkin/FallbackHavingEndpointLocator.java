@@ -1,7 +1,7 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import org.slf4j.Logger;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import zipkin.Endpoint;
 
 /**
@@ -10,8 +10,7 @@ import zipkin.Endpoint;
  */
 public class FallbackHavingEndpointLocator implements EndpointLocator {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(FallbackHavingEndpointLocator.class);
+	private static final Log log = LogFactory.getLog(FallbackHavingEndpointLocator.class);
 
 	private final DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
 	private final ServerPropertiesEndpointLocator serverPropertiesEndpointLocator;

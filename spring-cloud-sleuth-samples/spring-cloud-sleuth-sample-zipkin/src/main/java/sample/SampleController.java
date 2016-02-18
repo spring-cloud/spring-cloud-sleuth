@@ -19,7 +19,8 @@ package sample;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
-import org.slf4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
@@ -38,8 +39,7 @@ import org.springframework.web.client.RestTemplate;
 public class SampleController implements
 ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(SampleController.class);
+	private static final Log log = LogFactory.getLog(SampleController.class);
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -97,7 +97,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		Span span = this.tracer.startTrace("http:customTraceEndpoint",
 				new AlwaysSampler());
 		int millis = this.random.nextInt(1000);
-		log.info("Sleeping for {} millis", millis);
+		log.info(String.format("Sleeping for [%d] millis", millis));
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 
@@ -110,7 +110,7 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	@RequestMapping("/start")
 	public String start() throws InterruptedException {
 		int millis = this.random.nextInt(1000);
-		log.info("Sleeping for {} millis", millis);
+		log.info(String.format("Sleeping for [%d] millis", millis));
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 

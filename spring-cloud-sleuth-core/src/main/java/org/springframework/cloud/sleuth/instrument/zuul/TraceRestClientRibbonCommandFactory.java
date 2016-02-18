@@ -19,7 +19,10 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
-import org.slf4j.Logger;
+import com.netflix.client.http.HttpRequest;
+import com.netflix.niws.client.http.RestClient;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
@@ -32,17 +35,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.MultiValueMap;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.niws.client.http.RestClient;
-
 /**
  * @author Spencer Gibb
  */
 public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommandFactory
 		implements ApplicationEventPublisherAware {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(TraceRestClientRibbonCommandFactory.class);
+	private static final Log log = LogFactory.getLog(TraceRestClientRibbonCommandFactory.class);
 
 	private ApplicationEventPublisher publisher;
 

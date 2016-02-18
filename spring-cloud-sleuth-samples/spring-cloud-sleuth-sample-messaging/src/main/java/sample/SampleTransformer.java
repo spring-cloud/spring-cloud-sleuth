@@ -16,7 +16,8 @@
 
 package sample;
 
-import org.slf4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -29,8 +30,7 @@ import org.springframework.messaging.Message;
 @MessageEndpoint
 public class SampleTransformer {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(SampleTransformer.class);
+	private static final Log log = LogFactory.getLog(SampleTransformer.class);
 
 	@Autowired
 	SampleBackground background;
