@@ -18,7 +18,8 @@ package tools;
 import java.io.IOException;
 import java.net.URI;
 
-import org.slf4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -35,8 +36,7 @@ import org.springframework.web.client.RestTemplate;
  */
 public class AssertingRestTemplate extends RestTemplate {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(AssertingRestTemplate.class);
+	private static final Log log = LogFactory.getLog(AssertingRestTemplate.class);
 
 	public AssertingRestTemplate() {
 		setErrorHandler(new DefaultResponseErrorHandler() {

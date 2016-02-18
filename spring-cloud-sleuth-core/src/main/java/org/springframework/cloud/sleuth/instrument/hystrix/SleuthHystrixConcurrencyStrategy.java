@@ -5,7 +5,8 @@ import java.util.concurrent.Callable;
 
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
-import org.slf4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.TraceKeys;
@@ -13,8 +14,7 @@ import org.springframework.cloud.sleuth.instrument.TraceKeys;
 public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
 
 	private static final String HYSTRIX_COMPONENT = "hystrix";
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(SleuthHystrixConcurrencyStrategy.class);
+	private static final Log log = LogFactory.getLog(SleuthHystrixConcurrencyStrategy.class);
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;

@@ -16,7 +16,8 @@
 
 package sample;
 
-import org.slf4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -33,8 +34,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class SampleZipkinApplication {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(SampleZipkinApplication.class);
+	private static final Log log = LogFactory.getLog(SampleZipkinApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(SampleZipkinApplication.class, args);
@@ -47,7 +47,7 @@ public class SampleZipkinApplication {
 		return new ZipkinSpanReporter() {
 			@Override
 			public void report(zipkin.Span span) {
-				log.info("Reporting span [{}]", span);
+				log.info(String.format("Reporting span [%s]", span));
 			}
 		};
 	}

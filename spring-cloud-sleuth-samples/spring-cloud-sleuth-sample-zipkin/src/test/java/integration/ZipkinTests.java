@@ -17,10 +17,11 @@ package integration;
 
 import java.util.Random;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -76,8 +77,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	@Configuration
 	public static class WaitUntilZipkinIsUpConfig {
 
-		private static final Logger log = org.slf4j.LoggerFactory
-				.getLogger(WaitUntilZipkinIsUpConfig.class);
+		private static final Log log = LogFactory.getLog(WaitUntilZipkinIsUpConfig.class);
 
 		@Bean
 		public ZipkinSpanReporter spanCollector(final ZipkinProperties zipkin,

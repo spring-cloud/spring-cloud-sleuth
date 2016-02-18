@@ -18,13 +18,14 @@ package org.springframework.cloud.sleuth.assertions;
 
 import java.util.Objects;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
-import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.Span;
 
 public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 
-	private static final Logger log = org.slf4j.LoggerFactory.getLogger(SpanAssert.class);
+	private static final Log log = LogFactory.getLog(SpanAssert.class);
 
 	public SpanAssert(Span actual) {
 		super(actual, SpanAssert.class);

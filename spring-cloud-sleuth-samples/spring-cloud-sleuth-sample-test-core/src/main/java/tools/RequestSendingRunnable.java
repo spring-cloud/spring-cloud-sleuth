@@ -18,7 +18,8 @@ package tools;
 import java.net.URI;
 import java.util.Random;
 
-import org.slf4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -37,8 +38,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public class RequestSendingRunnable implements Runnable {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(RequestSendingRunnable.class);
+	private static final Log log = LogFactory.getLog(RequestSendingRunnable.class);
 
 	private final RestTemplate restTemplate;
 	private final String url;
@@ -56,11 +56,11 @@ public class RequestSendingRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		log.info("Sending the request to url [{}] with trace id in headers [{}]", this.url, this.traceId);
+		log.info(String.format("Sending the request to url [%s] with trace id in headers [%d]", this.url, this.traceId));
 		ResponseEntity<String> responseEntity =
 				this.restTemplate.exchange(requestWithTraceId(), String.class);
 		then(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		log.info("Received the following response [{}]", responseEntity);
+		log.info(String.format("Received the following response [%s]", responseEntity));
 	}
 
 	private RequestEntity<Void> requestWithTraceId() {

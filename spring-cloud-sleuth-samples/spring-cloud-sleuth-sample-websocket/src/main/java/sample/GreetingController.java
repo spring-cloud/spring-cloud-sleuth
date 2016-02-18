@@ -1,7 +1,7 @@
 package sample;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class GreetingController {
 
-	private static Logger log = LoggerFactory.getLogger(GreetingController.class);
+	private static final Log log = LogFactory.getLog(GreetingController.class);
 
 	@MessageMapping("/hello")
 	@SendTo("/topic/greetings")
