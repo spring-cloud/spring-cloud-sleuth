@@ -43,6 +43,7 @@ import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Spencer Gibb
@@ -166,6 +167,21 @@ public class DefaultTracerTests {
 		Span span = tracer.joinTrace(IMPORTANT_WORK_2, parent);
 		tracer.close(span);
 		assertThat(tracer.getCurrentSpan(), is(equalTo(grandParent)));
+	}
+
+	@Test
+	public void shouldUpdateLogsInSpanWhenItGetsContinued() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.publisher, this.spanNamer);
+		Span span = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
+				.build();
+		Span continuedSpan = tracer.continueSpan(span);
+
+		tracer.addTag("key", "value");
+		continuedSpan.logEvent("event");
+
+		then(span).hasATag("key", "value").hasLoggedAnEvent("event");
+		then(continuedSpan).hasATag("key", "value").hasLoggedAnEvent("event");
 	}
 
 	private Span assertSpan(List<Span> spans, Long parentId, String name) {

@@ -63,11 +63,17 @@ public class Span {
 	private final long spanId;
 	private boolean remote = false;
 	private boolean exportable = true;
-	private final Map<String, String> tags = new LinkedHashMap<>();
+	private final Map<String, String> tags;
 	private final String processId;
-	private final List<Log> logs = new ArrayList<>();
+	private final List<Log> logs;
 	private final Span savedSpan;
 
+	/**
+	 * Creates a new span that still tracks tags and logs of the
+	 * current span. This is crucial when continuing spans
+	 * since the changes in those collections done in the continued span
+	 * need to be reflected until the span gets closed.
+	 */
 	public Span(Span current, Span savedSpan) {
 		this.begin = current.getBegin();
 		this.end = current.getEnd();
@@ -78,8 +84,8 @@ public class Span {
 		this.remote = current.isRemote();
 		this.exportable = current.isExportable();
 		this.processId = current.getProcessId();
-		this.tags.putAll(current.tags());
-		this.logs.addAll(current.logs());
+		this.tags = current.tags;
+		this.logs = current.logs;
 		this.savedSpan = savedSpan;
 	}
 
@@ -102,6 +108,8 @@ public class Span {
 		this.exportable = exportable;
 		this.processId = processId;
 		this.savedSpan = savedSpan;
+		this.tags = new LinkedHashMap<>();
+		this.logs = new ArrayList<>();
 	}
 
 	public static SpanBuilder builder() {

@@ -73,7 +73,7 @@ public class SpanMessageHeaders {
 			if (parentId != null) {
 				addHeader(headers, Span.PARENT_ID_NAME, Span.toHex(parentId));
 			}
-			addHeader(headers, Span.SPAN_NAME_NAME, span.getName().toString());
+			addHeader(headers, Span.SPAN_NAME_NAME, span.getName());
 			addHeader(headers, Span.PROCESS_ID_NAME, span.getProcessId());
 		}
 		else {

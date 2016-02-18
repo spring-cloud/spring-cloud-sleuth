@@ -164,12 +164,12 @@ public class DefaultTracer implements Tracer {
 		} else {
 			return null;
 		}
-		Span newSpan = createSpan(span, SpanContextHolder.getCurrentSpan());
+		Span newSpan = createContinuedSpan(span, SpanContextHolder.getCurrentSpan());
 		SpanContextHolder.setCurrentSpan(newSpan);
 		return newSpan;
 	}
 
-	protected Span createSpan(Span span, Span saved) {
+	private Span createContinuedSpan(Span span, Span saved) {
 		if (saved == null && span.getSavedSpan() != null) {
 			saved = span.getSavedSpan();
 		}
