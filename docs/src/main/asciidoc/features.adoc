@@ -21,3 +21,5 @@
 * If `spring-cloud-sleuth-stream` then the app will generate and collect traces via Spring Cloud Stream. Your app automatically becomes a producer of tracer messages that are sent over your broker of choice (e.g. RabbitMQ, Apache Kafka, Redis).
 
 If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage` (default 0.1, i.e. 10%).
+
+NOTE: the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example above. Other logging systems have to configure their own formatter to get the same result. The default is `logging.pattern.level` set to `%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}` (this is a Spring Boot feature for logback users).
