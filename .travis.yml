@@ -12,6 +12,19 @@ install:
 - ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
 - '[ "${MVN_GOAL}" == "deploy" ] && ./docs/src/main/asciidoc/ghpages.sh || echo "Not updating docs"'
 script:
+-  |
+    cat <<EOF
+
+    Running build with the following parameters
+
+    FEATURE_BRANCH=${FEATURE_BRANCH}
+    SPRING_CLOUD_BUILD=${SPRING_CLOUD_BUILD}
+    MVN_GOAL=${MVN_GOAL}
+    VERSION=${VERSION}
+    MILESTONE=${MILESTONE}
+    MVN_PROFILE=${MVN_PROFILE}
+
+    EOF
 - './mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu -Dmaven.test.redirectTestOutputToFile=true'
 env:
   global:
