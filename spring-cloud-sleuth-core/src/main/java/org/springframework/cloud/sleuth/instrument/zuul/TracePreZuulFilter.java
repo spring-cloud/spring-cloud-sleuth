@@ -69,7 +69,7 @@ public class TracePreZuulFilter extends ZuulFilter
 		try {
 			setHeader(response, Span.SPAN_ID_NAME, span.getSpanId());
 			setHeader(response, Span.TRACE_ID_NAME, span.getTraceId());
-			setHeader(response, Span.SPAN_NAME_NAME, span.getName().toString());
+			setHeader(response, Span.SPAN_NAME_NAME, span.getName());
 			if (!span.isExportable()) {
 				setHeader(response, Span.NOT_SAMPLED_NAME, "true");
 			}

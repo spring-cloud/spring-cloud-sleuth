@@ -104,7 +104,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			}
 			setHeader(requestBuilder, Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
 			setHeader(requestBuilder, Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
-			setHeader(requestBuilder, Span.SPAN_NAME_NAME, span.getName().toString());
+			setHeader(requestBuilder, Span.SPAN_NAME_NAME, span.getName());
 			setHeader(requestBuilder, Span.PARENT_ID_NAME,
 					Span.toHex(getParentId(span)));
 			setHeader(requestBuilder, Span.PROCESS_ID_NAME,

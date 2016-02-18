@@ -127,7 +127,7 @@ public class TraceFeignClientAutoConfiguration {
 					return;
 				}
 				template.header(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
-				setHeader(template, Span.SPAN_NAME_NAME, span.getName().toString());
+				setHeader(template, Span.SPAN_NAME_NAME, span.getName());
 				setHeader(template, Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
 				if (!span.isExportable()) {
 					setHeader(template, Span.NOT_SAMPLED_NAME, "true");
