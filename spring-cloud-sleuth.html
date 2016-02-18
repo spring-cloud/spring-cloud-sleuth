@@ -426,7 +426,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Spring Cloud Sleuth borrows <a href="http://research.google.com/pubs/pub36356.html">Dapper&#8217;s</a> terminology.</p>
 </div>
 <div class="paragraph">
-<p><strong>Span:</strong> The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span&#8217;s are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.  Spans also have other data, such as descriptions, key-value annotations, the ID of the span that caused them, and process ID&#8217;s (normally IP address).</p>
+<p><strong>Span:</strong> The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span&#8217;s are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.  Spans also have other data, such as descriptions, timestamped events, key-value annotations (tags), the ID of the span that caused them, and process ID&#8217;s (normally IP address).</p>
 </div>
 <div class="paragraph">
 <p>Spans are started and stopped, and they keep track of their timing information.  Once you create a span, you must stop it at some point in the future.</p>
@@ -438,15 +438,263 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
-<h2 id="_todo_document_spring_cloud_sleuth">TODO: Document Spring Cloud Sleuth</h2>
+<h2 id="_features">Features</h2>
 <div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator. Example logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre>2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>(notice the <code>[appname,traceId,spanId,exportable]</code> entries from the MDC).</p>
+</div>
+</li>
+<li>
+<p>Optionally log span data in JSON format for harvesting in a log aggregator (set <code>spring.sleuth.log.json.enabled=true</code>).</p>
+</li>
+<li>
+<p>Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.</p>
+</li>
+<li>
+<p>Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, zuul filters, feign client).</p>
+</li>
+<li>
+<p>If <code>spring-cloud-sleuth-zipkin</code> then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via HTTP to a Zipkin server on localhost (port 9411). Configure the location of the service using <code>spring.zipkin.[host,port]</code>.</p>
+</li>
+<li>
+<p>If <code>spring-cloud-sleuth-stream</code> then the app will generate and collect traces via Spring Cloud Stream. Your app automatically becomes a producer of tracer messages that are sent over your broker of choice (e.g. RabbitMQ, Apache Kafka, Redis).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If using Zipkin or Stream, configure the percentage of spans exported using <code>spring.sleuth.sampler.percentage</code> (default 0.1, i.e. 10%).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example above. Other logging systems have to configure their own formatter to get the same result. The default is <code>logging.pattern.level</code> set to <code>%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}</code> (this is a Spring Boot feature for logback users).
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sampling">Sampling</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In distributed tracing the data volumes can be very high so sampling
+can be important (you usually don&#8217;t need to export all spans to get a
+good picture of what is happening). Spring Cloud Sleuth has a
+<code>Sampler</code> strategy that you can implement to take control of the
+sampling algorithm. Samplers do not stop span (correlation) ids from
+being generated, but they do prevent the tags and events being
+attached and exported. By default you get a strategy that continues to
+trace if a span is already active, but new ones are always marked as
+non-exportable. If all your apps run with this sampler you will see
+traces in logs, but not in any remote store. For testing the default
+is often enough, and it probably is all you need if you are only using
+the logs (e.g. with an ELK aggregator). If you are exporting span data
+to Zipkin or Spring Cloud Stream, there is also an <code>AlwaysSampler</code>
+that exports everything and a <code>PercentageBasedSampler</code> that samples a
+fixed fraction of spans.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the <code>PercentageBasedSampler</code> is the default if you are using
+<code>spring-cloud-sleuth-zipkin</code> or <code>spring-cloud-sleuth-stream</code>. You can
+configure the exports using <code>spring.sleuth.sampler.percentage</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A sampler can be installed just by creating a bean definition, e.g:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+public Sampler&lt;?&gt; defaultSampler() {
+    return new AlwaysSampler();
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_instrumentation">Instrumentation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud Sleuth instruments all your Spring application
+automatically, so you shouldn&#8217;t have to do anything to activate
+it. The instrumentation is added using a variety of technologies
+according to the stack that is available, e.g. for a servlet web
+application we use a <code>Filter</code>, and for Spring Integration we use
+<code>ChannelInterceptors</code>.</p>
+</div>
+<div class="paragraph">
+<p>You can customize the keys used in span tags. To limit the volume of
+span data, by default an HTTP request will be tagged only with a
+handful of metadata like the status code, host and URL. You can add
+request headers by configuring <code>spring.sleuth.keys.http.headers</code> (a
+list of header names).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Remember that tags are only collected and exported if there is a
+<code>Sampler</code> that allows it (by default there is not, so there is no
+danger of accidentally collecting too much data without configuring
+something).
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_span_data_as_messages">Span Data as Messages</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can accumulate and send span data over
+<a href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</a> by
+including the <code>spring-cloud-sleuth-stream</code> jar as a dependency, and
+adding a Channel Binder implementation
+(e.g. <code>spring-cloud-starter-stream-rabbit</code> for RabbitMQ or
+<code>spring-cloud-starter-stream-kafka</code> for Kafka). This will
+automatically turn your app into a producer of messages with payload
+type <code>Spans</code>.</p>
+</div>
+<div class="sect2">
+<h3 id="_zipkin_consumer">Zipkin Consumer</h3>
+<div class="paragraph">
+<p>There is a special convenience annotation for setting up a message consumer
+for the Span data and pushing it into a Zipkin <code>SpanStore</code>. This application</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@SpringBootApplication
+@EnableZipkinStreamServer
+public class Consumer {
+  public static void main(String[] args) {
+    SpringApplication.run(Consumer.class, args);
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>will listen for the Span data on whatever transport you provide via a
+Spring Cloud Stream <code>Binder</code> (e.g. include
+<code>spring-cloud-starter-stream-rabbit</code> for RabbitMQ, and similar
+starters exist for Redis and Kafka). The app will also be a
+<a href="https://github.com/openzipkin/zipkin-java">Zipkin query server</a>, so you
+can point a standard Zipkin UI at it (e.g. run the consumer app on
+port 9411 if you want the query server on the same host and the
+default configuration).</p>
+</div>
+<div class="paragraph">
+<p>The deafult <code>SpanStore</code> is in-memory (good for demos and getting
+started quickly). For a more robust solution you can add MySQL and
+<code>spring-boot-starter-jdbc</code> to your classpath and enable the JDBC
+<code>SpanStore</code> via configuration, e.g.:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+  datasource:
+    schema: classpath:/mysql.sql
+    url: jdbc:mysql://${MYSQL_HOST:localhost}/test
+    username: root
+    password: root
+# Switch this on to create the schema on startup:
+    initialize: true
+    continueOnError: true
+  sleuth:
+    enabled: false
+zipkin:
+  store:
+    type: mysql</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The <code>@EnableZipkinStreamServer</code> is also annotated with
+<code>@EnableZipkinServer</code> so the process will also expose the standard
+Zipkin server endpoints for collecting spans over HTTP, and for
+querying in the Zipkin Web UI.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_custom_consumer">Custom Consumer</h3>
+<div class="paragraph">
+<p>A custom consumer can also easily be implemented using
+<code>spring-cloud-sleuth-stream</code> and binding to the <code>SleuthSink</code>. Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@EnableBinding(SleuthSink.class)
+@SpringBootApplication(exclude = SleuthStreamAutoConfiguration.class)
+@MessageEndpoint
+public class Consumer {
 
+    @ServiceActivator(inputChannel = SleuthSink.INPUT)
+    public void sink(Spans input) throws Exception {
+        // ... process spans
+    }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the sample consumer application above explicitly excludes
+<code>SleuthStreamAutoConfiguration</code> so it doesn&#8217;t send messages to itself,
+but this is optional (you might actually want to trace requests into
+the consumer app).
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-09-10 09:33:11 +01:00
+Last updated 2016-02-18 23:05:40 +00:00
 </div>
 </div>
 </body>
