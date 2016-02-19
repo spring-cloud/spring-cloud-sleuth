@@ -110,6 +110,21 @@ public class TraceFilterTests {
 	}
 
 	@Test
+	public void startsNewTraceWithParentIdInHeaders() throws Exception {
+		this.request = builder()
+				.header(Span.SPAN_ID_NAME, Span.toHex(1L))
+				.header(Span.TRACE_ID_NAME, Span.toHex(2L))
+				.header(Span.PARENT_ID_NAME, Span.toHex(3L))
+				.buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		assertThat(this.span.getParents()).containsOnly(1L);
+		assertNull(TestSpanContextHolder.getCurrentSpan());
+	}
+
+	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
 		Span span = this.tracer.startTrace("http:foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);

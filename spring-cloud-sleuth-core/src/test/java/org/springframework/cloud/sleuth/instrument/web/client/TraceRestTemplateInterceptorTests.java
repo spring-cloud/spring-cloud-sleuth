@@ -76,12 +76,13 @@ public class TraceRestTemplateInterceptorTests {
 
 	@Test
 	public void headersAddedWhenTracing() {
-		this.traces.continueSpan(Span.builder().traceId(1L).spanId(2L).build());
+		this.traces.continueSpan(Span.builder().traceId(1L).spanId(2L).parent(3L).build());
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
 		then(Long.valueOf(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
 		then(Long.valueOf(headers.get(Span.SPAN_ID_NAME))).isEqualTo(2L);
+		then(Long.valueOf(headers.get(Span.PARENT_ID_NAME))).isEqualTo(3L);
 	}
 
 	@Test
