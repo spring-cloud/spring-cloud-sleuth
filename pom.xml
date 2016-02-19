@@ -51,8 +51,8 @@
 								<showDeprecation>true</showDeprecation>
 								<showWarnings>true</showWarnings>
 								<compilerArguments>
-									<source>${maven.compiler.target}</source>
-									<target>${maven.compiler.source}</target>
+									<source>${maven.compiler.source}</source>
+									<target>${maven.compiler.target}</target>
 								</compilerArguments>
 							</configuration>
 						</execution>
