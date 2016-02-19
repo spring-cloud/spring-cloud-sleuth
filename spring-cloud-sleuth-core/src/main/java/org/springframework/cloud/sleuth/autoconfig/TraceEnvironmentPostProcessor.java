@@ -27,6 +27,8 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
 /**
+ * Adds a default logging pattern level that prints trace infotmation
+ *
  * @author Dave Syer
  *
  */
@@ -42,6 +44,7 @@ public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		// traces in logs without having to configure it.
 		map.put("logging.pattern.level",
 				"%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}");
+		map.put("spring.aop.proxyTargetClass", "true");
 		addOrReplace(environment.getPropertySources(), map);
 	}
 

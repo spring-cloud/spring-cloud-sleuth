@@ -39,14 +39,12 @@ import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * @author Spencer Gibb
  */
 @Configuration
 @ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
-@EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableConfigurationProperties
 public class TraceAutoConfiguration {
 
