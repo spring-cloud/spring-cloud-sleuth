@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.log;
 
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -37,11 +38,17 @@ public class SleuthLogAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass(MDC.class)
 	protected static class Slf4jConfiguration {
+		/**
+		 * Name pattern for which span should not be printed in the logs
+		 */
+		@Value("${spring.sleuth.log.slf4j.nameSkipPattern:}")
+		private String nameSkipPattern;
+
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
 		public Slf4jSpanListener slf4jSpanStartedListener() {
 			// Sets up MDC entries X-Trace-Id and X-Span-Id
-			return new Slf4jSpanListener();
+			return new Slf4jSpanListener(this.nameSkipPattern);
 		}
 	}
 }

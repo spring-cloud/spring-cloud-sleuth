@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.log;
 
+import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
@@ -31,8 +33,19 @@ import org.springframework.core.annotation.Order;
  */
 public class Slf4jSpanListener {
 
-	private static final Logger log = org.slf4j.LoggerFactory
-			.getLogger(Slf4jSpanListener.class);
+	private final Logger log;
+	private final Pattern nameSkipPattern;
+
+	public Slf4jSpanListener(String nameSkipPattern) {
+		this.nameSkipPattern = Pattern.compile(nameSkipPattern);
+		this.log = org.slf4j.LoggerFactory
+				.getLogger(Slf4jSpanListener.class);
+	}
+
+	Slf4jSpanListener(String nameSkipPattern, Logger log) {
+		this.nameSkipPattern = Pattern.compile(nameSkipPattern);
+		this.log = log;
+	}
 
 	@EventListener(SpanAcquiredEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE)
@@ -41,9 +54,9 @@ public class Slf4jSpanListener {
 		MDC.put(Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
 		MDC.put(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
-		log.trace("Starting span: {}", span);
+		log("Starting span: {}", span);
 		if (event.getParent() != null) {
-			log.trace("With parent: {}", event.getParent());
+			log("With parent: {}", event.getParent());
 		}
 	}
 
@@ -54,15 +67,15 @@ public class Slf4jSpanListener {
 		MDC.put(Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
 		MDC.put(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
-		log.trace("Continued span: {}", event.getSpan());
+		log("Continued span: {}", event.getSpan());
 	}
 
 	@EventListener(SpanReleasedEvent.class)
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void stop(SpanReleasedEvent event) {
-		log.trace("Stopped span: {}", event.getSpan());
+		log("Stopped span: {}", event.getSpan());
 		if (event.getParent() != null) {
-			log.trace("With parent: {}", event.getParent());
+			log("With parent: {}", event.getParent());
 			MDC.put(Span.SPAN_ID_NAME, Span.toHex(event.getParent().getSpanId()));
 			MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(event.getParent().isExportable()));
 		}
@@ -71,6 +84,13 @@ public class Slf4jSpanListener {
 			MDC.remove(Span.SPAN_EXPORT_NAME);
 			MDC.remove(Span.TRACE_ID_NAME);
 		}
+	}
+
+	private void log(String text, Span span) {
+		if (this.nameSkipPattern.matcher(span.getName()).matches()) {
+			return;
+		}
+		this.log.trace(text, span);
 	}
 
 }
