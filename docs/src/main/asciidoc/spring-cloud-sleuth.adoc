@@ -35,7 +35,7 @@ A sampler can be installed just by creating a bean definition, e.g:
 [source,java]
 ----
 @Bean
-public Sampler<?> defaultSampler() {
+public Sampler defaultSampler() {
     return new AlwaysSampler();
 }
 ----
