@@ -318,6 +318,21 @@ public class TraceKeys {
 		 */
 		private String commandKey = "commandKey";
 
+		/**
+		 * Name of the command group
+		 */
+		private String commandGroup = "commandGroup";
+
+		/**
+		 * Name of the cache key
+		 */
+		private String cacheKey = "cacheKey";
+
+		/**
+		 * Name of the thread pool key
+		 */
+		private String threadPoolKey = "threadPoolKey";
+
 		public String getPrefix() {
 			return this.prefix;
 		}
@@ -326,12 +341,36 @@ public class TraceKeys {
 			return this.commandKey;
 		}
 
+		public String getCommandGroup() {
+			return this.commandGroup;
+		}
+
+		public String getCacheKey() {
+			return this.cacheKey;
+		}
+
+		public String getThreadPoolKey() {
+			return this.threadPoolKey;
+		}
+
 		public void setPrefix(String prefix) {
 			this.prefix = prefix;
 		}
 
 		public void setCommandKey(String commandKey) {
 			this.commandKey = commandKey;
+		}
+
+		public void setCommandGroup(String commandGroup) {
+			this.commandGroup = commandGroup;
+		}
+
+		public void setCacheKey(String cacheKey) {
+			this.cacheKey = cacheKey;
+		}
+
+		public void setThreadPoolKey(String threadPoolKey) {
+			this.threadPoolKey = threadPoolKey;
 		}
 
 	}

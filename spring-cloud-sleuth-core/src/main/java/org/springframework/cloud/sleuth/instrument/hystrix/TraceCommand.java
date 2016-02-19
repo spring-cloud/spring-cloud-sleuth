@@ -18,9 +18,9 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
 import com.netflix.hystrix.HystrixCommand;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
 
 /**
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
@@ -54,6 +54,12 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
 		this.tracer.addTag(this.traceKeys.getHystrix().getPrefix() +
 				this.traceKeys.getHystrix().getCommandKey(), commandKeyName);
+		this.tracer.addTag(this.traceKeys.getHystrix().getPrefix() +
+				this.traceKeys.getHystrix().getCommandGroup(), getCommandGroup().name());
+		this.tracer.addTag(this.traceKeys.getHystrix().getPrefix() +
+				this.traceKeys.getHystrix().getCacheKey(), isRequestCachingEnabled() ? getCacheKey() : "");
+		this.tracer.addTag(this.traceKeys.getHystrix().getPrefix() +
+				this.traceKeys.getHystrix().getThreadPoolKey(), getThreadPoolKey().name());
 		try {
 			return doRun();
 		}

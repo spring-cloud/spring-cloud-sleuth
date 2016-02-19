@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -151,10 +152,13 @@ public class Span {
 	}
 
 	/**
-	 * Add a tag or data annotation associated with this span
+	 * Add a tag or data annotation associated with this span. The tag will be
+	 * added only if it has a value.
 	 */
 	public void tag(String key, String value) {
-		this.tags.put(key, value);
+		if (StringUtils.hasText(value)) {
+			this.tags.put(key, value);
+		}
 	}
 
 	/**
