@@ -38,6 +38,7 @@ import org.springframework.messaging.PollableChannel;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -75,12 +76,17 @@ public class TraceContextPropagationChannelInterceptorTests {
 		assertNotNull("message was null", message);
 
 		Long spanId = Span
-				.fromHex(message.getHeaders().get(Span.SPAN_ID_NAME, String.class));
+				.hexToId(message.getHeaders().get(Span.SPAN_ID_NAME, String.class));
 		assertNotEquals("spanId was equal to parent's id", expectedSpanId,  spanId);
 
 		long traceId = Span
-				.fromHex(message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+				.hexToId(message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
 		assertNotNull("traceId was null", traceId);
+
+		Long parentId = Span
+				.hexToId(message.getHeaders().get(Span.PARENT_ID_NAME, String.class));
+		assertEquals("parentId was not equal to parent's id", expectedSpanId,  parentId);
+
 	}
 
 	@Configuration

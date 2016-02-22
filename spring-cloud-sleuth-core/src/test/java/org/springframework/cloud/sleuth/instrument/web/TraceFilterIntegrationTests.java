@@ -111,12 +111,12 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			Long correlationId) throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
-						.header(headerName, Span.toHex(correlationId))
-						.header(Span.SPAN_ID_NAME, Span.toHex(new Random().nextLong())))
+						.header(headerName, Span.idToHex(correlationId))
+						.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong())))
 				.andReturn();
 	}
 
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.fromHex(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
+		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
 	}
 }

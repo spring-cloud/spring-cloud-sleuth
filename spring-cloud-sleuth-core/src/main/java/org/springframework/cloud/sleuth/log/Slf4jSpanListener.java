@@ -38,9 +38,9 @@ public class Slf4jSpanListener {
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void start(SpanAcquiredEvent event) {
 		Span span = event.getSpan();
-		MDC.put(Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
+		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
-		MDC.put(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
+		MDC.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		log.trace("Starting span: {}", span);
 		if (event.getParent() != null) {
 			log.trace("With parent: {}", event.getParent());
@@ -51,8 +51,8 @@ public class Slf4jSpanListener {
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void continued(SpanContinuedEvent event) {
 		Span span = event.getSpan();
-		MDC.put(Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
-		MDC.put(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
+		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+		MDC.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
 		log.trace("Continued span: {}", event.getSpan());
 	}
@@ -63,7 +63,7 @@ public class Slf4jSpanListener {
 		log.trace("Stopped span: {}", event.getSpan());
 		if (event.getParent() != null) {
 			log.trace("With parent: {}", event.getParent());
-			MDC.put(Span.SPAN_ID_NAME, Span.toHex(event.getParent().getSpanId()));
+			MDC.put(Span.SPAN_ID_NAME, Span.idToHex(event.getParent().getSpanId()));
 			MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(event.getParent().isExportable()));
 		}
 		else {

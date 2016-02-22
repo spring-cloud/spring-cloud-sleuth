@@ -121,9 +121,9 @@ public class TraceFilter extends OncePerRequestFilter
 		if (spanFromRequest == null) {
 			if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
 				long traceId = Span
-						.fromHex(getHeader(request, response, Span.TRACE_ID_NAME));
+						.hexToId(getHeader(request, response, Span.TRACE_ID_NAME));
 				long spanId = hasHeader(request, response, Span.SPAN_ID_NAME)
-						? Span.fromHex(getHeader(request, response, Span.SPAN_ID_NAME))
+						? Span.hexToId(getHeader(request, response, Span.SPAN_ID_NAME))
 						: this.random.nextLong();
 
 				SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
@@ -143,7 +143,7 @@ public class TraceFilter extends OncePerRequestFilter
 				}
 				if (hasHeader(request, response, Span.PARENT_ID_NAME)) {
 					span.parent(Span
-							.fromHex(getHeader(request, response, Span.PARENT_ID_NAME)));
+							.hexToId(getHeader(request, response, Span.PARENT_ID_NAME)));
 				}
 				span.remote(true);
 
@@ -200,8 +200,8 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private void addResponseHeaders(HttpServletResponse response, Span span) {
 		if (span != null) {
-			response.addHeader(Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
-			response.addHeader(Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
+			response.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+			response.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		}
 	}
 

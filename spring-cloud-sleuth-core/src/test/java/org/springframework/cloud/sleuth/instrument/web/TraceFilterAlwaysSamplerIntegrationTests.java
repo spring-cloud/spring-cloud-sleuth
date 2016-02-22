@@ -95,8 +95,8 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 			boolean sampling) throws Exception {
 		MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/ping")
 				.accept(MediaType.TEXT_PLAIN)
-				.header(headerName, Span.toHex(correlationId))
-				.header(Span.SPAN_ID_NAME, Span.toHex(new Random().nextLong()));
+				.header(headerName, Span.idToHex(correlationId))
+				.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong()));
 		if (!sampling) {
 			request.header(Span.NOT_SAMPLED_NAME, "true");
 		}
@@ -104,6 +104,6 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 	}
 
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.fromHex(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
+		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
 	}
 }

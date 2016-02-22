@@ -101,11 +101,11 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 				setHeader(requestBuilder, Span.NOT_SAMPLED_NAME, "true");
 				return;
 			}
-			setHeader(requestBuilder, Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
-			setHeader(requestBuilder, Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
+			setHeader(requestBuilder, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+			setHeader(requestBuilder, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 			setHeader(requestBuilder, Span.SPAN_NAME_NAME, span.getName());
 			setHeader(requestBuilder, Span.PARENT_ID_NAME,
-					Span.toHex(getParentId(span)));
+					Span.idToHex(getParentId(span)));
 			setHeader(requestBuilder, Span.PROCESS_ID_NAME,
 					span.getProcessId());
 			publish(new ClientSentEvent(this, span));
@@ -129,7 +129,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 		}
 
 		public void setHeader(HttpRequest.Builder builder, String name, Long value) {
-			setHeader(builder, name, Span.toHex(value));
+			setHeader(builder, name, Span.idToHex(value));
 		}
 
 		private Span getCurrentSpan() {

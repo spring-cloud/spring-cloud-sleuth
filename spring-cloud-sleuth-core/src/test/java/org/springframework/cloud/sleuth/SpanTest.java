@@ -36,7 +36,7 @@ public class SpanTest {
 	public void should_convert_long_to_hex_string() throws Exception {
 		long someLong = 123123L;
 
-		String hexString = Span.toHex(someLong);
+		String hexString = Span.idToHex(someLong);
 
 		then(hexString).isEqualTo("1e0f3");
 	}
@@ -45,14 +45,14 @@ public class SpanTest {
 	public void should_convert_hex_string_to_long() throws Exception {
 		String hexString = "1e0f3";
 
-		long someLong = Span.fromHex(hexString);
+		long someLong = Span.hexToId(hexString);
 
 		then(someLong).isEqualTo(123123L);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void should_throw_exception_when_null_string_is_to_be_converted_to_long() throws Exception {
-		Span.fromHex(null);
+		Span.hexToId(null);
 	}
 
 	@Test(expected = UnsupportedOperationException.class)

@@ -64,14 +64,14 @@ public class SpanMessageHeaders {
 		}
 
 		Map<String, String> headers = new HashMap<>();
-		addHeader(headers, Span.TRACE_ID_NAME, Span.toHex(span.getTraceId()));
-		addHeader(headers, Span.SPAN_ID_NAME, Span.toHex(span.getSpanId()));
+		addHeader(headers, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		addHeader(headers, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 
 		if (span.isExportable()) {
 			addAnnotations(traceKeys, message, span);
 			Long parentId = getFirst(span.getParents());
 			if (parentId != null) {
-				addHeader(headers, Span.PARENT_ID_NAME, Span.toHex(parentId));
+				addHeader(headers, Span.PARENT_ID_NAME, Span.idToHex(parentId));
 			}
 			addHeader(headers, Span.SPAN_NAME_NAME, span.getName());
 			addHeader(headers, Span.PROCESS_ID_NAME, span.getProcessId());

@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -50,8 +49,6 @@ public class Span {
 	public static final String TRACE_ID_NAME = "X-Trace-Id";
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
 	public static final String SPAN_ID_NAME = "X-Span-Id";
-	public static final List<String> HEADERS = Arrays.asList(SPAN_ID_NAME, TRACE_ID_NAME,
-			SPAN_NAME_NAME, PARENT_ID_NAME, PROCESS_ID_NAME, NOT_SAMPLED_NAME);
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
 
@@ -276,21 +273,21 @@ public class Span {
 	/**
 	 * Represents given long id as hex string
 	 */
-	public static String toHex(long id) {
+	public static String idToHex(long id) {
 		return Long.toHexString(id);
 	}
 
 	/**
 	 * Represents hex string as long
 	 */
-	public static long fromHex(String hexString) {
+	public static long hexToId(String hexString) {
 		Assert.hasText(hexString, "Can't convert empty hex string to long");
 		return new BigInteger(hexString, 16).longValue();
 	}
 
 	@Override
 	public String toString() {
-		return "[Trace: " + toHex(this.traceId) + ", Span: " + toHex(this.spanId) + ", exportable=" + this.exportable + "]";
+		return "[Trace: " + idToHex(this.traceId) + ", Span: " + idToHex(this.spanId) + ", exportable=" + this.exportable + "]";
 	}
 
 	@Override

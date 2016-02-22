@@ -100,7 +100,7 @@ public class TracePreZuulFilter extends ZuulFilter
 
 	public void setHeader(Map<String, String> request, String name, Long value) {
 		if (value != null) {
-			setHeader(request, name, Span.toHex(value));
+			setHeader(request, name, Span.idToHex(value));
 		}
 	}
 

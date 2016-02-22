@@ -53,9 +53,9 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 			return null; // cannot build a span without ids
 		}
 		long spanId = hasHeader(message, Span.SPAN_ID_NAME)
-				? Span.fromHex(getHeader(message, Span.SPAN_ID_NAME))
+				? Span.hexToId(getHeader(message, Span.SPAN_ID_NAME))
 				: this.random.nextLong();
-		long traceId = Span.fromHex(getHeader(message, Span.TRACE_ID_NAME));
+		long traceId = Span.hexToId(getHeader(message, Span.TRACE_ID_NAME));
 		Span.SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
 		if (message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
 			span.exportable(false);
@@ -70,7 +70,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 			span.processId(processId);
 		}
 		if (parentId != null) {
-			span.parent(Span.fromHex(parentId));
+			span.parent(Span.hexToId(parentId));
 		}
 		span.remote(true);
 		return span.build();

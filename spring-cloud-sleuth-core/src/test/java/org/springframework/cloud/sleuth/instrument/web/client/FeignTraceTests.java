@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,6 +41,8 @@ import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { FeignTraceTests.TestConfiguration.class })
 @WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
@@ -66,25 +66,21 @@ public class FeignTraceTests {
 
 	@Test
 	public void shouldCreateANewSpanWhenNoPreviousTracingWasPresent() {
-		// when
 		ResponseEntity<String> response = this.testFeignInterface.getNoTrace();
 
-		// then
 		then(getHeader(response, Span.TRACE_ID_NAME)).isNotNull();
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
 	@Test
 	public void shouldPropagateNotSamplingHeader() {
-		// given
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
 		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
 				.spanId(generatedId()).exportable(false).parent(currentParentId).build());
-		// when
+
 		ResponseEntity<Map<String, String>> response = this.testFeignInterface.headers();
 
-		// then
 		then(response.getBody().get(Span.TRACE_ID_NAME)).isNotNull();
 		then(response.getBody().get(Span.NOT_SAMPLED_NAME)).isNotNull();
 		then(this.listener.getEvents()).isNotEmpty();
@@ -92,18 +88,17 @@ public class FeignTraceTests {
 
 	@Test
 	public void shouldAttachTraceIdWhenUsingFeignClient() {
-		// given
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
 		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
 				.spanId(generatedId()).parent(currentParentId).build());
 
-		// when
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
-		// then
-		then(Span.fromHex(getHeader(response, Span.TRACE_ID_NAME)))
+		then(Span.hexToId(getHeader(response, Span.TRACE_ID_NAME)))
 				.isEqualTo(currentTraceId);
+		then(Span.hexToId(getHeader(response, Span.PARENT_ID_NAME)))
+				.isEqualTo(currentParentId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 

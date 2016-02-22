@@ -110,14 +110,14 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void parentSpanIncluded() {
 		this.channel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.TRACE_ID_NAME, Span.toHex(10L))
-				.setHeader(Span.SPAN_ID_NAME, Span.toHex(20L)).build());
+				.setHeader(Span.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 		long traceId = Span
-				.fromHex(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+				.hexToId(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		assertEquals(1, this.app.events.size());

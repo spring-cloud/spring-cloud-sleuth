@@ -75,7 +75,7 @@ abstract class AbstractTraceHttpRequestInterceptor
 
 	private void setIdHeader(HttpRequest request, String name, Long value) {
 		if (value != null) {
-			setHeader(request, name, Span.toHex(value));
+			setHeader(request, name, Span.idToHex(value));
 		}
 	}
 
