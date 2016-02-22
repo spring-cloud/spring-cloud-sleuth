@@ -11,6 +11,7 @@ org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfigurati
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.zuul.TraceZuulAutoConfiguration
 

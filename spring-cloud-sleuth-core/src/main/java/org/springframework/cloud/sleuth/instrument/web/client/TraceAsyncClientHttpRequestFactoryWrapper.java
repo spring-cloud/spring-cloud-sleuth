@@ -20,34 +20,96 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.AsyncClientHttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequest;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
- * Wrapper that adds trace related headers to the created AsyncClientHttpRequest
- *
- * @see org.springframework.web.client.RestTemplate
- * @see SpanAccessor
+ * Wrapper that adds trace related headers to the created {@link AsyncClientHttpRequest}
+ * and to the {@link ClientHttpRequest}
  *
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  */
 public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttpRequestInterceptor
-		implements AsyncClientHttpRequestFactory {
+		implements ClientHttpRequestFactory, AsyncClientHttpRequestFactory {
 
+	private final Tracer tracer;
 	private final AsyncClientHttpRequestFactory delegate;
+	private final ClientHttpRequestFactory syncDelegate;
 
-	public TraceAsyncClientHttpRequestFactoryWrapper(SpanAccessor accessor,
+	/**
+	 * According to the javadocs all Spring {@link AsyncClientHttpRequestFactory} implement
+	 * the {@link ClientHttpRequestFactory} interface.
+	 *
+	 * In case that it's not true we're setting the {@link SimpleClientHttpRequestFactory}
+	 * as a default for sync request processing.
+	 *
+	 * @see org.springframework.web.client.AsyncRestTemplate#AsyncRestTemplate(AsyncClientHttpRequestFactory)
+	 */
+	public TraceAsyncClientHttpRequestFactoryWrapper(SpanAccessor accessor, Tracer tracer,
 			AsyncClientHttpRequestFactory delegate) {
 		super(accessor);
+		this.tracer = tracer;
 		this.delegate = delegate;
+		this.syncDelegate = delegate instanceof ClientHttpRequestFactory ?
+				(ClientHttpRequestFactory) delegate : defaultClientHttpRequestFactory();
+	}
+
+	/**
+	 * Default implementation that creates a {@link SimpleClientHttpRequestFactory} that
+	 * has a wrapped task executor via the {@link TraceAsyncListenableTaskExecutor}
+	 */
+	public TraceAsyncClientHttpRequestFactoryWrapper(SpanAccessor accessor, Tracer tracer) {
+		super(accessor);
+		this.tracer = tracer;
+		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = defaultClientHttpRequestFactory();
+		this.delegate = simpleClientHttpRequestFactory;
+		this.syncDelegate = simpleClientHttpRequestFactory;
+	}
+
+	public TraceAsyncClientHttpRequestFactoryWrapper(SpanAccessor accessor, Tracer tracer,
+			AsyncClientHttpRequestFactory delegate, ClientHttpRequestFactory syncDelegate) {
+		super(accessor);
+		this.tracer = tracer;
+		this.delegate = delegate;
+		this.syncDelegate = syncDelegate;
+	}
+
+	private SimpleClientHttpRequestFactory defaultClientHttpRequestFactory() {
+		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+		simpleClientHttpRequestFactory.setTaskExecutor(asyncListenableTaskExecutor(this.tracer));
+		return simpleClientHttpRequestFactory;
+	}
+
+	private AsyncListenableTaskExecutor asyncListenableTaskExecutor(Tracer tracer) {
+		ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+		threadPoolTaskScheduler.initialize();
+		return new TraceAsyncListenableTaskExecutor(threadPoolTaskScheduler, tracer);
 	}
 
 	@Override
 	public AsyncClientHttpRequest createAsyncRequest(URI uri, HttpMethod httpMethod)
 			throws IOException {
 		AsyncClientHttpRequest request = this.delegate.createAsyncRequest(uri, httpMethod);
+		if (!isTracing()) {
+			doNotSampleThisSpan(request);
+			return request;
+		}
+		publishStartEvent(request);
+		return request;
+	}
+
+	@Override
+	public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod)
+			throws IOException {
+		ClientHttpRequest request = this.syncDelegate.createRequest(uri, httpMethod);
 		if (!isTracing()) {
 			doNotSampleThisSpan(request);
 			return request;

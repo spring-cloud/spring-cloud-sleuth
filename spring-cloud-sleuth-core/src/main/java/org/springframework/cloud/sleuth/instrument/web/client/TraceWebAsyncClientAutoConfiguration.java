@@ -16,65 +16,39 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.AsyncClientHttpRequestFactory;
+import org.springframework.web.client.AsyncRestTemplate;
 
 /**
- * @author Spencer Gibb
+ * @author Marcin Grzejszczak
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.sleuth.client.enabled", matchIfMissing = true)
-@ConditionalOnClass(RestTemplate.class)
+@ConditionalOnProperty(value = "spring.sleuth.async.client.enabled", matchIfMissing = true)
+@ConditionalOnClass(AsyncRestTemplate.class)
 @ConditionalOnBean(SpanAccessor.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
-public class TraceWebClientAutoConfiguration {
+public class TraceWebAsyncClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(SpanAccessor accessor) {
-		return new TraceRestTemplateInterceptor(accessor);
+	public AsyncClientHttpRequestFactory asyncClientHttpRequestFactory(SpanAccessor spanAccessor, Tracer tracer) {
+		return new TraceAsyncClientHttpRequestFactoryWrapper(spanAccessor, tracer);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public RestTemplate restTemplate() {
-		return new RestTemplate();
+	public AsyncRestTemplate asyncRestTemplate(AsyncClientHttpRequestFactory asyncClientHttpRequestFactory) {
+		return new AsyncRestTemplate(asyncClientHttpRequestFactory);
 	}
 
-	@Configuration
-	protected static class TraceInterceptorConfiguration {
-
-		@Autowired(required = false)
-		private Collection<RestTemplate> restTemplates;
-
-		@Autowired
-		private TraceRestTemplateInterceptor traceRestTemplateInterceptor;
-
-		@PostConstruct
-		public void init() {
-			if (this.restTemplates != null) {
-				for (RestTemplate restTemplate : this.restTemplates) {
-					List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>(restTemplate.getInterceptors());
-					interceptors.add(this.traceRestTemplateInterceptor);
-					restTemplate.setInterceptors(interceptors);
-				}
-			}
-		}
-	}
 }
