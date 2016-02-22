@@ -2,10 +2,6 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import java.util.Random;
 
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.HystrixThreadPoolProperties;
-import com.netflix.hystrix.strategy.HystrixPlugins;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,6 +14,11 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
+
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
+import com.netflix.hystrix.strategy.HystrixPlugins;
 
 import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
@@ -70,8 +71,12 @@ public class TraceCommandTests {
 
 		Span spanFromCommand = whenCommandIsExecuted(command);
 
-		then(spanFromCommand).as("Span from the Hystrix Thread").isNotNull();
-		then(spanFromCommand.getTraceId()).isEqualTo(EXPECTED_TRACE_ID);
+		then(spanFromCommand).as("Span from the Hystrix Thread")
+				.isNotNull()
+				.hasTraceIdEqualTo(EXPECTED_TRACE_ID)
+				.hasATag("commandKey", "traceCommandKey")
+				.hasATag("commandGroup", "group")
+				.hasATag("threadPoolKey", "group");
 	}
 
 	private Span givenATraceIsPresentInTheCurrentThread() {
