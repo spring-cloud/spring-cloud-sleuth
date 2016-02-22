@@ -18,7 +18,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -41,7 +41,7 @@ public class TraceableExecutorServiceTests {
 	@Before
 	public void setup() {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher,
-				spanNamer);
+				this.spanNamer);
 		this.traceManagerableExecutorService = new TraceableExecutorService(this.executorService,
 				this.tracer, new TraceKeys(), this.spanNamer);
 		TestSpanContextHolder.removeCurrentSpan();

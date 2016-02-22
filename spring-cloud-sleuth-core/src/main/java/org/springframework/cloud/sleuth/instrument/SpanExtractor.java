@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  * @author Dave Syer

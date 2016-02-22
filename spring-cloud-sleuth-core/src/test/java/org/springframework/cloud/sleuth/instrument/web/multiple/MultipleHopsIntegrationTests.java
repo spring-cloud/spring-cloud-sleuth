@@ -8,7 +8,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;

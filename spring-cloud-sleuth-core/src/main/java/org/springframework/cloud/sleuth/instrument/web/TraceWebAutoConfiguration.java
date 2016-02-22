@@ -30,7 +30,7 @@ import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

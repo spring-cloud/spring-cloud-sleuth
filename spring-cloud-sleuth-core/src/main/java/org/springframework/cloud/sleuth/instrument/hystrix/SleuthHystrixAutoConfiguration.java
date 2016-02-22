@@ -3,7 +3,7 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

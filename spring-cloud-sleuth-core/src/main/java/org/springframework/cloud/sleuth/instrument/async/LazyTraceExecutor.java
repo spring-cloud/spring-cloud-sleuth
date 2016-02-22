@@ -26,7 +26,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  * @author Dave Syer

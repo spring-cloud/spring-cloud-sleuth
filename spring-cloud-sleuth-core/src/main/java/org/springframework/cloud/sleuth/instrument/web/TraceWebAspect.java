@@ -44,7 +44,7 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * </ul>
  * <p/>
  * For controllers an around aspect is created that wraps the {@link Callable#call()}
- * method execution in {@link org.springframework.cloud.sleuth.instrument.async.TraceCallable}
+ * method execution in {@link org.springframework.cloud.sleuth.TraceCallable}
  * <p/>
  *
  * This aspect will continue a span created by the TraceFilter. It will not create
@@ -54,9 +54,9 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * @see org.springframework.web.bind.annotation.RestController
  * @see org.springframework.stereotype.Controller
  * @see org.springframework.web.client.RestOperations
- * @see org.springframework.cloud.sleuth.instrument.async.TraceCallable
- * @see Tracer
- * @see TraceFilter
+ * @see org.springframework.cloud.sleuth.TraceCallable
+ * @see org.springframework.cloud.sleuth.Tracer
+ * @see org.springframework.cloud.sleuth.instrument.web.TraceFilter
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT

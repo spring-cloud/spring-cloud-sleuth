@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument;
+package org.springframework.cloud.sleuth;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;

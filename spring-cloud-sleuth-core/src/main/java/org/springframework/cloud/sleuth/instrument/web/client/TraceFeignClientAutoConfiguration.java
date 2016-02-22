@@ -40,7 +40,7 @@ import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConcurrencyStrategy;
 import org.springframework.context.ApplicationEvent;

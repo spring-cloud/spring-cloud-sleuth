@@ -31,7 +31,7 @@ import org.springframework.cloud.sleuth.Span.SpanBuilder;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;

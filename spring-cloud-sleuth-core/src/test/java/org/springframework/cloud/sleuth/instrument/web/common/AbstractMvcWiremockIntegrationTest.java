@@ -3,7 +3,7 @@ package org.springframework.cloud.sleuth.instrument.web.common;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;

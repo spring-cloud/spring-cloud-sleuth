@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.support.GenericMessage;

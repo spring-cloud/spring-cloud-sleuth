@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.instrument.websocket;
+package org.springframework.cloud.sleuth.instrument.messaging.websocket;
 
 import java.util.Random;
 
@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptor;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.stereotype.Component;

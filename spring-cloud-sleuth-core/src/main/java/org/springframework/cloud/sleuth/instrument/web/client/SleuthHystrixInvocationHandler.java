@@ -26,7 +26,7 @@ import feign.InvocationHandlerFactory;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommand;
 
 import static feign.Util.checkNotNull;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,35 +14,29 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
-
-import java.util.concurrent.Callable;
-
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.Tracer;
+package org.springframework.cloud.sleuth;
 
 /**
- * Callable that passes Span between threads. The Span name is
+ * Runnable that passes Span between threads. The Span name is
  * taken either from the passed value or from the {@link SpanNamer}
  * interface.
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
  */
-public class TraceCallable<V> implements Callable<V> {
+public class TraceRunnable implements Runnable {
 
 	private final Tracer tracer;
 	private final SpanNamer spanNamer;
-	private final Callable<V> delegate;
+	private final Runnable delegate;
 	private final String name;
 	private final Span parent;
 
-	public TraceCallable(Tracer tracer,  SpanNamer spanNamer, Callable<V> delegate) {
+	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, Runnable delegate) {
 		this(tracer, spanNamer, delegate, null);
 	}
 
-	public TraceCallable(Tracer tracer, SpanNamer spanNamer, Callable<V> delegate, String name) {
+	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, Runnable delegate, String name) {
 		this.tracer = tracer;
 		this.spanNamer = spanNamer;
 		this.delegate = delegate;
@@ -51,10 +45,10 @@ public class TraceCallable<V> implements Callable<V> {
 	}
 
 	@Override
-	public V call() throws Exception {
+	public void run()  {
 		Span span = startSpan();
 		try {
-			return this.getDelegate().call();
+			this.getDelegate().run();
 		}
 		finally {
 			close(span);
@@ -80,7 +74,7 @@ public class TraceCallable<V> implements Callable<V> {
 		return this.tracer;
 	}
 
-	public Callable<V> getDelegate() {
+	public Runnable getDelegate() {
 		return this.delegate;
 	}
 
@@ -91,5 +85,4 @@ public class TraceCallable<V> implements Callable<V> {
 	public Span getParent() {
 		return this.parent;
 	}
-
 }

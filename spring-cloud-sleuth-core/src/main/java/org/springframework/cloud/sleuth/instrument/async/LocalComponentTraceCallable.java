@@ -20,8 +20,9 @@ import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.TraceCallable;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  *

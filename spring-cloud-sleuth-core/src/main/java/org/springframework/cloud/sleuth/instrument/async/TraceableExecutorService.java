@@ -26,7 +26,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors

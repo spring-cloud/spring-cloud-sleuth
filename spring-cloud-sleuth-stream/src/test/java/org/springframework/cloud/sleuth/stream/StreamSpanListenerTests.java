@@ -41,6 +41,7 @@ import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
+import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.stream.StreamSpanListenerTests.TestConfiguration;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
@@ -116,8 +117,9 @@ public class StreamSpanListenerTests {
 
 	@Configuration
 	@Import({ ZipkinTestConfiguration.class, SleuthStreamAutoConfiguration.class,
-			TestSupportBinderAutoConfiguration.class, ChannelBindingAutoConfiguration.class,
-			TraceAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class })
+			TraceMetricsAutoConfiguration.class, TestSupportBinderAutoConfiguration.class,
+			ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class,
+			PropertyPlaceholderAutoConfiguration.class })
 	protected static class TestConfiguration {}
 
 	@Configuration

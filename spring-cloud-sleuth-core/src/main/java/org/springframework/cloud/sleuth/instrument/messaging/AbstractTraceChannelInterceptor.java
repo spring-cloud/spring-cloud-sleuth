@@ -4,7 +4,7 @@ import java.util.Random;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.TraceKeys;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;

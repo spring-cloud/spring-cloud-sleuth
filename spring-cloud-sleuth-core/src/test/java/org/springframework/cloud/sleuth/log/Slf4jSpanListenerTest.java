@@ -39,74 +39,74 @@ public class Slf4jSpanListenerTest {
 	Span spanWithNameNotToBeExcluded = Span.builder().name("Aspect").build();
 	String nameExcludingPattern = "^.*Hystrix.*$";
 	Logger log = Mockito.mock(Logger.class);
-	Slf4jSpanListener slf4jSpanListener = new Slf4jSpanListener(nameExcludingPattern, log);
+	Slf4jSpanListener slf4jSpanListener = new Slf4jSpanListener(this.nameExcludingPattern, this.log);
 
 	@Test
 	public void should_log_when_start_event_arrived_and_pattern_doesnt_match_span_name() throws Exception {
-		slf4jSpanListener.start(new SpanAcquiredEvent(this, spanWithNameNotToBeExcluded,
-				spanWithNameNotToBeExcluded));
+		this.slf4jSpanListener.start(new SpanAcquiredEvent(this, this.spanWithNameNotToBeExcluded,
+				this.spanWithNameNotToBeExcluded));
 
-		then(log).should(times(2)).trace(anyString(), anyList());
+		then(this.log).should(times(2)).trace(anyString(), anyList());
 	}
 
 	@Test
 	public void should_log_once_when_start_event_arrived_and_pattern_matches_only_parent_span_name() throws Exception {
-		slf4jSpanListener.start(new SpanAcquiredEvent(this, spanWithNameToBeExcluded,
-				spanWithNameNotToBeExcluded));
+		this.slf4jSpanListener.start(new SpanAcquiredEvent(this, this.spanWithNameToBeExcluded,
+				this.spanWithNameNotToBeExcluded));
 
-		then(log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), anyList());
 	}
 
 	@Test
 	public void should_log_when_continue_event_arrived_and_pattern_doesnt_match_span_name() throws Exception {
-		slf4jSpanListener.continued(new SpanContinuedEvent(this,
-				spanWithNameNotToBeExcluded));
+		this.slf4jSpanListener.continued(new SpanContinuedEvent(this,
+				this.spanWithNameNotToBeExcluded));
 
-		then(log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), anyList());
 	}
 
 	@Test
 	public void should_not_log_when_continue_event_arrived_and_pattern_matches_name() throws Exception {
-		slf4jSpanListener.continued(new SpanContinuedEvent(this, spanWithNameToBeExcluded));
+		this.slf4jSpanListener.continued(new SpanContinuedEvent(this, this.spanWithNameToBeExcluded));
 
-		then(log).should(never()).trace(anyString(), anyList());
+		then(this.log).should(never()).trace(anyString(), anyList());
 	}
 
 	@Test
 	public void should_log_when_close_event_arrived_and_pattern_doesnt_match_span_name() throws Exception {
-		slf4jSpanListener.stop(new SpanReleasedEvent(this, spanWithNameNotToBeExcluded));
+		this.slf4jSpanListener.stop(new SpanReleasedEvent(this, this.spanWithNameNotToBeExcluded));
 
-		then(log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), anyList());
 	}
 
 	@Test
 	public void should_log_both_spans_when_their_names_dont_match_pattern() throws Exception {
-		slf4jSpanListener.stop(new SpanReleasedEvent(this, spanWithNameNotToBeExcluded,
-				spanWithNameNotToBeExcluded));
+		this.slf4jSpanListener.stop(new SpanReleasedEvent(this, this.spanWithNameNotToBeExcluded,
+				this.spanWithNameNotToBeExcluded));
 
-		then(log).should(times(2)).trace(anyString(), anyList());
+		then(this.log).should(times(2)).trace(anyString(), anyList());
 	}
 
 	@Test
 	public void should_not_log_any_spans_if_both_match_pattern() throws Exception {
-		slf4jSpanListener.stop(new SpanReleasedEvent(this, spanWithNameToBeExcluded,
-				spanWithNameToBeExcluded));
+		this.slf4jSpanListener.stop(new SpanReleasedEvent(this, this.spanWithNameToBeExcluded,
+				this.spanWithNameToBeExcluded));
 
-		then(log).should(never()).trace(anyString(), anyList());
+		then(this.log).should(never()).trace(anyString(), anyList());
 	}
 
 	@Test
 	public void should_log_only_current_span_if_parent_span_name_matches_pattern() throws Exception {
-		slf4jSpanListener.stop(new SpanReleasedEvent(this, spanWithNameNotToBeExcluded,
-				spanWithNameToBeExcluded));
+		this.slf4jSpanListener.stop(new SpanReleasedEvent(this, this.spanWithNameNotToBeExcluded,
+				this.spanWithNameToBeExcluded));
 
-		then(log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), anyList());
 	}
 
 	@Test
 	public void should_log_only_current_span_if_there_is_no_parent() throws Exception {
-		slf4jSpanListener.stop(new SpanReleasedEvent(this, spanWithNameNotToBeExcluded));
+		this.slf4jSpanListener.stop(new SpanReleasedEvent(this, this.spanWithNameNotToBeExcluded));
 
-		then(log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), anyList());
 	}
 }
