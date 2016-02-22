@@ -44,8 +44,7 @@ public class ServerPropertiesHostLocator implements HostLocator {
 		String serviceName = getServiceName(span);
 		String address = getAddress();
 		Integer port = getPort();
-		Host ep = new Host(serviceName, address, port);
-		return ep;
+		return new Host(serviceName, address, port);
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)

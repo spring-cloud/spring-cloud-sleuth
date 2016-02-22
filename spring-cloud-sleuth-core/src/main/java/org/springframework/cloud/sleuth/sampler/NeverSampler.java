@@ -24,7 +24,7 @@ import org.springframework.cloud.sleuth.Span;
  */
 public class NeverSampler implements Sampler {
 
-	public static NeverSampler INSTANCE = new NeverSampler();
+	public static final NeverSampler INSTANCE = new NeverSampler();
 
 	@Override
 	public boolean isSampled(Span span) {

@@ -19,15 +19,18 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommand;
+import org.springframework.util.ReflectionUtils;
+
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
+
 import feign.InvocationHandlerFactory;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommand;
 
 import static feign.Util.checkNotNull;
 
@@ -64,12 +67,10 @@ final class SleuthHystrixInvocationHandler implements InvocationHandler {
 					return SleuthHystrixInvocationHandler.this.dispatch.get(method)
 							.invoke(args);
 				}
-				catch (Exception e) {
-					throw e;
+				catch (Throwable throwable) {
+					ReflectionUtils.rethrowException(throwable);
 				}
-				catch (Throwable t) {
-					throw (Error) t;
-				}
+				return null;
 			}
 		};
 

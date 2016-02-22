@@ -37,7 +37,6 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(SamplingZipkinSpanIterator.class);
-	private static final String MESSAGE_COMPONENT = "message";
 
 	private final Sampler sampler;
 	private final Iterator<Span> delegate;

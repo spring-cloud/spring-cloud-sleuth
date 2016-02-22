@@ -51,8 +51,8 @@ public abstract class AbstractIntegrationTest {
 
 	private static final Log log = LogFactory.getLog(AbstractIntegrationTest.class);
 
-	protected static int pollInterval = 1;
-	protected static int timeout = 20;
+	protected static final int POLL_INTERVAL = 1;
+	protected static final int TIMEOUT = 20;
 	protected RestTemplate restTemplate = new AssertingRestTemplate();
 
 	@Before
@@ -66,7 +66,7 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	public static ConditionFactory await() {
-		return Awaitility.await().pollInterval(pollInterval, SECONDS).atMost(timeout, SECONDS);
+		return Awaitility.await().pollInterval(POLL_INTERVAL, SECONDS).atMost(TIMEOUT, SECONDS);
 	}
 
 	protected Runnable zipkinQueryServerIsUp() {
