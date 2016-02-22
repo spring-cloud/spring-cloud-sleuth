@@ -314,9 +314,34 @@ public class TraceKeys {
 		private String prefix = "";
 
 		/**
-		 * Name of the command key
+		 * Name of the command key. Describes the name for the given command.
+		 * A key to represent a {@link com.netflix.hystrix.HystrixCommand} for
+		 * monitoring, circuit-breakers, metrics publishing, caching and other such uses.
+		 *
+		 * @see com.netflix.hystrix.HystrixCommandKey
 		 */
 		private String commandKey = "commandKey";
+
+		/**
+		 * Name of the command group. Hystrix uses the command group key to group
+		 * together commands such as for reporting, alerting, dashboards,
+		 * or team/library ownership.
+		 *
+		 * @see com.netflix.hystrix.HystrixCommandGroupKey
+		 */
+		private String commandGroup = "commandGroup";
+
+		/**
+		 * Name of the thread pool key. The thread-pool key represents a {@link com.netflix.hystrix.HystrixThreadPool}
+		 * for monitoring, metrics publishing, caching, and other such uses. A {@link com.netflix.hystrix.HystrixCommand}
+		 * is associated with a single {@link com.netflix.hystrix.HystrixThreadPool} as
+		 * retrieved by the {@link com.netflix.hystrix.HystrixThreadPoolKey} injected into it,
+		 * or it defaults to one created using the {@link com.netflix.hystrix.HystrixCommandGroupKey}
+		 * it is created with.
+		 *
+		 * @see com.netflix.hystrix.HystrixThreadPoolKey
+		 */
+		private String threadPoolKey = "threadPoolKey";
 
 		public String getPrefix() {
 			return this.prefix;
@@ -326,12 +351,28 @@ public class TraceKeys {
 			return this.commandKey;
 		}
 
+		public String getCommandGroup() {
+			return this.commandGroup;
+		}
+
+		public String getThreadPoolKey() {
+			return this.threadPoolKey;
+		}
+
 		public void setPrefix(String prefix) {
 			this.prefix = prefix;
 		}
 
 		public void setCommandKey(String commandKey) {
 			this.commandKey = commandKey;
+		}
+
+		public void setCommandGroup(String commandGroup) {
+			this.commandGroup = commandGroup;
+		}
+
+		public void setThreadPoolKey(String threadPoolKey) {
+			this.threadPoolKey = threadPoolKey;
 		}
 
 	}
@@ -348,17 +389,23 @@ public class TraceKeys {
 
 		/**
 		 * Name of the thread that executed the async method
+		 *
+		 * @see org.springframework.scheduling.annotation.Async
 		 */
 		private String threadNameKey = "thread";
 
 		/**
 		 * Simple name of the class with a method annotated with {@code @Async}
 		 * from which the asynchronous process started
+		 *
+		 * @see org.springframework.scheduling.annotation.Async
 		 */
 		private String classNameKey = "class";
 
 		/**
 		 * Name of the method annotated with {@code @Async}
+		 *
+		 * @see org.springframework.scheduling.annotation.Async
 		 */
 		private String methodNameKey = "method";
 
