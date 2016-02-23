@@ -23,6 +23,7 @@ package org.springframework.cloud.sleuth;
  * the name of the span.
  *
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  */
 public interface SpanNamer {
 

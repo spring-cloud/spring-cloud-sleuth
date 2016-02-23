@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth.event;
 import org.springframework.cloud.sleuth.Span;
 
 /**
+ * Event emitted upon closing of a span. Results in preparing span for collection
+ * to external systems (logging, Zipkin etc.)
+ *
  * @author Spencer Gibb
  */
 @SuppressWarnings("serial")

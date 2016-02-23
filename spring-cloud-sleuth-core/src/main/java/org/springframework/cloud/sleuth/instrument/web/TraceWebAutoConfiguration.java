@@ -37,12 +37,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 /**
- * Registers beans that add tracing to requests
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enables tracing to HTTP requests.
  *
  * @author Tomasz Nurkewicz, 4financeIT
- * @author Marcin Grzejszczak, 4financeIT
  * @author Michal Chmielarz, 4financeIT
+ * @author Marcin Grzejszczak
  * @author Spencer Gibb
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)

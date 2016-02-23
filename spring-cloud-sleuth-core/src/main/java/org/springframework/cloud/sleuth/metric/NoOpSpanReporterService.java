@@ -1,9 +1,11 @@
 package org.springframework.cloud.sleuth.metric;
 
 /**
- * Span reporting service that does nothing
+ * {@link SpanReporterService} that does nothing
  *
  * @author Marcin Grzejszczak
+ *
+ * @since 1.0.0
  */
 public class NoOpSpanReporterService implements SpanReporterService {
 

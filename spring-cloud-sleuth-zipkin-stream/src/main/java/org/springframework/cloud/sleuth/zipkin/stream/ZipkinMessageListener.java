@@ -40,6 +40,16 @@ import zipkin.Sampler;
 import zipkin.Span.Builder;
 import zipkin.SpanStore;
 
+/**
+ * A message listener that is turned on if Sleuth Stream is disabled.
+ * Asynchronously stores the received spans in a {@link SpanStore}.
+ *
+ * @author Dave Syer
+ *
+ * @since 1.0.0
+ *
+ * @see NotSleuthStreamClient
+ */
 @MessageEndpoint
 @Conditional(NotSleuthStreamClient.class)
 public class ZipkinMessageListener {
@@ -77,9 +87,7 @@ public class ZipkinMessageListener {
 	}
 
 	/**
-	 * Creates a list of Annotations that are present in sleuth Span object.
-	 *
-	 * @return list of Annotations that could be added to Zipkin Span.
+	 * Adds binary annotations from the sleuth Span
 	 */
 	static void addZipkinBinaryAnnotations(Builder zipkinSpan, Span span,
 			Endpoint endpoint) {

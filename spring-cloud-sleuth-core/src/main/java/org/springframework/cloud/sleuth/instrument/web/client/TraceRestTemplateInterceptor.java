@@ -27,11 +27,13 @@ import org.springframework.http.client.ClientHttpResponse;
  * Interceptor that verifies whether the trance and span id has been set on the request
  * and sets them if one or both of them are missing.
  *
+ * @author Marcin Grzejszczak
+ * @author Spencer Gibb
+ *
  * @see org.springframework.web.client.RestTemplate
  * @see SpanAccessor
  *
- * @author Marcin Grzejszczak
- * @author Spencer Gibb
+ * @since 1.0.0
  */
 public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterceptor
 		implements ClientHttpRequestInterceptor {

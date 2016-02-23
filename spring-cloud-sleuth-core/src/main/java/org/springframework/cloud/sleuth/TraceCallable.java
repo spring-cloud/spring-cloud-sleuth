@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  */
 public class TraceCallable<V> implements Callable<V> {
 

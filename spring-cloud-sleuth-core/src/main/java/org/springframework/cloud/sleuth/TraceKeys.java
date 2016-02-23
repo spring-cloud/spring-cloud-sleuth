@@ -45,6 +45,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Meanwhile, you have another system storing private data! The takeaway isn't never store
  * cookies, as there are valid cases for this. The takeaway is to be conscious about
  * what's you are storing.
+ *
+ * @since 1.0.0
  */
 @ConfigurationProperties("spring.sleuth.keys")
 public class TraceKeys {

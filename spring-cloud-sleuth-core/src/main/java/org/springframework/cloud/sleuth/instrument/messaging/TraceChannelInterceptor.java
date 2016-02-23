@@ -27,8 +27,10 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
 /**
- * @author Dave Syer
+ * A channel interceptor that automatically starts / continues / closes and detaches spans.
  *
+ * @author Dave Syer
+ * @since 1.0.0
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 

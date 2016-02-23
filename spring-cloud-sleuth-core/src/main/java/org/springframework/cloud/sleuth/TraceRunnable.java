@@ -23,8 +23,15 @@ package org.springframework.cloud.sleuth;
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  */
 public class TraceRunnable implements Runnable {
+
+	/**
+	 * Since we don't know the exact operation name we provide a default
+	 * name for the Span
+	 */
+	private static final String DEFAULT_SPAN_NAME = "async";
 
 	private final Tracer tracer;
 	private final SpanNamer spanNamer;
@@ -63,7 +70,7 @@ public class TraceRunnable implements Runnable {
 		if (this.name != null) {
 			return this.name;
 		}
-		return this.spanNamer.name(this.delegate, "async");
+		return this.spanNamer.name(this.delegate, DEFAULT_SPAN_NAME);
 	}
 
 	protected void close(Span span) {

@@ -25,12 +25,16 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * @author Dave Syer
+ * {@link Executor} that wraps {@link Runnable} in a
+ * {@link org.springframework.cloud.sleuth.TraceRunnable TraceRunnable} that sets a
+ * local component tag on the span.
  *
+ * @author Dave Syer
+ * @since 1.0.0
  */
 public class LazyTraceExecutor implements Executor {
 

@@ -15,10 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,12 +22,17 @@ import java.util.Enumeration;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
 import org.springframework.cloud.sleuth.event.ServerSentEvent;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -54,15 +55,17 @@ import static org.springframework.util.StringUtils.hasText;
  * {@link TraceKeys}. If you need to add additional tags, such as headers subtype this and
  * override {@link #addRequestTags} or {@link #addResponseTags}.
  *
+ * @author Jakub Nabrdalik, 4financeIT
+ * @author Tomasz Nurkiewicz, 4financeIT
+ * @author Marcin Grzejszczak
+ * @author Spencer Gibb
+ * @author Dave Syer
+ *
  * @see Tracer
  * @see TraceKeys
  * @see TraceWebAutoConfiguration#traceFilter
  *
- * @author Jakub Nabrdalik, 4financeIT
- * @author Tomasz Nurkiewicz, 4financeIT
- * @author Marcin Grzejszczak, 4financeIT
- * @author Spencer Gibb
- * @author Dave Syer
+ * @since 1.0.0
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class TraceFilter extends OncePerRequestFilter

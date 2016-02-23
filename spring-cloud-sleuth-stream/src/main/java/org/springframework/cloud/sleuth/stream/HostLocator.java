@@ -19,11 +19,12 @@ package org.springframework.cloud.sleuth.stream;
 import org.springframework.cloud.sleuth.Span;
 
 /**
- * Strategy for locating a "host" from a Spring Cloud Span (and whatever other
+ * Strategy for locating a {@link Host "host"} from a Spring Cloud Span (and whatever other
  * environment properties might be available).
  *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public interface HostLocator {
 

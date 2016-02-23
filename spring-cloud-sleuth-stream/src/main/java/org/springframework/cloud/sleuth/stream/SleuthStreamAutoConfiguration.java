@@ -44,12 +44,15 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 
 /**
- * Autoconfiguration for sending Spans over Spring Cloud Stream. This is for the producer
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * for sending spans over Spring Cloud Stream. This is for the producer
  * (via {@link SleuthSource}). A consumer can enable binding to {@link SleuthSink} and
  * receive the messages coming from the source (they have the same channel name so there
  * is no additional configuration to do by default).
  *
  * @author Dave Syer
+ *
+ * @since 1.0.0
  */
 @Configuration
 @EnableConfigurationProperties({SleuthStreamProperties.class, SamplerProperties.class})

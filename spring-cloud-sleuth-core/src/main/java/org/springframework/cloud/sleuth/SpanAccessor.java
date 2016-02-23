@@ -22,7 +22,7 @@ package org.springframework.cloud.sleuth;
  * to specialized and cross-cutting instrumentation code).
  *
  * @author Dave Syer
- *
+ * @since 1.0.0
  */
 public interface SpanAccessor {
 

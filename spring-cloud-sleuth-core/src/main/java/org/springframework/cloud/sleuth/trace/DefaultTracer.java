@@ -32,7 +32,11 @@ import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
+ * Default implementation of {@link Tracer}
+ *
  * @author Spencer Gibb
+ *
+ * @since 1.0.0
  */
 public class DefaultTracer implements Tracer {
 

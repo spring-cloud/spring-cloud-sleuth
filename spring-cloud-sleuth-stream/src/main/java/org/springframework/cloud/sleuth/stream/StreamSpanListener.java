@@ -40,6 +40,8 @@ import org.springframework.integration.annotation.MessageEndpoint;
  * A message source for spans. Also handles RPC flavoured annotations.
  *
  * @author Dave Syer
+ *
+ * @since 1.0.0
  */
 @MessageEndpoint
 public class StreamSpanListener {

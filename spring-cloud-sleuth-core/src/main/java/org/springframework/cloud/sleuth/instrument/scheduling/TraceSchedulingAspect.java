@@ -25,12 +25,15 @@ import org.springframework.cloud.sleuth.Tracer;
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
  * {@link org.springframework.scheduling.annotation.Scheduled} annotation.
- * For every execution of scheduled method a new trace will be started.
+ * For every execution of scheduled method a new trace will be started. The name of the
+ * span will be the simple name of the class annotated with
+ * {@link org.springframework.scheduling.annotation.Scheduled}
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Michal Chmielarz, 4financeIT
- * @author Marcin Grzejszczak, 4financeIT
+ * @author Marcin Grzejszczak
  * @author Spencer Gibb
+ * @since 1.0.0
  *
  * @see Tracer
  */
@@ -47,8 +50,9 @@ public class TraceSchedulingAspect {
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		String spanName = SCHEDULED_COMPONENT + ":" + pjp.getTarget().getClass().getSimpleName();
+		String spanName = pjp.getTarget().getClass().getSimpleName();
 		Span span = this.tracer.startTrace(spanName);
+		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, SCHEDULED_COMPONENT);
 		try {
 			return pjp.proceed();
 		}

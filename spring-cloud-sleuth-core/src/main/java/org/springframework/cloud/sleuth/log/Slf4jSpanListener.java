@@ -29,7 +29,12 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
 /**
+ * Span listener that logs to the console when a span got
+ * started / stopped / continued.
+ *
  * @author Spencer Gibb
+ *
+ * @since 1.0.0
  */
 public class Slf4jSpanListener {
 

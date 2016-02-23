@@ -31,7 +31,7 @@ import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 /**
- * Aspect that adds correlation id to
+ * Aspect that adds tracing to
  * <p/>
  * <ul>
  * <li>{@link org.springframework.web.bind.annotation.RestController} annotated classes
@@ -51,17 +51,19 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * a new span - since the one in TraceFilter will wait until processing has been
  * finished
  *
+ * @author Tomasz Nurkewicz, 4financeIT
+ * @author Michal Chmielarz, 4financeIT
+ * @author Marcin Grzejszczak
+ * @author Spencer Gibb
+ *
+ * @since 1.0.0
+ *
  * @see org.springframework.web.bind.annotation.RestController
  * @see org.springframework.stereotype.Controller
  * @see org.springframework.web.client.RestOperations
  * @see org.springframework.cloud.sleuth.TraceCallable
  * @see org.springframework.cloud.sleuth.Tracer
  * @see org.springframework.cloud.sleuth.instrument.web.TraceFilter
- *
- * @author Tomasz Nurkewicz, 4financeIT
- * @author Marcin Grzejszczak, 4financeIT
- * @author Michal Chmielarz, 4financeIT
- * @author Spencer Gibb
  */
 @Aspect
 public class TraceWebAspect {

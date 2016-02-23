@@ -31,9 +31,12 @@ import org.springframework.context.annotation.Configuration;
 import com.netflix.zuul.ZuulFilter;
 
 /**
- * Registers beans that add tracing to requests
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enables span information propagation when using Zuul.
  *
  * @author Dave Syer
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.zuul.enabled", matchIfMissing = true)

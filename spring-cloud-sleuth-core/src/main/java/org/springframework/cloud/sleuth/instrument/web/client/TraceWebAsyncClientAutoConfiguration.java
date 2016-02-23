@@ -30,7 +30,13 @@ import org.springframework.http.client.AsyncClientHttpRequestFactory;
 import org.springframework.web.client.AsyncRestTemplate;
 
 /**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enables span information propagation for {@link AsyncClientHttpRequestFactory} and
+ * {@link AsyncRestTemplate}
+ *
  * @author Marcin Grzejszczak
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.async.client.enabled", matchIfMissing = true)

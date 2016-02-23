@@ -19,7 +19,10 @@ package org.springframework.cloud.sleuth.event;
 import org.springframework.cloud.sleuth.Span;
 
 /**
+ * Event emitted when a parent or a child span was created.
+ *
  * @author Spencer Gibb
+ * @since 1.0.0
  */
 @SuppressWarnings("serial")
 public class SpanAcquiredEvent extends SpanParentContainingEvent {

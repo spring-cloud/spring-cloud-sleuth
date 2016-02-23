@@ -49,6 +49,15 @@ public class SpanMessageHeaders {
 		return null;
 	}
 
+	/**
+	 * Adds default headers for a message. Check {@link Span} constants for
+	 * more information what the default headers are.
+	 *
+	 * @param traceKeys - the global configuration for trace keys
+	 * @param message - message to which headers will be added
+	 * @param span - span from which headers will be taken
+	 * @return the input message with updated headers
+	 */
 	public static Message<?> addSpanHeaders(TraceKeys traceKeys, Message<?> message,
 			Span span) {
 

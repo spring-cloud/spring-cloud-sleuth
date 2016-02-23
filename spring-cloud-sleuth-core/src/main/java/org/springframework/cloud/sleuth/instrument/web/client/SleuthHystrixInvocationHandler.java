@@ -35,7 +35,9 @@ import feign.Target;
 import static feign.Util.checkNotNull;
 
 /**
- * Wraps execution in Sleuth's TraceCommand
+ * Wraps {@link HystrixCommand} execution in Sleuth's {@link TraceCommand}
+ *
+ * @since 1.0.0
  */
 final class SleuthHystrixInvocationHandler implements InvocationHandler {
 
@@ -59,7 +61,6 @@ final class SleuthHystrixInvocationHandler implements InvocationHandler {
 		HystrixCommand.Setter setter = HystrixCommand.Setter
 				.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
 				.andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
-
 		HystrixCommand<Object> hystrixCommand = new TraceCommand<Object>(this.tracer, this.traceKeys,
 				setter) {
 			@Override public Object doRun() throws Exception {
@@ -73,7 +74,6 @@ final class SleuthHystrixInvocationHandler implements InvocationHandler {
 				return null;
 			}
 		};
-
 		if (HystrixCommand.class.isAssignableFrom(method.getReturnType())) {
 			return hystrixCommand;
 		}

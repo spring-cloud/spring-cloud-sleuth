@@ -19,7 +19,13 @@ package org.springframework.cloud.sleuth.event;
 import org.springframework.cloud.sleuth.Span;
 
 /**
+ * <b>sr</b> - Server Receive. The server side got the request and will start processing it.
+ * If one subtracts the cs timestamp from this timestamp one will receive the network latency.
+ *
  * @author Spencer Gibb
+ * @since 1.0.0
+ *
+ * @see ClientSentEvent
  */
 @SuppressWarnings("serial")
 public class ServerReceivedEvent extends SpanParentContainingEvent {

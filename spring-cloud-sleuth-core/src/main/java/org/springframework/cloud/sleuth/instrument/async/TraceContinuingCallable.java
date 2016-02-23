@@ -24,7 +24,8 @@ import org.springframework.cloud.sleuth.TraceCallable;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * Trace Callable that continues a span instead of creating a new one
+ * Trace Callable that continues a span instead of creating a new one. Upon completion
+ * the span is not closed - it gets {@link Tracer#detach(Span) detached}.
  *
  * @author Marcin Grzejszczak
  */

@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Configuration properties for Sleuth related metrics
  *
  * @author Marcin Grzejszczak
+ *
+ * @since 1.0.0
  */
 @ConfigurationProperties("spring.sleuth.metric")
 public class SleuthMetricProperties {

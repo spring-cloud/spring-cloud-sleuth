@@ -9,6 +9,15 @@ import org.springframework.context.annotation.Configuration;
 
 import com.netflix.hystrix.HystrixCommand;
 
+/**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * that registers a custom Sleuth {@link com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 1.0.0
+ *
+ * @see SleuthHystrixConcurrencyStrategy
+ */
 @Configuration
 @ConditionalOnClass(HystrixCommand.class)
 @ConditionalOnProperty(value = "spring.sleuth.hystrix.strategy.enabled", matchIfMissing = true)

@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class Spans {

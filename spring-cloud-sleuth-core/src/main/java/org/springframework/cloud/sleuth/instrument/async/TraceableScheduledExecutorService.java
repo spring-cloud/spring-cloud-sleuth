@@ -27,8 +27,9 @@ import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  * A decorator class for {@link ScheduledExecutorService} to support tracing in Executors
- * @author Gaurav Rai Mazra
  *
+ * @author Gaurav Rai Mazra
+ * @since 1.0.0
  */
 public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
 

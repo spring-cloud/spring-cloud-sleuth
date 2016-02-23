@@ -23,14 +23,14 @@ public class HttpZipkinSpanReporterTest {
 	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(
 			this.zipkin.httpUrl(), 0, this.spanReporterService);
 
-	@Test 
+	@Test
 	public void reportDoesntDoIO() throws Exception {
 		this.reporter.report(span(1L, "foo"));
 
 		assertThat(this.zipkin.httpRequestCount()).isZero();
 	}
 
-	@Test 
+	@Test
 	public void reportIncrementsAcceptedMetrics() throws Exception {
 		this.reporter.report(span(1L, "foo"));
 
@@ -38,7 +38,7 @@ public class HttpZipkinSpanReporterTest {
 		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isZero();
 	}
 
-	@Test 
+	@Test
 	public void dropsWhenQueueIsFull() throws Exception {
 		for (int i = 0; i < 1001; i++)
 			this.reporter.report(span(1L, "foo"));
@@ -63,7 +63,7 @@ public class HttpZipkinSpanReporterTest {
 		);
 	}
 
-	@Test 
+	@Test
 	public void incrementsDroppedSpansWhenServerErrors() throws Exception {
 		this.zipkin.enqueueFailure(HttpFailure.sendErrorResponse(500, "Ouch"));
 
@@ -75,7 +75,7 @@ public class HttpZipkinSpanReporterTest {
 		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isEqualTo(2);
 	}
 
-	@Test 
+	@Test
 	public void incrementsDroppedSpansWhenServerDisconnects() throws Exception {
 		this.zipkin.enqueueFailure(HttpFailure.disconnectDuringBody());
 

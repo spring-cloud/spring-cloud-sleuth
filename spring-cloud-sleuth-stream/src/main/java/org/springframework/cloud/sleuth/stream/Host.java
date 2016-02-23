@@ -23,8 +23,11 @@ import java.nio.ByteBuffer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
+ * Represents the host from which the span was sent
+ *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Host {

@@ -24,7 +24,7 @@ import org.springframework.context.ApplicationEvent;
 /**
  * @author Marcin Grzejszczak
  */
-class SpanContainingEvent extends ApplicationEvent {
+abstract class SpanContainingEvent extends ApplicationEvent {
 	private final Span span;
 
 	public SpanContainingEvent(Object source, Span span) {

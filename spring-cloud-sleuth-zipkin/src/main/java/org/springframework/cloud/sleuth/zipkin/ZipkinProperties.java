@@ -19,7 +19,11 @@ package org.springframework.cloud.sleuth.zipkin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
+ * Zipkin settings
+ *
  * @author Spencer Gibb
+ *
+ * @since 1.0.0
  */
 @ConfigurationProperties("spring.zipkin")
 public class ZipkinProperties {

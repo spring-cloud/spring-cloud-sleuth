@@ -23,8 +23,17 @@ import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
 
 /**
+ * A {@link HostLocator} that retrieves:
+ *
+ * <ul>
+ *     <li><b>service name</b> - either from {@link span#getProcessId()} or current application name</li>
+ *     <li><b>address</b> - from {@link ServerProperties}</li>
+ *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
+ * </ul>
+ *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public class ServerPropertiesHostLocator implements HostLocator {
 

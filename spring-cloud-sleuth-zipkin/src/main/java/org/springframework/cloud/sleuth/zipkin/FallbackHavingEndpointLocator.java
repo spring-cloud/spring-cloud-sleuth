@@ -7,6 +7,8 @@ import zipkin.Endpoint;
 /**
  * Endpoint locator that will try to call an endpoint via Discovery Client
  * and will fallback to Server Properties if an exception is thrown
+ *
+ * @since 1.0.0
  */
 public class FallbackHavingEndpointLocator implements EndpointLocator {
 

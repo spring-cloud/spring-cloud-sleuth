@@ -19,8 +19,12 @@ package org.springframework.cloud.sleuth.event;
 import org.springframework.cloud.sleuth.Span;
 
 /**
- * @author Dave Syer
+ * <b>cs</b> - Client Sent. The client has made a request (a client can be e.g.
+ * {@link org.springframework.web.client.RestTemplate}. This annotation depicts
+ * the start of the span.
  *
+ * @author Dave Syer
+ * @since 1.0.0
  */
 @SuppressWarnings("serial")
 public class ClientSentEvent extends SpanContainingEvent {

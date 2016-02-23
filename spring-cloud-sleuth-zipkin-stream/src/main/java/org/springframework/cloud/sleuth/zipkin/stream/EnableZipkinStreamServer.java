@@ -25,6 +25,16 @@ import org.springframework.context.annotation.Import;
 
 import zipkin.server.EnableZipkinServer;
 
+/**
+ * When enabled, instrumented apps will transport spans over a
+ * Spring Cloud Stream, for example RabbitMQ.
+ *
+ * @author Dave Syer
+ *
+ * @since 1.0.0
+ *
+ * @see ZipkinMessageListener
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

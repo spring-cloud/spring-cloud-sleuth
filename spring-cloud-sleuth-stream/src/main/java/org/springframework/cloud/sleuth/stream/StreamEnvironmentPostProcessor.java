@@ -37,8 +37,12 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 /**
+ * {@link EnvironmentPostProcessor} that sets the default properties for
+ * Sleuth Stream.
+ *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
