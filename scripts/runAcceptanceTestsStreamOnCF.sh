@@ -13,4 +13,4 @@ curl "${SCRIPT_URL}" --output runAcceptanceTests.sh
 
 chmod +x runAcceptanceTests.sh
 
-./runAcceptanceTests.sh --whattotest "${AT_WHAT_TO_TEST}" --cloudfoundry
+./runAcceptanceTests.sh --whattotest "${AT_WHAT_TO_TEST}" --cloudfoundry --reset
