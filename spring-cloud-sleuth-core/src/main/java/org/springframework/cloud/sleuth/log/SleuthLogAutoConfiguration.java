@@ -28,7 +28,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enables a {@link Slf4jSpanListener} that prints tracing information in the logs.
+ * <p>
+ * Note: this is only available for Slf4j
+ *
  * @author Spencer Gibb
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnBean(Tracer.class)

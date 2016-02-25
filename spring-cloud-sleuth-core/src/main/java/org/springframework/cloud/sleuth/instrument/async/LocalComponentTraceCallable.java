@@ -25,10 +25,10 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
- *
  * Callable that starts a span that is a local component span.
  *
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  */
 public class LocalComponentTraceCallable<V> extends TraceCallable<V> {
 

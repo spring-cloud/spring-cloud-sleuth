@@ -29,13 +29,25 @@ import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
- * <p/>
+ * <p>
  * Spans should form a directed acyclic graph structure. It should be possible to keep
  * following the parents of a span until you arrive at a span with no parents.
- * <p/>
+ * <p>
+ * Spans can be either annotated with tags or logs.
+ * <p>
+ * An <b>Annotation</b> is used to record existence of an event in time. Below you can find some
+ * of the core annotations used to define the start and stop of a request:
+ * <p>
+ * <ul>
+ *     <li><b>cs</b> - {@link org.springframework.cloud.sleuth.event.ClientSentEvent Client Sent}</li>
+ *     <li><b>sr</b> - {@link org.springframework.cloud.sleuth.event.ServerReceivedEvent Server Received}</li>
+ *     <li><b>ss</b> - {@link org.springframework.cloud.sleuth.event.ServerSentEvent Server Sent}</li>
+ *     <li><b>cr</b> - {@link org.springframework.cloud.sleuth.event.ClientReceivedEvent Client Received}</li>
+ * </ul>
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  */
 /*
  * OpenTracing spans can affect the trace tree by creating children. In this way, they are
@@ -186,7 +198,7 @@ public class Span {
 	}
 
 	/**
-	 * Returns the saved span. The one that was "current" before this Span.
+	 * Returns the saved span. The one that was "current" before this span.
 	 * <p>
 	 * Might be null
 	 */
@@ -210,7 +222,7 @@ public class Span {
 	 * A pseudo-unique (random) number assigned to this span instance.
 	 * <p>
 	 * <p>
-	 * The spanId is immutable and cannot be changed. It is safe to access this from
+	 * The span id is immutable and cannot be changed. It is safe to access this from
 	 * multiple threads.
 	 */
 	public long getSpanId() {
@@ -225,10 +237,9 @@ public class Span {
 	}
 
 	/**
-	 * Return a unique id for the process from which this Span originated.
+	 * Return a unique id for the process from which this span originated.
 	 * <p>
-	 * <p>
-	 * // TODO: Check when this is going to be null (cause it may be null)
+	 * Might be null
 	 */
 	public String getProcessId() {
 		return this.processId;

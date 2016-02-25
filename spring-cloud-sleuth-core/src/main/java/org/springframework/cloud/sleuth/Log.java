@@ -17,7 +17,11 @@
 package org.springframework.cloud.sleuth;
 
 /**
+ * Represents an event in time associated with a span. Every span has zero or more Logs,
+ * each of which being a timestamped event name.
+ *
  * @author Spencer Gibb
+ * @since 1.0.0
  */
 public class Log {
 	/**
@@ -26,21 +30,15 @@ public class Log {
 	private final long timestamp;
 
 	/**
-	 * Event (if not null) should be the stable name of some notable moment in the lifetime of a Span.
-	 * For instance, a Span representing a browser page load might add an Event for each of the
+	 * Event (if not null) should be the stable name of some notable moment in the lifetime of a span.
+	 * For instance, a span representing a browser page load might add an Event for each of the
 	 * Performance.timing moments here: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceTiming
 	 *
 	 * <p>While it is not a formal requirement, Event strings will be most useful if they are *not*
-	 * unique; rather, tracing systems should be able to use them to understand how two similar Spans
+	 * unique; rather, tracing systems should be able to use them to understand how two similar spans
 	 * relate from an internal timing perspective.
 	 */
 	private final String event;
-
-	@SuppressWarnings("unused")
-	private Log() {
-		this.timestamp = 0;
-		this.event = null;
-	}
 
 	public Log(long timestamp, String event) {
 		this.timestamp = timestamp;

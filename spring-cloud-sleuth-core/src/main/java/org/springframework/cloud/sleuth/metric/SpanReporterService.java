@@ -1,12 +1,16 @@
 package org.springframework.cloud.sleuth.metric;
 
 /**
+ * Contract for a service that measures the number of accepted / dropped spans.
+ *
  * @author Marcin Grzejszczak
+ *
+ * @since 1.0.0
  */
 public interface SpanReporterService {
 
 	/**
-	 * Called when spans are submitted to SpanCollector for processing.
+	 * Called when spans are submitted to span collector for processing.
 	 *
 	 * @param quantity the number of spans accepted.
 	 */

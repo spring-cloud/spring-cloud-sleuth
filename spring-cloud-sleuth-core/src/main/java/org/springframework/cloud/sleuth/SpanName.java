@@ -23,16 +23,40 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *
- * Annotation to provide the name for the Span. You should annotate all your
- * custom {@link java.lang.Runnable} or {@link java.util.concurrent.Callable} classes
+ * Annotation to provide the name for the span. You should annotate all your
+ * custom {@link java.lang.Runnable Runnable} or {@link java.util.concurrent.Callable Callable} classes
  * for the instrumentation logic to pick up how to name the span.
+ * <p>
  *
- * If you're using anonymous instances for those classes then you should override the
- * {@code toString()} method. That way that value will be picked as a span name at
- * runtime.
+ * Having for example the following code
+ * <pre>{@code
+ *     @SpanName("custom-operation")
+ *     class CustomRunnable implements Runnable {
+ *         @Override
+ *         public void run() {
+ *          // latency of this method will be recorded in a span named "custom-operation"
+ *         }
+ *      }
+ * }</pre>
+ *
+ * Will result in creating a span with name {@code custom-operation}.
+ * <p>
+ *
+ * When there's no @SpanName annotation, {@code toString} is used. Here's an
+ * example of the above, but via an anonymous instance.
+ * <pre>{@code
+ *     return new Runnable() {
+ *          -- snip --
+ *
+ *          @Override
+ *          public String toString() {
+ *              return "custom-operation";
+ *          }
+ *     };
+ * }</pre>
  *
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

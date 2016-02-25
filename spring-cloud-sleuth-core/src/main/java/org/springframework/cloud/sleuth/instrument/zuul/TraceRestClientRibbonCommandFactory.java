@@ -19,8 +19,6 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.niws.client.http.RestClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
@@ -35,8 +33,15 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.MultiValueMap;
 
+import com.netflix.client.http.HttpRequest;
+import com.netflix.niws.client.http.RestClient;
+
 /**
+ * Propagates traces downstream via http headers that contain trace metadata.
+ *
  * @author Spencer Gibb
+ *
+ * @since 1.0.0
  */
 public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommandFactory
 		implements ApplicationEventPublisherAware {
@@ -104,8 +109,10 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			setHeader(requestBuilder, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 			setHeader(requestBuilder, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 			setHeader(requestBuilder, Span.SPAN_NAME_NAME, span.getName());
-			setHeader(requestBuilder, Span.PARENT_ID_NAME,
-					Span.idToHex(getParentId(span)));
+			if (getParentId(span) != null) {
+				setHeader(requestBuilder, Span.PARENT_ID_NAME,
+						Span.idToHex(getParentId(span)));
+			}
 			setHeader(requestBuilder, Span.PROCESS_ID_NAME,
 					span.getProcessId());
 			publish(new ClientSentEvent(this, span));

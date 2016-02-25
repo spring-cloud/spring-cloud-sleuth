@@ -29,6 +29,7 @@ import org.springframework.util.Assert;
  *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public class DiscoveryClientHostLocator implements HostLocator {
 

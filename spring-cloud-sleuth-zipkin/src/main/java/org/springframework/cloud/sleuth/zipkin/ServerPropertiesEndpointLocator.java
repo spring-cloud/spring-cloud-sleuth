@@ -24,8 +24,16 @@ import org.springframework.context.event.EventListener;
 import zipkin.Endpoint;
 
 /**
+ * {@link EndpointLocator} implementation that:
+ *
+ * <ul>
+ *     <li><b>address</b> - from {@link ServerProperties}</li>
+ *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
+ * </ul>
+ *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public class ServerPropertiesEndpointLocator implements EndpointLocator {
 

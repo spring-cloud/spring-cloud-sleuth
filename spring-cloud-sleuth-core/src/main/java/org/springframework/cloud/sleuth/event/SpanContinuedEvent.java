@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.event;
 import org.springframework.cloud.sleuth.Span;
 
 /**
+ * Emitted when a span was continued.
+ *
  * @author Spencer Gibb
  */
 @SuppressWarnings("serial")

@@ -27,7 +27,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enables Sleuth related metrics reporting
+ *
  * @author Marcin Grzejszczak
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(value="spring.sleuth.metrics.enabled", matchIfMissing=true)

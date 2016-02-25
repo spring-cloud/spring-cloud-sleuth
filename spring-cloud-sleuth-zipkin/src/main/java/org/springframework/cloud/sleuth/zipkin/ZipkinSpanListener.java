@@ -37,7 +37,11 @@ import zipkin.Constants;
 import zipkin.Endpoint;
 
 /**
+ * Listener of Sleuth events. Reports to Zipkin via {@link ZipkinSpanReporter}.
+ *
  * @author Spencer Gibb
+ *
+ * @since 1.0.0
  */
 public class ZipkinSpanListener {
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
@@ -171,9 +175,7 @@ public class ZipkinSpanListener {
 	}
 
 	/**
-	 * Creates a list of Annotations that are present in sleuth Span object.
-	 *
-	 * @return list of Annotations that could be added to Zipkin Span.
+	 * Adds binary annotation from the sleuth Span
 	 */
 	private void addZipkinBinaryAnnotations(zipkin.Span.Builder zipkinSpan,
 			Span span, Endpoint endpoint) {

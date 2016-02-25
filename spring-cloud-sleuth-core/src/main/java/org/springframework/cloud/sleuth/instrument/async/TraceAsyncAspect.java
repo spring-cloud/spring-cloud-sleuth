@@ -28,6 +28,7 @@ import org.springframework.cloud.sleuth.TraceKeys;
  * {@link org.springframework.scheduling.annotation.Async} annotation.
  *
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  *
  * @see Tracer
  */

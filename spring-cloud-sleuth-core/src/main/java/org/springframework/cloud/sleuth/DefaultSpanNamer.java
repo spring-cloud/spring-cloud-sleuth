@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth;
 import org.springframework.core.annotation.AnnotationUtils;
 
 /**
- * Default implementation of SpanNamer that tries to get the Span name as follows:
+ * Default implementation of SpanNamer that tries to get the span name as follows:
  *
  *  <li>
  *     <ul>from the @SpanName annotation if one is present</ul>
@@ -28,9 +28,10 @@ import org.springframework.core.annotation.AnnotationUtils;
  *     <ul>the default provided value</ul>
  * </li>
  *
- * @see org.springframework.cloud.sleuth.SpanName
- *
  * @author Marcin Grzejszczak
+ * @since 1.0.0
+ *
+ * @see org.springframework.cloud.sleuth.SpanName
  */
 public class DefaultSpanNamer implements SpanNamer {
 

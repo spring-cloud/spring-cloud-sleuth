@@ -25,14 +25,18 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
-import org.springframework.util.StringUtils;
 
 /**
+ * A pre request {@link ZuulFilter} that sets tracing related headers on the request
+ * from the current span. We're doing so to ensure tracing propagates to the next hop.
+ *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public class TracePreZuulFilter extends ZuulFilter
 		implements ApplicationEventPublisherAware {

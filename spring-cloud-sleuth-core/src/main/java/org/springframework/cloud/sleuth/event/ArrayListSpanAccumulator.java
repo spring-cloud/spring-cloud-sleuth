@@ -23,7 +23,11 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.ApplicationListener;
 
 /**
+ * Accumulator of {@link org.springframework.cloud.sleuth.Tracer#close(Span)
+ * closed spans}.
+ *
  * @author Spencer Gibb
+ * @since 1.0.0
  */
 public class ArrayListSpanAccumulator implements ApplicationListener<SpanReleasedEvent> {
 	private final List<Span> spans = new ArrayList<>();

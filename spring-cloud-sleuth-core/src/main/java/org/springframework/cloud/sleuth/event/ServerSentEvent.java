@@ -19,7 +19,14 @@ package org.springframework.cloud.sleuth.event;
 import org.springframework.cloud.sleuth.Span;
 
 /**
+ * <b>ss</b> - Server Send. Annotated upon completion of request processing (when the response
+ * got sent back to the client). If one subtracts the sr timestamp from this timestamp one
+ * will receive the time needed by the server side to process the request.
+ *
  * @author Spencer Gibb
+ * @since 1.0.0
+ *
+ * @see ServerReceivedEvent
  */
 @SuppressWarnings("serial")
 public class ServerSentEvent extends SpanParentContainingEvent {

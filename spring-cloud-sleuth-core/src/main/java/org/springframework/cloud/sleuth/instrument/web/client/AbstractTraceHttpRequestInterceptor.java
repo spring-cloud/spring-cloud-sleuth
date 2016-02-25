@@ -31,6 +31,8 @@ import org.springframework.util.StringUtils;
  * to enrich the request headers with trace related information.
  *
  * @author Marcin Grzejszczak
+ *
+ * @since 1.0.0
  */
 abstract class AbstractTraceHttpRequestInterceptor
 		implements ApplicationEventPublisherAware {

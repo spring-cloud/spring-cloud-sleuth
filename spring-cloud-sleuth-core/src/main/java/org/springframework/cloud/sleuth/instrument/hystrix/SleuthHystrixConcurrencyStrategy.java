@@ -13,6 +13,14 @@ import org.springframework.cloud.sleuth.TraceKeys;
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
 
+/**
+ * A {@link HystrixConcurrencyStrategy} that wraps a {@link Callable} in a
+ * {@link Callable} that either starts a new span or continues one
+ * if the tracing was already running before the command was executed.
+ *
+ * @author Marcin Grzejszczak
+ * @since 1.0.0
+ */
 public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
 
 	private static final String HYSTRIX_COMPONENT = "hystrix";

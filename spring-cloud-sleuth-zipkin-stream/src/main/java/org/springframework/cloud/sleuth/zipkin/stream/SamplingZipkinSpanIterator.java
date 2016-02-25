@@ -32,6 +32,10 @@ import zipkin.Span.Builder;
 
 /**
  * This converts sleuth spans to zipkin ones, skipping invalid or unsampled.
+ *
+ * @author Adrian Cole
+ *
+ * @since 1.0.0
  */
 final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 

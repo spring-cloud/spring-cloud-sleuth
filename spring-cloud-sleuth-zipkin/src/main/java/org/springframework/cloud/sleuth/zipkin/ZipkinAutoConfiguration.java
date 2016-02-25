@@ -36,7 +36,13 @@ import org.springframework.context.annotation.Configuration;
 
 
 /**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enables reporting to Zipkin via HTTP. Has a default {@link Sampler} set as
+ * {@link PercentageBasedSampler}.
+ *
  * @author Spencer Gibb
+ *
+ * @since 1.0.0
  */
 @Configuration
 @EnableConfigurationProperties({ZipkinProperties.class, SamplerProperties.class})

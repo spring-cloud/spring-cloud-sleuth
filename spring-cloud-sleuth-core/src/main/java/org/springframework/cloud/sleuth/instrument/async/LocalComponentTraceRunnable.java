@@ -23,10 +23,10 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
- *
  * Runnable that starts a span that is a local component span.
  *
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  */
 public class LocalComponentTraceRunnable extends TraceRunnable {
 

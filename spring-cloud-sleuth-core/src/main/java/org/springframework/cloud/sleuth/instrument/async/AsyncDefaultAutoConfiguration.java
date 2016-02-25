@@ -33,20 +33,35 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+/**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enabling async related processing.
+ *
+ * @author Dave Syer
+ * @author Marcin Grzejszczak
+ * @since 1.0.0
+ *
+ * @see LazyTraceExecutor
+ * @see TraceAsyncAspect
+ */
 @EnableAsync
 @Configuration
-@ConditionalOnMissingBean(AsyncConfigurer.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(AsyncCustomAutoConfiguration.class)
-public class AsyncDefaultAutoConfiguration extends AsyncConfigurerSupport {
+public class AsyncDefaultAutoConfiguration {
 
-	@Autowired
-	private BeanFactory beanFactory;
+	@Configuration
+	@ConditionalOnMissingBean(AsyncConfigurer.class)
+	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled", matchIfMissing = true)
+	static class DefaultAsyncConfigurerSupport extends AsyncConfigurerSupport {
 
-	@Override
-	public Executor getAsyncExecutor() {
-		return new LazyTraceExecutor(this.beanFactory, new SimpleAsyncTaskExecutor());
+		@Autowired private BeanFactory beanFactory;
+
+		@Override
+		public Executor getAsyncExecutor() {
+			return new LazyTraceExecutor(this.beanFactory, new SimpleAsyncTaskExecutor());
+		}
 	}
 
 	@Bean

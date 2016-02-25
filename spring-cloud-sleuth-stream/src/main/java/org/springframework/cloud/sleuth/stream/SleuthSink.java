@@ -28,6 +28,7 @@ import org.springframework.messaging.SubscribableChannel;
  *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public interface SleuthSink {
 

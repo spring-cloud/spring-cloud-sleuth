@@ -28,6 +28,13 @@ import org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAut
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 
+/**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * that wraps an existing custom {@link AsyncConfigurer} in a {@link LazyTraceAsyncCustomizer}
+ *
+ * @author Dave Syer
+ * @since 1.0.0
+ */
 @Configuration
 @ConditionalOnBean(AsyncConfigurer.class)
 @AutoConfigureBefore(AsyncDefaultAutoConfiguration.class)

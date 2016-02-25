@@ -25,6 +25,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Submits spans using Zipkin's {@code POST /spans} endpoint.
+ *
+ * @author Adrian Cole
+ *
+ * @since 1.0.0
  */
 public final class HttpZipkinSpanReporter
 		implements ZipkinSpanReporter, Flushable, Closeable {

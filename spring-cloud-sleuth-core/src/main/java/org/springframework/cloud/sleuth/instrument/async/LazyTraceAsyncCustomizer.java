@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 
 /**
  * @author Dave Syer
- *
+ * @since 1.0.0
  */
 public class LazyTraceAsyncCustomizer extends AsyncConfigurerSupport {
 

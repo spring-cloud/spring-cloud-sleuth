@@ -19,8 +19,14 @@ package org.springframework.cloud.sleuth.event;
 import org.springframework.cloud.sleuth.Span;
 
 /**
- * @author Dave Syer
+ * <b>cr</b> - Client Receive. Signifies the end of the span. The client has successfully received the
+ * response from the server side. If one subtracts the cs timestamp from this timestamp one
+ * will receive the whole time needed by the client to receive the response from the server.
  *
+ * @author Dave Syer
+ * @since 1.0.0
+ *
+ * @see ClientSentEvent
  */
 @SuppressWarnings("serial")
 public class ClientReceivedEvent extends SpanContainingEvent {

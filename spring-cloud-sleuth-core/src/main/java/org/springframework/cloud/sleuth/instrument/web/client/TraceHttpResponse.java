@@ -24,8 +24,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
 /**
+ * Implementation of {@link ClientHttpResponse} that upon
+ * {@link ClientHttpResponse#close() closing the response}
+ * {@link TraceRestTemplateInterceptor#finish() closes the span}
+ *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public class TraceHttpResponse implements ClientHttpResponse {
 

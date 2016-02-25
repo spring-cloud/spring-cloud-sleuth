@@ -14,6 +14,15 @@ import org.springframework.web.socket.config.annotation.AbstractWebSocketMessage
 import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
+/**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * that enables tracing for WebSockets.
+ *
+ * @author Dave Syer
+ * @since 1.0.0
+ *
+ * @see AbstractWebSocketMessageBrokerConfigurer
+ */
 @Component
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(AbstractWebSocketMessageBrokerConfigurer.class)

@@ -31,7 +31,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.GlobalChannelInterceptor;
 
 /**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * that registers a Sleuth version of the {@link org.springframework.messaging.support.ChannelInterceptor}.
+ *
  * @author Spencer Gibb
+ * @since 1.0.0
+ *
+ * @see TraceChannelInterceptor
  */
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)

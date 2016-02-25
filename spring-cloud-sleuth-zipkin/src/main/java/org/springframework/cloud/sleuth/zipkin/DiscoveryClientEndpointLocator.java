@@ -28,6 +28,7 @@ import zipkin.Endpoint;
  *
  * @author Dave Syer
  *
+ * @since 1.0.0
  */
 public class DiscoveryClientEndpointLocator implements EndpointLocator {
 

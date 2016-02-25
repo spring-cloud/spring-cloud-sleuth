@@ -4,8 +4,11 @@ import org.springframework.boot.actuate.metrics.CounterService;
 
 /**
  * Service to operate on accepted and dropped spans statistics.
+ * Operates on a {@link CounterService} underneath
  *
  * @author Marcin Grzejszczak
+ *
+ * @since 1.0.0
  */
 public class CounterServiceBasedSpanReporterService implements SpanReporterService {
 	private final String acceptedSpansMetricName;

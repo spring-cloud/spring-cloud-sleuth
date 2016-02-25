@@ -63,10 +63,12 @@ import feign.codec.Decoder;
 import feign.hystrix.HystrixFeign;
 
 /**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enables span information propagation when using Feign.
  *
- * Configuration for ensuring that Spans are propagated while using Feign
+ * @author Marcin Grzejszczak
  *
- * @author Marcin Grzejszczak, 4financeIT
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)

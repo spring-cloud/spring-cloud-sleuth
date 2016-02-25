@@ -36,7 +36,12 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * @author Spencer Gibb
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
+ * enables span information propagation when using {@link RestTemplate}
+ *
+ * @author Marcin Grzejszczak
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.client.enabled", matchIfMissing = true)

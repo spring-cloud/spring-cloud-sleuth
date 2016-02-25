@@ -34,10 +34,11 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 /**
  * Registers beans related to task scheduling.
  *
- * @see TraceSchedulingAspect
- *
  * @author Michal Chmielarz, 4financeIT
  * @author Spencer Gibb
+ *
+ * @see TraceSchedulingAspect
+ * @since 1.0.0
  */
 @Configuration
 @EnableAspectJAutoProxy

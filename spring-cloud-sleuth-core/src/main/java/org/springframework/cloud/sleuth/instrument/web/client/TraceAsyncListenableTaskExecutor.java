@@ -26,6 +26,11 @@ import org.springframework.util.concurrent.ListenableFuture;
 /**
  * AsyncListenableTaskExecutor that wraps all Runnable / Callable tasks into
  * their trace related representation
+ *
+ * @since 1.0.0
+ *
+ * @see Tracer#wrap(Runnable)
+ * @see Tracer#wrap(Callable)
  */
 public class TraceAsyncListenableTaskExecutor implements AsyncListenableTaskExecutor {
 
