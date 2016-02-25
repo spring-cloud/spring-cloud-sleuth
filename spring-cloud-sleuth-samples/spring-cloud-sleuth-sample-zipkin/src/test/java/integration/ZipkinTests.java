@@ -102,7 +102,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 		private ZipkinSpanReporter getSpanCollector(ZipkinProperties zipkin,
 				SpanReporterService spanReporterService) {
 			return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
-					spanReporterService);
+					zipkin.getCompression().isEnabled(), spanReporterService);
 		}
 	}
 

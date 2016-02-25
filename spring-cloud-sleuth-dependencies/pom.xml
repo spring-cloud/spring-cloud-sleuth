@@ -17,7 +17,7 @@
 		<brave.version>3.4.0</brave.version>
 		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
-		<zipkin-java.version>0.5.5</zipkin-java.version>
+		<zipkin-java.version>0.6.0</zipkin-java.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>

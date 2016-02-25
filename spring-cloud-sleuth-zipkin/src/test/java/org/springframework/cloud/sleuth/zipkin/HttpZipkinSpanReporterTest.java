@@ -19,9 +19,12 @@ public class HttpZipkinSpanReporterTest {
 	SpanReporterService spanReporterService = new CounterServiceBasedSpanReporterService("accepted", "dropped",
 			this.inMemorySpanCounter);
 
-	// set flush interval to 0 so that tests can drive flushing explicitly
 	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(
-			this.zipkin.httpUrl(), 0, this.spanReporterService);
+			this.zipkin.httpUrl(),
+			0, // so that tests can drive flushing explicitly
+			false, // disable compression
+			this.spanReporterService
+	);
 
 	@Test
 	public void reportDoesntDoIO() throws Exception {
@@ -64,6 +67,29 @@ public class HttpZipkinSpanReporterTest {
 	}
 
 	@Test
+	public void postsCompressedSpans() throws Exception {
+		this.reporter = new HttpZipkinSpanReporter(
+				this.zipkin.httpUrl(),
+				0, // so that tests can drive flushing explicitly
+				false, // enable compression
+				this.spanReporterService
+		);
+
+		this.reporter.report(span(1L, "foo"));
+		this.reporter.report(span(2L, "bar"));
+
+		this.reporter.flush(); // manually flush the spans
+
+		// Ensure only one request was sent
+		assertThat(this.zipkin.httpRequestCount()).isEqualTo(1);
+
+		assertThat(this.zipkin.getTraces()).containsExactly(
+				asList(span(1L, "foo")),
+				asList(span(2L, "bar"))
+		);
+	}
+
+	@Test 
 	public void incrementsDroppedSpansWhenServerErrors() throws Exception {
 		this.zipkin.enqueueFailure(HttpFailure.sendErrorResponse(500, "Ouch"));
 
