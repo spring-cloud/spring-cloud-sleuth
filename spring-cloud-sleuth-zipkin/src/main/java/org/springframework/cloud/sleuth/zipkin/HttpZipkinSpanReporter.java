@@ -20,6 +20,7 @@ import org.springframework.cloud.sleuth.metric.SpanReporterService;
 
 import zipkin.Codec;
 import zipkin.Span;
+import zipkin.internal.Util;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -39,17 +40,20 @@ public final class HttpZipkinSpanReporter
 	private final String url;
 	private final BlockingQueue<Span> pending = new LinkedBlockingQueue<>(1000);
 	private final Flusher flusher; // Nullable for testing
+	private final boolean compressionEnabled;
 	private final SpanReporterService spanReporterService;
 
 	/**
 	 * @param baseUrl       URL of the zipkin query server instance. Like: http://localhost:9411/
 	 * @param flushInterval in seconds. 0 implies spans are {@link #flush() flushed} externally.
+	 * @param compressionEnabled compress spans using gzip before posting to the zipkin server.
 	 * @param spanReporterService service to count number of accepted / dropped spans
 	 */
-	public HttpZipkinSpanReporter(String baseUrl, int flushInterval,
+	public HttpZipkinSpanReporter(String baseUrl, int flushInterval, boolean compressionEnabled,
 			SpanReporterService spanReporterService) {
 		this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
 		this.flusher = flushInterval > 0 ? new Flusher(this, flushInterval) : null;
+		this.compressionEnabled = compressionEnabled;
 		this.spanReporterService = spanReporterService;
 	}
 
@@ -129,19 +133,21 @@ public final class HttpZipkinSpanReporter
 		HttpURLConnection connection = (HttpURLConnection) new URL(this.url).openConnection();
 		connection.setRequestMethod("POST");
 		connection.addRequestProperty("Content-Type", "application/json");
+		if (this.compressionEnabled) {
+			connection.addRequestProperty("Content-Encoding", "gzip");
+			json = Util.gzip(json);
+		}
 		connection.setDoOutput(true);
 		connection.setFixedLengthStreamingMode(json.length);
 		connection.getOutputStream().write(json);
 
 		try (InputStream in = connection.getInputStream()) {
-			while (in.read() != -1)
-				; // skip
+			while (in.read() != -1); // skip
 		}
 		catch (IOException e) {
 			try (InputStream err = connection.getErrorStream()) {
 				if (err != null) { // possible, if the connection was dropped
-					while (err.read() != -1)
-						; // skip
+					while (err.read() != -1); // skip
 				}
 			}
 			throw e;

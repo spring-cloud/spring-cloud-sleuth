@@ -31,6 +31,7 @@ public class ZipkinProperties {
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;
 	private int flushInterval = 1;
+	private Compression compression = new Compression();
 
 	public String getBaseUrl() {
 		return this.baseUrl;
@@ -44,6 +45,10 @@ public class ZipkinProperties {
 		return this.flushInterval;
 	}
 
+	public Compression getCompression() {
+		return this.compression;
+	}
+
 	public void setBaseUrl(String baseUrl) {
 		this.baseUrl = baseUrl;
 	}
@@ -54,5 +59,23 @@ public class ZipkinProperties {
 
 	public void setFlushInterval(int flushInterval) {
 		this.flushInterval = flushInterval;
+	}
+
+	public void setCompression(Compression compression) {
+		this.compression = compression;
+	}
+
+	/** When enabled, spans are gzipped before sent to the zipkin server */
+	public static class Compression {
+
+		private boolean enabled = false;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
 	}
 }
