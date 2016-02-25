@@ -26,7 +26,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -42,6 +42,30 @@ public class SpanMessageHeadersTests {
 		Message<?> message = new GenericMessage<>("Hello World");
 		message = SpanMessageHeaders.addSpanHeaders(this.traceKeys, message, span);
 		assertThat(message.getHeaders()).containsKey(Span.SPAN_ID_NAME);
+	}
+
+	@Test
+	public void shouldNotOverrideSpanTags() {
+		Span span = spanWithStringPayloadType();
+		Message<?> message = messageWithIntegerPayloadType();
+
+		message = SpanMessageHeaders.addSpanHeaders(this.traceKeys, message, span);
+
+		assertThat(message.getHeaders())
+				.containsKeys(Span.SPAN_ID_NAME, "message/payload-type");
+		assertThat(span).hasATag("message/payload-type", "java.lang.String");
+	}
+
+	private Span spanWithStringPayloadType() {
+		Span span = Span.builder().name("http:foo").spanId(1L).traceId(2L).build();
+		span.tag("message/payload-type", "java.lang.String");
+		return span;
+	}
+
+	private Message<?> messageWithIntegerPayloadType() {
+		MessageHeaderAccessor accessor = SimpMessageHeaderAccessor.create();
+		accessor.setHeader("message/payload-type", "java.lang.Integer");
+		return MessageBuilder.createMessage("Hello World", accessor.getMessageHeaders());
 	}
 
 	@Test

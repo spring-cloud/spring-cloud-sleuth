@@ -20,6 +20,9 @@ import org.springframework.util.ClassUtils;
  */
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
 
+	/**
+	 * A default prefix for span name for discerning messaging origin of the span
+	 */
 	protected static final String MESSAGE_COMPONENT = "message";
 
 	private final Tracer tracer;
@@ -57,7 +60,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 				: this.random.nextLong();
 		long traceId = Span.hexToId(getHeader(message, Span.TRACE_ID_NAME));
 		Span.SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
-		if (message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
+		if (hasHeader(message, Span.NOT_SAMPLED_NAME)) {
 			span.exportable(false);
 		}
 		String parentId = getHeader(message, Span.PARENT_ID_NAME);

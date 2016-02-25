@@ -60,7 +60,6 @@ public class SpanMessageHeaders {
 	 */
 	public static Message<?> addSpanHeaders(TraceKeys traceKeys, Message<?> message,
 			Span span) {
-
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(message);
 		if (span == null) {
@@ -71,11 +70,9 @@ public class SpanMessageHeaders {
 			}
 			return message;
 		}
-
 		Map<String, String> headers = new HashMap<>();
 		addHeader(headers, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		addHeader(headers, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-
 		if (span.isExportable()) {
 			addAnnotations(traceKeys, message, span);
 			Long parentId = getFirst(span.getParents());
@@ -109,7 +106,7 @@ public class SpanMessageHeaders {
 				if (value == null) {
 					value = "null";
 				}
-				span.tag(key, value.toString()); // TODO: better way to serialize?
+				tagIfEntryMissing(span, key, value.toString()); // TODO: better way to serialize?
 			}
 		}
 		addPayloadAnnotations(traceKeys, message.getPayload(), span);
@@ -117,16 +114,22 @@ public class SpanMessageHeaders {
 
 	static void addPayloadAnnotations(TraceKeys traceKeys, Object payload, Span span) {
 		if (payload != null) {
-			span.tag(traceKeys.getMessage().getPayload().getType(),
+			tagIfEntryMissing(span, traceKeys.getMessage().getPayload().getType(),
 					payload.getClass().getCanonicalName());
 			if (payload instanceof String) {
-				span.tag(traceKeys.getMessage().getPayload().getSize(),
+				tagIfEntryMissing(span, traceKeys.getMessage().getPayload().getSize(),
 						String.valueOf(((String) payload).length()));
 			}
 			else if (payload instanceof byte[]) {
-				span.tag(traceKeys.getMessage().getPayload().getSize(),
+				tagIfEntryMissing(span, traceKeys.getMessage().getPayload().getSize(),
 						String.valueOf(((byte[]) payload).length));
 			}
+		}
+	}
+
+	private static void tagIfEntryMissing(Span span, String key, String value) {
+		if (!span.tags().containsKey(key)) {
+			span.tag(key, value);
 		}
 	}
 
