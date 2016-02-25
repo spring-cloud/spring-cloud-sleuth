@@ -21,7 +21,12 @@ import org.springframework.util.ClassUtils;
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
 
 	/**
-	 * A default prefix for span name for discerning messaging origin of the span
+	 * If a span comes from messaging components then it will have this value
+	 * as a prefix to its name.
+	 * <p>
+	 * Example of a Span name: {@code message:foo}
+	 * <p>
+	 * Where {@code message} is the prefix and {@code foo} is the channel name
 	 */
 	protected static final String MESSAGE_COMPONENT = "message";
 
