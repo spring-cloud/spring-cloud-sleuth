@@ -11,12 +11,12 @@ import org.springframework.cloud.sleuth.Span;
  * <p>
  *
  * <ul>
- *     <li>We're taking the TraceID into consideration for sampling to be consistent</li>
+ *     <li>We're taking the trace id into consideration for sampling to be consistent</li>
  *     <li>We apply the Zipkin algorithm to define whether we should sample or not (we're comparing against threshold)
  *     - https://github.com/openzipkin/zipkin-java/blob/master/zipkin/src/main/java/zipkin/Sampler.java</li>
  * </ul>
  *
- * The value provided from SamplerConfiguration in terms of percentage is an estimation. It might occur that amount
+ * The value provided from sampler configuration in terms of percentage is an estimation. It might occur that amount
  * of data sampled differs from the provided percentage.
  *
  * @author Marcin Grzejszczak
