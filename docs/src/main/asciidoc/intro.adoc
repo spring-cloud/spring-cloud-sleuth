@@ -21,3 +21,18 @@ Visualization of what *Span* and *Trace* might look in a system:
 
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
 
+In Zipkin it would look like this:
+
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-ui.png[Trace Info propagation]
+
+When grepping the logs of those four applications by trace id equal to `fe9d2f717e29bb9c` one would get the following:
+
+[source]
+2016-02-26 11:15:47.561  INFO [service1,fe9d2f717e29bb9c,fe9d2f717e29bb9c,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
+2016-02-26 11:15:47.710  INFO [service2,fe9d2f717e29bb9c,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Hello from service2. Calling service3 and then service4
+2016-02-26 11:15:47.895  INFO [service3,fe9d2f717e29bb9c,1210be13194bfe5,true] 68060 --- [nio-8083-exec-1] i.s.c.sleuth.docs.service3.Application   : Hello from service3
+2016-02-26 11:15:47.924  INFO [service2,fe9d2f717e29bb9c,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service3 [Hello from service3]
+2016-02-26 11:15:48.134  INFO [service4,fe9d2f717e29bb9c,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
+2016-02-26 11:15:48.156  INFO [service2,fe9d2f717e29bb9c,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
+2016-02-26 11:15:48.182  INFO [service1,fe9d2f717e29bb9c,fe9d2f717e29bb9c,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]
+
