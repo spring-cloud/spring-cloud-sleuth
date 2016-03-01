@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Log;
@@ -44,6 +46,14 @@ import zipkin.Endpoint;
  * @since 1.0.0
  */
 public class ZipkinSpanListener {
+	private static final List<String> ZIPKIN_ANNOTATIONS = Arrays.asList(
+			Constants.CLIENT_ADDR, Constants.CLIENT_RECV, Constants.CLIENT_SEND,
+			Constants.CLIENT_RECV_FRAGMENT, Constants.CLIENT_SEND_FRAGMENT,
+			Constants.SERVER_ADDR, Constants.SERVER_RECV, Constants.SERVER_SEND,
+			Constants.SERVER_RECV_FRAGMENT, Constants.SERVER_SEND_FRAGMENT,
+			Constants.LOCAL_COMPONENT,
+			Constants.WIRE_RECV, Constants.WIRE_SEND
+			);
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
 			.getLog(ZipkinSpanListener.class);
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
@@ -129,20 +139,14 @@ public class ZipkinSpanListener {
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
 		if (span.logs().isEmpty() && span.tags().isEmpty()) {
-			byte[] processId = span.getProcessId() != null
-					? span.getProcessId().toLowerCase().getBytes(UTF_8)
-					: UNKNOWN_BYTES;
-			BinaryAnnotation component = new BinaryAnnotation.Builder()
-					.type(BinaryAnnotation.Type.STRING)
-					.key("lc") // LOCAL_COMPONENT
-					.value(processId)
-					.endpoint(this.localEndpoint).build();
-			zipkinSpan.addBinaryAnnotation(component);
+			addLocalComponentAnnotation(span, zipkinSpan);
 		} else {
 			addZipkinAnnotations(zipkinSpan, span, this.localEndpoint);
 			addZipkinBinaryAnnotations(zipkinSpan, span, this.localEndpoint);
 		}
-
+		if (!spanContainsAnyZipkinConstant(span)) {
+			addLocalComponentAnnotation(span, zipkinSpan);
+		}
 		zipkinSpan.timestamp(span.getBegin() * 1000L);
 		zipkinSpan.duration(span.getAccumulatedMillis() * 1000L);
 		zipkinSpan.traceId(span.getTraceId());
@@ -158,6 +162,27 @@ public class ZipkinSpanListener {
 			zipkinSpan.name(span.getName());
 		}
 		return zipkinSpan.build();
+	}
+
+	private void addLocalComponentAnnotation(Span span, zipkin.Span.Builder zipkinSpan) {
+		byte[] processId = span.getProcessId() != null
+				? span.getProcessId().toLowerCase().getBytes(UTF_8)
+				: UNKNOWN_BYTES;
+		BinaryAnnotation component = new BinaryAnnotation.Builder()
+				.type(BinaryAnnotation.Type.STRING)
+				.key("lc") // LOCAL_COMPONENT
+				.value(processId)
+				.endpoint(this.localEndpoint).build();
+		zipkinSpan.addBinaryAnnotation(component);
+	}
+
+	private boolean spanContainsAnyZipkinConstant(Span span) {
+		for (Log log : span.logs()) {
+			if (ZIPKIN_ANNOTATIONS.contains(log.getEvent())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

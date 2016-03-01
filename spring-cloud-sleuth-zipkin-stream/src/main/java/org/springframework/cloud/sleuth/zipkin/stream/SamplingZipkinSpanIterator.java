@@ -15,7 +15,9 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.logging.Log;
@@ -38,6 +40,14 @@ import zipkin.Span.Builder;
  * @since 1.0.0
  */
 final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
+	private static final List<String> ZIPKIN_ANNOTATIONS = Arrays.asList(
+			Constants.CLIENT_ADDR, Constants.CLIENT_RECV, Constants.CLIENT_SEND,
+			Constants.CLIENT_RECV_FRAGMENT, Constants.CLIENT_SEND_FRAGMENT,
+			Constants.SERVER_ADDR, Constants.SERVER_RECV, Constants.SERVER_SEND,
+			Constants.SERVER_RECV_FRAGMENT, Constants.SERVER_SEND_FRAGMENT,
+			Constants.LOCAL_COMPONENT,
+			Constants.WIRE_RECV, Constants.WIRE_SEND
+	);
 
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(SamplingZipkinSpanIterator.class);
@@ -110,17 +120,15 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 		// A zipkin span without any annotations cannot be queried, add special "lc" to
 		// avoid that.
 		if (span.logs().isEmpty() && span.tags().isEmpty()) {
-			String processId = span.getProcessId() != null
-					? span.getProcessId().toLowerCase()
-					: ZipkinMessageListener.UNKNOWN_PROCESS_ID;
-			zipkinSpan.addBinaryAnnotation(
-					BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep));
+			addLocalComponentAnnotation(span, zipkinSpan, ep);
 		}
 		else {
 			ZipkinMessageListener.addZipkinAnnotations(zipkinSpan, span, ep);
 			ZipkinMessageListener.addZipkinBinaryAnnotations(zipkinSpan, span, ep);
 		}
-
+		if (!spanContainsAnyZipkinConstant(span)) {
+			addLocalComponentAnnotation(span, zipkinSpan, ep);
+		}
 		zipkinSpan.timestamp(span.getBegin() * 1000);
 		zipkinSpan.duration(span.getAccumulatedMillis() * 1000);
 		zipkinSpan.traceId(span.getTraceId());
@@ -137,5 +145,23 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 			zipkinSpan.name(span.getName());
 		}
 		return zipkinSpan.build();
+	}
+
+	private static void addLocalComponentAnnotation(Span span, Builder zipkinSpan,
+			Endpoint ep) {
+		String processId = span.getProcessId() != null
+				? span.getProcessId().toLowerCase()
+				: ZipkinMessageListener.UNKNOWN_PROCESS_ID;
+		zipkinSpan.addBinaryAnnotation(
+				BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep));
+	}
+
+	private static boolean spanContainsAnyZipkinConstant(Span span) {
+		for (org.springframework.cloud.sleuth.Log log : span.logs()) {
+			if (ZIPKIN_ANNOTATIONS.contains(log.getEvent())) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
