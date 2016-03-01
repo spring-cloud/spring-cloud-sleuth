@@ -16,9 +16,11 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import javax.annotation.PostConstruct;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.annotation.PostConstruct;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,6 +42,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import zipkin.Constants;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -133,6 +137,45 @@ public class ZipkinSpanListenerTests {
 		this.application.publishEvent(new ClientReceivedEvent(this, context));
 		this.tracer.close(context);
 		assertEquals(2, this.test.spans.size());
+	}
+
+	@Test
+	public void appendsLocalComponentTagIfNoZipkinLogIsPresent() {
+		this.parent.logEvent("hystrix/retry");
+		this.parent.stop();
+
+		zipkin.Span result = this.listener.convert(this.parent);
+
+		assertThat(result.binaryAnnotations)
+				.extracting(input -> input.key)
+				.contains(Constants.LOCAL_COMPONENT);
+	}
+
+	@Test
+	public void appendsServerAddressTagIfClientLogIsPresent() {
+		this.parent.logEvent(Constants.CLIENT_SEND);
+		this.parent.stop();
+
+		zipkin.Span result = this.listener.convert(this.parent);
+
+		assertThat(result.binaryAnnotations)
+				.filteredOn("key", Constants.SERVER_ADDR)
+				.extracting(input -> input.value)
+				.containsOnly("unknown".getBytes(Charset.forName("UTF-8")));
+	}
+
+	@Test
+	public void shouldReuseServerAddressTag() {
+		this.parent.logEvent(Constants.CLIENT_SEND);
+		this.parent.tag(Constants.SERVER_ADDR, "fooservice");
+		this.parent.stop();
+
+		zipkin.Span result = this.listener.convert(this.parent);
+
+		assertThat(result.binaryAnnotations)
+				.filteredOn("key", Constants.SERVER_ADDR)
+				.extracting(input -> input.value)
+				.containsOnly("fooservice".getBytes(Charset.forName("UTF-8")));
 	}
 
 	@Configuration

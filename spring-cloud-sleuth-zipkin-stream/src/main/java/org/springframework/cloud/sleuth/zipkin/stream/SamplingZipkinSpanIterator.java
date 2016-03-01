@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -40,14 +41,23 @@ import zipkin.Span.Builder;
  * @since 1.0.0
  */
 final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
-	private static final List<String> ZIPKIN_ANNOTATIONS = Arrays.asList(
+	private static final List<String> ZIPKIN_CLIENT_ANNOTATIONS = Arrays.asList(
 			Constants.CLIENT_ADDR, Constants.CLIENT_RECV, Constants.CLIENT_SEND,
-			Constants.CLIENT_RECV_FRAGMENT, Constants.CLIENT_SEND_FRAGMENT,
-			Constants.SERVER_ADDR, Constants.SERVER_RECV, Constants.SERVER_SEND,
-			Constants.SERVER_RECV_FRAGMENT, Constants.SERVER_SEND_FRAGMENT,
-			Constants.LOCAL_COMPONENT,
-			Constants.WIRE_RECV, Constants.WIRE_SEND
+			Constants.CLIENT_RECV_FRAGMENT, Constants.CLIENT_SEND_FRAGMENT
 	);
+	private static final List<String> ZIPKIN_ANNOTATIONS = zipkinAnnotations();
+
+	private static List<String> zipkinAnnotations() {
+		List<String> annotations = new ArrayList<>();
+		annotations.addAll(Arrays.asList(
+				Constants.SERVER_ADDR, Constants.SERVER_RECV, Constants.SERVER_SEND,
+				Constants.SERVER_RECV_FRAGMENT, Constants.SERVER_SEND_FRAGMENT,
+				Constants.LOCAL_COMPONENT,
+				Constants.WIRE_RECV, Constants.WIRE_SEND
+		));
+		annotations.addAll(ZIPKIN_CLIENT_ANNOTATIONS);
+		return annotations;
+	}
 
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(SamplingZipkinSpanIterator.class);
@@ -128,6 +138,8 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 		}
 		if (!spanContainsAnyZipkinConstant(span)) {
 			addLocalComponentAnnotation(span, zipkinSpan, ep);
+		} else if (spanContainsAnyZipkinClientConstantAndSaIsNotSet(span)) {
+			addServerAddressAnnotation(zipkinSpan, ep);
 		}
 		zipkinSpan.timestamp(span.getBegin() * 1000);
 		zipkinSpan.duration(span.getAccumulatedMillis() * 1000);
@@ -156,6 +168,16 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 				BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep));
 	}
 
+	private static void addServerAddressAnnotation(zipkin.Span.Builder zipkinSpan,
+			Endpoint ep) {
+		BinaryAnnotation component = new BinaryAnnotation.Builder()
+				.type(BinaryAnnotation.Type.STRING)
+				.key(Constants.SERVER_ADDR)
+				.value(ep.serviceName)
+				.endpoint(ep).build();
+		zipkinSpan.addBinaryAnnotation(component);
+	}
+
 	private static boolean spanContainsAnyZipkinConstant(Span span) {
 		for (org.springframework.cloud.sleuth.Log log : span.logs()) {
 			if (ZIPKIN_ANNOTATIONS.contains(log.getEvent())) {
@@ -164,4 +186,17 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 		}
 		return false;
 	}
+
+	private static boolean spanContainsAnyZipkinClientConstantAndSaIsNotSet(Span span) {
+		boolean containsAnyZipkinClientConstant = false;
+		for (org.springframework.cloud.sleuth.Log log : span.logs()) {
+			if (ZIPKIN_CLIENT_ANNOTATIONS.contains(log.getEvent())) {
+				containsAnyZipkinClientConstant = true;
+				break;
+			}
+		}
+		return containsAnyZipkinClientConstant && !span.tags().containsKey(Constants.SERVER_ADDR);
+	}
+
+
 }
