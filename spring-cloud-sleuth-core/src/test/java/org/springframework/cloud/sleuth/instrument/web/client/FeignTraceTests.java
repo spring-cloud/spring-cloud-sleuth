@@ -90,15 +90,16 @@ public class FeignTraceTests {
 	public void shouldAttachTraceIdWhenUsingFeignClient() {
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
+		Long currentSpanId = generatedId();
 		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
-				.spanId(generatedId()).parent(currentParentId).build());
+				.spanId(currentSpanId).parent(currentParentId).build());
 
 		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
 
 		then(Span.hexToId(getHeader(response, Span.TRACE_ID_NAME)))
 				.isEqualTo(currentTraceId);
 		then(Span.hexToId(getHeader(response, Span.PARENT_ID_NAME)))
-				.isEqualTo(currentParentId);
+				.isEqualTo(currentSpanId);
 		then(this.listener.getEvents().size()).isEqualTo(2);
 	}
 

@@ -80,9 +80,9 @@ public class TraceRestTemplateInterceptorTests {
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
-		then(Long.valueOf(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
-		then(Long.valueOf(headers.get(Span.SPAN_ID_NAME))).isEqualTo(2L);
-		then(Long.valueOf(headers.get(Span.PARENT_ID_NAME))).isEqualTo(3L);
+		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
+		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotEqualTo(2L);
+		then(Span.hexToId(headers.get(Span.PARENT_ID_NAME))).isEqualTo(2L);
 	}
 
 	@Test
@@ -91,8 +91,8 @@ public class TraceRestTemplateInterceptorTests {
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
-		then(Long.valueOf(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
-		then(Long.valueOf(headers.get(Span.SPAN_ID_NAME))).isEqualTo(2L);
+		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
+		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotEqualTo(2L);
 		then(headers.get(Span.NOT_SAMPLED_NAME)).isEqualTo("true");
 	}
 

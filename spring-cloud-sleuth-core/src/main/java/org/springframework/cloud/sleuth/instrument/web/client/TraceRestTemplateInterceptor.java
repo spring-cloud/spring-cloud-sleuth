@@ -17,7 +17,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
 
-import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -31,15 +31,14 @@ import org.springframework.http.client.ClientHttpResponse;
  * @author Spencer Gibb
  *
  * @see org.springframework.web.client.RestTemplate
- * @see SpanAccessor
  *
  * @since 1.0.0
  */
 public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterceptor
 		implements ClientHttpRequestInterceptor {
 
-	public TraceRestTemplateInterceptor(SpanAccessor accessor) {
-		super(accessor);
+	public TraceRestTemplateInterceptor(Tracer tracer) {
+		super(tracer);
 	}
 
 	@Override

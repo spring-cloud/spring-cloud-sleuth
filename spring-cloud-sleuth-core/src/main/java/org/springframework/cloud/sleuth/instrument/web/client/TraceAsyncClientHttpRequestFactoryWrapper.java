@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 import java.net.URI;
 
-import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpMethod;
@@ -42,8 +41,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttpRequestInterceptor
 		implements ClientHttpRequestFactory, AsyncClientHttpRequestFactory {
 
-	private final Tracer tracer;
-	private final AsyncClientHttpRequestFactory delegate;
+	private final AsyncClientHttpRequestFactory asyncDelegate;
 	private final ClientHttpRequestFactory syncDelegate;
 
 	/**
@@ -55,32 +53,29 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	 *
 	 * @see org.springframework.web.client.AsyncRestTemplate#AsyncRestTemplate(AsyncClientHttpRequestFactory)
 	 */
-	public TraceAsyncClientHttpRequestFactoryWrapper(SpanAccessor accessor, Tracer tracer,
-			AsyncClientHttpRequestFactory delegate) {
-		super(accessor);
-		this.tracer = tracer;
-		this.delegate = delegate;
-		this.syncDelegate = delegate instanceof ClientHttpRequestFactory ?
-				(ClientHttpRequestFactory) delegate : defaultClientHttpRequestFactory();
+	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer,
+			AsyncClientHttpRequestFactory asyncDelegate) {
+		super(tracer);
+		this.asyncDelegate = asyncDelegate;
+		this.syncDelegate = asyncDelegate instanceof ClientHttpRequestFactory ?
+				(ClientHttpRequestFactory) asyncDelegate : defaultClientHttpRequestFactory();
 	}
 
 	/**
 	 * Default implementation that creates a {@link SimpleClientHttpRequestFactory} that
 	 * has a wrapped task executor via the {@link TraceAsyncListenableTaskExecutor}
 	 */
-	public TraceAsyncClientHttpRequestFactoryWrapper(SpanAccessor accessor, Tracer tracer) {
-		super(accessor);
-		this.tracer = tracer;
+	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer) {
+		super(tracer);
 		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = defaultClientHttpRequestFactory();
-		this.delegate = simpleClientHttpRequestFactory;
+		this.asyncDelegate = simpleClientHttpRequestFactory;
 		this.syncDelegate = simpleClientHttpRequestFactory;
 	}
 
-	public TraceAsyncClientHttpRequestFactoryWrapper(SpanAccessor accessor, Tracer tracer,
-			AsyncClientHttpRequestFactory delegate, ClientHttpRequestFactory syncDelegate) {
-		super(accessor);
-		this.tracer = tracer;
-		this.delegate = delegate;
+	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer,
+			AsyncClientHttpRequestFactory asyncDelegate, ClientHttpRequestFactory syncDelegate) {
+		super(tracer);
+		this.asyncDelegate = asyncDelegate;
 		this.syncDelegate = syncDelegate;
 	}
 
@@ -99,7 +94,8 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	@Override
 	public AsyncClientHttpRequest createAsyncRequest(URI uri, HttpMethod httpMethod)
 			throws IOException {
-		AsyncClientHttpRequest request = this.delegate.createAsyncRequest(uri, httpMethod);
+		AsyncClientHttpRequest request = this.asyncDelegate
+				.createAsyncRequest(uri, httpMethod);
 		if (!isTracing()) {
 			doNotSampleThisSpan(request);
 			return request;

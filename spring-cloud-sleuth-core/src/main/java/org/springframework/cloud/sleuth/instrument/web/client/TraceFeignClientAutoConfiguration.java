@@ -20,6 +20,7 @@ import static java.util.Collections.singletonList;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +37,6 @@ import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
@@ -84,7 +84,7 @@ public class TraceFeignClientAutoConfiguration {
 	private ApplicationEventPublisher publisher;
 
 	@Autowired
-	private SpanAccessor accessor;
+	private Tracer tracer;
 
 	@Bean
 	@Scope("prototype")
@@ -112,6 +112,7 @@ public class TraceFeignClientAutoConfiguration {
 					Span span = getCurrentSpan();
 					if (span != null) {
 						publish(new ClientReceivedEvent(this, span));
+						TraceFeignClientAutoConfiguration.this.tracer.close(span);
 					}
 				}
 			}
@@ -123,7 +124,9 @@ public class TraceFeignClientAutoConfiguration {
 		return new RequestInterceptor() {
 			@Override
 			public void apply(RequestTemplate template) {
-				Span span = getCurrentSpan();
+				URI uri = URI.create(template.url());
+				String spanName = uri.getScheme() + ":" + uri.getPath();
+				Span span = TraceFeignClientAutoConfiguration.this.tracer.startTrace(spanName);
 				if (span == null) {
 					setHeader(template, Span.NOT_SAMPLED_NAME, "true");
 					return;
@@ -156,7 +159,7 @@ public class TraceFeignClientAutoConfiguration {
 
 	public void setHeader(RequestTemplate request, String name, String value) {
 		if (StringUtils.hasText(value) && !request.headers().containsKey(name)
-				&& this.accessor.isTracing()) {
+				&& this.tracer.isTracing()) {
 			request.header(name, value);
 		}
 	}
@@ -179,7 +182,7 @@ public class TraceFeignClientAutoConfiguration {
 	public void setHeader(Map<String, Collection<String>> headers, String name,
 			String value) {
 		if (StringUtils.hasText(value) && !headers.containsKey(name)
-				&& this.accessor.isTracing()) {
+				&& this.tracer.isTracing()) {
 			headers.put(name, singletonList(value));
 		}
 	}
@@ -192,7 +195,7 @@ public class TraceFeignClientAutoConfiguration {
 	}
 
 	private Span getCurrentSpan() {
-		return this.accessor.getCurrentSpan();
+		return this.tracer.getCurrentSpan();
 	}
 
 }

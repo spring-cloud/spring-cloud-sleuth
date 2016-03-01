@@ -47,14 +47,15 @@ public class TraceWebAsyncClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public AsyncClientHttpRequestFactory asyncClientHttpRequestFactory(SpanAccessor spanAccessor, Tracer tracer) {
-		return new TraceAsyncClientHttpRequestFactoryWrapper(spanAccessor, tracer);
+	public AsyncClientHttpRequestFactory asyncClientHttpRequestFactory(Tracer tracer) {
+		return new TraceAsyncClientHttpRequestFactoryWrapper(tracer);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public AsyncRestTemplate asyncRestTemplate(AsyncClientHttpRequestFactory asyncClientHttpRequestFactory) {
-		return new AsyncRestTemplate(asyncClientHttpRequestFactory);
+	public AsyncRestTemplate asyncRestTemplate(AsyncClientHttpRequestFactory asyncClientHttpRequestFactory,
+			Tracer tracer) {
+		return new TraceAsyncRestTemplate(asyncClientHttpRequestFactory, tracer);
 	}
 
 }

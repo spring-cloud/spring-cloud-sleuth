@@ -16,6 +16,7 @@
 package integration;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -106,22 +107,32 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	private void thenTheSpansHaveProperParentStructure() {
 		Optional<Span> firstHttpSpan = findFirstHttpRequestSpan();
 		List<Span> eventSpans = findAllEventRelatedSpans();
-		Optional<Span> eventSentSpan = findSpanWithAnnotation(eventSpans, Constants.SERVER_SEND);
-		Optional<Span> eventReceivedSpan = findSpanWithAnnotation(eventSpans, Constants.CLIENT_RECV);
-		Optional<Span> lastHttpSpan = findLastHttpSpan();
-		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpan, eventSentSpan, eventReceivedSpan);
-		then(lastHttpSpan.get().parentId).isEqualTo(eventSentSpan.get().id);
-		then(eventSentSpan.get().parentId).isEqualTo(firstHttpSpan.get().id);
-		then(eventSentSpan.get()).isNotEqualTo(eventReceivedSpan.get());
+		Optional<Span> eventSentSpan = findSpanWithAnnotation(Constants.SERVER_SEND);
+		Optional<Span> eventReceivedSpan = findSpanWithAnnotation(Constants.CLIENT_RECV);
+		Optional<Span> lastHttpSpansParent = findLastHttpSpansParent();
+		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, eventReceivedSpan);
+		// "http:/parent/" -> "http:/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo" (SS) -> "http:/foo"
+		Collections.sort(this.integrationTestSpanCollector.hashedSpans, (s1, s2) -> s1.timestamp.compareTo(s2.timestamp));
+		then(this.integrationTestSpanCollector.hashedSpans).hasSize(6);
+		for (int i=0; i<this.integrationTestSpanCollector.hashedSpans.size(); i++) {
+			if (i - 1 >= 0) {
+				Span parent = this.integrationTestSpanCollector.hashedSpans.get(i - 1);
+				Span current = this.integrationTestSpanCollector.hashedSpans.get(i);
+				// there is a pair of spans having cs/cr and ss/sr
+				if (current.id != parent.id) {
+					then(current.parentId).isEqualTo(parent.id);
+				}
+			}
+		}
 	}
 
-	private Optional<Span> findLastHttpSpan() {
+	private Optional<Span> findLastHttpSpansParent() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "http:/foo".equals(span.name)).findFirst();
+				.filter(span -> "http:/foo".equals(span.name) && !span.annotations.isEmpty()).findFirst();
 	}
 
-	private Optional<Span> findSpanWithAnnotation(List<Span> eventSpans, String annotationName) {
-		return eventSpans.stream()
+	private Optional<Span> findSpanWithAnnotation(String annotationName) {
+		return this.integrationTestSpanCollector.hashedSpans.stream()
 				.filter(span -> span.annotations.stream().filter(annotation -> annotationName
 						.equals(annotation.value)).findFirst().isPresent())
 				.findFirst();

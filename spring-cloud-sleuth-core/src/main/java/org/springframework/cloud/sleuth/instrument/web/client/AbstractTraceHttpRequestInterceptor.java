@@ -16,8 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.net.URI;
+
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.context.ApplicationEvent;
@@ -38,10 +40,10 @@ abstract class AbstractTraceHttpRequestInterceptor
 		implements ApplicationEventPublisherAware {
 
 	private ApplicationEventPublisher publisher;
-	private final SpanAccessor accessor;
+	protected final Tracer tracer;
 
-	protected AbstractTraceHttpRequestInterceptor(SpanAccessor accessor) {
-		this.accessor = accessor;
+	protected AbstractTraceHttpRequestInterceptor(Tracer tracer) {
+		this.tracer = tracer;
 	}
 
 	@Override
@@ -70,7 +72,7 @@ abstract class AbstractTraceHttpRequestInterceptor
 
 	private void setHeader(HttpRequest request, String name, String value) {
 		if (StringUtils.hasText(value) && !request.getHeaders().containsKey(name) &&
-				this.accessor.isTracing()) {
+				this.tracer.isTracing()) {
 			request.getHeaders().add(name, value);
 		}
 	}
@@ -86,9 +88,11 @@ abstract class AbstractTraceHttpRequestInterceptor
 	 * the client sent event
 	 */
 	protected void publishStartEvent(HttpRequest request) {
-		Span span = currentSpan();
-		enrichWithTraceHeaders(request, span);
-		publish(new ClientSentEvent(this, span));
+		URI uri = request.getURI();
+		String spanName = uri.getScheme() + ":" + uri.getPath();
+		Span newSpan = this.tracer.startTrace(spanName);
+		enrichWithTraceHeaders(request, newSpan);
+		publish(new ClientSentEvent(this, newSpan));
 	}
 
 	/**
@@ -99,6 +103,7 @@ abstract class AbstractTraceHttpRequestInterceptor
 			return;
 		}
 		publish(new ClientReceivedEvent(this, currentSpan()));
+		this.tracer.close(this.currentSpan());
 	}
 
 	private void publish(ApplicationEvent event) {
@@ -108,11 +113,11 @@ abstract class AbstractTraceHttpRequestInterceptor
 	}
 
 	private Span currentSpan() {
-		return this.accessor.getCurrentSpan();
+		return this.tracer.getCurrentSpan();
 	}
 
 	protected boolean isTracing() {
-		return this.accessor.isTracing();
+		return this.tracer.isTracing();
 	}
 
 }
