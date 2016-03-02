@@ -106,9 +106,9 @@ public class TraceRunnableTests {
 		this.executor.submit(new TraceRunnable(this.tracer, new DefaultSpanNamer(), runnable)).get();
 	}
 
-	private void whenNonTraceableRunnableGetsSubmitted(Runnable callable)
+	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable)
 			throws Exception {
-		this.executor.submit(callable).get();
+		this.executor.submit(runnable).get();
 	}
 
 	private Runnable runnableWithCustomToString(final AtomicReference<Span> span) {

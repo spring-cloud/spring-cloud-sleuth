@@ -34,7 +34,7 @@ A sampler can be installed just by creating a bean definition, e.g:
 
 [source,java]
 ----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/issues_%2379_updating_documentation/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SamplingTest.java[tags=always_sampler,indent=0]
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
 ----
 
 == Instrumentation
@@ -57,6 +57,54 @@ NOTE: Remember that tags are only collected and exported if there is a
 danger of accidentally collecting too much data without configuring
 something).
 
+=== Span Name
+
+Picking a span name is not a trivial task. Span name should depict an operation
+but shouldn't be too descriptive (you don't want the Zipkin UI to render for minutes,
+do you?).
+
+Since there is a lot of instrumentation going on some of the span names will be
+artificial like:
+
+- `http:path` when received an http request on a given path
+- `async` for asynchronous operations done via wrapped `Callable` and `Runnable`.
+- `@Scheduled` annotated methods will return the simple name of the class.
+
+Fortunately, for the asynchronous processing you can provide explicit naming.
+
+==== @SpanName annotation
+
+You can do name the span explicitly via the `@SpanName` annotation.
+
+[source,java]
+----
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]
+----
+
+In this case, when processed in the following manner:
+
+[source,java]
+----
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]
+----
+
+The span will be named `calculateTax`.
+
+==== toString() method
+
+It's pretty rare to create separate classes for `Runnable` or `Callable`. Typically one creates an anonymous
+instance of those classes. You can't annotate such classes thus to override that, if there is no `@SpanName` annotation present,
+we're checking if the class has a custom implementation of the `toString()` method.
+
+So executing such code:
+
+[source,java]
+----
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]
+----
+
+will lead in creating a span named `calculateTax`.
+
 == Span Data as Messages
 
 You can accumulate and send span data over
@@ -75,13 +123,7 @@ for the Span data and pushing it into a Zipkin `SpanStore`. This application
 
 [source,java]
 ----
-@SpringBootApplication
-@EnableZipkinStreamServer
-public class Consumer {
-  public static void main(String[] args) {
-    SpringApplication.run(Consumer.class, args);
-  }
-}
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/documentation/Consumer.java[tags=zipkin_consumer,indent=0]
 ----
 
 will listen for the Span data on whatever transport you provide via a
@@ -93,7 +135,7 @@ can point a standard Zipkin UI at it (e.g. run the consumer app on
 port 9411 if you want the query server on the same host and the
 default configuration).
 
-The deafult `SpanStore` is in-memory (good for demos and getting
+The default `SpanStore` is in-memory (good for demos and getting
 started quickly). For a more robust solution you can add MySQL and
 `spring-boot-starter-jdbc` to your classpath and enable the JDBC
 `SpanStore` via configuration, e.g.:

@@ -14,29 +14,24 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.documentation;
+package org.springframework.cloud.sleuth.zipkin.stream.documentation;
 
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.sleuth.zipkin.stream.EnableZipkinStreamServer;
 
 /**
- * Test class to be embedded in the Sampling part of
+ * Test class to be embedded in the Zipkin Consumer part of
  * {@code docs/src/main/asciidoc/spring-cloud-sleuth.adoc}
  *
  * @author Marcin Grzejszczak
  */
-public class SamplingTest {
-
-
-	@Configuration
-	public class SamplingConfiguration {
-		// tag::always_sampler[]
-		@Bean
-		public Sampler defaultSampler() {
-			return new AlwaysSampler();
-		}
-		// end::always_sampler[]
+// tag::zipkin_consumer[]
+@SpringBootApplication
+@EnableZipkinStreamServer
+public class Consumer {
+	public static void main(String[] args) {
+		SpringApplication.run(Consumer.class, args);
 	}
 }
+// end::zipkin_consumer[]
