@@ -34,7 +34,7 @@ A sampler can be installed just by creating a bean definition, e.g:
 
 [source,java]
 ----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
 ----
 
 == Instrumentation
@@ -57,6 +57,10 @@ NOTE: Remember that tags are only collected and exported if there is a
 danger of accidentally collecting too much data without configuring
 something).
 
+NOTE: Currently the instrumentation in Spring Cloud Sleuth is eager - it means that
+we're actively trying to pass the tracing context between threads.
+This approach may change in the future towards being lazy on this matter.
+
 === Span Name
 
 Picking a span name is not a trivial task. Span name should depict an operation
@@ -78,14 +82,14 @@ You can do name the span explicitly via the `@SpanName` annotation.
 
 [source,java]
 ----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]
 ----
 
 In this case, when processed in the following manner:
 
 [source,java]
 ----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]
 ----
 
 The span will be named `calculateTax`.
@@ -100,7 +104,7 @@ So executing such code:
 
 [source,java]
 ----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]
 ----
 
 will lead in creating a span named `calculateTax`.
@@ -123,7 +127,7 @@ for the Span data and pushing it into a Zipkin `SpanStore`. This application
 
 [source,java]
 ----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/documentation/Consumer.java[tags=zipkin_consumer,indent=0]
+include::../../../../spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/documentation/Consumer.java[tags=zipkin_consumer,indent=0]
 ----
 
 will listen for the Span data on whatever transport you provide via a
