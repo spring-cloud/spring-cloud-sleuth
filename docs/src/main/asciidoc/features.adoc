@@ -17,6 +17,8 @@ key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
 * Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints,
 rest template, scheduled actions, message channels, zuul filters, feign client).
 
+* Provides simple metrics of accepted / dropped spans.
+
 * If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave).
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using `spring.zipkin.baseUrl`.

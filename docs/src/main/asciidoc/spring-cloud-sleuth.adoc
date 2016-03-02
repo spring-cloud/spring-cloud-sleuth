@@ -192,3 +192,7 @@ NOTE: the sample consumer application above explicitly excludes
 `SleuthStreamAutoConfiguration` so it doesn't send messages to itself,
 but this is optional (you might actually want to trace requests into
 the consumer app).
+
+== Metrics
+
+Currently Spring Cloud Sleuth

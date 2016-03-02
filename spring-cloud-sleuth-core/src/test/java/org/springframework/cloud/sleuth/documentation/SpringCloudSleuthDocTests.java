@@ -78,7 +78,7 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_annotated_runnable_execution[]
 
-		BDDMockito.then(tracer.joinTrace(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class)));
+		BDDMockito.then(tracer).should().joinTrace(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
 	}
 
 	@Test
@@ -103,6 +103,6 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_to_string_runnable_execution[]
 
-		BDDMockito.then(tracer.joinTrace(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class)));
+		BDDMockito.then(tracer).should().joinTrace(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
 	}
 }
