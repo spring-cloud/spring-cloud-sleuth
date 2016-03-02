@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.Spans;
+
+import zipkin.Constants;
 import zipkin.Sampler;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,6 +76,54 @@ public class SamplingZipkinSpanIteratorTests {
 
 		assertThat(result).extracting(s -> s.name).containsExactly(
 				"message:foo", "message:baz");
+	}
+
+	@Test
+	public void appendsLocalComponentTagIfNoZipkinLogIsPresent() {
+		Spans spans = new Spans(this.host, Collections.singletonList(span("foo")));
+
+		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
+				Sampler.create(1.0f), spans);
+
+		assertThat(result)
+				.flatExtracting(s -> s.binaryAnnotations)
+				.extracting(input -> input.key)
+				.contains(Constants.LOCAL_COMPONENT);
+	}
+
+	@Test
+	public void appendsServerAddressTagIfClientLogIsPresent() {
+		Span span = span("foo");
+		span.logEvent(Constants.CLIENT_SEND);
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+
+		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
+				Sampler.create(1.0f), spans);
+
+		assertThat(result)
+				.hasSize(1)
+				.flatExtracting(input1 -> input1.binaryAnnotations)
+				.filteredOn("key", Constants.SERVER_ADDR)
+				.extracting(input -> input.endpoint.serviceName)
+				.contains("myservice");
+	}
+
+	@Test
+	public void shouldReuseServerAddressTag() {
+		Span span = span("foo");
+		span.logEvent(Constants.CLIENT_SEND);
+		span.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "barservice");
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+
+		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
+				Sampler.create(1.0f), spans);
+
+		assertThat(result)
+				.hasSize(1)
+				.flatExtracting(input1 -> input1.binaryAnnotations)
+				.filteredOn("key", Constants.SERVER_ADDR)
+				.extracting(input -> input.endpoint.serviceName)
+				.contains("barservice");
 	}
 
 	Span span(String name) {
