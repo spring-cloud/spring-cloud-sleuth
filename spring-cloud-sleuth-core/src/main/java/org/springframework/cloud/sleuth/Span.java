@@ -64,6 +64,10 @@ public class Span {
 	public static final String SPAN_ID_NAME = "X-Span-Id";
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
+	/**
+	 * <a href="https://github.com/opentracing/opentracing-go/blob/master/ext/tags.go">As in Open Tracing</a>
+	 */
+	public static final String SPAN_PEER_SERVICE_TAG_NAME = "peer.service";
 
 	private final long begin;
 	private long end = 0;

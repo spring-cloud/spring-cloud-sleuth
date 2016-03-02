@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -160,22 +159,22 @@ public class ZipkinSpanListenerTests {
 
 		assertThat(result.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
-				.extracting(input -> input.value)
-				.containsOnly("unknown".getBytes(Charset.forName("UTF-8")));
+				.extracting(input -> input.endpoint.serviceName)
+				.containsOnly("unknown");
 	}
 
 	@Test
 	public void shouldReuseServerAddressTag() {
 		this.parent.logEvent(Constants.CLIENT_SEND);
-		this.parent.tag(Constants.SERVER_ADDR, "fooservice");
+		this.parent.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "fooservice");
 		this.parent.stop();
 
 		zipkin.Span result = this.listener.convert(this.parent);
 
 		assertThat(result.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
-				.extracting(input -> input.value)
-				.containsOnly("fooservice".getBytes(Charset.forName("UTF-8")));
+				.extracting(input -> input.endpoint.serviceName)
+				.containsOnly("fooservice");
 	}
 
 	@Configuration

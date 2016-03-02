@@ -15,7 +15,6 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -95,7 +94,7 @@ public class SamplingZipkinSpanIteratorTests {
 	@Test
 	public void appendsServerAddressTagIfClientLogIsPresent() {
 		Span span = span("foo");
-		span.logEvent(Constants.CLIENT_RECV);
+		span.logEvent(Constants.CLIENT_SEND);
 		Spans spans = new Spans(this.host, Collections.singletonList(span));
 
 		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
@@ -105,15 +104,15 @@ public class SamplingZipkinSpanIteratorTests {
 				.hasSize(1)
 				.flatExtracting(input1 -> input1.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
-				.extracting(input -> input.value)
-				.contains("myservice".getBytes(Charset.forName("UTF-8")));
+				.extracting(input -> input.endpoint.serviceName)
+				.contains("myservice");
 	}
 
 	@Test
 	public void shouldReuseServerAddressTag() {
 		Span span = span("foo");
-		span.logEvent(Constants.CLIENT_RECV);
-		span.tag(Constants.SERVER_ADDR, "barservice");
+		span.logEvent(Constants.CLIENT_SEND);
+		span.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "barservice");
 		Spans spans = new Spans(this.host, Collections.singletonList(span));
 
 		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
@@ -123,8 +122,8 @@ public class SamplingZipkinSpanIteratorTests {
 				.hasSize(1)
 				.flatExtracting(input1 -> input1.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
-				.extracting(input -> input.value)
-				.contains("barservice".getBytes(Charset.forName("UTF-8")));
+				.extracting(input -> input.endpoint.serviceName)
+				.contains("barservice");
 	}
 
 	Span span(String name) {

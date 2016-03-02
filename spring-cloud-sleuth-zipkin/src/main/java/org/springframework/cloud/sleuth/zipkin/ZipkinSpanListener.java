@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -47,23 +46,9 @@ import zipkin.Endpoint;
  * @since 1.0.0
  */
 public class ZipkinSpanListener {
-	private static final List<String> ZIPKIN_CLIENT_ANNOTATIONS = Arrays.asList(
-			Constants.CLIENT_ADDR, Constants.CLIENT_RECV, Constants.CLIENT_SEND,
-			Constants.CLIENT_RECV_FRAGMENT, Constants.CLIENT_SEND_FRAGMENT
+	private static final List<String> ZIPKIN_START_EVENTS = Arrays.asList(
+			Constants.CLIENT_RECV, Constants.SERVER_RECV
 	);
-	private static final List<String> ZIPKIN_ANNOTATIONS = zipkinAnnotations();
-
-	private static List<String> zipkinAnnotations() {
-		List<String> annotations = new ArrayList<>();
-		annotations.addAll(Arrays.asList(
-				Constants.SERVER_ADDR, Constants.SERVER_RECV, Constants.SERVER_SEND,
-				Constants.SERVER_RECV_FRAGMENT, Constants.SERVER_SEND_FRAGMENT,
-				Constants.LOCAL_COMPONENT,
-				Constants.WIRE_RECV, Constants.WIRE_SEND
-		));
-		annotations.addAll(ZIPKIN_CLIENT_ANNOTATIONS);
-		return annotations;
-	}
 
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
 			.getLog(ZipkinSpanListener.class);
@@ -143,22 +128,23 @@ public class ZipkinSpanListener {
 	 * <li>Create timeline annotations based on data from Span object.
 	 * <li>Create binary annotations based on data from Span object.
 	 * </ul>
+	 *
+	 * When logging {@link Constants#CLIENT_SEND}, instrumentation should also log the {@link Constants#SERVER_ADDR}
+	 * Check <a href="https://github.com/openzipkin/zipkin-java/blob/master/zipkin/src/main/java/zipkin/Constants.java#L28">Zipkin code</a>
+	 * for more information
 	 */
 	// Visible for testing
 	zipkin.Span convert(Span span) {
 		zipkin.Span.Builder zipkinSpan = new zipkin.Span.Builder();
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
-		if (span.logs().isEmpty() && span.tags().isEmpty()) {
-			addLocalComponentAnnotation(span, zipkinSpan);
-		} else {
-			addZipkinAnnotations(zipkinSpan, span, this.localEndpoint);
-			addZipkinBinaryAnnotations(zipkinSpan, span, this.localEndpoint);
+		if (notClientOrServer(span)) {
+			ensureLocalComponent(span, zipkinSpan);
 		}
-		if (!spanContainsAnyZipkinConstant(span)) {
-			addLocalComponentAnnotation(span, zipkinSpan);
-		} else if (spanContainsAnyZipkinClientConstantAndSaIsNotSet(span)) {
-			addServerAddressAnnotation(zipkinSpan);
+		addZipkinAnnotations(zipkinSpan, span, this.localEndpoint);
+		addZipkinBinaryAnnotations(zipkinSpan, span, this.localEndpoint);
+		if (hasClientSend(span)) {
+			ensureServerAddr(span, zipkinSpan);
 		}
 		zipkinSpan.timestamp(span.getBegin() * 1000L);
 		zipkinSpan.duration(span.getAccumulatedMillis() * 1000L);
@@ -177,7 +163,10 @@ public class ZipkinSpanListener {
 		return zipkinSpan.build();
 	}
 
-	private void addLocalComponentAnnotation(Span span, zipkin.Span.Builder zipkinSpan) {
+	private void ensureLocalComponent(Span span, zipkin.Span.Builder zipkinSpan) {
+		if (span.tags().containsKey(Constants.LOCAL_COMPONENT)) {
+			return;
+		}
 		byte[] processId = span.getProcessId() != null
 				? span.getProcessId().toLowerCase().getBytes(UTF_8)
 				: UNKNOWN_BYTES;
@@ -189,33 +178,29 @@ public class ZipkinSpanListener {
 		zipkinSpan.addBinaryAnnotation(component);
 	}
 
-	private void addServerAddressAnnotation(zipkin.Span.Builder zipkinSpan) {
-		BinaryAnnotation component = new BinaryAnnotation.Builder()
-				.type(BinaryAnnotation.Type.STRING)
-				.key(Constants.SERVER_ADDR)
-				.value(this.localEndpoint.serviceName)
-				.endpoint(this.localEndpoint).build();
-		zipkinSpan.addBinaryAnnotation(component);
+	private void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan) {
+		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME) ?
+				span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : this.localEndpoint.serviceName;
+		zipkinSpan.addBinaryAnnotation(BinaryAnnotation.address(Constants.SERVER_ADDR,
+				Endpoint.create(serviceName, this.localEndpoint.ipv4, this.localEndpoint.port)));
 	}
 
-	private boolean spanContainsAnyZipkinConstant(Span span) {
+	private boolean notClientOrServer(Span span) {
 		for (Log log : span.logs()) {
-			if (ZIPKIN_ANNOTATIONS.contains(log.getEvent())) {
-				return true;
+			if (ZIPKIN_START_EVENTS.contains(log.getEvent())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean hasClientSend(Span span) {
+		for (org.springframework.cloud.sleuth.Log log : span.logs()) {
+			if (Constants.CLIENT_SEND.equals(log.getEvent())) {
+				return !span.tags().containsKey(Constants.SERVER_ADDR);
 			}
 		}
 		return false;
-	}
-
-	private boolean spanContainsAnyZipkinClientConstantAndSaIsNotSet(Span span) {
-		boolean containsAnyZipkinClientConstant = false;
-		for (org.springframework.cloud.sleuth.Log log : span.logs()) {
-			if (ZIPKIN_CLIENT_ANNOTATIONS.contains(log.getEvent())) {
-				containsAnyZipkinClientConstant = true;
-				break;
-			}
-		}
-		return containsAnyZipkinClientConstant && !span.tags().containsKey(Constants.SERVER_ADDR);
 	}
 
 	/**
@@ -236,13 +221,13 @@ public class ZipkinSpanListener {
 	 * Adds binary annotation from the sleuth Span
 	 */
 	private void addZipkinBinaryAnnotations(zipkin.Span.Builder zipkinSpan,
-			Span span, Endpoint endpoint) {
+			Span span, Endpoint ep) {
 		for (Map.Entry<String, String> e : span.tags().entrySet()) {
 			BinaryAnnotation binaryAnn = new BinaryAnnotation.Builder()
 					.type(BinaryAnnotation.Type.STRING)
 					.key(e.getKey())
 					.value(e.getValue().getBytes(UTF_8))
-					.endpoint(endpoint).build();
+					.endpoint(ep).build();
 			zipkinSpan.addBinaryAnnotation(binaryAnn);
 		}
 	}
