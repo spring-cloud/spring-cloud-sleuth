@@ -8,16 +8,28 @@
 2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...
 ----
 +
-(notice the `[appname,traceId,spanId,exportable]` entries from the MDC).
+(notice the `[appname,traceId,spanId,exportable]` entries from the MDC. `appname`, `traceId` , `spanId` seem to be quite
+straightforward, `exportable` means whether the log should be exported to Zipkin or not).
 
-* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
+* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations,
+key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
 
-* Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, zuul filters, feign client).
+* Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints,
+rest template, scheduled actions, message channels, zuul filters, feign client).
 
-* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via HTTP to a Zipkin server on localhost (port 9411). Configure the location of the service using `spring.zipkin.[host,port]`.
+* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave).
+By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
+Configure the location of the service using `spring.zipkin.baseUrl`.
 
-* If `spring-cloud-sleuth-stream` then the app will generate and collect traces via Spring Cloud Stream. Your app automatically becomes a producer of tracer messages that are sent over your broker of choice (e.g. RabbitMQ, Apache Kafka, Redis).
+* If `spring-cloud-sleuth-stream` then the app will generate and collect traces via Spring Cloud Stream. Your app
+automatically becomes a producer of tracer messages that are sent over your broker of choice
+(e.g. RabbitMQ, Apache Kafka, Redis).
 
-IMPORTANT: If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage` (default 0.1, i.e. 10%).
+IMPORTANT: If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
+(default 0.1, i.e. 10%). Otherwise you might think that Sleuth is not working cause it's omitting some spans.
 
-NOTE: the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example above. Other logging systems have to configure their own formatter to get the same result. The default is `logging.pattern.level` set to `%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}` (this is a Spring Boot feature for logback users).
+NOTE: the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example
+ above. Other logging systems have to configure their own formatter to get the same result. The default is
+ `logging.pattern.level` set to `%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}`
+ (this is a Spring Boot feature for logback users).
+ *This means that if you're not using SLF4J this pattern WILL NOT be automatically applied*.

@@ -17,22 +17,64 @@ span, you must stop it at some point in the future.
 *Trace:* A set of spans forming a tree-like structure.  For example, if you are running a distributed
 big-data store, a trace might be formed by a put request.
 
-Visualization of what *Span* and *Trace* might look in a system:
+*Annotation:*  is used to record existence of an event in time. Some of the core annotations used to define
+the start and stop of a request are:
+
+    - *cs* - Client Sent - The client has made a request. This annotation depicts the start of the span.
+    - *sr* - Server Received -  The server side got the request and will start processing it.
+    If one subtracts the cs timestamp from this timestamp one will receive the network latency.
+    - *ss* - Server Sent -  Annotated upon completion of request processing (when the response
+    got sent back to the client). If one subtracts the sr timestamp from this timestamp one
+    will receive the time needed by the server side to process the request.
+    - *cr* - Client Received - Signifies the end of the span. The client has successfully received the
+    response from the server side. If one subtracts the cs timestamp from this timestamp one
+    will receive the whole time needed by the client to receive the response from the server.
+
+Visualization of what *Span* and *Trace* will look in a system together with the Zipkin annotations:
 
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
 
-In Zipkin it would look like this:
+Yellow note signifies a span. If you have such information in the note:
+
+[source]
+Trace Id = X
+Span Id = D
+Client Sent
+Client Received
+
+That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*. It also has emitted
+ *Client Sent* and *Client Received* events.
+
+=== Purpose
+
+In the following sections the example from the image above will be taken into consideration.
+
+==== Distributed tracing with Zipkin
+
+Altogether there are *10 spans* . If you go to traces in Zipkin you will see this number:
+
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-traces.png[Trace Info propagation]
+
+However if you pick a particular trace then you will see *7 spans*:
 
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-ui.png[Trace Info propagation]
 
-When grepping the logs of those four applications by trace id equal to `fe9d2f717e29bb9c` one would get the following:
+NOTE: When picking a particular trace you will see merged spans. That means that if there were 2 spans sent to
+Zipkin with Server Received and Server Sent annotations then they will presented as a single span.
+
+You don't have to use Zipkin to profit from tracing. When grepping the logs of those four applications by trace id
+equal to e.g. `2485ec27856c56f4` one would get the following:
+
+==== Distributed tracing with log collectors
 
 [source]
-2016-02-26 11:15:47.561  INFO [service1,fe9d2f717e29bb9c,fe9d2f717e29bb9c,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
-2016-02-26 11:15:47.710  INFO [service2,fe9d2f717e29bb9c,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Hello from service2. Calling service3 and then service4
-2016-02-26 11:15:47.895  INFO [service3,fe9d2f717e29bb9c,1210be13194bfe5,true] 68060 --- [nio-8083-exec-1] i.s.c.sleuth.docs.service3.Application   : Hello from service3
-2016-02-26 11:15:47.924  INFO [service2,fe9d2f717e29bb9c,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service3 [Hello from service3]
-2016-02-26 11:15:48.134  INFO [service4,fe9d2f717e29bb9c,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
-2016-02-26 11:15:48.156  INFO [service2,fe9d2f717e29bb9c,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
-2016-02-26 11:15:48.182  INFO [service1,fe9d2f717e29bb9c,fe9d2f717e29bb9c,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]
+service1.log:2016-02-26 11:15:47.561  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
+service2.log:2016-02-26 11:15:47.710  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Hello from service2. Calling service3 and then service4
+service3.log:2016-02-26 11:15:47.895  INFO [service3,2485ec27856c56f4,1210be13194bfe5,true] 68060 --- [nio-8083-exec-1] i.s.c.sleuth.docs.service3.Application   : Hello from service3
+service2.log:2016-02-26 11:15:47.924  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service3 [Hello from service3]
+service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
+service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
+service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]
 
+If you're using a log aggregating tool like Kibana, Splunk etc. you can profit from debugging a production issue in a chronological
+order.
