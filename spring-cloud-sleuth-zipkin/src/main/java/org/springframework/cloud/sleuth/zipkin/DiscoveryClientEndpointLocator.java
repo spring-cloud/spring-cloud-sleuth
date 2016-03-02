@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtils;
 
 import zipkin.Endpoint;
 

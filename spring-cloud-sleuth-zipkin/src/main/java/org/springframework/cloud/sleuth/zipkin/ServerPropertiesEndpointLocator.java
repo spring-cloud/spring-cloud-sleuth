@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import org.springframework.cloud.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.context.event.EventListener;
 
 import zipkin.Endpoint;
