@@ -34,10 +34,7 @@ A sampler can be installed just by creating a bean definition, e.g:
 
 [source,java]
 ----
-@Bean
-public Sampler defaultSampler() {
-    return new AlwaysSampler();
-}
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/issues_#79_updating_documentation/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SamplingTest.java[tags=always_sampler,indent=0]
 ----
 
 == Instrumentation
