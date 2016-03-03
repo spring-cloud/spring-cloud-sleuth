@@ -58,27 +58,24 @@ danger of accidentally collecting too much data without configuring
 something).
 
 NOTE: Currently the instrumentation in Spring Cloud Sleuth is eager - it means that
-we're actively trying to pass the tracing context between threads.
+we're actively trying to pass the tracing context between threads. Also timing events
+are captured even when sleuth isn't exporting data to a tracing system.
 This approach may change in the future towards being lazy on this matter.
 
 == Span lifecycle
 
 You can do the following operations on the Span by means of *Tracer* interface:
-- *start* - when you start a span its name is assigned and start timestamp is recorded.
-- *close* - the span gets *stopped* (the end time of the span is recorded) and if
+
+- <<creating-and-closing-spans, start>> - when you start a span its name is assigned and start timestamp is recorded.
+- <<creating-and-closing-spans, close>> - the span gets finished (the end time of the span is recorded) and if
 the span is *exportable* then it will be eligible for collection to Zipkin.
 The span is also removed from the current thread.
-- *continue* - a new instance of span will be created whereas it will be a copy of the
-one that it continues. In other words:
-[source,java]
-----
-Span continuedSpan = this.tracer.continueSpan(spanToContinue);
-assertThat(continuedSpan).isEqualTo(spanToContinue);
-----
-- *detach* - the span doesn't get stopped or closed. It only gets removed from the current thread.
-- *join* - you can create a new span and set an explicit parent to it
+- <<continuing-spans, continue>> - a new instance of span will be created whereas it will be a copy of the
+one that it continues.
+- <<continuing-spans, detach>> - the span doesn't get stopped or closed. It only gets removed from the current thread.
+- <<joining-spans, join>> - you can create a new span and set an explicit parent to it
 
-=== Creating spans
+=== Creating and closing spans [[creating-and-closing-spans]]
 
 You can manually create spans by using the *Tracer* interface.
 
@@ -90,13 +87,22 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 In this example we could see how to create a new instance of span. Assuming that there already
 was a span present in this thread then it would become the parent of that span.
 
-=== Continuing spans
+IMPORTANT: Always clean after you create a span! Don't forget to close a span if you want to send it to Zipkin.
+
+=== Continuing spans [[continuing-spans]]
 
 Sometimes you don't want to create a new span but you want to continue one. Example of such a
 situation might be (of course it all depends on the use-case):
     - *AOP* - If there was already a span created before an aspect was reached then you might not want to create a new span.
     - *Hystrix* - executing a Hystrix command is most likely a logical part of the current processing. It's in fact
     only a technical implementation detail that you wouldn't necessarily want to reflect in tracing as a separate being.
+
+The continued instance of span is equal to the one that it continues:
+[source,java]
+----
+Span continuedSpan = this.tracer.continueSpan(spanToContinue);
+assertThat(continuedSpan).isEqualTo(spanToContinue);
+----
 
 To continue a span you can use the *Tracer* interface.
 
@@ -105,10 +111,9 @@ To continue a span you can use the *Tracer* interface.
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_continuation,indent=0]
 ----
 
-What's important is to always clean after you create a span. The golden rule would be to:
- - close a span if you want to send it to Zipkin
- - detach a span if some work was done started in one thread (e.g. thread X) and it's waiting for other threads (e.g. Y, Z)
- to finish. Then the spans in the threads Y, Z should be detached at the end of their work. When the results are collected
+IMPORTANT: Always clean after you create a span! Don't forget to detach a span if some work was done started in one
+ thread (e.g. thread X) and it's waiting for other threads (e.g. Y, Z) to finish.
+ Then the spans in the threads Y, Z should be detached at the end of their work. When the results are collected
  the span in thread X should be closed.
 
 === Joining spans
@@ -128,9 +133,8 @@ IMPORTANT: After having joined the span remember to close it. Otherwise you will
 
 == Naming spans
 
-Picking a span name is not a trivial task. Span name should depict an operation
-but shouldn't be too long (you don't want the Zipkin UI to render for minutes,
-do you?).
+Picking a span name is not a trivial task. Span name should depict an operation name. The name should
+be low cardinality (e.g. not include identifiers).
 
 Since there is a lot of instrumentation going on some of the span names will be
 artificial like:

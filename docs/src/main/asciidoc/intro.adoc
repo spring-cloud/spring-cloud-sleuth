@@ -45,6 +45,10 @@ Client Received
 That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*. It also has emitted
  *Client Sent* and *Client Received* events.
 
+This is how the visualization of the parent / child relationship of spans would look like:
+
+image::parents.png[Parent child relationship]
+
 === Purpose
 
 In the following sections the example from the image above will be taken into consideration.
@@ -55,17 +59,37 @@ Altogether there are *10 spans* . If you go to traces in Zipkin you will see thi
 
 image::zipkin-traces.png[Traces]
 
-However if you pick a particular trace then you will see *7 spans*:
+However if you pick a particular trace then you will see *7 spans* (From *A* to *G*):
 
 image::zipkin-ui.png[Traces Info propagation]
 
 NOTE: When picking a particular trace you will see merged spans. That means that if there were 2 spans sent to
-Zipkin with Server Received and Server Sent annotations then they will presented as a single span.
+Zipkin with Server Received and Server Sent / Client Received and Client Sent
+annotations then they will presented as a single span.
 
-You don't have to use Zipkin to profit from tracing. When grepping the logs of those four applications by trace id
-equal to e.g. `2485ec27856c56f4` one would get the following:
+In the image depicting the visualization of what *Span* and *Trace* is you can see 20
+colorful labels. How does it happen that in Zipkin 10 spans are received?
 
-==== Distributed tracing with log collectors
+    - 2 span *A* labels signify span started and closed. Upon closing a single span is sent to Zipkin.
+    - 4 span *B* labels are in fact are single span with 4 annotations. However this span is composed of
+        two separate instances. One sent from service 1 and one from service 2. So in fact two span instances will be sent
+        to Zipkin and merged there.
+    - 2 span *C* labels signify span started and closed. Upon closing a single span is sent to Zipkin.
+    - 4 span *B* labels are in fact are single span with 4 annotations. However this span is composed of
+        two separate instances. One sent from service 2 and one from service 3. So in fact two span instances will be sent
+        to Zipkin and merged there.
+    - 2 span *E* labels signify span started and closed. Upon closing a single span is sent to Zipkin.
+    - 4 span *B* labels are in fact are single span with 4 annotations. However this span is composed of
+        two separate instances. One sent from service 2 and one from service 4. So in fact two span instances will be sent
+        to Zipkin and merged there.
+    - 2 span *G* labels signify span started and closed. Upon closing a single span is sent to Zipkin.
+
+So 1 span from *A*, 2 spans from *B*, 1 span from *C*, 2 spans from *D*, 1 span from *E*, 2 spans from *F* and 1 from *G*.
+Altogether *10* spans.
+
+==== Log correlation
+
+When grepping the logs of those four applications by trace id equal to e.g. `2485ec27856c56f4` one would get the following:
 
 [source]
 service1.log:2016-02-26 11:15:47.561  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2

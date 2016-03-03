@@ -49,9 +49,9 @@ The UI should look like the screenshot above.
 
 include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/building.adoc[]
 
-IMPORTANT: There are 2 different versions of JDK used in Spring Cloud Sleuth. JDK7 is used for main sources and
-JDK8 is used for tests. When importing your project to an IDE please activate the `ide` Maven profile to turn on
-JDK8 for both main and test sources. Of course remember that you MUST NOT use JDK8 features in the main sources. If you do
+IMPORTANT: There are 2 different versions of language level used in Spring Cloud Sleuth. Java 1.7 is used for main sources and
+Java 1.8 is used for tests. When importing your project to an IDE please activate the `ide` Maven profile to turn on
+Java 1.8 for both main and test sources. Of course remember that you MUST NOT use Java 1.8 features in the main sources. If you do
 so your app will break during the Maven build.
 
 == Contributing

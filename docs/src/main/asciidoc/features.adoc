@@ -8,23 +8,33 @@
 2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...
 ----
 +
-(notice the `[appname,traceId,spanId,exportable]` entries from the MDC. `appname`, `traceId` , `spanId` seem to be quite
-straightforward, `exportable` means whether the log should be exported to Zipkin or not).
+notice the `[appname,traceId,spanId,exportable]` entries from the MDC:
+    - *spanId - the id of a specific operation that took place
+    - *appname - the name of the application that logged the span
+    - *traceId - the id of the latency graph that contains the span
+    - *exportable* - whether the log should be exported to Zipkin or not
 
 * Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations,
 key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
+
+* Sleuth records timing information to aid in latency analysis. Using sleuth, you can pinpoint causes of
+latency in your applications. Sleuth is written to not log too much, and to not cause your production application to crash.
+  - propagates structural data about your call-graph in-band, and the rest out-of-band.
+  - includes opinionated instrumentation of layers such as HTTP
+  - includes sampling policy to manage volume
+  - can report to a Zipkin system for query and visualization
 
 * Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints,
 rest template, scheduled actions, message channels, zuul filters, feign client).
 
 * Provides simple metrics of accepted / dropped spans.
 
-* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave).
+* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using `spring.zipkin.baseUrl`.
 
-* If `spring-cloud-sleuth-stream` then the app will generate and collect traces via Spring Cloud Stream. Your app
-automatically becomes a producer of tracer messages that are sent over your broker of choice
+* If `spring-cloud-sleuth-stream` then the app will generate and collect traces via https://github.com/spring-cloud/spring-cloud-stream[Spring Cloud Stream].
+Your app automatically becomes a producer of tracer messages that are sent over your broker of choice
 (e.g. RabbitMQ, Apache Kafka, Redis).
 
 IMPORTANT: If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
