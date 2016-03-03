@@ -54,6 +54,12 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
+	public ZuulProperties zuulProperties() {
+		return new ZuulProperties();
+	}
+
+	@Bean
 	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory,
 			SpanAccessor accessor, ZuulProperties zuulProperties) {
 		return new TraceRestClientRibbonCommandFactory(factory, accessor, zuulProperties);
