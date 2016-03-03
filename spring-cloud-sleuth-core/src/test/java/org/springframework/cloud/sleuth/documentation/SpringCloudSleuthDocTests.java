@@ -140,7 +140,6 @@ public class SpringCloudSleuthDocTests {
 
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(newSpan).isNotNull();
-		then(newSpan.getAccumulatedMillis()).isGreaterThan(0);
 	}
 
 	@Test
