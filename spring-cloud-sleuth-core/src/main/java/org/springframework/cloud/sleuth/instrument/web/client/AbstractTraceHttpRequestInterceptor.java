@@ -112,7 +112,7 @@ abstract class AbstractTraceHttpRequestInterceptor
 		}
 	}
 
-	private Span currentSpan() {
+	protected Span currentSpan() {
 		return this.tracer.getCurrentSpan();
 	}
 

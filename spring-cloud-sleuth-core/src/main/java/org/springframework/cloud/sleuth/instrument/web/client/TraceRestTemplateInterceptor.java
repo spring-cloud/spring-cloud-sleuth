@@ -16,7 +16,10 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -37,6 +40,8 @@ import org.springframework.http.client.ClientHttpResponse;
 public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterceptor
 		implements ClientHttpRequestInterceptor {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	public TraceRestTemplateInterceptor(Tracer tracer) {
 		super(tracer);
 	}
@@ -49,7 +54,17 @@ public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterc
 			return execution.execute(request, body);
 		}
 		publishStartEvent(request);
-		return new TraceHttpResponse(this, execution.execute(request, body));
+		return response(request, body, execution);
+	}
+
+	private ClientHttpResponse response(HttpRequest request, byte[] body,
+			ClientHttpRequestExecution execution) throws IOException {
+		try {
+			return new TraceHttpResponse(this, execution.execute(request, body));
+		} catch (Exception e) {
+			this.tracer.close(currentSpan());
+			throw e;
+		}
 	}
 
 

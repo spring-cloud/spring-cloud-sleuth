@@ -22,10 +22,12 @@ import java.util.Map;
 import java.util.Random;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -55,17 +57,17 @@ public class TraceRestTemplateInterceptorTests {
 	private RestTemplate template = new RestTemplate(
 			new MockMvcClientHttpRequestFactory(this.mockMvc));
 
-	private DefaultTracer traces;
+	private DefaultTracer tracer;
 
 	private StaticApplicationContext publisher = new StaticApplicationContext();
 
 	@Before
 	public void setup() {
 		this.publisher.refresh();
-		this.traces = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher,
+		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher,
 				new DefaultSpanNamer());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				new TraceRestTemplateInterceptor(this.traces)));
+				new TraceRestTemplateInterceptor(this.tracer)));
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
@@ -76,7 +78,7 @@ public class TraceRestTemplateInterceptorTests {
 
 	@Test
 	public void headersAddedWhenTracing() {
-		this.traces.continueSpan(Span.builder().traceId(1L).spanId(2L).parent(3L).build());
+		this.tracer.continueSpan(Span.builder().traceId(1L).spanId(2L).parent(3L).build());
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
@@ -87,7 +89,7 @@ public class TraceRestTemplateInterceptorTests {
 
 	@Test
 	public void notSampledHeaderAddedWhenNotExportable() {
-		this.traces.continueSpan(Span.builder().traceId(1L).spanId(2L).exportable(false).build());
+		this.tracer.continueSpan(Span.builder().traceId(1L).spanId(2L).exportable(false).build());
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
@@ -104,14 +106,36 @@ public class TraceRestTemplateInterceptorTests {
 		assertFalse("Wrong headers: " + headers, headers.containsKey(Span.SPAN_ID_NAME));
 	}
 
+	// issue #198
+	@Test
+	public void spanRemovedFromThreadUponException() {
+		Span span = this.tracer.startTrace("new trace");
+
+		try {
+			this.template.getForEntity("/exception", Map.class).getBody();
+			Assert.fail("should throw an exception");
+		} catch (RuntimeException e) {
+			SleuthAssertions.then(e).hasMessage("500 Internal Server Error");
+		}
+
+		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
+		this.tracer.close(span);
+	}
+
 	@RestController
 	public static class TestController {
+
 		@RequestMapping("/")
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
 			Map<String, String> map = new HashMap<String, String>();
 			addHeaders(map, headers, Span.SPAN_ID_NAME, Span.TRACE_ID_NAME,
 					Span.PARENT_ID_NAME, Span.NOT_SAMPLED_NAME);
 			return map;
+		}
+
+		@RequestMapping("/exception")
+		public Map<String, String> exception() {
+			throw new RuntimeException("foo");
 		}
 
 		private void addHeaders(Map<String, String> map, HttpHeaders headers,
