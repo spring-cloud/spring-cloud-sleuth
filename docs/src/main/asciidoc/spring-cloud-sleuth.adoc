@@ -93,6 +93,7 @@ IMPORTANT: Always clean after you create a span! Don't forget to close a span if
 
 Sometimes you don't want to create a new span but you want to continue one. Example of such a
 situation might be (of course it all depends on the use-case):
+
     - *AOP* - If there was already a span created before an aspect was reached then you might not want to create a new span.
     - *Hystrix* - executing a Hystrix command is most likely a logical part of the current processing. It's in fact
     only a technical implementation detail that you wouldn't necessarily want to reflect in tracing as a separate being.
@@ -116,7 +117,7 @@ IMPORTANT: Always clean after you create a span! Don't forget to detach a span i
  Then the spans in the threads Y, Z should be detached at the end of their work. When the results are collected
  the span in thread X should be closed.
 
-=== Joining spans
+=== Joining spans [[joining-spans]]
 
 There is a possibility that you want to start a new span and provide an explicit parent of that span.
 Let's assume that the parent of a span is in one thread and you want to start a new span in another thread. The

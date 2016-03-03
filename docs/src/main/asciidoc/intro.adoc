@@ -34,16 +34,15 @@ Visualization of what *Span* and *Trace* will look in a system together with the
 
 image::trace-id.png[Trace Info propagation]
 
-Yellow note signifies a span. If you have such information in the note:
+Each color of a note signifies a span (7 spans - from *A* to *G*). If you have such information in the note:
 
 [source]
 Trace Id = X
 Span Id = D
 Client Sent
-Client Received
 
 That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*. It also has emitted
- *Client Sent* and *Client Received* events.
+ *Client Sent* event.
 
 This is how the visualization of the parent / child relationship of spans would look like:
 
@@ -59,7 +58,7 @@ Altogether there are *10 spans* . If you go to traces in Zipkin you will see thi
 
 image::zipkin-traces.png[Traces]
 
-However if you pick a particular trace then you will see *7 spans* (From *A* to *G*):
+However if you pick a particular trace then you will see *7 spans*:
 
 image::zipkin-ui.png[Traces Info propagation]
 

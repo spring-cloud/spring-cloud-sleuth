@@ -9,9 +9,10 @@
 ----
 +
 notice the `[appname,traceId,spanId,exportable]` entries from the MDC:
-    - *spanId - the id of a specific operation that took place
-    - *appname - the name of the application that logged the span
-    - *traceId - the id of the latency graph that contains the span
+
+    - *spanId* - the id of a specific operation that took place
+    - *appname* - the name of the application that logged the span
+    - *traceId* - the id of the latency graph that contains the span
     - *exportable* - whether the log should be exported to Zipkin or not
 
 * Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations,
@@ -38,7 +39,7 @@ Your app automatically becomes a producer of tracer messages that are sent over 
 (e.g. RabbitMQ, Apache Kafka, Redis).
 
 IMPORTANT: If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
-(default 0.1, i.e. 10%). Otherwise you might think that Sleuth is not working cause it's omitting some spans.
+(default 0.1, i.e. 10%). *Otherwise you might think that Sleuth is not working cause it's omitting some spans.*
 
 NOTE: the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example
  above. Other logging systems have to configure their own formatter to get the same result. The default is
