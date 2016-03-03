@@ -27,7 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -42,8 +41,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.Assert.assertFalse;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Dave Syer
@@ -51,7 +50,9 @@ import static org.junit.Assert.assertFalse;
  */
 public class TraceRestTemplateInterceptorTests {
 
-	private MockMvc mockMvc = MockMvcBuilders.standaloneSetup(new TestController())
+	private TestController testController = new TestController();
+
+	private MockMvc mockMvc = MockMvcBuilders.standaloneSetup(this.testController)
 			.build();
 
 	private RestTemplate template = new RestTemplate(
@@ -115,18 +116,30 @@ public class TraceRestTemplateInterceptorTests {
 			this.template.getForEntity("/exception", Map.class).getBody();
 			Assert.fail("should throw an exception");
 		} catch (RuntimeException e) {
-			SleuthAssertions.then(e).hasMessage("500 Internal Server Error");
+			then(e).hasMessage("500 Internal Server Error");
 		}
 
-		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
+		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
 	}
 
+	@Test
+	public void createdSpanNameDoesNotHaveNullInName() {
+		this.tracer.continueSpan(Span.builder().traceId(1L).spanId(2L).exportable(false).build());
+
+		this.template.getForEntity("/", Map.class).getBody();
+
+		then(this.testController.span).hasNameEqualTo("http:/");
+	}
+
 	@RestController
-	public static class TestController {
+	public class TestController {
+
+		Span span;
 
 		@RequestMapping("/")
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
+			this.span = TraceRestTemplateInterceptorTests.this.tracer.getCurrentSpan();
 			Map<String, String> map = new HashMap<String, String>();
 			addHeaders(map, headers, Span.SPAN_ID_NAME, Span.TRACE_ID_NAME,
 					Span.PARENT_ID_NAME, Span.NOT_SAMPLED_NAME);

@@ -125,7 +125,7 @@ public class TraceFeignClientAutoConfiguration {
 			@Override
 			public void apply(RequestTemplate template) {
 				URI uri = URI.create(template.url());
-				String spanName = uri.getScheme() + ":" + uri.getPath();
+				String spanName = uriScheme(uri) + ":" + uri.getPath();
 				Span span = TraceFeignClientAutoConfiguration.this.tracer.startTrace(spanName);
 				if (span == null) {
 					setHeader(template, Span.NOT_SAMPLED_NAME, "true");
@@ -145,6 +145,10 @@ public class TraceFeignClientAutoConfiguration {
 				publish(new ClientSentEvent(this, span));
 			}
 		};
+	}
+
+	private String uriScheme(URI uri) {
+		return uri.getScheme() == null ? "http" : uri.getScheme();
 	}
 
 	private void publish(ApplicationEvent event) {

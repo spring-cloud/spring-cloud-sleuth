@@ -89,10 +89,14 @@ abstract class AbstractTraceHttpRequestInterceptor
 	 */
 	protected void publishStartEvent(HttpRequest request) {
 		URI uri = request.getURI();
-		String spanName = uri.getScheme() + ":" + uri.getPath();
+		String spanName = uriScheme(uri) + ":" + uri.getPath();
 		Span newSpan = this.tracer.startTrace(spanName);
 		enrichWithTraceHeaders(request, newSpan);
 		publish(new ClientSentEvent(this, newSpan));
+	}
+
+	private String uriScheme(URI uri) {
+		return uri.getScheme() == null ? "http" : uri.getScheme();
 	}
 
 	/**
