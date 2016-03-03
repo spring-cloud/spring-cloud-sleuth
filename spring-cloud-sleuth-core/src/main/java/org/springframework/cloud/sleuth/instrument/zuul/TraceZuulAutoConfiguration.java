@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
+import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -53,8 +54,15 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory, SpanAccessor accessor) {
-		return new TraceRestClientRibbonCommandFactory(factory, accessor);
+	@ConditionalOnMissingBean
+	public ZuulProperties zuulProperties() {
+		return new ZuulProperties();
+	}
+
+	@Bean
+	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory,
+			SpanAccessor accessor, ZuulProperties zuulProperties) {
+		return new TraceRestClientRibbonCommandFactory(factory, accessor, zuulProperties);
 	}
 
 	@Bean

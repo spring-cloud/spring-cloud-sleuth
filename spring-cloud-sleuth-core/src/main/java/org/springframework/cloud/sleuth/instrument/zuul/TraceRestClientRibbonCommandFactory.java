@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
+import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
@@ -51,11 +52,13 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 	private ApplicationEventPublisher publisher;
 
 	private final SpanAccessor accessor;
+	private final ZuulProperties zuulProperties;
 
 	public TraceRestClientRibbonCommandFactory(SpringClientFactory clientFactory,
-			SpanAccessor accessor) {
-		super(clientFactory);
+			SpanAccessor accessor, ZuulProperties zuulProperties) {
+		super(clientFactory, zuulProperties);
 		this.accessor = accessor;
+		this.zuulProperties = zuulProperties;
 	}
 
 	@Override
@@ -72,7 +75,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
 					getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
 					context.getHeaders(), context.getParams(), context.getRequestEntity(),
-					this.publisher, this.accessor);
+					this.publisher, this.accessor, this.zuulProperties);
 		}
 		catch (URISyntaxException e) {
 			log.error("Exception occurred while trying to create the TraceRestClientRibbonCommand", e);
@@ -91,10 +94,10 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 				HttpRequest.Verb verb, String uri, Boolean retryable,
 				MultiValueMap<String, String> headers,
 				MultiValueMap<String, String> params, InputStream requestEntity,
-				ApplicationEventPublisher publisher, SpanAccessor accessor)
+				ApplicationEventPublisher publisher, SpanAccessor accessor, ZuulProperties zuulProperties)
 						throws URISyntaxException {
 			super(commandKey, restClient, verb, uri, retryable, headers, params,
-					requestEntity);
+					requestEntity, zuulProperties);
 			this.publisher = publisher;
 			this.accessor = accessor;
 		}
