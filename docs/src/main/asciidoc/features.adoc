@@ -8,18 +8,41 @@
 2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...
 ----
 +
-(notice the `[appname,traceId,spanId,exportable]` entries from the MDC).
+notice the `[appname,traceId,spanId,exportable]` entries from the MDC:
 
-* Optionally log span data in JSON format for harvesting in a log aggregator (set `spring.sleuth.log.json.enabled=true`).
+    - *spanId* - the id of a specific operation that took place
+    - *appname* - the name of the application that logged the span
+    - *traceId* - the id of the latency graph that contains the span
+    - *exportable* - whether the log should be exported to Zipkin or not
 
-* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
+* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations,
+key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
 
-* Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, zuul filters, feign client).
+* Sleuth records timing information to aid in latency analysis. Using sleuth, you can pinpoint causes of
+latency in your applications. Sleuth is written to not log too much, and to not cause your production application to crash.
+  - propagates structural data about your call-graph in-band, and the rest out-of-band.
+  - includes opinionated instrumentation of layers such as HTTP
+  - includes sampling policy to manage volume
+  - can report to a Zipkin system for query and visualization
 
-* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via HTTP to a Zipkin server on localhost (port 9411). Configure the location of the service using `spring.zipkin.[host,port]`.
+* Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints,
+rest template, scheduled actions, message channels, zuul filters, feign client).
 
-* If `spring-cloud-sleuth-stream` then the app will generate and collect traces via Spring Cloud Stream. Your app automatically becomes a producer of tracer messages that are sent over your broker of choice (e.g. RabbitMQ, Apache Kafka, Redis).
+* Provides simple metrics of accepted / dropped spans.
 
-If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage` (default 0.1, i.e. 10%).
+* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces.
+By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
+Configure the location of the service using `spring.zipkin.baseUrl`.
 
-NOTE: the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example above. Other logging systems have to configure their own formatter to get the same result. The default is `logging.pattern.level` set to `%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}` (this is a Spring Boot feature for logback users).
+* If `spring-cloud-sleuth-stream` then the app will generate and collect traces via https://github.com/spring-cloud/spring-cloud-stream[Spring Cloud Stream].
+Your app automatically becomes a producer of tracer messages that are sent over your broker of choice
+(e.g. RabbitMQ, Apache Kafka, Redis).
+
+IMPORTANT: If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
+(default 0.1, i.e. 10%). *Otherwise you might think that Sleuth is not working cause it's omitting some spans.*
+
+NOTE: the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example
+ above. Other logging systems have to configure their own formatter to get the same result. The default is
+ `logging.pattern.level` set to `%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}`
+ (this is a Spring Boot feature for logback users).
+ *This means that if you're not using SLF4J this pattern WILL NOT be automatically applied*.

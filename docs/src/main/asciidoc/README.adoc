@@ -31,7 +31,7 @@ The Ribbon sample makes an interesting demo or playground for learning about zip
 
 NOTE: You can see the zipkin spans without the UI (in logs) if you run the sample with `sample.zipkin.enabled=false`.
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Eample Zipkin Screenshot]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Sample Zipkin Screenshot]
 
 > The fact that the first trace in says "testSleuthMessaging" seems to be a bug in the UI (it has some annotations from that service, but it originates in the "testSleuthRibbon" service).
 
@@ -48,6 +48,11 @@ The UI should look like the screenshot above.
 == Building
 
 include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/building.adoc[]
+
+IMPORTANT: There are 2 different versions of language level used in Spring Cloud Sleuth. Java 1.7 is used for main sources and
+Java 1.8 is used for tests. When importing your project to an IDE please activate the `ide` Maven profile to turn on
+Java 1.8 for both main and test sources. Of course remember that you MUST NOT use Java 1.8 features in the main sources. If you do
+so your app will break during the Maven build.
 
 == Contributing
 
