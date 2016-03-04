@@ -874,7 +874,7 @@ one that it continues.</p>
 <p><a href="#continuing-spans">detach</a> - the span doesn&#8217;t get stopped or closed. It only gets removed from the current thread.</p>
 </li>
 <li>
-<p><a href="#joining-spans">join</a> - you can create a new span and set an explicit parent to it</p>
+<p><a href="#creating-spans-with-explicit-parent">create with explicit parent</a> - you can create a new span and set an explicit parent to it</p>
 </li>
 </ul>
 </div>
@@ -887,7 +887,7 @@ one that it continues.</p>
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">// Start a span. If there was a span present in this thread it will become
 // the `newSpan`'s parent.
-Span newSpan = this.tracer.startTrace("calculateTax");
+Span newSpan = this.tracer.createSpan("calculateTax");
 try {
 	// ...
 	// You can tag a span
@@ -984,18 +984,18 @@ Always clean after you create a span! Don&#8217;t forget to detach a span if som
 </div>
 </div>
 <div class="sect2">
-<h3 id="joining-spans">Joining spans</h3>
+<h3 id="creating-spans-with-explicit-parent">Creating spans with an explicit parent</h3>
 <div class="paragraph">
 <p>There is a possibility that you want to start a new span and provide an explicit parent of that span.
 Let&#8217;s assume that the parent of a span is in one thread and you want to start a new span in another thread. The
-<code>joinTrace</code> method of the <code>Tracer</code> interface is the method you are looking for.</p>
+<code>startSpan</code> method of the <code>Tracer</code> interface is the method you are looking for.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">// let's assume that we're in a thread Y and we've received
 // the `initialSpan` from thread X. `initialSpan` will be the parent
 // of the `joinedSpan`
-Span joinedSpan = this.tracer.joinTrace("calculateCommission", initialSpan);
+Span joinedSpan = this.tracer.createSpan("calculateCommission", initialSpan);
 try {
 	// ...
 	// You can tag a span
@@ -1018,7 +1018,7 @@ try {
 <div class="title">Important</div>
 </td>
 <td class="content">
-After having joined the span remember to close it. Otherwise you will see a lot of warnings in your logs
+After having created such a span remember to close it. Otherwise you will see a lot of warnings in your logs
  related to the fact that you have a span present in the current thread other than the one you&#8217;re trying to close.
  What&#8217;s worse your spans won&#8217;t get closed properly thus will not get collected to Zipkin.
 </td>
@@ -1253,7 +1253,7 @@ the number of dropped spans will get increased.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-03 21:14:02 CET
+Last updated 2016-03-04 14:10:27 CET
 </div>
 </div>
 </body>
