@@ -51,7 +51,7 @@ public class TraceSchedulingAspect {
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
 		String spanName = pjp.getTarget().getClass().getSimpleName();
-		Span span = this.tracer.startTrace(spanName);
+		Span span = this.tracer.createSpan(spanName);
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, SCHEDULED_COMPONENT);
 		try {
 			return pjp.proceed();

@@ -74,7 +74,7 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 	@Test
 	public void spanRemovedFromThreadUponException() throws IOException {
 		this.mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-		Span span = this.tracer.startTrace("new trace");
+		Span span = this.tracer.createSpan("new trace");
 
 		try {
 			this.template.getForEntity(

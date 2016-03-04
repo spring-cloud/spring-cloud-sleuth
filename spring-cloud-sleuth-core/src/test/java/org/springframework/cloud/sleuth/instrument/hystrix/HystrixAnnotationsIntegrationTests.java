@@ -66,7 +66,7 @@ public class HystrixAnnotationsIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		return this.tracer.startTrace("http:existing");
+		return this.tracer.createSpan("http:existing");
 	}
 
 	private void whenHystrixCommandAnnotatedMethodGetsExecuted() {

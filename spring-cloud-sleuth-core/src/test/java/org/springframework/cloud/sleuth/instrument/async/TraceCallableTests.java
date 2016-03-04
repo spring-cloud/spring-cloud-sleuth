@@ -91,7 +91,7 @@ public class TraceCallableTests {
 	}
 
 	private Span givenSpanIsAlreadyActive() {
-		return this.tracer.startTrace("http:parent");
+		return this.tracer.createSpan("http:parent");
 	}
 
 	private Callable<Span> thatRetrievesTraceFromThreadLocal() {

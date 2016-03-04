@@ -110,7 +110,7 @@ public class TraceRestTemplateInterceptorTests {
 	// issue #198
 	@Test
 	public void spanRemovedFromThreadUponException() {
-		Span span = this.tracer.startTrace("new trace");
+		Span span = this.tracer.createSpan("new trace");
 
 		try {
 			this.template.getForEntity("/exception", Map.class).getBody();

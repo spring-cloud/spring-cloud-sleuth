@@ -84,7 +84,7 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_annotated_runnable_execution[]
 
-		BDDMockito.then(tracer).should().joinTrace(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
+		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
 	}
 
 	@Test
@@ -109,7 +109,7 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_to_string_runnable_execution[]
 
-		BDDMockito.then(tracer).should().joinTrace(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
+		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
 		executorService.shutdown();
 	}
 
@@ -123,7 +123,7 @@ public class SpringCloudSleuthDocTests {
 		// tag::manual_span_creation[]
 		// Start a span. If there was a span present in this thread it will become
 		// the `newSpan`'s parent.
-		Span newSpan = this.tracer.startTrace("calculateTax");
+		Span newSpan = this.tracer.createSpan("calculateTax");
 		try {
 			// ...
 			// You can tag a span
@@ -146,7 +146,7 @@ public class SpringCloudSleuthDocTests {
 	public void should_continue_a_span_with_tracer() throws Exception {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		String taxValue = "10";
-		Span initialSpan = this.tracer.startTrace("calculateTax");
+		Span initialSpan = this.tracer.createSpan("calculateTax");
 		assertThat(initialSpan.tags()).doesNotContainKeys("taxValue");
 		assertThat(initialSpan.logs()).extracting("event").doesNotContain("taxCalculated");
 
@@ -183,7 +183,7 @@ public class SpringCloudSleuthDocTests {
 	public void should_join_a_span_with_tracer() throws Exception {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		String commissionValue = "10";
-		Span initialSpan = this.tracer.startTrace("calculateTax");
+		Span initialSpan = this.tracer.createSpan("calculateTax");
 		assertThat(initialSpan.tags()).doesNotContainKeys("commissionValue");
 		assertThat(initialSpan.logs()).extracting("event").doesNotContain("commissionCalculated");
 
@@ -192,7 +192,7 @@ public class SpringCloudSleuthDocTests {
 			// let's assume that we're in a thread Y and we've received
 			// the `initialSpan` from thread X. `initialSpan` will be the parent
 			// of the `joinedSpan`
-			Span joinedSpan = this.tracer.joinTrace("calculateCommission", initialSpan);
+			Span joinedSpan = this.tracer.createSpan("calculateCommission", initialSpan);
 			try {
 				// ...
 				// You can tag a span

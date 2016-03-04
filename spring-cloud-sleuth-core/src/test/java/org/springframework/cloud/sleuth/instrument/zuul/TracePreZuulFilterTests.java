@@ -59,7 +59,7 @@ public class TracePreZuulFilterTests {
 
 	@Test
 	public void filterAddsHeaders() throws Exception {
-		this.tracer.startTrace("http:start");
+		this.tracer.createSpan("http:start");
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
 		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
@@ -70,7 +70,7 @@ public class TracePreZuulFilterTests {
 
 	@Test
 	public void notSampledIfNotExportable() throws Exception {
-		this.tracer.startTrace("http:start", NeverSampler.INSTANCE);
+		this.tracer.createSpan("http:start", NeverSampler.INSTANCE);
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
 		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),

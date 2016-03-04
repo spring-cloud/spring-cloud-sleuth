@@ -151,18 +151,18 @@ public class TraceFilter extends OncePerRequestFilter
 				span.remote(true);
 
 				Span parent = span.build();
-				spanFromRequest = this.tracer.joinTrace(name, parent);
+				spanFromRequest = this.tracer.createSpan(name, parent);
 				publish(new ServerReceivedEvent(this, parent, spanFromRequest));
 				request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 
 			}
 			else {
 				if (skip) {
-					spanFromRequest = this.tracer.startTrace(name,
+					spanFromRequest = this.tracer.createSpan(name,
 							NeverSampler.INSTANCE);
 				}
 				else {
-					spanFromRequest = this.tracer.startTrace(name);
+					spanFromRequest = this.tracer.createSpan(name);
 				}
 				request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 			}

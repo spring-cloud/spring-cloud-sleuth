@@ -57,20 +57,20 @@ public class DefaultTracer implements Tracer {
 	}
 
 	@Override
-	public Span joinTrace(String name, Span parent) {
+	public Span createSpan(String name, Span parent) {
 		if (parent == null) {
-			return startTrace(name);
+			return createSpan(name);
 		}
 		return continueSpan(createChild(parent, name));
 	}
 
 	@Override
-	public Span startTrace(String name) {
-		return this.startTrace(name, this.defaultSampler);
+	public Span createSpan(String name) {
+		return this.createSpan(name, this.defaultSampler);
 	}
 
 	@Override
-	public Span startTrace(String name, Sampler sampler) {
+	public Span createSpan(String name, Sampler sampler) {
 		Span span;
 		if (isTracing()) {
 			span = createChild(getCurrentSpan(), name);

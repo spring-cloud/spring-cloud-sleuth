@@ -138,7 +138,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void headerCreation() {
-		Span span = this.tracer.startTrace("http:testSendMessage", new AlwaysSampler());
+		Span span = this.tracer.createSpan("http:testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
@@ -154,7 +154,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	// TODO: Refactor to parametrized test together with sending messages via channel
 	@Test
 	public void headerCreationViaMessagingTemplate() {
-		Span span = this.tracer.startTrace("http:testSendMessage", new AlwaysSampler());
+		Span span = this.tracer.createSpan("http:testSendMessage", new AlwaysSampler());
 		this.messagingTemplate.send(MessageBuilder.withPayload("hi").build());
 		this.tracer.close(span);
 		assertNotNull("message was null", this.message);

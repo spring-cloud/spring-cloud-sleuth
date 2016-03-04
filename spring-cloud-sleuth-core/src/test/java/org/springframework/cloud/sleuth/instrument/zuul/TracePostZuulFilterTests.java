@@ -57,7 +57,7 @@ public class TracePostZuulFilterTests {
 	@Test
 	public void filterPublishesEvent() throws Exception {
 		this.filter.setApplicationEventPublisher(this.publisher);
-		this.tracer.startTrace("http:start");
+		this.tracer.createSpan("http:start");
 		this.filter.run();
 		verify(this.publisher).publishEvent(isA(ClientReceivedEvent.class));
 	}

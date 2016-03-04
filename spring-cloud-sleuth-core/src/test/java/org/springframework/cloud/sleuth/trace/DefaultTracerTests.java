@@ -76,7 +76,7 @@ public class DefaultTracerTests {
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
 				this.publisher, new DefaultSpanNamer());
 
-		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, new AlwaysSampler());
+		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
 			importantWork1(tracer);
 		}
@@ -114,7 +114,7 @@ public class DefaultTracerTests {
 	public void nonExportable() {
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
 				this.publisher, this.spanNamer);
-		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
+		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(false));
 	}
 
@@ -122,7 +122,7 @@ public class DefaultTracerTests {
 	public void exportable() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				this.publisher, this.spanNamer);
-		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE);
+		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(true));
 	}
 
@@ -130,9 +130,9 @@ public class DefaultTracerTests {
 	public void exportableInheritedFromParent() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				this.publisher, this.spanNamer);
-		Span span = tracer.startTrace(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
+		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
 		assertThat(span.isExportable(), is(false));
-		Span child = tracer.joinTrace(CREATE_SIMPLE_TRACE_SPAN_NAME + "/child", span);
+		Span child = tracer.createSpan(CREATE_SIMPLE_TRACE_SPAN_NAME + "/child", span);
 		assertThat(child.isExportable(), is(false));
 	}
 
@@ -140,8 +140,8 @@ public class DefaultTracerTests {
 	public void parentNotRemovedIfActiveOnJoin() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				this.publisher, this.spanNamer);
-		Span parent = tracer.startTrace(CREATE_SIMPLE_TRACE);
-		Span span = tracer.joinTrace(IMPORTANT_WORK_1, parent);
+		Span parent = tracer.createSpan(CREATE_SIMPLE_TRACE);
+		Span span = tracer.createSpan(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
 		assertThat(tracer.getCurrentSpan(), is(equalTo(parent)));
 	}
@@ -152,7 +152,7 @@ public class DefaultTracerTests {
 				this.publisher, this.spanNamer);
 		Span parent = Span.builder().name(CREATE_SIMPLE_TRACE).traceId(1L).spanId(1L)
 				.build();
-		Span span = tracer.joinTrace(IMPORTANT_WORK_1, parent);
+		Span span = tracer.createSpan(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
 		assertThat(tracer.getCurrentSpan(), is(equalTo(null)));
 	}
@@ -161,10 +161,10 @@ public class DefaultTracerTests {
 	public void grandParentRestoredAfterAutoClose() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				this.publisher, this.spanNamer);
-		Span grandParent = tracer.startTrace(CREATE_SIMPLE_TRACE);
+		Span grandParent = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
 				.build();
-		Span span = tracer.joinTrace(IMPORTANT_WORK_2, parent);
+		Span span = tracer.createSpan(IMPORTANT_WORK_2, parent);
 		tracer.close(span);
 		assertThat(tracer.getCurrentSpan(), is(equalTo(grandParent)));
 	}
@@ -207,7 +207,7 @@ public class DefaultTracerTests {
 	}
 
 	private void importantWork1(Tracer tracer) {
-		Span cur = tracer.startTrace(IMPORTANT_WORK_1);
+		Span cur = tracer.createSpan(IMPORTANT_WORK_1);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
 			importantWork2(tracer);
@@ -221,7 +221,7 @@ public class DefaultTracerTests {
 	}
 
 	private void importantWork2(Tracer tracer) {
-		Span cur = tracer.startTrace(IMPORTANT_WORK_2);
+		Span cur = tracer.createSpan(IMPORTANT_WORK_2);
 		try {
 			Thread.sleep((long) (50 * Math.random()));
 		}

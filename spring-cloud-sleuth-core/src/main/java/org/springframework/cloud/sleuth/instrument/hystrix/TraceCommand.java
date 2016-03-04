@@ -50,7 +50,7 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 	@Override
 	protected R run() throws Exception {
 		String commandKeyName = getCommandKey().name();
-		Span span = this.tracer.joinTrace(commandKeyName, this.parentSpan);
+		Span span = this.tracer.createSpan(commandKeyName, this.parentSpan);
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
 		this.tracer.addTag(this.traceKeys.getHystrix().getPrefix() +
 				this.traceKeys.getHystrix().getCommandKey(), commandKeyName);
