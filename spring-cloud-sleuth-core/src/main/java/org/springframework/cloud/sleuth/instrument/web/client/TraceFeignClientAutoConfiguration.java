@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
@@ -42,7 +41,6 @@ import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConcurrencyStrategy;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -60,7 +58,6 @@ import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
-import feign.hystrix.HystrixFeign;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -86,19 +83,19 @@ public class TraceFeignClientAutoConfiguration {
 	@Autowired
 	private Tracer tracer;
 
+	private final FeignRequestContext feignRequestContext = new FeignRequestContext();
+
 	@Bean
 	@Scope("prototype")
 	@ConditionalOnClass(HystrixCommand.class)
-	@ConditionalOnMissingBean(SleuthHystrixConcurrencyStrategy.class)
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
 	public Feign.Builder feignHystrixBuilder(Tracer tracer, TraceKeys traceKeys) {
-		return HystrixFeign.builder().invocationHandlerFactory(
-				new SleuthHystrixInvocationHandler.Factory(tracer, traceKeys));
+		return SleuthFeignBuilder.builder(tracer, this.feignRequestContext);
 	}
 
 	@Bean
 	@Primary
-	public Decoder feignDecoder() {
+	public Decoder feignDecoder(final Tracer tracer) {
 		return new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
 			@Override
 			public Object decode(Response response, Type type)
@@ -112,13 +109,17 @@ public class TraceFeignClientAutoConfiguration {
 					Span span = getCurrentSpan();
 					if (span != null) {
 						publish(new ClientReceivedEvent(this, span));
-						TraceFeignClientAutoConfiguration.this.tracer.close(span);
+						tracer.close(span);
 					}
 				}
 			}
 		};
 	}
 
+	/**
+	 * Sleuth {@link feign.RequestInterceptor} that either starts a new Span
+	 * or continues an existing one if a retry takes place.
+	 */
 	@Bean
 	public RequestInterceptor traceIdRequestInterceptor() {
 		return new RequestInterceptor() {
@@ -126,7 +127,7 @@ public class TraceFeignClientAutoConfiguration {
 			public void apply(RequestTemplate template) {
 				URI uri = URI.create(template.url());
 				String spanName = uriScheme(uri) + ":" + uri.getPath();
-				Span span = TraceFeignClientAutoConfiguration.this.tracer.createSpan(spanName);
+				Span span = getSpan(spanName);
 				if (span == null) {
 					setHeader(template, Span.NOT_SAMPLED_NAME, "true");
 					return;
@@ -145,6 +146,24 @@ public class TraceFeignClientAutoConfiguration {
 				publish(new ClientSentEvent(this, span));
 			}
 		};
+	}
+
+	/**
+	 * Depending on the presence of a Span in context, either starts a new Span
+	 * or continues an existing one.
+	 */
+	private Span getSpan(String spanName) {
+		FeignRequestContext feignRequestContext = this.feignRequestContext;
+		if (!feignRequestContext.hasSpanInProcess()) {
+			Span span = this.tracer.createSpan(spanName);
+			feignRequestContext.putSpan(span, false);
+			return span;
+		} else {
+			if (feignRequestContext.wasSpanRetried()) {
+				return this.tracer.continueSpan(feignRequestContext.getCurrentSpan());
+			}
+		}
+		return this.tracer.createSpan(spanName);
 	}
 
 	private String uriScheme(URI uri) {

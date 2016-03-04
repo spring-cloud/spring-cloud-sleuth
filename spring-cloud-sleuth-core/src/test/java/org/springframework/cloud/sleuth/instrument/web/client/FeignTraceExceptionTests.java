@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +30,6 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +40,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.netflix.config.ConfigurationManager;
 import com.netflix.hystrix.HystrixCommandProperties;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { FeignTraceExceptionTests.TestConfiguration.class })
@@ -66,19 +67,19 @@ public class FeignTraceExceptionTests {
 
 	@Test
 	public void shouldRemoveSpanFromThreadUponConnectionException() throws IOException {
-		Span span = this.tracer.startTrace("new trace");
+		Span span = this.tracer.createSpan("new trace");
 		ConfigurationManager
 				.getConfigInstance().setProperty("hystrix.command.shouldFailToConnect.execution.isolation.strategy",
 				HystrixCommandProperties.ExecutionIsolationStrategy.SEMAPHORE);
 
 		try {
 			this.testFeignInterfaceWithException.shouldFailToConnect();
-			Assert.fail("should throw an exception");
+			fail("should throw an exception");
 		} catch (Exception e) {
-			SleuthAssertions.then(e).hasRootCauseInstanceOf(UnknownHostException.class);
+			then(e).hasRootCauseInstanceOf(UnknownHostException.class);
 		}
 
-		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
+		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
 	}
 
