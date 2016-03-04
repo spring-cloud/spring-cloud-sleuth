@@ -62,23 +62,21 @@ public class TracePreZuulFilter extends ZuulFilter
 	@Override
 	public Object run() {
 		RequestContext ctx = RequestContext.getCurrentContext();
-		Map<String, String> response = ctx.getZuulRequestHeaders();
-		// N.B. this will only work with the simple host filter (not ribbon) unless you
-		// set hystrix.execution.isolation.strategy=SEMAPHORE
+		Map<String, String> requestHeaders = ctx.getZuulRequestHeaders();
 		Span span = getCurrentSpan();
 		if (span == null) {
-			setHeader(response, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
 			return null;
 		}
 		try {
-			setHeader(response, Span.SPAN_ID_NAME, span.getSpanId());
-			setHeader(response, Span.TRACE_ID_NAME, span.getTraceId());
-			setHeader(response, Span.SPAN_NAME_NAME, span.getName());
+			setHeader(requestHeaders, Span.SPAN_ID_NAME, span.getSpanId());
+			setHeader(requestHeaders, Span.TRACE_ID_NAME, span.getTraceId());
+			setHeader(requestHeaders, Span.SPAN_NAME_NAME, span.getName());
 			if (!span.isExportable()) {
-				setHeader(response, Span.NOT_SAMPLED_NAME, "true");
+				setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
 			}
-			setHeader(response, Span.PARENT_ID_NAME, getParentId(span));
-			setHeader(response, Span.PROCESS_ID_NAME, span.getProcessId());
+			setHeader(requestHeaders, Span.PARENT_ID_NAME, getParentId(span));
+			setHeader(requestHeaders, Span.PROCESS_ID_NAME, span.getProcessId());
 			// TODO: the client sent event should come from the client not the filter!
 			publish(new ClientSentEvent(this, span));
 		}

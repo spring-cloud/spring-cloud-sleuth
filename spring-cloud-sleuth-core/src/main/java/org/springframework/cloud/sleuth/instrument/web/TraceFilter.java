@@ -158,8 +158,7 @@ public class TraceFilter extends OncePerRequestFilter
 			}
 			else {
 				if (skip) {
-					spanFromRequest = this.tracer.createSpan(name,
-							NeverSampler.INSTANCE);
+					spanFromRequest = this.tracer.createSpan(name, NeverSampler.INSTANCE);
 				}
 				else {
 					spanFromRequest = this.tracer.createSpan(name);
@@ -172,6 +171,9 @@ public class TraceFilter extends OncePerRequestFilter
 		try {
 
 			addRequestTags(request);
+			// Add headers before filter chain in case one of the filters flushes the
+			// response...
+			addResponseHeaders(response, spanFromRequest);
 			filterChain.doFilter(request, response);
 
 		}
@@ -190,7 +192,6 @@ public class TraceFilter extends OncePerRequestFilter
 			}
 			if (spanFromRequest != null) {
 				addResponseTags(response, exception);
-				addResponseHeaders(response, spanFromRequest);
 				if (spanFromRequest.hasSavedSpan()) {
 					publish(new ServerSentEvent(this, spanFromRequest.getSavedSpan(),
 							spanFromRequest));
@@ -203,8 +204,10 @@ public class TraceFilter extends OncePerRequestFilter
 
 	private void addResponseHeaders(HttpServletResponse response, Span span) {
 		if (span != null) {
-			response.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-			response.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+			if (!response.containsHeader(Span.SPAN_ID_NAME)) {
+				response.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+				response.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+			}
 		}
 	}
 
