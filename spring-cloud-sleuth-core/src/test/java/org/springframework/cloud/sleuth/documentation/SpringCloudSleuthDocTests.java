@@ -180,7 +180,7 @@ public class SpringCloudSleuthDocTests {
 	}
 
 	@Test
-	public void should_join_a_span_with_tracer() throws Exception {
+	public void should_start_a_span_with_explicit_parent() throws Exception {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		String commissionValue = "10";
 		Span initialSpan = this.tracer.createSpan("calculateTax");
@@ -191,20 +191,20 @@ public class SpringCloudSleuthDocTests {
 			// tag::manual_span_joining[]
 			// let's assume that we're in a thread Y and we've received
 			// the `initialSpan` from thread X. `initialSpan` will be the parent
-			// of the `joinedSpan`
-			Span joinedSpan = this.tracer.createSpan("calculateCommission", initialSpan);
+			// of the `newSpan`
+			Span newSpan = this.tracer.createSpan("calculateCommission", initialSpan);
 			try {
 				// ...
 				// You can tag a span
 				this.tracer.addTag("commissionValue", commissionValue);
 				// ...
 				// You can log an event on a span
-				joinedSpan.logEvent("commissionCalculated");
+				newSpan.logEvent("commissionCalculated");
 			} finally {
 				// Once done remember to close the span. This will allow collecting
 				// the span to send it to Zipkin. The tags and events set on the
-				// joinedSpan will not be present on the parent
-				this.tracer.close(joinedSpan);
+				// newSpan will not be present on the parent
+				this.tracer.close(newSpan);
 			}
 			// end::manual_span_joining[]
 		}
