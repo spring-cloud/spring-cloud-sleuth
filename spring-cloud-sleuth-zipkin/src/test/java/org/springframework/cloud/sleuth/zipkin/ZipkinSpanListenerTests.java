@@ -120,7 +120,7 @@ public class ZipkinSpanListenerTests {
 	 */
 	@Test
 	public void spanWithoutAnnotationsLogsComponent() {
-		Span context = this.tracer.startTrace("http:foo");
+		Span context = this.tracer.createSpan("http:foo");
 		this.tracer.close(context);
 		assertEquals(1, this.test.spans.size());
 		assertThat(this.test.spans.get(0).binaryAnnotations.get(0).endpoint.serviceName)
@@ -129,7 +129,7 @@ public class ZipkinSpanListenerTests {
 
 	@Test
 	public void rpcAnnotations() {
-		Span context = this.tracer.joinTrace("http:child", this.parent);
+		Span context = this.tracer.createSpan("http:child", this.parent);
 		this.application.publishEvent(new ClientSentEvent(this, context));
 		this.application.publishEvent(new ServerReceivedEvent(this, this.parent, context));
 		this.application.publishEvent(new ServerSentEvent(this, this.parent, context));

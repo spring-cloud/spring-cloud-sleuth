@@ -80,7 +80,7 @@ public class TraceCommandTests {
 	}
 
 	private Span givenATraceIsPresentInTheCurrentThread() {
-		return this.tracer.joinTrace("http:test",
+		return this.tracer.createSpan("http:test",
 				Span.builder().traceId(EXPECTED_TRACE_ID).build());
 	}
 

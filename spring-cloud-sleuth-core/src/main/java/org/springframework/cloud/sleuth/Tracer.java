@@ -36,9 +36,9 @@ import java.util.concurrent.Callable;
  *
  * Most crucial methods in terms of span lifecycle are:
  * <ul>
- * <li>The {@linkplain Tracer#startTrace(String) startTrace} method in this class
+ * <li>The {@linkplain Tracer#createSpan(String) createSpan} method in this class
  * starts a new span.</li>
- * <li>The {@linkplain Tracer#joinTrace(String, Span) joinTrace} method creates a new span
+ * <li>The {@linkplain Tracer#createSpan(String, Span) createSpan} method creates a new span
  * which has this thread's currentSpan as one of its parents</li>
  * <li>The {@linkplain Tracer#continueSpan(Span) continueSpan} method creates a
  * new instance of span that logically is a continuation of the provided span.</li>
@@ -63,7 +63,7 @@ public interface Tracer extends SpanAccessor {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	Span startTrace(String name);
+	Span createSpan(String name);
 
 	/**
 	 * Creates a new Span with a specific parent. The parent might be in another
@@ -75,7 +75,7 @@ public interface Tracer extends SpanAccessor {
 	 *
 	 * @param name The name field for the new span to create.
 	 */
-	Span joinTrace(String name, Span parent);
+	Span createSpan(String name, Span parent);
 
 	/**
 	 * Start a new span if the sampler allows it or if we are already tracing in this
@@ -84,7 +84,7 @@ public interface Tracer extends SpanAccessor {
 	 * @param name the name of the span
 	 * @param sampler a sampler to decide whether to create the span or not
 	 */
-	Span startTrace(String name, Sampler sampler);
+	Span createSpan(String name, Sampler sampler);
 
 	/**
 	 * Contributes to a span started in another thread. The returned span shares

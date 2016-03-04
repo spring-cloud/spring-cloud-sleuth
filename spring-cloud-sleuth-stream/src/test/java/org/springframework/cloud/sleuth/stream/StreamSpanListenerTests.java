@@ -76,7 +76,7 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void acquireAndRelease() {
-		Span context = this.tracer.startTrace("http:foo");
+		Span context = this.tracer.createSpan("http:foo");
 		this.tracer.close(context);
 		assertEquals(1, this.test.spans.size());
 	}
@@ -85,7 +85,7 @@ public class StreamSpanListenerTests {
 	public void rpcAnnotations() {
 		Span parent = Span.builder().traceId(1L).name("http:parent").remote(true)
 				.build();
-		Span context = this.tracer.joinTrace("http:child", parent);
+		Span context = this.tracer.createSpan("http:child", parent);
 		this.application.publishEvent(new ClientSentEvent(this, context));
 		this.application
 				.publishEvent(new ServerReceivedEvent(this, parent, context));
@@ -98,7 +98,7 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void nullSpanName() {
-		Span span = this.tracer.startTrace(null);
+		Span span = this.tracer.createSpan(null);
 		this.application.publishEvent(new ClientSentEvent(this, span));
 		this.tracer.close(span);
 		assertEquals(1, this.test.spans.size());
@@ -108,7 +108,7 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void shouldIncreaseNumberOfAcceptedSpans() {
-		Span context = this.tracer.startTrace("http:foo");
+		Span context = this.tracer.createSpan("http:foo");
 		this.tracer.close(context);
 		this.listener.poll();
 

@@ -47,7 +47,7 @@ public class TraceAsyncAspect {
 
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		Span span = this.tracer.startTrace(pjp.getSignature().getName());
+		Span span = this.tracer.createSpan(pjp.getSignature().getName());
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
 		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
 				this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());

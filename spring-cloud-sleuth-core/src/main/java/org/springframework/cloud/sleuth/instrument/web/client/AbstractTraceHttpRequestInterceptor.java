@@ -90,7 +90,7 @@ abstract class AbstractTraceHttpRequestInterceptor
 	protected void publishStartEvent(HttpRequest request) {
 		URI uri = request.getURI();
 		String spanName = uriScheme(uri) + ":" + uri.getPath();
-		Span newSpan = this.tracer.startTrace(spanName);
+		Span newSpan = this.tracer.createSpan(spanName);
 		enrichWithTraceHeaders(request, newSpan);
 		publish(new ClientSentEvent(this, newSpan));
 	}

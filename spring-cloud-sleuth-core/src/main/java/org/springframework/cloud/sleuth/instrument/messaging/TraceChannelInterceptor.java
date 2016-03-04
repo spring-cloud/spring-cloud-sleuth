@@ -54,12 +54,12 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private Span startSpan(Span span, String name, Message<?> message) {
 		if (span != null) {
-			return getTracer().joinTrace(name, span);
+			return getTracer().createSpan(name, span);
 		}
 		if (message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
-			return getTracer().startTrace(name, NeverSampler.INSTANCE);
+			return getTracer().createSpan(name, NeverSampler.INSTANCE);
 		}
-		return getTracer().startTrace(name);
+		return getTracer().createSpan(name);
 	}
 
 	@Override

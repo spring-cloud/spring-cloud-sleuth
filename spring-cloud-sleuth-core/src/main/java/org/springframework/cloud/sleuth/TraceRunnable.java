@@ -63,7 +63,7 @@ public class TraceRunnable implements Runnable {
 	}
 
 	protected Span startSpan() {
-		return this.tracer.joinTrace(getSpanName(), this.parent);
+		return this.tracer.createSpan(getSpanName(), this.parent);
 	}
 
 	protected String getSpanName() {

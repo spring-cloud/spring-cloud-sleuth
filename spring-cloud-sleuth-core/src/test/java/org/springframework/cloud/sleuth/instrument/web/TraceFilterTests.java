@@ -127,7 +127,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
-		Span span = this.tracer.startTrace("http:foo");
+		Span span = this.tracer.createSpan("http:foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
 		// It should have been removed from the thread local context so simulate that
 		TestSpanContextHolder.removeCurrentSpan();

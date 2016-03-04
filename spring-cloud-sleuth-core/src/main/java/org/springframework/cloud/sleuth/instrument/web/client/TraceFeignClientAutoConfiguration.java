@@ -126,7 +126,7 @@ public class TraceFeignClientAutoConfiguration {
 			public void apply(RequestTemplate template) {
 				URI uri = URI.create(template.url());
 				String spanName = uriScheme(uri) + ":" + uri.getPath();
-				Span span = TraceFeignClientAutoConfiguration.this.tracer.startTrace(spanName);
+				Span span = TraceFeignClientAutoConfiguration.this.tracer.createSpan(spanName);
 				if (span == null) {
 					setHeader(template, Span.NOT_SAMPLED_NAME, "true");
 					return;

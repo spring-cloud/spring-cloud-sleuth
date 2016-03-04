@@ -58,7 +58,7 @@ public class TraceableExecutorServiceTests {
 	@Test
 	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed()
 			throws Exception {
-		Span span = this.tracer.startTrace("http:PARENT");
+		Span span = this.tracer.createSpan("http:PARENT");
 		CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		this.tracer.close(span);
 

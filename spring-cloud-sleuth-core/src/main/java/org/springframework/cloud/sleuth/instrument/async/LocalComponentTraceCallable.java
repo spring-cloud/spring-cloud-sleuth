@@ -61,7 +61,7 @@ public class LocalComponentTraceCallable<V> extends TraceCallable<V> {
 
 	@Override
 	protected Span startSpan() {
-		Span span = getTracer().joinTrace(getSpanName(), getParent());
+		Span span = getTracer().createSpan(getSpanName(), getParent());
 		getTracer().addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
 		getTracer().addTag(this.traceKeys.getAsync().getPrefix() +
 				this.traceKeys.getAsync().getThreadNameKey(), Thread.currentThread().getName());

@@ -66,7 +66,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@Test
 	public void testSpanPropagation() {
 
-		Span span = this.tracer.startTrace("http:testSendMessage", new AlwaysSampler());
+		Span span = this.tracer.createSpan("http:testSendMessage", new AlwaysSampler());
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		Long expectedSpanId = span.getSpanId();
 		this.tracer.close(span);
