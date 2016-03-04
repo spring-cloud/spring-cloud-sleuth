@@ -99,4 +99,27 @@ service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262f
 service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
 service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]
 
-If you're using a log aggregating tool like Kibana, Splunk etc. you can order the events that took place
+If you're using a log aggregating tool like https://www.elastic.co/products/kibana[Kibana],
+http://www.splunk.com/[Splunk] etc. you can order the events that took place. An example of
+Kibana would look like this:
+
+image::kibana.png[Log correlation with Kibana]
+
+If you want to use https://www.elastic.co/guide/en/logstash/current/index.html[Logstash] here is the Grok pattern for Logstash:
+
+[source]
+filter {
+       # pattern matching logback pattern
+       grok {
+              match => { "message" => "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+       }
+}
+
+NOTE: If you want to use Grok together with the logs from Cloud Foundry you have to use this pattern:
+[source]
+filter {
+       # pattern matching logback pattern
+       grok {
+              match => { "message" => "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+       }
+}
