@@ -597,7 +597,49 @@ service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec2785
 </div>
 </div>
 <div class="paragraph">
-<p>If you&#8217;re using a log aggregating tool like Kibana, Splunk etc. you can order the events that took place</p>
+<p>If you&#8217;re using a log aggregating tool like <a href="https://www.elastic.co/products/kibana">Kibana</a>,
+<a href="http://www.splunk.com/">Splunk</a> etc. you can order the events that took place. An example of
+Kibana would look like this:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/kibana.png" alt="Log correlation with Kibana">
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to use <a href="https://www.elastic.co/guide/en/logstash/current/index.html">Logstash</a> here is the Grok pattern for Logstash:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>filter {
+       # pattern matching logback pattern
+       grok {
+              match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+       }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+If you want to use Grok together with the logs from Cloud Foundry you have to use this pattern:
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>filter {
+       # pattern matching logback pattern
+       grok {
+              match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+       }
+}</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -1211,7 +1253,7 @@ the number of dropped spans will get increased.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-03 11:19:57 CET
+Last updated 2016-03-03 21:14:02 CET
 </div>
 </div>
 </body>
