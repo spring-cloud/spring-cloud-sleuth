@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client;
+package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import org.springframework.cloud.sleuth.Span;
 
@@ -29,6 +29,11 @@ import org.springframework.cloud.sleuth.Span;
  * @since 1.0.0
  */
 class FeignRequestContext {
+
+	private static final FeignRequestContext INSTANCE = new FeignRequestContext();
+
+	private FeignRequestContext() {}
+
 	private static final ThreadLocal<SpanHolder> THREAD_LOCAL = new ThreadLocal<>();
 
 	private static class SpanHolder {
@@ -62,5 +67,9 @@ class FeignRequestContext {
 
 	void clearContext() {
 		THREAD_LOCAL.remove();
+	}
+
+	static FeignRequestContext getInstance() {
+		return INSTANCE;
 	}
 }

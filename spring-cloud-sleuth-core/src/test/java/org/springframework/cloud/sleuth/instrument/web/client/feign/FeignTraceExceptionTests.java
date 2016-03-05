@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client;
+package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
