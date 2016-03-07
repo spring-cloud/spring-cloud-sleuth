@@ -417,9 +417,55 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .show-for-print{display:inherit!important}}
 </style>
 </head>
-<body class="article">
+<body class="article toc2 toc-left">
 <div id="header">
 <h1>Spring Cloud Sleuth</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_spring_cloud_sleuth">Spring Cloud Sleuth</a>
+<ul class="sectlevel2">
+<li><a href="#_terminology">Terminology</a></li>
+<li><a href="#_purpose">Purpose</a></li>
+</ul>
+</li>
+<li><a href="#_features">Features</a></li>
+<li><a href="#_sampling">Sampling</a></li>
+<li><a href="#_instrumentation">Instrumentation</a></li>
+<li><a href="#_span_lifecycle">Span lifecycle</a>
+<ul class="sectlevel2">
+<li><a href="#creating-and-closing-spans">Creating and closing spans</a></li>
+<li><a href="#continuing-spans">Continuing spans</a></li>
+<li><a href="#creating-spans-with-explicit-parent">Creating spans with an explicit parent</a></li>
+</ul>
+</li>
+<li><a href="#_naming_spans">Naming spans</a>
+<ul class="sectlevel3">
+<li><a href="#__spanname_annotation">@SpanName annotation</a></li>
+<li><a href="#_tostring_method">toString() method</a></li>
+</ul>
+</li>
+<li><a href="#_span_data_as_messages">Span Data as Messages</a>
+<ul class="sectlevel2">
+<li><a href="#_zipkin_consumer">Zipkin Consumer</a></li>
+<li><a href="#_custom_consumer">Custom Consumer</a></li>
+</ul>
+</li>
+<li><a href="#_metrics">Metrics</a></li>
+<li><a href="#_integrations">Integrations</a>
+<ul class="sectlevel2">
+<li><a href="#_runnable_and_callable">Runnable and Callable</a></li>
+<li><a href="#_hystrix">Hystrix</a></li>
+<li><a href="#_http_integration">HTTP integration</a></li>
+<li><a href="#_http_client_integration">HTTP client integration</a></li>
+<li><a href="#_feign">Feign</a></li>
+<li><a href="#_asynchronous_communication">Asynchronous communication</a></li>
+<li><a href="#_messaging">Messaging</a></li>
+<li><a href="#_zuul">Zuul</a></li>
+</ul>
+</li>
+</ul>
+</div>
 </div>
 <div id="content">
 <div class="sect1">
@@ -1316,10 +1362,7 @@ Callable&lt;String&gt; traceCallableFromTracer = tracer.wrap(callable);</code></
 <p>We&#8217;re registering a custom <a href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy"><code>HystrixConcurrencyStrategy</code></a>
 that wraps all <code>Callable</code> instances into their Sleuth representative -
 the <code>TraceCallable</code>. The strategy either starts or continues a span depending on the fact whether tracing was already going
-on before the Hystrix command was called.</p>
-</div>
-<div class="paragraph">
-<p>To disable the custom Hystrix Concurrency Strategy set the <code>spring.sleuth.hystrix.strategy.enabled</code> to <code>false</code>.</p>
+on before the Hystrix command was called. To disable the custom Hystrix Concurrency Strategy set the <code>spring.sleuth.hystrix.strategy.enabled</code> to <code>false</code>.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1435,7 +1478,7 @@ are creating Spans each time a new task is submitted, invoked or scheduled.</p>
 <h3 id="_messaging">Messaging</h3>
 <div class="paragraph">
 <p>All <a href="http://projects.spring.io/spring-integration/">Spring Integration</a> creates spans for publish and subscribe events.
-To disable Spring Integration instrumentation, set spring.sleuth.integration.enabled to false.</p>
+To disable Spring Integration instrumentation, set <code>spring.sleuth.integration.enabled</code> to false.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1450,7 +1493,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-07 15:46:57 CET
+Last updated 2016-03-07 16:21:56 CET
 </div>
 </div>
 </body>
