@@ -12,7 +12,7 @@ org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfig
 org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.client.TraceFeignClientAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.zuul.TraceZuulAutoConfiguration
 
 # Environment Post Processor
