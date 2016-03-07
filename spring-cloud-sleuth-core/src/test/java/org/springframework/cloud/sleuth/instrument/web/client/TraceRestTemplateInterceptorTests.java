@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.Assert.assertFalse;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
@@ -78,6 +77,16 @@ public class TraceRestTemplateInterceptorTests {
 	}
 
 	@Test
+	public void headersAddedWhenNoTracingWasPresent() {
+		@SuppressWarnings("unchecked")
+		Map<String, String> headers = this.template.getForEntity("/", Map.class)
+				.getBody();
+
+		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isNotNull();
+		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotNull();
+	}
+
+	@Test
 	public void headersAddedWhenTracing() {
 		this.tracer.continueSpan(Span.builder().traceId(1L).spanId(2L).parent(3L).build());
 		@SuppressWarnings("unchecked")
@@ -97,14 +106,6 @@ public class TraceRestTemplateInterceptorTests {
 		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
 		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotEqualTo(2L);
 		then(headers.get(Span.NOT_SAMPLED_NAME)).isEqualTo("true");
-	}
-
-	@Test
-	public void headersNotAddedWhenNotTracing() {
-		@SuppressWarnings("unchecked")
-		Map<String, String> headers = this.template.getForEntity("/", Map.class)
-				.getBody();
-		assertFalse("Wrong headers: " + headers, headers.containsKey(Span.SPAN_ID_NAME));
 	}
 
 	// issue #198

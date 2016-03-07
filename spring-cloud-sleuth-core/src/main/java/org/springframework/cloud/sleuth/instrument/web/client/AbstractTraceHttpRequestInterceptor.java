@@ -66,10 +66,6 @@ abstract class AbstractTraceHttpRequestInterceptor
 		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
 	}
 
-	protected void doNotSampleThisSpan(HttpRequest request) {
-		setHeader(request, Span.NOT_SAMPLED_NAME, "true");
-	}
-
 	private void setHeader(HttpRequest request, String name, String value) {
 		if (StringUtils.hasText(value) && !request.getHeaders().containsKey(name) &&
 				this.tracer.isTracing()) {

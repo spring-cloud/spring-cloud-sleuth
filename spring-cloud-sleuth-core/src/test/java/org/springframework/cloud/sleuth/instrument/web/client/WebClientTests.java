@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client.feign;
+package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 import org.junit.After;
+import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,11 +35,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.netflix.ribbon.RibbonClients;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -46,33 +52,37 @@ import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+import static junitparams.JUnitParamsRunner.$;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { FeignTraceTests.TestConfiguration.class })
+@RunWith(JUnitParamsRunner.class)
+@SpringApplicationConfiguration(classes = { WebClientTests.TestConfiguration.class })
 @WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
-@DirtiesContext
-public class FeignTraceTests {
+public class WebClientTests {
 
-	@Autowired
-	TestFeignInterface testFeignInterface;
-
-	@Autowired
-	Listener listener;
-
-	@Autowired
-	Tracer tracer;
+	@ClassRule public static final SpringClassRule SCR = new SpringClassRule();
+	@Rule public final SpringMethodRule springMethodRule = new SpringMethodRule();
+	
+	@Autowired TestFeignInterface testFeignInterface;
+	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
+	@Autowired @LoadBalanced RestTemplate template;
+	@Autowired Listener listener;
+	@Autowired Tracer tracer;
 
 	@After
 	public void close() {
@@ -81,46 +91,68 @@ public class FeignTraceTests {
 	}
 
 	@Test
-	public void shouldCreateANewSpanWhenNoPreviousTracingWasPresent() {
-		ResponseEntity<String> response = this.testFeignInterface.getNoTrace();
+	@Parameters
+	@SuppressWarnings("unchecked")
+	public void shouldCreateANewSpanWhenNoPreviousTracingWasPresent(ResponseEntityProvider provider) {
+		ResponseEntity<String> response = provider.get(this);
 
 		then(getHeader(response, Span.TRACE_ID_NAME)).isNotNull();
+		then(getHeader(response, Span.SPAN_ID_NAME)).isNotNull();
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
+	private Object[] parametersForShouldCreateANewSpanWhenNoPreviousTracingWasPresent() {
+		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
+				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/notrace", String.class));
+	}
+
 	@Test
-	public void shouldPropagateNotSamplingHeader() {
+	@Parameters
+	@SuppressWarnings("unchecked")
+	public void shouldPropagateNotSamplingHeader(ResponseEntityProvider provider) {
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
 		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
 				.spanId(generatedId()).exportable(false).parent(currentParentId).build());
 
-		ResponseEntity<Map<String, String>> response = this.testFeignInterface.headers();
+		ResponseEntity<Map<String, String>> response = provider.get(this);
 
 		then(response.getBody().get(Span.TRACE_ID_NAME)).isNotNull();
 		then(response.getBody().get(Span.NOT_SAMPLED_NAME)).isNotNull();
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
+	private Object[] parametersForShouldPropagateNotSamplingHeader() {
+		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
+				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/", Map.class));
+	}
+
 	@Test
-	public void shouldAttachTraceIdWhenUsingFeignClient() {
+	@Parameters
+	@SuppressWarnings("unchecked")
+	public void shouldAttachTraceIdWhenCallingAnotherService(ResponseEntityProvider provider) {
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
 		Long currentSpanId = 100L;
 		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
 				.spanId(currentSpanId).parent(currentParentId).build());
 
-		ResponseEntity<String> response = this.testFeignInterface.getTraceId();
+		ResponseEntity<String> response = provider.get(this);
 
 		then(Span.hexToId(getHeader(response, Span.TRACE_ID_NAME)))
 				.isEqualTo(currentTraceId);
-		then(Span.hexToId(getHeader(response, Span.PARENT_ID_NAME)))
-				.isEqualTo(currentSpanId);
 		thenRegisteredClientSentAndReceivedEvents();
 	}
 
+	private Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
+		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
+				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/traceid", String.class));
+	}
+
 	@Test
-	public void shouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
+	@Parameters
+	@SuppressWarnings("unchecked")
+	public void shouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody(ResponseEntityProvider provider) {
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
 		Long currentSpanId = generatedId();
@@ -128,10 +160,38 @@ public class FeignTraceTests {
 				.spanId(currentSpanId).parent(currentParentId).build();
 		this.tracer.continueSpan(span);
 
-		this.testFeignInterface.noResponseBody();
+		provider.get(this);
 
 		thenRegisteredClientSentAndReceivedEvents();
 		then(this.tracer.getCurrentSpan()).isEqualTo(span);
+	}
+
+	private Object[] parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
+		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.noResponseBody(),
+				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/noresponse", String.class));
+	}
+
+	// issue #198
+	@Test
+	@Parameters
+	@SuppressWarnings("unchecked")
+	public void shouldCloseSpanUponException(ResponseEntityProvider provider) throws IOException {
+		Span span = this.tracer.createSpan("new trace");
+
+		try {
+			provider.get(this);
+			Assert.fail("should throw an exception");
+		} catch (RuntimeException e) {
+			SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
+		}
+
+		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
+		this.tracer.close(span);
+	}
+
+	private Object[] parametersForShouldCloseSpanUponException() {
+		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException.shouldFailToConnect(),
+				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://exceptionService/", Map.class));
 	}
 
 	private void thenRegisteredClientSentAndReceivedEvents() {
@@ -161,13 +221,19 @@ public class FeignTraceTests {
 		ResponseEntity<Map<String, String>> headers();
 
 		@RequestMapping(method = RequestMethod.GET, value = "/noresponse")
-		void noResponseBody();
+		ResponseEntity<Void> noResponseBody();
+	}
+
+	@FeignClient(name = "exceptionService", url = "http://invalid.host.to.break.tests")
+	public interface TestFeignInterfaceWithException {
+		@RequestMapping(method = RequestMethod.GET, value = "/")
+		ResponseEntity<String> shouldFailToConnect();
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableFeignClients
-	@RibbonClient(name = "fooservice", configuration = SimpleRibbonClientConfiguration.class)
+	@RibbonClients(defaultConfiguration = SimpleRibbonClientConfiguration.class)
 	public static class TestConfiguration {
 
 		@Bean
@@ -249,9 +315,15 @@ public class FeignTraceTests {
 		@Bean
 		public ILoadBalancer ribbonLoadBalancer() {
 			BaseLoadBalancer balancer = new BaseLoadBalancer();
-			balancer.setServersList(Arrays.asList(new Server("localhost", this.port)));
+			balancer.setServersList(
+					Collections.singletonList(new Server("localhost", this.port)));
 			return balancer;
 		}
 
+	}
+
+	@FunctionalInterface
+	interface ResponseEntityProvider {
+		ResponseEntity get(WebClientTests webClientTests);
 	}
 }

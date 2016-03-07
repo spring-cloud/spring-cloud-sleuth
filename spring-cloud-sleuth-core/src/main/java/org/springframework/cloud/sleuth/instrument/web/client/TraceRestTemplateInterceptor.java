@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
@@ -44,10 +45,6 @@ public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterc
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
-		if (!isTracing()) {
-			doNotSampleThisSpan(request);
-			return execution.execute(request, body);
-		}
 		publishStartEvent(request);
 		return response(request, body, execution);
 	}

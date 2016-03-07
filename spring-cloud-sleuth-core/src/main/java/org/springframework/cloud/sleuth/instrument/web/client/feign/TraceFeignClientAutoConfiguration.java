@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import static java.util.Collections.singletonList;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -35,8 +33,8 @@ import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -53,6 +51,8 @@ import feign.FeignException;
 import feign.RequestInterceptor;
 import feign.Response;
 import feign.codec.Decoder;
+
+import static java.util.Collections.singletonList;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -128,12 +128,7 @@ public class TraceFeignClientAutoConfiguration {
 		}
 		setHeader(newHeaders, Span.TRACE_ID_NAME, span.getTraceId());
 		setHeader(newHeaders, Span.SPAN_ID_NAME, span.getSpanId());
-		setHeader(newHeaders, Span.PARENT_ID_NAME, getParentId(span));
 		return newHeaders;
-	}
-
-	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
 	}
 
 	public void setHeader(Map<String, Collection<String>> headers, String name,

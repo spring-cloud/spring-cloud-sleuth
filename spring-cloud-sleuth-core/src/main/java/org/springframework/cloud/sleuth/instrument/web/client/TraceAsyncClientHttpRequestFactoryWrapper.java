@@ -96,10 +96,6 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 			throws IOException {
 		AsyncClientHttpRequest request = this.asyncDelegate
 				.createAsyncRequest(uri, httpMethod);
-		if (!isTracing()) {
-			doNotSampleThisSpan(request);
-			return request;
-		}
 		publishStartEvent(request);
 		return request;
 	}
@@ -108,10 +104,6 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod)
 			throws IOException {
 		ClientHttpRequest request = this.syncDelegate.createRequest(uri, httpMethod);
-		if (!isTracing()) {
-			doNotSampleThisSpan(request);
-			return request;
-		}
 		publishStartEvent(request);
 		return request;
 	}
