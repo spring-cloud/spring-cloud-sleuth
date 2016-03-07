@@ -301,9 +301,7 @@ That way you will ensure that a new Span is created and closed for each executio
 We're registering a custom https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy[`HystrixConcurrencyStrategy`]
 that wraps all `Callable` instances into their Sleuth representative -
 the `TraceCallable`. The strategy either starts or continues a span depending on the fact whether tracing was already going
-on before the Hystrix command was called.
-
-To disable the custom Hystrix Concurrency Strategy set the `spring.sleuth.hystrix.strategy.enabled` to `false`.
+on before the Hystrix command was called. To disable the custom Hystrix Concurrency Strategy set the `spring.sleuth.hystrix.strategy.enabled` to `false`.
 
 ==== Manual Command setting
 
@@ -376,7 +374,7 @@ are creating Spans each time a new task is submitted, invoked or scheduled.
 === Messaging
 
 All http://projects.spring.io/spring-integration/[Spring Integration] creates spans for publish and subscribe events.
-To disable Spring Integration instrumentation, set spring.sleuth.integration.enabled to false.
+To disable Spring Integration instrumentation, set `spring.sleuth.integration.enabled` to false.
 
 === Zuul
 
