@@ -1250,10 +1250,207 @@ the number of dropped spans will get increased.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_integrations">Integrations</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_runnable_and_callable">Runnable and Callable</h3>
+<div class="paragraph">
+<p>If you&#8217;re wrapping your logic in <code>Runnable</code> or <code>Callable</code> it&#8217;s enough to wrap those classes in their Sleuth representative.</p>
+</div>
+<div class="paragraph">
+<p>Example for <code>Runnable</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Runnable runnable = new Runnable() {
+	@Override
+	public void run() {
+		// do some work
+	}
+
+	@Override
+	public String toString() {
+		return "spanNameFromToStringMethod";
+	}
+};
+// Manual `TraceRunnable` creation with explicit "calculateTax" Span name
+Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, runnable, "calculateTax");
+// Wrapping `Runnable` with `Tracer`. The Span name will be taken either from the
+// `@SpanName` annotation or from `toString` method
+Runnable traceRunnableFromTracer = tracer.wrap(runnable);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Example for <code>Callable</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Callable&lt;String&gt; callable = new Callable&lt;String&gt;() {
+	@Override
+	public String call() throws Exception {
+		return someLogic();
+	}
+
+	@Override
+	public String toString() {
+		return "spanNameFromToStringMethod";
+	}
+};
+// Manual `TraceCallable` creation with explicit "calculateTax" Span name
+Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(tracer, spanNamer, callable, "calculateTax");
+// Wrapping `Callable` with `Tracer`. The Span name will be taken either from the
+// `@SpanName` annotation or from `toString` method
+Callable&lt;String&gt; traceCallableFromTracer = tracer.wrap(callable);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That way you will ensure that a new Span is created and closed for each execution.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hystrix">Hystrix</h3>
+<div class="sect3">
+<h4 id="_custom_concurrency_strategy">Custom Concurrency Strategy</h4>
+<div class="paragraph">
+<p>We&#8217;re registering a custom <a href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy"><code>HystrixConcurrencyStrategy</code></a>
+that wraps all <code>Callable</code> instances into their Sleuth representative -
+the <code>TraceCallable</code>. The strategy either starts or continues a span depending on the fact whether tracing was already going
+on before the Hystrix command was called.</p>
+</div>
+<div class="paragraph">
+<p>To disable the custom Hystrix Concurrency Strategy set the <code>spring.sleuth.hystrix.strategy.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_manual_command_setting">Manual Command setting</h4>
+<div class="paragraph">
+<p>Assuming that you have the following <code>HystrixCommand</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">HystrixCommand&lt;String&gt; hystrixCommand = new HystrixCommand&lt;String&gt;(setter) {
+	@Override
+	protected String run() throws Exception {
+		return someLogic();
+	}
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In order to pass the tracing information you have to wrap the same logic in the Sleuth version of the <code>HystrixCommand</code> which is the
+<code>TraceCommand</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">TraceCommand&lt;String&gt; traceCommand = new TraceCommand&lt;String&gt;(tracer, traceKeys, setter) {
+	@Override
+	public String doRun() throws Exception {
+		return someLogic();
+	}
+};</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_http_integration">HTTP integration</h3>
+<div class="paragraph">
+<p>Features from this section can be disabled by providing the <code>spring.sleuth.web.enabled</code> property with value equal to <code>false</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_http_filter">HTTP Filter</h4>
+<div class="paragraph">
+<p>Via the <code>TraceFilter</code> all sampled incoming requests result in creation of a Span. That Span&#8217;s name is <code>http:</code> + the path to which
+ the request was sent. E.g. if the request was sent to <code>/foo/bar</code> then the name will be <code>http:/foo/bar</code>. You can configure which URIs you would
+ like to skip via the <code>spring.sleuth.instrument.web.skipPattern</code> property.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_async_servlet_support">Async Servlet support</h4>
+<div class="paragraph">
+<p>If your controller returns a <code>Callable</code> or a <code>WebAsyncTask</code> Spring Cloud Sleuth will continue the existing span instead of creating a new one.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_http_client_integration">HTTP client integration</h3>
+<div class="sect3">
+<h4 id="_synchronous_rest_template">Synchronous Rest Template</h4>
+<div class="paragraph">
+<p>We&#8217;re injecting a <code>RestTemplate</code> interceptor that ensures that all the tracing information is passed to the requests. Each time a
+call is made a new Span is created. It gets closed upon receiving the response. In order to block the synchronous <code>RestTemplate</code> features
+just set <code>spring.sleuth.client.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_asynchronous_rest_template">Asynchronous Rest Template</h4>
+<div class="paragraph">
+<p>Custom instrumentation is set to create and close Spans upon sending and receiving requests. To block the <code>AsyncRestTemplate</code>
+features set <code>spring.sleuth.async.client.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_feign">Feign</h3>
+<div class="paragraph">
+<p>By default Spring Cloud Sleuth provides integration with feign via the <code>TraceFeignClientAutoConfiguration</code>. You can disable it entirely
+by setting <code>spring.sleuth.feign.enabled</code> to false.</p>
+</div>
+<div class="paragraph">
+<p>Part of Feign instrumentation is done via a <code>FeignBeanPostProcessor</code>. You can disable it by providing the <code>spring.sleuth.feign.processor.enabled</code> equal to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_asynchronous_communication">Asynchronous communication</h3>
+<div class="paragraph">
+<p>In Spring Cloud Sleuth we&#8217;re instrumenting async related components so that the tracing information is passed between threads. You can disable this behaviour
+by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="__async_scheduled_annotated_methods">@Async / @Scheduled annotated methods</h4>
+<div class="paragraph">
+<p>If you annotate your method with <code>@Async</code> / <code>@Scheduled</code> then we&#8217;ll automatically create a new Span with the following characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the Span name will be the annotated method name</p>
+</li>
+<li>
+<p>the Span will be tagged with that method&#8217;s class name and the method name too</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_executor_executorservice_and_scheduledexecutorservice">Executor, ExecutorService and ScheduledExecutorService</h4>
+<div class="paragraph">
+<p>We&#8217;re providing <code>LazyTraceExecutor</code>, <code>TraceableExecutorService</code> and <code>TraceableScheduledExecutorService</code>. Those implementations
+are creating Spans each time a new task is submitted, invoked or scheduled.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_messaging">Messaging</h3>
+<div class="paragraph">
+<p>All <a href="http://projects.spring.io/spring-integration/">Spring Integration</a> creates spans for publish and subscribe events.
+To disable Spring Integration instrumentation, set spring.sleuth.integration.enabled to false.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_zuul">Zuul</h3>
+<div class="paragraph">
+<p>We registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
+To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property to <code>false</code>.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-04 19:29:15 CET
+Last updated 2016-03-07 15:46:57 CET
 </div>
 </div>
 </body>
