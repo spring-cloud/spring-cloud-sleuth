@@ -352,9 +352,11 @@ features set `spring.sleuth.async.client.enabled` to `false`.
 === Feign
 
 By default Spring Cloud Sleuth provides integration with feign via the `TraceFeignClientAutoConfiguration`. You can disable it entirely
-by setting `spring.sleuth.feign.enabled` to false.
+by setting `spring.sleuth.feign.enabled` to false. If you do so then no Feign related instrumentation will take place.
 
 Part of Feign instrumentation is done via a `FeignBeanPostProcessor`. You can disable it by providing the `spring.sleuth.feign.processor.enabled` equal to `false`.
+If you set it like this then Spring Cloud Sleuth will not instrument any of your custom Feign components. All the default instrumentation
+however will be still there.
 
 === Asynchronous communication
 
@@ -380,5 +382,5 @@ To disable Spring Integration instrumentation, set `spring.sleuth.integration.en
 
 === Zuul
 
-We registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
+We're registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
 To disable Zuul support set the `spring.sleuth.zuul.enabled` property to `false`.
