@@ -440,7 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </li>
 <li><a href="#_naming_spans">Naming spans</a>
-<ul class="sectlevel3">
+<ul class="sectlevel2">
 <li><a href="#__spanname_annotation">@SpanName annotation</a></li>
 <li><a href="#_tostring_method">toString() method</a></li>
 </ul>
@@ -1101,8 +1101,8 @@ artificial like:</p>
 <div class="paragraph">
 <p>Fortunately, for the asynchronous processing you can provide explicit naming.</p>
 </div>
-<div class="sect3">
-<h4 id="__spanname_annotation">@SpanName annotation</h4>
+<div class="sect2">
+<h3 id="__spanname_annotation">@SpanName annotation</h3>
 <div class="paragraph">
 <p>You can do name the span explicitly via the <code>@SpanName</code> annotation.</p>
 </div>
@@ -1132,8 +1132,8 @@ future.get();</code></pre>
 <p>The span will be named <code>calculateTax</code>.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_tostring_method">toString() method</h4>
+<div class="sect2">
+<h3 id="_tostring_method">toString() method</h3>
 <div class="paragraph">
 <p>It&#8217;s pretty rare to create separate classes for <code>Runnable</code> or <code>Callable</code>. Typically one creates an anonymous
 instance of those classes. You can&#8217;t annotate such classes thus to override that, if there is no <code>@SpanName</code> annotation present,
@@ -1438,10 +1438,12 @@ features set <code>spring.sleuth.async.client.enabled</code> to <code>false</cod
 <h3 id="_feign">Feign</h3>
 <div class="paragraph">
 <p>By default Spring Cloud Sleuth provides integration with feign via the <code>TraceFeignClientAutoConfiguration</code>. You can disable it entirely
-by setting <code>spring.sleuth.feign.enabled</code> to false.</p>
+by setting <code>spring.sleuth.feign.enabled</code> to false. If you do so then no Feign related instrumentation will take place.</p>
 </div>
 <div class="paragraph">
-<p>Part of Feign instrumentation is done via a <code>FeignBeanPostProcessor</code>. You can disable it by providing the <code>spring.sleuth.feign.processor.enabled</code> equal to <code>false</code>.</p>
+<p>Part of Feign instrumentation is done via a <code>FeignBeanPostProcessor</code>. You can disable it by providing the <code>spring.sleuth.feign.processor.enabled</code> equal to <code>false</code>.
+If you set it like this then Spring Cloud Sleuth will not instrument any of your custom Feign components. All the default instrumentation
+however will be still there.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1484,7 +1486,7 @@ To disable Spring Integration instrumentation, set <code>spring.sleuth.integrati
 <div class="sect2">
 <h3 id="_zuul">Zuul</h3>
 <div class="paragraph">
-<p>We registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
+<p>We&#8217;re registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
 To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property to <code>false</code>.</p>
 </div>
 </div>
@@ -1493,7 +1495,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-07 16:21:56 CET
+Last updated 2016-03-07 16:32:09 CET
 </div>
 </div>
 </body>
