@@ -270,3 +270,13 @@ It's using the http://docs.spring.io/spring-boot/docs/current/reference/html/pro
 to calculate the number of accepted and dropped spans. Each time a span gets
 sent to Zipkin the number of accepted spans will increase. If there's an error then
 the number of dropped spans will get increased.
+
+== Integrations
+
+=== Feign
+
+By default Spring Cloud Sleuth provides integration with feign via the `TraceFeignClientAutoConfiguration`. You can disable it
+by setting `spring.sleuth.feign.enabled` to false.
+
+We're taking care of Feign instrumentation by means of a `FeignBeanPostProcessor`.
+You can disable the post processor by providing the `spring.sleuth.feign.processor.enabled` equal to `false`.

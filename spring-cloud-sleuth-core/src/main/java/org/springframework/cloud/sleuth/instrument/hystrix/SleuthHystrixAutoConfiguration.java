@@ -27,4 +27,5 @@ public class SleuthHystrixAutoConfiguration {
 	SleuthHystrixConcurrencyStrategy sleuthHystrixConcurrencyStrategy(Tracer tracer, TraceKeys traceKeys) {
 		return new SleuthHystrixConcurrencyStrategy(tracer, traceKeys);
 	}
+
 }

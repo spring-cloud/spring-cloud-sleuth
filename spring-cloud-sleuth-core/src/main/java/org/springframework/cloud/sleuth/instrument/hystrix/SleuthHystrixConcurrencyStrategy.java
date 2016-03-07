@@ -7,8 +7,8 @@ import javax.annotation.PreDestroy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;

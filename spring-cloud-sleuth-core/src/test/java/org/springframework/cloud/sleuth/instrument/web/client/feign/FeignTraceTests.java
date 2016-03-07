@@ -1,4 +1,20 @@
-package org.springframework.cloud.sleuth.instrument.web.client;
+/*
+ * Copyright 2013-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,7 +106,7 @@ public class FeignTraceTests {
 	public void shouldAttachTraceIdWhenUsingFeignClient() {
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
-		Long currentSpanId = generatedId();
+		Long currentSpanId = 100L;
 		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
 				.spanId(currentSpanId).parent(currentParentId).build());
 
@@ -100,7 +116,28 @@ public class FeignTraceTests {
 				.isEqualTo(currentTraceId);
 		then(Span.hexToId(getHeader(response, Span.PARENT_ID_NAME)))
 				.isEqualTo(currentSpanId);
+		thenRegisteredClientSentAndReceivedEvents();
+	}
+
+	@Test
+	public void shouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
+		Long currentTraceId = 1L;
+		Long currentParentId = 2L;
+		Long currentSpanId = generatedId();
+		Span span = Span.builder().traceId(currentTraceId)
+				.spanId(currentSpanId).parent(currentParentId).build();
+		this.tracer.continueSpan(span);
+
+		this.testFeignInterface.noResponseBody();
+
+		thenRegisteredClientSentAndReceivedEvents();
+		then(this.tracer.getCurrentSpan()).isEqualTo(span);
+	}
+
+	private void thenRegisteredClientSentAndReceivedEvents() {
 		then(this.listener.getEvents().size()).isEqualTo(2);
+		then(this.listener.getEvents().get(0)).isExactlyInstanceOf(ClientSentEvent.class);
+		then(this.listener.getEvents().get(1)).isExactlyInstanceOf(ClientReceivedEvent.class);
 	}
 
 	private Long generatedId() {
@@ -122,6 +159,9 @@ public class FeignTraceTests {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/")
 		ResponseEntity<Map<String, String>> headers();
+
+		@RequestMapping(method = RequestMethod.GET, value = "/noresponse")
+		void noResponseBody();
 	}
 
 	@Configuration
@@ -187,6 +227,15 @@ public class FeignTraceTests {
 				map.put(key, headers.getFirst(key));
 			}
 			return map;
+		}
+
+		@RequestMapping("/noresponse")
+		public void noResponse(@RequestHeader(Span.TRACE_ID_NAME) String traceId,
+				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
+				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+			then(traceId).isNotEmpty();
+			then(parentId).isNotEmpty();
+			then(spanId).isNotEmpty();
 		}
 
 	}
