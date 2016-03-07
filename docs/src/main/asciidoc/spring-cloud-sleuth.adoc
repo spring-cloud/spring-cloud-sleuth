@@ -148,7 +148,7 @@ artificial like:
 
 Fortunately, for the asynchronous processing you can provide explicit naming.
 
-==== @SpanName annotation
+=== @SpanName annotation
 
 You can do name the span explicitly via the `@SpanName` annotation.
 
@@ -166,7 +166,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 The span will be named `calculateTax`.
 
-==== toString() method
+=== toString() method
 
 It's pretty rare to create separate classes for `Runnable` or `Callable`. Typically one creates an anonymous
 instance of those classes. You can't annotate such classes thus to override that, if there is no `@SpanName` annotation present,
