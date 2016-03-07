@@ -74,8 +74,8 @@ public class TraceFilter extends OncePerRequestFilter
 	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".TRACE";
 
-	public static final Pattern DEFAULT_SKIP_PATTERN = Pattern.compile(
-			"/api-docs.*|/autoconfig|/configprops|/dump|/health|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream");
+	public static final String DEFAULT_SKIP_PATTERN =
+			"/api-docs.*|/autoconfig|/configprops|/dump|/health|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream";
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
@@ -86,7 +86,7 @@ public class TraceFilter extends OncePerRequestFilter
 	private ApplicationEventPublisher publisher;
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys) {
-		this(tracer, traceKeys, DEFAULT_SKIP_PATTERN, new Random());
+		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), new Random());
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
@@ -105,7 +105,7 @@ public class TraceFilter extends OncePerRequestFilter
 	@Override
 	protected void doFilterInternal(HttpServletRequest request,
 			HttpServletResponse response, FilterChain filterChain)
-					throws ServletException, IOException {
+			throws ServletException, IOException {
 
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()

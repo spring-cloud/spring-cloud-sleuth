@@ -330,7 +330,8 @@ Features from this section can be disabled by providing the `spring.sleuth.web.e
 
 Via the `TraceFilter` all sampled incoming requests result in creation of a Span. That Span's name is `http:` + the path to which
  the request was sent. E.g. if the request was sent to `/foo/bar` then the name will be `http:/foo/bar`. You can configure which URIs you would
- like to skip via the `spring.sleuth.instrument.web.skipPattern` property.
+ like to skip via the `spring.sleuth.instrument.web.skipPattern` property. If you have `ManagementServerProperties` on classpath then
+ its value of `contextPath` gets appended to the provided skip pattern.
 
 ==== Async Servlet support
 

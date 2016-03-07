@@ -1,9 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -12,12 +8,15 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MvcResult;
@@ -25,6 +24,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterIntegrationTests.class)
@@ -34,10 +37,9 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private static Log logger = LogFactory.getLog(TraceFilterIntegrationTests.class);
 
-	@Autowired
-	Tracer tracer;
-	@Autowired
-	TraceKeys traceKeys;
+	@Autowired Tracer tracer;
+	@Autowired TraceKeys traceKeys;
+	@Autowired TraceFilter traceFilter;
 
 	static Span span;
 
@@ -59,6 +61,13 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		MvcResult mvcResult = whenSentPingWithoutTracingData();
 
 		then(tracingHeaderFrom(mvcResult)).isNotNull();
+	}
+
+	@Test
+	public void should_ignore_sampling_the_span_if_uri_matches_management_properties_context_path() throws Exception {
+		MvcResult mvcResult = whenSentInfoWithTraceId(new Random().nextLong());
+
+		then(notSampledHeaderIsPresent(mvcResult)).isEqualTo(true);
 	}
 
 	@Test
@@ -85,7 +94,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys));
+		mockMvcBuilder.addFilters(traceFilter);
 	}
 
 	private MvcResult whenSentPingWithoutTracingData() throws Exception {
@@ -96,6 +105,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private MvcResult whenSentPingWithTraceId(Long passedTraceId) throws Exception {
 		return sendPingWithTraceId(Span.TRACE_ID_NAME, passedTraceId);
+	}
+
+	private MvcResult whenSentInfoWithTraceId(Long passedTraceId) throws Exception {
+		return sendPingWithTraceId("/additionalContextPath/info", Span.TRACE_ID_NAME, passedTraceId);
 	}
 
 	private MvcResult whenSentFutureWithTraceId(Long passedTraceId) throws Exception {
@@ -118,5 +131,19 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
 		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
+	}
+
+	private boolean notSampledHeaderIsPresent(MvcResult mvcResult) {
+		return mvcResult.getResponse().containsHeader(Span.NOT_SAMPLED_NAME);
+	}
+
+	@Configuration
+	static class Config {
+		@Bean
+		ManagementServerProperties managementServerProperties() {
+			ManagementServerProperties managementServerProperties = new ManagementServerProperties();
+			managementServerProperties.setContextPath("/additionalContextPath");
+			return managementServerProperties;
+		}
 	}
 }
