@@ -63,8 +63,8 @@ public class SpringCloudSleuthDocTests {
 	}
 
 	// tag::span_name_annotation[]
-	@SpanName("processTax")
-	class TaxProcessingRunnable implements Runnable {
+	@SpanName("calculateTax")
+	class TaxCountingRunnable implements Runnable {
 
 		@Override public void run() {
 			// perform logic
@@ -80,13 +80,13 @@ public class SpringCloudSleuthDocTests {
 		Tracer tracer = Mockito.mock(Tracer.class);
 
 		// tag::span_name_annotated_runnable_execution[]
-		Runnable runnable = new TraceRunnable(tracer, spanNamer, new TaxProcessingRunnable());
+		Runnable runnable = new TraceRunnable(tracer, spanNamer, new TaxCountingRunnable());
 		Future<?> future = executorService.submit(runnable);
 		// ... some additional logic ...
 		future.get();
 		// end::span_name_annotated_runnable_execution[]
 
-		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("processTax"), BDDMockito.any(Span.class));
+		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
 	}
 
 	@Test
@@ -103,7 +103,7 @@ public class SpringCloudSleuthDocTests {
 			}
 
 			@Override public String toString() {
-				return "processTax";
+				return "calculateTax";
 			}
 		});
 		Future<?> future = executorService.submit(runnable);
@@ -111,7 +111,7 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_to_string_runnable_execution[]
 
-		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("processTax"), BDDMockito.any(Span.class));
+		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
 		executorService.shutdown();
 	}
 
@@ -236,8 +236,8 @@ public class SpringCloudSleuthDocTests {
 				return "spanNameFromToStringMethod";
 			}
 		};
-		// Manual `TraceRunnable` creation with explicit "processTax" Span name
-		Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, runnable, "processTax");
+		// Manual `TraceRunnable` creation with explicit "calculateTax" Span name
+		Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, runnable, "calculateTax");
 		// Wrapping `Runnable` with `Tracer`. The Span name will be taken either from the
 		// `@SpanName` annotation or from `toString` method
 		Runnable traceRunnableFromTracer = tracer.wrap(runnable);
