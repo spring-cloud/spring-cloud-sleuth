@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -43,16 +44,22 @@ public class TraceSchedulingAspect {
 	private static final String SCHEDULED_COMPONENT = "scheduled";
 
 	private final Tracer tracer;
+	private final TraceKeys traceKeys;
 
-	public TraceSchedulingAspect(Tracer tracer) {
+	public TraceSchedulingAspect(Tracer tracer, TraceKeys traceKeys) {
 		this.tracer = tracer;
+		this.traceKeys = traceKeys;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		String spanName = pjp.getTarget().getClass().getSimpleName();
+		String spanName = pjp.getSignature().getName();
 		Span span = this.tracer.createSpan(spanName);
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, SCHEDULED_COMPONENT);
+		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
+				this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
+		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
+				this.traceKeys.getAsync().getMethodNameKey(), pjp.getSignature().getName());
 		try {
 			return pjp.proceed();
 		}
