@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.documentation;
 
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +31,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.TraceCallable;
 import org.springframework.cloud.sleuth.TraceRunnable;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -61,8 +63,8 @@ public class SpringCloudSleuthDocTests {
 	}
 
 	// tag::span_name_annotation[]
-	@SpanName("calculateTax")
-	class TaxCountingRunnable implements Runnable {
+	@SpanName("processTax")
+	class TaxProcessingRunnable implements Runnable {
 
 		@Override public void run() {
 			// perform logic
@@ -78,13 +80,13 @@ public class SpringCloudSleuthDocTests {
 		Tracer tracer = Mockito.mock(Tracer.class);
 
 		// tag::span_name_annotated_runnable_execution[]
-		Runnable runnable = new TraceRunnable(tracer, spanNamer, new TaxCountingRunnable());
+		Runnable runnable = new TraceRunnable(tracer, spanNamer, new TaxProcessingRunnable());
 		Future<?> future = executorService.submit(runnable);
 		// ... some additional logic ...
 		future.get();
 		// end::span_name_annotated_runnable_execution[]
 
-		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
+		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("processTax"), BDDMockito.any(Span.class));
 	}
 
 	@Test
@@ -101,7 +103,7 @@ public class SpringCloudSleuthDocTests {
 			}
 
 			@Override public String toString() {
-				return "calculateTax";
+				return "processTax";
 			}
 		});
 		Future<?> future = executorService.submit(runnable);
@@ -109,7 +111,7 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_to_string_runnable_execution[]
 
-		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
+		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("processTax"), BDDMockito.any(Span.class));
 		executorService.shutdown();
 	}
 
@@ -215,5 +217,67 @@ public class SpringCloudSleuthDocTests {
 		assertThat(initialSpan.tags()).doesNotContainKeys("commissionValue");
 		assertThat(initialSpan.logs()).extracting("event").doesNotContain("commissionCalculated");
 		executorService.shutdown();
+	}
+
+	@Test
+	public void should_wrap_runnable_in_its_sleuth_representative() {
+		SpanNamer spanNamer = new DefaultSpanNamer();
+		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher, spanNamer);
+		Span initialSpan = tracer.createSpan("initialSpan");
+		// tag::trace_runnable[]
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				// do some work
+			}
+
+			@Override
+			public String toString() {
+				return "spanNameFromToStringMethod";
+			}
+		};
+		// Manual `TraceRunnable` creation with explicit "processTax" Span name
+		Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, runnable, "processTax");
+		// Wrapping `Runnable` with `Tracer`. The Span name will be taken either from the
+		// `@SpanName` annotation or from `toString` method
+		Runnable traceRunnableFromTracer = tracer.wrap(runnable);
+		// end::trace_runnable[]
+
+		then(traceRunnable).isExactlyInstanceOf(TraceRunnable.class);
+		then(traceRunnableFromTracer).isExactlyInstanceOf(TraceRunnable.class);
+		tracer.close(initialSpan);
+	}
+
+	@Test
+	public void should_wrap_callable_in_its_sleuth_representative() {
+		SpanNamer spanNamer = new DefaultSpanNamer();
+		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher, spanNamer);
+		Span initialSpan = tracer.createSpan("initialSpan");
+		// tag::trace_callable[]
+		Callable<String> callable = new Callable<String>() {
+			@Override
+			public String call() throws Exception {
+				return someLogic();
+			}
+
+			@Override
+			public String toString() {
+				return "spanNameFromToStringMethod";
+			}
+		};
+		// Manual `TraceCallable` creation with explicit "calculateTax" Span name
+		Callable<String> traceCallable = new TraceCallable<>(tracer, spanNamer, callable, "calculateTax");
+		// Wrapping `Callable` with `Tracer`. The Span name will be taken either from the
+		// `@SpanName` annotation or from `toString` method
+		Callable<String> traceCallableFromTracer = tracer.wrap(callable);
+		// end::trace_callable[]
+
+		then(traceCallable).isExactlyInstanceOf(TraceCallable.class);
+		then(traceCallableFromTracer).isExactlyInstanceOf(TraceCallable.class);
+		tracer.close(initialSpan);
+	}
+
+	private String someLogic() {
+		return "some logic";
 	}
 }

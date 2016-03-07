@@ -179,6 +179,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 will lead in creating a span named `calculateTax`.
 
+
 == Span Data as Messages
 
 You can accumulate and send span data over
@@ -273,6 +274,82 @@ the number of dropped spans will get increased.
 
 == Integrations
 
+=== Runnable and Callable
+
+If you're wrapping your logic in `Runnable` or `Callable` it's enough to wrap those classes in their Sleuth representative.
+
+Example for `Runnable`:
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_runnable,indent=0]
+----
+
+Example for `Callable`:
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_callable,indent=0]
+----
+
+That way you will ensure that a new Span is created and closed for each execution.
+
+=== Hystrix
+
+==== Custom Concurrency Strategy
+
+To disable the custom Hystrix Concurrency Strategy set the `spring.sleuth.hystrix.strategy.enabled` to `false`.
+
+We're registering a custom `HystrixConcurrencyStrategy` that wraps all `Callable` instances into their Sleuth representative -
+the `TraceCallable`. The strategy either starts or continues a span depending on the fact whether tracing was already going
+on before the Hystrix command was called.
+
+==== Manual Command setting
+
+Assuming that you have the following `HystrixCommand`:
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=hystrix_command,indent=0]
+----
+
+In order to pass the tracing information you have to wrap the same logic in the Sleuth version of the `HystrixCommand` which is the
+`TraceCommand`:
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=trace_hystrix_command,indent=0]
+----
+
+=== HTTP integration
+
+Features from this section can be disabled by providing the `spring.sleuth.web.enabled` property with value equal to `false`.
+
+==== HTTP Filter
+
+Via the `TraceFilter` all sampled incoming requests result in creation of a Span. That Span's name is `http:` + the path to which
+ the request was sent. E.g. if the request was sent to `/foo/bar` then the name will be `http:/foo/bar`.
+
+You can configure which URIs you would like to skip via the `spring.sleuth.instrument.web.skipPattern` property.
+
+==== Async Servlet support
+
+If your controller returns a `Callable` or a `WebAsyncTask` Spring Cloud Sleuth will continue the existing span instead of creating a new one.
+
+=== HTTP client integration
+
+In order to block the synchronous `RestTemplate` features just set `spring.sleuth.client.enabled` to `false`.
+To block the `AsyncRestTemplate` features set `spring.sleuth.async.client.enabled` to `false`.
+
+==== Synchronous Rest Template
+
+We're injecting a `RestTemplate` interceptor that ensures that all the tracing information is passed to the requests. Each time a
+call is made a new Span is created. It gets closed upon receiving the response.
+
+==== Asynchronous Rest Template
+
+Custom instrumentation is set to create and close Spans upon sending and receiving requests.
+
 === Feign
 
 By default Spring Cloud Sleuth provides integration with feign via the `TraceFeignClientAutoConfiguration`. You can disable it
@@ -280,3 +357,34 @@ by setting `spring.sleuth.feign.enabled` to false.
 
 We're taking care of Feign instrumentation by means of a `FeignBeanPostProcessor`.
 You can disable the post processor by providing the `spring.sleuth.feign.processor.enabled` equal to `false`.
+
+=== Asynchronous communication
+
+In Spring Cloud Sleuth we're instrumenting async related components so that the tracing information is passed between threads. You can disable this behaviour
+by setting the value of `spring.sleuth.async.enabled` to `false`.
+
+==== @Async / @Scheduled annotated methods
+
+If you annotate your method with `@Async` / `@Scheduled` then we'll automatically create a new Span with the following characteristics:
+
+    - the Span name will be the annotated method name
+    - the Span will be tagged with that method's class name and the method name too
+
+==== Executor, ExecutorService and ScheduledExecutorService
+
+We're providing `LazyTraceExecutor`, `TraceableExecutorService` and `TraceableScheduledExecutorService`. Those implementations
+are creating Spans each time a new task is submitted, invoked or scheduled.
+
+=== Messaging
+
+To disable these features just set the `spring.sleuth.integration.enabled` property to `false`.
+
+All http://projects.spring.io/spring-integration/[Spring Integration] based communication gets wrapped in creation / closing of Spans.
+
+Support for Websockets is also implemented.
+
+=== Zuul
+
+To disable Zuul support set the `spring.sleuth.zuul.enabled` property to `false`.
+
+We registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).

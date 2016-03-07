@@ -8,13 +8,15 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationEventPublisher;
 
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
@@ -22,6 +24,7 @@ import com.netflix.hystrix.strategy.HystrixPlugins;
 
 import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 public class TraceCommandTests {
@@ -77,6 +80,42 @@ public class TraceCommandTests {
 				.hasATag("commandKey", "traceCommandKey")
 				.hasATag("commandGroup", "group")
 				.hasATag("threadPoolKey", "group");
+	}
+
+	@Test
+	public void should_pass_tracing_information_when_using_Hystrix_commands() {
+		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				Mockito.mock(ApplicationEventPublisher.class), new DefaultSpanNamer());
+		TraceKeys traceKeys = new TraceKeys();
+		HystrixCommand.Setter setter = HystrixCommand.Setter
+				.withGroupKey(HystrixCommandGroupKey.Factory.asKey("group"))
+				.andCommandKey(HystrixCommandKey.Factory.asKey("command"));
+		// tag::hystrix_command[]
+		HystrixCommand<String> hystrixCommand = new HystrixCommand<String>(setter) {
+			@Override
+			protected String run() throws Exception {
+				return someLogic();
+			}
+		};
+		// end::hystrix_command[]
+		// tag::trace_hystrix_command[]
+		TraceCommand<String> traceCommand = new TraceCommand<String>(tracer, traceKeys, setter) {
+			@Override
+			public String doRun() throws Exception {
+				return someLogic();
+			}
+		};
+		// end::trace_hystrix_command[]
+
+		String resultFromHystrixCommand = hystrixCommand.execute();
+		String resultFromTraceCommand = traceCommand.execute();
+
+		then(resultFromHystrixCommand).isEqualTo(resultFromTraceCommand);
+		then(tracer.getCurrentSpan()).isNull();
+	}
+
+	private String someLogic(){
+		return "some logic";
 	}
 
 	private Span givenATraceIsPresentInTheCurrentThread() {
