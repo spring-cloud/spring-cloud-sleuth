@@ -31,17 +31,17 @@ import feign.Retryer;
  *
  * @since 1.0.0
  */
-class TraceFeignRetryer implements Retryer {
+final class TraceFeignRetryer implements Retryer {
 
 	private final Tracer tracer;
 	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
 	private final Retryer delegate;
 
-	public TraceFeignRetryer(Tracer tracer) {
+	TraceFeignRetryer(Tracer tracer) {
 		this(tracer, new Retryer.Default());
 	}
 
-	public TraceFeignRetryer(Tracer tracer, Retryer delegate) {
+	TraceFeignRetryer(Tracer tracer, Retryer delegate) {
 		this.tracer = tracer;
 		this.delegate = delegate;
 	}

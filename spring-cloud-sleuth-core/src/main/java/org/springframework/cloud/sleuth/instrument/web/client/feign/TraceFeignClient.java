@@ -34,7 +34,7 @@ import feign.Response;
  *
  * @since 1.0.0
  */
-class TraceFeignClient extends FeignEventPublisher implements Client {
+final class TraceFeignClient extends FeignEventPublisher implements Client {
 
 	private final Client delegate;
 

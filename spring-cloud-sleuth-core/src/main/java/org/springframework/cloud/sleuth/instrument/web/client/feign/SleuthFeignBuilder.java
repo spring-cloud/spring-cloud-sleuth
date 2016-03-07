@@ -31,7 +31,9 @@ import feign.hystrix.HystrixFeign;
  *
  * @since 1.0.0
  */
-class SleuthFeignBuilder {
+final class SleuthFeignBuilder {
+
+	private SleuthFeignBuilder() {}
 
 	static Feign.Builder builder(ApplicationEventPublisher publisher, Tracer tracer) {
 		return HystrixFeign.builder()

@@ -34,15 +34,16 @@ import feign.codec.Decoder;
  *
  * @since 1.0.0
  */
-class TraceFeignDecoder extends FeignEventPublisher implements Decoder {
+final class TraceFeignDecoder extends FeignEventPublisher implements Decoder {
 
 	private final Decoder delegate;
 
-	public TraceFeignDecoder(ApplicationEventPublisher publisher, Tracer tracer) {
+	TraceFeignDecoder(ApplicationEventPublisher publisher, Tracer tracer) {
 		super(publisher, tracer);
 		this.delegate = new Decoder.Default();
 	}
-	public TraceFeignDecoder(ApplicationEventPublisher publisher, Tracer tracer, Decoder delegate) {
+
+	TraceFeignDecoder(ApplicationEventPublisher publisher, Tracer tracer, Decoder delegate) {
 		super(publisher, tracer);
 		this.delegate = delegate;
 	}

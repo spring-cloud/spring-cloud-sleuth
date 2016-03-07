@@ -33,7 +33,7 @@ import feign.codec.Decoder;
  *
  * @since 1.0.0
  */
-class FeignBeanPostProcessor implements BeanPostProcessor {
+final class FeignBeanPostProcessor implements BeanPostProcessor {
 
 	private final ApplicationEventPublisher publisher;
 	private final Tracer tracer;

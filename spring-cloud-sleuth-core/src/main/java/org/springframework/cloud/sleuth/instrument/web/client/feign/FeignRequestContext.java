@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.Span;
  *
  * @since 1.0.0
  */
-class FeignRequestContext {
+final class FeignRequestContext {
 
 	private static final FeignRequestContext INSTANCE = new FeignRequestContext();
 
@@ -36,7 +36,7 @@ class FeignRequestContext {
 
 	private static final ThreadLocal<SpanHolder> THREAD_LOCAL = new ThreadLocal<>();
 
-	private static class SpanHolder {
+	private static final class SpanHolder {
 		final Span span;
 		final boolean retried;
 

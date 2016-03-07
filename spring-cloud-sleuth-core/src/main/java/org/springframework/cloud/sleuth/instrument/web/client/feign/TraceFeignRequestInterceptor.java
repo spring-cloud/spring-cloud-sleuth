@@ -37,7 +37,7 @@ import feign.RequestTemplate;
  *
  * @since 1.0.0
  */
-class TraceFeignRequestInterceptor implements RequestInterceptor,
+final class TraceFeignRequestInterceptor implements RequestInterceptor,
 		ApplicationEventPublisherAware {
 
 	private final Tracer tracer;
@@ -45,7 +45,7 @@ class TraceFeignRequestInterceptor implements RequestInterceptor,
 
 	private ApplicationEventPublisher publisher;
 
-	public TraceFeignRequestInterceptor(Tracer tracer) {
+	TraceFeignRequestInterceptor(Tracer tracer) {
 		this.tracer = tracer;
 	}
 
