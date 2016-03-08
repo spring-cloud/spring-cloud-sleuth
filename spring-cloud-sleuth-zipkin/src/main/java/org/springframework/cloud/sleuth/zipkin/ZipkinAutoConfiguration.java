@@ -65,7 +65,7 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	public ZipkinSpanListener sleuthTracer(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
-		return new ZipkinSpanListener(reporter, endpointLocator.local());
+		return new ZipkinSpanListener(reporter, endpointLocator);
 	}
 
 	@Configuration
