@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,7 +24,6 @@ import java.util.Map;
 import java.util.Random;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,10 +36,9 @@ import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.cloud.netflix.ribbon.RibbonClients;
+import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
 import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
@@ -79,7 +76,6 @@ public class WebClientTests {
 	@Rule public final SpringMethodRule springMethodRule = new SpringMethodRule();
 	
 	@Autowired TestFeignInterface testFeignInterface;
-	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
 	@Autowired @LoadBalanced RestTemplate template;
 	@Autowired Listener listener;
 	@Autowired Tracer tracer;
@@ -171,29 +167,6 @@ public class WebClientTests {
 				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/noresponse", String.class));
 	}
 
-	// issue #198
-	@Test
-	@Parameters
-	@SuppressWarnings("unchecked")
-	public void shouldCloseSpanUponException(ResponseEntityProvider provider) throws IOException {
-		Span span = this.tracer.createSpan("new trace");
-
-		try {
-			provider.get(this);
-			Assert.fail("should throw an exception");
-		} catch (RuntimeException e) {
-			SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
-		}
-
-		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
-		this.tracer.close(span);
-	}
-
-	private Object[] parametersForShouldCloseSpanUponException() {
-		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException.shouldFailToConnect(),
-				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://exceptionService/", Map.class));
-	}
-
 	private void thenRegisteredClientSentAndReceivedEvents() {
 		then(this.listener.getEvents().size()).isEqualTo(2);
 		then(this.listener.getEvents().get(0)).isExactlyInstanceOf(ClientSentEvent.class);
@@ -224,16 +197,10 @@ public class WebClientTests {
 		ResponseEntity<Void> noResponseBody();
 	}
 
-	@FeignClient(name = "exceptionService", url = "http://invalid.host.to.break.tests")
-	public interface TestFeignInterfaceWithException {
-		@RequestMapping(method = RequestMethod.GET, value = "/")
-		ResponseEntity<String> shouldFailToConnect();
-	}
-
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableFeignClients
-	@RibbonClients(defaultConfiguration = SimpleRibbonClientConfiguration.class)
+	@RibbonClient(value = "fooservice", configuration = SimpleRibbonClientConfiguration.class)
 	public static class TestConfiguration {
 
 		@Bean
@@ -309,7 +276,6 @@ public class WebClientTests {
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
 		}
-
 	}
 
 	@Configuration
@@ -325,7 +291,6 @@ public class WebClientTests {
 					Collections.singletonList(new Server("localhost", this.port)));
 			return balancer;
 		}
-
 	}
 
 	@FunctionalInterface
