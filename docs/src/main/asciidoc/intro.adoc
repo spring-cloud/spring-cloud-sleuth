@@ -123,3 +123,10 @@ filter {
               match => { "message" => "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
        }
 }
+
+=== Adding to the project
+
+In general if you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
+the *spring-cloud-starter-sleuth* module to your project.
+
+If you want both Sleuth and Zipkin just add the *spring-cloud-starter-zipkin* dependency.

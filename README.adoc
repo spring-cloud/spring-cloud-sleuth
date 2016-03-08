@@ -128,6 +128,13 @@ filter {
        }
 }
 
+=== Adding to the project
+
+In general if you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
+the *spring-cloud-starter-sleuth* module to your project.
+
+If you want both Sleuth and Zipkin just add the *spring-cloud-starter-zipkin* dependency.
+
 == Features
 
 * Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator. Example logs:
@@ -220,7 +227,7 @@ The UI should look like the screenshot above.
 
 == Building
 
-:jdkversion: 1.7
+:jdkversion: 1.8
 
 === Basic Compile and Test
 
