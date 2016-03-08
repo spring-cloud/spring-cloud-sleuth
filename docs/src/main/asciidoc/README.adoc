@@ -1,3 +1,4 @@
+:no_lombok:
 image::https://api.travis-ci.org/spring-cloud/spring-cloud-sleuth.svg?branch=master[Build Status, link=https://travis-ci.org/spring-cloud/spring-cloud-sleuth]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 include::intro.adoc[]
