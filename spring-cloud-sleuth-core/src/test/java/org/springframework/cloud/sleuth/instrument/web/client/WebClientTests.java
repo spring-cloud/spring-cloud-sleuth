@@ -245,6 +245,12 @@ public class WebClientTests {
 		Listener listener() {
 			return new Listener();
 		}
+
+		@LoadBalanced
+		@Bean
+		public RestTemplate restTemplate() {
+				return new RestTemplate();
+		}
 	}
 
 	@Component
