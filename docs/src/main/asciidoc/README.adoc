@@ -25,7 +25,7 @@ The Ribbon sample makes an interesting demo or playground for learning about zip
 === Running samples with Zipkin
 
 1. Optionally run the https://github.com/openzipkin/zipkin[Zipkin] UI, e.g. via docker compose (there's a `docker-compose.yml` in https://github.com/spring-cloud/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin[Spring Cloud Sleuth], or in https://github.com/openzipkin/docker-zipkin[Docker Zipkin]
-7. Run the zipkin sample application (set `sample.zipkin.enabled=false` if you have no Zipkin running). If you are using a VM to run docker you might need to tunnel port 9411 to localhost, or change the `spring.zipkin.host`.
+7. Run the zipkin sample application (set `sample.zipkin.enabled=false` if you have no Zipkin running). If you are using a VM to run docker you might need to tunnel port 9411 to localhost, or change the `spring.zipkin.baseUrl`.
 8. Hit `http://localhost:3380`, `http://localhost:3380/call`, `http://localhost:3380/async` for some interesting sample traces (the app callas back to itself).
 9. Goto `http://localhost:8080` for zipkin web (if you are using boot2docker the host will be different)
 
