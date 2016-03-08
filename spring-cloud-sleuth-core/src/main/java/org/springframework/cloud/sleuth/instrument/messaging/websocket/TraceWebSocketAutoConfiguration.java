@@ -35,6 +35,9 @@ public class TraceWebSocketAutoConfiguration
 	@Autowired
 	private TraceKeys traceKeys;
 
+	@Autowired
+	private Random random;
+
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		// The user must register their own endpoints
@@ -43,12 +46,12 @@ public class TraceWebSocketAutoConfiguration
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(
-				new TraceChannelInterceptor(this.tracer, this.traceKeys, new Random()));
+				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.random));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(
-				new TraceChannelInterceptor(this.tracer, this.traceKeys, new Random()));
+				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.random));
 	}
 }
