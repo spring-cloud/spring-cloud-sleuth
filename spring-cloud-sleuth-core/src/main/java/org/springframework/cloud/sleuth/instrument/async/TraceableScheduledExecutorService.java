@@ -33,8 +33,8 @@ import org.springframework.cloud.sleuth.TraceKeys;
  */
 public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
 
-	public TraceableScheduledExecutorService(final ScheduledExecutorService delegate,
-			final Tracer tracer, TraceKeys traceKeys, SpanNamer spanNamer) {
+	public TraceableScheduledExecutorService(ScheduledExecutorService delegate,
+			Tracer tracer, TraceKeys traceKeys, SpanNamer spanNamer) {
 		super(delegate, tracer, traceKeys, spanNamer);
 	}
 
