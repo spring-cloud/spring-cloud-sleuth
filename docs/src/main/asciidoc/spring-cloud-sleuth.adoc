@@ -378,8 +378,8 @@ are creating Spans each time a new task is submitted, invoked or scheduled.
 
 === Messaging
 
-All http://projects.spring.io/spring-integration/[Spring Integration] creates spans for publish and subscribe events.
-To disable Spring Integration instrumentation, set `spring.sleuth.integration.enabled` to false.
+Spring Cloud Sleuth integrates with http://projects.spring.io/spring-integration/[Spring Integration]. It creates spans for publish and
+subscribe events. To disable Spring Integration instrumentation, set `spring.sleuth.integration.enabled` to false.
 
 === Zuul
 
