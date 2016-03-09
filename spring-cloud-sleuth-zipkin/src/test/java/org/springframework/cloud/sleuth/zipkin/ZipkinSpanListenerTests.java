@@ -101,7 +101,7 @@ public class ZipkinSpanListenerTests {
 		zipkin.Span result = this.listener.convert(this.parent);
 
 		assertThat(result.annotations.get(0).endpoint)
-				.isEqualTo(this.listener.localEndpoint);
+				.isEqualTo(this.listener.endpointLocator.local());
 		assertThat(result.binaryAnnotations.get(0).endpoint)
 				.isEqualTo(result.annotations.get(0).endpoint);
 	}
@@ -109,7 +109,7 @@ public class ZipkinSpanListenerTests {
 	/** zipkin's Endpoint.serviceName should never be null. */
 	@Test
 	public void localEndpointIncludesServiceName() {
-		assertThat(this.listener.localEndpoint.serviceName)
+		assertThat(this.listener.endpointLocator.local().serviceName)
 				.isNotEmpty();
 	}
 
