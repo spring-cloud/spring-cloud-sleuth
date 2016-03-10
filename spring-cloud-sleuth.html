@@ -1417,7 +1417,7 @@ on before the Hystrix command was called. To disable the custom Hystrix Concurre
 <div class="paragraph">
 <p>Via the <code>TraceFilter</code> all sampled incoming requests result in creation of a Span. That Span&#8217;s name is <code>http:</code> + the path to which
  the request was sent. E.g. if the request was sent to <code>/foo/bar</code> then the name will be <code>http:/foo/bar</code>. You can configure which URIs you would
- like to skip via the <code>spring.sleuth.instrument.web.skipPattern</code> property. If you have <code>ManagementServerProperties</code> on classpath then
+ like to skip via the <code>spring.sleuth.web.skipPattern</code> property. If you have <code>ManagementServerProperties</code> on classpath then
  its value of <code>contextPath</code> gets appended to the provided skip pattern.</p>
 </div>
 </div>
@@ -1435,14 +1435,14 @@ on before the Hystrix command was called. To disable the custom Hystrix Concurre
 <div class="paragraph">
 <p>We&#8217;re injecting a <code>RestTemplate</code> interceptor that ensures that all the tracing information is passed to the requests. Each time a
 call is made a new Span is created. It gets closed upon receiving the response. In order to block the synchronous <code>RestTemplate</code> features
-just set <code>spring.sleuth.client.enabled</code> to <code>false</code>.</p>
+just set <code>spring.sleuth.web.client.enabled</code> to <code>false</code>.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_asynchronous_rest_template">Asynchronous Rest Template</h4>
 <div class="paragraph">
 <p>Custom instrumentation is set to create and close Spans upon sending and receiving requests. To block the <code>AsyncRestTemplate</code>
-features set <code>spring.sleuth.async.client.enabled</code> to <code>false</code>.</p>
+features set <code>spring.sleuth.web.async.client.enabled</code> to <code>false</code>.</p>
 </div>
 </div>
 </div>
@@ -1532,7 +1532,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-10 12:10:11 CET
+Last updated 2016-03-10 12:14:15 CET
 </div>
 </div>
 </body>
