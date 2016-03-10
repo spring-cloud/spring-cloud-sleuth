@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.scheduling;
 
+import java.util.regex.Pattern;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -45,14 +47,19 @@ public class TraceSchedulingAspect {
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
+	private final Pattern skipPattern;
 
-	public TraceSchedulingAspect(Tracer tracer, TraceKeys traceKeys) {
+	public TraceSchedulingAspect(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
+		this.skipPattern = skipPattern;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
+		if (this.skipPattern.matcher(pjp.getTarget().getClass().getName()).matches()) {
+			return pjp.proceed();
+		}
 		String spanName = pjp.getSignature().getName();
 		Span span = this.tracer.createSpan(spanName);
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, SCHEDULED_COMPONENT);

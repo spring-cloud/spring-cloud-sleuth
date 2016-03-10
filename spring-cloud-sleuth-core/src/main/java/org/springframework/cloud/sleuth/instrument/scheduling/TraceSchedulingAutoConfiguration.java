@@ -16,11 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.scheduling;
 
-/**
- * @author Spencer Gibb
- */
+import java.util.regex.Pattern;
 
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -43,15 +42,20 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  */
 @Configuration
 @EnableAspectJAutoProxy
-@ConditionalOnProperty(value = "spring.sleuth.schedule.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceSchedulingAutoConfiguration {
 
+	/**
+	 * Pattern for the fully qualified name of a class that should be skipped
+	 */
+	private @Value("${spring.sleuth.scheduled.skipPattern:}") String skipPattern;
+
 	@ConditionalOnClass(ProceedingJoinPoint.class)
 	@Bean
 	public TraceSchedulingAspect traceSchedulingAspect(Tracer tracer, TraceKeys traceKeys) {
-		return new TraceSchedulingAspect(tracer, traceKeys);
+		return new TraceSchedulingAspect(tracer, traceKeys, Pattern.compile(this.skipPattern));
 	}
 
 }

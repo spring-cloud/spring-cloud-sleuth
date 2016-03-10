@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.scheduling;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 public class TracingOnScheduledTests {
 
 	@Autowired TestBeanWithScheduledMethod beanWithScheduledMethod;
+	@Autowired TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
 
 	@Test
 	public void should_have_span_set_after_scheduled_method_has_been_executed() {
@@ -47,6 +51,12 @@ public class TracingOnScheduledTests {
 	public void should_have_a_new_span_set_each_time_a_scheduled_method_has_been_executed() {
 		Span firstSpan = this.beanWithScheduledMethod.getSpan();
 		await().until(differentSpanHasBeenSetThan(firstSpan));
+	}
+
+	@Test
+	public void should_not_span_in_the_scheduled_class_that_matches_skip_pattern() throws Exception {
+		await().untilAtomic(this.beanWithScheduledMethodToBeIgnored.isExecuted(), Matchers.is(true));
+		then(this.beanWithScheduledMethodToBeIgnored.getSpan()).isNull();
 	}
 
 	private Runnable spanIsSetOnAScheduledMethod() {
@@ -81,6 +91,10 @@ class ScheduledTestConfiguration {
 		return new TestBeanWithScheduledMethod();
 	}
 
+	@Bean TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored() {
+		return new TestBeanWithScheduledMethodToBeIgnored();
+	}
+
 	@Bean
 	AlwaysSampler alwaysSampler() {
 		return new AlwaysSampler();
@@ -99,5 +113,25 @@ class TestBeanWithScheduledMethod {
 
 	public Span getSpan() {
 		return this.span;
+	}
+}
+
+class TestBeanWithScheduledMethodToBeIgnored {
+
+	Span span;
+	AtomicBoolean executed = new AtomicBoolean(false);
+
+	@Scheduled(fixedDelay = 1L)
+	public void scheduledMethodToIgnore() {
+		this.span = TestSpanContextHolder.getCurrentSpan();
+		this.executed.set(true);
+	}
+
+	public Span getSpan() {
+		return this.span;
+	}
+
+	public AtomicBoolean isExecuted() {
+		return this.executed;
 	}
 }

@@ -361,15 +361,29 @@ however will be still there.
 
 === Asynchronous communication
 
+==== @Async annotated methods
+
 In Spring Cloud Sleuth we're instrumenting async related components so that the tracing information is passed between threads. You can disable this behaviour
 by setting the value of `spring.sleuth.async.enabled` to `false`.
 
-==== @Async / @Scheduled annotated methods
-
-If you annotate your method with `@Async` / `@Scheduled` then we'll automatically create a new Span with the following characteristics:
+If you annotate your method with `@Async` then we'll automatically create a new Span with the following characteristics:
 
     - the Span name will be the annotated method name
     - the Span will be tagged with that method's class name and the method name too
+
+==== @Scheduled annotated methods
+
+In Spring Cloud Sleuth we're instrumenting scheduled method execution so that the tracing information is passed between threads. You can disable this behaviour
+by setting the value of `spring.sleuth.scheduled.enabled` to `false`.
+
+If you annotate your method with `@Scheduled` then we'll automatically create a new Span with the following characteristics:
+
+    - the Span name will be the annotated method name
+    - the Span will be tagged with that method's class name and the method name too
+
+If you want to skip Span creation for some `@Scheduled` annotated classes you can set the
+`spring.sleuth.scheduled.skipPattern` with a regular expression that will match the fully qualified name of the
+`@Scheduled` annotated class.
 
 ==== Executor, ExecutorService and ScheduledExecutorService
 

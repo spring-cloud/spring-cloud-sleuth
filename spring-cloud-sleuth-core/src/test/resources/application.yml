@@ -8,3 +8,5 @@ exceptionService.ribbon:
   OkToRetryOnAllOperations: true
   ConnectTimeout: 1
   ReadTimeout: 1
+
+spring.sleuth.scheduled.skipPattern: "^org.*TestBeanWithScheduledMethodToBeIgnored$"
