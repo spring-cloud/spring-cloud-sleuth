@@ -61,7 +61,7 @@ public class TraceWebAutoConfiguration {
 	/**
 	 * Pattern for URLs that should be skipped in tracing
 	 */
-	@Value("${spring.sleuth.instrument.web.skipPattern:}")
+	@Value("${spring.sleuth.web.skipPattern:}")
 	private String skipPattern;
 
 	@Autowired
@@ -94,7 +94,7 @@ public class TraceWebAutoConfiguration {
 		/**
 		 * Pattern for URLs that should be skipped in tracing
 		 */
-		@Value("${spring.sleuth.instrument.web.skipPattern:}")
+		@Value("${spring.sleuth.web.skipPattern:}")
 		private String skipPattern;
 
 		@Bean
