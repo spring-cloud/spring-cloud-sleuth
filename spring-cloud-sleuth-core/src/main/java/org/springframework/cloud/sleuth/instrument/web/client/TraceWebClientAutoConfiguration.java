@@ -44,7 +44,7 @@ import org.springframework.web.client.RestTemplate;
  * @since 1.0.0
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.sleuth.client.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.web.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(RestTemplate.class)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)

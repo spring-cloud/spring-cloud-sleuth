@@ -330,7 +330,7 @@ Features from this section can be disabled by providing the `spring.sleuth.web.e
 
 Via the `TraceFilter` all sampled incoming requests result in creation of a Span. That Span's name is `http:` + the path to which
  the request was sent. E.g. if the request was sent to `/foo/bar` then the name will be `http:/foo/bar`. You can configure which URIs you would
- like to skip via the `spring.sleuth.instrument.web.skipPattern` property. If you have `ManagementServerProperties` on classpath then
+ like to skip via the `spring.sleuth.web.skipPattern` property. If you have `ManagementServerProperties` on classpath then
  its value of `contextPath` gets appended to the provided skip pattern.
 
 ==== Async Servlet support
@@ -343,12 +343,12 @@ If your controller returns a `Callable` or a `WebAsyncTask` Spring Cloud Sleuth 
 
 We're injecting a `RestTemplate` interceptor that ensures that all the tracing information is passed to the requests. Each time a
 call is made a new Span is created. It gets closed upon receiving the response. In order to block the synchronous `RestTemplate` features
-just set `spring.sleuth.client.enabled` to `false`.
+just set `spring.sleuth.web.client.enabled` to `false`.
 
 ==== Asynchronous Rest Template
 
 Custom instrumentation is set to create and close Spans upon sending and receiving requests. To block the `AsyncRestTemplate`
-features set `spring.sleuth.async.client.enabled` to `false`.
+features set `spring.sleuth.web.async.client.enabled` to `false`.
 
 === Feign
 
