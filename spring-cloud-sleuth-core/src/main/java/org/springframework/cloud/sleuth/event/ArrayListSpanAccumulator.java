@@ -42,23 +42,6 @@ public class ArrayListSpanAccumulator implements ApplicationListener<SpanRelease
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		ArrayListSpanAccumulator that = (ArrayListSpanAccumulator) o;
-		return this.spans.equals(that.spans);
-	}
-
-	@Override
-	public int hashCode() {
-		return this.spans.hashCode();
-	}
-
-	@Override
 	public String toString() {
 		return "ArrayListSpanAccumulator{" +
 				"spans=" + this.spans +

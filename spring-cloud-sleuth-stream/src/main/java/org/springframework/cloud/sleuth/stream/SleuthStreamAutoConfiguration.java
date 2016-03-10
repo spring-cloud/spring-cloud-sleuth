@@ -27,7 +27,6 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.metric.SpanReporterService;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
@@ -37,11 +36,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.integration.config.GlobalChannelInterceptor;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.ChannelInterceptorAdapter;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -69,30 +64,8 @@ public class SleuthStreamAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = SleuthSource.OUTPUT, order = Ordered.HIGHEST_PRECEDENCE)
-	public ChannelInterceptor zipkinChannelInterceptor(final SpanReporterService spanReporterService) {
-		// don't trace the tracer (suppress spans originating from our own source)
-		return new ChannelInterceptorAdapter() {
-			@Override
-			public Message<?> preSend(Message<?> message, MessageChannel channel) {
-				return MessageBuilder.fromMessage(message)
-						.setHeader(Span.NOT_SAMPLED_NAME, "true").build();
-			}
-
-			@Override
-			public void afterSendCompletion(Message<?> message, MessageChannel channel,
-					boolean sent, Exception ex) {
-				if (!(message.getPayload() instanceof Spans)) {
-					return;
-				}
-				Spans spans = (Spans) message.getPayload();
-				int spanNumber = spans.getSpans().size();
-				if (sent) {
-					spanReporterService.incrementAcceptedSpans(spanNumber);
-				} else {
-					spanReporterService.incrementDroppedSpans(spanNumber);
-				}
-			}
-		};
+	public ChannelInterceptor zipkinChannelInterceptor(SpanReporterService spanReporterService) {
+		return new TracerIgnoringChannelInterceptor(spanReporterService);
 	}
 
 	@Bean

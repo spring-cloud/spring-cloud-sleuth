@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -29,6 +30,7 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 
+import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -49,8 +51,8 @@ public class TraceableScheduledExecutorServiceTest {
 	public void should_schedule_a_local_component_trace_runnable() throws Exception {
 		this.traceableScheduledExecutorService.schedule(aRunnable(), 1L, TimeUnit.DAYS);
 
-		then(this.scheduledExecutorService).should().schedule(any(
-				LocalComponentTraceRunnable.class), anyLong(), any(TimeUnit.class));
+		then(this.scheduledExecutorService).should().schedule(BDDMockito.<Runnable>argThat(
+				instanceOf(LocalComponentTraceRunnable.class)), anyLong(), any(TimeUnit.class));
 	}
 
 	@Test
@@ -58,24 +60,24 @@ public class TraceableScheduledExecutorServiceTest {
 	public void should_schedule_a_local_component_trace_callable() throws Exception {
 		this.traceableScheduledExecutorService.schedule(aCallable(), 1L, TimeUnit.DAYS);
 
-		then(this.scheduledExecutorService).should().schedule(any(
-				LocalComponentTraceCallable.class), anyLong(), any(TimeUnit.class));
+		then(this.scheduledExecutorService).should().schedule(BDDMockito.<Callable>argThat(
+				instanceOf(LocalComponentTraceCallable.class)), anyLong(), any(TimeUnit.class));
 	}
 
 	@Test
 	public void should_schedule_at_fixed_rate_a_local_component_trace_runnable() throws Exception {
 		this.traceableScheduledExecutorService.scheduleAtFixedRate(aRunnable(), 1L, 1L, TimeUnit.DAYS);
 
-		then(this.scheduledExecutorService).should().scheduleAtFixedRate(any(
-				LocalComponentTraceRunnable.class), anyLong(), anyLong(), any(TimeUnit.class));
+		then(this.scheduledExecutorService).should().scheduleAtFixedRate(BDDMockito.<Runnable>argThat(
+				instanceOf(LocalComponentTraceRunnable.class)), anyLong(), anyLong(), any(TimeUnit.class));
 	}
 
 	@Test
 	public void should_schedule_with_fixed_delay_a_local_component_trace_runnable() throws Exception {
 		this.traceableScheduledExecutorService.scheduleWithFixedDelay(aRunnable(), 1L, 1L, TimeUnit.DAYS);
 
-		then(this.scheduledExecutorService).should().scheduleWithFixedDelay(any(
-				LocalComponentTraceRunnable.class), anyLong(), anyLong(), any(TimeUnit.class));
+		then(this.scheduledExecutorService).should().scheduleWithFixedDelay(BDDMockito.<Runnable>argThat(
+				instanceOf(LocalComponentTraceRunnable.class)), anyLong(), anyLong(), any(TimeUnit.class));
 	}
 
 	Runnable aRunnable() {
