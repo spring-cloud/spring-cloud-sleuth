@@ -1460,14 +1460,14 @@ however will be still there.</p>
 </div>
 <div class="sect2">
 <h3 id="_asynchronous_communication">Asynchronous communication</h3>
+<div class="sect3">
+<h4 id="__async_annotated_methods">@Async annotated methods</h4>
 <div class="paragraph">
 <p>In Spring Cloud Sleuth we&#8217;re instrumenting async related components so that the tracing information is passed between threads. You can disable this behaviour
 by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false</code>.</p>
 </div>
-<div class="sect3">
-<h4 id="__async_scheduled_annotated_methods">@Async / @Scheduled annotated methods</h4>
 <div class="paragraph">
-<p>If you annotate your method with <code>@Async</code> / <code>@Scheduled</code> then we&#8217;ll automatically create a new Span with the following characteristics:</p>
+<p>If you annotate your method with <code>@Async</code> then we&#8217;ll automatically create a new Span with the following characteristics:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1478,6 +1478,31 @@ by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false<
 <p>the Span will be tagged with that method&#8217;s class name and the method name too</p>
 </li>
 </ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="__scheduled_annotated_methods">@Scheduled annotated methods</h4>
+<div class="paragraph">
+<p>In Spring Cloud Sleuth we&#8217;re instrumenting scheduled method execution so that the tracing information is passed between threads. You can disable this behaviour
+by setting the value of <code>spring.sleuth.scheduled.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="paragraph">
+<p>If you annotate your method with <code>@Scheduled</code> then we&#8217;ll automatically create a new Span with the following characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the Span name will be the annotated method name</p>
+</li>
+<li>
+<p>the Span will be tagged with that method&#8217;s class name and the method name too</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If you want to skip Span creation for some <code>@Scheduled</code> annotated classes you can set the
+<code>spring.sleuth.scheduled.skipPattern</code> with a regular expression that will match the fully qualified name of the
+<code>@Scheduled</code> annotated class.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1507,7 +1532,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-09 18:58:32 CET
+Last updated 2016-03-10 12:10:11 CET
 </div>
 </div>
 </body>
