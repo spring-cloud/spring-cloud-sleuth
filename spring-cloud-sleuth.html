@@ -731,7 +731,9 @@ the <strong>spring-cloud-starter-sleuth</strong> module to your project.</p>
 <p><strong>traceId</strong> - the id of the latency graph that contains the span</p>
 </li>
 <li>
-<p><strong>exportable</strong> - whether the log should be exported to Zipkin or not</p>
+<p><strong>exportable</strong> - whether the log should be exported to Zipkin or not. When would you like the span not to be
+exportable? In the case in which you want to wrap some operation in a Span and have it written to the logs
+only.</p>
 </li>
 </ul>
 </div>
@@ -1532,7 +1534,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-10 12:14:15 CET
+Last updated 2016-03-10 14:52:17 CET
 </div>
 </div>
 </body>
