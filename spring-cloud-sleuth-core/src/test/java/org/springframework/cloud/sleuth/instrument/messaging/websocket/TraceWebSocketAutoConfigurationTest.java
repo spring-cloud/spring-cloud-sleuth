@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging.websocket;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +32,6 @@ import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessa
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.BDDAssertions.then;
-
 /**
  * @author Marcin Grzejszczak
  */
@@ -40,24 +39,17 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringApplicationConfiguration(classes = TraceWebSocketAutoConfigurationTest.Config.class)
 public class TraceWebSocketAutoConfigurationTest {
 
-	@Autowired DelegatingWebSocketMessageBrokerConfiguration delegatingWebSocketMessageBrokerConfiguration;
+	@Autowired
+	DelegatingWebSocketMessageBrokerConfiguration delegatingWebSocketMessageBrokerConfiguration;
 
 	@Test
 	public void should_register_interceptors_for_inbound_and_outbound_channels() {
-		then(this.delegatingWebSocketMessageBrokerConfiguration
-					.clientInboundChannel()
-					.getInterceptors()
-					.stream()
-					.map(Object::getClass)
-					.collect(toList()))
-				.contains(TraceChannelInterceptor.class);
-		then(this.delegatingWebSocketMessageBrokerConfiguration
-					.clientOutboundChannel()
-					.getInterceptors()
-					.stream()
-					.map(Object::getClass)
-					.collect(toList()))
-				.contains(TraceChannelInterceptor.class);
+		then(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannel()
+				.getInterceptors())
+						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
+		then(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannel()
+				.getInterceptors())
+						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
 	}
 
 	@EnableAutoConfiguration
