@@ -13,7 +13,9 @@ notice the `[appname,traceId,spanId,exportable]` entries from the MDC:
     - *spanId* - the id of a specific operation that took place
     - *appname* - the name of the application that logged the span
     - *traceId* - the id of the latency graph that contains the span
-    - *exportable* - whether the log should be exported to Zipkin or not
+    - *exportable* - whether the log should be exported to Zipkin or not. When would you like the span not to be
+    exportable? In the case in which you want to wrap some operation in a Span and have it written to the logs
+    only.
 
 * Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations,
 key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
