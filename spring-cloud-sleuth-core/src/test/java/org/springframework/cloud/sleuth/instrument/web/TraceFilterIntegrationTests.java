@@ -94,7 +94,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(traceFilter);
+		mockMvcBuilder.addFilters(this.traceFilter);
 	}
 
 	private MvcResult whenSentPingWithoutTracingData() throws Exception {

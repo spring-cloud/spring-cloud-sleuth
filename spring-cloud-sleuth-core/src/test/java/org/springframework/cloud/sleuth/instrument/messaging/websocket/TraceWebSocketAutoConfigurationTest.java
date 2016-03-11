@@ -44,14 +44,14 @@ public class TraceWebSocketAutoConfigurationTest {
 
 	@Test
 	public void should_register_interceptors_for_inbound_and_outbound_channels() {
-		then(delegatingWebSocketMessageBrokerConfiguration
+		then(this.delegatingWebSocketMessageBrokerConfiguration
 					.clientInboundChannel()
 					.getInterceptors()
 					.stream()
 					.map(Object::getClass)
 					.collect(toList()))
 				.contains(TraceChannelInterceptor.class);
-		then(delegatingWebSocketMessageBrokerConfiguration
+		then(this.delegatingWebSocketMessageBrokerConfiguration
 					.clientOutboundChannel()
 					.getInterceptors()
 					.stream()
