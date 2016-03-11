@@ -186,47 +186,6 @@ NOTE: the SLF4J MDC is always set and logback users will immediately see the tra
  (this is a Spring Boot feature for logback users).
  *This means that if you're not using SLF4J this pattern WILL NOT be automatically applied*.
 
-== Running the samples
-
-There are a few samples with slightly different features. You can run all of them from an IDE via the main method, or on the command line with `mvn spring-boot:run`. They all log trace and span data on the console by default. Here's a list:
-
-* `spring-cloud-sleuth-sample`: vanilla (no zipkin) web app that calls back to itself on various endpoints ("/", "/call", "/async")
-
-* `spring-cloud-sleuth-sample-zipkin`: same as vanilla sample but with zipkin (set `sample.zipkin.enabled=true` if you have a collector running)
-
-* `spring-cloud-sleuth-sample-stream`: same as vanilla sample, but exports span data to RabbitMQ using Spring Cloud Stream
-
-* `spring-cloud-sleuth-sample-stream-zipkin`: a consumer for the span data on RabbitMQ that pushes it into a Zipkin span store, so it can be queried and visualized using the standard Zipkin UI.
-
-* `spring-cloud-sleuth-sample-messaging`: a Spring Integration application with two HTTP endpoints ("/" and "/xform")
-
-* `spring-cloud-sleuth-sample-ribbon`: two endpoints ("/" and "/call") that make calls to the "zipkin" sample via Ribbon. Also has `@EnableZUulProxy" so if the other samples are running they are proxied at "/messaging", "/zipkin", "/vanilla" (see "/routes" for a list).
-
-The Ribbon sample makes an interesting demo or playground for learning about zipkin. In the screenshot below you can see a trace with 3 spans - it starts in the "testSleuthRibbon" app and crosses to "testSleuthMessaging" for the next 2 spans.
-
-=== Running samples with Zipkin
-
-1. Optionally run the https://github.com/openzipkin/zipkin[Zipkin] UI, e.g. via docker compose (there's a `docker-compose.yml` in https://github.com/spring-cloud/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin[Spring Cloud Sleuth], or in https://github.com/openzipkin/docker-zipkin[Docker Zipkin]
-7. Run the zipkin sample application (set `sample.zipkin.enabled=false` if you have no Zipkin running). If you are using a VM to run docker you might need to tunnel port 9411 to localhost, or change the `spring.zipkin.baseUrl`.
-8. Hit `http://localhost:3380`, `http://localhost:3380/call`, `http://localhost:3380/async` for some interesting sample traces (the app callas back to itself).
-9. Goto `http://localhost:8080` for zipkin web (if you are using boot2docker the host will be different)
-
-NOTE: You can see the zipkin spans without the UI (in logs) if you run the sample with `sample.zipkin.enabled=false`.
-
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Sample Zipkin Screenshot]
-
-> The fact that the first trace in says "testSleuthMessaging" seems to be a bug in the UI (it has some annotations from that service, but it originates in the "testSleuthRibbon" service).
-
-=== Running samples with Zipkin Stream
-
-Instead of POSTing trace data directly to a Zipkin server, you can export them over https://raw.githubusercontent.com/spring-cloud/spring-cloud-stream[Spring Cloud Stream].
-
-1. Build the Zipkin Stream sample with Maven and run it via its `docker-compose.yml` (which also starts the required middleware and the Zipkin UI).
-7. Run the `spring-cloud-sleuth-sample-stream` app and interact with it in a browser, just like the vanilla sample. If you are using a VM to run docker you might need to tunnel port 5672 to localhost, or change the `spring.rabbbitmq.host`.
-9. Goto `http://localhost:8080` for zipkin web (if you are using a VM to run docker the host will be different).
-
-The UI should look like the screenshot above.
-
 == Building
 
 === Basic Compile and Test
