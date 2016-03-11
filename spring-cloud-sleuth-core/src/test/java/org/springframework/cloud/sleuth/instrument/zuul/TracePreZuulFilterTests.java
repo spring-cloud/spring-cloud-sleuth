@@ -18,18 +18,19 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.util.Random;
 
-import com.netflix.zuul.context.RequestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.context.ApplicationEventPublisher;
+
+import com.netflix.zuul.context.RequestContext;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -42,11 +43,8 @@ import static org.junit.Assert.assertThat;
  */
 public class TracePreZuulFilterTests {
 
-	private ApplicationEventPublisher publisher = Mockito
-			.mock(ApplicationEventPublisher.class);
-
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			this.publisher, new DefaultSpanNamer());
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
 	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer);
 

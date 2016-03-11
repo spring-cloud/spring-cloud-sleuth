@@ -14,28 +14,37 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.event;
+package org.springframework.cloud.sleuth.util;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
 
 /**
- * <b>ss</b> - Server Send. Annotated upon completion of request processing (when the response
- * got sent back to the client). If one subtracts the sr timestamp from this timestamp one
- * will receive the time needed by the server side to process the request.
+ * Accumulator of {@link org.springframework.cloud.sleuth.Tracer#close(Span)
+ * closed spans}.
  *
  * @author Spencer Gibb
  * @since 1.0.0
- *
- * @see ServerReceivedEvent
  */
-@SuppressWarnings("serial")
-public class ServerSentEvent extends SpanParentContainingEvent {
+public class ArrayListSpanAccumulator implements SpanReporter {
+	private final List<Span> spans = new ArrayList<>();
 
-	public ServerSentEvent(Object source, Span span) {
-		this(source, null, span);
+	public List<Span> getSpans() {
+		return this.spans;
 	}
 
-	public ServerSentEvent(Object source, Span parent, Span span) {
-		super(source, parent, span);
+	@Override
+	public String toString() {
+		return "ArrayListSpanAccumulator{" +
+				"spans=" + this.spans +
+				'}';
+	}
+
+	@Override
+	public void report(Span span) {
+		this.spans.add(span);
 	}
 }

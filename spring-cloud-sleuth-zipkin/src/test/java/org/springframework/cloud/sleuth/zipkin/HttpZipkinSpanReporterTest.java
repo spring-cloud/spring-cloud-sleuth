@@ -2,8 +2,8 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanReporterService;
-import org.springframework.cloud.sleuth.metric.SpanReporterService;
+import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanMetricReporter;
+import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import zipkin.Span;
 
 import zipkin.junit.HttpFailure;
@@ -16,14 +16,14 @@ public class HttpZipkinSpanReporterTest {
 
 	@Rule public final ZipkinRule zipkin = new ZipkinRule();
 	InMemorySpanCounter inMemorySpanCounter = new InMemorySpanCounter();
-	SpanReporterService spanReporterService = new CounterServiceBasedSpanReporterService("accepted", "dropped",
+	SpanMetricReporter spanMetricReporter = new CounterServiceBasedSpanMetricReporter("accepted", "dropped",
 			this.inMemorySpanCounter);
 
 	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(
 			this.zipkin.httpUrl(),
 			0, // so that tests can drive flushing explicitly
 			false, // disable compression
-			this.spanReporterService
+			this.spanMetricReporter
 	);
 
 	@Test
@@ -72,7 +72,7 @@ public class HttpZipkinSpanReporterTest {
 				this.zipkin.httpUrl(),
 				0, // so that tests can drive flushing explicitly
 				false, // enable compression
-				this.spanReporterService
+				this.spanMetricReporter
 		);
 
 		this.reporter.report(span(1L, "foo"));

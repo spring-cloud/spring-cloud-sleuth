@@ -31,10 +31,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -80,10 +80,10 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceFilter traceFilter(ApplicationEventPublisher publisher, Random random, SkipPatternProvider skipPatternProvider) {
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, skipPatternProvider.skipPattern(), random);
-		filter.setApplicationEventPublisher(publisher);
-		return filter;
+	public TraceFilter traceFilter(Random random,
+			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter) {
+		return new TraceFilter(this.tracer, this.traceKeys, skipPatternProvider.skipPattern(), random,
+				spanReporter);
 	}
 
 	@Configuration

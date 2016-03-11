@@ -15,14 +15,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.context.ApplicationEventPublisher;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -31,7 +32,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceableExecutorServiceTests {
 	private static int TOTAL_THREADS = 10;
 
-	@Mock ApplicationEventPublisher publisher;
 	@Mock SpanNamer spanNamer;
 	Tracer tracer;
 	ExecutorService executorService = Executors.newFixedThreadPool(3);
@@ -40,8 +40,8 @@ public class TraceableExecutorServiceTests {
 
 	@Before
 	public void setup() {
-		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher,
-				this.spanNamer);
+		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.spanNamer, new NoOpSpanLogger(), new NoOpSpanReporter());
 		this.traceManagerableExecutorService = new TraceableExecutorService(this.executorService,
 				this.tracer, new TraceKeys(), this.spanNamer);
 		TestSpanContextHolder.removeCurrentSpan();

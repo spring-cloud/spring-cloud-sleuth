@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.metric.SpanReporterService;
+import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -64,14 +64,14 @@ public class SleuthStreamAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = SleuthSource.OUTPUT, order = Ordered.HIGHEST_PRECEDENCE)
-	public ChannelInterceptor zipkinChannelInterceptor(SpanReporterService spanReporterService) {
-		return new TracerIgnoringChannelInterceptor(spanReporterService);
+	public ChannelInterceptor zipkinChannelInterceptor(SpanMetricReporter spanMetricReporter) {
+		return new TracerIgnoringChannelInterceptor(spanMetricReporter);
 	}
 
 	@Bean
 	public StreamSpanListener sleuthTracer(HostLocator endpointLocator,
-			SpanReporterService spanReporterService) {
-		return new StreamSpanListener(endpointLocator, spanReporterService);
+			SpanMetricReporter spanMetricReporter) {
+		return new StreamSpanListener(endpointLocator, spanMetricReporter);
 	}
 
 	@Configuration

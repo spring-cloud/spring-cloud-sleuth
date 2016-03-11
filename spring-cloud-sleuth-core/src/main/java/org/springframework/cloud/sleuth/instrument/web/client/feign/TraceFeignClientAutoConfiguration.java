@@ -36,7 +36,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -73,9 +72,6 @@ public class TraceFeignClientAutoConfiguration {
 	private ObjectFactory<HttpMessageConverters> messageConverters;
 
 	@Autowired
-	private ApplicationEventPublisher publisher;
-
-	@Autowired
 	private Tracer tracer;
 
 	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
@@ -85,19 +81,19 @@ public class TraceFeignClientAutoConfiguration {
 	@ConditionalOnClass(HystrixCommand.class)
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
 	public Feign.Builder feignHystrixBuilder(Tracer tracer, TraceKeys traceKeys) {
-		return SleuthFeignBuilder.builder(this.publisher, tracer);
+		return SleuthFeignBuilder.builder(tracer);
 	}
 
 	@Bean
 	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
 	public FeignBeanPostProcessor feignBeanPostProcessor(Tracer tracer) {
-		return new FeignBeanPostProcessor(this.publisher, tracer);
+		return new FeignBeanPostProcessor(tracer);
 	}
 
 	@Bean
 	@Primary
 	public Decoder feignDecoder(final Tracer tracer) {
-		return new TraceFeignDecoder(this.publisher, tracer, new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
+		return new TraceFeignDecoder(tracer, new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
 			@Override
 			public Object decode(Response response, Type type)
 					throws IOException, FeignException {

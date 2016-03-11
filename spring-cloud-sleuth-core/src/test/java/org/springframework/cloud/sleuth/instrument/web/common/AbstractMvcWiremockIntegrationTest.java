@@ -2,9 +2,11 @@ package org.springframework.cloud.sleuth.instrument.web.common;
 
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 
@@ -53,6 +55,7 @@ public abstract class AbstractMvcWiremockIntegrationTest extends AbstractMvcInte
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys));
+		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
+				new NoOpSpanReporter()));
 	}
 }

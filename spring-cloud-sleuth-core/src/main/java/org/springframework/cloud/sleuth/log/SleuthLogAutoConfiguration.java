@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -29,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables a {@link Slf4jSpanListener} that prints tracing information in the logs.
+ * enables a {@link Slf4jSpanLogger} that prints tracing information in the logs.
  * <p>
  * Note: this is only available for Slf4j
  *
@@ -53,9 +55,22 @@ public class SleuthLogAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
-		public Slf4jSpanListener slf4jSpanStartedListener() {
+		public SpanLogger slf4jSpanLogger() {
 			// Sets up MDC entries X-Trace-Id and X-Span-Id
-			return new Slf4jSpanListener(this.nameSkipPattern);
+			return new Slf4jSpanLogger(this.nameSkipPattern);
 		}
+
+		@Bean
+		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", havingValue = "false")
+		public SpanLogger noOpSlf4jSpanLogger() {
+			return new NoOpSpanLogger();
+		}
+	}
+
+	@Bean
+	@ConditionalOnMissingClass("org.slf4j.MDC")
+	@ConditionalOnMissingBean
+	public SpanLogger defaultLoggedSpansHandler() {
+		return new NoOpSpanLogger();
 	}
 }

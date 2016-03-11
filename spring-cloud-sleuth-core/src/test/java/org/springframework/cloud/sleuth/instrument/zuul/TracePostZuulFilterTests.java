@@ -18,20 +18,20 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.util.Random;
 
-import com.netflix.zuul.context.RequestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.context.ApplicationEventPublisher;
 
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.verify;
+import com.netflix.zuul.context.RequestContext;
+
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Dave Syer
@@ -39,11 +39,8 @@ import static org.mockito.Mockito.verify;
  */
 public class TracePostZuulFilterTests {
 
-	private ApplicationEventPublisher publisher = Mockito.mock(ApplicationEventPublisher.class);
-
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), Mockito.mock(ApplicationEventPublisher.class),
-			new DefaultSpanNamer());
+			new Random(), new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
 	private TracePostZuulFilter filter = new TracePostZuulFilter(this.tracer);
 
@@ -56,9 +53,9 @@ public class TracePostZuulFilterTests {
 
 	@Test
 	public void filterPublishesEvent() throws Exception {
-		this.filter.setApplicationEventPublisher(this.publisher);
-		this.tracer.createSpan("http:start");
+		Span span = this.tracer.createSpan("http:start");
 		this.filter.run();
-		verify(this.publisher).publishEvent(isA(ClientReceivedEvent.class));
+
+		then(span).hasLoggedAnEvent(Span.CLIENT_RECV);
 	}
 }

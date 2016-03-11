@@ -7,7 +7,7 @@ package org.springframework.cloud.sleuth.metric;
  *
  * @since 1.0.0
  */
-public interface SpanReporterService {
+public interface SpanMetricReporter {
 
 	/**
 	 * Called when spans are submitted to span collector for processing.

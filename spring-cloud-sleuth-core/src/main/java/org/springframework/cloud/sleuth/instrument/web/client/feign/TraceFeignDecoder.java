@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.context.ApplicationEventPublisher;
 
 import feign.FeignException;
 import feign.Response;
@@ -38,13 +37,13 @@ final class TraceFeignDecoder extends FeignEventPublisher implements Decoder {
 
 	private final Decoder delegate;
 
-	TraceFeignDecoder(ApplicationEventPublisher publisher, Tracer tracer) {
-		super(publisher, tracer);
+	TraceFeignDecoder(Tracer tracer) {
+		super(tracer);
 		this.delegate = new Decoder.Default();
 	}
 
-	TraceFeignDecoder(ApplicationEventPublisher publisher, Tracer tracer, Decoder delegate) {
-		super(publisher, tracer);
+	TraceFeignDecoder(Tracer tracer, Decoder delegate) {
+		super(tracer);
 		this.delegate = delegate;
 	}
 

@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.context.ApplicationEventPublisher;
 
 import feign.Client;
 import feign.Retryer;
@@ -35,11 +34,9 @@ import feign.codec.Decoder;
  */
 final class FeignBeanPostProcessor implements BeanPostProcessor {
 
-	private final ApplicationEventPublisher publisher;
 	private final Tracer tracer;
 
-	FeignBeanPostProcessor(ApplicationEventPublisher publisher, Tracer tracer) {
-		this.publisher = publisher;
+	FeignBeanPostProcessor(Tracer tracer) {
 		this.tracer = tracer;
 	}
 
@@ -47,11 +44,11 @@ final class FeignBeanPostProcessor implements BeanPostProcessor {
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
 		if (bean instanceof Decoder && !(bean instanceof TraceFeignDecoder)) {
-			return new TraceFeignDecoder(this.publisher, this.tracer, (Decoder) bean);
+			return new TraceFeignDecoder(this.tracer, (Decoder) bean);
 		} else if (bean instanceof Retryer && !(bean instanceof TraceFeignRetryer)) {
 			return new TraceFeignRetryer(this.tracer, (Retryer) bean);
 		} else if (bean instanceof Client && !(bean instanceof TraceFeignClient)) {
-			return new TraceFeignClient(this.publisher, this.tracer, (Client) bean);
+			return new TraceFeignClient(this.tracer, (Client) bean);
 		}
 		return bean;
 	}

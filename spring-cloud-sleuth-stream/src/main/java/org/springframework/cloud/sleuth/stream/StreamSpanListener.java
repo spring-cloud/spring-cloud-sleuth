@@ -23,15 +23,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
-import org.springframework.cloud.sleuth.event.ServerSentEvent;
-import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
-import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
-import org.springframework.cloud.sleuth.metric.SpanReporterService;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
+import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.MessageEndpoint;
 
@@ -44,68 +37,19 @@ import org.springframework.integration.annotation.MessageEndpoint;
  * @since 1.0.0
  */
 @MessageEndpoint
-public class StreamSpanListener {
-
-	public static final String CLIENT_RECV = "cr";
-	public static final String CLIENT_SEND = "cs";
-	public static final String SERVER_RECV = "sr";
-	public static final String SERVER_SEND = "ss";
+public class StreamSpanListener implements SpanReporter {
 
 	private Collection<Span> queue = new ConcurrentLinkedQueue<>();
 	private final HostLocator endpointLocator;
-	private final SpanReporterService spanReporterService;
+	private final SpanMetricReporter spanMetricReporter;
 
-	public StreamSpanListener(HostLocator endpointLocator, SpanReporterService spanReporterService) {
+	public StreamSpanListener(HostLocator endpointLocator, SpanMetricReporter spanMetricReporter) {
 		this.endpointLocator = endpointLocator;
-		this.spanReporterService = spanReporterService;
+		this.spanMetricReporter = spanMetricReporter;
 	}
 
 	public void setQueue(Collection<Span> queue) {
 		this.queue = queue;
-	}
-
-	@EventListener
-	@Order(0)
-	public void start(SpanAcquiredEvent event) {
-		event.getSpan().logEvent("acquire");
-	}
-
-	@EventListener
-	@Order(0)
-	public void serverReceived(ServerReceivedEvent event) {
-		if (event.getParent() != null && event.getParent().isRemote()) {
-			event.getParent().logEvent(SERVER_RECV);
-		}
-	}
-
-	@EventListener
-	@Order(0)
-	public void clientSend(ClientSentEvent event) {
-		event.getSpan().logEvent(CLIENT_SEND);
-	}
-
-	@EventListener
-	@Order(0)
-	public void clientReceive(ClientReceivedEvent event) {
-		event.getSpan().logEvent(CLIENT_RECV);
-	}
-
-	@EventListener
-	@Order(0)
-	public void serverSend(ServerSentEvent event) {
-		if (event.getParent() != null && event.getParent().isRemote()) {
-			event.getParent().logEvent(SERVER_SEND);
-			this.queue.add(event.getParent());
-		}
-	}
-
-	@EventListener
-	@Order(0)
-	public void release(SpanReleasedEvent event) {
-		event.getSpan().logEvent("release");
-		if (event.getSpan().isExportable()) {
-			this.queue.add(event.getSpan());
-		}
 	}
 
 	@InboundChannelAdapter(value = SleuthSource.OUTPUT)
@@ -121,8 +65,14 @@ public class StreamSpanListener {
 		if (result.isEmpty()) {
 			return null;
 		}
-		this.spanReporterService.incrementAcceptedSpans(result.size());
+		this.spanMetricReporter.incrementAcceptedSpans(result.size());
 		return new Spans(this.endpointLocator.locate(result.get(0)), result);
 	}
 
+	@Override
+	public void report(Span span) {
+		if (span.isExportable()) {
+			this.queue.add(span);
+		}
+	}
 }

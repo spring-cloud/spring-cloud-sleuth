@@ -27,10 +27,6 @@ import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonComm
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.MultiValueMap;
 
 import com.netflix.client.http.HttpRequest;
@@ -43,12 +39,9 @@ import com.netflix.niws.client.http.RestClient;
  *
  * @since 1.0.0
  */
-public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommandFactory
-		implements ApplicationEventPublisherAware {
+public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommandFactory {
 
 	private static final Log log = LogFactory.getLog(TraceRestClientRibbonCommandFactory.class);
-
-	private ApplicationEventPublisher publisher;
 
 	private final SpanAccessor accessor;
 
@@ -56,11 +49,6 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			SpanAccessor accessor) {
 		super(clientFactory);
 		this.accessor = accessor;
-	}
-
-	@Override
-	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
-		this.publisher = publisher;
 	}
 
 	@Override
@@ -72,7 +60,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
 					getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
 					context.getHeaders(), context.getParams(), context.getRequestEntity(),
-					this.publisher, this.accessor);
+					this.accessor);
 		}
 		catch (URISyntaxException e) {
 			log.error("Exception occurred while trying to create the TraceRestClientRibbonCommand", e);
@@ -82,8 +70,6 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 
 	class TraceRestClientRibbonCommand extends RestClientRibbonCommand {
 
-		private ApplicationEventPublisher publisher;
-
 		private final SpanAccessor accessor;
 
 		@SuppressWarnings("deprecation")
@@ -91,11 +77,10 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 				HttpRequest.Verb verb, String uri, Boolean retryable,
 				MultiValueMap<String, String> headers,
 				MultiValueMap<String, String> params, InputStream requestEntity,
-				ApplicationEventPublisher publisher, SpanAccessor accessor)
+				SpanAccessor accessor)
 						throws URISyntaxException {
 			super(commandKey, restClient, verb, uri, retryable, headers, params,
 					requestEntity);
-			this.publisher = publisher;
 			this.accessor = accessor;
 		}
 
@@ -115,13 +100,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			}
 			setHeader(requestBuilder, Span.PROCESS_ID_NAME,
 					span.getProcessId());
-			publish(new ClientSentEvent(this, span));
-		}
-
-		private void publish(ApplicationEvent event) {
-			if (this.publisher != null) {
-				this.publisher.publishEvent(event);
-			}
+			span.logEvent(Span.CLIENT_SEND);
 		}
 
 		private Long getParentId(Span span) {

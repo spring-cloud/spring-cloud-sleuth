@@ -17,7 +17,7 @@
 package org.springframework.cloud.sleuth.stream;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.metric.SpanReporterService;
+import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -31,10 +31,10 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
  */
 class TracerIgnoringChannelInterceptor extends ChannelInterceptorAdapter {
 
-	private final SpanReporterService spanReporterService;
+	private final SpanMetricReporter spanMetricReporter;
 
-	public TracerIgnoringChannelInterceptor(SpanReporterService spanReporterService) {
-		this.spanReporterService = spanReporterService;
+	public TracerIgnoringChannelInterceptor(SpanMetricReporter spanMetricReporter) {
+		this.spanMetricReporter = spanMetricReporter;
 	}
 
 	/**
@@ -55,9 +55,9 @@ class TracerIgnoringChannelInterceptor extends ChannelInterceptorAdapter {
 		Spans spans = (Spans) message.getPayload();
 		int spanNumber = spans.getSpans().size();
 		if (sent) {
-			this.spanReporterService.incrementAcceptedSpans(spanNumber);
+			this.spanMetricReporter.incrementAcceptedSpans(spanNumber);
 		} else {
-			this.spanReporterService.incrementDroppedSpans(spanNumber);
+			this.spanMetricReporter.incrementDroppedSpans(spanNumber);
 		}
 	}
 }

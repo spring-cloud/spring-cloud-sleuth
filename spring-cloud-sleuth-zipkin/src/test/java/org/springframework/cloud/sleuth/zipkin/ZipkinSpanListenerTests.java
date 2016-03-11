@@ -28,12 +28,11 @@ import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfigurati
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
-import org.springframework.cloud.sleuth.event.ServerSentEvent;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
+import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanListenerTests.TestConfiguration;
 import org.springframework.context.ApplicationContext;
@@ -55,17 +54,11 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ZipkinSpanListenerTests {
 
-	@Autowired
-	private Tracer tracer;
-
-	@Autowired
-	private ApplicationContext application;
-
-	@Autowired
-	private ZipkinTestConfiguration test;
-
-	@Autowired
-	private ZipkinSpanListener listener;
+	@Autowired Tracer tracer;
+	@Autowired ApplicationContext application;
+	@Autowired ZipkinTestConfiguration test;
+	@Autowired ZipkinSpanListener listener;
+	@Autowired SpanReporter spanReporter;
 
 	@PostConstruct
 	public void init() {
@@ -130,12 +123,24 @@ public class ZipkinSpanListenerTests {
 	@Test
 	public void rpcAnnotations() {
 		Span context = this.tracer.createSpan("http:child", this.parent);
-		this.application.publishEvent(new ClientSentEvent(this, context));
-		this.application.publishEvent(new ServerReceivedEvent(this, this.parent, context));
-		this.application.publishEvent(new ServerSentEvent(this, this.parent, context));
-		this.application.publishEvent(new ClientReceivedEvent(this, context));
+		context.logEvent(Span.CLIENT_SEND);
+		logServerReceived(this.parent);
+		logServerSent(this.spanReporter, this.parent);
 		this.tracer.close(context);
 		assertEquals(2, this.test.spans.size());
+	}
+
+	void logServerReceived(Span parent) {
+		if (parent != null && parent.isRemote()) {
+			parent.logEvent(Span.SERVER_RECV);
+		}
+	}
+
+	void logServerSent(SpanReporter spanReporter, Span parent) {
+		if (parent != null && parent.isRemote()) {
+			parent.logEvent(Span.SERVER_SEND);
+			spanReporter.report(parent);
+		}
 	}
 
 	@Test
@@ -181,6 +186,11 @@ public class ZipkinSpanListenerTests {
 	@Import({ ZipkinTestConfiguration.class, ZipkinAutoConfiguration.class, TraceAutoConfiguration.class,
 			PropertyPlaceholderAutoConfiguration.class })
 	protected static class TestConfiguration {
+
+		@Bean
+		SpanLogger spanLogger() {
+			return new NoOpSpanLogger();
+		}
 	}
 
 	@Configuration

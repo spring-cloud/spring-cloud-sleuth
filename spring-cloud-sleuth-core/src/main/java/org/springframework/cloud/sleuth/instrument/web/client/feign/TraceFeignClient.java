@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Objects;
 
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.context.ApplicationEventPublisher;
 
 import feign.Client;
 import feign.Request;
@@ -38,13 +37,13 @@ final class TraceFeignClient extends FeignEventPublisher implements Client {
 
 	private final Client delegate;
 
-	TraceFeignClient(ApplicationEventPublisher publisher, Tracer tracer) {
-		super(publisher, tracer);
+	TraceFeignClient(Tracer tracer) {
+		super(tracer);
 		this.delegate = new Client.Default(null, null);
 	}
 
-	TraceFeignClient(ApplicationEventPublisher publisher, Tracer tracer, Client delegate) {
-		super(publisher, tracer);
+	TraceFeignClient(Tracer tracer, Client delegate) {
+		super(tracer);
 		this.delegate = delegate;
 	}
 

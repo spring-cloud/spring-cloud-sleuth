@@ -24,23 +24,20 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
-import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
+import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -56,13 +53,13 @@ public class DefaultTracerTests {
 	public static final String IMPORTANT_WORK_1 = "http:important work 1";
 	public static final String IMPORTANT_WORK_2 = "http:important work 2";
 	public static final int NUM_SPANS = 3;
-	private ApplicationEventPublisher publisher;
 	private SpanNamer spanNamer = new DefaultSpanNamer();
+	private SpanLogger spanLogger = Mockito.mock(SpanLogger.class);
+	private SpanReporter spanReporter = Mockito.mock(SpanReporter.class);
 
 	@Before
 	public void setup() {
 		TestSpanContextHolder.removeCurrentSpan();
-		this.publisher = mock(ApplicationEventPublisher.class);
 	}
 
 	@After
@@ -74,7 +71,7 @@ public class DefaultTracerTests {
 	public void tracingWorks() {
 
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
-				this.publisher, new DefaultSpanNamer());
+				new DefaultSpanNamer(), this.spanLogger, this.spanReporter);
 
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
@@ -84,21 +81,16 @@ public class DefaultTracerTests {
 			tracer.close(span);
 		}
 
-		verify(this.publisher, times(NUM_SPANS))
-				.publishEvent(isA(SpanAcquiredEvent.class));
-		verify(this.publisher, times(NUM_SPANS))
-				.publishEvent(isA(SpanReleasedEvent.class));
+		verify(this.spanLogger, times(NUM_SPANS))
+				.logStartedSpan(Mockito.any(Span.class), Mockito.any(Span.class));
+		verify(this.spanReporter, times(NUM_SPANS))
+				.report(Mockito.any(Span.class));
 
-		ArgumentCaptor<ApplicationEvent> captor = ArgumentCaptor
-				.forClass(ApplicationEvent.class);
-		verify(this.publisher, atLeast(NUM_SPANS)).publishEvent(captor.capture());
+		ArgumentCaptor<Span> captor = ArgumentCaptor
+				.forClass(Span.class);
+		verify(this.spanReporter, atLeast(NUM_SPANS)).report(captor.capture());
 
-		List<Span> spans = new ArrayList<>();
-		for (ApplicationEvent event : captor.getAllValues()) {
-			if (event instanceof SpanReleasedEvent) {
-				spans.add(((SpanReleasedEvent) event).getSpan());
-			}
-		}
+		List<Span> spans = new ArrayList<>(captor.getAllValues());
 
 		assertThat("spans was wrong size", spans.size(), is(NUM_SPANS));
 
@@ -113,7 +105,7 @@ public class DefaultTracerTests {
 	@Test
 	public void nonExportable() {
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
-				this.publisher, this.spanNamer);
+				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(false));
 	}
@@ -121,7 +113,7 @@ public class DefaultTracerTests {
 	@Test
 	public void exportable() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher, this.spanNamer);
+				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(true));
 	}
@@ -129,7 +121,7 @@ public class DefaultTracerTests {
 	@Test
 	public void exportableInheritedFromParent() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher, this.spanNamer);
+				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
 		assertThat(span.isExportable(), is(false));
 		Span child = tracer.createSpan(CREATE_SIMPLE_TRACE_SPAN_NAME + "/child", span);
@@ -139,7 +131,7 @@ public class DefaultTracerTests {
 	@Test
 	public void parentNotRemovedIfActiveOnJoin() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher, this.spanNamer);
+				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span parent = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		Span span = tracer.createSpan(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
@@ -149,7 +141,7 @@ public class DefaultTracerTests {
 	@Test
 	public void parentRemovedIfNotActiveOnJoin() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher, this.spanNamer);
+				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span parent = Span.builder().name(CREATE_SIMPLE_TRACE).traceId(1L).spanId(1L)
 				.build();
 		Span span = tracer.createSpan(IMPORTANT_WORK_1, parent);
@@ -160,7 +152,7 @@ public class DefaultTracerTests {
 	@Test
 	public void grandParentRestoredAfterAutoClose() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher, this.spanNamer);
+				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span grandParent = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
 				.build();
@@ -172,7 +164,7 @@ public class DefaultTracerTests {
 	@Test
 	public void shouldUpdateLogsInSpanWhenItGetsContinued() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.publisher, this.spanNamer);
+				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span span = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
 				.build();
 		Span continuedSpan = tracer.continueSpan(span);

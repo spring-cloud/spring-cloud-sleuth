@@ -23,14 +23,7 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
-import org.springframework.cloud.sleuth.event.ServerSentEvent;
-import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
-import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.util.StringUtils;
 
 import zipkin.Annotation;
@@ -45,7 +38,7 @@ import zipkin.Endpoint;
  *
  * @since 1.0.0
  */
-public class ZipkinSpanListener {
+public class ZipkinSpanListener implements SpanReporter {
 	private static final List<String> ZIPKIN_START_EVENTS = Arrays.asList(
 			Constants.CLIENT_RECV, Constants.SERVER_RECV
 	);
@@ -66,59 +59,6 @@ public class ZipkinSpanListener {
 	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
 		this.reporter = reporter;
 		this.endpointLocator = endpointLocator;
-	}
-
-	@EventListener
-	@Order(0)
-	public void start(SpanAcquiredEvent event) {
-		// Zipkin Span.timestamp corresponds with Sleuth's Span.begin
-		assert event.getSpan().getBegin() != 0;
-	}
-
-	@EventListener
-	@Order(0)
-	public void serverReceived(ServerReceivedEvent event) {
-		if (event.getParent() != null && event.getParent().isRemote()) {
-			// If an inbound RPC call, it should log a "sr" annotation.
-			// If possible, it should log a binary annotation of "ca", indicating the
-			// caller's address (ex X-Forwarded-For header)
-			event.getParent().logEvent(Constants.SERVER_RECV);
-		}
-	}
-
-	@EventListener
-	@Order(0)
-	public void clientSend(ClientSentEvent event) {
-		// For an outbound RPC call, it should log a "cs" annotation.
-		// If possible, it should log a binary annotation of "sa", indicating the
-		// destination address.
-		event.getSpan().logEvent(Constants.CLIENT_SEND);
-	}
-
-	@EventListener
-	@Order(0)
-	public void clientReceive(ClientReceivedEvent event) {
-		event.getSpan().logEvent(Constants.CLIENT_RECV);
-	}
-
-	@EventListener
-	@Order(0)
-	public void serverSend(ServerSentEvent event) {
-		if (event.getParent() != null && event.getParent().isRemote()) {
-			event.getParent().logEvent(Constants.SERVER_SEND);
-			this.reporter.report(convert(event.getParent()));
-		}
-	}
-
-	@EventListener
-	@Order(0)
-	public void release(SpanReleasedEvent event) {
-		// Ending a span in zipkin means adding duration and sending it out
-		// Zipkin Span.duration corresponds with Sleuth's Span.begin and end
-		assert event.getSpan().getEnd() != 0;
-		if (event.getSpan().isExportable()) {
-			this.reporter.report(convert(event.getSpan()));
-		}
 	}
 
 	/**
@@ -232,4 +172,8 @@ public class ZipkinSpanListener {
 		}
 	}
 
+	@Override
+	public void report(Span span) {
+		this.reporter.report(convert(span));
+	}
 }

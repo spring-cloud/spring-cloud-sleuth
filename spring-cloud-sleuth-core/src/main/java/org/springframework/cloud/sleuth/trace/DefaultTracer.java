@@ -22,14 +22,12 @@ import java.util.concurrent.Callable;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
-import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
-import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceCallable;
 import org.springframework.cloud.sleuth.TraceRunnable;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
-import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * Default implementation of {@link Tracer}
@@ -42,18 +40,22 @@ public class DefaultTracer implements Tracer {
 
 	private final Sampler defaultSampler;
 
-	private final ApplicationEventPublisher publisher;
-
 	private final Random random;
 
 	private final SpanNamer spanNamer;
 
+	private final SpanLogger spanLogger;
+
+	private final SpanReporter spanReporter;
+
 	public DefaultTracer(Sampler defaultSampler, Random random,
-			ApplicationEventPublisher publisher, SpanNamer spanNamer) {
+			SpanNamer spanNamer, SpanLogger spanLogger,
+			SpanReporter spanReporter) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
-		this.publisher = publisher;
 		this.spanNamer = spanNamer;
+		this.spanLogger = spanLogger;
+		this.spanReporter = spanReporter;
 	}
 
 	@Override
@@ -87,7 +89,7 @@ public class DefaultTracer implements Tracer {
 				span = Span.builder().begin(span.getBegin()).name(name).traceId(id)
 						.spanId(id).exportable(false).build();
 			}
-			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
+			this.spanLogger.logStartedSpan(null, span);
 		}
 		return continueSpan(span);
 	}
@@ -124,11 +126,13 @@ public class DefaultTracer implements Tracer {
 		else {
 			span.stop();
 			if (savedSpan != null && span.getParents().contains(savedSpan.getSpanId())) {
-				this.publisher.publishEvent(new SpanReleasedEvent(this, savedSpan, span));
+				this.spanReporter.report(span);
+				this.spanLogger.logStoppedSpan(savedSpan, span);
 			}
 			else {
 				if (!span.isRemote()) {
-					this.publisher.publishEvent(new SpanReleasedEvent(this, span));
+					this.spanReporter.report(span);
+					this.spanLogger.logStoppedSpan(null, span);
 				}
 			}
 			SpanContextHolder.close();
@@ -141,7 +145,7 @@ public class DefaultTracer implements Tracer {
 		if (parent == null) {
 			Span span = Span.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(id).spanId(id).build();
-			this.publisher.publishEvent(new SpanAcquiredEvent(this, span));
+			this.spanLogger.logStartedSpan(null, span);
 			return span;
 		}
 		else {
@@ -152,7 +156,7 @@ public class DefaultTracer implements Tracer {
 					.traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
 					.processId(parent.getProcessId()).savedSpan(parent)
 					.exportable(parent.isExportable()).build();
-			this.publisher.publishEvent(new SpanAcquiredEvent(this, parent, span));
+			this.spanLogger.logStartedSpan(parent, span);
 			return span;
 		}
 	}
@@ -164,7 +168,7 @@ public class DefaultTracer implements Tracer {
 	@Override
 	public Span continueSpan(Span span) {
 		if (span != null) {
-			this.publisher.publishEvent(new SpanContinuedEvent(this, span));
+			this.spanLogger.logContinuedSpan(span);
 		} else {
 			return null;
 		}

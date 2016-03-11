@@ -26,11 +26,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
@@ -59,13 +60,10 @@ public class TraceRestTemplateInterceptorTests {
 
 	private DefaultTracer tracer;
 
-	private StaticApplicationContext publisher = new StaticApplicationContext();
-
 	@Before
 	public void setup() {
-		this.publisher.refresh();
-		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher,
-				new DefaultSpanNamer());
+		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.tracer)));
 		TestSpanContextHolder.removeCurrentSpan();

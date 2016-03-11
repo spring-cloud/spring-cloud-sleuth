@@ -18,10 +18,6 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 
 import com.netflix.zuul.ZuulFilter;
 
@@ -32,20 +28,12 @@ import com.netflix.zuul.ZuulFilter;
  *
  * @since 1.0.0
  */
-public class TracePostZuulFilter extends ZuulFilter
-		implements ApplicationEventPublisherAware {
+public class TracePostZuulFilter extends ZuulFilter {
 
-	private ApplicationEventPublisher publisher;
+	private final SpanAccessor spanAccessor;
 
-	private final SpanAccessor accessor;
-
-	public TracePostZuulFilter(SpanAccessor accessor) {
-		this.accessor = accessor;
-	}
-
-	@Override
-	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
-		this.publisher = publisher;
+	public TracePostZuulFilter(SpanAccessor spanAccessor) {
+		this.spanAccessor = spanAccessor;
 	}
 
 	@Override
@@ -56,7 +44,7 @@ public class TracePostZuulFilter extends ZuulFilter
 	@Override
 	public Object run() {
 		// TODO: the client sent event should come from the client not the filter!
-		publish(new ClientReceivedEvent(this, getCurrentSpan()));
+		getCurrentSpan().logEvent(Span.CLIENT_RECV);
 		return null;
 	}
 
@@ -70,13 +58,7 @@ public class TracePostZuulFilter extends ZuulFilter
 		return 0;
 	}
 
-	private void publish(ApplicationEvent event) {
-		if (this.publisher != null) {
-			this.publisher.publishEvent(event);
-		}
-	}
-
 	private Span getCurrentSpan() {
-		return this.accessor.getCurrentSpan();
+		return this.spanAccessor.getCurrentSpan();
 	}
 }

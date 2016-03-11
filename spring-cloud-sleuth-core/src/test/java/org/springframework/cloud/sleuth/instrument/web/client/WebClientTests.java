@@ -38,14 +38,11 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -65,7 +62,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 import static junitparams.JUnitParamsRunner.$;
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
 @SpringApplicationConfiguration(classes = { WebClientTests.TestConfiguration.class })
@@ -137,7 +134,17 @@ public class WebClientTests {
 
 		then(Span.hexToId(getHeader(response, Span.TRACE_ID_NAME)))
 				.isEqualTo(currentTraceId);
-		thenRegisteredClientSentAndReceivedEvents();
+		thenRegisteredClientSentAndReceivedEvents(spanWithClientEvents());
+	}
+
+	private Span spanWithClientEvents() {
+		return this.listener.getEvents()
+				.stream()
+				.filter(span -> span.logs()
+						.stream()
+						.filter(log -> log.getEvent().contains(Span.CLIENT_RECV) || log.getEvent().contains(Span.CLIENT_SEND))
+						.findFirst().isPresent())
+				.findFirst().get();
 	}
 
 	private Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
@@ -158,8 +165,8 @@ public class WebClientTests {
 
 		provider.get(this);
 
-		thenRegisteredClientSentAndReceivedEvents();
 		then(this.tracer.getCurrentSpan()).isEqualTo(span);
+		thenRegisteredClientSentAndReceivedEvents(spanWithClientEvents());
 	}
 
 	private Object[] parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
@@ -167,10 +174,9 @@ public class WebClientTests {
 				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/noresponse", String.class));
 	}
 
-	private void thenRegisteredClientSentAndReceivedEvents() {
-		then(this.listener.getEvents().size()).isEqualTo(2);
-		then(this.listener.getEvents().get(0)).isExactlyInstanceOf(ClientSentEvent.class);
-		then(this.listener.getEvents().get(1)).isExactlyInstanceOf(ClientReceivedEvent.class);
+	private void thenRegisteredClientSentAndReceivedEvents(Span span) {
+		then(span).hasLoggedAnEvent(Span.CLIENT_RECV);
+		then(span).hasLoggedAnEvent(Span.CLIENT_SEND);
 	}
 
 	private Long generatedId() {
@@ -221,26 +227,23 @@ public class WebClientTests {
 	}
 
 	@Component
-	public static class Listener {
-		private List<ApplicationEvent> events = new ArrayList<>();
+	public static class Listener implements SpanReporter {
+		private List<Span> events = new ArrayList<>();
 
-		@EventListener(ClientSentEvent.class)
-		public void sent(ClientSentEvent event) {
-			this.events.add(event);
-		}
-
-		@EventListener(ClientReceivedEvent.class)
-		public void received(ClientReceivedEvent event) {
-			this.events.add(event);
-		}
-
-		public List<ApplicationEvent> getEvents() {
+		public List<Span> getEvents() {
 			return this.events;
+		}
+
+		@Override
+		public void report(Span span) {
+			this.events.add(span);
 		}
 	}
 
 	@RestController
 	public static class FooController {
+
+		@Autowired Tracer tracer;
 
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(

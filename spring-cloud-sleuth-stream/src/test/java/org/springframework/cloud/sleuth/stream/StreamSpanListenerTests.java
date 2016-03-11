@@ -35,12 +35,11 @@ import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfigurati
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
-import org.springframework.cloud.sleuth.event.ServerSentEvent;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
+import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.stream.StreamSpanListenerTests.TestConfiguration;
@@ -68,6 +67,7 @@ public class StreamSpanListenerTests {
 	@Autowired ZipkinTestConfiguration test;
 	@Autowired StreamSpanListener listener;
 	@Autowired CounterService counterService;
+	@Autowired SpanReporter spanReporter;
 
 	@PostConstruct
 	public void init() {
@@ -86,20 +86,30 @@ public class StreamSpanListenerTests {
 		Span parent = Span.builder().traceId(1L).name("http:parent").remote(true)
 				.build();
 		Span context = this.tracer.createSpan("http:child", parent);
-		this.application.publishEvent(new ClientSentEvent(this, context));
-		this.application
-				.publishEvent(new ServerReceivedEvent(this, parent, context));
-		this.application
-				.publishEvent(new ServerSentEvent(this, parent, context));
-		this.application.publishEvent(new ClientReceivedEvent(this, context));
+		context.logEvent(Span.CLIENT_SEND);
+		logServerReceived(parent);
+		logServerSent(this.spanReporter, parent);
 		this.tracer.close(context);
 		assertEquals(2, this.test.spans.size());
+	}
+
+	void logServerReceived(Span parent) {
+		if (parent != null && parent.isRemote()) {
+			parent.logEvent(Span.SERVER_RECV);
+		}
+	}
+
+	void logServerSent(SpanReporter spanReporter, Span parent) {
+		if (parent != null && parent.isRemote()) {
+			parent.logEvent(Span.SERVER_SEND);
+			spanReporter.report(parent);
+		}
 	}
 
 	@Test
 	public void nullSpanName() {
 		Span span = this.tracer.createSpan(null);
-		this.application.publishEvent(new ClientSentEvent(this, span));
+		span.logEvent(Span.CLIENT_SEND);
 		this.tracer.close(span);
 		assertEquals(1, this.test.spans.size());
 		this.listener.poll();
@@ -133,6 +143,11 @@ public class StreamSpanListenerTests {
 
 		@ServiceActivator(inputChannel=SleuthSource.OUTPUT)
 		public void handle(Message<?> msg) {
+		}
+
+		@Bean
+		SpanLogger spanLogger() {
+			return new NoOpSpanLogger();
 		}
 
 		@Bean

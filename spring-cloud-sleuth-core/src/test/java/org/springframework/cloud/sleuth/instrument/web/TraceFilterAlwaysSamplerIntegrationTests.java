@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
@@ -74,7 +75,8 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys));
+		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
+				new NoOpSpanReporter()));
 	}
 
 	private MvcResult whenSentPingWithTraceIdAndNotSampling(Long traceId)
