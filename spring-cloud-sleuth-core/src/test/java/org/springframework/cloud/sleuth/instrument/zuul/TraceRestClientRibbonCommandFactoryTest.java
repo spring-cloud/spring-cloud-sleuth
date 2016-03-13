@@ -26,7 +26,6 @@ import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonComm
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.context.ApplicationEventPublisher;
 
 import com.netflix.client.http.HttpRequest;
 import com.netflix.niws.client.http.RestClient;
@@ -42,7 +41,6 @@ import static org.mockito.Matchers.anyString;
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRestClientRibbonCommandFactoryTest {
 
-	@Mock ApplicationEventPublisher publisher;
 	@Mock SpanAccessor accessor;
 	@Mock SpringClientFactory springClientFactory;
 	TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory;
@@ -52,7 +50,6 @@ public class TraceRestClientRibbonCommandFactoryTest {
 	public void setup() {
 		this.traceRestClientRibbonCommandFactory = new TraceRestClientRibbonCommandFactory(
 				this.springClientFactory, this.accessor);
-		this.traceRestClientRibbonCommandFactory.setApplicationEventPublisher(this.publisher);
 		given(this.springClientFactory.getClient(anyString(), any(Class.class))).willReturn(new RestClient());
 		Span span = Span.builder()
 				.name("name")

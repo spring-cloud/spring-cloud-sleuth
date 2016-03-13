@@ -25,7 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.metric.SpanReporterService;
+import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 public class TracerIgnoringChannelInterceptorTest {
 
 	@Mock MessageChannel messageChannel;
-	@Mock SpanReporterService spanReporterService;
+	@Mock SpanMetricReporter spanMetricReporter;
 	@InjectMocks TracerIgnoringChannelInterceptor tracerIgnoringChannelInterceptor;
 
 	@Test
@@ -59,7 +59,7 @@ public class TracerIgnoringChannelInterceptorTest {
 
 		this.tracerIgnoringChannelInterceptor.afterSendCompletion(message, this.messageChannel, true, null);
 
-		verifyZeroInteractions(this.spanReporterService);
+		verifyZeroInteractions(this.spanMetricReporter);
 	}
 
 	@Test
@@ -71,7 +71,7 @@ public class TracerIgnoringChannelInterceptorTest {
 
 		this.tracerIgnoringChannelInterceptor.afterSendCompletion(message, this.messageChannel, true, null);
 
-		BDDMockito.then(this.spanReporterService).should().incrementAcceptedSpans(2);
+		BDDMockito.then(this.spanMetricReporter).should().incrementAcceptedSpans(2);
 	}
 
 	@Test
@@ -83,6 +83,6 @@ public class TracerIgnoringChannelInterceptorTest {
 
 		this.tracerIgnoringChannelInterceptor.afterSendCompletion(message, this.messageChannel, false, null);
 
-		BDDMockito.then(this.spanReporterService).should().incrementDroppedSpans(2);
+		BDDMockito.then(this.spanMetricReporter).should().incrementDroppedSpans(2);
 	}
 }

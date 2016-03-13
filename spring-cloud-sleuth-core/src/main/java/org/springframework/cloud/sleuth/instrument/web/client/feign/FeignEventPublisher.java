@@ -18,11 +18,9 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.context.ApplicationEventPublisher;
 
 /**
- * Abstract class for publishing {@link org.springframework.cloud.sleuth.event.ClientReceivedEvent}
+ * Abstract class for publishing logging the client received event
  *
  * @author Marcin Grzejszczak
  *
@@ -32,18 +30,16 @@ abstract class FeignEventPublisher {
 
 	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
 
-	private final ApplicationEventPublisher publisher;
 	private final Tracer tracer;
 
-	protected FeignEventPublisher(ApplicationEventPublisher publisher, Tracer tracer) {
-		this.publisher = publisher;
+	protected FeignEventPublisher(Tracer tracer) {
 		this.tracer = tracer;
 	}
 
 	protected void finish() {
 		Span span = this.feignRequestContext.getCurrentSpan();
 		if (span != null) {
-			this.publisher.publishEvent(new ClientReceivedEvent(this, span));
+			span.logEvent(Span.CLIENT_RECV);
 			this.tracer.close(span);
 			this.feignRequestContext.clearContext();
 		}

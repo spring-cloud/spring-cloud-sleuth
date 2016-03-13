@@ -6,8 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
@@ -32,10 +33,12 @@ public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 	@Autowired Tracer tracer;
 	@Autowired TraceKeys traceKeys;
 	@Autowired ArrayListSpanAccumulator arrayListSpanAccumulator;
+	@Autowired SpanReporter spanReporter;
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys));
+		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
+				this.spanReporter));
 	}
 
 	@Test

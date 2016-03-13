@@ -14,37 +14,37 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.event;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.springframework.cloud.sleuth.log;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.context.ApplicationListener;
 
 /**
- * Accumulator of {@link org.springframework.cloud.sleuth.Tracer#close(Span)
- * closed spans}.
+ * Contract for implementations responsible for logging Spans
  *
- * @author Spencer Gibb
+ * @author Marcin Grzejszczak
+ *
  * @since 1.0.0
  */
-public class ArrayListSpanAccumulator implements ApplicationListener<SpanReleasedEvent> {
-	private final List<Span> spans = new ArrayList<>();
+public interface SpanLogger {
 
-	@Override
-	public void onApplicationEvent(SpanReleasedEvent event) {
-		this.spans.add(event.getSpan());
-	}
+	/**
+	 * Logic to run when a Span gets started
+	 *
+	 * @param parent - maybe be nullable
+	 * @param span - current span
+	 */
+	void logStartedSpan(Span parent, Span span);
 
-	public List<Span> getSpans() {
-		return this.spans;
-	}
+	/**
+	 * Logic to run when a Span gets continued
+	 */
+	void logContinuedSpan(Span span);
 
-	@Override
-	public String toString() {
-		return "ArrayListSpanAccumulator{" +
-				"spans=" + this.spans +
-				'}';
-	}
+	/**
+	 * Logic to run when a Span gets stopped (closed or detached)
+	 *
+	 * @param parent - maybe be nullable
+	 * @param span - current span
+	 */
+	void logStoppedSpan(Span parent, Span span);
 }

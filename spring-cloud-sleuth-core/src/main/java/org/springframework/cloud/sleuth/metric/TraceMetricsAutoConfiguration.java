@@ -47,27 +47,27 @@ public class TraceMetricsAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(CounterService.class)
-	@ConditionalOnMissingBean(SpanReporterService.class)
+	@ConditionalOnMissingBean(SpanMetricReporter.class)
 	protected static class CounterServiceSpanReporterConfig {
 		@Bean
 		@ConditionalOnBean(CounterService.class)
-		public SpanReporterService spanReporterCounterService(CounterService counterService,
+		public SpanMetricReporter spanReporterCounterService(CounterService counterService,
 				SleuthMetricProperties sleuthMetricProperties) {
-			return new CounterServiceBasedSpanReporterService(sleuthMetricProperties.getSpan().getAcceptedName(),
+			return new CounterServiceBasedSpanMetricReporter(sleuthMetricProperties.getSpan().getAcceptedName(),
 					sleuthMetricProperties.getSpan().getDroppedName(), counterService);
 		}
 
 		@Bean
 		@ConditionalOnMissingBean(CounterService.class)
-		public SpanReporterService noOpSpanReporterCounterService() {
-			return new NoOpSpanReporterService();
+		public SpanMetricReporter noOpSpanReporterCounterService() {
+			return new NoOpSpanMetricReporter();
 		}
 	}
 
 	@Bean
 	@ConditionalOnMissingClass("org.springframework.boot.actuate.metrics.CounterService")
-	@ConditionalOnMissingBean(SpanReporterService.class)
-	public SpanReporterService noOpSpanReporterCounterService() {
-		return new NoOpSpanReporterService();
+	@ConditionalOnMissingBean(SpanMetricReporter.class)
+	public SpanMetricReporter noOpSpanReporterCounterService() {
+		return new NoOpSpanMetricReporter();
 	}
 }

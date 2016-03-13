@@ -20,10 +20,6 @@ import java.net.URI;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.util.StringUtils;
 
 import feign.RequestInterceptor;
@@ -37,13 +33,10 @@ import feign.RequestTemplate;
  *
  * @since 1.0.0
  */
-final class TraceFeignRequestInterceptor implements RequestInterceptor,
-		ApplicationEventPublisherAware {
+final class TraceFeignRequestInterceptor implements RequestInterceptor {
 
 	private final Tracer tracer;
 	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
-
-	private ApplicationEventPublisher publisher;
 
 	TraceFeignRequestInterceptor(Tracer tracer) {
 		this.tracer = tracer;
@@ -68,7 +61,7 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor,
 			setHeader(template, Span.PARENT_ID_NAME, Span.idToHex(parentId));
 		}
 		setHeader(template, Span.PROCESS_ID_NAME, span.getProcessId());
-		publish(new ClientSentEvent(this, span));
+		span.logEvent(Span.CLIENT_SEND);
 	}
 
 	protected String getSpanName(RequestTemplate template) {
@@ -108,15 +101,4 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor,
 		}
 	}
 
-	private void publish(ApplicationEvent event) {
-		if (this.publisher != null) {
-			this.publisher.publishEvent(event);
-		}
-	}
-
-	@Override
-	public void setApplicationEventPublisher(
-			ApplicationEventPublisher applicationEventPublisher) {
-		this.publisher = applicationEventPublisher;
-	}
 }

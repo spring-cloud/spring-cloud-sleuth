@@ -10,12 +10,12 @@ import org.springframework.boot.actuate.metrics.CounterService;
  *
  * @since 1.0.0
  */
-public class CounterServiceBasedSpanReporterService implements SpanReporterService {
+public class CounterServiceBasedSpanMetricReporter implements SpanMetricReporter {
 	private final String acceptedSpansMetricName;
 	private final String droppedSpansMetricName;
 	private final CounterService counterService;
 
-	public CounterServiceBasedSpanReporterService(String acceptedSpansMetricName,
+	public CounterServiceBasedSpanMetricReporter(String acceptedSpansMetricName,
 			String droppedSpansMetricName, CounterService counterService) {
 		this.acceptedSpansMetricName = acceptedSpansMetricName;
 		this.droppedSpansMetricName = droppedSpansMetricName;

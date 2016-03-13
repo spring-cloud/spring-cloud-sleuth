@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.metric.SpanReporterService;
+import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
@@ -52,9 +52,9 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(ZipkinSpanReporter.class)
-	public ZipkinSpanReporter reporter(SpanReporterService spanReporterService, ZipkinProperties zipkin) {
+	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin) {
 		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
-				zipkin.getCompression().isEnabled(), spanReporterService);
+				zipkin.getCompression().isEnabled(), spanMetricReporter);
 	}
 
 	@Bean

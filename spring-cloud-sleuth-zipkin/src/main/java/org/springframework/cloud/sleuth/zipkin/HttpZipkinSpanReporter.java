@@ -16,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.logging.Log;
-import org.springframework.cloud.sleuth.metric.SpanReporterService;
+import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 
 import zipkin.Codec;
 import zipkin.Span;
@@ -41,20 +41,20 @@ public final class HttpZipkinSpanReporter
 	private final BlockingQueue<Span> pending = new LinkedBlockingQueue<>(1000);
 	private final Flusher flusher; // Nullable for testing
 	private final boolean compressionEnabled;
-	private final SpanReporterService spanReporterService;
+	private final SpanMetricReporter spanMetricReporter;
 
 	/**
 	 * @param baseUrl       URL of the zipkin query server instance. Like: http://localhost:9411/
 	 * @param flushInterval in seconds. 0 implies spans are {@link #flush() flushed} externally.
 	 * @param compressionEnabled compress spans using gzip before posting to the zipkin server.
-	 * @param spanReporterService service to count number of accepted / dropped spans
+	 * @param spanMetricReporter service to count number of accepted / dropped spans
 	 */
 	public HttpZipkinSpanReporter(String baseUrl, int flushInterval, boolean compressionEnabled,
-			SpanReporterService spanReporterService) {
+			SpanMetricReporter spanMetricReporter) {
 		this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
 		this.flusher = flushInterval > 0 ? new Flusher(this, flushInterval) : null;
 		this.compressionEnabled = compressionEnabled;
-		this.spanReporterService = spanReporterService;
+		this.spanMetricReporter = spanMetricReporter;
 	}
 
 	/**
@@ -64,9 +64,9 @@ public final class HttpZipkinSpanReporter
 	 */
 	@Override
 	public void report(Span span) {
-		this.spanReporterService.incrementAcceptedSpans(1);
+		this.spanMetricReporter.incrementAcceptedSpans(1);
 		if (!this.pending.offer(span)) {
-			this.spanReporterService.incrementDroppedSpans(1);
+			this.spanMetricReporter.incrementDroppedSpans(1);
 		}
 	}
 
@@ -87,7 +87,7 @@ public final class HttpZipkinSpanReporter
 		// NOTE: https://github.com/openzipkin/zipkin-java/issues/66 will throw instead of return null.
 		if (json == null) {
 			log.debug("failed to encode spans, dropping them: " + drained);
-			this.spanReporterService.incrementDroppedSpans(drained.size());
+			this.spanMetricReporter.incrementDroppedSpans(drained.size());
 			return;
 		}
 
@@ -102,7 +102,7 @@ public final class HttpZipkinSpanReporter
 						"error POSTing spans to " + this.url + ": as json: " + new String(json,
 								UTF_8), e);
 			}
-			this.spanReporterService.incrementDroppedSpans(drained.size());
+			this.spanMetricReporter.incrementDroppedSpans(drained.size());
 		}
 	}
 
@@ -164,6 +164,6 @@ public final class HttpZipkinSpanReporter
 			this.flusher.scheduler.shutdown();
 		// throw any outstanding spans on the floor
 		int dropped = this.pending.drainTo(new LinkedList<>());
-		this.spanReporterService.incrementDroppedSpans(dropped);
+		this.spanMetricReporter.incrementDroppedSpans(dropped);
 	}
 }

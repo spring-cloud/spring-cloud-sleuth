@@ -39,10 +39,10 @@ import org.springframework.util.StringUtils;
  * of the core annotations used to define the start and stop of a request:
  * <p>
  * <ul>
- *     <li><b>cs</b> - {@link org.springframework.cloud.sleuth.event.ClientSentEvent Client Sent}</li>
- *     <li><b>sr</b> - {@link org.springframework.cloud.sleuth.event.ServerReceivedEvent Server Received}</li>
- *     <li><b>ss</b> - {@link org.springframework.cloud.sleuth.event.ServerSentEvent Server Sent}</li>
- *     <li><b>cr</b> - {@link org.springframework.cloud.sleuth.event.ClientReceivedEvent Client Received}</li>
+ *     <li><b>cs</b> - Client Sent</li>
+ *     <li><b>sr</b> - Server Received</li>
+ *     <li><b>ss</b> - Server Sent</li>
+ *     <li><b>cr</b> - Client Received</li>
  * </ul>
  *
  * @author Spencer Gibb
@@ -63,7 +63,41 @@ public class Span {
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
 	public static final String SPAN_ID_NAME = "X-Span-Id";
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
+
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
+	/**
+	 * <b>cr</b> - Client Receive. Signifies the end of the span. The client has successfully received the
+	 * response from the server side. If one subtracts the cs timestamp from this timestamp one
+	 * will receive the whole time needed by the client to receive the response from the server.
+	 */
+	public static final String CLIENT_RECV = "cr";
+
+	/**
+	 * <b>cs</b> - Client Sent. The client has made a request (a client can be e.g.
+	 * {@link org.springframework.web.client.RestTemplate}. This annotation depicts
+	 * the start of the span.
+	 */
+	// For an outbound RPC call, it should log a "cs" annotation.
+	// If possible, it should log a binary annotation of "sa", indicating the
+	// destination address.
+	public static final String CLIENT_SEND = "cs";
+
+	/**
+	 * <b>sr</b> - Server Receive. The server side got the request and will start processing it.
+	 * If one subtracts the cs timestamp from this timestamp one will receive the network latency.
+	 */
+	// If an inbound RPC call, it should log a "sr" annotation.
+	// If possible, it should log a binary annotation of "ca", indicating the
+	// caller's address (ex X-Forwarded-For header)
+	public static final String SERVER_RECV = "sr";
+
+	/**
+	 * <b>ss</b> - Server Send. Annotated upon completion of request processing (when the response
+	 * got sent back to the client). If one subtracts the sr timestamp from this timestamp one
+	 * will receive the time needed by the server side to process the request.
+	 */
+	public static final String SERVER_SEND = "ss";
+
 	/**
 	 * <a href="https://github.com/opentracing/opentracing-go/blob/master/ext/tags.go">As in Open Tracing</a>
 	 */

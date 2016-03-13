@@ -22,13 +22,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -60,9 +62,10 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(Tracer.class)
 	public DefaultTracer traceManager(Sampler sampler, Random random,
-									ApplicationEventPublisher publisher,
-									SpanNamer spanNamer) {
-		return new DefaultTracer(sampler, random, publisher, spanNamer);
+									SpanNamer spanNamer, SpanLogger spanLogger,
+									SpanReporter spanReporter) {
+		return new DefaultTracer(sampler, random, spanNamer, spanLogger,
+				spanReporter);
 	}
 
 	@Bean
@@ -75,6 +78,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	public SpanNamer spanNamer() {
 		return new DefaultSpanNamer();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public SpanReporter defaultSpanReporter() {
+		return new NoOpSpanReporter();
 	}
 
 }

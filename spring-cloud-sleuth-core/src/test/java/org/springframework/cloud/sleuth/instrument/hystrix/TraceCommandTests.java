@@ -5,15 +5,15 @@ import java.util.Random;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.context.ApplicationEventPublisher;
 
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
@@ -31,7 +31,7 @@ public class TraceCommandTests {
 
 	static final long EXPECTED_TRACE_ID = 1L;
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			Mockito.mock(ApplicationEventPublisher.class), new DefaultSpanNamer());
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
 	@Before
 	public void setup() {
@@ -85,7 +85,7 @@ public class TraceCommandTests {
 	@Test
 	public void should_pass_tracing_information_when_using_Hystrix_commands() {
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				Mockito.mock(ApplicationEventPublisher.class), new DefaultSpanNamer());
+				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 		TraceKeys traceKeys = new TraceKeys();
 		HystrixCommand.Setter setter = HystrixCommand.Setter
 				.withGroupKey(HystrixCommandGroupKey.Factory.asKey("group"))

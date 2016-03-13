@@ -52,4 +52,11 @@ public class Log {
 	public String getEvent() {
 		return this.event;
 	}
+
+	@Override public String toString() {
+		return "Log{" +
+				"timestamp=" + this.timestamp +
+				", event='" + this.event + '\'' +
+				'}';
+	}
 }

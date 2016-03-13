@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.event;
-
-import org.springframework.cloud.sleuth.Span;
+package org.springframework.cloud.sleuth;
 
 /**
- * Event emitted when a parent or a child span was created.
+ * Contract for reporting Sleuth spans for collection. For example to Zipkin.
  *
- * @author Spencer Gibb
+ * @author Marcin Grzejszczak
+ *
  * @since 1.0.0
  */
-@SuppressWarnings("serial")
-public class SpanAcquiredEvent extends SpanParentContainingEvent {
-
-	public SpanAcquiredEvent(Object source, Span span) {
-		this(source, null, span);
-	}
-
-	public SpanAcquiredEvent(Object source, Span parent, Span span) {
-		super(source, parent, span);
-	}
+public interface SpanReporter {
+	/**
+	 * Reports a completed span out of band, usually out of process.
+	 * This is typically to a trace depot (ex zipkin) or a log file.
+	 */
+	void report(Span span);
 }

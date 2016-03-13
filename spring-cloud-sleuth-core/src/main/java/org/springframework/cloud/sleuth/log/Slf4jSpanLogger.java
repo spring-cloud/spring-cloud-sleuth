@@ -21,12 +21,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.event.SpanAcquiredEvent;
-import org.springframework.cloud.sleuth.event.SpanContinuedEvent;
-import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 
 /**
  * Span listener that logs to the console when a span got
@@ -36,53 +30,48 @@ import org.springframework.core.annotation.Order;
  *
  * @since 1.0.0
  */
-public class Slf4jSpanListener {
+public class Slf4jSpanLogger implements SpanLogger {
 
 	private final Logger log;
 	private final Pattern nameSkipPattern;
 
-	public Slf4jSpanListener(String nameSkipPattern) {
+	public Slf4jSpanLogger(String nameSkipPattern) {
 		this.nameSkipPattern = Pattern.compile(nameSkipPattern);
 		this.log = org.slf4j.LoggerFactory
-				.getLogger(Slf4jSpanListener.class);
+				.getLogger(Slf4jSpanLogger.class);
 	}
 
-	Slf4jSpanListener(String nameSkipPattern, Logger log) {
+	Slf4jSpanLogger(String nameSkipPattern, Logger log) {
 		this.nameSkipPattern = Pattern.compile(nameSkipPattern);
 		this.log = log;
 	}
 
-	@EventListener(SpanAcquiredEvent.class)
-	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void start(SpanAcquiredEvent event) {
-		Span span = event.getSpan();
+	@Override
+	public void logStartedSpan(Span parent, Span span) {
 		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
 		MDC.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		log("Starting span: {}", span);
-		if (event.getParent() != null) {
-			log("With parent: {}", event.getParent());
+		if (parent != null) {
+			log("With parent: {}", parent);
 		}
 	}
 
-	@EventListener(SpanContinuedEvent.class)
-	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void continued(SpanContinuedEvent event) {
-		Span span = event.getSpan();
+	@Override
+	public void logContinuedSpan(Span span) {
 		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		MDC.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
-		log("Continued span: {}", event.getSpan());
+		log("Continued span: {}", span);
 	}
 
-	@EventListener(SpanReleasedEvent.class)
-	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void stop(SpanReleasedEvent event) {
-		log("Stopped span: {}", event.getSpan());
-		if (event.getParent() != null) {
-			log("With parent: {}", event.getParent());
-			MDC.put(Span.SPAN_ID_NAME, Span.idToHex(event.getParent().getSpanId()));
-			MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(event.getParent().isExportable()));
+	@Override
+	public void logStoppedSpan(Span parent, Span span) {
+		log("Stopped span: {}", span);
+		if (parent != null) {
+			log("With parent: {}", parent);
+			MDC.put(Span.SPAN_ID_NAME, Span.idToHex(parent.getSpanId()));
+			MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(parent.isExportable()));
 		}
 		else {
 			MDC.remove(Span.SPAN_ID_NAME);

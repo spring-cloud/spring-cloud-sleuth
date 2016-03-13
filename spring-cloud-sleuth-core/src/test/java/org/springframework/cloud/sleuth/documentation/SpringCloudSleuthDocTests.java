@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanName;
@@ -34,9 +35,9 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceCallable;
 import org.springframework.cloud.sleuth.TraceRunnable;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -115,8 +116,8 @@ public class SpringCloudSleuthDocTests {
 		executorService.shutdown();
 	}
 
-	ApplicationEventPublisher publisher = Mockito.mock(ApplicationEventPublisher.class);
-	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher, new DefaultSpanNamer());
+	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
+			new NoOpSpanLogger(), new NoOpSpanReporter());
 
 	@Test
 	public void should_create_a_span_with_tracer() {
@@ -222,7 +223,8 @@ public class SpringCloudSleuthDocTests {
 	@Test
 	public void should_wrap_runnable_in_its_sleuth_representative() {
 		SpanNamer spanNamer = new DefaultSpanNamer();
-		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher, spanNamer);
+		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), spanNamer,
+				new NoOpSpanLogger(), new NoOpSpanReporter());
 		Span initialSpan = tracer.createSpan("initialSpan");
 		// tag::trace_runnable[]
 		Runnable runnable = new Runnable() {
@@ -251,7 +253,8 @@ public class SpringCloudSleuthDocTests {
 	@Test
 	public void should_wrap_callable_in_its_sleuth_representative() {
 		SpanNamer spanNamer = new DefaultSpanNamer();
-		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), this.publisher, spanNamer);
+		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), spanNamer,
+				new NoOpSpanLogger(), new NoOpSpanReporter());
 		Span initialSpan = tracer.createSpan("initialSpan");
 		// tag::trace_callable[]
 		Callable<String> callable = new Callable<String>() {

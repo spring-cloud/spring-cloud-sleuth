@@ -29,14 +29,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.ServerReceivedEvent;
-import org.springframework.cloud.sleuth.event.ServerSentEvent;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
@@ -68,8 +64,7 @@ import static org.springframework.util.StringUtils.hasText;
  * @since 1.0.0
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
-public class TraceFilter extends OncePerRequestFilter
-		implements ApplicationEventPublisherAware {
+public class TraceFilter extends OncePerRequestFilter {
 
 	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".TRACE";
@@ -81,25 +76,22 @@ public class TraceFilter extends OncePerRequestFilter
 	private final TraceKeys traceKeys;
 	private final Pattern skipPattern;
 	private final Random random;
+	private final SpanReporter spanReporter;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
-	private ApplicationEventPublisher publisher;
 
-	public TraceFilter(Tracer tracer, TraceKeys traceKeys) {
-		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), new Random());
+	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter) {
+		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), new Random(),
+				spanReporter);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
-			Random random) {
+			Random random, SpanReporter spanReporter) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
 		this.random = random;
-	}
-
-	@Override
-	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
-		this.publisher = publisher;
+		this.spanReporter = spanReporter;
 	}
 
 	@Override
@@ -152,7 +144,9 @@ public class TraceFilter extends OncePerRequestFilter
 
 				Span parent = span.build();
 				spanFromRequest = this.tracer.createSpan(name, parent);
-				publish(new ServerReceivedEvent(this, parent, spanFromRequest));
+				if (parent != null && parent.isRemote()) {
+					parent.logEvent(Span.SERVER_RECV);
+				}
 				request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 
 			}
@@ -193,8 +187,11 @@ public class TraceFilter extends OncePerRequestFilter
 			if (spanFromRequest != null) {
 				addResponseTags(response, exception);
 				if (spanFromRequest.hasSavedSpan()) {
-					publish(new ServerSentEvent(this, spanFromRequest.getSavedSpan(),
-							spanFromRequest));
+					Span parent =  spanFromRequest.getSavedSpan();
+					if (parent != null && parent.isRemote()) {
+						parent.logEvent(Span.SERVER_SEND);
+						this.spanReporter.report(parent);
+					}
 				}
 				// Double close to clean up the parent (remote span as well)
 				this.tracer.close(spanFromRequest);
@@ -208,12 +205,6 @@ public class TraceFilter extends OncePerRequestFilter
 				response.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 				response.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 			}
-		}
-	}
-
-	private void publish(ApplicationEvent event) {
-		if (this.publisher != null) {
-			this.publisher.publishEvent(event);
 		}
 	}
 

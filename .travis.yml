@@ -9,9 +9,6 @@ before_install:
   - echo "https://$GH_TOKEN:@github.com" > .git/credentials
   - gem install asciidoctor
 install:
-- ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
-- '[ "${MVN_GOAL}" == "deploy" ] && ./docs/src/main/asciidoc/ghpages.sh || echo "Not updating docs"'
-script:
 -  |
     cat <<EOF
 
@@ -23,15 +20,21 @@ script:
     VERSION=${VERSION}
     MILESTONE=${MILESTONE}
     MVN_PROFILE=${MVN_PROFILE}
+    TRAVIS_BRANCH=${TRAVIS_BRANCH}
+    TRAVIS_REPO_SLUG=${TRAVIS_REPO_SLUG}
+    TRAVIS_PULL_REQUEST=${TRAVIS_PULL_REQUEST}
 
     EOF
+- ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
+- '[ "${MVN_GOAL}" == "deploy" ] && ./docs/src/main/asciidoc/ghpages.sh || echo "Not updating docs"'
+script:
 - './mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu -Dmaven.test.redirectTestOutputToFile=true'
 env:
   global:
   - GIT_NAME="Spencer Gibb"
   - GIT_EMAIL=sgibb@pivotal.io
   - CI_DEPLOY_USERNAME=sgibb
-  - FEATURE_BRANCH=$(echo ${TRAVIS_BRANCH} | grep "^.*/.*$" && echo true || echo false)
+  - FEATURE_BRANCH=$(echo ${TRAVIS_BRANCH} | grep -v "master" && echo true || echo false)
   - SPRING_CLOUD_BUILD=$(echo ${TRAVIS_REPO_SLUG} | grep -q "^spring-cloud/.*$" && echo true || echo false)
   - MVN_GOAL=$([ "${TRAVIS_PULL_REQUEST}" == "false" -a "${TRAVIS_TAG}" == "" -a "${FEATURE_BRANCH}" == "false" -a "${SPRING_CLOUD_BUILD}" == "true" ] && echo deploy || echo install)
   - VERSION=$(mvn validate | grep Building | head -1 | sed -e 's/.* //')

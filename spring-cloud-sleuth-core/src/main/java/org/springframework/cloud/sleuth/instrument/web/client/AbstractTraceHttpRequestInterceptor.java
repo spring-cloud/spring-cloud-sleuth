@@ -20,11 +20,6 @@ import java.net.URI;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.cloud.sleuth.event.ClientSentEvent;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.http.HttpRequest;
 import org.springframework.util.StringUtils;
 
@@ -36,20 +31,14 @@ import org.springframework.util.StringUtils;
  *
  * @since 1.0.0
  */
-abstract class AbstractTraceHttpRequestInterceptor
-		implements ApplicationEventPublisherAware {
+abstract class AbstractTraceHttpRequestInterceptor {
 
-	private ApplicationEventPublisher publisher;
 	protected final Tracer tracer;
 
 	protected AbstractTraceHttpRequestInterceptor(Tracer tracer) {
 		this.tracer = tracer;
 	}
 
-	@Override
-	public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
-		this.publisher = publisher;
-	}
 
 	private void enrichWithTraceHeaders(HttpRequest request, Span span) {
 		setIdHeader(request, Span.TRACE_ID_NAME, span.getTraceId());
@@ -88,7 +77,7 @@ abstract class AbstractTraceHttpRequestInterceptor
 		String spanName = uriScheme(uri) + ":" + uri.getPath();
 		Span newSpan = this.tracer.createSpan(spanName);
 		enrichWithTraceHeaders(request, newSpan);
-		publish(new ClientSentEvent(this, newSpan));
+		newSpan.logEvent(Span.CLIENT_SEND);
 	}
 
 	private String uriScheme(URI uri) {
@@ -96,20 +85,14 @@ abstract class AbstractTraceHttpRequestInterceptor
 	}
 
 	/**
-	 * Close the current span and emit the ClientReceivedEvent
+	 * Close the current span and log the client received event
 	 */
 	public void finish() {
 		if (!isTracing()) {
 			return;
 		}
-		publish(new ClientReceivedEvent(this, currentSpan()));
+		currentSpan().logEvent(Span.CLIENT_RECV);
 		this.tracer.close(this.currentSpan());
-	}
-
-	private void publish(ApplicationEvent event) {
-		if (this.publisher != null) {
-			this.publisher.publishEvent(event);
-		}
 	}
 
 	protected Span currentSpan() {

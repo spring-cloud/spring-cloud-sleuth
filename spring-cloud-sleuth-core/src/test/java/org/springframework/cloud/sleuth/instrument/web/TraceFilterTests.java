@@ -24,13 +24,14 @@ import org.mockito.Mock;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -52,8 +53,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  */
 public class TraceFilterTests {
 
-	@Mock
-	private ApplicationEventPublisher publisher;
+	@Mock SpanLogger spanLogger;
+	@Mock SpanReporter spanReporter;
 
 	private Tracer tracer;
 	private TraceKeys traceKeys = new TraceKeys();
@@ -69,7 +70,7 @@ public class TraceFilterTests {
 	public void init() {
 		initMocks(this);
 		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),
-				this.publisher, new DefaultSpanNamer()) {
+				new DefaultSpanNamer(), this.spanLogger, this.spanReporter) {
 			@Override
 			public Span continueSpan(Span span) {
 				TraceFilterTests.this.span = super.continueSpan(span);
@@ -90,7 +91,7 @@ public class TraceFilterTests {
 	@Test
 	public void notTraced() throws Exception {
 		this.sampler = NeverSampler.INSTANCE;
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanReporter);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
@@ -103,7 +104,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanReporter);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpTags();
 		assertNull(TestSpanContextHolder.getCurrentSpan());
@@ -116,7 +117,7 @@ public class TraceFilterTests {
 				.header(Span.TRACE_ID_NAME, Span.idToHex(2L))
 				.header(Span.PARENT_ID_NAME, Span.idToHex(3L))
 				.buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanReporter);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -132,7 +133,7 @@ public class TraceFilterTests {
 		// It should have been removed from the thread local context so simulate that
 		TestSpanContextHolder.removeCurrentSpan();
 
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanReporter);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
@@ -145,7 +146,7 @@ public class TraceFilterTests {
 		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanReporter);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
@@ -159,7 +160,7 @@ public class TraceFilterTests {
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanReporter);
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -174,7 +175,7 @@ public class TraceFilterTests {
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanReporter);
 		this.request.addHeader("X-Foo", "bar");
 		this.request.addHeader("X-Foo", "spam");
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -186,7 +187,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void catchesException() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys);
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanReporter);
 		this.filterChain = new MockFilterChain() {
 			@Override
 			public void doFilter(javax.servlet.ServletRequest request,

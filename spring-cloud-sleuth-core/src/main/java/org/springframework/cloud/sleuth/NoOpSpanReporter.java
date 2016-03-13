@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.event;
-
-import org.springframework.cloud.sleuth.Span;
+package org.springframework.cloud.sleuth;
 
 /**
- * <b>sr</b> - Server Receive. The server side got the request and will start processing it.
- * If one subtracts the cs timestamp from this timestamp one will receive the network latency.
+ * Span reporter that does nothing
  *
- * @author Spencer Gibb
+ * @author Marcin Grzejszczak
+ *
  * @since 1.0.0
- *
- * @see ClientSentEvent
  */
-@SuppressWarnings("serial")
-public class ServerReceivedEvent extends SpanParentContainingEvent {
+public class NoOpSpanReporter implements SpanReporter {
+	@Override
+	public void report(Span span) {
 
-	public ServerReceivedEvent(Object source, Span span) {
-		this(source, null, span);
-	}
-
-	public ServerReceivedEvent(Object source, Span parent, Span span) {
-		super(source, parent, span);
 	}
 }

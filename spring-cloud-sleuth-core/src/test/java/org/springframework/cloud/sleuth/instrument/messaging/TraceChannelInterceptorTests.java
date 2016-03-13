@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,13 +27,12 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.SpanReleasedEvent;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
@@ -72,7 +68,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	private MessagingTemplate messagingTemplate;
 
 	@Autowired
-	private App app;
+	private ArrayListSpanAccumulator accumulator;
 
 	private Message<?> message;
 
@@ -120,7 +116,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 				.hexToId(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
-		assertEquals(1, this.app.events.size());
+		assertEquals(1, this.accumulator.getSpans().size());
 	}
 
 	@Test
@@ -171,11 +167,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@EnableAutoConfiguration
 	static class App {
 
-		private List<SpanReleasedEvent> events = new ArrayList<>();
-
-		@EventListener
-		public void handle(SpanReleasedEvent event) {
-			this.events.add(event);
+		@Bean
+		ArrayListSpanAccumulator arrayListSpanAccumulator() {
+			return new ArrayListSpanAccumulator();
 		}
 
 		@Bean

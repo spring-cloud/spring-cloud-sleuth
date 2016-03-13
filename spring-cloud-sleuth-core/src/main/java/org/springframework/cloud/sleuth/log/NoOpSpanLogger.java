@@ -14,25 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.event;
+package org.springframework.cloud.sleuth.log;
 
 import org.springframework.cloud.sleuth.Span;
 
 /**
- * <b>cr</b> - Client Receive. Signifies the end of the span. The client has successfully received the
- * response from the server side. If one subtracts the cs timestamp from this timestamp one
- * will receive the whole time needed by the client to receive the response from the server.
+ * Logger of Spans that does nothing
  *
- * @author Dave Syer
+ * @author Marcin Grzejszczak
+ *
  * @since 1.0.0
- *
- * @see ClientSentEvent
  */
-@SuppressWarnings("serial")
-public class ClientReceivedEvent extends SpanContainingEvent {
+public class NoOpSpanLogger implements SpanLogger {
+	@Override
+	public void logStartedSpan(Span parent, Span span) {
 
-	public ClientReceivedEvent(Object source, Span span) {
-		super(source, span);
 	}
 
+	@Override
+	public void logContinuedSpan(Span span) {
+
+	}
+
+	@Override
+	public void logStoppedSpan(Span parent, Span span) {
+
+	}
 }

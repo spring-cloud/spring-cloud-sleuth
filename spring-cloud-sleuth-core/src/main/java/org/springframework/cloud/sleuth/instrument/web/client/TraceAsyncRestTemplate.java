@@ -20,10 +20,6 @@ import java.net.URI;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.event.ClientReceivedEvent;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
@@ -43,10 +39,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * @since 1.0.0
  */
-class TraceAsyncRestTemplate extends AsyncRestTemplate
-		implements ApplicationEventPublisherAware {
-
-	private ApplicationEventPublisher publisher;
+class TraceAsyncRestTemplate extends AsyncRestTemplate {
 
 	private final Tracer tracer;
 
@@ -93,14 +86,8 @@ class TraceAsyncRestTemplate extends AsyncRestTemplate
 		if (!isTracing()) {
 			return;
 		}
-		publish(new ClientReceivedEvent(this, currentSpan()));
+		currentSpan().logEvent(Span.CLIENT_RECV);
 		this.tracer.close(this.currentSpan());
-	}
-
-	private void publish(ApplicationEvent event) {
-		if (this.publisher != null) {
-			this.publisher.publishEvent(event);
-		}
 	}
 
 	private Span currentSpan() {
@@ -111,9 +98,4 @@ class TraceAsyncRestTemplate extends AsyncRestTemplate
 		return this.tracer.isTracing();
 	}
 
-	@Override
-	public void setApplicationEventPublisher(
-			ApplicationEventPublisher applicationEventPublisher) {
-		this.publisher = applicationEventPublisher;
-	}
 }
