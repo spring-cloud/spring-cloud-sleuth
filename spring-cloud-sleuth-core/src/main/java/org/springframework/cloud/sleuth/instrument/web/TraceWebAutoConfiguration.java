@@ -78,11 +78,6 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public SpanInjector httpRequestInjector() {
-		return new HttpRequestInjector();
-	}
-
-	@Bean
 	public SpanJoiner httpServletJoiner(Random random, SkipPatternProvider skipPatternProvider) {
 		return new HttpServletRequestJoiner(random, skipPatternProvider.skipPattern());
 	}
