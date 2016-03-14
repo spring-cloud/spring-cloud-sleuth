@@ -26,7 +26,7 @@ import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonComm
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.util.MultiValueMap;
 
 import com.netflix.client.http.HttpRequest;
@@ -43,12 +43,12 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 
 	private static final Log log = LogFactory.getLog(TraceRestClientRibbonCommandFactory.class);
 
-	private final SpanAccessor accessor;
+	private final Tracer tracer;
 
 	public TraceRestClientRibbonCommandFactory(SpringClientFactory clientFactory,
-			SpanAccessor accessor) {
+			Tracer tracer) {
 		super(clientFactory);
-		this.accessor = accessor;
+		this.tracer = tracer;
 	}
 
 	@Override
@@ -60,7 +60,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
 					getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
 					context.getHeaders(), context.getParams(), context.getRequestEntity(),
-					this.accessor);
+					this.tracer);
 		}
 		catch (URISyntaxException e) {
 			log.error("Exception occurred while trying to create the TraceRestClientRibbonCommand", e);
@@ -70,52 +70,29 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 
 	class TraceRestClientRibbonCommand extends RestClientRibbonCommand {
 
-		private final SpanAccessor accessor;
+		private final Tracer tracer;
 
 		@SuppressWarnings("deprecation")
 		public TraceRestClientRibbonCommand(String commandKey, RestClient restClient,
 				HttpRequest.Verb verb, String uri, Boolean retryable,
 				MultiValueMap<String, String> headers,
 				MultiValueMap<String, String> params, InputStream requestEntity,
-				SpanAccessor accessor)
+				Tracer tracer)
 						throws URISyntaxException {
 			super(commandKey, restClient, verb, uri, retryable, headers, params,
 					requestEntity);
-			this.accessor = accessor;
+			this.tracer = tracer;
 		}
 
 		@Override
 		protected void customizeRequest(HttpRequest.Builder requestBuilder) {
 			Span span = getCurrentSpan();
-			if (span == null) {
-				setHeader(requestBuilder, Span.NOT_SAMPLED_NAME, "true");
-				return;
-			}
-			setHeader(requestBuilder, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-			setHeader(requestBuilder, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-			setHeader(requestBuilder, Span.SPAN_NAME_NAME, span.getName());
-			if (getParentId(span) != null) {
-				setHeader(requestBuilder, Span.PARENT_ID_NAME,
-						Span.idToHex(getParentId(span)));
-			}
-			setHeader(requestBuilder, Span.PROCESS_ID_NAME,
-					span.getProcessId());
+			this.tracer.inject(span, requestBuilder);
 			span.logEvent(Span.CLIENT_SEND);
 		}
 
-		private Long getParentId(Span span) {
-			return !span.getParents().isEmpty()
-					? span.getParents().get(0) : null;
-		}
-
-		public void setHeader(HttpRequest.Builder builder, String name, String value) {
-			if (value != null && this.accessor.isTracing()) {
-				builder.header(name, value);
-			}
-		}
-
 		private Span getCurrentSpan() {
-			return this.accessor.getCurrentSpan();
+			return this.tracer.getCurrentSpan();
 		}
 
 	}

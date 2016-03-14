@@ -28,7 +28,7 @@ import org.springframework.util.StringUtils;
  *
  * @since 1.0.0
  */
-public class HttpRequestInjector implements SpanInjector {
+class HttpRequestInjector implements SpanInjector {
 
 	@Override
 	public <T> void inject(Span span, T carrier) {

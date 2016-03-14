@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.SpanInjector;
  *
  * @since 1.0.0
  */
-public class HttpServletResponseInjector implements SpanInjector {
+class HttpServletResponseInjector implements SpanInjector {
 
 	@Override
 	public <T> void inject(Span span, T carrier) {

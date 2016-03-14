@@ -28,13 +28,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UrlPathHelper;
 
 /**
- * Creates a {@link SpanBuilder} from {@link HttpServletDataHolder}
+ * Creates a {@link SpanBuilder} from {@link HttpServletRequest}
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
-public class HttpServletRequestJoiner implements SpanJoiner {
+class HttpServletRequestJoiner implements SpanJoiner {
 
 	private static final String HTTP_COMPONENT = "http";
 

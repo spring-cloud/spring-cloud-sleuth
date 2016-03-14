@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.util.Collections;
 import java.util.Random;
 
 import org.junit.After;
@@ -47,7 +48,7 @@ public class TracePreZuulFilterTests {
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-			new SpanInjectorComposite());
+			new SpanInjectorComposite(Collections.singletonList(new RequestContextInjector())));
 
 	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer);
 

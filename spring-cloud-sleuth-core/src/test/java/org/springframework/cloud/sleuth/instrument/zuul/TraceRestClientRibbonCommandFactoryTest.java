@@ -19,13 +19,14 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.client.http.HttpRequest;
 import com.netflix.niws.client.http.RestClient;
@@ -41,7 +42,7 @@ import static org.mockito.Matchers.anyString;
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRestClientRibbonCommandFactoryTest {
 
-	@Mock SpanAccessor accessor;
+	@Mock Tracer tracer;
 	@Mock SpringClientFactory springClientFactory;
 	TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory;
 
@@ -49,7 +50,7 @@ public class TraceRestClientRibbonCommandFactoryTest {
 	@SuppressWarnings({"deprecation", "unchecked"})
 	public void setup() {
 		this.traceRestClientRibbonCommandFactory = new TraceRestClientRibbonCommandFactory(
-				this.springClientFactory, this.accessor);
+				this.springClientFactory, this.tracer);
 		given(this.springClientFactory.getClient(anyString(), any(Class.class))).willReturn(new RestClient());
 		Span span = Span.builder()
 				.name("name")
@@ -58,8 +59,13 @@ public class TraceRestClientRibbonCommandFactoryTest {
 				.parent(3L)
 				.processId("processId")
 				.build();
-		given(this.accessor.getCurrentSpan()).willReturn(span);
-		given(this.accessor.isTracing()).willReturn(true);
+		given(this.tracer.getCurrentSpan()).willReturn(span);
+		given(this.tracer.isTracing()).willReturn(true);
+		BDDMockito.doAnswer(invocation -> {
+				Object[] args = invocation.getArguments();
+				new RequestBuilderContextInjector().inject((Span) args[0], args[1]);
+				return null;
+		}).when(this.tracer).inject(any(Span.class), any());
 	}
 
 	@Test
