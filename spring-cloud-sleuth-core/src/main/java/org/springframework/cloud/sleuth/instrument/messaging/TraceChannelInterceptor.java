@@ -16,15 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.Random;
-
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.support.MessageBuilder;
 
 /**
  * A channel interceptor that automatically starts / continues / closes and detaches spans.
@@ -34,13 +33,15 @@ import org.springframework.messaging.MessageHandler;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
-	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys, Random random) {
-		super(tracer, traceKeys, random);
+	private static final String SPAN_HEADER = "X-Current-Span";
+
+	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys) {
+		super(tracer, traceKeys);
 	}
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		getTracer().close(SpanMessageHeaders.getSpanFromHeader(message));
+		getTracer().close(getSpanFromHeader(message));
 	}
 
 	@Override
@@ -49,7 +50,9 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 				: buildSpan(message);
 		String name = getMessageChannelName(channel);
 		Span span = startSpan(parentSpan, name, message);
-		return SpanMessageHeaders.addSpanHeaders(getTraceKeys(), message, span);
+		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
+		getTracer().inject(span, messageBuilder);
+		return messageBuilder.build();
 	}
 
 	private Span startSpan(Span span, String name, Message<?> message) {
@@ -65,14 +68,25 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
 			MessageHandler handler) {
-		getTracer().continueSpan(SpanMessageHeaders.getSpanFromHeader(message));
+		getTracer().continueSpan(getSpanFromHeader(message));
 		return message;
 	}
 
 	@Override
 	public void afterMessageHandled(Message<?> message, MessageChannel channel,
 			MessageHandler handler, Exception ex) {
-		getTracer().detach(SpanMessageHeaders.getSpanFromHeader(message));
+		getTracer().detach(getSpanFromHeader(message));
+	}
+
+	private Span getSpanFromHeader(Message<?> message) {
+		if (message == null) {
+			return null;
+		}
+		Object object = message.getHeaders().get(SPAN_HEADER);
+		if (object instanceof Span) {
+			return (Span) object;
+		}
+		return null;
 	}
 
 }

@@ -29,6 +29,8 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
+import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
+import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 
 import static org.hamcrest.Matchers.instanceOf;
@@ -41,7 +43,8 @@ public class TraceAsyncListenableTaskExecutorTest {
 
 	AsyncListenableTaskExecutor delegate = mock(AsyncListenableTaskExecutor.class);
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter()) {
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
+			new SpanInjectorComposite()) {
 		@Override public boolean isTracing() {
 			return true;
 		}

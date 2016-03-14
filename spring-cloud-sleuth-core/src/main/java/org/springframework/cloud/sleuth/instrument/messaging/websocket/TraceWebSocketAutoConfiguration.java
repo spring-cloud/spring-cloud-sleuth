@@ -1,12 +1,10 @@
 package org.springframework.cloud.sleuth.instrument.messaging.websocket;
 
-import java.util.Random;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptor;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.stereotype.Component;
@@ -35,9 +33,6 @@ public class TraceWebSocketAutoConfiguration
 	@Autowired
 	private TraceKeys traceKeys;
 
-	@Autowired
-	private Random random;
-
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		// The user must register their own endpoints
@@ -46,12 +41,12 @@ public class TraceWebSocketAutoConfiguration
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(
-				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.random));
+				new TraceChannelInterceptor(this.tracer, this.traceKeys));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(
-				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.random));
+				new TraceChannelInterceptor(this.tracer, this.traceKeys));
 	}
 }

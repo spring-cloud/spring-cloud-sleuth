@@ -71,7 +71,8 @@ public class DefaultTracerTests {
 	public void tracingWorks() {
 
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
-				new DefaultSpanNamer(), this.spanLogger, this.spanReporter);
+				new DefaultSpanNamer(), this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new SpanInjectorComposite());
 
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE, new AlwaysSampler());
 		try {
@@ -105,7 +106,8 @@ public class DefaultTracerTests {
 	@Test
 	public void nonExportable() {
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new SpanInjectorComposite());
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(false));
 	}
@@ -113,7 +115,8 @@ public class DefaultTracerTests {
 	@Test
 	public void exportable() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new SpanInjectorComposite());
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		assertThat(span.isExportable(), is(true));
 	}
@@ -121,7 +124,8 @@ public class DefaultTracerTests {
 	@Test
 	public void exportableInheritedFromParent() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new SpanInjectorComposite());
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
 		assertThat(span.isExportable(), is(false));
 		Span child = tracer.createSpan(CREATE_SIMPLE_TRACE_SPAN_NAME + "/child", span);
@@ -131,7 +135,8 @@ public class DefaultTracerTests {
 	@Test
 	public void parentNotRemovedIfActiveOnJoin() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new SpanInjectorComposite());
 		Span parent = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		Span span = tracer.createSpan(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
@@ -141,7 +146,8 @@ public class DefaultTracerTests {
 	@Test
 	public void parentRemovedIfNotActiveOnJoin() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new SpanInjectorComposite());
 		Span parent = Span.builder().name(CREATE_SIMPLE_TRACE).traceId(1L).spanId(1L)
 				.build();
 		Span span = tracer.createSpan(IMPORTANT_WORK_1, parent);
@@ -152,7 +158,8 @@ public class DefaultTracerTests {
 	@Test
 	public void grandParentRestoredAfterAutoClose() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new SpanInjectorComposite());
 		Span grandParent = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
 				.build();
@@ -164,7 +171,8 @@ public class DefaultTracerTests {
 	@Test
 	public void shouldUpdateLogsInSpanWhenItGetsContinued() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new SpanInjectorComposite());
 		Span span = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
 				.build();
 		Span continuedSpan = tracer.continueSpan(span);

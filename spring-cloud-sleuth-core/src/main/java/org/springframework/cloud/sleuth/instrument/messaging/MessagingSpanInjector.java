@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -29,24 +30,30 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.StringUtils;
 
 /**
- * Utility for manipulating message headers related to span data.
+ * Creates a {@link Span.SpanBuilder} from {@link Message}
  *
- * @author Dave Syer
+ * @author Marcin Grzejszczak
  *
+ * @since 1.0.0
  */
-public class SpanMessageHeaders {
+public class MessagingSpanInjector implements SpanInjector {
 
 	public static final String SPAN_HEADER = "X-Current-Span";
 
-	public static Span getSpanFromHeader(Message<?> message) {
-		if (message == null) {
-			return null;
+	private final TraceKeys traceKeys;
+
+	public MessagingSpanInjector(TraceKeys traceKeys) {
+		this.traceKeys = traceKeys;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> void inject(Span span, T carrier) {
+		if (!(carrier instanceof MessageBuilder)) {
+			return;
 		}
-		Object object = message.getHeaders().get(SPAN_HEADER);
-		if (object instanceof Span) {
-			return (Span) object;
-		}
-		return null;
+		MessageBuilder messageBuilder = (MessageBuilder) carrier;
+		addSpanHeaders(this.traceKeys, messageBuilder, span);
 	}
 
 	/**
@@ -55,27 +62,28 @@ public class SpanMessageHeaders {
 	 * a tag set it will not get overridden.
 	 *
 	 * @param traceKeys - the global configuration for trace keys
-	 * @param message - message to which headers will be added
+	 * @param messageBuilder - message builder to which headers will be added
 	 * @param span - span from which headers will be taken
 	 * @return the input message with updated headers
 	 */
-	public static Message<?> addSpanHeaders(TraceKeys traceKeys, Message<?> message,
+	public void addSpanHeaders(TraceKeys traceKeys, MessageBuilder messageBuilder,
 			Span span) {
+		Message initialMessage = messageBuilder.build();
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
-				.getMutableAccessor(message);
+				.getMutableAccessor(initialMessage);
 		if (span == null) {
-			if (!message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
+			if (!initialMessage.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
 				accessor.setHeader(Span.NOT_SAMPLED_NAME, "true");
-				return MessageBuilder.createMessage(message.getPayload(),
-						accessor.getMessageHeaders());
+				messageBuilder.setHeaders(accessor);
+				return;
 			}
-			return message;
+			return;
 		}
 		Map<String, String> headers = new HashMap<>();
 		addHeader(headers, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		addHeader(headers, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		if (span.isExportable()) {
-			addAnnotations(traceKeys, message, span);
+			addAnnotations(traceKeys, initialMessage, span);
 			Long parentId = getFirst(span.getParents());
 			if (parentId != null) {
 				addHeader(headers, Span.PARENT_ID_NAME, Span.idToHex(parentId));
@@ -94,11 +102,10 @@ public class SpanMessageHeaders {
 				nativeAccessor.setNativeHeader(name, headers.get(name));
 			}
 		}
-		return MessageBuilder.createMessage(message.getPayload(),
-				accessor.getMessageHeaders());
+		messageBuilder.setHeaders(accessor);
 	}
 
-	public static void addAnnotations(TraceKeys traceKeys, Message<?> message,
+	public void addAnnotations(TraceKeys traceKeys, Message<?> message,
 			Span span) {
 		for (String name : traceKeys.getMessage().getHeaders()) {
 			if (message.getHeaders().containsKey(name)) {
@@ -113,7 +120,7 @@ public class SpanMessageHeaders {
 		addPayloadAnnotations(traceKeys, message.getPayload(), span);
 	}
 
-	static void addPayloadAnnotations(TraceKeys traceKeys, Object payload, Span span) {
+	void addPayloadAnnotations(TraceKeys traceKeys, Object payload, Span span) {
 		if (payload != null) {
 			tagIfEntryMissing(span, traceKeys.getMessage().getPayload().getType(),
 					payload.getClass().getCanonicalName());
@@ -128,21 +135,20 @@ public class SpanMessageHeaders {
 		}
 	}
 
-	private static void tagIfEntryMissing(Span span, String key, String value) {
+	private void tagIfEntryMissing(Span span, String key, String value) {
 		if (!span.tags().containsKey(key)) {
 			span.tag(key, value);
 		}
 	}
 
-	private static void addHeader(Map<String, String> headers, String name,
+	private void addHeader(Map<String, String> headers, String name,
 			String value) {
 		if (StringUtils.hasText(value)) {
 			headers.put(name, value);
 		}
 	}
 
-	private static Long getFirst(List<Long> parents) {
+	private Long getFirst(List<Long> parents) {
 		return parents.isEmpty() ? null : parents.get(0);
 	}
-
 }

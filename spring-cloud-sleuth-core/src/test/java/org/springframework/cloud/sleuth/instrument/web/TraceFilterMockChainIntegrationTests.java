@@ -28,6 +28,8 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
+import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
+import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -47,7 +49,8 @@ public class TraceFilterMockChainIntegrationTests {
 
 	private Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), new NoOpSpanReporter());
+			new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
+			new SpanInjectorComposite());
 	private TraceKeys traceKeys = new TraceKeys();
 
 	private MockHttpServletRequest request;

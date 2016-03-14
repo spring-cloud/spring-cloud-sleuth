@@ -38,67 +38,91 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth.headers")
 public class TraceHeaders {
 
-	private String traceId = "X-Trace-Id";
-	private String spanId = "X-Span-Id";
-	private String parentSpanId = "X-Parent-Id";
-	private String notSampled = "X-Not-Sampled";
-	private String processId = "X-Process-Id";
-	private String spanName = "X-Span-Name";
-	private String exportable = "X-Span-Export";
+	private Zipkin zipkin;
+	private Sleuth sleuth;
 
-	public String getTraceId() {
-		return this.traceId;
+	public Zipkin getZipkin() {
+		return this.zipkin;
 	}
 
-	public void setTraceId(String traceId) {
-		this.traceId = traceId;
+	public void setZipkin(Zipkin zipkin) {
+		this.zipkin = zipkin;
 	}
 
-	public String getSpanId() {
-		return this.spanId;
+	public Sleuth getSleuth() {
+		return this.sleuth;
 	}
 
-	public void setSpanId(String spanId) {
-		this.spanId = spanId;
+	public void setSleuth(Sleuth sleuth) {
+		this.sleuth = sleuth;
 	}
 
-	public String getParentSpanId() {
-		return this.parentSpanId;
+	private static class Zipkin {
+		private String traceId = "X-B3-TraceId";
+		private String spanId = "X-B3-SpanId";
+		private String parentSpanId = "X-B3-ParentSpanId";
+		private String sampled = "X-B3-Sampled";
+
+		public String getTraceId() {
+			return this.traceId;
+		}
+
+		public void setTraceId(String traceId) {
+			this.traceId = traceId;
+		}
+
+		public String getSpanId() {
+			return this.spanId;
+		}
+
+		public void setSpanId(String spanId) {
+			this.spanId = spanId;
+		}
+
+		public String getParentSpanId() {
+			return this.parentSpanId;
+		}
+
+		public void setParentSpanId(String parentSpanId) {
+			this.parentSpanId = parentSpanId;
+		}
+
+		public String getSampled() {
+			return this.sampled;
+		}
+
+		public void setSampled(String sampled) {
+			this.sampled = sampled;
+		}
 	}
 
-	public void setParentSpanId(String parentSpanId) {
-		this.parentSpanId = parentSpanId;
-	}
+	private static class Sleuth {
+		private String processId = "X-Process-Id";
+		private String spanName = "X-Span-Name";
+		private String exportable = "X-Span-Export";
 
-	public String getNotSampled() {
-		return this.notSampled;
-	}
+		public String getProcessId() {
+			return this.processId;
+		}
 
-	public void setNotSampled(String notSampled) {
-		this.notSampled = notSampled;
-	}
+		public void setProcessId(String processId) {
+			this.processId = processId;
+		}
 
-	public String getProcessId() {
-		return this.processId;
-	}
+		public String getSpanName() {
+			return this.spanName;
+		}
 
-	public void setProcessId(String processId) {
-		this.processId = processId;
-	}
+		public void setSpanName(String spanName) {
+			this.spanName = spanName;
+		}
 
-	public String getSpanName() {
-		return this.spanName;
-	}
+		public String getExportable() {
+			return this.exportable;
+		}
 
-	public void setSpanName(String spanName) {
-		this.spanName = spanName;
-	}
-
-	public String getExportable() {
-		return this.exportable;
-	}
-
-	public void setExportable(String exportable) {
-		this.exportable = exportable;
+		public void setExportable(String exportable) {
+			this.exportable = exportable;
+		}
 	}
 }

@@ -32,26 +32,30 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.asser
  * @author Dave Syer
  *
  */
-public class SpanMessageHeadersTests {
+public class MessagingSpanInjectorTests {
 
 	private TraceKeys traceKeys = new TraceKeys();
+	private MessagingSpanInjector messagingSpanInjector = new MessagingSpanInjector(this.traceKeys);
 
 	@Test
 	public void spanHeadersAdded() {
 		Span span = Span.builder().name("http:foo").spanId(1L).traceId(2L).build();
 		Message<?> message = new GenericMessage<>("Hello World");
-		message = SpanMessageHeaders.addSpanHeaders(this.traceKeys, message, span);
-		assertThat(message.getHeaders()).containsKey(Span.SPAN_ID_NAME);
+		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
+
+		this.messagingSpanInjector.addSpanHeaders(this.traceKeys, messageBuilder, span);
+
+		assertThat(messageBuilder.build().getHeaders()).containsKey(Span.SPAN_ID_NAME);
 	}
 
 	@Test
 	public void shouldNotOverrideSpanTags() {
 		Span span = spanWithStringPayloadType();
-		Message<?> message = messageWithIntegerPayloadType();
+		MessageBuilder messageBuilder = messageWithIntegerPayloadType();
 
-		message = SpanMessageHeaders.addSpanHeaders(this.traceKeys, message, span);
+		this.messagingSpanInjector.addSpanHeaders(this.traceKeys, messageBuilder, span);
 
-		assertThat(message.getHeaders())
+		assertThat(messageBuilder.build().getHeaders())
 				.containsKeys(Span.SPAN_ID_NAME, "message/payload-type");
 		assertThat(span).hasATag("message/payload-type", "java.lang.String");
 	}
@@ -62,18 +66,22 @@ public class SpanMessageHeadersTests {
 		return span;
 	}
 
-	private Message<?> messageWithIntegerPayloadType() {
+	private MessageBuilder messageWithIntegerPayloadType() {
 		MessageHeaderAccessor accessor = SimpMessageHeaderAccessor.create();
 		accessor.setHeader("message/payload-type", "java.lang.Integer");
-		return MessageBuilder.createMessage("Hello World", accessor.getMessageHeaders());
+		return MessageBuilder.withPayload("Hello World").setHeaders(accessor);
 	}
 
 	@Test
 	public void nativeSpanHeadersAdded() {
 		Span span = Span.builder().name("http:foo").spanId(1L).traceId(2L).build();
 		MessageHeaderAccessor accessor = SimpMessageHeaderAccessor.create();
-		Message<?> message = MessageBuilder.createMessage("Hello World", accessor.getMessageHeaders());
-		message = SpanMessageHeaders.addSpanHeaders(this.traceKeys, message, span);
+		Message messageToBuild = MessageBuilder.createMessage("Hello World", accessor.getMessageHeaders());
+		MessageBuilder<String> messageBuilder = MessageBuilder.fromMessage(messageToBuild);
+
+		this.messagingSpanInjector.addSpanHeaders(this.traceKeys, messageBuilder, span);
+
+		Message<String> message = messageBuilder.build();
 		assertThat(message.getHeaders())
 				.containsKey(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 		MessageHeaderAccessor natives = NativeMessageHeaderAccessor
