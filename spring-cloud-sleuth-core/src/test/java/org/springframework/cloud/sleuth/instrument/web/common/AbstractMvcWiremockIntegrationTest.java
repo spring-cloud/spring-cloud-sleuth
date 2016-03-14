@@ -6,7 +6,6 @@ import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 
