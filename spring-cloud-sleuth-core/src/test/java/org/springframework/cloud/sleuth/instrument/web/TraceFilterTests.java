@@ -76,7 +76,7 @@ public class TraceFilterTests {
 		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),
 				new DefaultSpanNamer(), this.spanLogger, this.spanReporter,
 				new SpanJoinerComposite(Collections.singletonList(
-						new HttpServletJoiner(new Random(), Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN)))),
+						new HttpServletRequestJoiner(new Random(), Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN)))),
 				new SpanInjectorComposite()) {
 			@Override
 			public Span continueSpan(Span span) {

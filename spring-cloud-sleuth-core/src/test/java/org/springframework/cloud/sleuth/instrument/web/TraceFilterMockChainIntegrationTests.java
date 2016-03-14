@@ -54,7 +54,7 @@ public class TraceFilterMockChainIntegrationTests {
 			new Random(), new DefaultSpanNamer(),
 			new NoOpSpanLogger(), new NoOpSpanReporter(),
 			new SpanJoinerComposite(Collections.singletonList(
-					new HttpServletJoiner(new Random(), Pattern.compile(
+					new HttpServletRequestJoiner(new Random(), Pattern.compile(
 							DEFAULT_SKIP_PATTERN)))),
 			new SpanInjectorComposite());
 	private TraceKeys traceKeys = new TraceKeys();

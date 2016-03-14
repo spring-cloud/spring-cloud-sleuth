@@ -28,6 +28,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.SpanJoiner;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -76,13 +78,18 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public HttpRequestInjector httpRequestInjector() {
+	public SpanInjector httpRequestInjector() {
 		return new HttpRequestInjector();
 	}
 
 	@Bean
-	public HttpServletJoiner httpServletJoiner(Random random, SkipPatternProvider skipPatternProvider) {
-		return new HttpServletJoiner(random, skipPatternProvider.skipPattern());
+	public SpanJoiner httpServletJoiner(Random random, SkipPatternProvider skipPatternProvider) {
+		return new HttpServletRequestJoiner(random, skipPatternProvider.skipPattern());
+	}
+
+	@Bean
+	public SpanInjector httpServletResponseJoiner() {
+		return new HttpServletResponseInjector();
 	}
 
 	@Configuration

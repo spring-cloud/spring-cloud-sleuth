@@ -114,7 +114,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			addRequestTags(request);
 			// Add headers before filter chain in case one of the filters flushes the
 			// response...
-			addResponseHeaders(response, spanFromRequest);
+			this.tracer.inject(spanFromRequest, response);
 			filterChain.doFilter(request, response);
 		}
 		catch (Throwable e) {
@@ -153,7 +153,7 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (spanFromRequest == null) {
 			if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
 				SpanBuilder spanBuilder = this.tracer
-						.join(new HttpServletDataHolder(request, response));
+						.join(request);
 				Span parent = spanBuilder.build();
 				spanFromRequest = this.tracer.createSpan(name, parent);
 				if (parent != null && parent.isRemote()) {
@@ -172,15 +172,6 @@ public class TraceFilter extends OncePerRequestFilter {
 			}
 		}
 		return spanFromRequest;
-	}
-
-	private void addResponseHeaders(HttpServletResponse response, Span span) {
-		if (span != null) {
-			if (!response.containsHeader(Span.SPAN_ID_NAME)) {
-				response.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-				response.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-			}
-		}
 	}
 
 	/** Override to add annotations not defined in {@link TraceKeys}. */
