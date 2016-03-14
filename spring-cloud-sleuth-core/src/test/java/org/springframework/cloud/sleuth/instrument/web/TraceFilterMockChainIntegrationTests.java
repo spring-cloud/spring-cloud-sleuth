@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.Collections;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +41,7 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.junit.Assert.assertNull;
+import static org.springframework.cloud.sleuth.instrument.web.TraceFilter.DEFAULT_SKIP_PATTERN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
@@ -49,7 +52,10 @@ public class TraceFilterMockChainIntegrationTests {
 
 	private Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
+			new NoOpSpanLogger(), new NoOpSpanReporter(),
+			new SpanJoinerComposite(Collections.singletonList(
+					new HttpServletJoiner(new Random(), Pattern.compile(
+							DEFAULT_SKIP_PATTERN)))),
 			new SpanInjectorComposite());
 	private TraceKeys traceKeys = new TraceKeys();
 

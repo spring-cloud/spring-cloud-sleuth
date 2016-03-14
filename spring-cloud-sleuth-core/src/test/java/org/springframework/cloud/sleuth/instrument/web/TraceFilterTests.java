@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.Collections;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +74,9 @@ public class TraceFilterTests {
 	public void init() {
 		initMocks(this);
 		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),
-				new DefaultSpanNamer(), this.spanLogger, this.spanReporter, new SpanJoinerComposite(),
+				new DefaultSpanNamer(), this.spanLogger, this.spanReporter,
+				new SpanJoinerComposite(Collections.singletonList(
+						new HttpServletJoiner(new Random(), Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN)))),
 				new SpanInjectorComposite()) {
 			@Override
 			public Span continueSpan(Span span) {
