@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -31,9 +31,12 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
  */
 class TracerIgnoringChannelInterceptor extends ChannelInterceptorAdapter {
 
+	private final TraceHeaders traceHeaders;
 	private final SpanMetricReporter spanMetricReporter;
 
-	public TracerIgnoringChannelInterceptor(SpanMetricReporter spanMetricReporter) {
+	public TracerIgnoringChannelInterceptor(TraceHeaders traceHeaders,
+			SpanMetricReporter spanMetricReporter) {
+		this.traceHeaders = traceHeaders;
 		this.spanMetricReporter = spanMetricReporter;
 	}
 
@@ -43,7 +46,8 @@ class TracerIgnoringChannelInterceptor extends ChannelInterceptorAdapter {
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		return MessageBuilder.fromMessage(message)
-				.setHeader(Span.NOT_SAMPLED_NAME, "true").build();
+				.setHeader(this.traceHeaders.getSampled(), TraceHeaders.SPAN_NOT_SAMPLED)
+				.build();
 	}
 
 	@Override

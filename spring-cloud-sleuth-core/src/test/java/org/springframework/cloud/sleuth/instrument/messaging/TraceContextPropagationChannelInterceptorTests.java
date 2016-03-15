@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceContextPropagationChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -76,15 +77,15 @@ public class TraceContextPropagationChannelInterceptorTests {
 		assertNotNull("message was null", message);
 
 		Long spanId = Span
-				.hexToId(message.getHeaders().get(Span.SPAN_ID_NAME, String.class));
+				.hexToId(message.getHeaders().get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, String.class));
 		assertNotEquals("spanId was equal to parent's id", expectedSpanId,  spanId);
 
 		long traceId = Span
-				.hexToId(message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+				.hexToId(message.getHeaders().get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, String.class));
 		assertNotNull("traceId was null", traceId);
 
 		Long parentId = Span
-				.hexToId(message.getHeaders().get(Span.PARENT_ID_NAME, String.class));
+				.hexToId(message.getHeaders().get(TraceHeaders.ZIPKIN_PARENT_SPAN_ID_HEADER_NAME, String.class));
 		assertEquals("parentId was not equal to parent's id", expectedSpanId,  parentId);
 
 	}

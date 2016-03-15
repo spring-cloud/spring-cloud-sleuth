@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -12,9 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +27,8 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterAlwaysSamplerIntegrationTests.class)
 @DefaultTestAutoConfiguration
@@ -39,10 +40,9 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 	private static Log logger = LogFactory
 			.getLog(TraceFilterAlwaysSamplerIntegrationTests.class);
 
-	@Autowired
-	Tracer tracer;
-	@Autowired
-	TraceKeys traceKeys;
+	@Autowired Tracer tracer;
+	@Autowired TraceKeys traceKeys;
+	@Autowired TraceHeaders traceHeaders;
 
 	static Span span;
 
@@ -76,16 +76,17 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
-				new NoOpSpanReporter(), this.spanExtractor, this.spanInjector));
+				new NoOpSpanReporter(), this.spanExtractor, this.spanInjector,
+				this.traceHeaders));
 	}
 
 	private MvcResult whenSentPingWithTraceIdAndNotSampling(Long traceId)
 			throws Exception {
-		return sendPingWithTraceId(Span.TRACE_ID_NAME, traceId, false);
+		return sendPingWithTraceId(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, traceId, false);
 	}
 
 	private MvcResult whenSentPingWithTraceId(Long traceId) throws Exception {
-		return sendPingWithTraceId(Span.TRACE_ID_NAME, traceId);
+		return sendPingWithTraceId(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, traceId);
 	}
 
 	private MvcResult sendPingWithTraceId(String headerName, Long correlationId)
@@ -98,14 +99,13 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 		MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/ping")
 				.accept(MediaType.TEXT_PLAIN)
 				.header(headerName, Span.idToHex(correlationId))
-				.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong()));
-		if (!sampling) {
-			request.header(Span.NOT_SAMPLED_NAME, "true");
-		}
+				.header(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, Span.idToHex(new Random().nextLong()));
+		request.header(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME, sampling ?
+				TraceHeaders.SPAN_SAMPLED : TraceHeaders.SPAN_NOT_SAMPLED);
 		return this.mockMvc.perform(request).andReturn();
 	}
 
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
+		return Span.hexToId(mvcResult.getResponse().getHeader(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME));
 	}
 }

@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -68,13 +69,13 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	SpanInjector<RequestContext> requestContextInjector() {
-		return new RequestContextInjector();
+	SpanInjector<RequestContext> requestContextInjector(TraceHeaders traceHeaders) {
+		return new RequestContextInjector(traceHeaders);
 	}
 
 	@Bean
-	SpanInjector<HttpRequest.Builder> requestBuilderContextInjector() {
-		return new RequestBuilderContextInjector();
+	SpanInjector<HttpRequest.Builder> requestBuilderContextInjector(TraceHeaders traceHeaders) {
+		return new RequestBuilderContextInjector(traceHeaders);
 	}
 
 }

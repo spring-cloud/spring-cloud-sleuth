@@ -25,7 +25,7 @@ import java.util.Properties;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -40,6 +40,9 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
  * {@link EnvironmentPostProcessor} that sets the default properties for
  * Sleuth Stream.
  *
+ * If you're changing the {@link TraceHeaders} default values you have to override
+ * the appropriate {@code spring.cloud.stream.binder} header values.
+ *
  * @author Dave Syer
  *
  * @since 1.0.0
@@ -47,9 +50,12 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
-	private static String[] headers = new String[] { Span.SPAN_ID_NAME,
-			Span.TRACE_ID_NAME, Span.PARENT_ID_NAME, Span.PROCESS_ID_NAME,
-			Span.NOT_SAMPLED_NAME, Span.SPAN_NAME_NAME };
+	private static String[] headers = new String[] { TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME,
+			TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME,
+			TraceHeaders.ZIPKIN_PARENT_SPAN_ID_HEADER_NAME,
+			TraceHeaders.ZIPKIN_PROCESS_ID_HEADER_NAME,
+			TraceHeaders.Sleuth.SLEUTH_EXPORTABLE_HEADER_NAME,
+			TraceHeaders.Sleuth.SLEUTH_SPAN_NAME_HEADER_NAME };
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,

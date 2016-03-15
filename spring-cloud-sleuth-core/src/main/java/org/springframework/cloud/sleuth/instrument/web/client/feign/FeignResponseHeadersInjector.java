@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.util.StringUtils;
 
 import static java.util.Collections.singletonList;
@@ -36,6 +37,12 @@ import static java.util.Collections.singletonList;
  */
 class FeignResponseHeadersInjector implements SpanInjector<FeignResponseHeadersHolder> {
 
+	private final TraceHeaders traceHeaders;
+
+	FeignResponseHeadersInjector(TraceHeaders traceHeaders) {
+		this.traceHeaders = traceHeaders;
+	}
+
 	@Override
 	public void inject(Span span, FeignResponseHeadersHolder carrier) {
 		Map<String, Collection<String>> headers = carrier.responseHeaders;
@@ -47,11 +54,14 @@ class FeignResponseHeadersInjector implements SpanInjector<FeignResponseHeadersH
 		Map<String, Collection<String>> newHeaders = new HashMap<>();
 		newHeaders.putAll(headers);
 		if (span == null) {
-			setHeader(newHeaders, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(newHeaders, this.traceHeaders.getSampled(),
+					TraceHeaders.SPAN_NOT_SAMPLED);
 			return newHeaders;
 		}
-		setHeader(newHeaders, Span.TRACE_ID_NAME, span.getTraceId());
-		setHeader(newHeaders, Span.SPAN_ID_NAME, span.getSpanId());
+		setHeader(newHeaders, this.traceHeaders.getTraceId(), span.getTraceId());
+		setHeader(newHeaders, this.traceHeaders.getSpanId(), span.getSpanId());
+		setHeader(newHeaders, this.traceHeaders.getSampled(), span.isExportable() ?
+				TraceHeaders.SPAN_SAMPLED : TraceHeaders.SPAN_NOT_SAMPLED);
 		return newHeaders;
 	}
 

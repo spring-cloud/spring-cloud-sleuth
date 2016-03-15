@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -35,7 +36,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.asser
 public class MessagingSpanInjectorTests {
 
 	private TraceKeys traceKeys = new TraceKeys();
-	private MessagingSpanInjector messagingSpanInjector = new MessagingSpanInjector(this.traceKeys);
+	private MessagingSpanInjector messagingSpanInjector = new MessagingSpanInjector(this.traceKeys,
+			new TraceHeaders());
 
 	@Test
 	public void spanHeadersAdded() {
@@ -45,7 +47,7 @@ public class MessagingSpanInjectorTests {
 
 		this.messagingSpanInjector.inject(span, messageBuilder);
 
-		assertThat(messageBuilder.build().getHeaders()).containsKey(Span.SPAN_ID_NAME);
+		assertThat(messageBuilder.build().getHeaders()).containsKey(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME);
 	}
 
 	@Test
@@ -56,7 +58,7 @@ public class MessagingSpanInjectorTests {
 		this.messagingSpanInjector.inject(span, messageBuilder);
 
 		assertThat(messageBuilder.build().getHeaders())
-				.containsKeys(Span.SPAN_ID_NAME, "message/payload-type");
+				.containsKeys(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, "message/payload-type");
 		assertThat(span).hasATag("message/payload-type", "java.lang.String");
 	}
 
@@ -86,7 +88,7 @@ public class MessagingSpanInjectorTests {
 				.containsKey(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 		MessageHeaderAccessor natives = NativeMessageHeaderAccessor
 				.getMutableAccessor(message);
-		assertThat(natives.getMessageHeaders()).containsKey(Span.SPAN_ID_NAME);
+		assertThat(natives.getMessageHeaders()).containsKey(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME);
 	}
 
 }

@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.trace.IntegrationTestSpanContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -54,6 +55,7 @@ public abstract class AbstractIntegrationTest {
 	protected static final int POLL_INTERVAL = 1;
 	protected static final int TIMEOUT = 20;
 	protected RestTemplate restTemplate = new AssertingRestTemplate();
+	protected TraceHeaders traceHeaders = new TraceHeaders();
 
 	@Before
 	public void clearSpanBefore() {
@@ -128,11 +130,13 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId) {
-		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, null);
+		return new RequestSendingRunnable(this.restTemplate, this.traceHeaders, traceId, null,
+				endpoint);
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId, Long spanId) {
-		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, spanId);
+		return new RequestSendingRunnable(this.restTemplate, this.traceHeaders, traceId,
+				spanId, endpoint);
 	}
 
 	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(long traceId) {

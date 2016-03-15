@@ -26,11 +26,12 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
@@ -94,10 +95,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void nonExportableSpanCreation() {
 		this.channel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.NOT_SAMPLED_NAME, "true").build());
+				.setHeader(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME, "0").build());
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 		assertFalse(this.span.isExportable());
@@ -106,14 +107,14 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void parentSpanIncluded() {
 		this.channel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.TRACE_ID_NAME, Span.idToHex(10L))
-				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
+				.setHeader(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, Span.idToHex(10L))
+				.setHeader(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, Span.idToHex(20L)).build());
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 		long traceId = Span
-				.hexToId(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+				.hexToId(this.message.getHeaders().get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		assertEquals(1, this.accumulator.getSpans().size());
@@ -124,10 +125,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.channel.send(MessageBuilder.withPayload("hi").build());
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 
-		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -139,10 +140,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 
-		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -155,10 +156,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.tracer.close(span);
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, String.class);
 		assertNotNull("spanId was null", spanId);
 
-		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}

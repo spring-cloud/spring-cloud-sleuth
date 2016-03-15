@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.util.StringUtils;
 
@@ -30,16 +31,21 @@ import org.springframework.util.StringUtils;
  */
 class HttpRequestInjector implements SpanInjector<HttpRequest> {
 
+	private final TraceHeaders traceHeaders;
+
+	HttpRequestInjector(TraceHeaders traceHeaders) {
+		this.traceHeaders = traceHeaders;
+	}
+
 	@Override
 	public void inject(Span span, HttpRequest carrier) {
-		setIdHeader(carrier, Span.TRACE_ID_NAME, span.getTraceId());
-		setIdHeader(carrier, Span.SPAN_ID_NAME, span.getSpanId());
-		if (!span.isExportable()) {
-			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
-		}
-		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
-		setIdHeader(carrier, Span.PARENT_ID_NAME, getParentId(span));
-		setHeader(carrier, Span.PROCESS_ID_NAME, span.getProcessId());
+		setIdHeader(carrier, this.traceHeaders.getTraceId(), span.getTraceId());
+		setIdHeader(carrier, this.traceHeaders.getSpanId(), span.getSpanId());
+		setHeader(carrier, this.traceHeaders.getSampled(), span.isExportable() ?
+				TraceHeaders.SPAN_SAMPLED : TraceHeaders.SPAN_NOT_SAMPLED);
+		setHeader(carrier, this.traceHeaders.getSleuth().getSpanName(), span.getName());
+		setIdHeader(carrier, this.traceHeaders.getParentSpanId(), getParentId(span));
+		setHeader(carrier, this.traceHeaders.getProcessId(), span.getProcessId());
 	}
 
 	private Long getParentId(Span span) {

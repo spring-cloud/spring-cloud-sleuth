@@ -30,6 +30,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -43,8 +44,8 @@ import static org.springframework.cloud.sleuth.instrument.web.ServletUtils.hasHe
 import static org.springframework.util.StringUtils.hasText;
 
 /**
- * Filter that takes the value of the {@link Span#SPAN_ID_NAME} and
- * {@link Span#TRACE_ID_NAME} header from either request or response and uses them to
+ * Filter that takes the value of the Span Id header and
+ * Trace Id header from either request or response and uses them to
  * create a new span.
  *
  * <p>
@@ -77,6 +78,7 @@ public class TraceFilter extends OncePerRequestFilter {
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
+	private final TraceHeaders traceHeaders;
 	private final Pattern skipPattern;
 	private final SpanReporter spanReporter;
 	private final SpanExtractor<HttpServletRequest> spanExtractor;
@@ -85,16 +87,18 @@ public class TraceFilter extends OncePerRequestFilter {
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
-			SpanExtractor<HttpServletRequest> spanExtractor, SpanInjector<HttpServletResponse> spanInjector) {
-		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
+			SpanExtractor<HttpServletRequest> spanExtractor,
+			SpanInjector<HttpServletResponse> spanInjector, TraceHeaders traceHeaders) {
+		this(tracer, traceKeys, traceHeaders, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
 				spanExtractor, spanInjector);
 	}
 
-	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
-			SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
+	public TraceFilter(Tracer tracer, TraceKeys traceKeys, TraceHeaders traceHeaders,
+			Pattern skipPattern, SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
 			SpanInjector<HttpServletResponse> spanInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
+		this.traceHeaders = traceHeaders;
 		this.skipPattern = skipPattern;
 		this.spanReporter = spanReporter;
 		this.spanExtractor = spanExtractor;
@@ -107,14 +111,14 @@ public class TraceFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| ServletUtils.getHeader(request, response, Span.NOT_SAMPLED_NAME) != null;
+				|| TraceHeaders.SPAN_NOT_SAMPLED.equals(
+					ServletUtils.getHeader(request, response, this.traceHeaders.getSampled()));
 		Span spanFromRequest = (Span) request.getAttribute(TRACE_REQUEST_ATTR);
 		if (spanFromRequest != null) {
 			this.tracer.continueSpan(spanFromRequest);
 		}
-		else if (skip) {
-			addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
-		}
+		addToResponseIfNotPresent(response, this.traceHeaders.getSampled(), skip ?
+			TraceHeaders.SPAN_NOT_SAMPLED : TraceHeaders.SPAN_SAMPLED);
 		String name = HTTP_COMPONENT + ":" + uri;
 		spanFromRequest = createSpan(request, response, skip, spanFromRequest, name);
 		Throwable exception = null;
@@ -135,9 +139,8 @@ public class TraceFilter extends OncePerRequestFilter {
 				// TODO: how to deal with response annotations and async?
 				return;
 			}
-			if (skip) {
-				addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
-			}
+			addToResponseIfNotPresent(response, this.traceHeaders.getSampled(), skip ?
+					TraceHeaders.SPAN_NOT_SAMPLED : TraceHeaders.SPAN_SAMPLED);
 			if (spanFromRequest != null) {
 				addResponseTags(response, exception);
 				if (spanFromRequest.hasSavedSpan()) {
@@ -161,7 +164,7 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (spanFromRequest != null) {
 			return spanFromRequest;
 		}
-		if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
+		if (hasHeader(request, response, this.traceHeaders.getTraceId())) {
 			Span parent = this.spanExtractor
 					.joinTrace(request);
 			spanFromRequest = this.tracer.createSpan(name, parent);

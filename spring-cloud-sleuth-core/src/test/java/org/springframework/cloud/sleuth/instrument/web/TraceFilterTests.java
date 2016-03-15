@@ -31,6 +31,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.SpanLogger;
@@ -61,9 +62,11 @@ public class TraceFilterTests {
 
 	@Mock SpanLogger spanLogger;
 	@Mock SpanReporter spanReporter;
+	TraceHeaders traceHeaders = new TraceHeaders();
 	SpanExtractor<HttpServletRequest> spanExtractor = new HttpServletRequestExtractor(new Random(), Pattern
-			.compile(TraceFilter.DEFAULT_SKIP_PATTERN));
-	SpanInjector<HttpServletResponse> spanInjector = new HttpServletResponseInjector();
+			.compile(TraceFilter.DEFAULT_SKIP_PATTERN), this.traceHeaders);
+	SpanInjector<HttpServletResponse> spanInjector = new HttpServletResponseInjector(
+			this.traceHeaders);
 
 	private Tracer tracer;
 	private TraceKeys traceKeys = new TraceKeys();
@@ -101,7 +104,7 @@ public class TraceFilterTests {
 	public void notTraced() throws Exception {
 		this.sampler = NeverSampler.INSTANCE;
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.traceHeaders);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
@@ -115,7 +118,7 @@ public class TraceFilterTests {
 	@Test
 	public void startsNewTrace() throws Exception {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.traceHeaders);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		verifyHttpTags();
 		assertNull(TestSpanContextHolder.getCurrentSpan());
@@ -124,12 +127,12 @@ public class TraceFilterTests {
 	@Test
 	public void startsNewTraceWithParentIdInHeaders() throws Exception {
 		this.request = builder()
-				.header(Span.SPAN_ID_NAME, Span.idToHex(1L))
-				.header(Span.TRACE_ID_NAME, Span.idToHex(2L))
-				.header(Span.PARENT_ID_NAME, Span.idToHex(3L))
+				.header(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, Span.idToHex(1L))
+				.header(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, Span.idToHex(2L))
+				.header(TraceHeaders.ZIPKIN_PARENT_SPAN_ID_HEADER_NAME, Span.idToHex(3L))
 				.buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.traceHeaders);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -146,7 +149,7 @@ public class TraceFilterTests {
 		TestSpanContextHolder.removeCurrentSpan();
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.traceHeaders);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
@@ -156,11 +159,11 @@ public class TraceFilterTests {
 
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
-				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		this.request = builder().header(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, 10L)
+				.header(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, 20L).buildRequest(new MockServletContext());
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.traceHeaders);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyHttpTags();
@@ -170,12 +173,12 @@ public class TraceFilterTests {
 
 	@Test
 	public void addsAdditionalHeaders() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
-				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		this.request = builder().header(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, 10L)
+				.header(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, 20L).buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.traceHeaders);
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -186,12 +189,12 @@ public class TraceFilterTests {
 
 	@Test
 	public void additionalMultiValuedHeader() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
-				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		this.request = builder().header(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, 10L)
+				.header(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, 20L).buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.traceHeaders);
 		this.request.addHeader("X-Foo", "bar");
 		this.request.addHeader("X-Foo", "spam");
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -204,7 +207,7 @@ public class TraceFilterTests {
 	@Test
 	public void catchesException() throws Exception {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.traceHeaders);
 		this.filterChain = new MockFilterChain() {
 			@Override
 			public void doFilter(javax.servlet.ServletRequest request,
