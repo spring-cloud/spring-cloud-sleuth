@@ -44,6 +44,7 @@ import feign.Client;
 import feign.Feign;
 import feign.FeignException;
 import feign.RequestInterceptor;
+import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
 
@@ -89,7 +90,7 @@ public class TraceFeignClientAutoConfiguration {
 					FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
 					FeignResponseHeadersHolder feignResponseHeadersHolder =
 							new FeignResponseHeadersHolder(response.headers());
-					tracer.inject(feignRequestContext.getCurrentSpan(), feignResponseHeadersHolder);
+					feignResponseHeadersInjector().inject(feignRequestContext.getCurrentSpan(), feignResponseHeadersHolder);
 					return super.decode(Response.create(response.status(),
 							response.reason(), feignResponseHeadersHolder.responseHeaders,
 							response.body()), type);
@@ -103,17 +104,14 @@ public class TraceFeignClientAutoConfiguration {
 	 */
 	@Bean
 	public RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
-		return new TraceFeignRequestInterceptor(tracer);
+		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector());
 	}
 
-
-	@Bean
-	SpanInjector feignRequestTemplateInjector() {
+	private SpanInjector<RequestTemplate> feignRequestTemplateInjector() {
 		return new FeignRequestTemplateInjector();
 	}
 
-	@Bean
-	SpanInjector feignResponseHeadersInjector() {
+	private SpanInjector<FeignResponseHeadersHolder> feignResponseHeadersInjector() {
 		return new FeignResponseHeadersInjector();
 	}
 }

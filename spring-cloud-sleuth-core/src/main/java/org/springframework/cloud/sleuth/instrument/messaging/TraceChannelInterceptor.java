@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -35,8 +37,10 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private static final String SPAN_HEADER = "X-Current-Span";
 
-	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys) {
-		super(tracer, traceKeys);
+	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
+			SpanExtractor<Message> spanExtractor,
+			SpanInjector<MessageBuilder> spanInjector) {
+		super(tracer, traceKeys, spanExtractor, spanInjector);
 	}
 
 	@Override
@@ -51,7 +55,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		String name = getMessageChannelName(channel);
 		Span span = startSpan(parentSpan, name, message);
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
-		getTracer().inject(span, messageBuilder);
+		getSpanInjector().inject(span, messageBuilder);
 		return messageBuilder.build();
 	}
 

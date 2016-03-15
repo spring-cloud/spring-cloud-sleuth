@@ -27,7 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Span.SpanBuilder;
+import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -78,19 +79,26 @@ public class TraceFilter extends OncePerRequestFilter {
 	private final TraceKeys traceKeys;
 	private final Pattern skipPattern;
 	private final SpanReporter spanReporter;
+	private final SpanExtractor<HttpServletRequest> spanExtractor;
+	private final SpanInjector<HttpServletResponse> spanInjector;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
-	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter) {
-		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter);
+	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
+			SpanExtractor<HttpServletRequest> spanExtractor, SpanInjector<HttpServletResponse> spanInjector) {
+		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
+				spanExtractor, spanInjector);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
-			SpanReporter spanReporter) {
+			SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
+			SpanInjector<HttpServletResponse> spanInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
 		this.spanReporter = spanReporter;
+		this.spanExtractor = spanExtractor;
+		this.spanInjector = spanInjector;
 	}
 
 	@Override
@@ -114,7 +122,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			addRequestTags(request);
 			// Add headers before filter chain in case one of the filters flushes the
 			// response...
-			this.tracer.inject(spanFromRequest, response);
+			this.spanInjector.inject(spanFromRequest, response);
 			filterChain.doFilter(request, response);
 		}
 		catch (Throwable e) {
@@ -152,9 +160,8 @@ public class TraceFilter extends OncePerRequestFilter {
 			boolean skip, Span spanFromRequest, String name) {
 		if (spanFromRequest == null) {
 			if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
-				SpanBuilder spanBuilder = this.tracer
-						.join(request);
-				Span parent = spanBuilder.build();
+				Span parent = this.spanExtractor
+						.joinTrace(request);
 				spanFromRequest = this.tracer.createSpan(name, parent);
 				if (parent != null && parent.isRemote()) {
 					parent.logEvent(Span.SERVER_RECV);

@@ -38,8 +38,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
-import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -119,8 +117,7 @@ public class SpringCloudSleuthDocTests {
 	}
 
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-			new SpanInjectorComposite());
+			new NoOpSpanLogger(), new NoOpSpanReporter());
 
 	@Test
 	public void should_create_a_span_with_tracer() {
@@ -227,8 +224,7 @@ public class SpringCloudSleuthDocTests {
 	public void should_wrap_runnable_in_its_sleuth_representative() {
 		SpanNamer spanNamer = new DefaultSpanNamer();
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), spanNamer,
-				new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-				new SpanInjectorComposite());
+				new NoOpSpanLogger(), new NoOpSpanReporter());
 		Span initialSpan = tracer.createSpan("initialSpan");
 		// tag::trace_runnable[]
 		Runnable runnable = new Runnable() {
@@ -258,8 +254,7 @@ public class SpringCloudSleuthDocTests {
 	public void should_wrap_callable_in_its_sleuth_representative() {
 		SpanNamer spanNamer = new DefaultSpanNamer();
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), spanNamer,
-				new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-				new SpanInjectorComposite());
+				new NoOpSpanLogger(), new NoOpSpanReporter());
 		Span initialSpan = tracer.createSpan("initialSpan");
 		// tag::trace_callable[]
 		Callable<String> callable = new Callable<String>() {

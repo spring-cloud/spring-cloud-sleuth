@@ -29,7 +29,9 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.netflix.client.http.HttpRequest;
 import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -49,13 +51,14 @@ public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer) {
-		return new TracePreZuulFilter(tracer);
+	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer, SpanInjector<RequestContext> spanInjector) {
+		return new TracePreZuulFilter(tracer, spanInjector);
 	}
 
 	@Bean
-	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory, Tracer tracer) {
-		return new TraceRestClientRibbonCommandFactory(factory, tracer);
+	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory,
+			Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector) {
+		return new TraceRestClientRibbonCommandFactory(factory, tracer, spanInjector);
 	}
 
 	@Bean
@@ -65,12 +68,12 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	SpanInjector requestContextInjector() {
+	SpanInjector<RequestContext> requestContextInjector() {
 		return new RequestContextInjector();
 	}
 
 	@Bean
-	SpanInjector requestBuilderContextInjector() {
+	SpanInjector<HttpRequest.Builder> requestBuilderContextInjector() {
 		return new RequestBuilderContextInjector();
 	}
 

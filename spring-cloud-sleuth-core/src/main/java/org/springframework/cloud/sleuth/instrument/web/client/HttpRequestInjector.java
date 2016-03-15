@@ -28,22 +28,18 @@ import org.springframework.util.StringUtils;
  *
  * @since 1.0.0
  */
-class HttpRequestInjector implements SpanInjector {
+class HttpRequestInjector implements SpanInjector<HttpRequest> {
 
 	@Override
-	public <T> void inject(Span span, T carrier) {
-		if (!(carrier instanceof HttpRequest)) {
-			return;
-		}
-		HttpRequest request = (HttpRequest) carrier;
-		setIdHeader(request, Span.TRACE_ID_NAME, span.getTraceId());
-		setIdHeader(request, Span.SPAN_ID_NAME, span.getSpanId());
+	public void inject(Span span, HttpRequest carrier) {
+		setIdHeader(carrier, Span.TRACE_ID_NAME, span.getTraceId());
+		setIdHeader(carrier, Span.SPAN_ID_NAME, span.getSpanId());
 		if (!span.isExportable()) {
-			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
 		}
-		setHeader(request, Span.SPAN_NAME_NAME, span.getName());
-		setIdHeader(request, Span.PARENT_ID_NAME, getParentId(span));
-		setHeader(request, Span.PROCESS_ID_NAME, span.getProcessId());
+		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
+		setIdHeader(carrier, Span.PARENT_ID_NAME, getParentId(span));
+		setHeader(carrier, Span.PROCESS_ID_NAME, span.getProcessId());
 	}
 
 	private Long getParentId(Span span) {

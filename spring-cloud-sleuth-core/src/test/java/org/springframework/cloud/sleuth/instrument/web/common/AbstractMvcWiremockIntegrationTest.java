@@ -3,8 +3,6 @@ package org.springframework.cloud.sleuth.instrument.web.common;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
@@ -29,8 +27,7 @@ public abstract class AbstractMvcWiremockIntegrationTest extends AbstractMvcInte
 
 	protected WireMock wireMock;
 	@Autowired protected HttpMockServer httpMockServer;
-	@Autowired protected Tracer tracer;
-	@Autowired protected TraceKeys traceKeys;
+
 
 	@Override
 	@Before
@@ -55,6 +52,6 @@ public abstract class AbstractMvcWiremockIntegrationTest extends AbstractMvcInte
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
-				new NoOpSpanReporter()));
+				new NoOpSpanReporter(), this.spanExtractor, this.spanInjector));
 	}
 }

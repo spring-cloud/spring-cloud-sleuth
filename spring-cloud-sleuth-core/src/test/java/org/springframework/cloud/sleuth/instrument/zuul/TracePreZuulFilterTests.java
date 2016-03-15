@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.Collections;
 import java.util.Random;
 
 import org.junit.After;
@@ -29,8 +28,6 @@ import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
-import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
 import com.netflix.zuul.context.RequestContext;
@@ -47,10 +44,9 @@ import static org.junit.Assert.assertThat;
 public class TracePreZuulFilterTests {
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-			new SpanInjectorComposite(Collections.singletonList(new RequestContextInjector())));
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
-	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer);
+	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new RequestContextInjector());
 
 	@After
 	@Before

@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.net.URI;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.http.HttpRequest;
 
@@ -33,13 +34,16 @@ import org.springframework.http.HttpRequest;
 abstract class AbstractTraceHttpRequestInterceptor {
 
 	protected final Tracer tracer;
+	protected final SpanInjector<HttpRequest> spanInjector;
 
-	protected AbstractTraceHttpRequestInterceptor(Tracer tracer) {
+	protected AbstractTraceHttpRequestInterceptor(Tracer tracer,
+			SpanInjector<HttpRequest> spanInjector) {
 		this.tracer = tracer;
+		this.spanInjector = spanInjector;
 	}
 
 	private void enrichWithTraceHeaders(Span span, HttpRequest request) {
-		this.tracer.inject(span, request);
+		this.spanInjector.inject(span, request);
 	}
 
 	/**

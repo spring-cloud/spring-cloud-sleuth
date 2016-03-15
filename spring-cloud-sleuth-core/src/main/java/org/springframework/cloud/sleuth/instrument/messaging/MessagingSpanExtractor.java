@@ -20,7 +20,7 @@ import java.util.Random;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
-import org.springframework.cloud.sleuth.SpanJoiner;
+import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.messaging.Message;
 
 /**
@@ -30,41 +30,32 @@ import org.springframework.messaging.Message;
  *
  * @since 1.0.0
  */
-public class MessagingSpanJoiner implements SpanJoiner {
+public class MessagingSpanExtractor implements SpanExtractor<Message> {
 
 	private final Random random;
 
-	public MessagingSpanJoiner(Random random) {
+	public MessagingSpanExtractor(Random random) {
 		this.random = random;
 	}
 
-	/**
-	 * Creates a builder from a message.
-	 *
-	 * @return span builder or null if headers are missing or carrier is not a message
-	 */
 	@Override 
-	public <T> SpanBuilder join(T carrier) {
-		if (!(carrier instanceof Message)) {
-			return null;
-		}
-		Message message = (Message) carrier;
-		if (!hasHeader(message, Span.TRACE_ID_NAME)
-				|| !hasHeader(message, Span.SPAN_ID_NAME)) {
+	public Span joinTrace(Message carrier) {
+		if (!hasHeader(carrier, Span.TRACE_ID_NAME)
+				|| !hasHeader(carrier, Span.SPAN_ID_NAME)) {
 			return null;
 			//TODO: Consider throwing IllegalArgumentException;
 		}
-		long spanId = hasHeader(message, Span.SPAN_ID_NAME)
-				? Span.hexToId(getHeader(message, Span.SPAN_ID_NAME))
+		long spanId = hasHeader(carrier, Span.SPAN_ID_NAME)
+				? Span.hexToId(getHeader(carrier, Span.SPAN_ID_NAME))
 				: this.random.nextLong();
-		long traceId = Span.hexToId(getHeader(message, Span.TRACE_ID_NAME));
+		long traceId = Span.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
 		SpanBuilder spanBuilder = Span.builder().traceId(traceId).spanId(spanId);
-		if (hasHeader(message, Span.NOT_SAMPLED_NAME)) {
+		if (hasHeader(carrier, Span.NOT_SAMPLED_NAME)) {
 			spanBuilder.exportable(false);
 		}
-		String parentId = getHeader(message, Span.PARENT_ID_NAME);
-		String processId = getHeader(message, Span.PROCESS_ID_NAME);
-		String spanName = getHeader(message, Span.SPAN_NAME_NAME);
+		String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
+		String processId = getHeader(carrier, Span.PROCESS_ID_NAME);
+		String spanName = getHeader(carrier, Span.SPAN_NAME_NAME);
 		if (spanName != null) {
 			spanBuilder.name(spanName);
 		}
@@ -75,7 +66,7 @@ public class MessagingSpanJoiner implements SpanJoiner {
 			spanBuilder.parent(Span.hexToId(parentId));
 		}
 		spanBuilder.remote(true);
-		return spanBuilder;
+		return spanBuilder.build();
 	}
 
 	String getHeader(Message<?> message, String name) {

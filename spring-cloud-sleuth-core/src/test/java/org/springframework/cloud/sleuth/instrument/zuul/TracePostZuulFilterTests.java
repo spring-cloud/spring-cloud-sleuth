@@ -27,8 +27,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
-import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
 import com.netflix.zuul.context.RequestContext;
@@ -42,8 +40,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 public class TracePostZuulFilterTests {
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-			new SpanInjectorComposite());
+			new Random(), new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
 	private TracePostZuulFilter filter = new TracePostZuulFilter(this.tracer);
 

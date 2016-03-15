@@ -29,29 +29,25 @@ import feign.RequestTemplate;
  *
  * @since 1.0.0
  */
-class FeignRequestTemplateInjector implements SpanInjector {
+class FeignRequestTemplateInjector implements SpanInjector<RequestTemplate> {
 
 	@Override
-	public <T> void inject(Span span, T carrier) {
-		if (!(carrier instanceof RequestTemplate)) {
-			return;
-		}
-		RequestTemplate template = (RequestTemplate) carrier;
+	public void inject(Span span, RequestTemplate carrier) {
 		if (span == null) {
-			setHeader(template, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
 			return;
 		}
-		template.header(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		setHeader(template, Span.SPAN_NAME_NAME, span.getName());
-		setHeader(template, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+		carrier.header(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
+		setHeader(carrier, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		if (!span.isExportable()) {
-			setHeader(template, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
 		}
 		Long parentId = getParentId(span);
 		if (parentId != null) {
-			setHeader(template, Span.PARENT_ID_NAME, Span.idToHex(parentId));
+			setHeader(carrier, Span.PARENT_ID_NAME, Span.idToHex(parentId));
 		}
-		setHeader(template, Span.PROCESS_ID_NAME, span.getProcessId());
+		setHeader(carrier, Span.PROCESS_ID_NAME, span.getProcessId());
 	}
 
 	private Long getParentId(Span span) {

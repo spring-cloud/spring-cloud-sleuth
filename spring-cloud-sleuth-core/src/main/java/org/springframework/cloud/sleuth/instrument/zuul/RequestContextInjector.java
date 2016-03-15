@@ -31,15 +31,11 @@ import com.netflix.zuul.context.RequestContext;
  *
  * @since 1.0.0
  */
-class RequestContextInjector implements SpanInjector {
+class RequestContextInjector implements SpanInjector<RequestContext> {
 
 	@Override
-	public <T> void inject(Span span, T carrier) {
-		if (!(carrier instanceof RequestContext)) {
-			return;
-		}
-		RequestContext ctx = (RequestContext) carrier;
-		Map<String, String> requestHeaders = ctx.getZuulRequestHeaders();
+	public void inject(Span span, RequestContext carrier) {
+		Map<String, String> requestHeaders = carrier.getZuulRequestHeaders();
 		if (span == null) {
 			setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
 			return;

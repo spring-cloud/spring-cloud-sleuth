@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import java.util.List;
 import java.util.Random;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -25,8 +24,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.SpanJoiner;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -34,10 +31,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.NoOpSpanInjector;
-import org.springframework.cloud.sleuth.trace.NoOpSpanJoiner;
-import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
-import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -70,23 +63,9 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean(Tracer.class)
 	public DefaultTracer traceManager(Sampler sampler, Random random,
 			SpanNamer spanNamer, SpanLogger spanLogger,
-			SpanReporter spanReporter, List<SpanJoiner> spanJoiners,
-			List<SpanInjector> spanInjectors) {
+			SpanReporter spanReporter) {
 		return new DefaultTracer(sampler, random, spanNamer, spanLogger,
-				spanReporter, new SpanJoinerComposite(spanJoiners),
-				new SpanInjectorComposite(spanInjectors));
-	}
-
-	// have to register a NoOp - otherwise autowiring won't work for trace manager
-	@Bean
-	public SpanJoiner noOpSpanJoiner() {
-		return new NoOpSpanJoiner();
-	}
-
-	// have to register a NoOp - otherwise autowiring won't work for trace manager
-	@Bean
-	public SpanInjector noOpSpanInjector() {
-		return new NoOpSpanInjector();
+				spanReporter);
 	}
 
 	@Bean

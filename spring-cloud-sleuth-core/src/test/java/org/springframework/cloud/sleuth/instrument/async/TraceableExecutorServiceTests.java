@@ -23,8 +23,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
-import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
 import static java.util.stream.Collectors.toList;
@@ -43,8 +41,7 @@ public class TraceableExecutorServiceTests {
 	@Before
 	public void setup() {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-				new SpanInjectorComposite());
+				this.spanNamer, new NoOpSpanLogger(), new NoOpSpanReporter());
 		this.traceManagerableExecutorService = new TraceableExecutorService(this.executorService,
 				this.tracer, new TraceKeys(), this.spanNamer);
 		TestSpanContextHolder.removeCurrentSpan();

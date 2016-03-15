@@ -36,7 +36,7 @@ import org.springframework.util.StringUtils;
  *
  * @since 1.0.0
  */
-class MessagingSpanInjector implements SpanInjector {
+public class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 
 	public static final String SPAN_HEADER = "X-Current-Span";
 
@@ -48,12 +48,8 @@ class MessagingSpanInjector implements SpanInjector {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> void inject(Span span, T carrier) {
-		if (!(carrier instanceof MessageBuilder)) {
-			return;
-		}
-		MessageBuilder messageBuilder = (MessageBuilder) carrier;
-		addSpanHeaders(this.traceKeys, messageBuilder, span);
+	public void inject(Span span, MessageBuilder carrier) {
+		addSpanHeaders(this.traceKeys, carrier, span);
 	}
 
 	/**

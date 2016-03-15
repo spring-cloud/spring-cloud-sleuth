@@ -26,6 +26,7 @@ import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonComm
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommandFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.util.MultiValueMap;
 
@@ -44,11 +45,13 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 	private static final Log log = LogFactory.getLog(TraceRestClientRibbonCommandFactory.class);
 
 	private final Tracer tracer;
+	private final SpanInjector<HttpRequest.Builder> spanInjector;
 
 	public TraceRestClientRibbonCommandFactory(SpringClientFactory clientFactory,
-			Tracer tracer) {
+			Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector) {
 		super(clientFactory);
 		this.tracer = tracer;
+		this.spanInjector = spanInjector;
 	}
 
 	@Override
@@ -60,7 +63,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
 					getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
 					context.getHeaders(), context.getParams(), context.getRequestEntity(),
-					this.tracer);
+					this.tracer, this.spanInjector);
 		}
 		catch (URISyntaxException e) {
 			log.error("Exception occurred while trying to create the TraceRestClientRibbonCommand", e);
@@ -71,23 +74,25 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 	class TraceRestClientRibbonCommand extends RestClientRibbonCommand {
 
 		private final Tracer tracer;
+		private final SpanInjector<HttpRequest.Builder> spanInjector;
 
 		@SuppressWarnings("deprecation")
 		public TraceRestClientRibbonCommand(String commandKey, RestClient restClient,
 				HttpRequest.Verb verb, String uri, Boolean retryable,
 				MultiValueMap<String, String> headers,
 				MultiValueMap<String, String> params, InputStream requestEntity,
-				Tracer tracer)
+				Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector)
 						throws URISyntaxException {
 			super(commandKey, restClient, verb, uri, retryable, headers, params,
 					requestEntity);
 			this.tracer = tracer;
+			this.spanInjector = spanInjector;
 		}
 
 		@Override
 		protected void customizeRequest(HttpRequest.Builder requestBuilder) {
 			Span span = getCurrentSpan();
-			this.tracer.inject(span, requestBuilder);
+			this.spanInjector.inject(span, requestBuilder);
 			span.logEvent(Span.CLIENT_SEND);
 		}
 

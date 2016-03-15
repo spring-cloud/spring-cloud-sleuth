@@ -29,26 +29,22 @@ import com.netflix.client.http.HttpRequest.Builder;
  *
  * @since 1.0.0
  */
-class RequestBuilderContextInjector implements SpanInjector {
+class RequestBuilderContextInjector implements SpanInjector<Builder> {
 
 	@Override
-	public <T> void inject(Span span, T carrier) {
-		if (!(carrier instanceof Builder)) {
-			return;
-		}
-		Builder requestBuilder = (Builder) carrier;
+	public void inject(Span span, Builder carrier) {
 		if (span == null) {
-			setHeader(requestBuilder, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
 			return;
 		}
-		setHeader(requestBuilder, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		setHeader(requestBuilder, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		setHeader(requestBuilder, Span.SPAN_NAME_NAME, span.getName());
+		setHeader(carrier, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		setHeader(carrier, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
 		if (getParentId(span) != null) {
-			setHeader(requestBuilder, Span.PARENT_ID_NAME,
+			setHeader(carrier, Span.PARENT_ID_NAME,
 					Span.idToHex(getParentId(span)));
 		}
-		setHeader(requestBuilder, Span.PROCESS_ID_NAME,
+		setHeader(carrier, Span.PROCESS_ID_NAME,
 				span.getProcessId());
 	}
 

@@ -23,7 +23,7 @@ package org.springframework.cloud.sleuth;
  *
  * @since 1.0.0
  */
-public interface SpanInjector {
+public interface SpanInjector<T> {
 	/** Takes two arguments:
 	 *    a Span instance, and
 	 *    a “carrier” object in which to inject that Span for cross-process propagation.
@@ -33,5 +33,5 @@ public interface SpanInjector {
 	 * Attempting to inject to a carrier that has been registered/configured to this Tracer will result in a
 	 * IllegalStateException.
 	 */
-	<T> void inject(Span span, T carrier);
+	void inject(Span span, T carrier);
 }

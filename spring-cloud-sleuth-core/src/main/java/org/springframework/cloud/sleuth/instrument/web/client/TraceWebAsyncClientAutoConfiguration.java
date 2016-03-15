@@ -22,10 +22,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
 import org.springframework.web.client.AsyncRestTemplate;
 
@@ -47,8 +49,9 @@ public class TraceWebAsyncClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public AsyncClientHttpRequestFactory asyncClientHttpRequestFactory(Tracer tracer) {
-		return new TraceAsyncClientHttpRequestFactoryWrapper(tracer);
+	public AsyncClientHttpRequestFactory asyncClientHttpRequestFactory(Tracer tracer,
+			SpanInjector<HttpRequest> spanInjector) {
+		return new TraceAsyncClientHttpRequestFactoryWrapper(tracer, spanInjector);
 	}
 
 	@Bean

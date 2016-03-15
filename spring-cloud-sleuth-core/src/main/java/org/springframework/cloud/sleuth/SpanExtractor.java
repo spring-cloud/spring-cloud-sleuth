@@ -16,32 +16,24 @@
 
 package org.springframework.cloud.sleuth;
 
-import org.springframework.cloud.sleuth.Span.SpanBuilder;
-
 /**
- * Taken from <a href="https://github.com/opentracing/opentracing-java/blob/master/opentracing/src/main/java/opentracing/Tracer.java"></a>OpenTracing</a>
+ * Adopted from <a href="https://github.com/opentracing/opentracing-java/pull/11/files#diff-eb9c3460aba76aabc0de04b05e4a2b3d"></a>OpenTracing</a>
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
-public interface SpanJoiner {
+public interface SpanExtractor<T> {
 	/**  Returns a SpanBuilder provided
 	 *    a “carrier” object from which to extract identifying information needed by the new Span instance.
 	 *
 	 * If the carrier object has no such span stored within it, a new Span is created.
 	 *
-	 * Unless there’s an error, it returns a SpanBuilder.
+	 * Unless there’s an error, it returns a Span.
 	 * The Span generated from the builder can be used in the host process like any other.
 	 *
 	 * (Note that some OpenTracing implementations consider the Spans on either side of an RPC to have the same identity,
-	 * and others consider the caller to be the parent and the receiver to be the child)
-	 *
-	 * Attempting to join from a carrier that has been registered/configured to this Tracer will result in a
-	 * IllegalStateException.
-	 *
-	 * If the span serialized state is invalid (corrupt, wrong version, etc) inside the carrier this will result in a
-	 * IllegalArgumentException.
+	 * and others consider the caller to be the parent and the receiver to be the child).
 	 */
-	<T> SpanBuilder join(T carrier);
+	Span joinTrace(T carrier);
 }

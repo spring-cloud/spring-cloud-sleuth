@@ -52,7 +52,7 @@ import java.util.concurrent.Callable;
  *
  * @since 1.0.0
  */
-public interface Tracer extends SpanAccessor, SpanInjector, SpanJoiner {
+public interface Tracer extends SpanAccessor {
 
 	/**
 	 * Creates a new Span.

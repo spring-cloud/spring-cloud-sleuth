@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.Collections;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -30,8 +29,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
-import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -41,7 +38,6 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.junit.Assert.assertNull;
-import static org.springframework.cloud.sleuth.instrument.web.TraceFilter.DEFAULT_SKIP_PATTERN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
@@ -52,11 +48,7 @@ public class TraceFilterMockChainIntegrationTests {
 
 	private Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), new NoOpSpanReporter(),
-			new SpanJoinerComposite(Collections.singletonList(
-					new HttpServletRequestJoiner(new Random(), Pattern.compile(
-							DEFAULT_SKIP_PATTERN)))),
-			new SpanInjectorComposite());
+			new NoOpSpanLogger(), new NoOpSpanReporter());
 	private TraceKeys traceKeys = new TraceKeys();
 
 	private MockHttpServletRequest request;
@@ -79,7 +71,9 @@ public class TraceFilterMockChainIntegrationTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, new NoOpSpanReporter());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, new NoOpSpanReporter(),
+				new HttpServletRequestExtractor(new Random(), Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN)),
+				new HttpServletResponseInjector());
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -89,7 +83,9 @@ public class TraceFilterMockChainIntegrationTests {
 		Random generator = new Random();
 		this.request = builder().header(Span.SPAN_ID_NAME, generator.nextLong())
 				.header(Span.TRACE_ID_NAME, generator.nextLong()).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, new NoOpSpanReporter());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, new NoOpSpanReporter(),
+				new HttpServletRequestExtractor(new Random(), Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN)),
+				new HttpServletResponseInjector());
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}

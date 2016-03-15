@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
-import org.springframework.cloud.sleuth.SpanJoiner;
+import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -34,7 +34,7 @@ import org.springframework.web.util.UrlPathHelper;
  *
  * @since 1.0.0
  */
-class HttpServletRequestJoiner implements SpanJoiner {
+class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 
 	private static final String HTTP_COMPONENT = "http";
 
@@ -43,29 +43,25 @@ class HttpServletRequestJoiner implements SpanJoiner {
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
-	public HttpServletRequestJoiner(Random random, Pattern skipPattern) {
+	public HttpServletRequestExtractor(Random random, Pattern skipPattern) {
 		this.random = random;
 		this.skipPattern = skipPattern;
 	}
 
 	@Override
-	public <T> SpanBuilder join(T carrier) {
-		if (!(carrier instanceof HttpServletRequest)) {
-			return null;
-		}
-		HttpServletRequest request = (HttpServletRequest) carrier;
-		String uri = this.urlPathHelper.getPathWithinApplication(request);
+	public Span joinTrace(HttpServletRequest carrier) {
+		String uri = this.urlPathHelper.getPathWithinApplication(carrier);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| request.getHeader(Span.NOT_SAMPLED_NAME) != null;
+				|| carrier.getHeader(Span.NOT_SAMPLED_NAME) != null;
 		long traceId = Span
-				.hexToId(request.getHeader(Span.TRACE_ID_NAME));
-		long spanId = request.getHeader(Span.SPAN_ID_NAME) != null
-				? Span.hexToId(request.getHeader(Span.SPAN_ID_NAME))
+				.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
+		long spanId = carrier.getHeader(Span.SPAN_ID_NAME) != null
+				? Span.hexToId(carrier.getHeader(Span.SPAN_ID_NAME))
 				: this.random.nextLong();
 
 		SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
-		String processId = request.getHeader(Span.PROCESS_ID_NAME);
-		String parentName = request.getHeader(Span.SPAN_NAME_NAME);
+		String processId = carrier.getHeader(Span.PROCESS_ID_NAME);
+		String parentName = carrier.getHeader(Span.SPAN_NAME_NAME);
 		if (StringUtils.hasText(parentName)) {
 			span.name(parentName);
 		}
@@ -75,14 +71,14 @@ class HttpServletRequestJoiner implements SpanJoiner {
 		if (StringUtils.hasText(processId)) {
 			span.processId(processId);
 		}
-		if (request.getHeader(Span.PARENT_ID_NAME) != null) {
+		if (carrier.getHeader(Span.PARENT_ID_NAME) != null) {
 			span.parent(Span
-					.hexToId(request.getHeader(Span.PARENT_ID_NAME)));
+					.hexToId(carrier.getHeader(Span.PARENT_ID_NAME)));
 		}
 		span.remote(true);
 		if (skip) {
 			span.exportable(false);
 		}
-		return span;
+		return span.build();
 	}
 }

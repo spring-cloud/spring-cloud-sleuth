@@ -21,8 +21,6 @@ import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.SpanJoiner;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceCallable;
@@ -50,20 +48,13 @@ public class DefaultTracer implements Tracer {
 
 	private final SpanReporter spanReporter;
 
-	private final SpanJoiner spanJoiner;
-
-	private final SpanInjector spanInjector;
-
 	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
-			SpanLogger spanLogger, SpanReporter spanReporter, SpanJoiner spanJoiner,
-			SpanInjector spanInjector) {
+			SpanLogger spanLogger, SpanReporter spanReporter) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.spanNamer = spanNamer;
 		this.spanLogger = spanLogger;
 		this.spanReporter = spanReporter;
-		this.spanJoiner = spanJoiner;
-		this.spanInjector = spanInjector;
 	}
 
 	@Override
@@ -234,15 +225,5 @@ public class DefaultTracer implements Tracer {
 			return new TraceRunnable(this, this.spanNamer, runnable);
 		}
 		return runnable;
-	}
-
-	@Override
-	public <T> void inject(Span span, T carrier) {
-		this.spanInjector.inject(span, carrier);
-	}
-
-	@Override
-	public <T> Span.SpanBuilder join(T carrier) {
-		return this.spanJoiner.join(carrier);
 	}
 }

@@ -1,6 +1,8 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.AbstractMessageChannel;
@@ -9,6 +11,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -29,12 +32,17 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	protected static final String MESSAGE_COMPONENT = "message";
 
 	private final Tracer tracer;
-
 	private final TraceKeys traceKeys;
+	private final SpanExtractor<Message> spanExtractor;
+	private final SpanInjector<MessageBuilder> spanInjector;
 
-	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys) {
+	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
+			SpanExtractor<Message> spanExtractor,
+			SpanInjector<MessageBuilder> spanInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
+		this.spanExtractor = spanExtractor;
+		this.spanInjector = spanInjector;
 	}
 
 	protected Tracer getTracer() {
@@ -45,16 +53,16 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		return this.traceKeys;
 	}
 
+	protected SpanInjector<MessageBuilder> getSpanInjector() {
+		return this.spanInjector;
+	}
+
 	/**
 	 * Returns a span given the message and a channel. Returns {@code null} if ids
 	 * are missing.
 	 */
 	protected Span buildSpan(Message<?> message) {
-		Span.SpanBuilder spanBuilder = this.tracer.join(message);
-		if (spanBuilder == null) {
-			return null;
-		}
-		return spanBuilder.build();
+		return this.spanExtractor.joinTrace(message);
 	}
 
 	String getChannelName(MessageChannel channel) {

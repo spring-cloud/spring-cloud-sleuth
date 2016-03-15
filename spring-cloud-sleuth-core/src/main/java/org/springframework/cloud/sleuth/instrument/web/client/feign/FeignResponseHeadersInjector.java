@@ -34,15 +34,11 @@ import static java.util.Collections.singletonList;
  *
  * @since 1.0.0
  */
-class FeignResponseHeadersInjector implements SpanInjector {
+class FeignResponseHeadersInjector implements SpanInjector<FeignResponseHeadersHolder> {
 
 	@Override
-	public <T> void inject(Span span, T carrier) {
-		if (!(carrier instanceof FeignResponseHeadersHolder)) {
-			return;
-		}
-		FeignResponseHeadersHolder feignResponseHeadersHolder = (FeignResponseHeadersHolder) carrier;
-		Map<String, Collection<String>> headers = feignResponseHeadersHolder.responseHeaders;
+	public void inject(Span span, FeignResponseHeadersHolder carrier) {
+		Map<String, Collection<String>> headers = carrier.responseHeaders;
 		headersWithTraceId(span, headers);
 	}
 

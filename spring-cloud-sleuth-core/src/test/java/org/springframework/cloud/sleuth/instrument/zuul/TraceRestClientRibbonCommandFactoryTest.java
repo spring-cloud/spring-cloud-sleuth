@@ -19,13 +19,13 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.client.http.HttpRequest;
@@ -44,13 +44,14 @@ public class TraceRestClientRibbonCommandFactoryTest {
 
 	@Mock Tracer tracer;
 	@Mock SpringClientFactory springClientFactory;
+	SpanInjector<HttpRequest.Builder> spanInjector = new RequestBuilderContextInjector();
 	TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory;
 
 	@Before
 	@SuppressWarnings({"deprecation", "unchecked"})
 	public void setup() {
 		this.traceRestClientRibbonCommandFactory = new TraceRestClientRibbonCommandFactory(
-				this.springClientFactory, this.tracer);
+				this.springClientFactory, this.tracer, this.spanInjector);
 		given(this.springClientFactory.getClient(anyString(), any(Class.class))).willReturn(new RestClient());
 		Span span = Span.builder()
 				.name("name")
@@ -61,16 +62,12 @@ public class TraceRestClientRibbonCommandFactoryTest {
 				.build();
 		given(this.tracer.getCurrentSpan()).willReturn(span);
 		given(this.tracer.isTracing()).willReturn(true);
-		BDDMockito.doAnswer(invocation -> {
-				Object[] args = invocation.getArguments();
-				new RequestBuilderContextInjector().inject((Span) args[0], args[1]);
-				return null;
-		}).when(this.tracer).inject(any(Span.class), any());
 	}
 
 	@Test
 	public void should_wrap_ribbon_command_in_a_sleuth_representation() throws Exception {
-		RestClientRibbonCommand restClientRibbonCommand = this.traceRestClientRibbonCommandFactory.create(ribbonCommandContext());
+		RestClientRibbonCommand restClientRibbonCommand =
+				this.traceRestClientRibbonCommandFactory.create(ribbonCommandContext());
 
 		then(restClientRibbonCommand)
 				.isInstanceOf(TraceRestClientRibbonCommandFactory.TraceRestClientRibbonCommand.class);
@@ -79,7 +76,8 @@ public class TraceRestClientRibbonCommandFactoryTest {
 	@Test
 	public void should_attach_trace_headers_to_the_sent_request() throws Exception {
 		RestClientRibbonCommand restClientRibbonCommand = this.traceRestClientRibbonCommandFactory.create(ribbonCommandContext());
-		TraceRestClientRibbonCommandFactory.TraceRestClientRibbonCommand traceRestClientRibbonCommand = (TraceRestClientRibbonCommandFactory.TraceRestClientRibbonCommand) restClientRibbonCommand;
+		TraceRestClientRibbonCommandFactory.TraceRestClientRibbonCommand traceRestClientRibbonCommand =
+				(TraceRestClientRibbonCommandFactory.TraceRestClientRibbonCommand) restClientRibbonCommand;
 		HttpRequest.Builder builder = new HttpRequest.Builder();
 
 		traceRestClientRibbonCommand.customizeRequest(builder);

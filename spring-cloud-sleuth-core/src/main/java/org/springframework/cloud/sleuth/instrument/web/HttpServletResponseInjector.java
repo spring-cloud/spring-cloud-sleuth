@@ -28,15 +28,11 @@ import org.springframework.cloud.sleuth.SpanInjector;
  *
  * @since 1.0.0
  */
-class HttpServletResponseInjector implements SpanInjector {
+class HttpServletResponseInjector implements SpanInjector<HttpServletResponse> {
 
 	@Override
-	public <T> void inject(Span span, T carrier) {
-		if (!(carrier instanceof HttpServletResponse)) {
-			return;
-		}
-		HttpServletResponse response = (HttpServletResponse) carrier;
-		addResponseHeaders(span, response);
+	public void inject(Span span, HttpServletResponse carrier) {
+		addResponseHeaders(span, carrier);
 	}
 
 	private void addResponseHeaders(Span span, HttpServletResponse response) {

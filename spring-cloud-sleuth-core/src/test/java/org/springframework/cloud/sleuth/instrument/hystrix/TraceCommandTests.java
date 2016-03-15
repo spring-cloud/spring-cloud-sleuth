@@ -13,8 +13,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.SpanInjectorComposite;
-import org.springframework.cloud.sleuth.trace.SpanJoinerComposite;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
 import com.netflix.hystrix.HystrixCommand;
@@ -33,8 +31,7 @@ public class TraceCommandTests {
 
 	static final long EXPECTED_TRACE_ID = 1L;
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-			new SpanInjectorComposite());
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
 	@Before
 	public void setup() {
@@ -88,8 +85,7 @@ public class TraceCommandTests {
 	@Test
 	public void should_pass_tracing_information_when_using_Hystrix_commands() {
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new SpanJoinerComposite(),
-				new SpanInjectorComposite());
+				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 		TraceKeys traceKeys = new TraceKeys();
 		HystrixCommand.Setter setter = HystrixCommand.Setter
 				.withGroupKey(HystrixCommandGroupKey.Factory.asKey("group"))

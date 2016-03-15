@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.net.URI;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 
 import feign.RequestInterceptor;
@@ -35,17 +36,20 @@ import feign.RequestTemplate;
 final class TraceFeignRequestInterceptor implements RequestInterceptor {
 
 	private final Tracer tracer;
+	private final SpanInjector<RequestTemplate> spanInjector;
 	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
 
-	TraceFeignRequestInterceptor(Tracer tracer) {
+	TraceFeignRequestInterceptor(Tracer tracer,
+			SpanInjector<RequestTemplate> spanInjector) {
 		this.tracer = tracer;
+		this.spanInjector = spanInjector;
 	}
 
 	@Override
 	public void apply(RequestTemplate template) {
 		String spanName = getSpanName(template);
 		Span span = getSpan(spanName);
-		this.tracer.inject(span, template);
+		this.spanInjector.inject(span, template);
 		span.logEvent(Span.CLIENT_SEND);
 	}
 
