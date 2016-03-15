@@ -21,6 +21,7 @@ import java.util.Random;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
 import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.messaging.Message;
 
 /**
@@ -33,29 +34,32 @@ import org.springframework.messaging.Message;
 public class MessagingSpanExtractor implements SpanExtractor<Message> {
 
 	private final Random random;
+	private final TraceHeaders traceHeaders;
 
-	public MessagingSpanExtractor(Random random) {
+	public MessagingSpanExtractor(Random random, TraceHeaders traceHeaders) {
 		this.random = random;
+		this.traceHeaders = traceHeaders;
 	}
 
 	@Override 
 	public Span joinTrace(Message carrier) {
-		if (!hasHeader(carrier, Span.TRACE_ID_NAME)
-				|| !hasHeader(carrier, Span.SPAN_ID_NAME)) {
+		if (!hasHeader(carrier, this.traceHeaders.getTraceId())
+				|| !hasHeader(carrier, this.traceHeaders.getSpanId())) {
 			return null;
 			//TODO: Consider throwing IllegalArgumentException;
 		}
-		long spanId = hasHeader(carrier, Span.SPAN_ID_NAME)
-				? Span.hexToId(getHeader(carrier, Span.SPAN_ID_NAME))
+		long spanId = hasHeader(carrier, this.traceHeaders.getSpanId())
+				? Span.hexToId(getHeader(carrier, this.traceHeaders.getSpanId()))
 				: this.random.nextLong();
-		long traceId = Span.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
+		long traceId = Span.hexToId(getHeader(carrier, this.traceHeaders.getTraceId()));
 		SpanBuilder spanBuilder = Span.builder().traceId(traceId).spanId(spanId);
-		if (hasHeader(carrier, Span.NOT_SAMPLED_NAME)) {
+		if (TraceHeaders.SPAN_NOT_SAMPLED.equals(
+				getHeader(carrier, this.traceHeaders.getSampled()))) {
 			spanBuilder.exportable(false);
 		}
-		String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
-		String processId = getHeader(carrier, Span.PROCESS_ID_NAME);
-		String spanName = getHeader(carrier, Span.SPAN_NAME_NAME);
+		String parentId = getHeader(carrier, this.traceHeaders.getParentSpanId());
+		String processId = getHeader(carrier, this.traceHeaders.getProcessId());
+		String spanName = getHeader(carrier, this.traceHeaders.getSleuth().getSpanName());
 		if (spanName != null) {
 			spanBuilder.name(spanName);
 		}

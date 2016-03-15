@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -32,9 +32,9 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
 import com.netflix.zuul.context.RequestContext;
 
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -46,7 +46,8 @@ public class TracePreZuulFilterTests {
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
-	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new RequestContextInjector());
+	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new RequestContextInjector(
+			new TraceHeaders()));
 
 	@After
 	@Before
@@ -60,10 +61,10 @@ public class TracePreZuulFilterTests {
 		this.tracer.createSpan("http:start");
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
-		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
-				is(notNullValue()));
-		assertThat(ctx.getZuulRequestHeaders().get(Span.NOT_SAMPLED_NAME),
-				is(nullValue()));
+		then(ctx.getZuulRequestHeaders().get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME))
+				.isNotNull();
+		then(ctx.getZuulRequestHeaders().get(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME))
+				.isEqualTo(TraceHeaders.SPAN_SAMPLED);
 	}
 
 	@Test
@@ -71,9 +72,9 @@ public class TracePreZuulFilterTests {
 		this.tracer.createSpan("http:start", NeverSampler.INSTANCE);
 		this.filter.run();
 		RequestContext ctx = RequestContext.getCurrentContext();
-		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
+		assertThat(ctx.getZuulRequestHeaders().get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME),
 				is(notNullValue()));
-		assertThat(ctx.getZuulRequestHeaders().get(Span.NOT_SAMPLED_NAME),
+		assertThat(ctx.getZuulRequestHeaders().get(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME),
 				is(notNullValue()));
 	}
 

@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 
 /**
  * Span injector that injects tracing info to {@link HttpServletResponse}
@@ -30,15 +31,23 @@ import org.springframework.cloud.sleuth.SpanInjector;
  */
 class HttpServletResponseInjector implements SpanInjector<HttpServletResponse> {
 
+	private final TraceHeaders traceHeaders;
+
+	HttpServletResponseInjector(TraceHeaders traceHeaders) {
+		this.traceHeaders = traceHeaders;
+	}
+
 	@Override
 	public void inject(Span span, HttpServletResponse carrier) {
 		if (span == null) {
 			return;
 		}
-		if (!carrier.containsHeader(Span.SPAN_ID_NAME)) {
-			carrier.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-			carrier.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		if (!carrier.containsHeader(this.traceHeaders.getSpanId())) {
+			carrier.addHeader(this.traceHeaders.getSpanId(), Span.idToHex(span.getSpanId()));
+			carrier.addHeader(this.traceHeaders.getTraceId(), Span.idToHex(span.getTraceId()));
 		}
+		carrier.addHeader(this.traceHeaders.getSampled(), span.isExportable() ? TraceHeaders.SPAN_SAMPLED :
+				TraceHeaders.SPAN_NOT_SAMPLED);
 	}
 
 }

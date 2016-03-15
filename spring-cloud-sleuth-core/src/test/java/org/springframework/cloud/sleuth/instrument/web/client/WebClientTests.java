@@ -37,9 +37,12 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,6 +65,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 import static junitparams.JUnitParamsRunner.$;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
@@ -89,8 +93,8 @@ public class WebClientTests {
 	public void shouldCreateANewSpanWhenNoPreviousTracingWasPresent(ResponseEntityProvider provider) {
 		ResponseEntity<String> response = provider.get(this);
 
-		then(getHeader(response, Span.TRACE_ID_NAME)).isNotNull();
-		then(getHeader(response, Span.SPAN_ID_NAME)).isNotNull();
+		then(getHeader(response, TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME)).isNotNull();
+		then(getHeader(response, TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME)).isNotNull();
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
@@ -110,8 +114,8 @@ public class WebClientTests {
 
 		ResponseEntity<Map<String, String>> response = provider.get(this);
 
-		then(response.getBody().get(Span.TRACE_ID_NAME)).isNotNull();
-		then(response.getBody().get(Span.NOT_SAMPLED_NAME)).isNotNull();
+		then(response.getBody().get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME)).isNotNull();
+		then(response.getBody().get(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME)).isEqualTo(TraceHeaders.SPAN_NOT_SAMPLED);
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
@@ -128,11 +132,12 @@ public class WebClientTests {
 		Long currentParentId = 2L;
 		Long currentSpanId = 100L;
 		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
-				.spanId(currentSpanId).parent(currentParentId).build());
+				.spanId(currentSpanId).exportable(true).parent(currentParentId).build());
 
 		ResponseEntity<String> response = provider.get(this);
 
-		then(Span.hexToId(getHeader(response, Span.TRACE_ID_NAME)))
+		then(getHeader(response, TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME)).isEqualTo(TraceHeaders.SPAN_SAMPLED);
+		then(Span.hexToId(getHeader(response, TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME)))
 				.isEqualTo(currentTraceId);
 		thenRegisteredClientSentAndReceivedEvents(spanWithClientEvents());
 	}
@@ -160,7 +165,7 @@ public class WebClientTests {
 		Long currentParentId = 2L;
 		Long currentSpanId = generatedId();
 		Span span = Span.builder().traceId(currentTraceId)
-				.spanId(currentSpanId).parent(currentParentId).build();
+				.spanId(currentSpanId).exportable(true).parent(currentParentId).build();
 		this.tracer.continueSpan(span);
 
 		provider.get(this);
@@ -219,6 +224,10 @@ public class WebClientTests {
 			return new Listener();
 		}
 
+		@Bean Sampler alwaysSampler() {
+			return new AlwaysSampler();
+		}
+
 		@LoadBalanced
 		@Bean
 		public RestTemplate restTemplate() {
@@ -247,18 +256,20 @@ public class WebClientTests {
 
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
-				@RequestHeader(name = Span.TRACE_ID_NAME, required = false) String traceId) {
+				@RequestHeader(name = TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, required = false) String traceId) {
 			then(traceId).isNotNull();
 			return "OK";
 		}
 
 		@RequestMapping(value = "/traceid", method = RequestMethod.GET)
-		public String traceId(@RequestHeader(Span.TRACE_ID_NAME) String traceId,
-				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
-				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+		public String traceId(@RequestHeader(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME) String traceId,
+				@RequestHeader(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME) String spanId,
+				@RequestHeader(TraceHeaders.ZIPKIN_PARENT_SPAN_ID_HEADER_NAME) String parentId,
+				@RequestHeader(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME) String sampled) {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
+			then(sampled).isEqualTo(TraceHeaders.SPAN_SAMPLED);
 			return traceId;
 		}
 
@@ -272,12 +283,14 @@ public class WebClientTests {
 		}
 
 		@RequestMapping("/noresponse")
-		public void noResponse(@RequestHeader(Span.TRACE_ID_NAME) String traceId,
-				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
-				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+		public void noResponse(@RequestHeader(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME) String traceId,
+				@RequestHeader(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME) String spanId,
+				@RequestHeader(TraceHeaders.ZIPKIN_PARENT_SPAN_ID_HEADER_NAME) String parentId,
+				@RequestHeader(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME) String sampled) {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
+			then(sampled).isEqualTo(TraceHeaders.SPAN_SAMPLED);
 		}
 	}
 

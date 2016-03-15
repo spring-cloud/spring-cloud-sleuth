@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.util.StringUtils;
 
 import feign.RequestTemplate;
@@ -31,23 +32,28 @@ import feign.RequestTemplate;
  */
 class FeignRequestTemplateInjector implements SpanInjector<RequestTemplate> {
 
+	private final TraceHeaders traceHeaders;
+
+	FeignRequestTemplateInjector(TraceHeaders traceHeaders) {
+		this.traceHeaders = traceHeaders;
+	}
+
 	@Override
 	public void inject(Span span, RequestTemplate carrier) {
 		if (span == null) {
-			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(carrier, this.traceHeaders.getSampled(), TraceHeaders.SPAN_NOT_SAMPLED);
 			return;
 		}
-		carrier.header(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
-		setHeader(carrier, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		if (!span.isExportable()) {
-			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
-		}
+		carrier.header(this.traceHeaders.getTraceId(), Span.idToHex(span.getTraceId()));
+		setHeader(carrier, this.traceHeaders.getSleuth().getSpanName(), span.getName());
+		setHeader(carrier, this.traceHeaders.getSpanId(), Span.idToHex(span.getSpanId()));
+		setHeader(carrier, this.traceHeaders.getSampled(), span.isExportable() ?
+				TraceHeaders.SPAN_SAMPLED : TraceHeaders.SPAN_NOT_SAMPLED);
 		Long parentId = getParentId(span);
 		if (parentId != null) {
-			setHeader(carrier, Span.PARENT_ID_NAME, Span.idToHex(parentId));
+			setHeader(carrier, this.traceHeaders.getParentSpanId(), Span.idToHex(parentId));
 		}
-		setHeader(carrier, Span.PROCESS_ID_NAME, span.getProcessId());
+		setHeader(carrier, this.traceHeaders.getProcessId(), span.getProcessId());
 	}
 
 	private Long getParentId(Span span) {

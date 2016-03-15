@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -37,6 +38,9 @@ import org.springframework.core.env.PropertySource;
  *     {@link org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAspect TraceSchedulingAspect}.
  * </ul>
  *
+ * If you're chaning the {@link TraceHeaders} default values remember to change override
+ * the {@code logging.pattern.level} property too.
+ *
  * @author Dave Syer
  * @since 1.0.0
  */
@@ -51,7 +55,9 @@ public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		// This doesn't work with all logging systems but it's a useful default so you see
 		// traces in logs without having to configure it.
 		map.put("logging.pattern.level",
-				"%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}");
+				"%clr(%5p) %clr([${spring.application.name:},%X{" + TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME + ":-},"
+						+ "%X{"+TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME+":-},"
+						+ "%X{"+TraceHeaders.Sleuth.SLEUTH_EXPORTABLE_HEADER_NAME+":-}]){yellow}");
 		map.put("spring.aop.proxyTargetClass", "true");
 		addOrReplace(environment.getPropertySources(), map);
 	}

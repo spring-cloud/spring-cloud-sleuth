@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.AbstractMessageChannel;
@@ -33,14 +34,16 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
+	private final TraceHeaders traceHeaders;
 	private final SpanExtractor<Message> spanExtractor;
 	private final SpanInjector<MessageBuilder> spanInjector;
 
 	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			SpanExtractor<Message> spanExtractor,
+			TraceHeaders traceHeaders, SpanExtractor<Message> spanExtractor,
 			SpanInjector<MessageBuilder> spanInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
+		this.traceHeaders = traceHeaders;
 		this.spanExtractor = spanExtractor;
 		this.spanInjector = spanInjector;
 	}
@@ -51,6 +54,10 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	protected TraceKeys getTraceKeys() {
 		return this.traceKeys;
+	}
+
+	protected TraceHeaders getTraceHeaders() {
+		return this.traceHeaders;
 	}
 
 	protected SpanInjector<MessageBuilder> getSpanInjector() {

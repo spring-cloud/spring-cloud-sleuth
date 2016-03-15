@@ -36,6 +36,7 @@ import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -75,11 +76,11 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
+	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys, TraceHeaders traceHeaders,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
 			@Qualifier("httpServletRequestSpanExtractor") SpanExtractor<HttpServletRequest> spanExtractor,
 			@Qualifier("httpServletResponseInjector") SpanInjector<HttpServletResponse> spanInjector) {
-		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
+		return new TraceFilter(tracer, traceKeys, traceHeaders, skipPatternProvider.skipPattern(),
 				spanReporter, spanExtractor, spanInjector);
 	}
 
@@ -88,16 +89,17 @@ public class TraceWebAutoConfiguration {
 	@Qualifier("httpServletRequestSpanExtractor")
 	@ConditionalOnProperty(value = "spring.sleuth.web.extractor.enabled", matchIfMissing = true)
 	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(Random random,
-			SkipPatternProvider skipPatternProvider) {
-		return new HttpServletRequestExtractor(random, skipPatternProvider.skipPattern());
+			SkipPatternProvider skipPatternProvider, TraceHeaders traceHeaders) {
+		return new HttpServletRequestExtractor(random, skipPatternProvider.skipPattern(),
+				traceHeaders);
 	}
 
 	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
 	@Bean
 	@Qualifier("httpServletResponseInjector")
 	@ConditionalOnProperty(value = "spring.sleuth.web.injector.enabled", matchIfMissing = true)
-	public SpanInjector<HttpServletResponse> httpServletResponseInjector() {
-		return new HttpServletResponseInjector();
+	public SpanInjector<HttpServletResponse> httpServletResponseInjector(TraceHeaders traceHeaders) {
+		return new HttpServletResponseInjector(traceHeaders);
 	}
 
 	@Configuration

@@ -25,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -47,10 +48,11 @@ public class TracerIgnoringChannelInterceptorTest {
 	public void should_attach_not_sampled_header_to_the_message() throws Exception {
 		Message<String> message = MessageBuilder.withPayload("hello").build();
 
-		Message interceptedMessage = this.tracerIgnoringChannelInterceptor.preSend(message, this.messageChannel);
+		Message interceptedMessage = new TracerIgnoringChannelInterceptor(new TraceHeaders(), this.spanMetricReporter).
+				preSend(message, this.messageChannel);
 
 		then(interceptedMessage.getHeaders().containsKey(
-				Span.NOT_SAMPLED_NAME)).isTrue();
+				TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME)).isTrue();
 	}
 
 	@Test

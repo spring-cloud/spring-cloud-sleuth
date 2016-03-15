@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 
 /**
  * Span listener that logs to the console when a span got
@@ -34,23 +35,25 @@ public class Slf4jSpanLogger implements SpanLogger {
 
 	private final Logger log;
 	private final Pattern nameSkipPattern;
+	private final TraceHeaders traceHeaders;
 
-	public Slf4jSpanLogger(String nameSkipPattern) {
-		this.nameSkipPattern = Pattern.compile(nameSkipPattern);
-		this.log = org.slf4j.LoggerFactory
-				.getLogger(Slf4jSpanLogger.class);
+	public Slf4jSpanLogger(String nameSkipPattern, TraceHeaders traceHeaders) {
+		this(nameSkipPattern, org.slf4j.LoggerFactory
+				.getLogger(Slf4jSpanLogger.class), traceHeaders);
 	}
 
-	Slf4jSpanLogger(String nameSkipPattern, Logger log) {
+	Slf4jSpanLogger(String nameSkipPattern, Logger log, TraceHeaders traceHeaders) {
 		this.nameSkipPattern = Pattern.compile(nameSkipPattern);
 		this.log = log;
+		this.traceHeaders = traceHeaders;
 	}
 
 	@Override
 	public void logStartedSpan(Span parent, Span span) {
-		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
-		MDC.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		MDC.put(this.traceHeaders.getSpanId(), Span.idToHex(span.getSpanId()));
+		MDC.put(this.traceHeaders.getSleuth().getExportable(),
+				String.valueOf(span.isExportable()));
+		MDC.put(this.traceHeaders.getTraceId(), Span.idToHex(span.getTraceId()));
 		log("Starting span: {}", span);
 		if (parent != null) {
 			log("With parent: {}", parent);
@@ -59,9 +62,10 @@ public class Slf4jSpanLogger implements SpanLogger {
 
 	@Override
 	public void logContinuedSpan(Span span) {
-		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		MDC.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
+		MDC.put(this.traceHeaders.getSpanId(), Span.idToHex(span.getSpanId()));
+		MDC.put(this.traceHeaders.getSleuth().getExportable(),
+				String.valueOf(span.isExportable()));
+		MDC.put(this.traceHeaders.getTraceId(), Span.idToHex(span.getTraceId()));
 		log("Continued span: {}", span);
 	}
 
@@ -70,13 +74,14 @@ public class Slf4jSpanLogger implements SpanLogger {
 		log("Stopped span: {}", span);
 		if (parent != null) {
 			log("With parent: {}", parent);
-			MDC.put(Span.SPAN_ID_NAME, Span.idToHex(parent.getSpanId()));
-			MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(parent.isExportable()));
+			MDC.put(this.traceHeaders.getSpanId(), Span.idToHex(span.getSpanId()));
+			MDC.put(this.traceHeaders.getSleuth().getExportable(),
+					String.valueOf(span.isExportable()));
 		}
 		else {
-			MDC.remove(Span.SPAN_ID_NAME);
-			MDC.remove(Span.SPAN_EXPORT_NAME);
-			MDC.remove(Span.TRACE_ID_NAME);
+			MDC.remove(this.traceHeaders.getSpanId());
+			MDC.remove(this.traceHeaders.getSleuth().getExportable());
+			MDC.remove(this.traceHeaders.getTraceId());
 		}
 	}
 

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -30,7 +31,7 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.StringUtils;
 
 /**
- * Creates a {@link Span.SpanBuilder} from {@link Message}
+ * Updates the {@link MessageBuilder} with Span information
  *
  * @author Marcin Grzejszczak
  *
@@ -38,12 +39,14 @@ import org.springframework.util.StringUtils;
  */
 public class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 
-	public static final String SPAN_HEADER = "X-Current-Span";
+	private static final String SPAN_HEADER = "X-Current-Span";
 
 	private final TraceKeys traceKeys;
+	private final TraceHeaders traceHeaders;
 
-	public MessagingSpanInjector(TraceKeys traceKeys) {
+	public MessagingSpanInjector(TraceKeys traceKeys, TraceHeaders traceHeaders) {
 		this.traceKeys = traceKeys;
+		this.traceHeaders = traceHeaders;
 	}
 
 	@Override
@@ -52,27 +55,29 @@ public class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(initialMessage);
 		if (span == null) {
-			if (!initialMessage.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
-				accessor.setHeader(Span.NOT_SAMPLED_NAME, "true");
+			if (!TraceHeaders.SPAN_NOT_SAMPLED.equals(
+					initialMessage.getHeaders().get(this.traceHeaders.getSampled()))) {
+				accessor.setHeader(this.traceHeaders.getSampled(), TraceHeaders.SPAN_NOT_SAMPLED);
 				carrier.setHeaders(accessor);
 				return;
 			}
 			return;
 		}
 		Map<String, String> headers = new HashMap<>();
-		addHeader(headers, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		addHeader(headers, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+		addHeader(headers, this.traceHeaders.getTraceId(), Span.idToHex(span.getTraceId()));
+		addHeader(headers, this.traceHeaders.getSpanId(), Span.idToHex(span.getSpanId()));
 		if (span.isExportable()) {
 			addAnnotations(this.traceKeys, initialMessage, span);
 			Long parentId = getFirst(span.getParents());
 			if (parentId != null) {
-				addHeader(headers, Span.PARENT_ID_NAME, Span.idToHex(parentId));
+				addHeader(headers, this.traceHeaders.getParentSpanId(), Span.idToHex(parentId));
 			}
-			addHeader(headers, Span.SPAN_NAME_NAME, span.getName());
-			addHeader(headers, Span.PROCESS_ID_NAME, span.getProcessId());
+			addHeader(headers, this.traceHeaders.getSleuth().getSpanName(), span.getName());
+			addHeader(headers, this.traceHeaders.getProcessId(), span.getProcessId());
+			addHeader(headers, this.traceHeaders.getSampled(), TraceHeaders.SPAN_SAMPLED);
 		}
 		else {
-			addHeader(headers, Span.NOT_SAMPLED_NAME, "true");
+			addHeader(headers, this.traceHeaders.getSampled(), TraceHeaders.SPAN_NOT_SAMPLED);
 		}
 		accessor.setHeader(SPAN_HEADER, span);
 		accessor.copyHeaders(headers);

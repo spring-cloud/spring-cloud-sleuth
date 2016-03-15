@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -66,8 +67,8 @@ public class TraceWebClientAutoConfiguration {
 	}
 
 	@Bean
-	public SpanInjector httpRequestInjector() {
-		return new HttpRequestInjector();
+	public SpanInjector httpRequestInjector(TraceHeaders traceHeaders) {
+		return new HttpRequestInjector(traceHeaders);
 	}
 
 	@Configuration

@@ -26,6 +26,7 @@ import org.springframework.cloud.netflix.zuul.filters.route.RestClientRibbonComm
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.client.http.HttpRequest;
@@ -44,7 +45,8 @@ public class TraceRestClientRibbonCommandFactoryTest {
 
 	@Mock Tracer tracer;
 	@Mock SpringClientFactory springClientFactory;
-	SpanInjector<HttpRequest.Builder> spanInjector = new RequestBuilderContextInjector();
+	SpanInjector<HttpRequest.Builder> spanInjector = new RequestBuilderContextInjector(
+			new TraceHeaders());
 	TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory;
 
 	@Before
@@ -83,11 +85,11 @@ public class TraceRestClientRibbonCommandFactoryTest {
 		traceRestClientRibbonCommand.customizeRequest(builder);
 
 		HttpRequest httpRequest = builder.build();
-		then(httpRequest.getHttpHeaders().getFirstValue(Span.SPAN_ID_NAME)).isEqualTo("1");
-		then(httpRequest.getHttpHeaders().getFirstValue(Span.TRACE_ID_NAME)).isEqualTo("2");
-		then(httpRequest.getHttpHeaders().getFirstValue(Span.SPAN_NAME_NAME)).isEqualTo("name");
-		then(httpRequest.getHttpHeaders().getFirstValue(Span.PARENT_ID_NAME)).isEqualTo("3");
-		then(httpRequest.getHttpHeaders().getFirstValue(Span.PROCESS_ID_NAME)).isEqualTo("processId");
+		then(httpRequest.getHttpHeaders().getFirstValue(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME)).isEqualTo("1");
+		then(httpRequest.getHttpHeaders().getFirstValue(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME)).isEqualTo("2");
+		then(httpRequest.getHttpHeaders().getFirstValue(TraceHeaders.Sleuth.SLEUTH_SPAN_NAME_HEADER_NAME)).isEqualTo("name");
+		then(httpRequest.getHttpHeaders().getFirstValue(TraceHeaders.ZIPKIN_PARENT_SPAN_ID_HEADER_NAME)).isEqualTo("3");
+		then(httpRequest.getHttpHeaders().getFirstValue(TraceHeaders.ZIPKIN_PROCESS_ID_HEADER_NAME)).isEqualTo("processId");
 	}
 
 	private RibbonCommandContext ribbonCommandContext() {

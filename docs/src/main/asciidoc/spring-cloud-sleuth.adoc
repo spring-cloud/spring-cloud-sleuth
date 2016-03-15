@@ -181,6 +181,13 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 will lead in creating a span named `calculateTax`.
 
+== Configuring Header Names
+
+Thanks to the `TraceHeaders` class you can configure the names of headers propagated between processes.
+It's enough for you to tweak the `spring.sleuth.headers` properties
+
+IMPORTANT: If you're changing the default values of headers remember to update the `logging.pattern.level` and the
+`spring.cloud.stream.binder` if you're using Spring Cloud Sleuth Stream with your header values.
 
 == Span Data as Messages
 
@@ -191,7 +198,7 @@ adding a Channel Binder implementation
 (e.g. `spring-cloud-starter-stream-rabbit` for RabbitMQ or
 `spring-cloud-starter-stream-kafka` for Kafka). This will
 automatically turn your app into a producer of messages with payload
-type `Spans`. 
+type `Spans`.
 
 === Zipkin Consumer
 

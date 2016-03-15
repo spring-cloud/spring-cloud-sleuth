@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -65,7 +66,8 @@ public class TraceRestTemplateInterceptorTests {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector())));
+				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector(
+						new TraceHeaders()))));
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
@@ -80,8 +82,8 @@ public class TraceRestTemplateInterceptorTests {
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
 
-		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isNotNull();
-		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotNull();
+		then(Span.hexToId(headers.get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME))).isNotNull();
+		then(Span.hexToId(headers.get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME))).isNotNull();
 	}
 
 	@Test
@@ -90,9 +92,9 @@ public class TraceRestTemplateInterceptorTests {
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
-		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
-		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotEqualTo(2L);
-		then(Span.hexToId(headers.get(Span.PARENT_ID_NAME))).isEqualTo(2L);
+		then(Span.hexToId(headers.get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME))).isEqualTo(1L);
+		then(Span.hexToId(headers.get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME))).isNotEqualTo(2L);
+		then(Span.hexToId(headers.get(TraceHeaders.ZIPKIN_PARENT_SPAN_ID_HEADER_NAME))).isEqualTo(2L);
 	}
 
 	@Test
@@ -101,9 +103,9 @@ public class TraceRestTemplateInterceptorTests {
 		@SuppressWarnings("unchecked")
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
-		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
-		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotEqualTo(2L);
-		then(headers.get(Span.NOT_SAMPLED_NAME)).isEqualTo("true");
+		then(Span.hexToId(headers.get(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME))).isEqualTo(1L);
+		then(Span.hexToId(headers.get(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME))).isNotEqualTo(2L);
+		then(headers.get(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME)).isEqualTo("0");
 	}
 
 	// issue #198
@@ -140,8 +142,8 @@ public class TraceRestTemplateInterceptorTests {
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
 			this.span = TraceRestTemplateInterceptorTests.this.tracer.getCurrentSpan();
 			Map<String, String> map = new HashMap<String, String>();
-			addHeaders(map, headers, Span.SPAN_ID_NAME, Span.TRACE_ID_NAME,
-					Span.PARENT_ID_NAME, Span.NOT_SAMPLED_NAME);
+			addHeaders(map, headers, TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME,
+					TraceHeaders.ZIPKIN_PARENT_SPAN_ID_HEADER_NAME, TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME);
 			return map;
 		}
 

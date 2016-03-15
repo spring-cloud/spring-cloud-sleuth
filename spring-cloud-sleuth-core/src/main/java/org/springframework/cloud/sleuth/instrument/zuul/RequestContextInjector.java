@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.util.StringUtils;
 
 import com.netflix.zuul.context.RequestContext;
@@ -33,21 +34,26 @@ import com.netflix.zuul.context.RequestContext;
  */
 class RequestContextInjector implements SpanInjector<RequestContext> {
 
+	private final TraceHeaders traceHeaders;
+
+	RequestContextInjector(TraceHeaders traceHeaders) {
+		this.traceHeaders = traceHeaders;
+	}
+
 	@Override
 	public void inject(Span span, RequestContext carrier) {
 		Map<String, String> requestHeaders = carrier.getZuulRequestHeaders();
 		if (span == null) {
-			setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(requestHeaders, this.traceHeaders.getSampled(), TraceHeaders.SPAN_NOT_SAMPLED);
 			return;
 		}
-		setHeader(requestHeaders, Span.SPAN_ID_NAME, span.getSpanId());
-		setHeader(requestHeaders, Span.TRACE_ID_NAME, span.getTraceId());
-		setHeader(requestHeaders, Span.SPAN_NAME_NAME, span.getName());
-		if (!span.isExportable()) {
-			setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
-		}
-		setHeader(requestHeaders, Span.PARENT_ID_NAME, getParentId(span));
-		setHeader(requestHeaders, Span.PROCESS_ID_NAME, span.getProcessId());
+		setHeader(requestHeaders, this.traceHeaders.getSpanId(), span.getSpanId());
+		setHeader(requestHeaders, this.traceHeaders.getTraceId(), span.getTraceId());
+		setHeader(requestHeaders, this.traceHeaders.getSleuth().getSpanName(), span.getName());
+		setHeader(requestHeaders, this.traceHeaders.getSampled(), span.isExportable() ?
+				TraceHeaders.SPAN_SAMPLED : TraceHeaders.SPAN_NOT_SAMPLED);
+		setHeader(requestHeaders, this.traceHeaders.getParentSpanId(), getParentId(span));
+		setHeader(requestHeaders, this.traceHeaders.getProcessId(), span.getProcessId());
 	}
 
 	private Long getParentId(Span span) {

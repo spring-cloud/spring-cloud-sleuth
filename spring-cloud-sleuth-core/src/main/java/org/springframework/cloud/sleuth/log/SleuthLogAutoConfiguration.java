@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -55,9 +56,9 @@ public class SleuthLogAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
-		public SpanLogger slf4jSpanLogger() {
-			// Sets up MDC entries X-Trace-Id and X-Span-Id
-			return new Slf4jSpanLogger(this.nameSkipPattern);
+		public SpanLogger slf4jSpanLogger(TraceHeaders traceHeaders) {
+			// Sets up MDC entries X-B3-TraceId and X-B3-SpanId
+			return new Slf4jSpanLogger(this.nameSkipPattern, traceHeaders);
 		}
 
 		@Bean

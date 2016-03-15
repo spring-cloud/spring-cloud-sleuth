@@ -38,16 +38,64 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth.headers")
 public class TraceHeaders {
 
-	private Zipkin zipkin;
-	private Sleuth sleuth;
+	public static final String SPAN_SAMPLED = "1";
+	public static final String SPAN_NOT_SAMPLED = "0";
 
-	public Zipkin getZipkin() {
-		return this.zipkin;
+	public static final String ZIPKIN_TRACE_ID_HEADER_NAME = "X-B3-TraceId";
+	public static final String ZIPKIN_SPAN_ID_HEADER_NAME = "X-B3-SpanId";
+	public static final String ZIPKIN_PARENT_SPAN_ID_HEADER_NAME = "X-B3-ParentSpanId";
+	public static final String ZIPKIN_SAMPLED_HEADER_NAME = "X-B3-Sampled";
+	public static final String ZIPKIN_PROCESS_ID_HEADER_NAME = "X-Process-Id";
+
+	private String traceId = ZIPKIN_TRACE_ID_HEADER_NAME;
+	private String spanId = ZIPKIN_SPAN_ID_HEADER_NAME;
+	private String parentSpanId = ZIPKIN_PARENT_SPAN_ID_HEADER_NAME;
+	private String sampled = ZIPKIN_SAMPLED_HEADER_NAME;
+	private String processId = ZIPKIN_PROCESS_ID_HEADER_NAME;
+
+	public String getTraceId() {
+		return this.traceId;
 	}
 
-	public void setZipkin(Zipkin zipkin) {
-		this.zipkin = zipkin;
+	public void setTraceId(String traceId) {
+		this.traceId = traceId;
 	}
+
+	public String getSpanId() {
+		return this.spanId;
+	}
+
+	public void setSpanId(String spanId) {
+		this.spanId = spanId;
+	}
+
+	public String getParentSpanId() {
+		return this.parentSpanId;
+	}
+
+	public void setParentSpanId(String parentSpanId) {
+		this.parentSpanId = parentSpanId;
+	}
+
+	/**
+	 * Header name for the header describing whether the Span should be sampled
+	 * or not.
+	 *
+	 * <ul>
+	 * <li>"1" - should be sampled</li>
+	 * <li>"0" - should NOT be sampled</li>
+	 * </ul>
+	 *
+	 */
+	public String getSampled() {
+		return this.sampled;
+	}
+
+	public void setSampled(String sampled) {
+		this.sampled = sampled;
+	}
+
+	private Sleuth sleuth = new Sleuth();
 
 	public Sleuth getSleuth() {
 		return this.sleuth;
@@ -57,57 +105,21 @@ public class TraceHeaders {
 		this.sleuth = sleuth;
 	}
 
-	private static class Zipkin {
-		private String traceId = "X-B3-TraceId";
-		private String spanId = "X-B3-SpanId";
-		private String parentSpanId = "X-B3-ParentSpanId";
-		private String sampled = "X-B3-Sampled";
-
-		public String getTraceId() {
-			return this.traceId;
-		}
-
-		public void setTraceId(String traceId) {
-			this.traceId = traceId;
-		}
-
-		public String getSpanId() {
-			return this.spanId;
-		}
-
-		public void setSpanId(String spanId) {
-			this.spanId = spanId;
-		}
-
-		public String getParentSpanId() {
-			return this.parentSpanId;
-		}
-
-		public void setParentSpanId(String parentSpanId) {
-			this.parentSpanId = parentSpanId;
-		}
-
-		public String getSampled() {
-			return this.sampled;
-		}
-
-		public void setSampled(String sampled) {
-			this.sampled = sampled;
-		}
+	public String getProcessId() {
+		return this.processId;
 	}
 
-	private static class Sleuth {
-		private String processId = "X-Process-Id";
-		private String spanName = "X-Span-Name";
-		private String exportable = "X-Span-Export";
+	public void setProcessId(String processId) {
+		this.processId = processId;
+	}
 
-		public String getProcessId() {
-			return this.processId;
-		}
+	public static class Sleuth {
 
-		public void setProcessId(String processId) {
-			this.processId = processId;
-		}
+		public static final String SLEUTH_SPAN_NAME_HEADER_NAME = "X-Span-Name";
+		public static final String SLEUTH_EXPORTABLE_HEADER_NAME = "X-Span-Export";
+
+		private String spanName = SLEUTH_SPAN_NAME_HEADER_NAME;
+		private String exportable = SLEUTH_EXPORTABLE_HEADER_NAME;
 
 		public String getSpanName() {
 			return this.spanName;

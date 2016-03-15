@@ -21,6 +21,7 @@ import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -41,17 +42,18 @@ public class RequestSendingRunnable implements Runnable {
 	private static final Log log = LogFactory.getLog(RequestSendingRunnable.class);
 
 	private final RestTemplate restTemplate;
+	private final TraceHeaders traceHeaders;
 	private final String url;
 	private final long traceId;
-	private final Random random = new Random();
 	private final long spanId;
 
-	public RequestSendingRunnable(RestTemplate restTemplate, String url, long traceId,
-			Long spanId) {
+	public RequestSendingRunnable(RestTemplate restTemplate, TraceHeaders traceHeaders,
+			long traceId, Long spanId, String url) {
 		this.restTemplate = restTemplate;
+		this.traceHeaders = traceHeaders;
 		this.url = url;
 		this.traceId = traceId;
-		this.spanId = spanId != null ? spanId : this.random.nextLong();
+		this.spanId = spanId != null ? spanId : new Random().nextLong();
 	}
 
 	@Override
@@ -65,8 +67,8 @@ public class RequestSendingRunnable implements Runnable {
 
 	private RequestEntity<Void> requestWithTraceId() {
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(Span.TRACE_ID_NAME, Span.idToHex(this.traceId));
-		headers.add(Span.SPAN_ID_NAME, Span.idToHex(this.spanId));
+		headers.add(this.traceHeaders.getTraceId(), Span.idToHex(this.traceId));
+		headers.add(this.traceHeaders.getSpanId(), Span.idToHex(this.spanId));
 		URI uri = URI.create(this.url);
 		RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
 		log.info("Request [" + requestEntity + "] is ready");

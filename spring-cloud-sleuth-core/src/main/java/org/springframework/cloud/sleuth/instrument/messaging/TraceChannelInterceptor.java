@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -38,9 +39,9 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	private static final String SPAN_HEADER = "X-Current-Span";
 
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			SpanExtractor<Message> spanExtractor,
+			TraceHeaders traceHeaders, SpanExtractor<Message> spanExtractor,
 			SpanInjector<MessageBuilder> spanInjector) {
-		super(tracer, traceKeys, spanExtractor, spanInjector);
+		super(tracer, traceKeys, traceHeaders, spanExtractor, spanInjector);
 	}
 
 	@Override
@@ -63,7 +64,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		if (span != null) {
 			return getTracer().createSpan(name, span);
 		}
-		if (message.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
+		if (TraceHeaders.SPAN_NOT_SAMPLED.equals(
+				message.getHeaders().get(getTraceHeaders().getSampled()))) {
 			return getTracer().createSpan(name, NeverSampler.INSTANCE);
 		}
 		return getTracer().createSpan(name);

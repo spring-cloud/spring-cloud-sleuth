@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.anyList;
@@ -36,7 +37,8 @@ public class Slf4JSpanLoggerTest {
 	Span spanWithNameNotToBeExcluded = Span.builder().name("Aspect").build();
 	String nameExcludingPattern = "^.*Hystrix.*$";
 	Logger log = Mockito.mock(Logger.class);
-	Slf4jSpanLogger slf4JSpanLogger = new Slf4jSpanLogger(this.nameExcludingPattern, this.log);
+	Slf4jSpanLogger slf4JSpanLogger = new Slf4jSpanLogger(this.nameExcludingPattern, this.log,
+			new TraceHeaders());
 
 	@Test
 	public void should_log_when_start_event_arrived_and_pattern_doesnt_match_span_name() throws Exception {

@@ -80,7 +80,7 @@ public class DefaultTracer implements Tracer {
 			long id = createId();
 			span = Span.builder().begin(System.currentTimeMillis()).name(name).traceId(id)
 					.spanId(id).build();
-			if (sampler==null) {
+			if (sampler == null) {
 				sampler = this.defaultSampler;
 			}
 			if (!sampler.isSampled(span)) {

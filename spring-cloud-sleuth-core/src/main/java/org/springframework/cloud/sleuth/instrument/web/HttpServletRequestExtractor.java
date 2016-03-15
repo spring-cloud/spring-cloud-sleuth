@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
 import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -40,28 +41,32 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 
 	private final Random random;
 	private final Pattern skipPattern;
+	private final TraceHeaders traceHeaders;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
-	public HttpServletRequestExtractor(Random random, Pattern skipPattern) {
+	public HttpServletRequestExtractor(Random random, Pattern skipPattern,
+			TraceHeaders traceHeaders) {
 		this.random = random;
 		this.skipPattern = skipPattern;
+		this.traceHeaders = traceHeaders;
 	}
 
 	@Override
 	public Span joinTrace(HttpServletRequest carrier) {
 		String uri = this.urlPathHelper.getPathWithinApplication(carrier);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| carrier.getHeader(Span.NOT_SAMPLED_NAME) != null;
+				|| TraceHeaders.SPAN_NOT_SAMPLED.equals(
+					carrier.getHeader(this.traceHeaders.getSampled()));
 		long traceId = Span
-				.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
-		long spanId = carrier.getHeader(Span.SPAN_ID_NAME) != null
-				? Span.hexToId(carrier.getHeader(Span.SPAN_ID_NAME))
+				.hexToId(carrier.getHeader(this.traceHeaders.getTraceId()));
+		long spanId = carrier.getHeader(this.traceHeaders.getSpanId()) != null
+				? Span.hexToId(carrier.getHeader(this.traceHeaders.getSpanId()))
 				: this.random.nextLong();
 
 		SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
-		String processId = carrier.getHeader(Span.PROCESS_ID_NAME);
-		String parentName = carrier.getHeader(Span.SPAN_NAME_NAME);
+		String processId = carrier.getHeader(this.traceHeaders.getProcessId());
+		String parentName = carrier.getHeader(this.traceHeaders.getSleuth().getSpanName());
 		if (StringUtils.hasText(parentName)) {
 			span.name(parentName);
 		}
@@ -71,9 +76,9 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 		if (StringUtils.hasText(processId)) {
 			span.processId(processId);
 		}
-		if (carrier.getHeader(Span.PARENT_ID_NAME) != null) {
+		if (carrier.getHeader(this.traceHeaders.getParentSpanId()) != null) {
 			span.parent(Span
-					.hexToId(carrier.getHeader(Span.PARENT_ID_NAME)));
+					.hexToId(carrier.getHeader(this.traceHeaders.getParentSpanId())));
 		}
 		span.remote(true);
 		if (skip) {

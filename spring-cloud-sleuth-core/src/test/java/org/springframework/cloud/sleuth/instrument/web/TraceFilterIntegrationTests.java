@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
@@ -104,15 +105,15 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	private MvcResult whenSentPingWithTraceId(Long passedTraceId) throws Exception {
-		return sendPingWithTraceId(Span.TRACE_ID_NAME, passedTraceId);
+		return sendPingWithTraceId(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, passedTraceId);
 	}
 
 	private MvcResult whenSentInfoWithTraceId(Long passedTraceId) throws Exception {
-		return sendPingWithTraceId("/additionalContextPath/info", Span.TRACE_ID_NAME, passedTraceId);
+		return sendPingWithTraceId("/additionalContextPath/info", TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, passedTraceId);
 	}
 
 	private MvcResult whenSentFutureWithTraceId(Long passedTraceId) throws Exception {
-		return sendPingWithTraceId("/future", Span.TRACE_ID_NAME, passedTraceId);
+		return sendPingWithTraceId("/future", TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME, passedTraceId);
 	}
 
 	private MvcResult sendPingWithTraceId(String headerName, Long correlationId)
@@ -125,16 +126,16 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
 						.header(headerName, Span.idToHex(correlationId))
-						.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong())))
+						.header(TraceHeaders.ZIPKIN_SPAN_ID_HEADER_NAME, Span.idToHex(new Random().nextLong())))
 				.andReturn();
 	}
 
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
+		return Span.hexToId(mvcResult.getResponse().getHeader(TraceHeaders.ZIPKIN_TRACE_ID_HEADER_NAME));
 	}
 
 	private boolean notSampledHeaderIsPresent(MvcResult mvcResult) {
-		return mvcResult.getResponse().containsHeader(Span.NOT_SAMPLED_NAME);
+		return mvcResult.getResponse().containsHeader(TraceHeaders.ZIPKIN_SAMPLED_HEADER_NAME);
 	}
 
 	@Configuration

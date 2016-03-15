@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 
 import com.netflix.client.http.HttpRequest;
 import com.netflix.client.http.HttpRequest.Builder;
@@ -31,21 +32,30 @@ import com.netflix.client.http.HttpRequest.Builder;
  */
 class RequestBuilderContextInjector implements SpanInjector<Builder> {
 
+	private final TraceHeaders traceHeaders;
+
+	RequestBuilderContextInjector(TraceHeaders traceHeaders) {
+		this.traceHeaders = traceHeaders;
+	}
+
 	@Override
 	public void inject(Span span, Builder carrier) {
 		if (span == null) {
-			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(carrier, this.traceHeaders.getSampled(),
+					TraceHeaders.SPAN_NOT_SAMPLED);
 			return;
 		}
-		setHeader(carrier, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		setHeader(carrier, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
+		setHeader(carrier, this.traceHeaders.getTraceId(), Span.idToHex(span.getTraceId()));
+		setHeader(carrier, this.traceHeaders.getSpanId(), Span.idToHex(span.getSpanId()));
+		setHeader(carrier, this.traceHeaders.getSleuth().getSpanName(), span.getName());
 		if (getParentId(span) != null) {
-			setHeader(carrier, Span.PARENT_ID_NAME,
+			setHeader(carrier, this.traceHeaders.getParentSpanId(),
 					Span.idToHex(getParentId(span)));
 		}
-		setHeader(carrier, Span.PROCESS_ID_NAME,
+		setHeader(carrier, this.traceHeaders.getProcessId(),
 				span.getProcessId());
+		setHeader(carrier, this.traceHeaders.getSampled(), span.isExportable() ? TraceHeaders.SPAN_SAMPLED :
+				TraceHeaders.SPAN_NOT_SAMPLED);
 	}
 
 	private Long getParentId(Span span) {
