@@ -16,12 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.Map;
-
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
@@ -36,10 +33,12 @@ import com.netflix.zuul.context.RequestContext;
  */
 public class TracePreZuulFilter extends ZuulFilter {
 
-	private final SpanAccessor accessor;
+	private final Tracer tracer;
+	private final SpanInjector<RequestContext> spanInjector;
 
-	public TracePreZuulFilter(SpanAccessor accessor) {
-		this.accessor = accessor;
+	public TracePreZuulFilter(Tracer tracer, SpanInjector<RequestContext> spanInjector) {
+		this.tracer = tracer;
+		this.spanInjector = spanInjector;
 	}
 
 	@Override
@@ -50,49 +49,17 @@ public class TracePreZuulFilter extends ZuulFilter {
 	@Override
 	public Object run() {
 		RequestContext ctx = RequestContext.getCurrentContext();
-		Map<String, String> requestHeaders = ctx.getZuulRequestHeaders();
 		Span span = getCurrentSpan();
-		if (span == null) {
-			setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
-			return null;
-		}
-		try {
-			setHeader(requestHeaders, Span.SPAN_ID_NAME, span.getSpanId());
-			setHeader(requestHeaders, Span.TRACE_ID_NAME, span.getTraceId());
-			setHeader(requestHeaders, Span.SPAN_NAME_NAME, span.getName());
-			if (!span.isExportable()) {
-				setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
-			}
-			setHeader(requestHeaders, Span.PARENT_ID_NAME, getParentId(span));
-			setHeader(requestHeaders, Span.PROCESS_ID_NAME, span.getProcessId());
-			// TODO: the client sent event should come from the client not the filter!
-			span.logEvent(Span.CLIENT_SEND);
-		}
-		catch (Exception ex) {
-			ReflectionUtils.rethrowRuntimeException(ex);
-		}
+		this.spanInjector.inject(span, ctx);
+		// TODO: the client sent event should come from the client not the filter!
+		span.logEvent(Span.CLIENT_SEND);
 		return null;
 	}
 
 	private Span getCurrentSpan() {
-		return this.accessor.getCurrentSpan();
+		return this.tracer.getCurrentSpan();
 	}
 
-	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
-	}
-
-	public void setHeader(Map<String, String> request, String name, String value) {
-		if (StringUtils.hasText(value) && !request.containsKey(name) && this.accessor.isTracing()) {
-			request.put(name, value);
-		}
-	}
-
-	public void setHeader(Map<String, String> request, String name, Long value) {
-		if (value != null) {
-			setHeader(request, name, Span.idToHex(value));
-		}
-	}
 
 	@Override
 	public String filterType() {

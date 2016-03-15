@@ -154,24 +154,24 @@ public class SpringCloudSleuthDocTests {
 		assertThat(initialSpan.logs()).extracting("event").doesNotContain("taxCalculated");
 
 		executorService.submit(() -> {
-			// tag::manual_span_continuation[]
-			// let's assume that we're in a thread Y and we've received
-			// the `initialSpan` from thread X
-			Span continuedSpan = this.tracer.continueSpan(initialSpan);
-			try {
-				// ...
-				// You can tag a span
-				this.tracer.addTag("taxValue", taxValue);
-				// ...
-				// You can log an event on a span
-				continuedSpan.logEvent("taxCalculated");
-			} finally {
-				// Once done remember to detach the span. That way you'll
-				// safely remove it from the current thread without closing it
-				this.tracer.detach(continuedSpan);
-			}
-			// end::manual_span_continuation[]
-		}
+					// tag::manual_span_continuation[]
+					// let's assume that we're in a thread Y and we've received
+					// the `initialSpan` from thread X
+					Span continuedSpan = this.tracer.continueSpan(initialSpan);
+					try {
+						// ...
+						// You can tag a span
+						this.tracer.addTag("taxValue", taxValue);
+						// ...
+						// You can log an event on a span
+						continuedSpan.logEvent("taxCalculated");
+					} finally {
+						// Once done remember to detach the span. That way you'll
+						// safely remove it from the current thread without closing it
+						this.tracer.detach(continuedSpan);
+					}
+					// end::manual_span_continuation[]
+				}
 		).get();
 
 		this.tracer.close(initialSpan);
@@ -191,26 +191,26 @@ public class SpringCloudSleuthDocTests {
 		assertThat(initialSpan.logs()).extracting("event").doesNotContain("commissionCalculated");
 
 		executorService.submit(() -> {
-			// tag::manual_span_joining[]
-			// let's assume that we're in a thread Y and we've received
-			// the `initialSpan` from thread X. `initialSpan` will be the parent
-			// of the `newSpan`
-			Span newSpan = this.tracer.createSpan("calculateCommission", initialSpan);
-			try {
-				// ...
-				// You can tag a span
-				this.tracer.addTag("commissionValue", commissionValue);
-				// ...
-				// You can log an event on a span
-				newSpan.logEvent("commissionCalculated");
-			} finally {
-				// Once done remember to close the span. This will allow collecting
-				// the span to send it to Zipkin. The tags and events set on the
-				// newSpan will not be present on the parent
-				this.tracer.close(newSpan);
-			}
-			// end::manual_span_joining[]
-		}
+					// tag::manual_span_joining[]
+					// let's assume that we're in a thread Y and we've received
+					// the `initialSpan` from thread X. `initialSpan` will be the parent
+					// of the `newSpan`
+					Span newSpan = this.tracer.createSpan("calculateCommission", initialSpan);
+					try {
+						// ...
+						// You can tag a span
+						this.tracer.addTag("commissionValue", commissionValue);
+						// ...
+						// You can log an event on a span
+						newSpan.logEvent("commissionCalculated");
+					} finally {
+						// Once done remember to close the span. This will allow collecting
+						// the span to send it to Zipkin. The tags and events set on the
+						// newSpan will not be present on the parent
+						this.tracer.close(newSpan);
+					}
+					// end::manual_span_joining[]
+				}
 		).get();
 
 		this.tracer.close(initialSpan);

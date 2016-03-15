@@ -32,13 +32,13 @@ public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Autowired Tracer tracer;
 	@Autowired TraceKeys traceKeys;
+	@Autowired TraceFilter traceFilter;
 	@Autowired ArrayListSpanAccumulator arrayListSpanAccumulator;
 	@Autowired SpanReporter spanReporter;
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
-				this.spanReporter));
+		mockMvcBuilder.addFilters(this.traceFilter);
 	}
 
 	@Test

@@ -14,34 +14,31 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client.feign;
+package org.springframework.cloud.sleuth.instrument.web;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.SpanInjector;
 
 /**
- * Abstract class for logging the client received event
+ * Span injector that injects tracing info to {@link HttpServletResponse}
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
-abstract class FeignEventPublisher {
+class HttpServletResponseInjector implements SpanInjector<HttpServletResponse> {
 
-	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
-
-	private final Tracer tracer;
-
-	protected FeignEventPublisher(Tracer tracer) {
-		this.tracer = tracer;
-	}
-
-	protected void finish() {
-		Span span = this.feignRequestContext.getCurrentSpan();
-		if (span != null) {
-			span.logEvent(Span.CLIENT_RECV);
-			this.tracer.close(span);
-			this.feignRequestContext.clearContext();
+	@Override
+	public void inject(Span span, HttpServletResponse carrier) {
+		if (span == null) {
+			return;
+		}
+		if (!carrier.containsHeader(Span.SPAN_ID_NAME)) {
+			carrier.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+			carrier.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		}
 	}
+
 }

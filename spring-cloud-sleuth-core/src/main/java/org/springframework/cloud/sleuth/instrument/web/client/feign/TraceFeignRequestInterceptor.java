@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.net.URI;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.util.StringUtils;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -36,31 +36,20 @@ import feign.RequestTemplate;
 final class TraceFeignRequestInterceptor implements RequestInterceptor {
 
 	private final Tracer tracer;
+	private final SpanInjector<RequestTemplate> spanInjector;
 	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
 
-	TraceFeignRequestInterceptor(Tracer tracer) {
+	TraceFeignRequestInterceptor(Tracer tracer,
+			SpanInjector<RequestTemplate> spanInjector) {
 		this.tracer = tracer;
+		this.spanInjector = spanInjector;
 	}
 
 	@Override
 	public void apply(RequestTemplate template) {
 		String spanName = getSpanName(template);
 		Span span = getSpan(spanName);
-		if (span == null) {
-			setHeader(template, Span.NOT_SAMPLED_NAME, "true");
-			return;
-		}
-		template.header(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		setHeader(template, Span.SPAN_NAME_NAME, span.getName());
-		setHeader(template, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		if (!span.isExportable()) {
-			setHeader(template, Span.NOT_SAMPLED_NAME, "true");
-		}
-		Long parentId = getParentId(span);
-		if (parentId != null) {
-			setHeader(template, Span.PARENT_ID_NAME, Span.idToHex(parentId));
-		}
-		setHeader(template, Span.PROCESS_ID_NAME, span.getProcessId());
+		this.spanInjector.inject(span, template);
 		span.logEvent(Span.CLIENT_SEND);
 	}
 
@@ -88,17 +77,6 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor {
 
 	private String uriScheme(URI uri) {
 		return uri.getScheme() == null ? "http" : uri.getScheme();
-	}
-
-	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
-	}
-
-	protected void setHeader(RequestTemplate request, String name, String value) {
-		if (StringUtils.hasText(value) && !request.headers().containsKey(name)
-				&& this.tracer.isTracing()) {
-			request.header(name, value);
-		}
 	}
 
 }

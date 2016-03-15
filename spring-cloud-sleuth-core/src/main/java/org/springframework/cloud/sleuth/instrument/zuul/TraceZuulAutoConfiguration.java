@@ -23,12 +23,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.netflix.client.http.HttpRequest;
 import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -48,19 +51,30 @@ public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracePreZuulFilter tracePreZuulFilter(SpanAccessor accessor) {
-		return new TracePreZuulFilter(accessor);
+	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer, SpanInjector<RequestContext> spanInjector) {
+		return new TracePreZuulFilter(tracer, spanInjector);
 	}
 
 	@Bean
-	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory, SpanAccessor accessor) {
-		return new TraceRestClientRibbonCommandFactory(factory, accessor);
+	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory,
+			Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector) {
+		return new TraceRestClientRibbonCommandFactory(factory, tracer, spanInjector);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	public TracePostZuulFilter tracePostZuulFilter(SpanAccessor accessor) {
 		return new TracePostZuulFilter(accessor);
+	}
+
+	@Bean
+	SpanInjector<RequestContext> requestContextInjector() {
+		return new RequestContextInjector();
+	}
+
+	@Bean
+	SpanInjector<HttpRequest.Builder> requestBuilderContextInjector() {
+		return new RequestBuilderContextInjector();
 	}
 
 }

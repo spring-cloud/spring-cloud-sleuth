@@ -50,7 +50,8 @@ final class TraceFeignClient extends FeignEventPublisher implements Client {
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
 		Response response = this.delegate.execute(request, options);
-		if (response.body() == null || (response.body() != null && Objects.equals(response.body().length(), 0))) {
+		if (response.body() == null || (response.body() != null
+				&& Objects.equals(response.body().length(), 0))) {
 			finish();
 		}
 		return response;

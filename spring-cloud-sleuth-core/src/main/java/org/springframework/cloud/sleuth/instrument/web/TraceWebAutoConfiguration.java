@@ -18,7 +18,10 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.Random;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -29,7 +32,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -64,26 +68,36 @@ public class TraceWebAutoConfiguration {
 	@Value("${spring.sleuth.web.skipPattern:}")
 	private String skipPattern;
 
-	@Autowired
-	private Tracer tracer;
-
-	@Autowired
-	private SpanAccessor accessor;
-
-	@Autowired
-	private TraceKeys traceKeys;
-
 	@Bean
-	public TraceWebAspect traceWebAspect(SpanNamer spanNamer) {
-		return new TraceWebAspect(this.tracer, this.accessor, spanNamer);
+	public TraceWebAspect traceWebAspect(Tracer tracer, SpanNamer spanNamer) {
+		return new TraceWebAspect(tracer, spanNamer);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceFilter traceFilter(Random random,
-			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter) {
-		return new TraceFilter(this.tracer, this.traceKeys, skipPatternProvider.skipPattern(), random,
-				spanReporter);
+	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
+			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
+			@Qualifier("httpServletRequestSpanExtractor") SpanExtractor<HttpServletRequest> spanExtractor,
+			@Qualifier("httpServletResponseInjector") SpanInjector<HttpServletResponse> spanInjector) {
+		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
+				spanReporter, spanExtractor, spanInjector);
+	}
+
+	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
+	@Bean
+	@Qualifier("httpServletRequestSpanExtractor")
+	@ConditionalOnProperty(value = "spring.sleuth.web.extractor.enabled", matchIfMissing = true)
+	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(Random random,
+			SkipPatternProvider skipPatternProvider) {
+		return new HttpServletRequestExtractor(random, skipPatternProvider.skipPattern());
+	}
+
+	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
+	@Bean
+	@Qualifier("httpServletResponseInjector")
+	@ConditionalOnProperty(value = "spring.sleuth.web.injector.enabled", matchIfMissing = true)
+	public SpanInjector<HttpServletResponse> httpServletResponseInjector() {
+		return new HttpServletResponseInjector();
 	}
 
 	@Configuration
