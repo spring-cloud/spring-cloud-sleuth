@@ -65,7 +65,7 @@ public class TraceRestTemplateInterceptorTests {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				new TraceRestTemplateInterceptor(this.tracer)));
+				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector())));
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 

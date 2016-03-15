@@ -46,7 +46,7 @@ public class TracePreZuulFilterTests {
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
-	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer);
+	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new RequestContextInjector());
 
 	@After
 	@Before

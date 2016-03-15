@@ -28,10 +28,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
@@ -52,14 +54,20 @@ public class TraceWebClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(Tracer tracer) {
-		return new TraceRestTemplateInterceptor(tracer);
+	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(Tracer tracer,
+			SpanInjector<HttpRequest> spanInjector) {
+		return new TraceRestTemplateInterceptor(tracer, spanInjector);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	public RestTemplate restTemplate() {
 		return new RestTemplate();
+	}
+
+	@Bean
+	public SpanInjector httpRequestInjector() {
+		return new HttpRequestInjector();
 	}
 
 	@Configuration

@@ -14,34 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client.feign;
+package org.springframework.cloud.sleuth.instrument.web;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * Abstract class for logging the client received event
+ * Utility class to retrieve data from Servlet
+ * HTTP request and response
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
-abstract class FeignEventPublisher {
-
-	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
-
-	private final Tracer tracer;
-
-	protected FeignEventPublisher(Tracer tracer) {
-		this.tracer = tracer;
+class ServletUtils {
+	static boolean hasHeader(HttpServletRequest request, HttpServletResponse response,
+			String name) {
+		String value = request.getHeader(name);
+		return value != null || response.getHeader(name) != null;
 	}
 
-	protected void finish() {
-		Span span = this.feignRequestContext.getCurrentSpan();
-		if (span != null) {
-			span.logEvent(Span.CLIENT_RECV);
-			this.tracer.close(span);
-			this.feignRequestContext.clearContext();
-		}
+	static String getHeader(HttpServletRequest request, HttpServletResponse response,
+			String name) {
+		String value = request.getHeader(name);
+		return value != null ? value : response.getHeader(name);
 	}
+
 }

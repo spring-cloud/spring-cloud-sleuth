@@ -19,9 +19,9 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.net.URI;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.http.HttpRequest;
-import org.springframework.util.StringUtils;
 
 /**
  * Abstraction over classes that interact with Http requests. Allows you
@@ -34,38 +34,16 @@ import org.springframework.util.StringUtils;
 abstract class AbstractTraceHttpRequestInterceptor {
 
 	protected final Tracer tracer;
+	protected final SpanInjector<HttpRequest> spanInjector;
 
-	protected AbstractTraceHttpRequestInterceptor(Tracer tracer) {
+	protected AbstractTraceHttpRequestInterceptor(Tracer tracer,
+			SpanInjector<HttpRequest> spanInjector) {
 		this.tracer = tracer;
+		this.spanInjector = spanInjector;
 	}
 
-
-	private void enrichWithTraceHeaders(HttpRequest request, Span span) {
-		setIdHeader(request, Span.TRACE_ID_NAME, span.getTraceId());
-		setIdHeader(request, Span.SPAN_ID_NAME, span.getSpanId());
-		if (!span.isExportable()) {
-			setHeader(request, Span.NOT_SAMPLED_NAME, "true");
-		}
-		setHeader(request, Span.SPAN_NAME_NAME, span.getName());
-		setIdHeader(request, Span.PARENT_ID_NAME, getParentId(span));
-		setHeader(request, Span.PROCESS_ID_NAME, span.getProcessId());
-	}
-
-	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
-	}
-
-	private void setHeader(HttpRequest request, String name, String value) {
-		if (StringUtils.hasText(value) && !request.getHeaders().containsKey(name) &&
-				this.tracer.isTracing()) {
-			request.getHeaders().add(name, value);
-		}
-	}
-
-	private void setIdHeader(HttpRequest request, String name, Long value) {
-		if (value != null) {
-			setHeader(request, name, Span.idToHex(value));
-		}
+	private void enrichWithTraceHeaders(Span span, HttpRequest request) {
+		this.spanInjector.inject(span, request);
 	}
 
 	/**
@@ -76,7 +54,7 @@ abstract class AbstractTraceHttpRequestInterceptor {
 		URI uri = request.getURI();
 		String spanName = uriScheme(uri) + ":" + uri.getPath();
 		Span newSpan = this.tracer.createSpan(spanName);
-		enrichWithTraceHeaders(request, newSpan);
+		enrichWithTraceHeaders(newSpan, request);
 		newSpan.logEvent(Span.CLIENT_SEND);
 	}
 

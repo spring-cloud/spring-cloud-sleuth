@@ -16,32 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import java.util.Collection;
+import java.util.Map;
 
 /**
- * Abstract class for logging the client received event
+ * Mutable holder for Feign Response headers
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
-abstract class FeignEventPublisher {
+class FeignResponseHeadersHolder {
+	final Map<String, Collection<String>> responseHeaders;
 
-	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
-
-	private final Tracer tracer;
-
-	protected FeignEventPublisher(Tracer tracer) {
-		this.tracer = tracer;
-	}
-
-	protected void finish() {
-		Span span = this.feignRequestContext.getCurrentSpan();
-		if (span != null) {
-			span.logEvent(Span.CLIENT_RECV);
-			this.tracer.close(span);
-			this.feignRequestContext.clearContext();
-		}
+	FeignResponseHeadersHolder(Map<String, Collection<String>> responseHeaders) {
+		this.responseHeaders = responseHeaders;
 	}
 }

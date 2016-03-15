@@ -48,9 +48,8 @@ public class DefaultTracer implements Tracer {
 
 	private final SpanReporter spanReporter;
 
-	public DefaultTracer(Sampler defaultSampler, Random random,
-			SpanNamer spanNamer, SpanLogger spanLogger,
-			SpanReporter spanReporter) {
+	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
+			SpanLogger spanLogger, SpanReporter spanReporter) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.spanNamer = spanNamer;
@@ -227,5 +226,4 @@ public class DefaultTracer implements Tracer {
 		}
 		return runnable;
 	}
-
 }

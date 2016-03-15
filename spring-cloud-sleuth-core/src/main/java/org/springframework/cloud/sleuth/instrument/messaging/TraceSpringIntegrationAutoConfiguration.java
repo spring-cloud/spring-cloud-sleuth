@@ -18,17 +18,22 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Random;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.GlobalChannelInterceptor;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -50,8 +55,26 @@ public class TraceSpringIntegrationAutoConfiguration {
 	@Bean
 	@GlobalChannelInterceptor
 	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
-			TraceKeys traceKeys, Random random) {
-		return new TraceChannelInterceptor(tracer, traceKeys, random);
+			TraceKeys traceKeys, Random random,
+			@Qualifier("messagingSpanExtractor") SpanExtractor<Message> spanExtractor,
+			@Qualifier("messagingSpanInjector") SpanInjector<MessageBuilder> spanInjector) {
+		return new TraceChannelInterceptor(tracer, traceKeys, spanExtractor, spanInjector);
+	}
+
+	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
+	@Bean
+	@Qualifier("messagingSpanExtractor")
+	@ConditionalOnProperty(value = "spring.sleuth.integration.injector.enabled", matchIfMissing = true)
+	public SpanExtractor<Message> messagingSpanExtractor(Random random) {
+		return new MessagingSpanExtractor(random);
+	}
+
+	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
+	@Bean
+	@Qualifier("messagingSpanInjector")
+	@ConditionalOnProperty(value = "spring.sleuth.integration.injector.enabled", matchIfMissing = true)
+	public SpanInjector<MessageBuilder> messagingSpanInjector(TraceKeys traceKeys) {
+		return new MessagingSpanInjector(traceKeys);
 	}
 
 }

@@ -65,6 +65,7 @@ public class Span {
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
 
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
+
 	/**
 	 * <b>cr</b> - Client Receive. Signifies the end of the span. The client has successfully received the
 	 * response from the server side. If one subtracts the cs timestamp from this timestamp one

@@ -24,7 +24,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable;
@@ -72,12 +71,10 @@ public class TraceWebAspect {
 			.getLog(TraceWebAspect.class);
 
 	private final Tracer tracer;
-	private final SpanAccessor accessor;
 	private final SpanNamer spanNamer;
 
-	public TraceWebAspect(Tracer tracer, SpanAccessor accessor, SpanNamer spanNamer) {
+	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer) {
 		this.tracer = tracer;
-		this.accessor = accessor;
 		this.spanNamer = spanNamer;
 	}
 
@@ -109,9 +106,9 @@ public class TraceWebAspect {
 	@SuppressWarnings("unchecked")
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		Callable<Object> callable = (Callable<Object>) pjp.proceed();
-		if (this.accessor.isTracing()) {
+		if (this.tracer.isTracing()) {
 			log.debug("Wrapping callable with span ["
-					+ this.accessor.getCurrentSpan() + "]");
+					+ this.tracer.getCurrentSpan() + "]");
 			return new TraceContinuingCallable<>(this.tracer, this.spanNamer, callable);
 		}
 		else {
@@ -122,10 +119,10 @@ public class TraceWebAspect {
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
 	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		final WebAsyncTask<?> webAsyncTask = (WebAsyncTask<?>) pjp.proceed();
-		if (this.accessor.isTracing()) {
+		if (this.tracer.isTracing()) {
 			try {
 				log.debug("Wrapping callable with span ["
-						+ this.accessor.getCurrentSpan() + "]");
+						+ this.tracer.getCurrentSpan() + "]");
 				Field callableField = WebAsyncTask.class.getDeclaredField("callable");
 				callableField.setAccessible(true);
 				callableField.set(webAsyncTask, new TraceContinuingCallable<>(this.tracer,

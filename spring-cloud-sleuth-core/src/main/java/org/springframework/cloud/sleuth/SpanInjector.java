@@ -14,34 +14,24 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client.feign;
-
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+package org.springframework.cloud.sleuth;
 
 /**
- * Abstract class for logging the client received event
+ * Adopted from <a href="https://github.com/opentracing/opentracing-java/blob/master/opentracing/src/main/java/opentracing/Tracer.java"></a>OpenTracing</a>
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
-abstract class FeignEventPublisher {
-
-	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
-
-	private final Tracer tracer;
-
-	protected FeignEventPublisher(Tracer tracer) {
-		this.tracer = tracer;
-	}
-
-	protected void finish() {
-		Span span = this.feignRequestContext.getCurrentSpan();
-		if (span != null) {
-			span.logEvent(Span.CLIENT_RECV);
-			this.tracer.close(span);
-			this.feignRequestContext.clearContext();
-		}
-	}
+public interface SpanInjector<T> {
+	/** Takes two arguments:
+	 *    a Span instance, and
+	 *    a “carrier” object in which to inject that Span for cross-process propagation.
+	 *
+	 * A “carrier” object is some sort of http or rpc envelope, for example HeaderGroup (from Apache HttpComponents).
+	 *
+	 * Attempting to inject to a carrier that has been registered/configured to this Tracer will result in a
+	 * IllegalStateException.
+	 */
+	void inject(Span span, T carrier);
 }
