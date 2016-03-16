@@ -169,6 +169,10 @@ latency in your applications. Sleuth is written to not log too much, and to not 
 * Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints,
 rest template, scheduled actions, message channels, zuul filters, feign client).
 
+* Sleuth includes default logic to join a trace across http or messaging boundaries. For example, http propagation
+works via Zipkin-compatible request headers. This propagation logic is defined and customized via
+`SpanInjector` and `SpanExtractor` implementations.
+
 * Provides simple metrics of accepted / dropped spans.
 
 * If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces.
