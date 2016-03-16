@@ -181,18 +181,6 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 will lead in creating a span named `calculateTax`.
 
-
-== Span Data as Messages
-
-You can accumulate and send span data over
-http://cloud.spring.io/spring-cloud-stream[Spring Cloud Stream] by
-including the `spring-cloud-sleuth-stream` jar as a dependency, and
-adding a Channel Binder implementation
-(e.g. `spring-cloud-starter-stream-rabbit` for RabbitMQ or
-`spring-cloud-starter-stream-kafka` for Kafka). This will
-automatically turn your app into a producer of messages with payload
-type `Spans`.
-
 == Customizations
 
 Thanks to the `SpanInjector` and `SpanExtractor` you can customize the way spans
@@ -214,15 +202,15 @@ For Spring Integration these are the beans responsible for creation of a Span fr
 
 [source,java]
 ----
-	@Bean
-	public SpanExtractor<Message> messagingSpanExtractor() {
-		...
-	}
+@Bean
+public SpanExtractor<Message> messagingSpanExtractor() {
+    ...
+}
 
-	@Bean
-	public SpanInjector<MessageBuilder> messagingSpanInjector() {
-		...
-	}
+@Bean
+public SpanInjector<MessageBuilder> messagingSpanInjector() {
+    ...
+}
 ----
 
 You can override them by providing your own implementation and by adding a `@Primary` annotation
@@ -242,7 +230,7 @@ public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor() {
 
 @Bean
 public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
-	...
+    ...
 }
 ----
 
@@ -277,6 +265,17 @@ And you could register them like this:
 ----
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=configuration,indent=0]
 ----
+
+== Span Data as Messages
+
+You can accumulate and send span data over
+http://cloud.spring.io/spring-cloud-stream[Spring Cloud Stream] by
+including the `spring-cloud-sleuth-stream` jar as a dependency, and
+adding a Channel Binder implementation
+(e.g. `spring-cloud-starter-stream-rabbit` for RabbitMQ or
+`spring-cloud-starter-stream-kafka` for Kafka). This will
+automatically turn your app into a producer of messages with payload
+type `Spans`.
 
 === Zipkin Consumer
 
