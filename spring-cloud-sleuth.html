@@ -446,12 +446,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_tostring_method">toString() method</a></li>
 </ul>
 </li>
-<li><a href="#_span_data_as_messages">Span Data as Messages</a></li>
 <li><a href="#_customizations">Customizations</a>
 <ul class="sectlevel2">
 <li><a href="#_spring_integration">Spring Integration</a></li>
 <li><a href="#_http">HTTP</a></li>
 <li><a href="#_example">Example</a></li>
+</ul>
+</li>
+<li><a href="#_span_data_as_messages">Span Data as Messages</a>
+<ul class="sectlevel2">
 <li><a href="#_zipkin_consumer">Zipkin Consumer</a></li>
 <li><a href="#_custom_consumer">Custom Consumer</a></li>
 </ul>
@@ -1187,21 +1190,6 @@ future.get();</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_span_data_as_messages">Span Data as Messages</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>You can accumulate and send span data over
-<a href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</a> by
-including the <code>spring-cloud-sleuth-stream</code> jar as a dependency, and
-adding a Channel Binder implementation
-(e.g. <code>spring-cloud-starter-stream-rabbit</code> for RabbitMQ or
-<code>spring-cloud-starter-stream-kafka</code> for Kafka). This will
-automatically turn your app into a producer of messages with payload
-type <code>Spans</code>.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
 <h2 id="_customizations">Customizations</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1234,15 +1222,15 @@ injected into any outbound requests so the next hop can extract them.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">	@Bean
-	public SpanExtractor&lt;Message&gt; messagingSpanExtractor() {
-		...
-	}
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+public SpanExtractor&lt;Message&gt; messagingSpanExtractor() {
+    ...
+}
 
-	@Bean
-	public SpanInjector&lt;MessageBuilder&gt; messagingSpanInjector() {
-		...
-	}</code></pre>
+@Bean
+public SpanInjector&lt;MessageBuilder&gt; messagingSpanInjector() {
+    ...
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1265,7 +1253,7 @@ public SpanExtractor&lt;HttpServletRequest&gt; httpServletRequestSpanExtractor()
 
 @Bean
 public SpanInjector&lt;HttpServletResponse&gt; httpServletResponseSpanInjector() {
-	...
+    ...
 }</code></pre>
 </div>
 </div>
@@ -1343,6 +1331,21 @@ SpanInjector&lt;HttpServletResponse&gt; customHttpServletResponseSpanInjector() 
 }</code></pre>
 </div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_span_data_as_messages">Span Data as Messages</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can accumulate and send span data over
+<a href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</a> by
+including the <code>spring-cloud-sleuth-stream</code> jar as a dependency, and
+adding a Channel Binder implementation
+(e.g. <code>spring-cloud-starter-stream-rabbit</code> for RabbitMQ or
+<code>spring-cloud-starter-stream-kafka</code> for Kafka). This will
+automatically turn your app into a producer of messages with payload
+type <code>Spans</code>.</p>
 </div>
 <div class="sect2">
 <h3 id="_zipkin_consumer">Zipkin Consumer</h3>
@@ -1688,7 +1691,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-16 16:10:25 CET
+Last updated 2016-03-16 16:16:23 CET
 </div>
 </div>
 </body>
