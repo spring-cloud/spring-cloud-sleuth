@@ -61,18 +61,16 @@ public class TraceSpringIntegrationAutoConfiguration {
 		return new TraceChannelInterceptor(tracer, traceKeys, spanExtractor, spanInjector);
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
+	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("messagingSpanExtractor")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.extractor.enabled", matchIfMissing = true)
 	public SpanExtractor<Message> messagingSpanExtractor(Random random) {
 		return new MessagingSpanExtractor(random);
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
+	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("messagingSpanInjector")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.injector.enabled", matchIfMissing = true)
 	public SpanInjector<MessageBuilder> messagingSpanInjector(TraceKeys traceKeys) {
 		return new MessagingSpanInjector(traceKeys);
 	}

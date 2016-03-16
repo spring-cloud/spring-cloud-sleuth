@@ -66,10 +66,9 @@ public class TraceWebClientAutoConfiguration {
 		return new RestTemplate();
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
+	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("httpRequestSpanInjector")
-	@ConditionalOnProperty(value = "spring.sleuth.web.client.injector.enabled", matchIfMissing = true)
 	public SpanInjector<HttpRequest> httpRequestSpanInjector() {
 		return new HttpRequestInjector();
 	}

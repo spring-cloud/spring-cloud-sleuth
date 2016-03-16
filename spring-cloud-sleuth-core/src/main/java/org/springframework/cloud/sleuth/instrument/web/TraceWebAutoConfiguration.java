@@ -83,19 +83,17 @@ public class TraceWebAutoConfiguration {
 				spanReporter, spanExtractor, spanInjector);
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
+	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("httpServletRequestSpanExtractor")
-	@ConditionalOnProperty(value = "spring.sleuth.web.extractor.enabled", matchIfMissing = true)
 	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(Random random,
 			SkipPatternProvider skipPatternProvider) {
 		return new HttpServletRequestExtractor(random, skipPatternProvider.skipPattern());
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
+	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("httpServletResponseSpanInjector")
-	@ConditionalOnProperty(value = "spring.sleuth.web.injector.enabled", matchIfMissing = true)
 	public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
 		return new HttpServletResponseInjector();
 	}

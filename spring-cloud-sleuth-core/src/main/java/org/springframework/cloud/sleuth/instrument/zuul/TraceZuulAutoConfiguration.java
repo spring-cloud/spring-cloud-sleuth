@@ -69,20 +69,16 @@ public class TraceZuulAutoConfiguration {
 		return new TracePostZuulFilter(accessor);
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
+	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("requestContextSpanInjector")
-	@ConditionalOnProperty(value = "spring.sleuth.zuul.request.injector.enabled",
-			matchIfMissing = true)
 	public SpanInjector<RequestContext> requestContextSpanInjector() {
 		return new RequestContextInjector();
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
+	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("requestBuilderContextSpanInjector")
-	@ConditionalOnProperty(value = "spring.sleuth.zuul.builder.injector.enabled",
-			matchIfMissing = true)
 	public SpanInjector<HttpRequest.Builder> requestBuilderContextSpanInjector() {
 		return new RequestBuilderContextInjector();
 	}
