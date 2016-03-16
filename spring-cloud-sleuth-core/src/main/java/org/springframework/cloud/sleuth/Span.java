@@ -45,6 +45,15 @@ import org.springframework.util.StringUtils;
  *     <li><b>cr</b> - Client Received</li>
  * </ul>
  *
+ * Spring Cloud Sleuth uses Zipkin compatible header names
+ *
+ * <ul>
+ * <li>X-B3-TraceId: 64 encoded bits</li>
+ * <li>X-B3-SpanId: 64 encoded bits</li>
+ * <li>X-B3-ParentSpanId: 64 encoded bits</li>
+ * <li>X-B3-Sampled: Boolean (either “1” or “0”)</li>
+ * </ul>
+ *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
  * @since 1.0.0
@@ -58,10 +67,10 @@ public class Span {
 
 	public static final String NOT_SAMPLED_NAME = "X-Not-Sampled";
 	public static final String PROCESS_ID_NAME = "X-Process-Id";
-	public static final String PARENT_ID_NAME = "X-Parent-Id";
-	public static final String TRACE_ID_NAME = "X-Trace-Id";
+	public static final String PARENT_ID_NAME = "X-B3-ParentSpanId";
+	public static final String TRACE_ID_NAME = "X-B3-TraceId";
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
-	public static final String SPAN_ID_NAME = "X-Span-Id";
+	public static final String SPAN_ID_NAME = "X-B3-SpanId";
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
 
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
