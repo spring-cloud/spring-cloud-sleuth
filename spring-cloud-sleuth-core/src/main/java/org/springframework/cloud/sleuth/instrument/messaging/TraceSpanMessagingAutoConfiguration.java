@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Random;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -35,6 +36,7 @@ import org.springframework.messaging.support.MessageBuilder;
  * @since 1.0.0
  */
 @Configuration
+@ConditionalOnBean({TraceKeys.class, Random.class})
 public class TraceSpanMessagingAutoConfiguration {
 
 	@Bean
