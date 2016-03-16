@@ -134,7 +134,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	private boolean notSampledHeaderIsPresent(MvcResult mvcResult) {
-		return mvcResult.getResponse().containsHeader(Span.NOT_SAMPLED_NAME);
+		return Span.SPAN_NOT_SAMPLED.equals(mvcResult.getResponse().getHeader(Span.SAMPLED_NAME));
 	}
 
 	@Configuration

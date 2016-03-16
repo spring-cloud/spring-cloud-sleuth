@@ -107,14 +107,12 @@ public class TraceFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| ServletUtils.getHeader(request, response, Span.NOT_SAMPLED_NAME) != null;
+				|| Span.SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, Span.SAMPLED_NAME));
 		Span spanFromRequest = (Span) request.getAttribute(TRACE_REQUEST_ATTR);
 		if (spanFromRequest != null) {
 			this.tracer.continueSpan(spanFromRequest);
 		}
-		else if (skip) {
-			addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
-		}
+		addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 		String name = HTTP_COMPONENT + ":" + uri;
 		spanFromRequest = createSpan(request, response, skip, spanFromRequest, name);
 		Throwable exception = null;
@@ -135,9 +133,7 @@ public class TraceFilter extends OncePerRequestFilter {
 				// TODO: how to deal with response annotations and async?
 				return;
 			}
-			if (skip) {
-				addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
-			}
+			addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 			if (spanFromRequest != null) {
 				addResponseTags(response, exception);
 				if (spanFromRequest.hasSavedSpan()) {

@@ -52,13 +52,12 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 	public Span joinTrace(HttpServletRequest carrier) {
 		String uri = this.urlPathHelper.getPathWithinApplication(carrier);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| carrier.getHeader(Span.NOT_SAMPLED_NAME) != null;
+				|| Span.SPAN_NOT_SAMPLED.equals(carrier.getHeader(Span.SAMPLED_NAME));
 		long traceId = Span
 				.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
 		long spanId = carrier.getHeader(Span.SPAN_ID_NAME) != null
 				? Span.hexToId(carrier.getHeader(Span.SPAN_ID_NAME))
 				: this.random.nextLong();
-
 		SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
 		String processId = carrier.getHeader(Span.PROCESS_ID_NAME);
 		String parentName = carrier.getHeader(Span.SPAN_NAME_NAME);

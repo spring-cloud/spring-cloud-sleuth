@@ -34,15 +34,14 @@ class FeignRequestTemplateInjector implements SpanInjector<RequestTemplate> {
 	@Override
 	public void inject(Span span, RequestTemplate carrier) {
 		if (span == null) {
-			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(carrier, Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 			return;
 		}
 		carrier.header(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
 		setHeader(carrier, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		if (!span.isExportable()) {
-			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
-		}
+		setHeader(carrier, Span.SAMPLED_NAME, span.isExportable() ?
+				Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		Long parentId = getParentId(span);
 		if (parentId != null) {
 			setHeader(carrier, Span.PARENT_ID_NAME, Span.idToHex(parentId));

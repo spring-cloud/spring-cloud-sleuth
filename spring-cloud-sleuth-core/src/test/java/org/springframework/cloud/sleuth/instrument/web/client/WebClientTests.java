@@ -111,7 +111,7 @@ public class WebClientTests {
 		ResponseEntity<Map<String, String>> response = provider.get(this);
 
 		then(response.getBody().get(Span.TRACE_ID_NAME)).isNotNull();
-		then(response.getBody().get(Span.NOT_SAMPLED_NAME)).isNotNull();
+		then(response.getBody().get(Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_NOT_SAMPLED);
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
@@ -132,6 +132,7 @@ public class WebClientTests {
 
 		ResponseEntity<String> response = provider.get(this);
 
+		then(getHeader(response, Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_SAMPLED);
 		then(Span.hexToId(getHeader(response, Span.TRACE_ID_NAME)))
 				.isEqualTo(currentTraceId);
 		thenRegisteredClientSentAndReceivedEvents(spanWithClientEvents());

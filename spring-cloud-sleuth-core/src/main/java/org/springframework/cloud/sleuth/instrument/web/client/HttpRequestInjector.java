@@ -34,9 +34,7 @@ class HttpRequestInjector implements SpanInjector<HttpRequest> {
 	public void inject(Span span, HttpRequest carrier) {
 		setIdHeader(carrier, Span.TRACE_ID_NAME, span.getTraceId());
 		setIdHeader(carrier, Span.SPAN_ID_NAME, span.getSpanId());
-		if (!span.isExportable()) {
-			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
-		}
+		setHeader(carrier, Span.SAMPLED_NAME, span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
 		setIdHeader(carrier, Span.PARENT_ID_NAME, getParentId(span));
 		setHeader(carrier, Span.PROCESS_ID_NAME, span.getProcessId());

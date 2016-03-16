@@ -49,7 +49,7 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
 	private static String[] headers = new String[] { Span.SPAN_ID_NAME,
 			Span.TRACE_ID_NAME, Span.PARENT_ID_NAME, Span.PROCESS_ID_NAME,
-			Span.NOT_SAMPLED_NAME, Span.SPAN_NAME_NAME };
+			Span.SAMPLED_NAME, Span.SPAN_NAME_NAME };
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,

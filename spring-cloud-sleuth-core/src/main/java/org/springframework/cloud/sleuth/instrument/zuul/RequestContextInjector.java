@@ -37,15 +37,14 @@ class RequestContextInjector implements SpanInjector<RequestContext> {
 	public void inject(Span span, RequestContext carrier) {
 		Map<String, String> requestHeaders = carrier.getZuulRequestHeaders();
 		if (span == null) {
-			setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(requestHeaders, Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 			return;
 		}
 		setHeader(requestHeaders, Span.SPAN_ID_NAME, span.getSpanId());
 		setHeader(requestHeaders, Span.TRACE_ID_NAME, span.getTraceId());
 		setHeader(requestHeaders, Span.SPAN_NAME_NAME, span.getName());
-		if (!span.isExportable()) {
-			setHeader(requestHeaders, Span.NOT_SAMPLED_NAME, "true");
-		}
+		setHeader(requestHeaders, Span.SAMPLED_NAME, span.isExportable() ?
+				Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		setHeader(requestHeaders, Span.PARENT_ID_NAME, getParentId(span));
 		setHeader(requestHeaders, Span.PROCESS_ID_NAME, span.getProcessId());
 	}

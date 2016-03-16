@@ -99,9 +99,7 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 				.accept(MediaType.TEXT_PLAIN)
 				.header(headerName, Span.idToHex(correlationId))
 				.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong()));
-		if (!sampling) {
-			request.header(Span.NOT_SAMPLED_NAME, "true");
-		}
+		request.header(Span.SAMPLED_NAME, sampling ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		return this.mockMvc.perform(request).andReturn();
 	}
 

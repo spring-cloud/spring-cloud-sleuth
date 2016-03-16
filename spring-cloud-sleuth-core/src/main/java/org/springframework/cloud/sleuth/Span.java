@@ -65,13 +65,16 @@ import org.springframework.util.StringUtils;
  */
 public class Span {
 
-	public static final String NOT_SAMPLED_NAME = "X-Not-Sampled";
+	public static final String SAMPLED_NAME = "X-B3-Sampled";
 	public static final String PROCESS_ID_NAME = "X-Process-Id";
 	public static final String PARENT_ID_NAME = "X-B3-ParentSpanId";
 	public static final String TRACE_ID_NAME = "X-B3-TraceId";
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
 	public static final String SPAN_ID_NAME = "X-B3-SpanId";
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
+
+	public static final String SPAN_SAMPLED = "1";
+	public static final String SPAN_NOT_SAMPLED = "0";
 
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
 

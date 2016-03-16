@@ -32,10 +32,7 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
 import com.netflix.zuul.context.RequestContext;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Dave Syer
@@ -58,23 +55,27 @@ public class TracePreZuulFilterTests {
 	@Test
 	public void filterAddsHeaders() throws Exception {
 		this.tracer.createSpan("http:start");
+
 		this.filter.run();
+
 		RequestContext ctx = RequestContext.getCurrentContext();
-		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
-				is(notNullValue()));
-		assertThat(ctx.getZuulRequestHeaders().get(Span.NOT_SAMPLED_NAME),
-				is(nullValue()));
+		then(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME))
+				.isNotNull();
+		then(ctx.getZuulRequestHeaders().get(Span.SAMPLED_NAME))
+				.isEqualTo(Span.SPAN_SAMPLED);
 	}
 
 	@Test
 	public void notSampledIfNotExportable() throws Exception {
 		this.tracer.createSpan("http:start", NeverSampler.INSTANCE);
+
 		this.filter.run();
+
 		RequestContext ctx = RequestContext.getCurrentContext();
-		assertThat(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME),
-				is(notNullValue()));
-		assertThat(ctx.getZuulRequestHeaders().get(Span.NOT_SAMPLED_NAME),
-				is(notNullValue()));
+		then(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME))
+				.isNotNull();
+		then(ctx.getZuulRequestHeaders().get(Span.SAMPLED_NAME))
+				.isEqualTo(Span.SPAN_NOT_SAMPLED);
 	}
 
 }
