@@ -78,12 +78,12 @@ public class TraceWebAutoConfiguration {
 	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
 			@Qualifier("httpServletRequestSpanExtractor") SpanExtractor<HttpServletRequest> spanExtractor,
-			@Qualifier("httpServletResponseInjector") SpanInjector<HttpServletResponse> spanInjector) {
+			@Qualifier("httpServletResponseSpanInjector") SpanInjector<HttpServletResponse> spanInjector) {
 		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
 				spanReporter, spanExtractor, spanInjector);
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
+	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("httpServletRequestSpanExtractor")
 	@ConditionalOnProperty(value = "spring.sleuth.web.extractor.enabled", matchIfMissing = true)
@@ -92,11 +92,11 @@ public class TraceWebAutoConfiguration {
 		return new HttpServletRequestExtractor(random, skipPatternProvider.skipPattern());
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
+	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
 	@Bean
-	@Qualifier("httpServletResponseInjector")
+	@Qualifier("httpServletResponseSpanInjector")
 	@ConditionalOnProperty(value = "spring.sleuth.web.injector.enabled", matchIfMissing = true)
-	public SpanInjector<HttpServletResponse> httpServletResponseInjector() {
+	public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
 		return new HttpServletResponseInjector();
 	}
 

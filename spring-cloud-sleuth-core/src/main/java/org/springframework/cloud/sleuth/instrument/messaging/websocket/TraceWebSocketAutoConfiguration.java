@@ -65,7 +65,7 @@ public class TraceWebSocketAutoConfiguration
 				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.spanExtractor, this.spanInjector));
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
+	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("stompMessagingSpanExtractor")
 	@ConditionalOnProperty(value = "spring.sleuth.integration.websocket.injector.enabled", matchIfMissing = true)
@@ -73,7 +73,7 @@ public class TraceWebSocketAutoConfiguration
 		return new MessagingSpanExtractor(random);
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
+	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("stompMessagingSpanInjector")
 	@ConditionalOnProperty(value = "spring.sleuth.integration.websocket.injector.enabled", matchIfMissing = true)
