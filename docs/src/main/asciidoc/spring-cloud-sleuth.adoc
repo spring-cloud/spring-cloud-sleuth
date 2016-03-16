@@ -191,7 +191,120 @@ adding a Channel Binder implementation
 (e.g. `spring-cloud-starter-stream-rabbit` for RabbitMQ or
 `spring-cloud-starter-stream-kafka` for Kafka). This will
 automatically turn your app into a producer of messages with payload
-type `Spans`. 
+type `Spans`.
+
+== Customizations
+
+Thanks to the `SpanInjector` and `SpanExtractor` you can customize the way spans
+are created and propagated.
+
+Essentially with Spring Cloud Span there are two ways span tracing data can be passed to
+ a process.
+
+ * via Spring Integration
+ * via HTTP
+
+=== Spring Integration
+
+For Spring Integration these are the beans responsible for creation of a Span from a `Message`
+ and filling in the `MessageBuilder` with tracing information.
+
+[source,java]
+----
+	@Bean
+	@Qualifier("messagingSpanExtractor")
+	@ConditionalOnProperty(value = "spring.sleuth.integration.extractor.enabled", matchIfMissing = true)
+	public SpanExtractor<Message> messagingSpanExtractor() {
+		...
+	}
+
+	@Bean
+	@Qualifier("messagingSpanInjector")
+	@ConditionalOnProperty(value = "spring.sleuth.integration.injector.enabled", matchIfMissing = true)
+	public SpanInjector<MessageBuilder> messagingSpanInjector() {
+		...
+	}
+----
+
+As you can see you can disable them with the properties:
+
+* `Message` span extractor - `spring.sleuth.integration.extractor.enabled`
+* `MessageBuilder` span injector - `spring.sleuth.integration.injector.enabled`
+
+There is also a WebSockets version:
+
+* `Message` span extractor - `spring.sleuth.integration.websocket.extractor.enabled`
+* `MessageBuilder` span injector - `spring.sleuth.integration.websocket.injector.enabled`
+
+You can override them either by disabling with a property and providing your own implementation
+or by adding a `@Primary` annotation to your bean definition. Remember to provide the following qualifiers:
+
+* `Message` span extractor - `messagingSpanExtractor`
+* `MessageBuilder` span injector - `messagingSpanInjector`
+* `Message` span extractor for WebSockets - `stompMessagingSpanExtractor`
+* `MessageBuilder` span injector for WebSockets - `stompMessagingSpanInjector`
+
+=== HTTP
+
+For HTTP these are the beans responsible for creation of a Span from a `HttpServletRequest`
+  and filling in the `HttpServletResponse` with tracing information.
+
+[source,java]
+----
+@Bean
+@Qualifier("httpServletRequestSpanExtractor")
+@ConditionalOnProperty(value = "spring.sleuth.web.extractor.enabled", matchIfMissing = true)
+public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor() {
+    ...
+}
+
+@Bean
+@Qualifier("httpServletResponseSpanInjector")
+@ConditionalOnProperty(value = "spring.sleuth.web.injector.enabled", matchIfMissing = true)
+public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
+	...
+}
+----
+
+As you can see you can disable them with the properties:
+
+* `HttpServletRequest` span extractor - `spring.sleuth.web.extractor.enabled`
+* `HttpServletResponse` span injector - `spring.sleuth.web.injector.enabled`
+
+You can override them either by disabling with a property and providing your own implementation
+or by adding a `@Primary` annotation to your bean definition. Remember to provide the following qualifiers:
+
+* `HttpServletRequest` span extractor - `httpServletRequestSpanExtractor`
+* `HttpServletResponse` span injector - `httpServletResponseSpanInjector`
+
+=== Example
+
+Let's assume that instead of the standard Zipkin compatible tracing HTTP header names
+you have
+
+* for trace id - `correlationId`
+* for span id - `mySpanId`
+
+This is a an example of a `SpanExtractor`
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=extractor,indent=0]
+----
+
+The following `SpanInjector` could be created
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=injector,indent=0]
+----
+
+And you could register it like this:
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=configuration,indent=0]
+----
 
 === Zipkin Consumer
 
