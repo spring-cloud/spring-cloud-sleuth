@@ -39,7 +39,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
 
-import static org.springframework.cloud.sleuth.instrument.web.ServletUtils.hasHeader;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -114,7 +113,7 @@ public class TraceFilter extends OncePerRequestFilter {
 		}
 		addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 		String name = HTTP_COMPONENT + ":" + uri;
-		spanFromRequest = createSpan(request, response, skip, spanFromRequest, name);
+		spanFromRequest = createSpan(request, skip, spanFromRequest, name);
 		Throwable exception = null;
 		try {
 			addRequestTags(request);
@@ -152,16 +151,16 @@ public class TraceFilter extends OncePerRequestFilter {
 	/**
 	 * Creates a span and appends it as the current request's attribute
 	 */
-	private Span createSpan(HttpServletRequest request, HttpServletResponse response,
+	private Span createSpan(HttpServletRequest request,
 			boolean skip, Span spanFromRequest, String name) {
 		if (spanFromRequest != null) {
 			return spanFromRequest;
 		}
-		if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
-			Span parent = this.spanExtractor
-					.joinTrace(request);
+		Span parent = this.spanExtractor
+				.joinTrace(request);
+		if (parent != null) {
 			spanFromRequest = this.tracer.createSpan(name, parent);
-			if (parent != null && parent.isRemote()) {
+			if (parent.isRemote()) {
 				parent.logEvent(Span.SERVER_RECV);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
