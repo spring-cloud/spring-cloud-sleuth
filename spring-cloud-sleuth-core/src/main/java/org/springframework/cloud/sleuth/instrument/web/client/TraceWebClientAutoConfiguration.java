@@ -66,7 +66,7 @@ public class TraceWebClientAutoConfiguration {
 	}
 
 	@Bean
-	public SpanInjector httpRequestInjector() {
+	public SpanInjector<HttpRequest> httpRequestSpanInjector() {
 		return new HttpRequestInjector();
 	}
 

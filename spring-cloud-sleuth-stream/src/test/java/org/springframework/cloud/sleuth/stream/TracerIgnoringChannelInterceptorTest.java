@@ -49,8 +49,8 @@ public class TracerIgnoringChannelInterceptorTest {
 
 		Message interceptedMessage = this.tracerIgnoringChannelInterceptor.preSend(message, this.messageChannel);
 
-		then(interceptedMessage.getHeaders().containsKey(
-				Span.NOT_SAMPLED_NAME)).isTrue();
+		then(interceptedMessage.getHeaders().get(
+				Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_NOT_SAMPLED);
 	}
 
 	@Test

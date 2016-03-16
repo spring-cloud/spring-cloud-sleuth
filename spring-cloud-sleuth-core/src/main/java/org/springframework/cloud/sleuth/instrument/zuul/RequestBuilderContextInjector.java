@@ -34,9 +34,11 @@ class RequestBuilderContextInjector implements SpanInjector<Builder> {
 	@Override
 	public void inject(Span span, Builder carrier) {
 		if (span == null) {
-			setHeader(carrier, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(carrier, Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 			return;
 		}
+		setHeader(carrier, Span.SAMPLED_NAME, span.isExportable() ?
+				Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		setHeader(carrier, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
 		setHeader(carrier, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());

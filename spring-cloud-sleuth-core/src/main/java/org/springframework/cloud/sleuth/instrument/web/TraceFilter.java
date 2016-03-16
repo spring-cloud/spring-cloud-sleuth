@@ -39,7 +39,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
 
-import static org.springframework.cloud.sleuth.instrument.web.ServletUtils.hasHeader;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -107,16 +106,14 @@ public class TraceFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| ServletUtils.getHeader(request, response, Span.NOT_SAMPLED_NAME) != null;
+				|| Span.SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, Span.SAMPLED_NAME));
 		Span spanFromRequest = (Span) request.getAttribute(TRACE_REQUEST_ATTR);
 		if (spanFromRequest != null) {
 			this.tracer.continueSpan(spanFromRequest);
 		}
-		else if (skip) {
-			addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
-		}
+		addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 		String name = HTTP_COMPONENT + ":" + uri;
-		spanFromRequest = createSpan(request, response, skip, spanFromRequest, name);
+		spanFromRequest = createSpan(request, skip, spanFromRequest, name);
 		Throwable exception = null;
 		try {
 			addRequestTags(request);
@@ -135,9 +132,7 @@ public class TraceFilter extends OncePerRequestFilter {
 				// TODO: how to deal with response annotations and async?
 				return;
 			}
-			if (skip) {
-				addToResponseIfNotPresent(response, Span.NOT_SAMPLED_NAME, "");
-			}
+			addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 			if (spanFromRequest != null) {
 				addResponseTags(response, exception);
 				if (spanFromRequest.hasSavedSpan()) {
@@ -156,16 +151,16 @@ public class TraceFilter extends OncePerRequestFilter {
 	/**
 	 * Creates a span and appends it as the current request's attribute
 	 */
-	private Span createSpan(HttpServletRequest request, HttpServletResponse response,
+	private Span createSpan(HttpServletRequest request,
 			boolean skip, Span spanFromRequest, String name) {
 		if (spanFromRequest != null) {
 			return spanFromRequest;
 		}
-		if (hasHeader(request, response, Span.TRACE_ID_NAME)) {
-			Span parent = this.spanExtractor
-					.joinTrace(request);
+		Span parent = this.spanExtractor
+				.joinTrace(request);
+		if (parent != null) {
 			spanFromRequest = this.tracer.createSpan(name, parent);
-			if (parent != null && parent.isRemote()) {
+			if (parent.isRemote()) {
 				parent.logEvent(Span.SERVER_RECV);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);

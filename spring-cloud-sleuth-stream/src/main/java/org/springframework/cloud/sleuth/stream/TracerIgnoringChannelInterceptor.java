@@ -43,7 +43,7 @@ class TracerIgnoringChannelInterceptor extends ChannelInterceptorAdapter {
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		return MessageBuilder.fromMessage(message)
-				.setHeader(Span.NOT_SAMPLED_NAME, "true").build();
+				.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build();
 	}
 
 	@Override

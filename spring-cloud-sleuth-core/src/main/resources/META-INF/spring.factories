@@ -3,6 +3,7 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
 org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration,\
 org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.messaging.TraceSpanMessagingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.websocket.TraceWebSocketAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\

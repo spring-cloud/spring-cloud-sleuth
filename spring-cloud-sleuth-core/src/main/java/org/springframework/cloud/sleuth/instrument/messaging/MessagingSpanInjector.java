@@ -52,8 +52,8 @@ public class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(initialMessage);
 		if (span == null) {
-			if (!initialMessage.getHeaders().containsKey(Span.NOT_SAMPLED_NAME)) {
-				accessor.setHeader(Span.NOT_SAMPLED_NAME, "true");
+			if (!Span.SPAN_SAMPLED.equals(initialMessage.getHeaders().get(Span.SAMPLED_NAME))) {
+				accessor.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 				carrier.setHeaders(accessor);
 				return;
 			}
@@ -70,9 +70,10 @@ public class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 			}
 			addHeader(headers, Span.SPAN_NAME_NAME, span.getName());
 			addHeader(headers, Span.PROCESS_ID_NAME, span.getProcessId());
+			addHeader(headers, Span.SAMPLED_NAME, Span.SPAN_SAMPLED);
 		}
 		else {
-			addHeader(headers, Span.NOT_SAMPLED_NAME, "true");
+			addHeader(headers, Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 		}
 		accessor.setHeader(SPAN_HEADER, span);
 		accessor.copyHeaders(headers);

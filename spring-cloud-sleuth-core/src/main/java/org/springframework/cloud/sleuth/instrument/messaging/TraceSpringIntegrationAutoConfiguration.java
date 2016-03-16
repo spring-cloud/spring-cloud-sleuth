@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Random;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -47,7 +46,7 @@ import org.springframework.messaging.support.MessageBuilder;
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
+@AutoConfigureAfter({TraceAutoConfiguration.class, TraceSpanMessagingAutoConfiguration.class})
 @ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(TraceKeys.class)
 public class TraceSpringIntegrationAutoConfiguration {
@@ -56,25 +55,9 @@ public class TraceSpringIntegrationAutoConfiguration {
 	@GlobalChannelInterceptor
 	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
 			TraceKeys traceKeys, Random random,
-			@Qualifier("messagingSpanExtractor") SpanExtractor<Message> spanExtractor,
-			@Qualifier("messagingSpanInjector") SpanInjector<MessageBuilder> spanInjector) {
+			SpanExtractor<Message> spanExtractor,
+			SpanInjector<MessageBuilder> spanInjector) {
 		return new TraceChannelInterceptor(tracer, traceKeys, spanExtractor, spanInjector);
-	}
-
-	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
-	@Bean
-	@Qualifier("messagingSpanExtractor")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.injector.enabled", matchIfMissing = true)
-	public SpanExtractor<Message> messagingSpanExtractor(Random random) {
-		return new MessagingSpanExtractor(random);
-	}
-
-	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
-	@Bean
-	@Qualifier("messagingSpanInjector")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.injector.enabled", matchIfMissing = true)
-	public SpanInjector<MessageBuilder> messagingSpanInjector(TraceKeys traceKeys) {
-		return new MessagingSpanInjector(traceKeys);
 	}
 
 }

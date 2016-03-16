@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -77,26 +76,20 @@ public class TraceWebAutoConfiguration {
 	@ConditionalOnMissingBean
 	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
-			@Qualifier("httpServletRequestSpanExtractor") SpanExtractor<HttpServletRequest> spanExtractor,
-			@Qualifier("httpServletResponseInjector") SpanInjector<HttpServletResponse> spanInjector) {
+			SpanExtractor<HttpServletRequest> spanExtractor,
+			SpanInjector<HttpServletResponse> spanInjector) {
 		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
 				spanReporter, spanExtractor, spanInjector);
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
 	@Bean
-	@Qualifier("httpServletRequestSpanExtractor")
-	@ConditionalOnProperty(value = "spring.sleuth.web.extractor.enabled", matchIfMissing = true)
 	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(Random random,
 			SkipPatternProvider skipPatternProvider) {
 		return new HttpServletRequestExtractor(random, skipPatternProvider.skipPattern());
 	}
 
-	// TODO: Qualifier + ConditionalOnProp cause autowiring generics doesn't work
 	@Bean
-	@Qualifier("httpServletResponseInjector")
-	@ConditionalOnProperty(value = "spring.sleuth.web.injector.enabled", matchIfMissing = true)
-	public SpanInjector<HttpServletResponse> httpServletResponseInjector() {
+	public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
 		return new HttpServletResponseInjector();
 	}
 

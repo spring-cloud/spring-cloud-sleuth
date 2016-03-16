@@ -50,9 +50,7 @@ public class MessagingSpanExtractor implements SpanExtractor<Message> {
 				: this.random.nextLong();
 		long traceId = Span.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
 		SpanBuilder spanBuilder = Span.builder().traceId(traceId).spanId(spanId);
-		if (hasHeader(carrier, Span.NOT_SAMPLED_NAME)) {
-			spanBuilder.exportable(false);
-		}
+		spanBuilder.exportable(Span.SPAN_SAMPLED.equals(getHeader(carrier, Span.SAMPLED_NAME)));
 		String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
 		String processId = getHeader(carrier, Span.PROCESS_ID_NAME);
 		String spanName = getHeader(carrier, Span.SPAN_NAME_NAME);

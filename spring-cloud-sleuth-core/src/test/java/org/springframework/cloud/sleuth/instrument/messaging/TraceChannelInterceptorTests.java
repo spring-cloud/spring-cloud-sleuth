@@ -94,7 +94,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void nonExportableSpanCreation() {
 		this.channel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.NOT_SAMPLED_NAME, "true").build());
+				.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);

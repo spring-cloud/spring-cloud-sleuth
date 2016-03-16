@@ -103,7 +103,7 @@ public class TraceRestTemplateInterceptorTests {
 				.getBody();
 		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
 		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotEqualTo(2L);
-		then(headers.get(Span.NOT_SAMPLED_NAME)).isEqualTo("true");
+		then(headers.get(Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_NOT_SAMPLED);
 	}
 
 	// issue #198
@@ -141,7 +141,7 @@ public class TraceRestTemplateInterceptorTests {
 			this.span = TraceRestTemplateInterceptorTests.this.tracer.getCurrentSpan();
 			Map<String, String> map = new HashMap<String, String>();
 			addHeaders(map, headers, Span.SPAN_ID_NAME, Span.TRACE_ID_NAME,
-					Span.PARENT_ID_NAME, Span.NOT_SAMPLED_NAME);
+					Span.PARENT_ID_NAME, Span.SAMPLED_NAME);
 			return map;
 		}
 

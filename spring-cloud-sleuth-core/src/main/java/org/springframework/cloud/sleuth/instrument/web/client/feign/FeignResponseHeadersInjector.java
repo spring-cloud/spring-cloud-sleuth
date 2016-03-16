@@ -47,9 +47,11 @@ class FeignResponseHeadersInjector implements SpanInjector<FeignResponseHeadersH
 		Map<String, Collection<String>> newHeaders = new HashMap<>();
 		newHeaders.putAll(headers);
 		if (span == null) {
-			setHeader(newHeaders, Span.NOT_SAMPLED_NAME, "true");
+			setHeader(newHeaders, Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 			return newHeaders;
 		}
+		setHeader(newHeaders, Span.SAMPLED_NAME, span.isExportable() ?
+				Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		setHeader(newHeaders, Span.TRACE_ID_NAME, span.getTraceId());
 		setHeader(newHeaders, Span.SPAN_ID_NAME, span.getSpanId());
 		return newHeaders;

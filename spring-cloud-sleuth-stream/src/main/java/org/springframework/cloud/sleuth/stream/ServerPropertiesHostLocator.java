@@ -26,7 +26,7 @@ import org.springframework.util.Assert;
  * A {@link HostLocator} that retrieves:
  *
  * <ul>
- *     <li><b>service name</b> - either from {@link span#getProcessId()} or current application name</li>
+ *     <li><b>service name</b> - either from {@link Span#getProcessId()} or current application name</li>
  *     <li><b>address</b> - from {@link ServerProperties}</li>
  *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>

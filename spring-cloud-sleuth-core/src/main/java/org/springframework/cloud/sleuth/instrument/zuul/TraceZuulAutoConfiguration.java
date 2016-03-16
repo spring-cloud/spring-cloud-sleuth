@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -51,13 +52,14 @@ public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer, SpanInjector<RequestContext> spanInjector) {
+	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer,
+			SpanInjector<RequestContext> spanInjector) {
 		return new TracePreZuulFilter(tracer, spanInjector);
 	}
 
 	@Bean
 	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory,
-			Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector) {
+			Tracer tracer, @Qualifier("requestBuilderContextSpanInjector") SpanInjector<HttpRequest.Builder> spanInjector) {
 		return new TraceRestClientRibbonCommandFactory(factory, tracer, spanInjector);
 	}
 
@@ -68,12 +70,12 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	SpanInjector<RequestContext> requestContextInjector() {
+	public SpanInjector<RequestContext> requestContextSpanInjector() {
 		return new RequestContextInjector();
 	}
 
 	@Bean
-	SpanInjector<HttpRequest.Builder> requestBuilderContextInjector() {
+	public SpanInjector<HttpRequest.Builder> requestBuilderContextSpanInjector() {
 		return new RequestBuilderContextInjector();
 	}
 

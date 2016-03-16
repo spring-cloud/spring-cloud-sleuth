@@ -191,7 +191,92 @@ adding a Channel Binder implementation
 (e.g. `spring-cloud-starter-stream-rabbit` for RabbitMQ or
 `spring-cloud-starter-stream-kafka` for Kafka). This will
 automatically turn your app into a producer of messages with payload
-type `Spans`. 
+type `Spans`.
+
+== Customizations
+
+Thanks to the `SpanInjector` and `SpanExtractor` you can customize the way spans
+are created and propagated.
+
+There are currently two built-in ways to pass tracing information between processes:
+
+ * via Spring Integration
+ * via HTTP
+
+Span ids are extracted from Zipkin-compatible (B3) headers (either `Message`
+or HTTP headers), to start or join an existing trace. Trace information is
+injected into any outbound requests so the next hop can extract them.
+
+=== Spring Integration
+
+For Spring Integration these are the beans responsible for creation of a Span from a `Message`
+ and filling in the `MessageBuilder` with tracing information.
+
+[source,java]
+----
+	@Bean
+	public SpanExtractor<Message> messagingSpanExtractor() {
+		...
+	}
+
+	@Bean
+	public SpanInjector<MessageBuilder> messagingSpanInjector() {
+		...
+	}
+----
+
+You can override them by providing your own implementation and by adding a `@Primary` annotation
+to your bean definition.
+
+=== HTTP
+
+For HTTP these are the beans responsible for creation of a Span from a `HttpServletRequest`
+  and filling in the `HttpServletResponse` with tracing information.
+
+[source,java]
+----
+@Bean
+public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor() {
+    ...
+}
+
+@Bean
+public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
+	...
+}
+----
+
+You can override them by providing your own implementation and by adding a `@Primary` annotation
+to your bean definition.
+
+=== Example
+
+Let's assume that instead of the standard Zipkin compatible tracing HTTP header names
+you have
+
+* for trace id - `correlationId`
+* for span id - `mySpanId`
+
+This is a an example of a `SpanExtractor`
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=extractor,indent=0]
+----
+
+The following `SpanInjector` could be created
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=injector,indent=0]
+----
+
+And you could register them like this:
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=configuration,indent=0]
+----
 
 === Zipkin Consumer
 
