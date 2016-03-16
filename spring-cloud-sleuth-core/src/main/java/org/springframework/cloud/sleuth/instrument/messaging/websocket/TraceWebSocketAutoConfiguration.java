@@ -35,7 +35,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 @AutoConfigureAfter(TraceSpanMessagingAutoConfiguration.class)
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(AbstractWebSocketMessageBrokerConfigurer.class)
-@ConditionalOnProperty(value = "spring.sleuth.integration.websocket.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.integration.websockets.enabled", matchIfMissing = true)
 public class TraceWebSocketAutoConfiguration
 		extends AbstractWebSocketMessageBrokerConfigurer {
 
@@ -60,18 +60,4 @@ public class TraceWebSocketAutoConfiguration
 		registration.setInterceptors(
 				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.spanExtractor, this.spanInjector));
 	}
-
-	/*// TODO: Qualifier cause there were some issues with autowiring generics
-	@Bean
-	@Qualifier("stompMessagingSpanExtractor")
-	public SpanExtractor<Message> stompMessagingSpanExtractor(Random random) {
-		return new MessagingSpanExtractor(random);
-	}
-
-	// TODO: Qualifier cause there were some issues with autowiring generics
-	@Bean
-	@Qualifier("stompMessagingSpanInjector")
-	public SpanInjector<MessageBuilder> stompMessagingSpanInjector(TraceKeys traceKeys) {
-		return new MessagingSpanInjector(traceKeys);
-	}*/
 }
