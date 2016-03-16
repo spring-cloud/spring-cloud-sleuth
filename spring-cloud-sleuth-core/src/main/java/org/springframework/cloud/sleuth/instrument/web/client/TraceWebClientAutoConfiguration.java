@@ -23,7 +23,6 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -56,7 +55,7 @@ public class TraceWebClientAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(Tracer tracer,
-			@Qualifier("httpRequestSpanInjector") SpanInjector<HttpRequest> spanInjector) {
+			SpanInjector<HttpRequest> spanInjector) {
 		return new TraceRestTemplateInterceptor(tracer, spanInjector);
 	}
 
@@ -66,9 +65,7 @@ public class TraceWebClientAutoConfiguration {
 		return new RestTemplate();
 	}
 
-	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
-	@Qualifier("httpRequestSpanInjector")
 	public SpanInjector<HttpRequest> httpRequestSpanInjector() {
 		return new HttpRequestInjector();
 	}

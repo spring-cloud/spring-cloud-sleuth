@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -95,14 +94,12 @@ public class TraceFilterCustomExtractorTests  {
 
 		// tag::configuration[]
 		@Bean
-		@Qualifier("httpServletRequestSpanExtractor")
 		@Primary
 		SpanExtractor<HttpServletRequest> customHttpServletRequestSpanExtractor() {
 			return new CustomHttpServletRequestSpanExtractor();
 		}
 
 		@Bean
-		@Qualifier("httpServletResponseSpanInjector")
 		@Primary
 		SpanInjector<HttpServletResponse> customHttpServletResponseSpanInjector() {
 			return new CustomHttpServletResponseSpanInjector();

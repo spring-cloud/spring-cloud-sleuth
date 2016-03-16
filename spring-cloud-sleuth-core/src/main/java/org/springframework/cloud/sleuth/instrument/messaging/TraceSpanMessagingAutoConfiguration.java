@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Random;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -38,16 +37,12 @@ import org.springframework.messaging.support.MessageBuilder;
 @Configuration
 public class TraceSpanMessagingAutoConfiguration {
 
-	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
-	@Qualifier("messagingSpanExtractor")
 	public SpanExtractor<Message> messagingSpanExtractor(Random random) {
 		return new MessagingSpanExtractor(random);
 	}
 
-	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
-	@Qualifier("messagingSpanInjector")
 	public SpanInjector<MessageBuilder> messagingSpanInjector(TraceKeys traceKeys) {
 		return new MessagingSpanInjector(traceKeys);
 	}

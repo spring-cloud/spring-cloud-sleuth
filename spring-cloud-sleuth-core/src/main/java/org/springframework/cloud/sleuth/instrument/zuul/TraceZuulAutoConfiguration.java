@@ -53,7 +53,7 @@ public class TraceZuulAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer,
-			@Qualifier("requestContextSpanInjector") SpanInjector<RequestContext> spanInjector) {
+			SpanInjector<RequestContext> spanInjector) {
 		return new TracePreZuulFilter(tracer, spanInjector);
 	}
 
@@ -69,16 +69,12 @@ public class TraceZuulAutoConfiguration {
 		return new TracePostZuulFilter(accessor);
 	}
 
-	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
-	@Qualifier("requestContextSpanInjector")
 	public SpanInjector<RequestContext> requestContextSpanInjector() {
 		return new RequestContextInjector();
 	}
 
-	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
-	@Qualifier("requestBuilderContextSpanInjector")
 	public SpanInjector<HttpRequest.Builder> requestBuilderContextSpanInjector() {
 		return new RequestBuilderContextInjector();
 	}

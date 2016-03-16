@@ -215,23 +215,18 @@ For Spring Integration these are the beans responsible for creation of a Span fr
 [source,java]
 ----
 	@Bean
-	@Qualifier("messagingSpanExtractor")
 	public SpanExtractor<Message> messagingSpanExtractor() {
 		...
 	}
 
 	@Bean
-	@Qualifier("messagingSpanInjector")
 	public SpanInjector<MessageBuilder> messagingSpanInjector() {
 		...
 	}
 ----
 
 You can override them by providing your own implementation and by adding a `@Primary` annotation
-to your bean definition. Remember to provide the following qualifiers:
-
-* `Message` span extractor - `messagingSpanExtractor`
-* `MessageBuilder` span injector - `messagingSpanInjector`
+to your bean definition.
 
 === HTTP
 
@@ -241,23 +236,18 @@ For HTTP these are the beans responsible for creation of a Span from a `HttpServ
 [source,java]
 ----
 @Bean
-@Qualifier("httpServletRequestSpanExtractor")
 public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor() {
     ...
 }
 
 @Bean
-@Qualifier("httpServletResponseSpanInjector")
 public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
 	...
 }
 ----
 
 You can override them by providing your own implementation and by adding a `@Primary` annotation
-to your bean definition. Remember to provide the following qualifiers:
-
-* `HttpServletRequest` span extractor - `httpServletRequestSpanExtractor`
-* `HttpServletResponse` span injector - `httpServletResponseSpanInjector`
+to your bean definition.
 
 === Example
 
@@ -281,7 +271,7 @@ The following `SpanInjector` could be created
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=injector,indent=0]
 ----
 
-And you could register it like this:
+And you could register them like this:
 
 [source,java]
 ----

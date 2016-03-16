@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -77,23 +76,19 @@ public class TraceWebAutoConfiguration {
 	@ConditionalOnMissingBean
 	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
-			@Qualifier("httpServletRequestSpanExtractor") SpanExtractor<HttpServletRequest> spanExtractor,
-			@Qualifier("httpServletResponseSpanInjector") SpanInjector<HttpServletResponse> spanInjector) {
+			SpanExtractor<HttpServletRequest> spanExtractor,
+			SpanInjector<HttpServletResponse> spanInjector) {
 		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
 				spanReporter, spanExtractor, spanInjector);
 	}
 
-	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
-	@Qualifier("httpServletRequestSpanExtractor")
 	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(Random random,
 			SkipPatternProvider skipPatternProvider) {
 		return new HttpServletRequestExtractor(random, skipPatternProvider.skipPattern());
 	}
 
-	// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
-	@Qualifier("httpServletResponseSpanInjector")
 	public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
 		return new HttpServletResponseInjector();
 	}

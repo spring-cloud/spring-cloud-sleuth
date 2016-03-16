@@ -1,7 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.messaging.websocket;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -41,8 +40,8 @@ public class TraceWebSocketAutoConfiguration
 
 	@Autowired Tracer tracer;
 	@Autowired TraceKeys traceKeys;
-	@Autowired @Qualifier("messagingSpanExtractor") SpanExtractor<Message> spanExtractor;
-	@Autowired @Qualifier("messagingSpanInjector") SpanInjector<MessageBuilder> spanInjector;
+	@Autowired SpanExtractor<Message> spanExtractor;
+	@Autowired SpanInjector<MessageBuilder> spanInjector;
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
