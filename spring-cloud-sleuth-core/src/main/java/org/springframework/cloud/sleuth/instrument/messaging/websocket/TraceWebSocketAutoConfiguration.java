@@ -68,7 +68,7 @@ public class TraceWebSocketAutoConfiguration
 	// TODO: Qualifier + ConditionalOnProp cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("stompMessagingSpanExtractor")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.websocket.injector.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.integration.websocket.extractor.enabled", matchIfMissing = true)
 	public SpanExtractor<Message> stompMessagingSpanExtractor(Random random) {
 		return new MessagingSpanExtractor(random);
 	}
