@@ -36,7 +36,7 @@ import org.springframework.util.StringUtils;
  *
  * @since 1.0.0
  */
-public class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
+class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 
 	public static final String SPAN_HEADER = "X-Current-Span";
 
