@@ -198,11 +198,14 @@ type `Spans`.
 Thanks to the `SpanInjector` and `SpanExtractor` you can customize the way spans
 are created and propagated.
 
-Essentially with Spring Cloud Span there are two ways span tracing data can be passed to
- a process.
+There are currently two built-in ways to pass tracing information between processes:
 
  * via Spring Integration
  * via HTTP
+
+Span ids are extracted from Zipkin-compatible (B3) headers (either `Message`
+or HTTP headers), to start or join an existing trace. Trace information is
+injected into any outbound requests so the next hop can extract them.
 
 === Spring Integration
 
@@ -213,36 +216,22 @@ For Spring Integration these are the beans responsible for creation of a Span fr
 ----
 	@Bean
 	@Qualifier("messagingSpanExtractor")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.extractor.enabled", matchIfMissing = true)
 	public SpanExtractor<Message> messagingSpanExtractor() {
 		...
 	}
 
 	@Bean
 	@Qualifier("messagingSpanInjector")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.injector.enabled", matchIfMissing = true)
 	public SpanInjector<MessageBuilder> messagingSpanInjector() {
 		...
 	}
 ----
 
-As you can see you can disable them with the properties:
-
-* `Message` span extractor - `spring.sleuth.integration.extractor.enabled`
-* `MessageBuilder` span injector - `spring.sleuth.integration.injector.enabled`
-
-There is also a WebSockets version:
-
-* `Message` span extractor - `spring.sleuth.integration.websocket.extractor.enabled`
-* `MessageBuilder` span injector - `spring.sleuth.integration.websocket.injector.enabled`
-
-You can override them either by disabling with a property and providing your own implementation
-or by adding a `@Primary` annotation to your bean definition. Remember to provide the following qualifiers:
+You can override them by providing your own implementation and by adding a `@Primary` annotation
+to your bean definition. Remember to provide the following qualifiers:
 
 * `Message` span extractor - `messagingSpanExtractor`
 * `MessageBuilder` span injector - `messagingSpanInjector`
-* `Message` span extractor for WebSockets - `stompMessagingSpanExtractor`
-* `MessageBuilder` span injector for WebSockets - `stompMessagingSpanInjector`
 
 === HTTP
 
@@ -253,26 +242,19 @@ For HTTP these are the beans responsible for creation of a Span from a `HttpServ
 ----
 @Bean
 @Qualifier("httpServletRequestSpanExtractor")
-@ConditionalOnProperty(value = "spring.sleuth.web.extractor.enabled", matchIfMissing = true)
 public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor() {
     ...
 }
 
 @Bean
 @Qualifier("httpServletResponseSpanInjector")
-@ConditionalOnProperty(value = "spring.sleuth.web.injector.enabled", matchIfMissing = true)
 public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
 	...
 }
 ----
 
-As you can see you can disable them with the properties:
-
-* `HttpServletRequest` span extractor - `spring.sleuth.web.extractor.enabled`
-* `HttpServletResponse` span injector - `spring.sleuth.web.injector.enabled`
-
-You can override them either by disabling with a property and providing your own implementation
-or by adding a `@Primary` annotation to your bean definition. Remember to provide the following qualifiers:
+You can override them by providing your own implementation and by adding a `@Primary` annotation
+to your bean definition. Remember to provide the following qualifiers:
 
 * `HttpServletRequest` span extractor - `httpServletRequestSpanExtractor`
 * `HttpServletResponse` span injector - `httpServletResponseSpanInjector`
