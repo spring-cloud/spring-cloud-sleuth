@@ -1,21 +1,17 @@
 package org.springframework.cloud.sleuth.instrument.messaging.websocket;
 
-import java.util.Random;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.messaging.MessagingSpanExtractor;
-import org.springframework.cloud.sleuth.instrument.messaging.MessagingSpanInjector;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptor;
-import org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.cloud.sleuth.instrument.messaging.TraceSpanMessagingAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -36,16 +32,17 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
  */
 @Component
 @Configuration
-@AutoConfigureAfter(TraceSpringIntegrationAutoConfiguration.class)
+@AutoConfigureAfter(TraceSpanMessagingAutoConfiguration.class)
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(AbstractWebSocketMessageBrokerConfigurer.class)
+@ConditionalOnProperty(value = "spring.sleuth.integration.websocket.enabled", matchIfMissing = true)
 public class TraceWebSocketAutoConfiguration
 		extends AbstractWebSocketMessageBrokerConfigurer {
 
 	@Autowired Tracer tracer;
 	@Autowired TraceKeys traceKeys;
-	@Autowired @Qualifier("stompMessagingSpanExtractor") SpanExtractor<Message> spanExtractor;
-	@Autowired @Qualifier("stompMessagingSpanInjector") SpanInjector<MessageBuilder> spanInjector;
+	@Autowired @Qualifier("messagingSpanExtractor") SpanExtractor<Message> spanExtractor;
+	@Autowired @Qualifier("messagingSpanInjector") SpanInjector<MessageBuilder> spanInjector;
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -64,7 +61,7 @@ public class TraceWebSocketAutoConfiguration
 				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.spanExtractor, this.spanInjector));
 	}
 
-	// TODO: Qualifier cause there were some issues with autowiring generics
+	/*// TODO: Qualifier cause there were some issues with autowiring generics
 	@Bean
 	@Qualifier("stompMessagingSpanExtractor")
 	public SpanExtractor<Message> stompMessagingSpanExtractor(Random random) {
@@ -76,5 +73,5 @@ public class TraceWebSocketAutoConfiguration
 	@Qualifier("stompMessagingSpanInjector")
 	public SpanInjector<MessageBuilder> stompMessagingSpanInjector(TraceKeys traceKeys) {
 		return new MessagingSpanInjector(traceKeys);
-	}
+	}*/
 }

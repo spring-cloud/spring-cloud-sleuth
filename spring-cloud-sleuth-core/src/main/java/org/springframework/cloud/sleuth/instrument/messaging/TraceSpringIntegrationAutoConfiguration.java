@@ -47,7 +47,7 @@ import org.springframework.messaging.support.MessageBuilder;
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
+@AutoConfigureAfter({TraceAutoConfiguration.class, TraceSpanMessagingAutoConfiguration.class})
 @ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(TraceKeys.class)
 public class TraceSpringIntegrationAutoConfiguration {
@@ -59,20 +59,6 @@ public class TraceSpringIntegrationAutoConfiguration {
 			@Qualifier("messagingSpanExtractor") SpanExtractor<Message> spanExtractor,
 			@Qualifier("messagingSpanInjector") SpanInjector<MessageBuilder> spanInjector) {
 		return new TraceChannelInterceptor(tracer, traceKeys, spanExtractor, spanInjector);
-	}
-
-	// TODO: Qualifier cause there were some issues with autowiring generics
-	@Bean
-	@Qualifier("messagingSpanExtractor")
-	public SpanExtractor<Message> messagingSpanExtractor(Random random) {
-		return new MessagingSpanExtractor(random);
-	}
-
-	// TODO: Qualifier cause there were some issues with autowiring generics
-	@Bean
-	@Qualifier("messagingSpanInjector")
-	public SpanInjector<MessageBuilder> messagingSpanInjector(TraceKeys traceKeys) {
-		return new MessagingSpanInjector(traceKeys);
 	}
 
 }
