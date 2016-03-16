@@ -446,8 +446,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_tostring_method">toString() method</a></li>
 </ul>
 </li>
-<li><a href="#_span_data_as_messages">Span Data as Messages</a>
+<li><a href="#_span_data_as_messages">Span Data as Messages</a></li>
+<li><a href="#_customizations">Customizations</a>
 <ul class="sectlevel2">
+<li><a href="#_spring_integration">Spring Integration</a></li>
+<li><a href="#_http">HTTP</a></li>
+<li><a href="#_example">Example</a></li>
 <li><a href="#_zipkin_consumer">Zipkin Consumer</a></li>
 <li><a href="#_custom_consumer">Custom Consumer</a></li>
 </ul>
@@ -767,6 +771,11 @@ latency in your applications. Sleuth is written to not log too much, and to not 
 rest template, scheduled actions, message channels, zuul filters, feign client).</p>
 </li>
 <li>
+<p>Sleuth includes default logic to join a trace across http or messaging boundaries. For example, http propagation
+works via Zipkin-compatible request headers. This propagation logic is defined and customized via
+<code>SpanInjector</code> and <code>SpanExtractor</code> implementations.</p>
+</li>
+<li>
 <p>Provides simple metrics of accepted / dropped spans.</p>
 </li>
 <li>
@@ -803,7 +812,7 @@ If using Zipkin or Stream, configure the percentage of spans exported using <cod
 <td class="content">
 the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example
  above. Other logging systems have to configure their own formatter to get the same result. The default is
- <code>logging.pattern.level</code> set to <code>%clr(%5p) %clr([${spring.application.name:},%X{X-Trace-Id:-},%X{X-Span-Id:-},%X{X-Span-Export:-}]){yellow}</code>
+ <code>logging.pattern.level</code> set to <code>%clr(%5p) %clr([${spring.application.name:},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]){yellow}</code>
  (this is a Spring Boot feature for logback users).
  <strong>This means that if you&#8217;re not using SLF4J this pattern WILL NOT be automatically applied</strong>.
 </td>
@@ -1190,6 +1199,151 @@ adding a Channel Binder implementation
 automatically turn your app into a producer of messages with payload
 type <code>Spans</code>.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_customizations">Customizations</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Thanks to the <code>SpanInjector</code> and <code>SpanExtractor</code> you can customize the way spans
+are created and propagated.</p>
+</div>
+<div class="paragraph">
+<p>There are currently two built-in ways to pass tracing information between processes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>via Spring Integration</p>
+</li>
+<li>
+<p>via HTTP</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Span ids are extracted from Zipkin-compatible (B3) headers (either <code>Message</code>
+or HTTP headers), to start or join an existing trace. Trace information is
+injected into any outbound requests so the next hop can extract them.</p>
+</div>
+<div class="sect2">
+<h3 id="_spring_integration">Spring Integration</h3>
+<div class="paragraph">
+<p>For Spring Integration these are the beans responsible for creation of a Span from a <code>Message</code>
+ and filling in the <code>MessageBuilder</code> with tracing information.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">	@Bean
+	public SpanExtractor&lt;Message&gt; messagingSpanExtractor() {
+		...
+	}
+
+	@Bean
+	public SpanInjector&lt;MessageBuilder&gt; messagingSpanInjector() {
+		...
+	}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can override them by providing your own implementation and by adding a <code>@Primary</code> annotation
+to your bean definition.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_http">HTTP</h3>
+<div class="paragraph">
+<p>For HTTP these are the beans responsible for creation of a Span from a <code>HttpServletRequest</code>
+  and filling in the <code>HttpServletResponse</code> with tracing information.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+public SpanExtractor&lt;HttpServletRequest&gt; httpServletRequestSpanExtractor() {
+    ...
+}
+
+@Bean
+public SpanInjector&lt;HttpServletResponse&gt; httpServletResponseSpanInjector() {
+	...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can override them by providing your own implementation and by adding a <code>@Primary</code> annotation
+to your bean definition.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">Example</h3>
+<div class="paragraph">
+<p>Let&#8217;s assume that instead of the standard Zipkin compatible tracing HTTP header names
+you have</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>for trace id - <code>correlationId</code></p>
+</li>
+<li>
+<p>for span id - <code>mySpanId</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This is a an example of a <code>SpanExtractor</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletRequestSpanExtractor implements SpanExtractor&lt;HttpServletRequest&gt; {
+
+	@Override
+	public Span joinTrace(HttpServletRequest carrier) {
+		long traceId = Span.hexToId(carrier.getHeader("correlationId"));
+		long spanId = Span.hexToId(carrier.getHeader("mySpanId"));
+		// extract all necessary headers
+		Span.SpanBuilder builder = Span.builder().traceId(traceId).spanId(spanId);
+		// build rest of the Span
+		return builder.build();
+	}
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following <code>SpanInjector</code> could be created</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletResponseSpanInjector implements SpanInjector&lt;HttpServletResponse&gt; {
+
+	@Override
+	public void inject(Span span, HttpServletResponse carrier) {
+		carrier.addHeader("correlationId", Span.idToHex(span.getTraceId()));
+		carrier.addHeader("mySpanId", Span.idToHex(span.getSpanId()));
+		// inject the rest of Span values to the header
+	}
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And you could register them like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+@Primary
+SpanExtractor&lt;HttpServletRequest&gt; customHttpServletRequestSpanExtractor() {
+	return new CustomHttpServletRequestSpanExtractor();
+}
+
+@Bean
+@Primary
+SpanInjector&lt;HttpServletResponse&gt; customHttpServletResponseSpanInjector() {
+	return new CustomHttpServletResponseSpanInjector();
+}</code></pre>
+</div>
+</div>
+</div>
 <div class="sect2">
 <h3 id="_zipkin_consumer">Zipkin Consumer</h3>
 <div class="paragraph">
@@ -1534,7 +1688,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-10 14:52:17 CET
+Last updated 2016-03-16 16:10:25 CET
 </div>
 </div>
 </body>
