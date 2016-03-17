@@ -37,13 +37,13 @@ import org.springframework.integration.annotation.MessageEndpoint;
  * @since 1.0.0
  */
 @MessageEndpoint
-public class StreamSpanListener implements SpanReporter {
+public class StreamSpanReporter implements SpanReporter {
 
 	private Collection<Span> queue = new ConcurrentLinkedQueue<>();
 	private final HostLocator endpointLocator;
 	private final SpanMetricReporter spanMetricReporter;
 
-	public StreamSpanListener(HostLocator endpointLocator, SpanMetricReporter spanMetricReporter) {
+	public StreamSpanReporter(HostLocator endpointLocator, SpanMetricReporter spanMetricReporter) {
 		this.endpointLocator = endpointLocator;
 		this.spanMetricReporter = spanMetricReporter;
 	}

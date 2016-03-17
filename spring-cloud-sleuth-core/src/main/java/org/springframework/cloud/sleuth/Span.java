@@ -27,6 +27,9 @@ import java.util.Map;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Class for gathering and reporting statistics about a block of execution.
  * <p>
@@ -63,6 +66,7 @@ import org.springframework.util.StringUtils;
  * like scoped tracers. Sleuth spans are DTOs, whose sole responsibility is the current
  * span in the trace tree.
  */
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class Span {
 
 	public static final String SAMPLED_NAME = "X-B3-Sampled";
@@ -129,6 +133,11 @@ public class Span {
 	private final List<Log> logs;
 	private final Span savedSpan;
 
+	@SuppressWarnings("unused")
+	private Span() {
+		this(-1,-1,"dummy",0,Collections.emptyList(),0,false,false,null);
+	}
+
 	/**
 	 * Creates a new span that still tracks tags and logs of the
 	 * current span. This is crucial when continuing spans
@@ -194,6 +203,7 @@ public class Span {
 	 * Return the total amount of time elapsed since start was called, if running, or
 	 * difference between stop and start
 	 */
+	@JsonIgnore
 	public synchronized long getAccumulatedMillis() {
 		if (this.begin == 0) {
 			return 0;
@@ -207,6 +217,7 @@ public class Span {
 	/**
 	 * Has the span been started and not yet stopped?
 	 */
+	@JsonIgnore
 	public synchronized boolean isRunning() {
 		return this.begin != 0 && this.end == 0;
 	}
@@ -253,6 +264,7 @@ public class Span {
 	 * <p>
 	 * Might be null
 	 */
+	@JsonIgnore
 	public Span getSavedSpan() {
 		return this.savedSpan;
 	}

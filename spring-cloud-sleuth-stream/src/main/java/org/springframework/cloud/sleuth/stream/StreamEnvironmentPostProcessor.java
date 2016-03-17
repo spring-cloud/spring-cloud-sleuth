@@ -76,6 +76,8 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 		// compete with each other and only one gets each message.
 		map.put("spring.cloud.stream.bindings." + SleuthSink.INPUT + ".group",
 				environment.getProperty("spring.sleuth.stream.group", SleuthSink.INPUT));
+		map.put("spring.cloud.stream.bindings." + SleuthSink.INPUT + ".content-type",
+				environment.getProperty("spring.sleuth.stream.content-type", "application/json"));
 		addOrReplace(environment.getPropertySources(), map);
 	}
 

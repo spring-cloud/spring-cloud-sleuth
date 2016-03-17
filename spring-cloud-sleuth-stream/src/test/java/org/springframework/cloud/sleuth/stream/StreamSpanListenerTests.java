@@ -65,7 +65,7 @@ public class StreamSpanListenerTests {
 	@Autowired Tracer tracer;
 	@Autowired ApplicationContext application;
 	@Autowired ZipkinTestConfiguration test;
-	@Autowired StreamSpanListener listener;
+	@Autowired StreamSpanReporter listener;
 	@Autowired CounterService counterService;
 	@Autowired SpanReporter spanReporter;
 
@@ -139,7 +139,7 @@ public class StreamSpanListenerTests {
 		private List<Span> spans = new ArrayList<>();
 
 		@Autowired
-		StreamSpanListener listener;
+		StreamSpanReporter listener;
 
 		@ServiceActivator(inputChannel=SleuthSource.OUTPUT)
 		public void handle(Message<?> msg) {

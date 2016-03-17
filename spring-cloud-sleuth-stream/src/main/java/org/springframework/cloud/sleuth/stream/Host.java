@@ -20,6 +20,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
@@ -36,12 +37,17 @@ public class Host {
 	private String address;
 	private Integer port;
 
+	@SuppressWarnings("unused")
+	private Host() {
+	}
+
 	public Host(String serviceName, String address, Integer port) {
 		this.serviceName = serviceName;
 		this.address = address;
 		this.port = port;
 	}
 
+	@JsonIgnore
 	public int getIpv4() {
 		InetAddress inetAddress = null;
 		try {

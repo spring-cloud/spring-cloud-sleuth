@@ -35,6 +35,10 @@ public class Spans {
 
 	private Host host;
 	private List<Span> spans = Collections.emptyList();
+	
+	@SuppressWarnings("unused")
+	private Spans() {
+	}
 
 	public Spans(Host host, List<Span> spans) {
 		this.host = host;
