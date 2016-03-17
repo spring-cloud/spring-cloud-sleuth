@@ -135,7 +135,7 @@ public class Span {
 
 	@SuppressWarnings("unused")
 	private Span() {
-		this(-1,-1,"dummy",0,Collections.emptyList(),0,false,false,null);
+		this(-1,-1,"dummy",0,Collections.<Long>emptyList(),0,false,false,null);
 	}
 
 	/**
