@@ -5,6 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.3">
+<meta name="author" content="Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer">
 <title>Spring Cloud Sleuth</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -420,16 +421,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <body class="article toc2 toc-left">
 <div id="header">
 <h1>Spring Cloud Sleuth</h1>
+<div class="details">
+<span id="author" class="author">Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer</span><br>
+</div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<ul class="sectlevel1">
-<li><a href="#_spring_cloud_sleuth">Spring Cloud Sleuth</a>
 <ul class="sectlevel2">
 <li><a href="#_terminology">Terminology</a></li>
 <li><a href="#_purpose">Purpose</a></li>
 <li><a href="#_adding_to_the_project">Adding to the project</a></li>
-</ul>
-</li>
 <li><a href="#_features">Features</a></li>
 <li><a href="#_sampling">Sampling</a></li>
 <li><a href="#_instrumentation">Instrumentation</a></li>
@@ -476,11 +476,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
-<div class="sect1">
-<h2 id="_spring_cloud_sleuth">Spring Cloud Sleuth</h2>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
 <p>Spring Cloud Sleuth implements a distributed tracing solution for <a href="http://cloud.spring.io">Spring Cloud</a>.</p>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_terminology">Terminology</h3>
@@ -705,8 +706,6 @@ the <strong>spring-cloud-starter-sleuth</strong> module to your project.</p>
 </div>
 <div class="paragraph">
 <p>If you want both Sleuth and Zipkin just add the <strong>spring-cloud-starter-zipkin</strong> dependency.</p>
-</div>
-</div>
 </div>
 </div>
 <div class="sect1">
@@ -1691,7 +1690,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-16 16:16:23 CET
+Last updated 2016-03-17 17:29:21 CET
 </div>
 </div>
 </body>
