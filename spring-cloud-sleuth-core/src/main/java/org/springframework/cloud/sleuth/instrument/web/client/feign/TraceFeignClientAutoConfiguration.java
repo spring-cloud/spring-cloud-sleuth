@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -49,8 +50,8 @@ import feign.Response;
 import feign.codec.Decoder;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables span information propagation when using Feign.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} enables span information propagation when using Feign.
  *
  * @author Marcin Grzejszczak
  *
@@ -74,33 +75,44 @@ public class TraceFeignClientAutoConfiguration {
 		return SleuthFeignBuilder.builder(tracer);
 	}
 
-	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
-	FeignBeanPostProcessor feignBeanPostProcessor(Tracer tracer) {
-		return new FeignBeanPostProcessor(tracer);
+	@Configuration
+	protected static class FeignBeanPostProcessorConfiguration {
+
+		@Bean
+		@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
+		FeignBeanPostProcessor feignBeanPostProcessor(BeanFactory beanFactory) {
+			return new FeignBeanPostProcessor(beanFactory);
+		}
+
 	}
 
 	@Bean
 	@Primary
 	Decoder feignDecoder(final Tracer tracer) {
-		return new TraceFeignDecoder(tracer, new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
-			@Override
-			public Object decode(Response response, Type type)
-					throws IOException, FeignException {
-					FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
-					FeignResponseHeadersHolder feignResponseHeadersHolder =
-							new FeignResponseHeadersHolder(response.headers());
-					feignResponseHeadersInjector().inject(feignRequestContext.getCurrentSpan(), feignResponseHeadersHolder);
-					return super.decode(Response.create(response.status(),
-							response.reason(), feignResponseHeadersHolder.responseHeaders,
-							response.body()), type);
-			}
-		});
+		return new TraceFeignDecoder(tracer,
+				new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
+					@Override
+					public Object decode(Response response, Type type)
+							throws IOException, FeignException {
+						FeignRequestContext feignRequestContext = FeignRequestContext
+								.getInstance();
+						FeignResponseHeadersHolder feignResponseHeadersHolder = new FeignResponseHeadersHolder(
+								response.headers());
+						feignResponseHeadersInjector().inject(
+								feignRequestContext.getCurrentSpan(),
+								feignResponseHeadersHolder);
+						return super.decode(
+								Response.create(response.status(), response.reason(),
+										feignResponseHeadersHolder.responseHeaders,
+										response.body()),
+								type);
+					}
+				});
 	}
 
 	/**
-	 * Sleuth {@link feign.RequestInterceptor} that either starts a new Span
-	 * or continues an existing one if a retry takes place.
+	 * Sleuth {@link feign.RequestInterceptor} that either starts a new Span or continues
+	 * an existing one if a retry takes place.
 	 */
 	@Bean
 	public RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {

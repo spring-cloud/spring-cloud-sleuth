@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.Tracer;
 
@@ -34,23 +35,31 @@ import feign.codec.Decoder;
  */
 final class FeignBeanPostProcessor implements BeanPostProcessor {
 
-	private final Tracer tracer;
+	private Tracer tracer;
+	private final BeanFactory beanFactory;
 
-	FeignBeanPostProcessor(Tracer tracer) {
-		this.tracer = tracer;
+	FeignBeanPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
 		if (bean instanceof Decoder && !(bean instanceof TraceFeignDecoder)) {
-			return new TraceFeignDecoder(this.tracer, (Decoder) bean);
+			return new TraceFeignDecoder(getTracer(), (Decoder) bean);
 		} else if (bean instanceof Retryer && !(bean instanceof TraceFeignRetryer)) {
-			return new TraceFeignRetryer(this.tracer, (Retryer) bean);
+			return new TraceFeignRetryer(getTracer(), (Retryer) bean);
 		} else if (bean instanceof Client && !(bean instanceof TraceFeignClient)) {
-			return new TraceFeignClient(this.tracer, (Client) bean);
+			return new TraceFeignClient(getTracer(), (Client) bean);
 		}
 		return bean;
+	}
+
+	private Tracer getTracer() {
+		if (this.tracer==null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
+		return this.tracer;
 	}
 
 	@Override

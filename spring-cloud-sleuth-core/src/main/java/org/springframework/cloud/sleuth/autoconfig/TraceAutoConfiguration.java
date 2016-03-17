@@ -61,7 +61,7 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(Tracer.class)
-	public DefaultTracer traceManager(Sampler sampler, Random random,
+	public DefaultTracer sleuthTracer(Sampler sampler, Random random,
 			SpanNamer spanNamer, SpanLogger spanLogger,
 			SpanReporter spanReporter) {
 		return new DefaultTracer(sampler, random, spanNamer, spanLogger,

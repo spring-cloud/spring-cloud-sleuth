@@ -72,7 +72,7 @@ public class SleuthStreamAutoConfiguration {
 	}
 
 	@Bean
-	public StreamSpanListener sleuthTracer(HostLocator endpointLocator,
+	public StreamSpanListener sleuthStreamSpanListener(HostLocator endpointLocator,
 			SpanMetricReporter spanMetricReporter) {
 		return new StreamSpanListener(endpointLocator, spanMetricReporter);
 	}
