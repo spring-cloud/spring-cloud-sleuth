@@ -4,7 +4,10 @@
 :github-code: http://github.com/{github-repo}/tree/{github-tag}
 :toc: left
 
-= Spring Cloud Sleuth
+Spring Cloud Sleuth
+====================
+Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer
+:doctype: book
 
 include::intro.adoc[]
 
