@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,21 +24,17 @@ import javax.annotation.PostConstruct;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
-import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanListenerTests.TestConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import zipkin.Constants;
@@ -56,13 +52,12 @@ public class ZipkinSpanListenerTests {
 
 	@Autowired Tracer tracer;
 	@Autowired ApplicationContext application;
-	@Autowired ZipkinTestConfiguration test;
-	@Autowired ZipkinSpanListener listener;
-	@Autowired SpanReporter spanReporter;
+	@Autowired TestConfiguration test;
+	@Autowired ZipkinSpanListener spanReporter;
 
 	@PostConstruct
 	public void init() {
-		this.test.spans.clear();
+		this.test.zipkinSpans.clear();
 	}
 
 	Span parent = Span.builder().traceId(1L).name("http:parent").remote(true).build();
@@ -74,7 +69,7 @@ public class ZipkinSpanListenerTests {
 		this.parent.logEvent("hystrix/retry"); // System.currentTimeMillis
 		this.parent.stop();
 
-		zipkin.Span result = this.listener.convert(this.parent);
+		zipkin.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.timestamp)
 				.isEqualTo(this.parent.getBegin() * 1000);
@@ -91,10 +86,10 @@ public class ZipkinSpanListenerTests {
 		this.parent.logEvent("hystrix/retry");
 		this.parent.tag("spring-boot/version", "1.3.1.RELEASE");
 
-		zipkin.Span result = this.listener.convert(this.parent);
+		zipkin.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.annotations.get(0).endpoint)
-				.isEqualTo(this.listener.endpointLocator.local());
+				.isEqualTo(this.spanReporter.endpointLocator.local());
 		assertThat(result.binaryAnnotations.get(0).endpoint)
 				.isEqualTo(result.annotations.get(0).endpoint);
 	}
@@ -102,7 +97,7 @@ public class ZipkinSpanListenerTests {
 	/** zipkin's Endpoint.serviceName should never be null. */
 	@Test
 	public void localEndpointIncludesServiceName() {
-		assertThat(this.listener.endpointLocator.local().serviceName)
+		assertThat(this.spanReporter.endpointLocator.local().serviceName)
 				.isNotEmpty();
 	}
 
@@ -115,9 +110,9 @@ public class ZipkinSpanListenerTests {
 	public void spanWithoutAnnotationsLogsComponent() {
 		Span context = this.tracer.createSpan("http:foo");
 		this.tracer.close(context);
-		assertEquals(1, this.test.spans.size());
-		assertThat(this.test.spans.get(0).binaryAnnotations.get(0).endpoint.serviceName)
-				.isEqualTo("unknown"); // TODO: "unknown" bc process id, documented as not nullable, is null.
+		assertEquals(1, this.test.zipkinSpans.size());
+		assertThat(this.test.zipkinSpans.get(0).binaryAnnotations.get(0).value)
+				.isEqualTo("unknown".getBytes()); // TODO: "unknown" bc process id, documented as not nullable, is null.
 	}
 
 	@Test
@@ -127,7 +122,7 @@ public class ZipkinSpanListenerTests {
 		logServerReceived(this.parent);
 		logServerSent(this.spanReporter, this.parent);
 		this.tracer.close(context);
-		assertEquals(2, this.test.spans.size());
+		assertEquals(2, this.test.zipkinSpans.size());
 	}
 
 	void logServerReceived(Span parent) {
@@ -148,7 +143,7 @@ public class ZipkinSpanListenerTests {
 		this.parent.logEvent("hystrix/retry");
 		this.parent.stop();
 
-		zipkin.Span result = this.listener.convert(this.parent);
+		zipkin.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.binaryAnnotations)
 				.extracting(input -> input.key)
@@ -160,12 +155,11 @@ public class ZipkinSpanListenerTests {
 		this.parent.logEvent(Constants.CLIENT_SEND);
 		this.parent.stop();
 
-		zipkin.Span result = this.listener.convert(this.parent);
+		zipkin.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
-				.extracting(input -> input.endpoint.serviceName)
-				.containsOnly("unknown");
+				.isNotEmpty();
 	}
 
 	@Test
@@ -174,7 +168,7 @@ public class ZipkinSpanListenerTests {
 		this.parent.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "fooservice");
 		this.parent.stop();
 
-		zipkin.Span result = this.listener.convert(this.parent);
+		zipkin.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
@@ -183,30 +177,21 @@ public class ZipkinSpanListenerTests {
 	}
 
 	@Configuration
-	@Import({ ZipkinTestConfiguration.class, ZipkinAutoConfiguration.class, TraceAutoConfiguration.class,
-			PropertyPlaceholderAutoConfiguration.class })
+	@EnableAutoConfiguration
 	protected static class TestConfiguration {
 
-		@Bean
-		SpanLogger spanLogger() {
-			return new NoOpSpanLogger();
-		}
-	}
-
-	@Configuration
-	protected static class ZipkinTestConfiguration {
-
-		private List<zipkin.Span> spans = new ArrayList<>();
+		private List<zipkin.Span> zipkinSpans = new ArrayList<>();
 
 		@Bean
-		public Sampler defaultSampler() {
+		public Sampler sampler() {
 			return new AlwaysSampler();
 		}
 
 		@Bean
 		public ZipkinSpanReporter reporter() {
-			return this.spans::add;
+			return this.zipkinSpans::add;
 		}
 
 	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
@@ -64,7 +65,7 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	public ZipkinSpanListener sleuthTracer(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
+	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
 		return new ZipkinSpanListener(reporter, endpointLocator);
 	}
 
