@@ -14,10 +14,9 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<brave.version>3.4.0</brave.version>
 		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
-		<zipkin-java.version>0.7.0</zipkin-java.version>
+		<zipkin-java.version>0.9.1</zipkin-java.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -57,11 +56,6 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-sleuth</artifactId>
 				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.github.kristofa</groupId>
-				<artifactId>brave-core</artifactId>
-				<version>${brave.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.aspectj</groupId>

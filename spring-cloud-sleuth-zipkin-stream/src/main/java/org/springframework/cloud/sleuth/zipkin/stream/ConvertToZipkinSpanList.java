@@ -15,10 +15,9 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.Span;
@@ -30,7 +29,6 @@ import org.springframework.util.StringUtils;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
 import zipkin.Endpoint;
-import zipkin.Sampler;
 import zipkin.Span.Builder;
 
 /**
@@ -40,62 +38,26 @@ import zipkin.Span.Builder;
  *
  * @since 1.0.0
  */
-final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
+final class ConvertToZipkinSpanList {
 	private static final List<String> ZIPKIN_START_EVENTS = Arrays.asList(
 			Constants.CLIENT_RECV, Constants.SERVER_RECV
 	);
 
 	private static final Log log = org.apache.commons.logging.LogFactory
-			.getLog(SamplingZipkinSpanIterator.class);
+			.getLog(ConvertToZipkinSpanList.class);
 
-	private final Sampler sampler;
-	private final Iterator<Span> delegate;
-	private final Host host;
-	private zipkin.Span peeked;
-
-	SamplingZipkinSpanIterator(Sampler sampler, Spans input) {
-		this.sampler = sampler;
-		this.delegate = input.getSpans().iterator();
-		this.host = input.getHost();
-	}
-
-	@Override
-	public boolean hasNext() {
-		while (this.peeked == null && this.delegate.hasNext()) {
-			this.peeked = convertAndSample(this.delegate.next(), this.host);
-		}
-		return this.peeked != null;
-	}
-
-	@Override
-	public zipkin.Span next() {
-		// implicitly peeks
-		if (!hasNext())
-			throw new NoSuchElementException();
-		zipkin.Span result = this.peeked;
-		this.peeked = null;
-		return result;
-	}
-
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("remove");
-	}
-
-	/**
-	 * returns a converted span or null if it is invalid or unsampled.
-	 */
-	zipkin.Span convertAndSample(Span input, Host host) {
-		if (!input.getName().equals("message:" + SleuthSink.INPUT)) {
-			zipkin.Span result = SamplingZipkinSpanIterator.convert(input, host);
-			if (this.sampler.isSampled(result.traceId)) {
-				return result;
+	static List<zipkin.Span> convert(Spans input) {
+		Host host = input.getHost();
+		List<zipkin.Span> result = new ArrayList<>(input.getSpans().size());
+		for (Span span : input.getSpans()) {
+			if (!span.getName().equals("message:" + SleuthSink.INPUT)) {
+				result.add(convert(span, host));
+			}
+			else {
+				log.warn("Message tracing cycle detected for: " + input);
 			}
 		}
-		else {
-			log.warn("Message tracing cycle detected for: " + input);
-		}
-		return null;
+		return result;
 	}
 
 	/**
@@ -132,8 +94,7 @@ final class SamplingZipkinSpanIterator implements Iterator<zipkin.Span> {
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
-				SamplingZipkinSpanIterator.log
-						.debug("zipkin doesn't support spans with multiple parents.  Omitting "
+				log.debug("zipkin doesn't support spans with multiple parents.  Omitting "
 								+ "other parents for " + span);
 			}
 			zipkinSpan.parentId(span.getParents().get(0));

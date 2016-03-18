@@ -17,9 +17,8 @@ package org.springframework.cloud.sleuth.zipkin.stream;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
@@ -27,11 +26,10 @@ import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.Spans;
 
 import zipkin.Constants;
-import zipkin.Sampler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SamplingZipkinSpanIteratorTests {
+public class ConvertToZipkinSpanListTests {
 
 	Host host = new Host("myservice", "1.2.3.4", 8080);
 
@@ -40,8 +38,7 @@ public class SamplingZipkinSpanIteratorTests {
 		Spans spans = new Spans(this.host,
 				Collections.singletonList(span("sleuth")));
 
-		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
-				Sampler.create(1.0f), spans);
+		List<zipkin.Span> result = ConvertToZipkinSpanList.convert(spans);
 
 		assertThat(result).isEmpty();
 	}
@@ -51,39 +48,17 @@ public class SamplingZipkinSpanIteratorTests {
 		Spans spans = new Spans(this.host,
 				Arrays.asList(span("foo"), span("bar"), span("baz")));
 
-		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
-				Sampler.create(1.0f), spans);
+		List<zipkin.Span> result = ConvertToZipkinSpanList.convert(spans);
 
 		assertThat(result).extracting(s -> s.name).containsExactly(
 				"message:foo", "message:bar", "message:baz");
 	}
 
 	@Test
-	public void retainsOnlySampledSpans() {
-		Spans spans = new Spans(this.host,
-				Arrays.asList(span("foo"), span("bar"), span("baz")));
-
-		Sampler everyOtherSampler = new Sampler() {
-			AtomicInteger counter = new AtomicInteger();
-
-			public boolean isSampled(long l) {
-				return counter.getAndIncrement() % 2 == 0;
-			}
-		};
-
-		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(everyOtherSampler,
-				spans);
-
-		assertThat(result).extracting(s -> s.name).containsExactly(
-				"message:foo", "message:baz");
-	}
-
-	@Test
 	public void appendsLocalComponentTagIfNoZipkinLogIsPresent() {
 		Spans spans = new Spans(this.host, Collections.singletonList(span("foo")));
 
-		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
-				Sampler.create(1.0f), spans);
+		List<zipkin.Span> result = ConvertToZipkinSpanList.convert(spans);
 
 		assertThat(result)
 				.flatExtracting(s -> s.binaryAnnotations)
@@ -97,8 +72,7 @@ public class SamplingZipkinSpanIteratorTests {
 		span.logEvent(Constants.CLIENT_SEND);
 		Spans spans = new Spans(this.host, Collections.singletonList(span));
 
-		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
-				Sampler.create(1.0f), spans);
+		List<zipkin.Span> result = ConvertToZipkinSpanList.convert(spans);
 
 		assertThat(result)
 				.hasSize(1)
@@ -115,8 +89,7 @@ public class SamplingZipkinSpanIteratorTests {
 		span.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "barservice");
 		Spans spans = new Spans(this.host, Collections.singletonList(span));
 
-		Iterator<zipkin.Span> result = new SamplingZipkinSpanIterator(
-				Sampler.create(1.0f), spans);
+		List<zipkin.Span> result = ConvertToZipkinSpanList.convert(spans);
 
 		assertThat(result)
 				.hasSize(1)
