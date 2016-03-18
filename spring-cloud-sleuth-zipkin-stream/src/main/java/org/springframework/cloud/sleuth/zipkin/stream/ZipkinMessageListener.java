@@ -2,7 +2,7 @@ package org.springframework.cloud.sleuth.zipkin.stream;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -37,7 +37,9 @@ import zipkin.BinaryAnnotation;
 import zipkin.BinaryAnnotation.Type;
 import zipkin.Endpoint;
 import zipkin.Sampler;
+import zipkin.SamplingSpanStoreConsumer;
 import zipkin.Span.Builder;
+import zipkin.SpanConsumer;
 import zipkin.SpanStore;
 
 /**
@@ -57,19 +59,17 @@ public class ZipkinMessageListener {
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
 			.getLog(ZipkinMessageListener.class);
 	static final String UNKNOWN_PROCESS_ID = "unknown";
+	final SpanConsumer consumer;
 
 	@Autowired
-	SpanStore spanStore;
-
-	@Autowired
-	Sampler sampler;
+	ZipkinMessageListener(SpanStore spanStore, Sampler sampler) {
+		this.consumer = SamplingSpanStoreConsumer.create(sampler, spanStore);
+	}
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
 	public void sink(Spans input) {
-		Iterator<zipkin.Span> sampled = new SamplingZipkinSpanIterator(this.sampler, input);
-		if (sampled.hasNext()) {
-			this.spanStore.accept(sampled);
-		}
+		List<zipkin.Span> converted = ConvertToZipkinSpanList.convert(input);
+		this.consumer.accept(converted);
 	}
 
 	/**

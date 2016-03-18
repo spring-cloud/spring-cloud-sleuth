@@ -38,7 +38,7 @@ public class ZipkinMessageListenerTests {
 		long start = System.currentTimeMillis();
 		this.span.logEvent("hystrix/retry"); // System.currentTimeMillis
 
-		zipkin.Span result = SamplingZipkinSpanIterator.convert(this.span, this.host);
+		zipkin.Span result = ConvertToZipkinSpanList.convert(this.span, this.host);
 
 		assertThat(result.timestamp)
 				.isEqualTo(this.span.getBegin() * 1000);
@@ -55,7 +55,7 @@ public class ZipkinMessageListenerTests {
 		this.span.logEvent("hystrix/retry");
 		this.span.tag("spring-boot/version", "1.3.1.RELEASE");
 
-		zipkin.Span result = SamplingZipkinSpanIterator.convert(this.span, this.host);
+		zipkin.Span result = ConvertToZipkinSpanList.convert(this.span, this.host);
 
 		assertThat(result.annotations.get(0).endpoint)
 				.isEqualTo(this.endpoint);
@@ -70,7 +70,7 @@ public class ZipkinMessageListenerTests {
 	 */
 	@Test
 	public void spanWithoutAnnotationsLogsComponent() {
-		zipkin.Span result = SamplingZipkinSpanIterator.convert(this.span, this.host);
+		zipkin.Span result = ConvertToZipkinSpanList.convert(this.span, this.host);
 
 		assertThat(result.binaryAnnotations).hasSize(1);
 		assertThat(result.binaryAnnotations.get(0)).isEqualToComparingFieldByField(
@@ -82,7 +82,7 @@ public class ZipkinMessageListenerTests {
 	public void nullProcessIdCoercesToUnknownServiceName() {
 		Span noProcessId = Span.builder().traceId(1L).name("http:parent").remote(true).build();
 
-		zipkin.Span result = SamplingZipkinSpanIterator.convert(noProcessId, this.host);
+		zipkin.Span result = ConvertToZipkinSpanList.convert(noProcessId, this.host);
 
 		assertThat(result.binaryAnnotations)
 				.containsOnly(BinaryAnnotation.create("lc", "unknown", this.endpoint));
