@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.jayway.awaitility.Awaitility;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.strategy.HystrixPlugins;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -49,6 +52,12 @@ public class HystrixAnnotationsIntegrationTests {
 
 	@Autowired HystrixCommandInvocationSpanCatcher catcher;
 	@Autowired Tracer tracer;
+
+	@BeforeClass
+	@AfterClass
+	public static void reset() {
+		HystrixPlugins.reset();
+	}
 
 	@After
 	public void cleanTrace() {
