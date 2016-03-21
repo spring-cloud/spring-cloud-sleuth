@@ -24,6 +24,9 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 
 /**
+ * {@link AsyncConfigurerSupport} that creates a tracing data passing version
+ * of the {@link Executor}
+ *
  * @author Dave Syer
  * @since 1.0.0
  */
