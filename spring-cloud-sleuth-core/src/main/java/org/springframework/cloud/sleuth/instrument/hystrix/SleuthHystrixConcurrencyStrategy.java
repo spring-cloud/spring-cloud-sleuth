@@ -79,13 +79,13 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 	private void logCurrentStateOfHysrixPlugins(HystrixEventNotifier eventNotifier,
 			HystrixMetricsPublisher metricsPublisher,
 			HystrixPropertiesStrategy propertiesStrategy) {
-		log.info("Current Hystrix plugins configuration is ["
+		log.debug("Current Hystrix plugins configuration is ["
 				+ "concurrencyStrategy [" + this.delegate + "],"
 				+ "eventNotifier [" + eventNotifier + "],"
 				+ "metricPublisher [" + metricsPublisher + "],"
 				+ "propertiesStrategy [" + propertiesStrategy + "],"
 				+ "]");
-		log.info("Resetting Hystrix custom strategies and registering Sleuth Hystrix Concurrency Strategy.");
+		log.debug("Registering Sleuth Hystrix Concurrency Strategy.");
 	}
 
 	@Override
@@ -95,7 +95,8 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 		return new HystrixTraceCallable<>(this.tracer, this.traceKeys, wrappedCallable);
 	}
 
-	private static class HystrixTraceCallable<S> implements Callable<S> {
+	// Visible for testing
+	static class HystrixTraceCallable<S> implements Callable<S> {
 
 		private Tracer tracer;
 		private TraceKeys traceKeys;
