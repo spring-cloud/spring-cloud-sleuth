@@ -13,3 +13,4 @@ _site/
 *.swp
 .factorypath
 *.log
+.checkstyle
