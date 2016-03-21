@@ -294,10 +294,8 @@ will listen for the Span data on whatever transport you provide via a
 Spring Cloud Stream `Binder` (e.g. include
 `spring-cloud-starter-stream-rabbit` for RabbitMQ, and similar
 starters exist for Redis and Kafka). The app will also be a
-https://github.com/openzipkin/zipkin-java[Zipkin query server], so you
-can point a standard Zipkin UI at it (e.g. run the consumer app on
-port 9411 if you want the query server on the same host and the
-default configuration).
+https://github.com/openzipkin/zipkin-java[Zipkin server], which hosts
+the UI and api on port 9411.
 
 The default `SpanStore` is in-memory (good for demos and getting
 started quickly). For a more robust solution you can add MySQL and
