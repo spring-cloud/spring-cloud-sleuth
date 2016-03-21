@@ -22,7 +22,6 @@ import org.springframework.cloud.sleuth.Span;
  * Logger of Spans that does nothing
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public class NoOpSpanLogger implements SpanLogger {

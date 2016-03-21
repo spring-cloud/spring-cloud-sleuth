@@ -35,7 +35,6 @@ import zipkin.Endpoint;
  * Listener of Sleuth events. Reports to Zipkin via {@link ZipkinSpanReporter}.
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 public class ZipkinSpanListener implements SpanReporter {

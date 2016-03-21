@@ -39,7 +39,6 @@ import com.netflix.zuul.context.RequestContext;
  * enables span information propagation when using Zuul.
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 @Configuration

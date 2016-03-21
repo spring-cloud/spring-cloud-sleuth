@@ -56,12 +56,11 @@ import static org.springframework.util.StringUtils.hasText;
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  * @author Dave Syer
+ * @since 1.0.0
  *
  * @see Tracer
  * @see TraceKeys
  * @see TraceWebAutoConfiguration#traceFilter
- *
- * @since 1.0.0
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class TraceFilter extends OncePerRequestFilter {

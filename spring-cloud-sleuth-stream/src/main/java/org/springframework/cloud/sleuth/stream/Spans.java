@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * Data transfer object for a collection of spans from a given host.
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)

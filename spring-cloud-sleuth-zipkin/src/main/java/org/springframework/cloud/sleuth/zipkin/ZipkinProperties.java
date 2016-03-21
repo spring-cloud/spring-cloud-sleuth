@@ -22,7 +22,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Zipkin settings
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 @ConfigurationProperties("spring.zipkin")

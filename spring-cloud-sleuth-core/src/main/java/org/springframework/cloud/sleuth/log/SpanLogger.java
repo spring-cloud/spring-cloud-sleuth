@@ -22,7 +22,6 @@ import org.springframework.cloud.sleuth.Span;
  * Contract for implementations responsible for logging Spans
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public interface SpanLogger {

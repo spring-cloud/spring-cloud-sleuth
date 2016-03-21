@@ -36,9 +36,9 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  *
  * @author Michal Chmielarz, 4financeIT
  * @author Spencer Gibb
+ * @since 1.0.0
  *
  * @see TraceSchedulingAspect
- * @since 1.0.0
  */
 @Configuration
 @EnableAspectJAutoProxy

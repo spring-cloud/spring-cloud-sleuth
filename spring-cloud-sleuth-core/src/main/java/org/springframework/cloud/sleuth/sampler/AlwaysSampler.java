@@ -23,7 +23,6 @@ import org.springframework.cloud.sleuth.Span;
  * {@link Sampler} that traces each action
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 public class AlwaysSampler implements Sampler {

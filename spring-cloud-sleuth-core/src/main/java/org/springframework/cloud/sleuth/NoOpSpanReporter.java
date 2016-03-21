@@ -20,7 +20,6 @@ package org.springframework.cloud.sleuth;
  * Span reporter that does nothing
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public class NoOpSpanReporter implements SpanReporter {

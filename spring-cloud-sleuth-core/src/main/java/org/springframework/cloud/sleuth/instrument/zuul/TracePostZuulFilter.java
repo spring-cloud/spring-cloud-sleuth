@@ -25,7 +25,6 @@ import com.netflix.zuul.ZuulFilter;
  * A post request {@link ZuulFilter} that publishes an event upon start of the filtering
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 public class TracePostZuulFilter extends ZuulFilter {

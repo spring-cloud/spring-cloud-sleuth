@@ -4,7 +4,6 @@ package org.springframework.cloud.sleuth.metric;
  * {@link SpanMetricReporter} that does nothing
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public class NoOpSpanMetricReporter implements SpanMetricReporter {

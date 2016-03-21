@@ -37,7 +37,6 @@ import com.netflix.niws.client.http.RestClient;
  * Propagates traces downstream via http headers that contain trace metadata.
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommandFactory {

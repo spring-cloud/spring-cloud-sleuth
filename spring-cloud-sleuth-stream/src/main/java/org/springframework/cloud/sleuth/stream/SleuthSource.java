@@ -26,7 +26,6 @@ import org.springframework.messaging.MessageChannel;
  * spans, and if it does it should attempt to account for and report the number dropped.
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  *
  * @see SleuthSink

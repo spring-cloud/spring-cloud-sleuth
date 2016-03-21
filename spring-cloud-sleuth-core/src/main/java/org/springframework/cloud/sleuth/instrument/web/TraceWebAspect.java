@@ -54,7 +54,6 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * @author Michal Chmielarz, 4financeIT
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
- *
  * @since 1.0.0
  *
  * @see org.springframework.web.bind.annotation.RestController

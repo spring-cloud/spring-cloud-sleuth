@@ -48,7 +48,6 @@ import org.springframework.messaging.support.ChannelInterceptor;
  * is no additional configuration to do by default).
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 @Configuration

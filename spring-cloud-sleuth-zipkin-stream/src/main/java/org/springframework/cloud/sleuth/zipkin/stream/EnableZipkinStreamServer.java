@@ -30,7 +30,6 @@ import zipkin.server.EnableZipkinServer;
  * Spring Cloud Stream, for example RabbitMQ.
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  *
  * @see ZipkinMessageListener

@@ -31,6 +31,7 @@ import com.netflix.hystrix.HystrixCommand;
  * @author Tomasz Nurkiewicz, 4financeIT
  * @author Marcin Grzejszczak, 4financeIT
  * @author Spencer Gibb
+ * @since 1.0.0
  */
 public abstract class TraceCommand<R> extends HystrixCommand<R> {
 

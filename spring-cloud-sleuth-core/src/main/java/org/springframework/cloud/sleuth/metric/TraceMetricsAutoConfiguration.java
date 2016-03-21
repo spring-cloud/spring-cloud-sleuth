@@ -31,7 +31,6 @@ import org.springframework.context.annotation.Configuration;
  * enables Sleuth related metrics reporting
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 @Configuration

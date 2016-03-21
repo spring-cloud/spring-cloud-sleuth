@@ -27,7 +27,6 @@ import org.springframework.cloud.sleuth.Span;
  * started / stopped / continued.
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 public class Slf4jSpanLogger implements SpanLogger {

@@ -32,7 +32,6 @@ import org.springframework.context.annotation.Configuration;
  * Note: this is only available for Slf4j
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 @Configuration

@@ -24,11 +24,10 @@ import org.springframework.messaging.SubscribableChannel;
  * instrumented applications. Span data comes into the channel in the form of
  * {@link Spans}, buffering multiple actual spans into a single payload.
  *
- * @see SleuthSource
- *
  * @author Dave Syer
- *
  * @since 1.0.0
+ *
+ * @see SleuthSource
  */
 public interface SleuthSink {
 

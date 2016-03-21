@@ -7,7 +7,6 @@ import org.springframework.boot.actuate.metrics.CounterService;
  * Operates on a {@link CounterService} underneath
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public class CounterServiceBasedSpanMetricReporter implements SpanMetricReporter {

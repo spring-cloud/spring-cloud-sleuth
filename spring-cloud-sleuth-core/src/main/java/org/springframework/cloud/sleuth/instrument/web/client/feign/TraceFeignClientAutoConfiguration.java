@@ -54,7 +54,6 @@ import feign.codec.Decoder;
  * Auto-configuration} enables span information propagation when using Feign.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 @Configuration

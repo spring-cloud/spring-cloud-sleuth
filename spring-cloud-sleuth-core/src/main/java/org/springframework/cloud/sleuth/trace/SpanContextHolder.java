@@ -25,8 +25,6 @@ import org.springframework.core.NamedThreadLocal;
  *
  * @author Spencer Gibb
  * @author Dave Syer
- *
- * @since 1.0.0
  */
 class SpanContextHolder {
 

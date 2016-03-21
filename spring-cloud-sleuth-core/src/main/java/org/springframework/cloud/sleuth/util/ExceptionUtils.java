@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
  * when there are some issues with tracing.
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 public final class ExceptionUtils {

@@ -32,7 +32,6 @@ import org.springframework.util.Assert;
  * </ul>
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 public class ServerPropertiesHostLocator implements HostLocator {

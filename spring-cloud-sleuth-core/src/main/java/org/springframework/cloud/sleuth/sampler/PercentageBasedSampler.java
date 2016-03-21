@@ -21,7 +21,6 @@ import org.springframework.cloud.sleuth.Span;
  *
  * @author Marcin Grzejszczak
  * @author Adrian Cole
- *
  * @since 1.0.0
  */
 public class PercentageBasedSampler implements Sampler {

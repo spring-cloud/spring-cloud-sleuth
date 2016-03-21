@@ -24,7 +24,6 @@ import org.springframework.cloud.sleuth.SpanAccessor;
  * {@link Sampler} that traces only if there is already some tracing going on.
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  *
  * @see SpanAccessor#isTracing()

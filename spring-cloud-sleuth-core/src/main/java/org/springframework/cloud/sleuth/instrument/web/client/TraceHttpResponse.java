@@ -29,7 +29,6 @@ import org.springframework.http.client.ClientHttpResponse;
  * {@link TraceRestTemplateInterceptor#finish() closes the span}
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 public class TraceHttpResponse implements ClientHttpResponse {

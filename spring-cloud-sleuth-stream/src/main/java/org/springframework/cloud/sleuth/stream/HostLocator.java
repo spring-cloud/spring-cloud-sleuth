@@ -23,7 +23,6 @@ import org.springframework.cloud.sleuth.Span;
  * environment properties might be available).
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 public interface HostLocator {

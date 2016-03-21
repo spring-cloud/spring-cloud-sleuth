@@ -50,7 +50,6 @@ import org.springframework.util.StringUtils;
  * @author Michal Chmielarz, 4financeIT
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 @Configuration

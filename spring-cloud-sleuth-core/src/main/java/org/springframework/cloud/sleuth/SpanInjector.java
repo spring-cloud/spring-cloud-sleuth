@@ -22,7 +22,6 @@ package org.springframework.cloud.sleuth;
  * </a>OpenTracing</a>
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public interface SpanInjector<T> {

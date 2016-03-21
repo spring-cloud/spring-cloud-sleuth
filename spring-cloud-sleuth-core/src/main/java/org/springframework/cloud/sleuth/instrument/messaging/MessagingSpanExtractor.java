@@ -27,7 +27,6 @@ import org.springframework.messaging.Message;
  * Creates a {@link SpanBuilder} from {@link Message}
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {

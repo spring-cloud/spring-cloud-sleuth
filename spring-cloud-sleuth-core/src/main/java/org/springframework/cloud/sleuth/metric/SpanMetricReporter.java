@@ -4,7 +4,6 @@ package org.springframework.cloud.sleuth.metric;
  * Contract for a service that measures the number of accepted / dropped spans.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public interface SpanMetricReporter {

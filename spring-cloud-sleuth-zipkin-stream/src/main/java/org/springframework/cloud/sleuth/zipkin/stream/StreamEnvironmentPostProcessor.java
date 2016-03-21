@@ -33,7 +33,6 @@ import org.springframework.core.env.PropertySource;
  * Stream.
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {

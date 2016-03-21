@@ -28,6 +28,7 @@ import org.springframework.cloud.sleuth.Tracer;
  * the span is not closed - it gets {@link Tracer#detach(Span) detached}.
  *
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  */
 public class TraceContinuingCallable<V> extends TraceCallable<V> implements Callable<V> {
 

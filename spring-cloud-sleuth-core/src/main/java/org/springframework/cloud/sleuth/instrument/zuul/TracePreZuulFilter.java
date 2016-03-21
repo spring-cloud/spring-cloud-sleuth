@@ -28,7 +28,6 @@ import com.netflix.zuul.context.RequestContext;
  * from the current span. We're doing so to ensure tracing propagates to the next hop.
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 public class TracePreZuulFilter extends ZuulFilter {

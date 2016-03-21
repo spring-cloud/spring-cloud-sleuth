@@ -31,10 +31,9 @@ import org.springframework.http.client.ClientHttpResponse;
  *
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
+ * @since 1.0.0
  *
  * @see org.springframework.web.client.RestTemplate
- *
- * @since 1.0.0
  */
 public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterceptor
 		implements ClientHttpRequestInterceptor {

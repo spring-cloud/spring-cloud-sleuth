@@ -37,7 +37,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  *
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttpRequestInterceptor

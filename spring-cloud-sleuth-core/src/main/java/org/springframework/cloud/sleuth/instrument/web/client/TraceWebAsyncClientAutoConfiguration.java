@@ -37,7 +37,6 @@ import org.springframework.web.client.AsyncRestTemplate;
  * {@link AsyncRestTemplate}
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 @Configuration

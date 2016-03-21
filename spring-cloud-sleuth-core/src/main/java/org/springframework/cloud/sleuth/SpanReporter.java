@@ -20,7 +20,6 @@ package org.springframework.cloud.sleuth;
  * Contract for reporting Sleuth spans for collection. For example to Zipkin.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 public interface SpanReporter {

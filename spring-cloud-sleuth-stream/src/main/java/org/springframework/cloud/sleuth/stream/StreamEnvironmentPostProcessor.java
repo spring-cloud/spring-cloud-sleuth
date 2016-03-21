@@ -41,7 +41,6 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
  * Sleuth Stream.
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {

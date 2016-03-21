@@ -47,7 +47,6 @@ import zipkin.SpanStore;
  * Asynchronously stores the received spans in a {@link SpanStore}.
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  *
  * @see NotSleuthStreamClient

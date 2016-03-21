@@ -23,7 +23,6 @@ import org.springframework.cloud.sleuth.Span;
  * {@link Sampler} that never traces
  *
  * @author Spencer Gibb
- *
  * @since 1.0.0
  */
 public class NeverSampler implements Sampler {

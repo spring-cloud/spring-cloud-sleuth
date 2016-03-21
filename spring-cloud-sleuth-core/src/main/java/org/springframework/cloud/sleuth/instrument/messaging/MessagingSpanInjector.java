@@ -33,8 +33,6 @@ import org.springframework.util.StringUtils;
  * Creates a {@link Span.SpanBuilder} from {@link Message}
  *
  * @author Marcin Grzejszczak
- *
- * @since 1.0.0
  */
 class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 

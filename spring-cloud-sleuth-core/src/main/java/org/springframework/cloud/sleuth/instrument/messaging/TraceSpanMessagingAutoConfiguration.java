@@ -32,7 +32,6 @@ import org.springframework.messaging.support.MessageBuilder;
  * by Messaging and WebSockets
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 @Configuration

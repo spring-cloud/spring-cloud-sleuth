@@ -42,7 +42,6 @@ import org.springframework.web.client.RestTemplate;
  * enables span information propagation when using {@link RestTemplate}
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 @Configuration

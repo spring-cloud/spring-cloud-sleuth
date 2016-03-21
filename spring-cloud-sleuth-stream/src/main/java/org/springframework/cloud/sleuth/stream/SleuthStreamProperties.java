@@ -22,7 +22,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Properties related to Sleuth Stream
  *
  * @author Dave Syer
- *
  * @since 1.0.0
  */
 @ConfigurationProperties("spring.sleuth.stream")
