@@ -58,7 +58,7 @@ public class TraceSpringIntegrationAutoConfiguration {
 	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
 			TraceKeys traceKeys, Random random, SpanExtractor<Message<?>> spanExtractor,
 			SpanInjector<MessageBuilder<?>> spanInjector) {
-		return new TraceChannelInterceptor(tracer, traceKeys, spanExtractor,
+		return new IntegrationTraceChannelInterceptor(tracer, traceKeys, spanExtractor,
 				spanInjector);
 	}
 
