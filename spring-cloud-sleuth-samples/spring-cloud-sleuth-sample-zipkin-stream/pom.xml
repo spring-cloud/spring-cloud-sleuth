@@ -35,6 +35,7 @@
 	<properties>
 		<docker.image.prefix>springio</docker.image.prefix>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<zipkin-ui.version>1.38.1</zipkin-ui.version>
 		<java.version>1.8</java.version>
 		<sonar.skip>true</sonar.skip>
 	</properties>
@@ -52,6 +53,11 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-zipkin-stream</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.zipkin</groupId>
+			<artifactId>zipkin-ui</artifactId>
+			<version>${zipkin-ui.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.integration</groupId>
