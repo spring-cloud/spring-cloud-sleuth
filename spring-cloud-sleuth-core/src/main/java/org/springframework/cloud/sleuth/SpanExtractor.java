@@ -17,23 +17,27 @@
 package org.springframework.cloud.sleuth;
 
 /**
- * Adopted from <a href="https://github.com/opentracing/opentracing-java/pull/11/files#diff-eb9c3460aba76aabc0de04b05e4a2b3d"></a>OpenTracing</a>
+ * Adopted from <a href=
+ * "https://github.com/opentracing/opentracing-java/pull/11/files#diff-eb9c3460aba76aabc0de04b05e4a2b3d">
+ * </a>OpenTracing</a>
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
 public interface SpanExtractor<T> {
-	/**  Returns a SpanBuilder provided
-	 *    a “carrier” object from which to extract identifying information needed by the new Span instance.
+	/**
+	 * Returns a SpanBuilder provided a “carrier” object from which to extract identifying
+	 * information needed by the new Span instance.
 	 *
 	 * If the carrier object has no such span stored within it, a new Span is created.
 	 *
-	 * Unless there’s an error, it returns a Span.
-	 * The Span generated from the builder can be used in the host process like any other.
+	 * Unless there’s an error, it returns a Span. The Span generated from the builder can
+	 * be used in the host process like any other.
 	 *
-	 * (Note that some OpenTracing implementations consider the Spans on either side of an RPC to have the same identity,
-	 * and others consider the caller to be the parent and the receiver to be the child).
+	 * (Note that some OpenTracing implementations consider the Spans on either side of an
+	 * RPC to have the same identity, and others consider the caller to be the parent and
+	 * the receiver to be the child).
 	 */
 	Span joinTrace(T carrier);
 }

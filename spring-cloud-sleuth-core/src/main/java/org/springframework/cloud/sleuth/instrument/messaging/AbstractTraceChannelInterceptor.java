@@ -19,11 +19,12 @@ import org.springframework.util.ClassUtils;
  *
  * @author Marcin Grzejszczak
  */
-abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
+abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
+		implements ExecutorChannelInterceptor {
 
 	/**
-	 * If a span comes from messaging components then it will have this value
-	 * as a prefix to its name.
+	 * If a span comes from messaging components then it will have this value as a prefix
+	 * to its name.
 	 * <p>
 	 * Example of a Span name: {@code message:foo}
 	 * <p>
@@ -33,12 +34,12 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
-	private final SpanExtractor<Message> spanExtractor;
-	private final SpanInjector<MessageBuilder> spanInjector;
+	private final SpanExtractor<Message<?>> spanExtractor;
+	private final SpanInjector<MessageBuilder<?>> spanInjector;
 
 	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			SpanExtractor<Message> spanExtractor,
-			SpanInjector<MessageBuilder> spanInjector) {
+			SpanExtractor<Message<?>> spanExtractor,
+			SpanInjector<MessageBuilder<?>> spanInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.spanExtractor = spanExtractor;
@@ -53,13 +54,13 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		return this.traceKeys;
 	}
 
-	protected SpanInjector<MessageBuilder> getSpanInjector() {
+	protected SpanInjector<MessageBuilder<?>> getSpanInjector() {
 		return this.spanInjector;
 	}
 
 	/**
-	 * Returns a span given the message and a channel. Returns {@code null} if ids
-	 * are missing.
+	 * Returns a span given the message and a channel. Returns {@code null} if ids are
+	 * missing.
 	 */
 	protected Span buildSpan(Message<?> message) {
 		return this.spanExtractor.joinTrace(message);

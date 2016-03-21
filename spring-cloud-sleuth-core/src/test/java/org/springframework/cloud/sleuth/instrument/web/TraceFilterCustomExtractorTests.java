@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,47 +52,48 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterCustomExtractorTests.Config.class)
 @WebIntegrationTest(randomPort = true)
-public class TraceFilterCustomExtractorTests  {
-	@Autowired Random random;
-	@Autowired RestTemplate restTemplate;
-	@Autowired Config config;
-	@Autowired CustomRestController customRestController;
+public class TraceFilterCustomExtractorTests {
+	@Autowired
+	Random random;
+	@Autowired
+	RestTemplate restTemplate;
+	@Autowired
+	Config config;
+	@Autowired
+	CustomRestController customRestController;
 
 	@Test
 	@SuppressWarnings("unchecked")
 	public void should_create_a_valid_span_from_custom_headers() {
 		long spanId = this.random.nextLong();
 		long traceId = this.random.nextLong();
-		RequestEntity requestEntity = RequestEntity.get(
-				URI.create("http://localhost:" + this.config.port + "/headers"))
+		RequestEntity<?> requestEntity = RequestEntity
+				.get(URI.create("http://localhost:" + this.config.port + "/headers"))
 				.header("correlationId", Span.idToHex(traceId))
-				.header("mySpanId", Span.idToHex(spanId))
-				.build();
+				.header("mySpanId", Span.idToHex(spanId)).build();
 
-		ResponseEntity<Map> requestHeaders =
-				this.restTemplate.exchange(requestEntity, Map.class);
+		@SuppressWarnings("rawtypes")
+		ResponseEntity<Map> requestHeaders = this.restTemplate.exchange(requestEntity,
+				Map.class);
 
-		then(this.customRestController.span)
-				.hasTraceIdEqualTo(traceId);
+		then(this.customRestController.span).hasTraceIdEqualTo(traceId);
 		then(requestHeaders.getBody())
 				.containsEntry("correlationId", Span.idToHex(traceId))
 				.containsEntry("mySpanId", Span.idToHex(spanId))
 				.as("input request headers");
 		then(requestHeaders.getHeaders())
-				.containsEntry("correlationId", Collections.singletonList(Span.idToHex(traceId)))
-				.containsKey("mySpanId")
-				.as("response headers");
+				.containsEntry("correlationId",
+						Collections.singletonList(Span.idToHex(traceId)))
+				.containsKey("mySpanId").as("response headers");
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
-	static class Config implements
-			ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+	static class Config
+			implements ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int port;
 
 		// tag::configuration[]
@@ -111,13 +115,15 @@ public class TraceFilterCustomExtractorTests  {
 			this.port = event.getEmbeddedServletContainer().getPort();
 		}
 
-		@Bean CustomRestController customRestController() {
+		@Bean
+		CustomRestController customRestController() {
 			return new CustomRestController();
 		}
 	}
 
 	// tag::extractor[]
-	static class CustomHttpServletRequestSpanExtractor implements SpanExtractor<HttpServletRequest> {
+	static class CustomHttpServletRequestSpanExtractor
+			implements SpanExtractor<HttpServletRequest> {
 
 		@Override
 		public Span joinTrace(HttpServletRequest carrier) {
@@ -132,7 +138,8 @@ public class TraceFilterCustomExtractorTests  {
 	// end::extractor[]
 
 	// tag::injector[]
-	static class CustomHttpServletResponseSpanInjector implements SpanInjector<HttpServletResponse> {
+	static class CustomHttpServletResponseSpanInjector
+			implements SpanInjector<HttpServletResponse> {
 
 		@Override
 		public void inject(Span span, HttpServletResponse carrier) {

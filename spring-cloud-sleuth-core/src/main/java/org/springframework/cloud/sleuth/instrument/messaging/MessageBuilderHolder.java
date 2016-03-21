@@ -22,20 +22,20 @@ import org.springframework.messaging.support.MessageBuilder;
 /**
  * Utility class to contain both {@link MessageBuilder} and the {@link Message}.
  *
- * {@link MessageBuilder} is mutable
- * {@link Message} is immutable
+ * {@link MessageBuilder} is mutable {@link Message} is immutable
  *
  * @author Marcin Grzejszczak
  */
 public class MessageBuilderHolder {
-	final MessageBuilder messageBuilder;
-	final Message message;
+	final MessageBuilder<?> messageBuilder;
+	final Message<?> message;
 
-	public MessageBuilderHolder(MessageBuilder messageBuilder, Message message) {
+	public MessageBuilderHolder(MessageBuilder<?> messageBuilder, Message<?> message) {
 		this.messageBuilder = messageBuilder;
 		this.message = message;
 	}
-	public MessageBuilderHolder(MessageBuilder messageBuilder) {
+
+	public MessageBuilderHolder(MessageBuilder<?> messageBuilder) {
 		this.messageBuilder = messageBuilder;
 		this.message = messageBuilder.build();
 	}

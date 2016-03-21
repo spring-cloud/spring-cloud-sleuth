@@ -28,7 +28,8 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
- * A channel interceptor that automatically starts / continues / closes and detaches spans.
+ * A channel interceptor that automatically starts / continues / closes and detaches
+ * spans.
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -38,8 +39,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	private static final String SPAN_HEADER = "X-Current-Span";
 
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			SpanExtractor<Message> spanExtractor,
-			SpanInjector<MessageBuilder> spanInjector) {
+			SpanExtractor<Message<?>> spanExtractor,
+			SpanInjector<MessageBuilder<?>> spanInjector) {
 		super(tracer, traceKeys, spanExtractor, spanInjector);
 	}
 

@@ -28,24 +28,24 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
- * AutoConfiguration containing Span extractor and injector for messaging.
- * Will be reused by Messaging and WebSockets
+ * AutoConfiguration containing Span extractor and injector for messaging. Will be reused
+ * by Messaging and WebSockets
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
 @Configuration
-@ConditionalOnBean({TraceKeys.class, Random.class})
+@ConditionalOnBean({ TraceKeys.class, Random.class })
 public class TraceSpanMessagingAutoConfiguration {
 
 	@Bean
-	public SpanExtractor<Message> messagingSpanExtractor(Random random) {
+	public SpanExtractor<Message<?>> messagingSpanExtractor(Random random) {
 		return new MessagingSpanExtractor(random);
 	}
 
 	@Bean
-	public SpanInjector<MessageBuilder> messagingSpanInjector(TraceKeys traceKeys) {
+	public SpanInjector<MessageBuilder<?>> messagingSpanInjector(TraceKeys traceKeys) {
 		return new MessagingSpanInjector(traceKeys);
 	}
 }

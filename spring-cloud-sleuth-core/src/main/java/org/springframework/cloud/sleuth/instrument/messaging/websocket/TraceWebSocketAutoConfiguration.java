@@ -21,8 +21,8 @@ import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessa
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * that enables tracing for WebSockets.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} that enables tracing for WebSockets.
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -38,10 +38,14 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 public class TraceWebSocketAutoConfiguration
 		extends AbstractWebSocketMessageBrokerConfigurer {
 
-	@Autowired Tracer tracer;
-	@Autowired TraceKeys traceKeys;
-	@Autowired SpanExtractor<Message> spanExtractor;
-	@Autowired SpanInjector<MessageBuilder> spanInjector;
+	@Autowired
+	Tracer tracer;
+	@Autowired
+	TraceKeys traceKeys;
+	@Autowired
+	SpanExtractor<Message<?>> spanExtractor;
+	@Autowired
+	SpanInjector<MessageBuilder<?>> spanInjector;
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -50,13 +54,13 @@ public class TraceWebSocketAutoConfiguration
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(
-				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.spanExtractor, this.spanInjector));
+		registration.setInterceptors(new TraceChannelInterceptor(this.tracer,
+				this.traceKeys, this.spanExtractor, this.spanInjector));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(
-				new TraceChannelInterceptor(this.tracer, this.traceKeys, this.spanExtractor, this.spanInjector));
+		registration.setInterceptors(new TraceChannelInterceptor(this.tracer,
+				this.traceKeys, this.spanExtractor, this.spanInjector));
 	}
 }

@@ -19,16 +19,16 @@ package org.springframework.cloud.sleuth;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Names of default headers that need to be sent between processes
- * for tracing to be operational.
+ * Names of default headers that need to be sent between processes for tracing to be
+ * operational.
  *
  * Default Zipkin Headers are
  *
  * <ul>
- *     <li>{@code X-B3-TraceId} 64 encoded bits</li>
- *     <li>{@code X-B3-SpanId} 64 encoded bits</li>
- *     <li>{@code X-B3-ParentSpanId} 64 encoded bits</li>
- *     <li>{@code X-B3-Sampled} Boolean (either “1” or “0”)</li>
+ * <li>{@code X-B3-TraceId} 64 encoded bits</li>
+ * <li>{@code X-B3-SpanId} 64 encoded bits</li>
+ * <li>{@code X-B3-ParentSpanId} 64 encoded bits</li>
+ * <li>{@code X-B3-Sampled} Boolean (either “1” or “0”)</li>
  * </ul>
  *
  * @author Marcin Grzejszczak
@@ -57,7 +57,7 @@ public class TraceHeaders {
 		this.sleuth = sleuth;
 	}
 
-	private static class Zipkin {
+	protected static class Zipkin {
 		private String traceId = "X-B3-TraceId";
 		private String spanId = "X-B3-SpanId";
 		private String parentSpanId = "X-B3-ParentSpanId";
@@ -96,7 +96,7 @@ public class TraceHeaders {
 		}
 	}
 
-	private static class Sleuth {
+	protected static class Sleuth {
 		private String processId = "X-Process-Id";
 		private String spanName = "X-Span-Name";
 		private String exportable = "X-Span-Export";

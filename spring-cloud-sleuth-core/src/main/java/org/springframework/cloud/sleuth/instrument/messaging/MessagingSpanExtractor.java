@@ -30,7 +30,7 @@ import org.springframework.messaging.Message;
  *
  * @since 1.0.0
  */
-public class MessagingSpanExtractor implements SpanExtractor<Message> {
+public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 
 	private final Random random;
 
@@ -38,19 +38,20 @@ public class MessagingSpanExtractor implements SpanExtractor<Message> {
 		this.random = random;
 	}
 
-	@Override 
-	public Span joinTrace(Message carrier) {
+	@Override
+	public Span joinTrace(Message<?> carrier) {
 		if (!hasHeader(carrier, Span.TRACE_ID_NAME)
 				|| !hasHeader(carrier, Span.SPAN_ID_NAME)) {
 			return null;
-			//TODO: Consider throwing IllegalArgumentException;
+			// TODO: Consider throwing IllegalArgumentException;
 		}
 		long spanId = hasHeader(carrier, Span.SPAN_ID_NAME)
 				? Span.hexToId(getHeader(carrier, Span.SPAN_ID_NAME))
 				: this.random.nextLong();
 		long traceId = Span.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
 		SpanBuilder spanBuilder = Span.builder().traceId(traceId).spanId(spanId);
-		spanBuilder.exportable(Span.SPAN_SAMPLED.equals(getHeader(carrier, Span.SAMPLED_NAME)));
+		spanBuilder.exportable(
+				Span.SPAN_SAMPLED.equals(getHeader(carrier, Span.SAMPLED_NAME)));
 		String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
 		String processId = getHeader(carrier, Span.PROCESS_ID_NAME);
 		String spanName = getHeader(carrier, Span.SPAN_NAME_NAME);

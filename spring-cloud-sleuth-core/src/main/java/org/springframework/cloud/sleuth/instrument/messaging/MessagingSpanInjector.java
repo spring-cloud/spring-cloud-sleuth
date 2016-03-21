@@ -36,7 +36,7 @@ import org.springframework.util.StringUtils;
  *
  * @since 1.0.0
  */
-class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
+class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 
 	public static final String SPAN_HEADER = "X-Current-Span";
 
@@ -47,12 +47,13 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 	}
 
 	@Override
-	public void inject(Span span, MessageBuilder carrier) {
-		Message initialMessage = carrier.build();
+	public void inject(Span span, MessageBuilder<?> carrier) {
+		Message<?> initialMessage = carrier.build();
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(initialMessage);
 		if (span == null) {
-			if (!Span.SPAN_SAMPLED.equals(initialMessage.getHeaders().get(Span.SAMPLED_NAME))) {
+			if (!Span.SPAN_SAMPLED
+					.equals(initialMessage.getHeaders().get(Span.SAMPLED_NAME))) {
 				accessor.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 				carrier.setHeaders(accessor);
 				return;
@@ -86,8 +87,7 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 		carrier.setHeaders(accessor);
 	}
 
-	private void addAnnotations(TraceKeys traceKeys, Message<?> message,
-			Span span) {
+	private void addAnnotations(TraceKeys traceKeys, Message<?> message, Span span) {
 		for (String name : traceKeys.getMessage().getHeaders()) {
 			if (message.getHeaders().containsKey(name)) {
 				String key = traceKeys.getMessage().getPrefix() + name.toLowerCase();
@@ -95,7 +95,8 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 				if (value == null) {
 					value = "null";
 				}
-				tagIfEntryMissing(span, key, value.toString()); // TODO: better way to serialize?
+				// TODO: better way to serialize?
+				tagIfEntryMissing(span, key, value.toString());
 			}
 		}
 		addPayloadAnnotations(traceKeys, message.getPayload(), span);
@@ -122,8 +123,7 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder> {
 		}
 	}
 
-	private void addHeader(Map<String, String> headers, String name,
-			String value) {
+	private void addHeader(Map<String, String> headers, String name, String value) {
 		if (StringUtils.hasText(value)) {
 			headers.put(name, value);
 		}

@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import static junitparams.JUnitParamsRunner.$;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,21 +65,25 @@ import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
-import static junitparams.JUnitParamsRunner.$;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 @RunWith(JUnitParamsRunner.class)
 @SpringApplicationConfiguration(classes = { WebClientTests.TestConfiguration.class })
 @WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
 public class WebClientTests {
 
-	@ClassRule public static final SpringClassRule SCR = new SpringClassRule();
-	@Rule public final SpringMethodRule springMethodRule = new SpringMethodRule();
-	
-	@Autowired TestFeignInterface testFeignInterface;
-	@Autowired @LoadBalanced RestTemplate template;
-	@Autowired Listener listener;
-	@Autowired Tracer tracer;
+	@ClassRule
+	public static final SpringClassRule SCR = new SpringClassRule();
+	@Rule
+	public final SpringMethodRule springMethodRule = new SpringMethodRule();
+
+	@Autowired
+	TestFeignInterface testFeignInterface;
+	@Autowired
+	@LoadBalanced
+	RestTemplate template;
+	@Autowired
+	Listener listener;
+	@Autowired
+	Tracer tracer;
 
 	@After
 	public void close() {
@@ -86,7 +94,8 @@ public class WebClientTests {
 	@Test
 	@Parameters
 	@SuppressWarnings("unchecked")
-	public void shouldCreateANewSpanWhenNoPreviousTracingWasPresent(ResponseEntityProvider provider) {
+	public void shouldCreateANewSpanWhenNoPreviousTracingWasPresent(
+			ResponseEntityProvider provider) {
 		ResponseEntity<String> response = provider.get(this);
 
 		then(getHeader(response, Span.TRACE_ID_NAME)).isNotNull();
@@ -94,9 +103,11 @@ public class WebClientTests {
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
-	private Object[] parametersForShouldCreateANewSpanWhenNoPreviousTracingWasPresent() {
-		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
-				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/notrace", String.class));
+	Object[] parametersForShouldCreateANewSpanWhenNoPreviousTracingWasPresent() {
+		return $(
+				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
+				(ResponseEntityProvider) (tests) -> tests.template
+						.getForEntity("http://fooservice/notrace", String.class));
 	}
 
 	@Test
@@ -115,15 +126,17 @@ public class WebClientTests {
 		then(this.listener.getEvents()).isNotEmpty();
 	}
 
-	private Object[] parametersForShouldPropagateNotSamplingHeader() {
+	Object[] parametersForShouldPropagateNotSamplingHeader() {
 		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
-				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/", Map.class));
+				(ResponseEntityProvider) (tests) -> tests.template
+						.getForEntity("http://fooservice/", Map.class));
 	}
 
 	@Test
 	@Parameters
 	@SuppressWarnings("unchecked")
-	public void shouldAttachTraceIdWhenCallingAnotherService(ResponseEntityProvider provider) {
+	public void shouldAttachTraceIdWhenCallingAnotherService(
+			ResponseEntityProvider provider) {
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
 		Long currentSpanId = 100L;
@@ -139,29 +152,29 @@ public class WebClientTests {
 	}
 
 	private Span spanWithClientEvents() {
-		return this.listener.getEvents()
-				.stream()
-				.filter(span -> span.logs()
-						.stream()
-						.filter(log -> log.getEvent().contains(Span.CLIENT_RECV) || log.getEvent().contains(Span.CLIENT_SEND))
+		return this.listener.getEvents().stream()
+				.filter(span -> span.logs().stream()
+						.filter(log -> log.getEvent().contains(Span.CLIENT_RECV)
+								|| log.getEvent().contains(Span.CLIENT_SEND))
 						.findFirst().isPresent())
 				.findFirst().get();
 	}
 
-	private Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
+	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
 		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
-				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/traceid", String.class));
+				(ResponseEntityProvider) (tests) -> tests.template
+						.getForEntity("http://fooservice/traceid", String.class));
 	}
 
 	@Test
 	@Parameters
-	@SuppressWarnings("unchecked")
-	public void shouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody(ResponseEntityProvider provider) {
+	public void shouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody(
+			ResponseEntityProvider provider) {
 		Long currentTraceId = 1L;
 		Long currentParentId = 2L;
 		Long currentSpanId = generatedId();
-		Span span = Span.builder().traceId(currentTraceId)
-				.spanId(currentSpanId).parent(currentParentId).build();
+		Span span = Span.builder().traceId(currentTraceId).spanId(currentSpanId)
+				.parent(currentParentId).build();
 		this.tracer.continueSpan(span);
 
 		provider.get(this);
@@ -170,9 +183,12 @@ public class WebClientTests {
 		thenRegisteredClientSentAndReceivedEvents(spanWithClientEvents());
 	}
 
-	private Object[] parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
-		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.noResponseBody(),
-				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/noresponse", String.class));
+	Object[] parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
+		return $(
+				(ResponseEntityProvider) (tests) -> tests.testFeignInterface
+						.noResponseBody(),
+				(ResponseEntityProvider) (tests) -> tests.template
+						.getForEntity("http://fooservice/noresponse", String.class));
 	}
 
 	private void thenRegisteredClientSentAndReceivedEvents(Span span) {
@@ -223,7 +239,7 @@ public class WebClientTests {
 		@LoadBalanced
 		@Bean
 		public RestTemplate restTemplate() {
-				return new RestTemplate();
+			return new RestTemplate();
 		}
 	}
 
@@ -244,7 +260,8 @@ public class WebClientTests {
 	@RestController
 	public static class FooController {
 
-		@Autowired Tracer tracer;
+		@Autowired
+		Tracer tracer;
 
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
@@ -299,6 +316,7 @@ public class WebClientTests {
 
 	@FunctionalInterface
 	interface ResponseEntityProvider {
+		@SuppressWarnings("rawtypes")
 		ResponseEntity get(WebClientTests webClientTests);
 	}
 }

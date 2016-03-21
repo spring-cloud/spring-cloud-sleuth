@@ -23,11 +23,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.GlobalChannelInterceptor;
@@ -35,8 +35,9 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * that registers a Sleuth version of the {@link org.springframework.messaging.support.ChannelInterceptor}.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} that registers a Sleuth version of the
+ * {@link org.springframework.messaging.support.ChannelInterceptor}.
  *
  * @author Spencer Gibb
  * @since 1.0.0
@@ -46,7 +47,8 @@ import org.springframework.messaging.support.MessageBuilder;
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter({TraceAutoConfiguration.class, TraceSpanMessagingAutoConfiguration.class})
+@AutoConfigureAfter({ TraceAutoConfiguration.class,
+		TraceSpanMessagingAutoConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(TraceKeys.class)
 public class TraceSpringIntegrationAutoConfiguration {
@@ -54,10 +56,10 @@ public class TraceSpringIntegrationAutoConfiguration {
 	@Bean
 	@GlobalChannelInterceptor
 	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
-			TraceKeys traceKeys, Random random,
-			SpanExtractor<Message> spanExtractor,
-			SpanInjector<MessageBuilder> spanInjector) {
-		return new TraceChannelInterceptor(tracer, traceKeys, spanExtractor, spanInjector);
+			TraceKeys traceKeys, Random random, SpanExtractor<Message<?>> spanExtractor,
+			SpanInjector<MessageBuilder<?>> spanInjector) {
+		return new TraceChannelInterceptor(tracer, traceKeys, spanExtractor,
+				spanInjector);
 	}
 
 }

@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import static junitparams.JUnitParamsRunner.$;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
@@ -54,19 +56,25 @@ import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
-import static junitparams.JUnitParamsRunner.$;
-
 @RunWith(JUnitParamsRunner.class)
-@SpringApplicationConfiguration(classes = { WebClientExceptionTests.TestConfiguration.class })
-@WebIntegrationTest(value = { "spring.application.name=exceptionservice" }, randomPort = true)
+@SpringApplicationConfiguration(classes = {
+		WebClientExceptionTests.TestConfiguration.class })
+@WebIntegrationTest(value = {
+		"spring.application.name=exceptionservice" }, randomPort = true)
 public class WebClientExceptionTests {
 
-	@ClassRule public static final SpringClassRule SCR = new SpringClassRule();
-	@Rule public final SpringMethodRule springMethodRule = new SpringMethodRule();
-	
-	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
-	@Autowired @LoadBalanced RestTemplate template;
-	@Autowired Tracer tracer;
+	@ClassRule
+	public static final SpringClassRule SCR = new SpringClassRule();
+	@Rule
+	public final SpringMethodRule springMethodRule = new SpringMethodRule();
+
+	@Autowired
+	TestFeignInterfaceWithException testFeignInterfaceWithException;
+	@Autowired
+	@LoadBalanced
+	RestTemplate template;
+	@Autowired
+	Tracer tracer;
 
 	@After
 	public void close() {
@@ -76,14 +84,15 @@ public class WebClientExceptionTests {
 	// issue #198
 	@Test
 	@Parameters
-	@SuppressWarnings("unchecked")
-	public void shouldCloseSpanUponException(ResponseEntityProvider provider) throws IOException {
+	public void shouldCloseSpanUponException(ResponseEntityProvider provider)
+			throws IOException {
 		Span span = this.tracer.createSpan("new trace");
 
 		try {
 			provider.get(this);
 			Assert.fail("should throw an exception");
-		} catch (RuntimeException e) {
+		}
+		catch (RuntimeException e) {
 			SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
 		}
 
@@ -91,9 +100,12 @@ public class WebClientExceptionTests {
 		this.tracer.close(span);
 	}
 
-	private Object[] parametersForShouldCloseSpanUponException() {
-		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException.shouldFailToConnect(),
-				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://exceptionservice/", Map.class));
+	Object[] parametersForShouldCloseSpanUponException() {
+		return $(
+				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
+						.shouldFailToConnect(),
+				(ResponseEntityProvider) (tests) -> tests.template
+						.getForEntity("http://exceptionservice/", Map.class));
 	}
 
 	@FeignClient("exceptionservice")
@@ -111,10 +123,9 @@ public class WebClientExceptionTests {
 		@LoadBalanced
 		@Bean
 		public RestTemplate restTemplate() {
-				return new RestTemplate();
+			return new RestTemplate();
 		}
 	}
-
 
 	@Configuration
 	public static class ExceptionServiceRibbonClientConfiguration {
@@ -122,8 +133,8 @@ public class WebClientExceptionTests {
 		@Bean
 		public ILoadBalancer exceptionServiceRibbonLoadBalancer() {
 			BaseLoadBalancer balancer = new BaseLoadBalancer();
-			balancer.setServersList(
-					Collections.singletonList(new Server("invalid.host.to.break.tests", 1234)));
+			balancer.setServersList(Collections
+					.singletonList(new Server("invalid.host.to.break.tests", 1234)));
 			return balancer;
 		}
 
@@ -131,6 +142,6 @@ public class WebClientExceptionTests {
 
 	@FunctionalInterface
 	interface ResponseEntityProvider {
-		ResponseEntity get(WebClientExceptionTests webClientTests);
+		ResponseEntity<?> get(WebClientExceptionTests webClientTests);
 	}
 }
