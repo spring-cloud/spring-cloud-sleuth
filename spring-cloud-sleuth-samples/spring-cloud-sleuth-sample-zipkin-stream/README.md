@@ -1,6 +1,6 @@
-# Running a Zipkin Query Server
+# Running a Zipkin Server
 
-There are 4 parts to Zipkin: the instrumented client apps, the web UI, the backend database and the query server. The database for this implementation is MySQL.
+There are 3 parts to Zipkin: the instrumented client apps, the backend database and the Zipkin server. The database for this implementation is MySQL.
 
 ## Zipkin Services
 
@@ -35,5 +35,3 @@ You can run this app in an IDE and still use docker-compose to create the middle
 ```
 $ docker-compose up rabbitmq mysql
 ```
-
-The web UI cannot access the docker host though, so you have to run that separately, or just test against the query server directly on port 9411.
