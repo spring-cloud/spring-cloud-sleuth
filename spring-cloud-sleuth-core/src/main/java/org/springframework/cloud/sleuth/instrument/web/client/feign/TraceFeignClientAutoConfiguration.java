@@ -24,6 +24,7 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
@@ -59,6 +60,7 @@ import feign.codec.Decoder;
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass(Client.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
 @AutoConfigureAfter(SleuthHystrixAutoConfiguration.class)
 public class TraceFeignClientAutoConfiguration {
