@@ -176,6 +176,15 @@ public class ZipkinSpanListenerTests {
 				.containsOnly("fooservice");
 	}
 
+	@Test
+	public void shouldNotReportToZipkinWhenSpanIsNotExportable() {
+		Span span = Span.builder().exportable(false).build();
+
+		this.spanReporter.report(span);
+
+		assertThat(this.test.zipkinSpans).isEmpty();
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class TestConfiguration {

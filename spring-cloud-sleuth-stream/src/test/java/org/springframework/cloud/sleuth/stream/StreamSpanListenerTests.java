@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -123,6 +124,24 @@ public class StreamSpanListenerTests {
 		this.listener.poll();
 
 		verify(this.counterService, atLeastOnce()).increment(anyString());
+	}
+
+	@Test
+	public void shouldNotReportToZipkinWhenSpanIsNotExportable() {
+		Span span = Span.builder().exportable(false).build();
+
+		this.spanReporter.report(span);
+
+		assertThat(this.test.spans).isEmpty();
+	}
+
+	@Test
+	public void shouldReportToZipkinWhenSpanIsExportable() {
+		Span span = Span.builder().exportable(true).build();
+
+		this.spanReporter.report(span);
+
+		assertThat(this.test.spans).isNotEmpty();
 	}
 
 	@Configuration
