@@ -173,6 +173,8 @@ public class ZipkinSpanListener implements SpanReporter {
 
 	@Override
 	public void report(Span span) {
-		this.reporter.report(convert(span));
+		if (span.isExportable()) {
+			this.reporter.report(convert(span));
+		}
 	}
 }
