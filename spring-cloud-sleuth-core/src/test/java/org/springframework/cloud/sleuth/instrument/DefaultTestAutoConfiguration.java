@@ -17,8 +17,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @Retention(RetentionPolicy.RUNTIME)
 @EnableAutoConfiguration(exclude = { LoadBalancerAutoConfiguration.class,
 		JmxAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class,
-		TraceWebSocketAutoConfiguration.class,
-		LoadBalancerAutoConfiguration.class })
+		TraceWebSocketAutoConfiguration.class })
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @Configuration
 public @interface DefaultTestAutoConfiguration {
