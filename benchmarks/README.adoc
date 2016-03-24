@@ -1,0 +1,38 @@
+== Spring Cloud Sleuth Benchmarks
+
+This module can run benchmarks using the following tools
+
+- JMH
+- JMeter
+
+=== How to run it?
+
+In the root folder inside the `scripts` folder there are the following benchmark scripts:
+
+- runJmhBenchmark.sh
+- runJmeterBenchmarks.sh
+
+Just execute them from the root folder like this:
+
+[source]
+----
+./scripts/runJmeterBenchmarks.sh
+./scripts/runJmhBenchmarks.sh
+----
+
+=== How do they work?
+
+For JMH we're building a shaded JAR file that is next executed.
+
+For JMeter we're running two applications, one with Sleuth, one without with Spring Boot
+Maven Plugin. Next a Maven JMeter plugin is executed that loads the `*.jmx` files, starts
+JMeter and prints out the results. At the end Spring Boot Maven Plugin stops the applications.
+
+=== What are we testing?
+
+For now we're testing the performance impact of the following:
+
+- our custom Trace HTTP filter
+- instrumentation of controllers - `@Callable` returning and the sync one
+- instrumentation of RestTemplate
+- `@Async` annotated methods

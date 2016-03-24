@@ -12,5 +12,7 @@ _site/
 *.iml
 *.swp
 .factorypath
-*.log
+*.logtjmeter
 .checkstyle
+.DS_Store
+*.log
