@@ -86,20 +86,16 @@ public class TraceWebAspect {
 	}
 
 	@Pointcut("execution(public java.util.concurrent.Callable *(..))")
-	private void anyPublicMethodReturningCallable() { // NOSONAR
-	}
+	private void anyPublicMethodReturningCallable() { } // NOSONAR
 
 	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethodReturningCallable()")
-	private void anyControllerOrRestControllerWithPublicAsyncMethod() { // NOSONAR
-	}
+	private void anyControllerOrRestControllerWithPublicAsyncMethod() { } // NOSONAR
 
 	@Pointcut("execution(public org.springframework.web.context.request.async.WebAsyncTask *(..))")
-	private void anyPublicMethodReturningWebAsyncTask() { // NOSONAR
-	}
+	private void anyPublicMethodReturningWebAsyncTask() { } // NOSONAR
 
 	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethodReturningWebAsyncTask()")
-	private void anyControllerOrRestControllerWithPublicWebAsyncTaskMethod() { // NOSONAR
-	}
+	private void anyControllerOrRestControllerWithPublicWebAsyncTaskMethod() { } // NOSONAR
 
 	@Around("anyControllerOrRestControllerWithPublicAsyncMethod()")
 	@SuppressWarnings("unchecked")
