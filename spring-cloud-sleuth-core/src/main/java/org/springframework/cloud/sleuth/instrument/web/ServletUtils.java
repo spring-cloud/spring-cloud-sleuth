@@ -28,11 +28,6 @@ import javax.servlet.http.HttpServletResponse;
  * @since 1.0.0
  */
 class ServletUtils {
-	static boolean hasHeader(HttpServletRequest request, HttpServletResponse response,
-			String name) {
-		String value = request.getHeader(name);
-		return value != null || response.getHeader(name) != null;
-	}
 
 	static String getHeader(HttpServletRequest request, HttpServletResponse response,
 			String name) {
