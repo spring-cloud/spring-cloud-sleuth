@@ -49,6 +49,7 @@ public class SleuthLogAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
+		@ConditionalOnMissingBean
 		public SpanLogger slf4jSpanLogger() {
 			// Sets up MDC entries X-B3-TraceId and X-B3-SpanId
 			return new Slf4jSpanLogger(this.nameSkipPattern);
@@ -56,6 +57,7 @@ public class SleuthLogAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", havingValue = "false")
+		@ConditionalOnMissingBean
 		public SpanLogger noOpSlf4jSpanLogger() {
 			return new NoOpSpanLogger();
 		}
