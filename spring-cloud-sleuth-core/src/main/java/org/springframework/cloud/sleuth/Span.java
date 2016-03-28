@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,6 +67,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * like scoped tracers. Sleuth spans are DTOs, whose sole responsibility is the current
  * span in the trace tree.
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class Span {
 

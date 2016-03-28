@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Represents an event in time associated with a span. Every span has zero or more Logs,
  * each of which being a timestamped event name.
@@ -30,7 +33,7 @@ public class Log {
 	private final long timestamp;
 
 	/**
-	 * Event (if not null) should be the stable name of some notable moment in the lifetime of a span.
+	 * Event should be the stable name of some notable moment in the lifetime of a span.
 	 * For instance, a span representing a browser page load might add an Event for each of the
 	 * Performance.timing moments here: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceTiming
 	 *
@@ -40,7 +43,12 @@ public class Log {
 	 */
 	private final String event;
 
-	public Log(long timestamp, String event) {
+	@JsonCreator
+	public Log(
+			@JsonProperty(value = "timestamp", required = true) long timestamp,
+			@JsonProperty(value = "event", required = true) String event
+	) {
+		if (event == null) throw new NullPointerException("event");
 		this.timestamp = timestamp;
 		this.event = event;
 	}
@@ -51,6 +59,29 @@ public class Log {
 
 	public String getEvent() {
 		return this.event;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (o instanceof Log) {
+			Log that = (Log) o;
+			return (this.timestamp == that.timestamp)
+					&& (this.event.equals(that.event));
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		int h = 1;
+		h *= 1000003;
+		h ^= (this.timestamp >>> 32) ^ this.timestamp;
+		h *= 1000003;
+		h ^= this.event.hashCode();
+		return h;
 	}
 
 	@Override public String toString() {
