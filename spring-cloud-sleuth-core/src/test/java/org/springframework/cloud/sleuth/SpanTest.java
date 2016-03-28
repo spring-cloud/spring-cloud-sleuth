@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth;
 
+import java.io.IOException;
 import java.util.Collections;
 
 import org.junit.Test;
@@ -79,5 +80,19 @@ public class SpanTest {
 		String serializedName = objectMapper.writeValueAsString(span);
 
 		then(serializedName).isNotEmpty();
+	}
+
+	@Test public void should_properly_serialize_logs() throws IOException {
+		Span span = new Span(1, 2, "http:name", 1L,
+				Collections.<Long>emptyList(), 2L, true, true, "process");
+		span.logEvent("cs");
+
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		String serialized = objectMapper.writeValueAsString(span);
+		Span deserialized = objectMapper.readValue(serialized, Span.class);
+
+		then(deserialized.logs())
+				.isEqualTo(span.logs());
 	}
 }
