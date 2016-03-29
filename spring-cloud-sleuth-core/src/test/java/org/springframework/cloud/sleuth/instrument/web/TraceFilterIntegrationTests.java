@@ -25,7 +25,7 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,6 +61,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		MvcResult mvcResult = whenSentPingWithoutTracingData();
 
 		then(tracingHeaderFrom(mvcResult)).isNotNull();
+		then(TraceFilterIntegrationTests.span).hasLoggedAnEvent(Span.SERVER_RECV).hasLoggedAnEvent(Span.SERVER_SEND);
 	}
 
 	@Test
@@ -71,7 +72,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@Test
-	public void when_correlationId_is_sent_should_not_create_a_new_one_but_return_the_existing_one_instead()
+	public void when_traceId_is_sent_should_not_create_a_new_one_but_return_the_existing_one_instead()
 			throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
@@ -81,7 +82,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@Test
-	public void when_correlationId_is_sent_to_async_endpoint_span_is_joined()
+	public void when_traceId_is_sent_to_async_endpoint_span_is_joined()
 			throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
@@ -115,16 +116,16 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		return sendPingWithTraceId("/future", Span.TRACE_ID_NAME, passedTraceId);
 	}
 
-	private MvcResult sendPingWithTraceId(String headerName, Long correlationId)
+	private MvcResult sendPingWithTraceId(String headerName, Long traceId)
 			throws Exception {
-		return sendPingWithTraceId("/ping", headerName, correlationId);
+		return sendPingWithTraceId("/ping", headerName, traceId);
 	}
 
 	private MvcResult sendPingWithTraceId(String path, String headerName,
-			Long correlationId) throws Exception {
+			Long traceId) throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
-						.header(headerName, Span.idToHex(correlationId))
+						.header(headerName, Span.idToHex(traceId))
 						.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong())))
 				.andReturn();
 	}

@@ -136,10 +136,12 @@ public class TraceFilter extends OncePerRequestFilter {
 				addResponseTags(response, exception);
 				if (spanFromRequest.hasSavedSpan()) {
 					Span parent =  spanFromRequest.getSavedSpan();
-					if (parent != null && parent.isRemote()) {
+					if (parent.isRemote()) {
 						parent.logEvent(Span.SERVER_SEND);
 						this.spanReporter.report(parent);
 					}
+				} else {
+					spanFromRequest.logEvent(Span.SERVER_SEND);
 				}
 				// Double close to clean up the parent (remote span as well)
 				this.tracer.close(spanFromRequest);
@@ -171,6 +173,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			else {
 				spanFromRequest = this.tracer.createSpan(name);
 			}
+			spanFromRequest.logEvent(Span.SERVER_RECV);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 		}
 		return spanFromRequest;
