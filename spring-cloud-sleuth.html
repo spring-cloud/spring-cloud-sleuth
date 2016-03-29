@@ -634,6 +634,14 @@ to Zipkin and merged there.</p>
 <p>So 1 span from <strong>A</strong>, 2 spans from <strong>B</strong>, 1 span from <strong>C</strong>, 2 spans from <strong>D</strong>, 1 span from <strong>E</strong>, 2 spans from <strong>F</strong> and 1 from <strong>G</strong>.
 Altogether <strong>10</strong> spans.</p>
 </div>
+<div class="paragraph">
+<p>The dependency graph in Zipkin would look like this:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/dependencies.png" alt="Dependencies">
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_log_correlation">Log correlation</h4>
@@ -1282,7 +1290,8 @@ you have</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletRequestSpanExtractor implements SpanExtractor&lt;HttpServletRequest&gt; {
+<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletRequestSpanExtractor
+		implements SpanExtractor&lt;HttpServletRequest&gt; {
 
 	@Override
 	public Span joinTrace(HttpServletRequest carrier) {
@@ -1301,7 +1310,8 @@ you have</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletResponseSpanInjector implements SpanInjector&lt;HttpServletResponse&gt; {
+<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletResponseSpanInjector
+		implements SpanInjector&lt;HttpServletResponse&gt; {
 
 	@Override
 	public void inject(Span span, HttpServletResponse carrier) {
@@ -1368,10 +1378,8 @@ public class Consumer {
 Spring Cloud Stream <code>Binder</code> (e.g. include
 <code>spring-cloud-starter-stream-rabbit</code> for RabbitMQ, and similar
 starters exist for Redis and Kafka). The app will also be a
-<a href="https://github.com/openzipkin/zipkin-java">Zipkin query server</a>, so you
-can point a standard Zipkin UI at it (e.g. run the consumer app on
-port 9411 if you want the query server on the same host and the
-default configuration).</p>
+<a href="https://github.com/openzipkin/zipkin-java">Zipkin server</a>, which hosts
+the UI and api on port 9411.</p>
 </div>
 <div class="paragraph">
 <p>The default <code>SpanStore</code> is in-memory (good for demos and getting
@@ -1690,7 +1698,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-17 17:29:21 CET
+Last updated 2016-03-22 10:35:30 CET
 </div>
 </div>
 </body>
