@@ -95,4 +95,18 @@ public class SpanTest {
 		then(deserialized.logs())
 				.isEqualTo(span.logs());
 	}
+
+	@Test public void should_properly_serialize_tags() throws IOException {
+		Span span = new Span(1, 2, "http:name", 1L,
+				Collections.<Long>emptyList(), 2L, true, true, "process");
+		span.tag("calculatedTax", "100");
+
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		String serialized = objectMapper.writeValueAsString(span);
+		Span deserialized = objectMapper.readValue(serialized, Span.class);
+
+		then(deserialized.tags())
+				.isEqualTo(span.tags());
+	}
 }
