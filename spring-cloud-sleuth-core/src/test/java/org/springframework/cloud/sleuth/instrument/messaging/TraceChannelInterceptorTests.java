@@ -27,10 +27,10 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
@@ -44,7 +44,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -98,9 +97,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
-		assertNotNull("spanId was null", spanId);
-		assertNull(TestSpanContextHolder.getCurrentSpan());
-		assertFalse(this.span.isExportable());
+		then(spanId).isNotNull();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(this.span.isExportable()).isFalse();
 	}
 
 	@Test
@@ -130,6 +129,20 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		assertNotNull("traceId was null", traceId);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
+	}
+
+	@Test
+	public void shouldLogClientReceivedClientSentEventWhenTheMessageIsSentAndReceived() {
+		this.channel.send(MessageBuilder.withPayload("hi").build());
+
+		then(this.span.logs()).extracting("event").contains(Span.CLIENT_SEND, Span.CLIENT_RECV);
+	}
+
+	@Test
+	public void shouldLogServerReceivedServerSentEventWhenTheMessageIsPropagatedToTheNextListener() {
+		this.channel.send(MessageBuilder.withPayload("hi").setHeader("X-Message-Sent", true).build());
+
+		then(this.span.logs()).extracting("event").contains(Span.SERVER_RECV, Span.SERVER_SEND);
 	}
 
 	@Test
