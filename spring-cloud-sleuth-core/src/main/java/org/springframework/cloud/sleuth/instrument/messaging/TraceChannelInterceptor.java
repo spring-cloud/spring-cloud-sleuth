@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
@@ -37,6 +38,7 @@ import org.springframework.messaging.support.MessageBuilder;
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private static final String SPAN_HEADER = "X-Current-Span";
+	private static final String MESSAGE_SENT_FROM_CLIENT = "X-Message-Sent";
 
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			SpanExtractor<Message<?>> spanExtractor,
@@ -46,7 +48,25 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-		getTracer().close(getSpanFromHeader(message));
+		Span spanFromHeader = getSpanFromHeader(message);
+		if (containsServerReceived(spanFromHeader)) {
+			spanFromHeader.logEvent(Span.SERVER_SEND);
+		} else if (spanFromHeader != null) {
+			spanFromHeader.logEvent(Span.CLIENT_RECV);
+		}
+		getTracer().close(spanFromHeader);
+	}
+
+	private boolean containsServerReceived(Span span) {
+		if (span == null) {
+			return false;
+		}
+		for (Log log : span.logs()) {
+			if (Span.SERVER_RECV.equals(log.getEvent())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -56,6 +76,12 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		String name = getMessageChannelName(channel);
 		Span span = startSpan(parentSpan, name, message);
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
+		if (message.getHeaders().containsKey(MESSAGE_SENT_FROM_CLIENT)) {
+			span.logEvent(Span.SERVER_RECV);
+		} else {
+			span.logEvent(Span.CLIENT_SEND);
+			messageBuilder.setHeader(MESSAGE_SENT_FROM_CLIENT, true);
+		}
 		getSpanInjector().inject(span, messageBuilder);
 		return messageBuilder.build();
 	}
@@ -73,14 +99,22 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
 			MessageHandler handler) {
-		getTracer().continueSpan(getSpanFromHeader(message));
+		Span spanFromHeader = getSpanFromHeader(message);
+		if (spanFromHeader!= null) {
+			spanFromHeader.logEvent(Span.SERVER_RECV);
+		}
+		getTracer().continueSpan(spanFromHeader);
 		return message;
 	}
 
 	@Override
 	public void afterMessageHandled(Message<?> message, MessageChannel channel,
 			MessageHandler handler, Exception ex) {
-		getTracer().detach(getSpanFromHeader(message));
+		Span spanFromHeader = getSpanFromHeader(message);
+		if (spanFromHeader!= null) {
+			spanFromHeader.logEvent(Span.SERVER_SEND);
+		}
+		getTracer().detach(spanFromHeader);
 	}
 
 	private Span getSpanFromHeader(Message<?> message) {
