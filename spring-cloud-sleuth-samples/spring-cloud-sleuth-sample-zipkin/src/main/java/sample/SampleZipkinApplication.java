@@ -25,6 +25,7 @@ import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Spencer Gibb
@@ -40,9 +41,14 @@ public class SampleZipkinApplication {
 		SpringApplication.run(SampleZipkinApplication.class, args);
 	}
 
+	@Bean
+	public RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
+
 	// Use this for debugging (or if there is no Zipkin server running on port 9411)
 	@Bean
-	@ConditionalOnProperty(value="sample.zipkin.enabled", havingValue="false")
+	@ConditionalOnProperty(value = "sample.zipkin.enabled", havingValue = "false")
 	public ZipkinSpanReporter spanCollector() {
 		return new ZipkinSpanReporter() {
 			@Override

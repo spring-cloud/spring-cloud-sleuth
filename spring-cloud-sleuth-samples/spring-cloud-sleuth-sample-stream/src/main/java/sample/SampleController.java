@@ -36,8 +36,8 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @RestController
-public class SampleController implements
-ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+public class SampleController
+		implements ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	private static final Log log = LogFactory.getLog(SampleController.class);
 
 	@Autowired
@@ -48,16 +48,16 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 	private SpanAccessor accessor;
 	@Autowired
 	private SampleBackground controller;
-	@Autowired
-	private Random random;
+
+	private Random random = new Random();
 	private int port;
 
 	@RequestMapping("/")
 	public String hi() throws InterruptedException {
 		Thread.sleep(this.random.nextInt(1000));
 
-		String s = this.restTemplate.getForObject("http://localhost:" + this.port
-				+ "/hi2", String.class);
+		String s = this.restTemplate
+				.getForObject("http://localhost:" + this.port + "/hi2", String.class);
 		return "hi/" + s;
 	}
 
@@ -68,7 +68,8 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 			public String call() throws Exception {
 				int millis = SampleController.this.random.nextInt(1000);
 				Thread.sleep(millis);
-				SampleController.this.tracer.addTag("callable-sleep-millis", String.valueOf(millis));
+				SampleController.this.tracer.addTag("callable-sleep-millis",
+						String.valueOf(millis));
 				Span currentSpan = SampleController.this.accessor.getCurrentSpan();
 				return "async hi: " + currentSpan;
 			}
@@ -98,8 +99,8 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 
-		String s = this.restTemplate.getForObject("http://localhost:" + this.port
-				+ "/call", String.class);
+		String s = this.restTemplate
+				.getForObject("http://localhost:" + this.port + "/call", String.class);
 		this.tracer.close(span);
 		return "traced/" + s;
 	}
@@ -111,8 +112,8 @@ ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		Thread.sleep(millis);
 		this.tracer.addTag("random-sleep-millis", String.valueOf(millis));
 
-		String s = this.restTemplate.getForObject("http://localhost:" + this.port
-				+ "/call", String.class);
+		String s = this.restTemplate
+				.getForObject("http://localhost:" + this.port + "/call", String.class);
 		return "start/" + s;
 	}
 
