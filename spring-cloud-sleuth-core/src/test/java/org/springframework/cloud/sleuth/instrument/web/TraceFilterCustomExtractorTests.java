@@ -116,6 +116,11 @@ public class TraceFilterCustomExtractorTests {
 		}
 
 		@Bean
+		public RestTemplate restTemplate() {
+			return new RestTemplate();
+		}
+
+		@Bean
 		CustomRestController customRestController() {
 			return new CustomRestController();
 		}

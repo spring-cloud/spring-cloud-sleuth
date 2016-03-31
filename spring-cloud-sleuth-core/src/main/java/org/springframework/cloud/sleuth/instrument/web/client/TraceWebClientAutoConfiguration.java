@@ -38,8 +38,9 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables span information propagation when using {@link RestTemplate}
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} enables span information propagation when using
+ * {@link RestTemplate}
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
@@ -56,12 +57,6 @@ public class TraceWebClientAutoConfiguration {
 	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(Tracer tracer,
 			SpanInjector<HttpRequest> spanInjector) {
 		return new TraceRestTemplateInterceptor(tracer, spanInjector);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public RestTemplate restTemplate() {
-		return new RestTemplate();
 	}
 
 	@Bean
@@ -82,7 +77,8 @@ public class TraceWebClientAutoConfiguration {
 		public void init() {
 			if (this.restTemplates != null) {
 				for (RestTemplate restTemplate : this.restTemplates) {
-					List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>(restTemplate.getInterceptors());
+					List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>(
+							restTemplate.getInterceptors());
 					interceptors.add(this.traceRestTemplateInterceptor);
 					restTemplate.setInterceptors(interceptors);
 				}
