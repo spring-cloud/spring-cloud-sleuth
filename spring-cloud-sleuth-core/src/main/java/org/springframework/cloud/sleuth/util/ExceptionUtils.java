@@ -19,11 +19,11 @@ package org.springframework.cloud.sleuth.util;
 import org.apache.commons.logging.Log;
 
 /**
- * Utility class for logging exceptions. Useful for test purposes -
- * when a warning message should be presented an exception can be thrown.
+ * Utility class for logging exceptions. Useful for test purposes - when a warning message
+ * should be presented an exception can be thrown.
  * <p>
- * The purpose of this class is not to throw exceptions from the user's code
- * when there are some issues with tracing.
+ * The purpose of this class is not to throw exceptions from the user's code when there
+ * are some issues with tracing.
  *
  * @author Spencer Gibb
  * @since 1.0.0
@@ -32,18 +32,27 @@ public final class ExceptionUtils {
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(ExceptionUtils.class);
 	private static boolean fail = false;
+	private static Exception lastException = null;
 
 	private ExceptionUtils() {
 		throw new IllegalStateException("Utility class can't be instantiated");
 	}
 
 	public static void warn(String msg) {
-		if (fail) {
-			throw new IllegalStateException(msg);
-		}
 		log.warn(msg);
+		if (fail) {
+			IllegalStateException exception = new IllegalStateException(msg);
+			ExceptionUtils.lastException = exception;
+			throw exception;
+		}
 	}
+
+	public static Exception getLastException() {
+		return ExceptionUtils.lastException;
+	}
+
 	public static void setFail(boolean fail) {
 		ExceptionUtils.fail = fail;
+		ExceptionUtils.lastException = null;
 	}
 }

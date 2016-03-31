@@ -22,10 +22,10 @@ import feign.RetryableException;
 import feign.Retryer;
 
 /**
- * Execution of this retryer means that an exception occurred while trying to
- * send the request. In that case we need to put information about this span
- * into the {@link FeignRequestContext} in order for the {@link feign.RequestInterceptor}
- * to know that it should be continued or a new one should be created.
+ * Execution of this retryer means that an exception occurred while trying to send the
+ * request. In that case we need to put information about this span into the
+ * {@link FeignRequestContext} in order for the {@link feign.RequestInterceptor} to know
+ * that it should be continued or a new one should be created.
  *
  * @author Marcin Grzejszczak
  *
@@ -34,7 +34,8 @@ import feign.Retryer;
 final class TraceFeignRetryer implements Retryer {
 
 	private final Tracer tracer;
-	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
+	private final FeignRequestContext feignRequestContext = FeignRequestContext
+			.getInstance();
 	private final Retryer delegate;
 
 	TraceFeignRetryer(Tracer tracer) {

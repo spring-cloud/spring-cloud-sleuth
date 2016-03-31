@@ -22,7 +22,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 import org.junit.After;
@@ -36,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -54,19 +54,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 @SpringApplicationConfiguration(classes = {
-		WebClientExceptionTests.TestConfiguration.class })
+		WebClientDiscoveryExceptionTests.TestConfiguration.class })
 @WebIntegrationTest(value = {
 		"spring.application.name=exceptionservice" }, randomPort = true)
-public class WebClientExceptionTests {
+public class WebClientDiscoveryExceptionTests {
 
 	@ClassRule
 	public static final SpringClassRule SCR = new SpringClassRule();
@@ -93,7 +89,7 @@ public class WebClientExceptionTests {
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
-	// issue #198
+	// issue #240
 	@Test
 	@Parameters
 	public void shouldCloseSpanUponException(ResponseEntityProvider provider)
@@ -105,7 +101,6 @@ public class WebClientExceptionTests {
 			Assert.fail("should throw an exception");
 		}
 		catch (RuntimeException e) {
-			SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
 		}
 
 		assertThat(ExceptionUtils.getLastException(), is(nullValue()));
@@ -130,8 +125,9 @@ public class WebClientExceptionTests {
 
 	@Configuration
 	@EnableAutoConfiguration
+	@EnableDiscoveryClient
 	@EnableFeignClients
-	@RibbonClient(value = "exceptionservice", configuration = ExceptionServiceRibbonClientConfiguration.class)
+	@RibbonClient("exceptionservice")
 	public static class TestConfiguration {
 
 		@LoadBalanced
@@ -141,21 +137,8 @@ public class WebClientExceptionTests {
 		}
 	}
 
-	@Configuration
-	public static class ExceptionServiceRibbonClientConfiguration {
-
-		@Bean
-		public ILoadBalancer exceptionServiceRibbonLoadBalancer() {
-			BaseLoadBalancer balancer = new BaseLoadBalancer();
-			balancer.setServersList(Collections
-					.singletonList(new Server("invalid.host.to.break.tests", 1234)));
-			return balancer;
-		}
-
-	}
-
 	@FunctionalInterface
 	interface ResponseEntityProvider {
-		ResponseEntity<?> get(WebClientExceptionTests webClientTests);
+		ResponseEntity<?> get(WebClientDiscoveryExceptionTests webClientTests);
 	}
 }
