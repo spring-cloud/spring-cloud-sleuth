@@ -24,10 +24,11 @@ import org.springframework.cloud.sleuth.Tracer;
 import feign.Client;
 import feign.Request;
 import feign.Response;
+import feign.RetryableException;
 
 /**
- * A Feign Client that closes a Span if there is no response body.
- * In other cases Span will not get closed cause the Decoder will not get called
+ * A Feign Client that closes a Span if there is no response body. In other cases Span
+ * will get closed because the Decoder will be called
  *
  * @author Marcin Grzejszczak
  *
@@ -49,8 +50,20 @@ final class TraceFeignClient extends FeignEventPublisher implements Client {
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
-		Response response = this.delegate.execute(request, options);
-		if (response.body() == null || (response.body() != null
+		Response response = null;
+		try {
+			response = this.delegate.execute(request, options);
+		}
+		catch (RetryableException | IOException e) {
+			// IOException will be wrapped into a RetryableException in the caller
+			throw e;
+		}
+		catch (RuntimeException e) {
+			// Any other exception is going to be propagated so we need to tidy up
+			finish();
+			throw e;
+		}
+		if (response != null && response.body() == null || (response.body() != null
 				&& Objects.equals(response.body().length(), 0))) {
 			finish();
 		}

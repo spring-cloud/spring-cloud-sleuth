@@ -33,8 +33,8 @@ import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
 
 /**
  * A {@link HystrixConcurrencyStrategy} that wraps a {@link Callable} in a
- * {@link Callable} that either starts a new span or continues one
- * if the tracing was already running before the command was executed.
+ * {@link Callable} that either starts a new span or continues one if the tracing was
+ * already running before the command was executed.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
@@ -42,7 +42,8 @@ import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
 public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy {
 
 	private static final String HYSTRIX_COMPONENT = "hystrix";
-	private static final Log log = LogFactory.getLog(SleuthHystrixConcurrencyStrategy.class);
+	private static final Log log = LogFactory
+			.getLog(SleuthHystrixConcurrencyStrategy.class);
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
@@ -53,6 +54,10 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 		this.traceKeys = traceKeys;
 		try {
 			this.delegate = HystrixPlugins.getInstance().getConcurrencyStrategy();
+			if (this.delegate instanceof SleuthHystrixConcurrencyStrategy) {
+				// Welcome to singleton hell...
+				return;
+			}
 			HystrixCommandExecutionHook commandExecutionHook = HystrixPlugins
 					.getInstance().getCommandExecutionHook();
 			HystrixEventNotifier eventNotifier = HystrixPlugins.getInstance()
@@ -65,33 +70,37 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 					propertiesStrategy);
 			HystrixPlugins.reset();
 			HystrixPlugins.getInstance().registerConcurrencyStrategy(this);
-			HystrixPlugins.getInstance().registerCommandExecutionHook(commandExecutionHook);
+			HystrixPlugins.getInstance()
+					.registerCommandExecutionHook(commandExecutionHook);
 			HystrixPlugins.getInstance().registerEventNotifier(eventNotifier);
 			HystrixPlugins.getInstance().registerMetricsPublisher(metricsPublisher);
 			HystrixPlugins.getInstance().registerPropertiesStrategy(propertiesStrategy);
 		}
 		catch (Exception e) {
-			log.error(
-					"Failed to register Sleuth Hystrix Concurrency Strategy", e);
+			log.error("Failed to register Sleuth Hystrix Concurrency Strategy", e);
 		}
 	}
 
 	private void logCurrentStateOfHysrixPlugins(HystrixEventNotifier eventNotifier,
 			HystrixMetricsPublisher metricsPublisher,
 			HystrixPropertiesStrategy propertiesStrategy) {
-		log.debug("Current Hystrix plugins configuration is ["
-				+ "concurrencyStrategy [" + this.delegate + "],"
-				+ "eventNotifier [" + eventNotifier + "],"
-				+ "metricPublisher [" + metricsPublisher + "],"
-				+ "propertiesStrategy [" + propertiesStrategy + "],"
-				+ "]");
+		log.debug("Current Hystrix plugins configuration is [" + "concurrencyStrategy ["
+				+ this.delegate + "]," + "eventNotifier [" + eventNotifier + "],"
+				+ "metricPublisher [" + metricsPublisher + "]," + "propertiesStrategy ["
+				+ propertiesStrategy + "]," + "]");
 		log.debug("Registering Sleuth Hystrix Concurrency Strategy.");
 	}
 
 	@Override
 	public <T> Callable<T> wrapCallable(Callable<T> callable) {
-		Callable<T> wrappedCallable = this.delegate != null ?
-				this.delegate.wrapCallable(callable) : callable;
+		if (callable instanceof HystrixTraceCallable) {
+			return callable;
+		}
+		Callable<T> wrappedCallable = this.delegate != null
+				? this.delegate.wrapCallable(callable) : callable;
+		if (wrappedCallable instanceof HystrixTraceCallable) {
+			return wrappedCallable;
+		}
 		return new HystrixTraceCallable<>(this.tracer, this.traceKeys, wrappedCallable);
 	}
 
@@ -103,7 +112,8 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 		private Callable<S> callable;
 		private Span parent;
 
-		public HystrixTraceCallable(Tracer tracer, TraceKeys traceKeys, Callable<S> callable) {
+		public HystrixTraceCallable(Tracer tracer, TraceKeys traceKeys,
+				Callable<S> callable) {
 			this.tracer = tracer;
 			this.traceKeys = traceKeys;
 			this.callable = callable;
@@ -120,8 +130,10 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 			else {
 				span = this.tracer.createSpan(HYSTRIX_COMPONENT);
 				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
-				this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
-						this.traceKeys.getAsync().getThreadNameKey(), Thread.currentThread().getName());
+				this.tracer.addTag(
+						this.traceKeys.getAsync().getPrefix()
+								+ this.traceKeys.getAsync().getThreadNameKey(),
+						Thread.currentThread().getName());
 				created = true;
 			}
 			try {

@@ -20,8 +20,8 @@ import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.springframework.cloud.sleuth.instrument.hystrix.HystrixAnnotationsIntegrationTests;
-import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommandTests;
+import org.springframework.cloud.sleuth.instrument.web.TraceFilterCustomExtractorTests;
+import org.springframework.cloud.sleuth.instrument.web.client.WebClientExceptionTests;
 
 /**
  * A test suite for probing weird ordering problems in the tests.
@@ -29,8 +29,7 @@ import org.springframework.cloud.sleuth.instrument.hystrix.TraceCommandTests;
  * @author Dave Syer
  */
 @RunWith(Suite.class)
-@SuiteClasses({ HystrixAnnotationsIntegrationTests.class,
-		TraceCommandTests.class })
+@SuiteClasses({ TraceFilterCustomExtractorTests.class, WebClientExceptionTests.class })
 @Ignore
 public class AdhocTestSuite {
 
