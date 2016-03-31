@@ -37,14 +37,12 @@ import zipkin.BinaryAnnotation;
 import zipkin.BinaryAnnotation.Type;
 import zipkin.Endpoint;
 import zipkin.Sampler;
-import zipkin.SamplingSpanStoreConsumer;
 import zipkin.Span.Builder;
-import zipkin.SpanConsumer;
-import zipkin.SpanStore;
+import zipkin.async.AsyncSpanConsumer;
 
 /**
  * A message listener that is turned on if Sleuth Stream is disabled.
- * Asynchronously stores the received spans in a {@link SpanStore}.
+ * Asynchronously stores the received spans using {@link AsyncSpanConsumer}.
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -58,17 +56,17 @@ public class ZipkinMessageListener {
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
 			.getLog(ZipkinMessageListener.class);
 	static final String UNKNOWN_PROCESS_ID = "unknown";
-	final SpanConsumer consumer;
+	final AsyncSpanConsumer consumer;
 
 	@Autowired
-	ZipkinMessageListener(SpanStore spanStore, Sampler sampler) {
-		this.consumer = SamplingSpanStoreConsumer.create(sampler, spanStore);
+	ZipkinMessageListener(AsyncSpanConsumer consumer) {
+		this.consumer = consumer;
 	}
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
 	public void sink(Spans input) {
 		List<zipkin.Span> converted = ConvertToZipkinSpanList.convert(input);
-		this.consumer.accept(converted);
+		this.consumer.accept(converted, AsyncSpanConsumer.NOOP_CALLBACK);
 	}
 
 	/**

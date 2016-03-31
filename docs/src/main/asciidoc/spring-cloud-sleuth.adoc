@@ -318,7 +318,7 @@ spring:
   sleuth:
     enabled: false
 zipkin:
-  store:
+  storage:
     type: mysql
 ----
 
