@@ -17,6 +17,7 @@
 		<spring-cloud-netflix.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
 		<zipkin-java.version>0.10.4</zipkin-java.version>
+		<zipkin-ui.version>1.39.0</zipkin-ui.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -76,6 +77,11 @@
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin-server</artifactId>
 				<version>${zipkin-java.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin</groupId>
+				<artifactId>zipkin-ui</artifactId>
+				<version>${zipkin-ui.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
