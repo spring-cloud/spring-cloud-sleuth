@@ -20,7 +20,9 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 
+import com.netflix.zuul.ExecutionStatus;
 import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.ZuulFilterResult;
 import com.netflix.zuul.context.RequestContext;
 
 /**
@@ -31,6 +33,8 @@ import com.netflix.zuul.context.RequestContext;
  * @since 1.0.0
  */
 public class TracePreZuulFilter extends ZuulFilter {
+
+	private static final String ZUUL_COMPONENT = "zuul";
 
 	private final Tracer tracer;
 	private final SpanInjector<RequestContext> spanInjector;
@@ -47,12 +51,22 @@ public class TracePreZuulFilter extends ZuulFilter {
 
 	@Override
 	public Object run() {
+		getCurrentSpan().logEvent(Span.CLIENT_SEND);
+		return null;
+	}
+
+	@Override
+	public ZuulFilterResult runFilter() {
 		RequestContext ctx = RequestContext.getCurrentContext();
 		Span span = getCurrentSpan();
-		this.spanInjector.inject(span, ctx);
-		// TODO: the client sent event should come from the client not the filter!
-		span.logEvent(Span.CLIENT_SEND);
-		return null;
+		Span newSpan = this.tracer.createSpan(span.getName(), span);
+		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
+		this.spanInjector.inject(newSpan, ctx);
+		ZuulFilterResult result = super.runFilter();
+		if (ExecutionStatus.SUCCESS != result.getStatus()) {
+			this.tracer.close(newSpan);
+		}
+		return result;
 	}
 
 	private Span getCurrentSpan() {

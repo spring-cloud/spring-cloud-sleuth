@@ -17,7 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAccessor;
+import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.zuul.ZuulFilter;
 
@@ -29,10 +29,10 @@ import com.netflix.zuul.ZuulFilter;
  */
 public class TracePostZuulFilter extends ZuulFilter {
 
-	private final SpanAccessor spanAccessor;
+	private final Tracer tracer;
 
-	public TracePostZuulFilter(SpanAccessor spanAccessor) {
-		this.spanAccessor = spanAccessor;
+	public TracePostZuulFilter(Tracer tracer) {
+		this.tracer = tracer;
 	}
 
 	@Override
@@ -44,6 +44,7 @@ public class TracePostZuulFilter extends ZuulFilter {
 	public Object run() {
 		// TODO: the client sent event should come from the client not the filter!
 		getCurrentSpan().logEvent(Span.CLIENT_RECV);
+		this.tracer.close(getCurrentSpan());
 		return null;
 	}
 
@@ -58,6 +59,6 @@ public class TracePostZuulFilter extends ZuulFilter {
 	}
 
 	private Span getCurrentSpan() {
-		return this.spanAccessor.getCurrentSpan();
+		return this.tracer.getCurrentSpan();
 	}
 }
