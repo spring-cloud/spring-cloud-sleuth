@@ -15,7 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -58,7 +57,7 @@ public class TraceZuulAutoConfiguration {
 
 	@Bean
 	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory,
-			Tracer tracer, @Qualifier("requestBuilderContextSpanInjector") SpanInjector<HttpRequest.Builder> spanInjector) {
+			Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector) {
 		return new TraceRestClientRibbonCommandFactory(factory, tracer, spanInjector);
 	}
 
