@@ -33,12 +33,12 @@ import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 
 import zipkin.Annotation;
+import zipkin.AsyncSpanConsumer;
 import zipkin.BinaryAnnotation;
 import zipkin.BinaryAnnotation.Type;
 import zipkin.Endpoint;
 import zipkin.Sampler;
 import zipkin.Span.Builder;
-import zipkin.async.AsyncSpanConsumer;
 
 /**
  * A message listener that is turned on if Sleuth Stream is disabled.
