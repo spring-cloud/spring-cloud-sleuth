@@ -1,9 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
-import com.jayway.awaitility.Awaitility;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -17,17 +15,16 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import rx.Observable;
-import rx.Subscriber;
 import rx.functions.Action0;
 import rx.plugins.SleuthRxJavaPlugins;
 import rx.schedulers.Schedulers;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
@@ -42,13 +39,11 @@ public class SleuthRxJavaIntegrationTests {
 	Listener listener;
 	@Autowired
 	SleuthRxJavaSchedulersHook sleuthRxJavaSchedulersHook;
-	private static StringBuilder caller;
+	StringBuilder caller = new StringBuilder();
 
 	@Before
-	@After
 	public void cleanTrace() {
 		this.listener.getEvents().clear();
-		caller = new StringBuilder();
 	}
 
 	@BeforeClass
@@ -59,17 +54,12 @@ public class SleuthRxJavaIntegrationTests {
 
 	@Test
 	public void should_create_new_span_when_no_current_span_when_rx_java_action_is_executed() {
-		Observable.create((Subscriber<? super Action0> action) -> {
-			action.onNext((Action0) () -> {
-				caller = new StringBuilder("actual_action");
-			});
-		})
-				.subscribeOn(Schedulers.computation())
-				.subscribe((Action0 t) -> {
-					t.call();
-				});
+		Observable.defer(() -> Observable.just(
+			(Action0) () -> this.caller = new StringBuilder("actual_action")
+		)).subscribeOn(Schedulers.newThread()).toBlocking()
+			.subscribe(Action0::call);
 
-		Awaitility.await().until(() -> then(caller.toString()).isEqualTo("actual_action"));
+		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(this.listener.getEvents().size()).isEqualTo(1);
 		then(this.listener.getEvents().get(0)).hasNameEqualTo("rxjava");
@@ -82,17 +72,12 @@ public class SleuthRxJavaIntegrationTests {
 		Span spanInCurrentThread = this.tracer.createSpan("current_span");
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "current_span");
 
-		Observable.create((Subscriber<? super Action0> action) -> {
-			action.onNext((Action0) () -> {
-				caller = new StringBuilder("actual_action");
-			});
-		})
-				.subscribeOn(Schedulers.computation())
-				.subscribe((Action0 t) -> {
-					t.call();
-				});
+		Observable.defer(() -> Observable.just(
+			(Action0) () -> this.caller = new StringBuilder("actual_action")
+		)).subscribeOn(Schedulers.newThread()).toBlocking()
+			.subscribe(Action0::call);
 
-		Awaitility.await().until(() -> then(caller.toString()).isEqualTo("actual_action"));
+		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.getCurrentSpan()).isNotNull();
 		//making sure here that no new spans were created or reported as closed
 		then(this.listener.getEvents().size()).isEqualTo(0);

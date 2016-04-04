@@ -1,6 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
-import static org.assertj.core.api.BDDAssertions.then;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,11 +8,14 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaSchedulersHook;
 import rx.plugins.SleuthRxJavaPlugins;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  *
@@ -39,7 +41,7 @@ public class SleuthRxJavaSchedulersHookTest {
 	public void should_not_override_existing_custom_hooks() {
 		SleuthRxJavaPlugins.getInstance().registerErrorHandler(new MyRxJavaErrorHandler());
 		SleuthRxJavaPlugins.getInstance().registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
-		new SleuthRxJavaSchedulersHook(tracer, traceKeys);
+		new SleuthRxJavaSchedulersHook(this.tracer, this.traceKeys);
 		then(SleuthRxJavaPlugins.getInstance().getErrorHandler()).isExactlyInstanceOf(MyRxJavaErrorHandler.class);
 		then(SleuthRxJavaPlugins.getInstance().getObservableExecutionHook()).isExactlyInstanceOf(MyRxJavaObservableExecutionHook.class);
 	}
@@ -48,7 +50,7 @@ public class SleuthRxJavaSchedulersHookTest {
 	public void should_wrap_delegates_action_in_wrapped_action_when_delegate_is_present_on_schedule() {
 		SleuthRxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
 		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-				this.tracer, this.traceKeys);
+			this.tracer, this.traceKeys);
 		Action0 action = schedulersHook.onSchedule(() -> {
 			caller = new StringBuilder("hello");
 		});

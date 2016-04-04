@@ -39,7 +39,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * @since 1.0.0
  */
-class TraceAsyncRestTemplate extends AsyncRestTemplate {
+public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 
 	private final Tracer tracer;
 

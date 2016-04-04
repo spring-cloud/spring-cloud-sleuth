@@ -16,12 +16,14 @@
 
 package org.springframework.cloud.sleuth;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -36,8 +38,8 @@ public class LogTest {
 	ObjectMapper objectMapper = new ObjectMapper();
 
 	@Test public void ctor_missing_event() throws IOException {
-		thrown.expect(NullPointerException.class);
-		thrown.expectMessage("event");
+		this.thrown.expect(NullPointerException.class);
+		this.thrown.expectMessage("event");
 
 		new Log(1234L, null);
 	}
@@ -45,15 +47,15 @@ public class LogTest {
 	@Test public void serialization_round_trip() throws IOException {
 		Log log = new Log(1234L, "cs");
 
-		String serialized = objectMapper.writeValueAsString(log);
-		Log deserialized = objectMapper.readValue(serialized, Log.class);
+		String serialized = this.objectMapper.writeValueAsString(log);
+		Log deserialized = this.objectMapper.readValue(serialized, Log.class);
 
 		then(deserialized).isEqualTo(log);
 	}
 
 	@Test public void deserialize_missing_event() throws IOException {
-		thrown.expect(JsonMappingException.class);
+		this.thrown.expect(JsonMappingException.class);
 
-		objectMapper.readValue("{\"timestamp\": 1234}", Log.class);
+		this.objectMapper.readValue("{\"timestamp\": 1234}", Log.class);
 	}
 }

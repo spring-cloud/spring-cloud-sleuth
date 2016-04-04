@@ -52,10 +52,11 @@ public class TracePostZuulFilterTests {
 	}
 
 	@Test
-	public void filterPublishesEvent() throws Exception {
+	public void filterPublishesEventAndClosesSpan() throws Exception {
 		Span span = this.tracer.createSpan("http:start");
 		this.filter.run();
 
 		then(span).hasLoggedAnEvent(Span.CLIENT_RECV);
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 }

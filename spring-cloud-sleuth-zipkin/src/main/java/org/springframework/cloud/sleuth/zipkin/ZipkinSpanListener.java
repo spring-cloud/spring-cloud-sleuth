@@ -121,7 +121,7 @@ public class ZipkinSpanListener implements SpanReporter {
 		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME) ?
 				span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : this.endpointLocator.local().serviceName;
 		zipkinSpan.addBinaryAnnotation(BinaryAnnotation.address(Constants.SERVER_ADDR,
-				Endpoint.create(serviceName, this.endpointLocator.local().ipv4, this.endpointLocator.local().port)));
+				new Endpoint.Builder(this.endpointLocator.local()).serviceName(serviceName).build()));
 	}
 
 	private boolean notClientOrServer(Span span) {

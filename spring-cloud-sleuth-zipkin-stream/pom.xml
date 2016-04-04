@@ -63,7 +63,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.java</groupId>
-			<artifactId>spanstore-jdbc</artifactId>
+			<artifactId>storage-jdbc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
