@@ -12,16 +12,11 @@ import org.springframework.context.annotation.Configuration;
 import rx.plugins.RxJavaSchedulersHook;
 
 /**
-<<<<<<< HEAD
- *
- * @author Shivang Shah
-=======
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} that
  * enables support for RxJava via {@link RxJavaSchedulersHook}.
  *
  * @author Shivang Shah
  * @since 1.0.0
->>>>>>> e64ea26da45e5f9383d86a9689fe916c53eb7ad2
  */
 @Configuration
 @AutoConfigureAfter(TraceAutoConfiguration.class)
