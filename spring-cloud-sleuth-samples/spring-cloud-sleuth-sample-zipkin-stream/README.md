@@ -3,7 +3,7 @@
 There are 3 parts to Zipkin: 
 
 - the instrumented client apps
-- the backend database 
+- the backend database (defaults to in-memory db)
 - the Zipkin server
 
 ## Zipkin Services
