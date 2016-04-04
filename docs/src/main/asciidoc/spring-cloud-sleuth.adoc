@@ -407,7 +407,7 @@ In order to pass the tracing information you have to wrap the same logic in the 
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=trace_hystrix_command,indent=0]
 ----
 
-=== `RxJavaSchedulersHook` to add support for `RxJava` Schedulers
+=== RxJava
 
 We're registering a custom https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook [`RxJavaSchedulersHook`]
 that wraps all `Action0` instances into their Sleuth representative -
