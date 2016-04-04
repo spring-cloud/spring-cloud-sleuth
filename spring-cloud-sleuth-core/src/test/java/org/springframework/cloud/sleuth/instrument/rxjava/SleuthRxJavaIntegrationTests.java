@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action0;
 import rx.plugins.SleuthRxJavaPlugins;
 import rx.schedulers.Schedulers;
@@ -66,14 +67,13 @@ public class SleuthRxJavaIntegrationTests {
 
 	@Test
 	public void should_create_new_span_when_rx_java_action_is_executed_and_there_was_no_span() {
-		Observable.defer(() -> Observable.just(
-			(Action0) () -> this.caller = new StringBuilder("actual_action")
-		)).subscribeOn(Schedulers.newThread()).toBlocking()
-			.subscribe(Action0::call);
+		Observable.create((Subscriber<? super Action0> action) -> {
+			action.onNext((Action0) () -> caller = new StringBuilder("actual_action"));
+		}).subscribeOn(Schedulers.newThread()).subscribe(Action0::call);
 
-		then(this.caller.toString()).isEqualTo("actual_action");
+		await().until(() -> then(caller.toString()).isEqualTo("actual_action"));
 		then(this.tracer.getCurrentSpan()).isNull();
-		await("span was closed").until(() -> then(this.listener.getEvents().size()).isEqualTo(1));
+		await().until(() -> then(this.listener.getEvents().size()).isEqualTo(1));
 		then(this.listener.getEvents().get(0)).hasNameEqualTo("rxjava");
 		then(this.listener.getEvents().get(0)).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "rxjava");
 		then(this.listener.getEvents().get(0)).isALocalComponentSpan();
@@ -84,15 +84,14 @@ public class SleuthRxJavaIntegrationTests {
 		Span spanInCurrentThread = this.tracer.createSpan("current_span");
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "current_span");
 
-		Observable.defer(() -> Observable.just(
-			(Action0) () -> this.caller = new StringBuilder("actual_action")
-		)).subscribeOn(Schedulers.newThread()).toBlocking()
-			.subscribe(Action0::call);
+		Observable.create((Subscriber<? super Action0> action) -> {
+			action.onNext((Action0) () -> caller = new StringBuilder("actual_action"));
+		}).subscribeOn(Schedulers.newThread()).subscribe(Action0::call);
 
-		then(this.caller.toString()).isEqualTo("actual_action");
+		await().until(() -> then(caller.toString()).isEqualTo("actual_action"));
 		then(this.tracer.getCurrentSpan()).isNotNull();
 		//making sure here that no new spans were created or reported as closed
-		await("span was closed").until(() -> then(this.listener.getEvents().size()).isEqualTo(0));
+		await().until(() -> then(this.listener.getEvents().size()).isEqualTo(0));
 		then(spanInCurrentThread).hasNameEqualTo(spanInCurrentThread.getName());
 		then(spanInCurrentThread).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "current_span");
 		then(spanInCurrentThread).isALocalComponentSpan();
