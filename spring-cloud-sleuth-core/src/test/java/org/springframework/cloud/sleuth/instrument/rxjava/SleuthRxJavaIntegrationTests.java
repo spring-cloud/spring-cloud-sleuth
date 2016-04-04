@@ -31,14 +31,10 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 	SleuthRxJavaIntegrationTests.TestConfig.class})
 public class SleuthRxJavaIntegrationTests {
 
-	@Autowired
-	Tracer tracer;
-	@Autowired
-	TraceKeys traceKeys;
-	@Autowired
-	Listener listener;
-	@Autowired
-	SleuthRxJavaSchedulersHook sleuthRxJavaSchedulersHook;
+	@Autowired Tracer tracer;
+	@Autowired TraceKeys traceKeys;
+	@Autowired Listener listener;
+	@Autowired SleuthRxJavaSchedulersHook sleuthRxJavaSchedulersHook;
 	StringBuilder caller = new StringBuilder();
 
 	@Before
@@ -47,6 +43,12 @@ public class SleuthRxJavaIntegrationTests {
 	}
 
 	@BeforeClass
+	public static void setUp() {
+		if (!(SleuthRxJavaPlugins.getInstance().getSchedulersHook() instanceof SleuthRxJavaSchedulersHook)) {
+			SleuthRxJavaPlugins.resetPlugins();
+		}
+	}
+
 	@AfterClass
 	public static void cleanUp() {
 		SleuthRxJavaPlugins.resetPlugins();
