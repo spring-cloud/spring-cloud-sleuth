@@ -1,10 +1,3 @@
-mysql:
-  image: mysql
-  ports:
-    - 3306:3306
-  environment:
-    - MYSQL_ROOT_PASSWORD=root
-    - MYSQL_DATABASE=test
 rabbitmq:
   image: rabbitmq:management
   expose:
@@ -12,20 +5,3 @@ rabbitmq:
   ports:
     - 5672:5672
     - 15672:15672
-zipkin:
-  build: .
-  volumes:
-    - ../..:/app
-    - ~:/home/spring
-  environment:
-    - MYSQL_HOST=mysql
-    - RABBIT_HOST=rabbitmq
-    # - JAVA_OPTS=your jvm params here
-  ports:
-    # Historical port used for the Zipkin HTTP Api
-    - 9411:9411
-    # Zipkin UI used to be on a separate process listening on port 8080
-    - 8080:9411
-  links:
-    - mysql
-    - rabbitmq

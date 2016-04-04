@@ -35,9 +35,10 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master
 
 Instead of POSTing trace data directly to a Zipkin server, you can export them over https://raw.githubusercontent.com/spring-cloud/spring-cloud-stream[Spring Cloud Stream].
 
-1. Build the Zipkin Stream sample with Maven and run it via its `docker-compose.yml` (which also starts the required middleware and the Zipkin UI).
+1. Run the RabbitMQ middleware for Zipkin (you can use `docker-compose.yml`).
+2. Build the Zipkin Stream sample with Maven and run it.
 7. Run the `spring-cloud-sleuth-sample-stream` app and interact with it in a browser, just like the vanilla sample. If you are using a VM to run docker you might need to tunnel port 5672 to localhost, or change the `spring.rabbbitmq.host`.
-9. Go to `http://localhost:9411` for Zipkin's UI (if you are using boot2docker the host will be different)
+9. Go to `http://localhost:9411` for Zipkin's UI
 
 The UI should look more or less like this:
 
