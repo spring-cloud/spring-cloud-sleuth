@@ -2,6 +2,8 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -16,6 +18,7 @@ import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -27,8 +30,7 @@ import rx.schedulers.Schedulers;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {
-	SleuthRxJavaIntegrationTests.TestConfig.class})
+@SpringApplicationConfiguration(classes = {SleuthRxJavaIntegrationTests.TestConfig.class})
 public class SleuthRxJavaIntegrationTests {
 
 	@Autowired Tracer tracer;
@@ -38,8 +40,13 @@ public class SleuthRxJavaIntegrationTests {
 	StringBuilder caller = new StringBuilder();
 
 	@Before
-	public void cleanTrace() {
+	public void clean() {
 		this.listener.getEvents().clear();
+	}
+
+	@After
+	public void clearTrace() {
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@BeforeClass
