@@ -409,7 +409,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 === RxJava
 
-We're registering a custom https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook [`RxJavaSchedulersHook`]
+We're registering a custom https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook[`RxJavaSchedulersHook`]
 that wraps all `Action0` instances into their Sleuth representative -
 the `TraceAction`. The hook either starts or continues a span depending on the fact whether tracing was already going
 on before the Action was scheduled. To disable the custom RxJavaSchedulersHook set the `spring.sleuth.rxjava.schedulers.hook.enabled` to `false`.
