@@ -23,10 +23,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
 import rx.Observable;
 import rx.functions.Action0;
 import rx.plugins.SleuthRxJavaPlugins;
 import rx.schedulers.Schedulers;
+
+import static com.jayway.awaitility.Awaitility.await;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -62,7 +65,7 @@ public class SleuthRxJavaIntegrationTests {
 	}
 
 	@Test
-	public void should_create_new_span_when_no_current_span_when_rx_java_action_is_executed() {
+	public void should_create_new_span_when_rx_java_action_is_executed_and_there_was_no_span() {
 		Observable.defer(() -> Observable.just(
 			(Action0) () -> this.caller = new StringBuilder("actual_action")
 		)).subscribeOn(Schedulers.newThread()).toBlocking()
@@ -70,7 +73,7 @@ public class SleuthRxJavaIntegrationTests {
 
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.getCurrentSpan()).isNull();
-		then(this.listener.getEvents().size()).isEqualTo(1);
+		await("span was closed").until(() -> then(this.listener.getEvents().size()).isEqualTo(1));
 		then(this.listener.getEvents().get(0)).hasNameEqualTo("rxjava");
 		then(this.listener.getEvents().get(0)).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "rxjava");
 		then(this.listener.getEvents().get(0)).isALocalComponentSpan();
@@ -89,7 +92,7 @@ public class SleuthRxJavaIntegrationTests {
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.getCurrentSpan()).isNotNull();
 		//making sure here that no new spans were created or reported as closed
-		then(this.listener.getEvents().size()).isEqualTo(0);
+		await("span was closed").until(() -> then(this.listener.getEvents().size()).isEqualTo(0));
 		then(spanInCurrentThread).hasNameEqualTo(spanInCurrentThread.getName());
 		then(spanInCurrentThread).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "current_span");
 		then(spanInCurrentThread).isALocalComponentSpan();
