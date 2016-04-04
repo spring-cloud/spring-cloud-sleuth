@@ -11,6 +11,13 @@ import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaSchedulersHook;
 import rx.plugins.SleuthRxJavaPlugins;
 
+/**
+ * {@link RxJavaSchedulersHook} that wraps a {@link Action0} into its tracing
+ * representation.
+ *
+ * @author Shivang Shah
+ * @since 1.0.0
+ */
 class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
 	private static final Log log = LogFactory.getLog(SleuthRxJavaSchedulersHook.class);
@@ -30,7 +37,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			}
 			RxJavaErrorHandler errorHandler = SleuthRxJavaPlugins.getInstance().getErrorHandler();
 			RxJavaObservableExecutionHook observableExecutionHook
-					= SleuthRxJavaPlugins.getInstance().getObservableExecutionHook();
+				= SleuthRxJavaPlugins.getInstance().getObservableExecutionHook();
 			logCurrentStateOfRxJavaPlugins(errorHandler, observableExecutionHook);
 			SleuthRxJavaPlugins.resetPlugins();
 			SleuthRxJavaPlugins.getInstance().registerSchedulersHook(this);
@@ -42,12 +49,12 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 	}
 
 	private void logCurrentStateOfRxJavaPlugins(RxJavaErrorHandler errorHandler,
-			RxJavaObservableExecutionHook observableExecutionHook) {
+		RxJavaObservableExecutionHook observableExecutionHook) {
 		log.debug("Current RxJava plugins configuration is ["
-				+ "schedulersHook [" + this.delegate + "],"
-				+ "errorHandler [" + errorHandler + "],"
-				+ "observableExecutionHook [" + observableExecutionHook + "],"
-				+ "]");
+			+ "schedulersHook [" + this.delegate + "],"
+			+ "errorHandler [" + errorHandler + "],"
+			+ "observableExecutionHook [" + observableExecutionHook + "],"
+			+ "]");
 		log.debug("Registering Sleuth RxJava Schedulers Hook.");
 	}
 
@@ -57,7 +64,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			return action;
 		}
 		Action0 wrappedAction = this.delegate != null
-				? this.delegate.onSchedule(action) : action;
+			? this.delegate.onSchedule(action) : action;
 		if (wrappedAction instanceof TraceAction) {
 			return action;
 		}
@@ -88,7 +95,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 				span = this.tracer.createSpan(RXJAVA_COMPONENT);
 				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, RXJAVA_COMPONENT);
 				this.tracer.addTag(this.traceKeys.getAsync().getPrefix()
-						+ this.traceKeys.getAsync().getThreadNameKey(), Thread.currentThread().getName());
+					+ this.traceKeys.getAsync().getThreadNameKey(), Thread.currentThread().getName());
 				created = true;
 			}
 			try {
