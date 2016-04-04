@@ -1,30 +1,15 @@
 # Running a Zipkin Server
 
-There are 3 parts to Zipkin: the instrumented client apps, the backend database and the Zipkin server. The database for this implementation is MySQL.
+There are 3 parts to Zipkin: 
 
-## Zipkin Services
-
-Run this app using the docker-compose provided.
-
-```
-$ docker-compose build zipkin
-$ docker-compose up
-...
-```
-
-and test it
-
-```
-$ curl localhost:9411/api/v1/services
-["zipkin-query"]
-```
-
-The app might fail to start if mysql is not available when it needs it. If that happens you can just start it separately: just keep running `docker-compose up` until it works.
-
+- the instrumented client apps
+- the backend database 
+- the Zipkin server
 
 ## Instrumenting Apps
 
-Depend on [Spring Cloud Sleuth Stream](https://github.com/spring-cloud-spring-cloud-sleuth) and the rabbit binder (`spring-cloud-starter-stream-rabbit`).
+Depend on [Spring Cloud Sleuth Stream](https://github.com/spring-cloud-spring-cloud-sleuth) and the 
+rabbit binder (`spring-cloud-starter-stream-rabbit`).
 
 Once the apps start publishing spans they will appear in the span store as well.
 
@@ -33,5 +18,5 @@ Once the apps start publishing spans they will appear in the span store as well.
 You can run this app in an IDE and still use docker-compose to create the middleware:
 
 ```
-$ docker-compose up rabbitmq mysql
+$ docker-compose up rabbitmq
 ```
