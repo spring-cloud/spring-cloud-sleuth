@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
@@ -39,6 +40,7 @@ import zipkin.BinaryAnnotation.Type;
 import zipkin.Endpoint;
 import zipkin.Sampler;
 import zipkin.Span.Builder;
+import zipkin.StorageComponent;
 
 /**
  * A message listener that is turned on if Sleuth Stream is disabled.
@@ -58,9 +60,11 @@ public class ZipkinMessageListener {
 	static final String UNKNOWN_PROCESS_ID = "unknown";
 	final AsyncSpanConsumer consumer;
 
+	/** lazy so transient storage errors don't crash bootstrap */
+	@Lazy
 	@Autowired
-	ZipkinMessageListener(AsyncSpanConsumer consumer) {
-		this.consumer = consumer;
+	ZipkinMessageListener(StorageComponent storage, Sampler sampler) {
+		this.consumer = storage.asyncSpanConsumer(sampler);
 	}
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
