@@ -40,13 +40,11 @@ Spring Cloud Sleuth features:
 
 * Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator.
 
-* Optionally log span data in JSON format for harvesting in a log aggregator (set `spring.sleuth.log.json.enabled=true`).
-
 * Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
 
 * Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, zuul filters, feign client).
 
-* If `spring-cloud-sleuth-zipkin` is available then the app will generate and collect Zipkin-compatible traces (using Brave). By default it sends them via Thrift to a Zipkin collector service on localhost (port 9410). Configure the location of the service using `spring.zipkin.[host,port]`.
+* If `spring-cloud-sleuth-zipkin` is available then the app will generate and collect Zipkin-compatible traces via HTTP. By default it sends them to a Zipkin collector service on localhost (port 9411). Configure the location of the service using `spring.zipkin.[host,port]`.
 
 <span id="quick-start"></span>
 ## Quick Start
@@ -81,15 +79,13 @@ public class Application {
 }
 ```
 
-Run this app and add the MDC patterns to your log pattern:
+Run this app and this MDC pattern will be set:
 
-```yaml
-logging:
-  pattern:
-    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}] [%15.15t] %-40.40logger{39}: %m%n'
+```
+%clr([${spring.application.name:},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]){yellow}'
 ```
 
-and then hit the home page. You will see traceId and spanId populated
+Hit the home page. You will see traceId and spanId populated
 in the logs. If this app calls out to another one (e.g. with
 `RestTemplate`) it will send the trace data in headers and if the
 receiver is another Sleuth app you will see the trace continue there.
