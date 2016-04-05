@@ -8,6 +8,7 @@ package rx.plugins;
  * @author Shivang Shah
  * @since 1.0.0
  */
+@Deprecated
 public class SleuthRxJavaPlugins extends RxJavaPlugins {
 
 	SleuthRxJavaPlugins() {
