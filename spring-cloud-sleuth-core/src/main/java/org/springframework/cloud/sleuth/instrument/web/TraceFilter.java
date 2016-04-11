@@ -138,6 +138,7 @@ public class TraceFilter extends OncePerRequestFilter {
 					Span parent =  spanFromRequest.getSavedSpan();
 					if (parent.isRemote()) {
 						parent.logEvent(Span.SERVER_SEND);
+						parent.stop();
 						this.spanReporter.report(parent);
 					}
 				} else {
