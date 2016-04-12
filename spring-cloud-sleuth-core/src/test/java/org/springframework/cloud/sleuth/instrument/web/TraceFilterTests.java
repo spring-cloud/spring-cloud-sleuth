@@ -185,6 +185,20 @@ public class TraceFilterTests {
 	}
 
 	@Test
+	public void ensuresThatParentSpanIsStoppedWhenReported() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanIsStoppedVeryfingReporter(),
+				this.spanExtractor, this.spanInjector);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+	}
+
+	SpanReporter spanIsStoppedVeryfingReporter() {
+		return (span) -> assertThat(span.getEnd()).as("Span has to be stopped before reporting").isNotZero();
+	}
+
+	@Test
 	public void additionalMultiValuedHeader() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
