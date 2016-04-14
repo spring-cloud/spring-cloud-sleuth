@@ -58,6 +58,8 @@ public class TraceWebAsyncClientAutoConfiguration {
 	@Autowired(required = false) AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
 
 	@Bean
+	@Primary
+	@ConditionalOnProperty(value = "spring.sleuth.web.async.client.factory.enabled", matchIfMissing = true)
 	public TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactory() {
 		ClientHttpRequestFactory clientFactory = this.clientHttpRequestFactory;
 		AsyncClientHttpRequestFactory asyncClientFactory = this.asyncClientHttpRequestFactory;
@@ -86,6 +88,7 @@ public class TraceWebAsyncClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@ConditionalOnProperty(value = "spring.sleuth.web.async.client.template.enabled", matchIfMissing = true)
 	public AsyncRestTemplate traceAsyncRestTemplate() {
 		return new TraceAsyncRestTemplate(traceAsyncClientHttpRequestFactory(), this.tracer);
 	}
