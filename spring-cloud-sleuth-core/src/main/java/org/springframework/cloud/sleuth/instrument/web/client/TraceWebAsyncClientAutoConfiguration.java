@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -27,8 +28,12 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.client.AsyncRestTemplate;
 
 /**
@@ -46,11 +51,36 @@ import org.springframework.web.client.AsyncRestTemplate;
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceWebAsyncClientAutoConfiguration {
 
+	@Autowired Tracer tracer;
+	@Autowired(required = false) ClientHttpRequestFactory clientHttpRequestFactory;
+	@Autowired(required = false) AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
+
 	@Bean
 	@ConditionalOnMissingBean
 	public AsyncClientHttpRequestFactory asyncClientHttpRequestFactory(Tracer tracer,
 			SpanInjector<HttpRequest> spanInjector) {
-		return new TraceAsyncClientHttpRequestFactoryWrapper(tracer, spanInjector);
+		ClientHttpRequestFactory clientFactory = this.clientHttpRequestFactory;
+		AsyncClientHttpRequestFactory asyncClientFactory = this.asyncClientHttpRequestFactory;
+		if (clientFactory == null) {
+			clientFactory = defaultClientHttpRequestFactory(tracer);
+		}
+		if (asyncClientFactory == null) {
+			asyncClientFactory = clientFactory instanceof AsyncClientHttpRequestFactory ?
+					(AsyncClientHttpRequestFactory) clientFactory : defaultClientHttpRequestFactory(tracer);
+		}
+		return new TraceAsyncClientHttpRequestFactoryWrapper(tracer, spanInjector, asyncClientFactory, clientFactory);
+	}
+
+	private SimpleClientHttpRequestFactory defaultClientHttpRequestFactory(Tracer tracer) {
+		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+		simpleClientHttpRequestFactory.setTaskExecutor(asyncListenableTaskExecutor(tracer));
+		return simpleClientHttpRequestFactory;
+	}
+
+	private AsyncListenableTaskExecutor asyncListenableTaskExecutor(Tracer tracer) {
+		ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+		threadPoolTaskScheduler.initialize();
+		return new TraceAsyncListenableTaskExecutor(threadPoolTaskScheduler, tracer);
 	}
 
 	@Bean
