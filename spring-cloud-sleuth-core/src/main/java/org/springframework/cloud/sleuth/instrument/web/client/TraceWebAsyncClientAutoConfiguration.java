@@ -53,23 +53,23 @@ import org.springframework.web.client.AsyncRestTemplate;
 public class TraceWebAsyncClientAutoConfiguration {
 
 	@Autowired Tracer tracer;
+	@Autowired SpanInjector<HttpRequest> spanInjector;
 	@Autowired(required = false) ClientHttpRequestFactory clientHttpRequestFactory;
 	@Autowired(required = false) AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
 
 	@Bean
-	@Primary
-	public AsyncClientHttpRequestFactory traceAsyncClientHttpRequestFactory(Tracer tracer,
-			SpanInjector<HttpRequest> spanInjector) {
+	public TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactory() {
 		ClientHttpRequestFactory clientFactory = this.clientHttpRequestFactory;
 		AsyncClientHttpRequestFactory asyncClientFactory = this.asyncClientHttpRequestFactory;
 		if (clientFactory == null) {
-			clientFactory = defaultClientHttpRequestFactory(tracer);
+			clientFactory = defaultClientHttpRequestFactory(this.tracer);
 		}
 		if (asyncClientFactory == null) {
 			asyncClientFactory = clientFactory instanceof AsyncClientHttpRequestFactory ?
-					(AsyncClientHttpRequestFactory) clientFactory : defaultClientHttpRequestFactory(tracer);
+					(AsyncClientHttpRequestFactory) clientFactory : defaultClientHttpRequestFactory(this.tracer);
 		}
-		return new TraceAsyncClientHttpRequestFactoryWrapper(tracer, spanInjector, asyncClientFactory, clientFactory);
+		return new TraceAsyncClientHttpRequestFactoryWrapper(this.tracer, this.spanInjector,
+				asyncClientFactory, clientFactory);
 	}
 
 	private SimpleClientHttpRequestFactory defaultClientHttpRequestFactory(Tracer tracer) {
@@ -86,9 +86,8 @@ public class TraceWebAsyncClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public AsyncRestTemplate asyncRestTemplate(AsyncClientHttpRequestFactory asyncClientHttpRequestFactory,
-			Tracer tracer) {
-		return new TraceAsyncRestTemplate(asyncClientHttpRequestFactory, tracer);
+	public AsyncRestTemplate traceAsyncRestTemplate() {
+		return new TraceAsyncRestTemplate(traceAsyncClientHttpRequestFactory(), this.tracer);
 	}
 
 }
