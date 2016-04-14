@@ -28,6 +28,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
@@ -56,8 +57,8 @@ public class TraceWebAsyncClientAutoConfiguration {
 	@Autowired(required = false) AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
 
 	@Bean
-	@ConditionalOnMissingBean
-	public AsyncClientHttpRequestFactory asyncClientHttpRequestFactory(Tracer tracer,
+	@Primary
+	public AsyncClientHttpRequestFactory traceAsyncClientHttpRequestFactory(Tracer tracer,
 			SpanInjector<HttpRequest> spanInjector) {
 		ClientHttpRequestFactory clientFactory = this.clientHttpRequestFactory;
 		AsyncClientHttpRequestFactory asyncClientFactory = this.asyncClientHttpRequestFactory;
