@@ -439,8 +439,13 @@ just set `spring.sleuth.web.client.enabled` to `false`.
 
 ==== Asynchronous Rest Template
 
-Custom instrumentation is set to create and close Spans upon sending and receiving requests. To block the `AsyncRestTemplate`
-features set `spring.sleuth.web.async.client.enabled` to `false`.
+Custom instrumentation is set to create and close Spans upon sending and receiving requests. You can customize the `ClientHttpRequestFactory`
+and the `AsyncClientHttpRequestFactory` by registering your beans. Remember to use tracing compatible implementations (e.g. don't forget to
+wrap `ThreadPoolTaskScheduler` in a `TraceAsyncListenableTaskExecutor`).
+
+To block the `AsyncRestTemplate` features set `spring.sleuth.web.async.client.enabled` to `false`.
+To disable creation of the default `TraceAsyncClientHttpRequestFactoryWrapper` set `spring.sleuth.web.async.client.factory.enabled`
+to `false`. If you don't want to create `AsyncRestClient` at all set `spring.sleuth.web.async.client.template.enabled` to `false`.
 
 === Feign
 
