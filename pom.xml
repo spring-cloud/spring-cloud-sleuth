@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-cloud-sleuth</artifactId>
-	<version>1.0.0.BUILD-SNAPSHOT</version>
+	<version>1.0.0.RC2</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Sleuth</name>
 	<description>Spring Cloud Sleuth</description>
@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>1.1.0.BUILD-SNAPSHOT</version>
+		<version>1.1.0.RC2</version>
 		<relativePath/>
 		<!-- lookup parent from repository -->
 	</parent>
@@ -208,7 +208,7 @@
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
 		<surefire.plugin.version>2.19.1</surefire.plugin.version>
 		<checkstyle.version>2.17</checkstyle.version>
-		<spring-cloud-build.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-build.version>
+		<spring-cloud-build.version>1.1.0.RC2</spring-cloud-build.version>
 	</properties>
 
 	<profiles>
