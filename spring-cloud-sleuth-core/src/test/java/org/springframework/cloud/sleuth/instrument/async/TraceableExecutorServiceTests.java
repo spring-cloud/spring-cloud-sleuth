@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
@@ -64,6 +65,25 @@ public class TraceableExecutorServiceTests {
 
 		then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).containsOnly(span.getTraceId());
 		then(this.spanVerifyingRunnable.spanIds.stream().distinct().collect(toList())).hasSize(TOTAL_THREADS);
+	}
+
+	@Test
+	public void should_propagate_trace_info_when_compleable_future_is_used() throws Exception {
+		Tracer tracer = this.tracer;
+		TraceKeys traceKeys = new TraceKeys();
+		SpanNamer spanNamer = new DefaultSpanNamer();
+
+		// tag::completablefuture[]
+		CompletableFuture<Long> completableFuture = CompletableFuture.supplyAsync(() -> {
+			// perform some logic
+			return 1_000_000L;
+		}, new TraceableExecutorService(Executors.newCachedThreadPool(),
+				// 'calculateTax' explicitly names the span - this param is optional
+				tracer, traceKeys, spanNamer, "calculateTax"));
+		// end::completablefuture[]
+
+		then(completableFuture.get()).isEqualTo(1_000_000L);
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	private CompletableFuture<?>[] runnablesExecutedViaTraceManagerableExecutorService() {

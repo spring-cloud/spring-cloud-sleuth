@@ -487,6 +487,14 @@ If you want to skip Span creation for some `@Scheduled` annotated classes you ca
 We're providing `LazyTraceExecutor`, `TraceableExecutorService` and `TraceableScheduledExecutorService`. Those implementations
 are creating Spans each time a new task is submitted, invoked or scheduled.
 
+Here you can see an example of how to pass tracing information with `TraceableExecutorService` when working with `CompletableFuture`:
+
+[source,java]
+----
+
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/TraceableExecutorServiceTests.java[tags=completablefuture,indent=0]
+----
+
 === Messaging
 
 Spring Cloud Sleuth integrates with http://projects.spring.io/spring-integration/[Spring Integration]. It creates spans for publish and
