@@ -1617,8 +1617,14 @@ just set <code>spring.sleuth.web.client.enabled</code> to <code>false</code>.</p
 <div class="sect3">
 <h4 id="_asynchronous_rest_template">Asynchronous Rest Template</h4>
 <div class="paragraph">
-<p>Custom instrumentation is set to create and close Spans upon sending and receiving requests. To block the <code>AsyncRestTemplate</code>
-features set <code>spring.sleuth.web.async.client.enabled</code> to <code>false</code>.</p>
+<p>Custom instrumentation is set to create and close Spans upon sending and receiving requests. You can customize the <code>ClientHttpRequestFactory</code>
+and the <code>AsyncClientHttpRequestFactory</code> by registering your beans. Remember to use tracing compatible implementations (e.g. don&#8217;t forget to
+wrap <code>ThreadPoolTaskScheduler</code> in a <code>TraceAsyncListenableTaskExecutor</code>).</p>
+</div>
+<div class="paragraph">
+<p>To block the <code>AsyncRestTemplate</code> features set <code>spring.sleuth.web.async.client.enabled</code> to <code>false</code>.
+To disable creation of the default <code>TraceAsyncClientHttpRequestFactoryWrapper</code> set <code>spring.sleuth.web.async.client.factory.enabled</code>
+to <code>false</code>. If you don&#8217;t want to create <code>AsyncRestClient</code> at all set <code>spring.sleuth.web.async.client.template.enabled</code> to <code>false</code>.</p>
 </div>
 </div>
 </div>
@@ -1687,6 +1693,19 @@ by setting the value of <code>spring.sleuth.scheduled.enabled</code> to <code>fa
 <p>We&#8217;re providing <code>LazyTraceExecutor</code>, <code>TraceableExecutorService</code> and <code>TraceableScheduledExecutorService</code>. Those implementations
 are creating Spans each time a new task is submitted, invoked or scheduled.</p>
 </div>
+<div class="paragraph">
+<p>Here you can see an example of how to pass tracing information with <code>TraceableExecutorService</code> when working with <code>CompletableFuture</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">CompletableFuture&lt;Long&gt; completableFuture = CompletableFuture.supplyAsync(() -&gt; {
+	// perform some logic
+	return 1_000_000L;
+}, new TraceableExecutorService(Executors.newCachedThreadPool(),
+		// 'calculateTax' explicitly names the span - this param is optional
+		tracer, traceKeys, spanNamer, "calculateTax"));</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1708,7 +1727,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-04-04 17:42:22 CEST
+Last updated 2016-04-19 10:01:32 CEST
 </div>
 </div>
 </body>
