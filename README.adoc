@@ -93,16 +93,16 @@ So 1 span from *A*, 2 spans from *B*, 1 span from *C*, 2 spans from *D*, 1 span 
 Altogether *10* spans.
 
 .Click Pivotal Web Service icon to see it live!
-[caption="Click Pivotal Web Service icon to see it live!"]
-image:pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", height=100, width=100]
+[caption="Click Pivotal Web Services icon to see it live!"]
+image:pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
 
 The dependency graph in Zipkin would look like this:
 
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/dependencies.png[Dependencies]
 
 .Click Pivotal Web Service icon to see it live!
-[caption="Click Pivotal Web Service icon to see it live!"]
-image:pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", height=100, width=100]
+[caption="Click Pivotal Web Services icon to see it live!"]
+image:pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
 
 
 ==== Log correlation
