@@ -72,12 +72,13 @@ public class TraceableExecutorServiceTests {
 		Tracer tracer = this.tracer;
 		TraceKeys traceKeys = new TraceKeys();
 		SpanNamer spanNamer = new DefaultSpanNamer();
+		ExecutorService executorService = this.executorService;
 
 		// tag::completablefuture[]
 		CompletableFuture<Long> completableFuture = CompletableFuture.supplyAsync(() -> {
 			// perform some logic
 			return 1_000_000L;
-		}, new TraceableExecutorService(Executors.newCachedThreadPool(),
+		}, new TraceableExecutorService(executorService,
 				// 'calculateTax' explicitly names the span - this param is optional
 				tracer, traceKeys, spanNamer, "calculateTax"));
 		// end::completablefuture[]
