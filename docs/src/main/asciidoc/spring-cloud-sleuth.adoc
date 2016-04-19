@@ -504,3 +504,10 @@ subscribe events. To disable Spring Integration instrumentation, set `spring.sle
 
 We're registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
 To disable Zuul support set the `spring.sleuth.zuul.enabled` property to `false`.
+
+== Running examples
+
+You can find the running examples deployed in the https://run.pivotal.io/[Pivotal Web Services]. Check them out in the following links:
+
+- http://docssleuth-zipkin-server.cfapps.io/[Zipkin for apps presented in the samples to the top], its https://github.com/spring-cloud-samples/sleuth-documentation-apps[Github Code] and its build status image:https://build.spring.io/plugins/servlet/buildStatusImage/SCE2E-SCSDAOCF[Build Status, link=https://build.spring.io/browse/SCE2E-SCSDAOCF]
+- http://docsbrewing-zipkin-web.cfapps.io/[Zipkin for Brewery on PWS], its https://github.com/spring-cloud-samples/brewery[Github Code] and its build status image:https://build.spring.io/plugins/servlet/buildStatusImage/SCE2E-SCSSE2ECFT[Build Status, link=https://build.spring.io/browse/SCE2E-SCSBFDOCF]
