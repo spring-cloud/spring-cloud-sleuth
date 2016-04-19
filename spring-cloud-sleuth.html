@@ -1701,7 +1701,7 @@ are creating Spans each time a new task is submitted, invoked or scheduled.</p>
 <pre class="highlight"><code class="language-java" data-lang="java">CompletableFuture&lt;Long&gt; completableFuture = CompletableFuture.supplyAsync(() -&gt; {
 	// perform some logic
 	return 1_000_000L;
-}, new TraceableExecutorService(Executors.newCachedThreadPool(),
+}, new TraceableExecutorService(executorService,
 		// 'calculateTax' explicitly names the span - this param is optional
 		tracer, traceKeys, spanNamer, "calculateTax"));</code></pre>
 </div>
@@ -1727,7 +1727,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-04-19 10:01:32 CEST
+Last updated 2016-04-19 10:17:03 CEST
 </div>
 </div>
 </body>
