@@ -68,12 +68,14 @@ class SpanContextHolder {
 
 	/**
 	 * Close the current span and all parents that can be auto closed.
+	 * On every iteration a function will be applied on the closed Span.
 	 */
-	static void close() {
+	static void close(SpanFunction spanFunction) {
 		SpanContext current = CURRENT_SPAN.get();
 		CURRENT_SPAN.remove();
 		while (current != null) {
 			current = current.parent;
+			spanFunction.apply(current != null ? current.span : null);
 			if (current != null) {
 				if (!current.autoClose) {
 					CURRENT_SPAN.set(current);
@@ -81,6 +83,13 @@ class SpanContextHolder {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Close the current span and all parents that can be auto closed.
+	 */
+	static void close() {
+		close(new NoOpFunction());
 	}
 
 	/**
@@ -112,5 +121,13 @@ class SpanContextHolder {
 			this.autoClose = autoClose;
 			this.parent = CURRENT_SPAN.get();
 		}
+	}
+
+	interface SpanFunction {
+		void apply(Span span);
+	}
+
+	private static class NoOpFunction implements SpanFunction {
+		@Override public void apply(Span span) { }
 	}
 }

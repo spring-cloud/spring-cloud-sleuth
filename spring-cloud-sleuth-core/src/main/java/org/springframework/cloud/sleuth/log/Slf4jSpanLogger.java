@@ -67,7 +67,7 @@ public class Slf4jSpanLogger implements SpanLogger {
 	@Override
 	public void logStoppedSpan(Span parent, Span span) {
 		log("Stopped span: {}", span);
-		if (parent != null) {
+		if (span != null && parent != null) {
 			log("With parent: {}", parent);
 			MDC.put(Span.SPAN_ID_NAME, Span.idToHex(parent.getSpanId()));
 			MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(parent.isExportable()));
@@ -80,7 +80,7 @@ public class Slf4jSpanLogger implements SpanLogger {
 	}
 
 	private void log(String text, Span span) {
-		if (this.nameSkipPattern.matcher(span.getName()).matches()) {
+		if (span != null && this.nameSkipPattern.matcher(span.getName()).matches()) {
 			return;
 		}
 		this.log.trace(text, span);
