@@ -7,6 +7,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -79,6 +80,16 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
 		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
+	}
+
+	@Test
+	public void when_message_is_sent_should_eventually_clear_mdc()
+			throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+
+		whenSentPingWithTraceId(expectedTraceId);
+
+		then(MDC.getCopyOfContextMap()).isEmpty();
 	}
 
 	@Test

@@ -144,7 +144,6 @@ public class TraceFilter extends OncePerRequestFilter {
 				} else {
 					spanFromRequest.logEvent(Span.SERVER_SEND);
 				}
-				// Double close to clean up the parent (remote span as well)
 				this.tracer.close(spanFromRequest);
 			}
 		}

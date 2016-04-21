@@ -115,7 +115,7 @@ public class DefaultTracer implements Tracer {
 			return null;
 		}
 		Span cur = SpanContextHolder.getCurrentSpan();
-		Span savedSpan = span.getSavedSpan();
+		final Span savedSpan = span.getSavedSpan();
 		if (!span.equals(cur)) {
 			ExceptionUtils.warn(
 					"Tried to close span but " + "it is not the current span: " + span
@@ -133,7 +133,11 @@ public class DefaultTracer implements Tracer {
 					this.spanLogger.logStoppedSpan(null, span);
 				}
 			}
-			SpanContextHolder.close();
+			SpanContextHolder.close(new SpanContextHolder.SpanFunction() {
+				@Override public void apply(Span span) {
+					DefaultTracer.this.spanLogger.logStoppedSpan(savedSpan, span);
+				}
+			});
 		}
 		return savedSpan;
 	}
