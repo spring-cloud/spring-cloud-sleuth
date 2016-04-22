@@ -71,6 +71,7 @@ public class SleuthStreamAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
 			SpanMetricReporter spanMetricReporter) {
 		return new StreamSpanReporter(endpointLocator, spanMetricReporter);

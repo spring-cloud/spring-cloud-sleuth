@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Configuration;
 public class ZipkinAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean(ZipkinSpanReporter.class)
+	@ConditionalOnMissingBean
 	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin) {
 		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
 				zipkin.getCompression().isEnabled(), spanMetricReporter);
