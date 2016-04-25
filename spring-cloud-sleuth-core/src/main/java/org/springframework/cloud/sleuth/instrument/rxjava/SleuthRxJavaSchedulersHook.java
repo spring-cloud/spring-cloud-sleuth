@@ -5,14 +5,16 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
+import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
 import rx.plugins.SleuthRxJavaPlugins;
 
 /**
- * {@link RxJavaSchedulersHook} that wraps a {@link Action0} into its tracing
+ * {@link RxJavaSchedulersHook} that wraps an {@link Action0} into its tracing
  * representation.
  *
  * @author Shivang Shah
@@ -31,18 +33,18 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		try {
-			this.delegate = SleuthRxJavaPlugins.getInstance().getSchedulersHook();
+			this.delegate = RxJavaPlugins.getInstance().getSchedulersHook();
 			if (this.delegate instanceof SleuthRxJavaSchedulersHook) {
 				return;
 			}
-			RxJavaErrorHandler errorHandler = SleuthRxJavaPlugins.getInstance().getErrorHandler();
+			RxJavaErrorHandler errorHandler = RxJavaPlugins.getInstance().getErrorHandler();
 			RxJavaObservableExecutionHook observableExecutionHook
-				= SleuthRxJavaPlugins.getInstance().getObservableExecutionHook();
+				= RxJavaPlugins.getInstance().getObservableExecutionHook();
 			logCurrentStateOfRxJavaPlugins(errorHandler, observableExecutionHook);
 			SleuthRxJavaPlugins.resetPlugins();
-			SleuthRxJavaPlugins.getInstance().registerSchedulersHook(this);
-			SleuthRxJavaPlugins.getInstance().registerErrorHandler(errorHandler);
-			SleuthRxJavaPlugins.getInstance().registerObservableExecutionHook(observableExecutionHook);
+			RxJavaPlugins.getInstance().registerSchedulersHook(this);
+			RxJavaPlugins.getInstance().registerErrorHandler(errorHandler);
+			RxJavaPlugins.getInstance().registerObservableExecutionHook(observableExecutionHook);
 		} catch (Exception e) {
 			log.error("Failed to register Sleuth RxJava SchedulersHook", e);
 		}

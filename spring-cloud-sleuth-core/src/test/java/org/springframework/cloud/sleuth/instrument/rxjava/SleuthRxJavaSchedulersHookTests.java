@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,17 +14,16 @@ import org.springframework.cloud.sleuth.Tracer;
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
+import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
 import rx.plugins.SleuthRxJavaPlugins;
-
-import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  *
  * @author Shivang Shah
  */
 @RunWith(MockitoJUnitRunner.class)
-public class SleuthRxJavaSchedulersHookTest {
+public class SleuthRxJavaSchedulersHookTests {
 
 	@Mock
 	Tracer tracer;
@@ -39,16 +40,16 @@ public class SleuthRxJavaSchedulersHookTest {
 
 	@Test
 	public void should_not_override_existing_custom_hooks() {
-		SleuthRxJavaPlugins.getInstance().registerErrorHandler(new MyRxJavaErrorHandler());
-		SleuthRxJavaPlugins.getInstance().registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
+		RxJavaPlugins.getInstance().registerErrorHandler(new MyRxJavaErrorHandler());
+		RxJavaPlugins.getInstance().registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
 		new SleuthRxJavaSchedulersHook(this.tracer, this.traceKeys);
-		then(SleuthRxJavaPlugins.getInstance().getErrorHandler()).isExactlyInstanceOf(MyRxJavaErrorHandler.class);
-		then(SleuthRxJavaPlugins.getInstance().getObservableExecutionHook()).isExactlyInstanceOf(MyRxJavaObservableExecutionHook.class);
+		then(RxJavaPlugins.getInstance().getErrorHandler()).isExactlyInstanceOf(MyRxJavaErrorHandler.class);
+		then(RxJavaPlugins.getInstance().getObservableExecutionHook()).isExactlyInstanceOf(MyRxJavaObservableExecutionHook.class);
 	}
 
 	@Test
 	public void should_wrap_delegates_action_in_wrapped_action_when_delegate_is_present_on_schedule() {
-		SleuthRxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
+		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
 		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
 			this.tracer, this.traceKeys);
 		Action0 action = schedulersHook.onSchedule(() -> {
