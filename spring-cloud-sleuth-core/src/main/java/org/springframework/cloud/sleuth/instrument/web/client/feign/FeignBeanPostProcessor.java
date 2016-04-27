@@ -24,6 +24,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import feign.Client;
 import feign.Retryer;
 import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 
 /**
  * Post processor that wraps Feign related classes {@link Decoder},
@@ -51,6 +52,8 @@ final class FeignBeanPostProcessor implements BeanPostProcessor {
 			return new TraceFeignRetryer(getTracer(), (Retryer) bean);
 		} else if (bean instanceof Client && !(bean instanceof TraceFeignClient)) {
 			return new TraceFeignClient(getTracer(), (Client) bean);
+		} else if (bean instanceof ErrorDecoder && !(bean instanceof TraceFeignErrorDecoder)) {
+			return new TraceFeignErrorDecoder(getTracer(), (ErrorDecoder) bean);
 		}
 		return bean;
 	}

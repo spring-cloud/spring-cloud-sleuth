@@ -18,27 +18,35 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import org.springframework.cloud.sleuth.Tracer;
 
-import feign.Feign;
-import feign.hystrix.HystrixFeign;
+import feign.Response;
+import feign.codec.ErrorDecoder;
 
 /**
- * Contains {@link feign.Feign.Builder} implementation that delegates execution
- * {@link feign.hystrix.HystrixFeign} with tracing components
- * that close spans on exceptions / success and continues them on retries.
+ * An {@link ErrorDecoder} that closes a span before returning the exception type.
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.0.0
  */
-final class SleuthFeignBuilder {
+final class TraceFeignErrorDecoder extends FeignEventPublisher implements ErrorDecoder {
 
-	private SleuthFeignBuilder() {}
+	private final ErrorDecoder delegate;
 
-	static Feign.Builder builder(Tracer tracer) {
-		return HystrixFeign.builder()
-				.client(new TraceFeignClient(tracer))
-				.retryer(new TraceFeignRetryer(tracer))
-				.decoder(new TraceFeignDecoder(tracer))
-				.errorDecoder(new TraceFeignErrorDecoder(tracer));
+	TraceFeignErrorDecoder(Tracer tracer) {
+		super(tracer);
+		this.delegate = new ErrorDecoder.Default();
+	}
+
+	TraceFeignErrorDecoder(Tracer tracer, ErrorDecoder delegate) {
+		super(tracer);
+		this.delegate = delegate;
+	}
+
+	@Override public Exception decode(String methodKey, Response response) {
+		try {
+			return this.delegate.decode(methodKey, response);
+		} finally {
+			finish();
+		}
 	}
 }
