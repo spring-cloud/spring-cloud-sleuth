@@ -33,13 +33,13 @@ public class PercentageBasedSampler implements Sampler {
 
 	@Override
 	public boolean isSampled(Span currentSpan) {
-		long threshold = Math.abs(Long.MAX_VALUE * (int) (this.configuration.getPercentage() * 100)); // drops fractional percentage.
+		long threshold = (long) (Long.MAX_VALUE * this.configuration.getPercentage()); // drops fractional percentage.
 		if (currentSpan == null || threshold == 0L) {
 			return false;
 		}
 		long traceId = currentSpan.getTraceId();
-		Long mod = Math.abs(traceId % 100);
-		return mod.compareTo(threshold) <= 0;
+		long t = traceId == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(traceId);
+		return t <= threshold;
 	}
 
 }
