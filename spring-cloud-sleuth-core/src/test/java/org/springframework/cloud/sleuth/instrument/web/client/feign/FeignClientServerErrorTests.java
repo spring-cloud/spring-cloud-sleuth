@@ -37,7 +37,6 @@ import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,126 +59,118 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * Related to https://github.com/spring-cloud/spring-cloud-sleuth/issues/257
+ *
  * @author ryarabori
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { FeignClientServerErrorTests.TestConfiguration.class })
+@RunWith(SpringJUnit4ClassRunner.class) @SpringApplicationConfiguration(
+		classes = { FeignClientServerErrorTests.TestConfiguration.class })
 @WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
 public class FeignClientServerErrorTests {
 
-    @Autowired TestFeignInterface feignInterface;
-    @Rule public OutputCapture capture = new OutputCapture();
+	@Autowired TestFeignInterface feignInterface;
+	@Rule public OutputCapture capture = new OutputCapture();
 
-    @Before
-    public void setup() {
-        ExceptionUtils.setFail(true);
-    }
+	@Before public void setup() {
+		ExceptionUtils.setFail(true);
+	}
 
-    @Test
-    public void shouldCloseSpanOnInternalServerError() throws InterruptedException {
-        try {
-            this.feignInterface.internalError();
-        } catch (HystrixRuntimeException e) {
-        }
+	@Test public void shouldCloseSpanOnInternalServerError() throws InterruptedException {
+		try {
+			this.feignInterface.internalError();
+		}
+		catch (HystrixRuntimeException e) {
+		}
 
-        // ugly :/ waiting for rx thread to complete
-        Thread.sleep(100);
-        then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
-    }
+		// ugly :/ waiting for rx thread to complete
+		Thread.sleep(100);
+		then(this.capture.toString())
+				.doesNotContain("Tried to close span but it is not the current span");
+	}
 
-    @Test
-    public void shouldCloseSpanOnNotFound() throws InterruptedException {
-        try {
-            this.feignInterface.notFound();
-        } catch (HystrixRuntimeException e) {
-        }
+	@Test public void shouldCloseSpanOnNotFound() throws InterruptedException {
+		try {
+			this.feignInterface.notFound();
+		}
+		catch (HystrixRuntimeException e) {
+		}
 
-        // ugly :/ waiting for rx thread to complete
-        Thread.sleep(100);
-        then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
-    }
+		// ugly :/ waiting for rx thread to complete
+		Thread.sleep(100);
+		then(this.capture.toString())
+				.doesNotContain("Tried to close span but it is not the current span");
+	}
 
-    @Configuration
-    @EnableAutoConfiguration
-    @EnableFeignClients
-    @RibbonClient(value = "fooservice", configuration = SimpleRibbonClientConfiguration.class)
-    public static class TestConfiguration {
+	@Configuration @EnableAutoConfiguration @EnableFeignClients
+	@RibbonClient(value = "fooservice",
+			configuration = SimpleRibbonClientConfiguration.class)
+	public static class TestConfiguration {
 
-        @Bean
-        FooController fooController() {
-            return new FooController();
-        }
+		@Bean FooController fooController() {
+			return new FooController();
+		}
 
-        @Bean
-        Listener listener() {
-            return new Listener();
-        }
+		@Bean Listener listener() {
+			return new Listener();
+		}
 
-        @LoadBalanced
-        @Bean
-        public RestTemplate restTemplate() {
-            return new RestTemplate();
-        }
+		@LoadBalanced @Bean public RestTemplate restTemplate() {
+			return new RestTemplate();
+		}
 
-    }
+	}
 
-    @FeignClient(value = "fooservice")
-    public interface TestFeignInterface {
+	@FeignClient(value = "fooservice") public interface TestFeignInterface {
 
-        @RequestMapping(method = RequestMethod.GET, value = "/internalerror")
-        ResponseEntity<String> internalError();
+		@RequestMapping(method = RequestMethod.GET, value = "/internalerror")
+		ResponseEntity<String> internalError();
 
-        @RequestMapping(method = RequestMethod.GET, value = "/notfound")
-        ResponseEntity<String> notFound();
+		@RequestMapping(method = RequestMethod.GET, value = "/notfound")
+		ResponseEntity<String> notFound();
 
-    }
+	}
 
-    @Component
-    public static class Listener implements SpanReporter {
-        private List<Span> events = new ArrayList<>();
+	@Component public static class Listener implements SpanReporter {
+		private List<Span> events = new ArrayList<>();
 
-        public List<Span> getEvents() {
-            return this.events;
-        }
+		public List<Span> getEvents() {
+			return this.events;
+		}
 
-        @Override
-        public void report(Span span) {
-            this.events.add(span);
-        }
-    }
+		@Override public void report(Span span) {
+			this.events.add(span);
+		}
+	}
 
-    @RestController
-    public static class FooController {
+	@RestController public static class FooController {
 
-        @Autowired Tracer tracer;
+		@Autowired Tracer tracer;
 
-        @RequestMapping("/internalerror")
-        public ResponseEntity<String> internalError(@RequestHeader(Span.TRACE_ID_NAME) String traceId,
-                @RequestHeader(Span.SPAN_ID_NAME) String spanId,
-                @RequestHeader(Span.PARENT_ID_NAME) String parentId) {
-            return new ResponseEntity<>("internal error", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+		@RequestMapping("/internalerror") public ResponseEntity<String> internalError(
+				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
+				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
+				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+			return new ResponseEntity<>("internal error",
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 
-        @RequestMapping("/notfound")
-        public ResponseEntity<String> notFound(@RequestHeader(Span.TRACE_ID_NAME) String traceId,
-                @RequestHeader(Span.SPAN_ID_NAME) String spanId,
-                @RequestHeader(Span.PARENT_ID_NAME) String parentId) {
-            return new ResponseEntity<>("not found", HttpStatus.NOT_FOUND);
-        }
-    }
+		@RequestMapping("/notfound") public ResponseEntity<String> notFound(
+				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
+				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
+				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+			return new ResponseEntity<>("not found", HttpStatus.NOT_FOUND);
+		}
+	}
 
-    @Configuration
-    public static class SimpleRibbonClientConfiguration {
+	@Configuration public static class SimpleRibbonClientConfiguration {
 
-        @Value("${local.server.port}")
-        private int port = 0;
+		@Value("${local.server.port}") private int port = 0;
 
-        @Bean
-        public ILoadBalancer ribbonLoadBalancer() {
-            BaseLoadBalancer balancer = new BaseLoadBalancer();
-            balancer.setServersList(Collections.singletonList(new Server("localhost", this.port)));
-            return balancer;
-        }
-    }
+		@Bean public ILoadBalancer ribbonLoadBalancer() {
+			BaseLoadBalancer balancer = new BaseLoadBalancer();
+			balancer.setServersList(
+					Collections.singletonList(new Server("localhost", this.port)));
+			return balancer;
+		}
+	}
 
 }
