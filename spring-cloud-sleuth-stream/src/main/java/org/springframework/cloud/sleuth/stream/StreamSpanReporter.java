@@ -17,10 +17,10 @@
 package org.springframework.cloud.sleuth.stream;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -38,7 +38,7 @@ import org.springframework.integration.annotation.MessageEndpoint;
 @MessageEndpoint
 public class StreamSpanReporter implements SpanReporter {
 
-	private Collection<Span> queue = new ConcurrentLinkedQueue<>();
+	private BlockingQueue<Span> queue = new LinkedBlockingQueue<>();
 	private final HostLocator endpointLocator;
 	private final SpanMetricReporter spanMetricReporter;
 
@@ -47,14 +47,14 @@ public class StreamSpanReporter implements SpanReporter {
 		this.spanMetricReporter = spanMetricReporter;
 	}
 
-	public void setQueue(Collection<Span> queue) {
+	public void setQueue(BlockingQueue<Span> queue) {
 		this.queue = queue;
 	}
 
 	@InboundChannelAdapter(value = SleuthSource.OUTPUT)
 	public Spans poll() {
-		List<Span> result = new ArrayList<>(this.queue);
-		this.queue.clear();
+		List<Span> result = new ArrayList<>();
+		this.queue.drainTo(result);
 		for (Iterator<Span> iterator = result.iterator(); iterator.hasNext();) {
 			Span span = iterator.next();
 			if (span.getName() != null && span.getName().equals("message/" + SleuthSource.OUTPUT)) {
