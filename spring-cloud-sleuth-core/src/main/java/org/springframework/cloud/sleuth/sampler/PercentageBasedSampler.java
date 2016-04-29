@@ -42,7 +42,7 @@ public class PercentageBasedSampler implements Sampler {
 			this.i = this.i + 1;
 			if (this.i == this.outOf100) {
 				this.skipping = true;
-			} else if (i == 100) {
+			} else if (this.i == 100) {
 				this.i = 0;
 				this.skipping = false;
 			}
