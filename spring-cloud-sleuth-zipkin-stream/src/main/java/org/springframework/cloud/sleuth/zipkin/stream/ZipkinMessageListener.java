@@ -37,8 +37,8 @@ import zipkin.Annotation;
 import zipkin.AsyncSpanConsumer;
 import zipkin.BinaryAnnotation;
 import zipkin.BinaryAnnotation.Type;
+import zipkin.CollectorSampler;
 import zipkin.Endpoint;
-import zipkin.Sampler;
 import zipkin.Span.Builder;
 import zipkin.StorageComponent;
 
@@ -63,7 +63,7 @@ public class ZipkinMessageListener {
 	/** lazy so transient storage errors don't crash bootstrap */
 	@Lazy
 	@Autowired
-	ZipkinMessageListener(StorageComponent storage, Sampler sampler) {
+	ZipkinMessageListener(StorageComponent storage, CollectorSampler sampler) {
 		this.consumer = storage.asyncSpanConsumer(sampler);
 	}
 
@@ -145,8 +145,8 @@ public class ZipkinMessageListener {
 		float sampleRate = 1.0f;
 
 		@Bean
-		Sampler traceIdSampler() {
-			return Sampler.create(this.sampleRate);
+		CollectorSampler collectorSampler() {
+			return CollectorSampler.create(this.sampleRate);
 		}
 
 		@Bean
