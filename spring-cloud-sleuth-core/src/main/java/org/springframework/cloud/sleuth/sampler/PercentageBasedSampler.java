@@ -23,8 +23,8 @@ public class PercentageBasedSampler implements Sampler {
 
 	private final int outOf100;
 
-	private int i = 0;
-	private boolean skipping = false;
+	private int i = 0; // guarded by this
+	private boolean skipping = false; // guarded by this
 
 	public PercentageBasedSampler(SamplerProperties configuration) {
 		this.outOf100 = (int) (configuration.getPercentage() * 100.0f);;
