@@ -24,6 +24,9 @@ import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.PostConstruct;
 
@@ -155,7 +158,7 @@ public class StreamSpanListenerTests {
 	@MessageEndpoint
 	protected static class ZipkinTestConfiguration {
 
-		private List<Span> spans = new ArrayList<>();
+		private BlockingQueue<Span> spans = new LinkedBlockingQueue<>();
 
 		@Autowired
 		StreamSpanReporter listener;
