@@ -8,7 +8,6 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.data.Percentage.withPercentage;
 
 public class PercentageBasedSamplerTests {
 
@@ -46,8 +45,7 @@ public class PercentageBasedSamplerTests {
 
 		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations);
 
-		then(numberOfSampledElements).isCloseTo((int) (numberOfIterations * percentage),
-				withPercentage(3));
+		then(numberOfSampledElements).isEqualTo((int) (numberOfIterations * percentage));
 	}
 
 	@Test
@@ -59,8 +57,7 @@ public class PercentageBasedSamplerTests {
 		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations);
 
 		int threshold = (int) (numberOfIterations * percentage);
-		then(numberOfSampledElements).isCloseTo(threshold,
-				withPercentage(3));
+		then(numberOfSampledElements).isEqualTo(threshold);
 	}
 
 	private int countNumberOfSampledElements(int numberOfIterations) {
