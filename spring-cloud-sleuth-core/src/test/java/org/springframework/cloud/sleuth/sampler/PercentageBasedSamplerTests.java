@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -39,7 +40,7 @@ public class PercentageBasedSamplerTests {
 
 	@Test
 	public void should_pass_given_percent_of_samples() throws Exception {
-		int numberOfIterations = 10000;
+		int numberOfIterations = 1000;
 		float percentage = 1f;
 		this.samplerConfiguration.setPercentage(percentage);
 
@@ -51,7 +52,7 @@ public class PercentageBasedSamplerTests {
 
 	@Test
 	public void should_pass_given_percent_of_samples_with_fractional_element() throws Exception {
-		int numberOfIterations = 100000;
+		int numberOfIterations = 1000;
 		float percentage = 0.35f;
 		this.samplerConfiguration.setPercentage(percentage);
 
@@ -63,10 +64,10 @@ public class PercentageBasedSamplerTests {
 	}
 
 	private int countNumberOfSampledElements(int numberOfIterations) {
+		Sampler sampler = new PercentageBasedSampler(this.samplerConfiguration);
 		int passedCounter = 0;
 		for (int i = 0; i < numberOfIterations; i++) {
-			boolean passed = new PercentageBasedSampler(this.samplerConfiguration)
-					.isSampled(newSpan());
+			boolean passed = sampler.isSampled(newSpan());
 			passedCounter = passedCounter + (passed ? 1 : 0);
 		}
 		return passedCounter;

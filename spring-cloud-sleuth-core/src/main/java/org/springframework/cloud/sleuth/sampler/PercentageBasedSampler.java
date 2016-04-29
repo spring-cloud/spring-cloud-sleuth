@@ -4,20 +4,16 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 
 /**
- * Sampler that based on the given percentage rate will allow sampling.
- * <p>
+ * This sampler is appropriate for low-traffic instrumentation (ex servers that each receive <100K
+ * requests), or those who do not provision random trace ids. It not appropriate for collectors as
+ * the sampling decision isn't idempotent (consistent based on trace id).
  *
- * A couple of assumptions have to take place in order for the algorithm to work properly:
- * <p>
+ * <h3>Implementation</h3>
  *
- * <ul>
- *     <li>We're taking the trace id into consideration for sampling to be consistent</li>
- *     <li>We apply the Zipkin algorithm to define whether we should sample or not (we're comparing against threshold)
- *     - https://github.com/openzipkin/zipkin-java/blob/master/zipkin/src/main/java/zipkin/Sampler.java</li>
- * </ul>
+ * <p>Taken from <a href="https://github.com/openzipkin/zipkin-java/blob/traceid-sampler/zipkin/src/main/java/zipkin/CountingTraceIdSampler.java">Zipkin project</a></p>
  *
- * The value provided from sampler configuration in terms of percentage is an estimation. It might occur that amount
- * of data sampled differs from the provided percentage.
+ * <p>This counts to see how many out of 100 traces should be retained. This means that it is
+ * accurate in units of 100 traces.
  *
  * @author Marcin Grzejszczak
  * @author Adrian Cole
@@ -25,21 +21,33 @@ import org.springframework.cloud.sleuth.Span;
  */
 public class PercentageBasedSampler implements Sampler {
 
-	private final SamplerProperties configuration;
+	private final int outOf100;
+
+	private int i = 0;
+	private boolean skipping = false;
 
 	public PercentageBasedSampler(SamplerProperties configuration) {
-		this.configuration = configuration;
+		this.outOf100 = (int) (configuration.getPercentage() * 100.0f);;
 	}
 
 	@Override
 	public boolean isSampled(Span currentSpan) {
-		long threshold = (long) (Long.MAX_VALUE * this.configuration.getPercentage()); // drops fractional percentage.
-		if (currentSpan == null || threshold == 0L) {
+		if (this.outOf100 == 0 || currentSpan == null) {
 			return false;
+		} else if (this.outOf100 == 100) {
+			return true;
 		}
-		long traceId = currentSpan.getTraceId();
-		long t = traceId == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(traceId);
-		return t <= threshold;
+		synchronized (this) {
+			boolean result = !this.skipping;
+			this.i = this.i + 1;
+			if (this.i == this.outOf100) {
+				this.skipping = true;
+			} else if (i == 100) {
+				this.i = 0;
+				this.skipping = false;
+			}
+			return result;
+		}
 	}
 
 }
