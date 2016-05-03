@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -37,6 +38,7 @@ import zipkin.Annotation;
 import zipkin.AsyncSpanConsumer;
 import zipkin.BinaryAnnotation;
 import zipkin.BinaryAnnotation.Type;
+import zipkin.CollectorMetrics;
 import zipkin.CollectorSampler;
 import zipkin.Endpoint;
 import zipkin.Span.Builder;
@@ -63,8 +65,9 @@ public class ZipkinMessageListener {
 	/** lazy so transient storage errors don't crash bootstrap */
 	@Lazy
 	@Autowired
-	ZipkinMessageListener(StorageComponent storage, CollectorSampler sampler) {
-		this.consumer = storage.asyncSpanConsumer(sampler);
+	ZipkinMessageListener(StorageComponent storage, CollectorSampler sampler,
+			CollectorMetrics metrics) {
+		this.consumer = storage.asyncSpanConsumer(sampler, metrics);
 	}
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
@@ -145,8 +148,15 @@ public class ZipkinMessageListener {
 		float sampleRate = 1.0f;
 
 		@Bean
+		@ConditionalOnMissingBean
 		CollectorSampler collectorSampler() {
 			return CollectorSampler.create(this.sampleRate);
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		CollectorMetrics collectorMetrics() {
+			return CollectorMetrics.NOOP_METRICS;
 		}
 
 		@Bean
