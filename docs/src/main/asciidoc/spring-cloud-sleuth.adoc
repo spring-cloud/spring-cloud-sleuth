@@ -460,8 +460,8 @@ however will be still there.
 
 ==== @Async annotated methods
 
-In Spring Cloud Sleuth we're instrumenting async related components so that the tracing information is passed between threads. You can disable this behaviour
-by setting the value of `spring.sleuth.async.enabled` to `false`.
+In Spring Cloud Sleuth we're instrumenting async related components so that the tracing information is passed between threads.
+You can disable this behaviour by setting the value of `spring.sleuth.async.enabled` to `false`.
 
 If you annotate your method with `@Async` then we'll automatically create a new Span with the following characteristics:
 
