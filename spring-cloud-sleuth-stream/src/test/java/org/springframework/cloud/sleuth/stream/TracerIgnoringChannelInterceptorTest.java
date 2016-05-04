@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.verifyZeroInteractions;
+
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -29,9 +32,6 @@ import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 /**
  * @author Marcin Grzejszczak
@@ -47,7 +47,7 @@ public class TracerIgnoringChannelInterceptorTest {
 	public void should_attach_not_sampled_header_to_the_message() throws Exception {
 		Message<String> message = MessageBuilder.withPayload("hello").build();
 
-		Message interceptedMessage = this.tracerIgnoringChannelInterceptor.preSend(message, this.messageChannel);
+		Message<?> interceptedMessage = this.tracerIgnoringChannelInterceptor.preSend(message, this.messageChannel);
 
 		then(interceptedMessage.getHeaders().get(
 				Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_NOT_SAMPLED);
