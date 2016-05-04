@@ -46,6 +46,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,6 +56,7 @@ import org.springframework.web.client.RestTemplate;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterCustomExtractorTests.Config.class)
 @WebIntegrationTest(randomPort = true)
+@DirtiesContext
 public class TraceFilterCustomExtractorTests {
 	@Autowired
 	Random random;
@@ -81,8 +83,8 @@ public class TraceFilterCustomExtractorTests {
 
 		then(this.customRestController.span).hasTraceIdEqualTo(traceId);
 		then(requestHeaders.getBody())
-				.containsEntry("correlationId", Span.idToHex(traceId))
-				.containsEntry("mySpanId", Span.idToHex(spanId))
+				.containsEntry("correlationid", Span.idToHex(traceId))
+				.containsEntry("myspanid", Span.idToHex(spanId))
 				.as("input request headers");
 		then(requestHeaders.getHeaders())
 				.containsEntry("correlationId",

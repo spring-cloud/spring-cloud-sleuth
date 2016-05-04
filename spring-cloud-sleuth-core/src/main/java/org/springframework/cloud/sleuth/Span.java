@@ -16,18 +16,21 @@
 
 package org.springframework.cloud.sleuth;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -39,14 +42,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * <p>
  * Spans can be either annotated with tags or logs.
  * <p>
- * An <b>Annotation</b> is used to record existence of an event in time. Below you can find some
- * of the core annotations used to define the start and stop of a request:
+ * An <b>Annotation</b> is used to record existence of an event in time. Below you can
+ * find some of the core annotations used to define the start and stop of a request:
  * <p>
  * <ul>
- *     <li><b>cs</b> - Client Sent</li>
- *     <li><b>sr</b> - Server Received</li>
- *     <li><b>ss</b> - Server Sent</li>
- *     <li><b>cr</b> - Client Received</li>
+ * <li><b>cs</b> - Client Sent</li>
+ * <li><b>sr</b> - Server Received</li>
+ * <li><b>ss</b> - Server Sent</li>
+ * <li><b>cr</b> - Client Received</li>
  * </ul>
  *
  * Spring Cloud Sleuth uses Zipkin compatible header names
@@ -78,6 +81,9 @@ public class Span {
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
 	public static final String SPAN_ID_NAME = "X-B3-SpanId";
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
+	public static final Set<String> SPAN_HEADERS = new HashSet<>(
+			Arrays.asList(SAMPLED_NAME, PROCESS_ID_NAME, PARENT_ID_NAME, TRACE_ID_NAME,
+					SPAN_ID_NAME, SPAN_NAME_NAME, SPAN_EXPORT_NAME));
 
 	public static final String SPAN_SAMPLED = "1";
 	public static final String SPAN_NOT_SAMPLED = "0";
@@ -85,16 +91,17 @@ public class Span {
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
 
 	/**
-	 * <b>cr</b> - Client Receive. Signifies the end of the span. The client has successfully received the
-	 * response from the server side. If one subtracts the cs timestamp from this timestamp one
-	 * will receive the whole time needed by the client to receive the response from the server.
+	 * <b>cr</b> - Client Receive. Signifies the end of the span. The client has
+	 * successfully received the response from the server side. If one subtracts the cs
+	 * timestamp from this timestamp one will receive the whole time needed by the client
+	 * to receive the response from the server.
 	 */
 	public static final String CLIENT_RECV = "cr";
 
 	/**
 	 * <b>cs</b> - Client Sent. The client has made a request (a client can be e.g.
-	 * {@link org.springframework.web.client.RestTemplate}. This annotation depicts
-	 * the start of the span.
+	 * {@link org.springframework.web.client.RestTemplate}. This annotation depicts the
+	 * start of the span.
 	 */
 	// For an outbound RPC call, it should log a "cs" annotation.
 	// If possible, it should log a binary annotation of "sa", indicating the
@@ -102,8 +109,9 @@ public class Span {
 	public static final String CLIENT_SEND = "cs";
 
 	/**
-	 * <b>sr</b> - Server Receive. The server side got the request and will start processing it.
-	 * If one subtracts the cs timestamp from this timestamp one will receive the network latency.
+	 * <b>sr</b> - Server Receive. The server side got the request and will start
+	 * processing it. If one subtracts the cs timestamp from this timestamp one will
+	 * receive the network latency.
 	 */
 	// If an inbound RPC call, it should log a "sr" annotation.
 	// If possible, it should log a binary annotation of "ca", indicating the
@@ -111,14 +119,16 @@ public class Span {
 	public static final String SERVER_RECV = "sr";
 
 	/**
-	 * <b>ss</b> - Server Send. Annotated upon completion of request processing (when the response
-	 * got sent back to the client). If one subtracts the sr timestamp from this timestamp one
-	 * will receive the time needed by the server side to process the request.
+	 * <b>ss</b> - Server Send. Annotated upon completion of request processing (when the
+	 * response got sent back to the client). If one subtracts the sr timestamp from this
+	 * timestamp one will receive the time needed by the server side to process the
+	 * request.
 	 */
 	public static final String SERVER_SEND = "ss";
 
 	/**
-	 * <a href="https://github.com/opentracing/opentracing-go/blob/master/ext/tags.go">As in Open Tracing</a>
+	 * <a href="https://github.com/opentracing/opentracing-go/blob/master/ext/tags.go">As
+	 * in Open Tracing</a>
 	 */
 	public static final String SPAN_PEER_SERVICE_TAG_NAME = "peer.service";
 
@@ -137,14 +147,13 @@ public class Span {
 
 	@SuppressWarnings("unused")
 	private Span() {
-		this(-1,-1,"dummy",0,Collections.<Long>emptyList(),0,false,false,null);
+		this(-1, -1, "dummy", 0, Collections.<Long>emptyList(), 0, false, false, null);
 	}
 
 	/**
-	 * Creates a new span that still tracks tags and logs of the
-	 * current span. This is crucial when continuing spans
-	 * since the changes in those collections done in the continued span
-	 * need to be reflected until the span gets closed.
+	 * Creates a new span that still tracks tags and logs of the current span. This is
+	 * crucial when continuing spans since the changes in those collections done in the
+	 * continued span need to be reflected until the span gets closed.
 	 */
 	public Span(Span current, Span savedSpan) {
 		this.begin = current.getBegin();
@@ -225,8 +234,8 @@ public class Span {
 	}
 
 	/**
-	 * Add a tag or data annotation associated with this span. The tag will be
-	 * added only if it has a value.
+	 * Add a tag or data annotation associated with this span. The tag will be added only
+	 * if it has a value.
 	 */
 	public void tag(String key, String value) {
 		if (StringUtils.hasText(value)) {
@@ -367,7 +376,8 @@ public class Span {
 
 	@Override
 	public String toString() {
-		return "[Trace: " + idToHex(this.traceId) + ", Span: " + idToHex(this.spanId) + ", exportable=" + this.exportable + "]";
+		return "[Trace: " + idToHex(this.traceId) + ", Span: " + idToHex(this.spanId)
+				+ ", exportable=" + this.exportable + "]";
 	}
 
 	@Override
@@ -498,20 +508,12 @@ public class Span {
 
 		@Override
 		public String toString() {
-			return "SpanBuilder{" +
-					"begin=" + this.begin +
-					", end=" + this.end +
-					", name=" + this.name +
-					", traceId=" + this.traceId +
-					", parents=" + this.parents +
-					", spanId=" + this.spanId +
-					", remote=" + this.remote +
-					", exportable=" + this.exportable +
-					", processId='" + this.processId + '\'' +
-					", savedSpan=" + this.savedSpan +
-					", logs=" + this.logs +
-					", tags=" + this.tags +
-					'}';
+			return "SpanBuilder{" + "begin=" + this.begin + ", end=" + this.end
+					+ ", name=" + this.name + ", traceId=" + this.traceId + ", parents="
+					+ this.parents + ", spanId=" + this.spanId + ", remote=" + this.remote
+					+ ", exportable=" + this.exportable + ", processId='" + this.processId
+					+ '\'' + ", savedSpan=" + this.savedSpan + ", logs=" + this.logs
+					+ ", tags=" + this.tags + '}';
 		}
 	}
 }

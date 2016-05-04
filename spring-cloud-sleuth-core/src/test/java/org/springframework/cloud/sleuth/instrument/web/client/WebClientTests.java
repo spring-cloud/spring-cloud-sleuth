@@ -284,6 +284,10 @@ public class WebClientTests {
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
 			Map<String, String> map = new HashMap<String, String>();
 			for (String key : headers.keySet()) {
+				for (String spanKey : Span.SPAN_HEADERS)
+					if (key.equalsIgnoreCase(spanKey)) {
+						key = spanKey;
+					}
 				map.put(key, headers.getFirst(key));
 			}
 			return map;

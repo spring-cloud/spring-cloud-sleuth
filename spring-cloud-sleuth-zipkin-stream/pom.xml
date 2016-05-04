@@ -90,7 +90,7 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 			<exclusions>
-				<exclusion>
+				<exclusion><!-- TODO: really? -->
 					<artifactId>objenesis</artifactId>
 					<groupId>org.objenesis</groupId>
 				</exclusion>

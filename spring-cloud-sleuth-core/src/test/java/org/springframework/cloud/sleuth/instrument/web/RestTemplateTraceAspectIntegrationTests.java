@@ -1,12 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static junitparams.JUnitParamsRunner.$;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -16,48 +11,52 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcWiremockIntegrationTest;
-import org.springframework.cloud.sleuth.instrument.web.common.HttpMockServer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.async.WebAsyncTask;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 @SpringApplicationConfiguration(classes = {
 		RestTemplateTraceAspectIntegrationTests.CorrelationIdAspectTestConfiguration.class })
-@RunWith(JUnitParamsRunner.class)
-public class RestTemplateTraceAspectIntegrationTests
-		extends AbstractMvcWiremockIntegrationTest {
+@RunWith(SpringJUnit4ClassRunner.class)
+@WebIntegrationTest(randomPort = true)
+@DirtiesContext
+public class RestTemplateTraceAspectIntegrationTests {
 
-	@ClassRule
-	public static final SpringClassRule SCR = new SpringClassRule();
-	@Rule
-	public final SpringMethodRule springMethodRule = new SpringMethodRule();
+	@Autowired
+	private WebApplicationContext context;
+
+	@Autowired
+	private AspectTestingController controller;
+
+	private MockMvc mockMvc;
 
 	@Before
-	public void setupDefaultWireMockStubbing() {
-		stubInteraction(get(urlMatching(".*")), aResponse().withStatus(200));
+	public void init() {
+		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
+		this.controller.reset();
 	}
 
 	@Test
@@ -71,25 +70,26 @@ public class RestTemplateTraceAspectIntegrationTests
 	@Test
 	public void should_set_span_data_on_headers_when_sending_a_request_via_async_rest_template()
 			throws Exception {
-		whenARequestIsSentToAAsyncRestTemplateEndpoint();
+		whenARequestIsSentToAnAsyncRestTemplateEndpoint();
 
 		thenTraceIdHasBeenSetOnARequestHeader();
 	}
 
 	@Test
-	@Parameters
-	public void should_set_span_data_on_headers_via_aspect_in_asynchronous_call(
-			String url) throws Exception {
-		whenARequestIsSentToAnAsyncEndpoint(url);
-
+	public void should_set_span_data_on_headers_via_aspect_in_asynchronous_callable()
+			throws Exception {
+		whenARequestIsSentToAnAsyncEndpoint("/callablePing");
 		thenTraceIdHasBeenSetOnARequestHeader();
 	}
 
-	public Object[] parametersForShould_set_span_data_on_headers_via_aspect_in_asynchronous_call() {
-		return $("/callablePing", "/webAsyncTaskPing");
+	@Test
+	public void should_set_span_data_on_headers_via_aspect_in_asynchronous_web_async()
+			throws Exception {
+		whenARequestIsSentToAnAsyncEndpoint("/webAsyncTaskPing");
+		thenTraceIdHasBeenSetOnARequestHeader();
 	}
 
-	private void whenARequestIsSentToAAsyncRestTemplateEndpoint() throws Exception {
+	private void whenARequestIsSentToAnAsyncRestTemplateEndpoint() throws Exception {
 		this.mockMvc.perform(MockMvcRequestBuilders.get("/asyncRestTemplate")
 				.accept(MediaType.TEXT_PLAIN)).andReturn();
 	}
@@ -101,8 +101,7 @@ public class RestTemplateTraceAspectIntegrationTests
 	}
 
 	private void thenTraceIdHasBeenSetOnARequestHeader() {
-		this.wireMock.verifyThat(getRequestedFor(urlMatching(".*"))
-				.withHeader(Span.TRACE_ID_NAME, matching("^(?!\\s*$).+")));
+		assertThat(this.controller.getTraceId()).matches("^(?!\\s*$).+");
 	}
 
 	private void whenARequestIsSentToAnAsyncEndpoint(String url) throws Exception {
@@ -128,21 +127,33 @@ public class RestTemplateTraceAspectIntegrationTests
 	public static class AspectTestingController {
 
 		@Autowired
-		HttpMockServer httpMockServer;
-		@Autowired
 		RestTemplate restTemplate;
 		@Autowired
+		Environment environment;
+		@Autowired
 		AsyncRestTemplate asyncRestTemplate;
+		private String traceId;
+
+		public void reset() {
+			this.traceId = null;
+		}
+
+		@RequestMapping(value = "/", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		public String home(
+				@RequestHeader(value = Span.TRACE_ID_NAME, required = false) String traceId) {
+			this.traceId = traceId == null ? "UNKNOWN" : traceId;
+			return "trace=" + this.getTraceId();
+		}
 
 		@RequestMapping(value = "/asyncRestTemplate", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
 		public String asyncRestTemplate()
 				throws ExecutionException, InterruptedException {
-			return callWiremockViaAsyncRestTemplateAndReturnOk();
+			return callViaAsyncRestTemplateAndReturnOk();
 		}
 
 		@RequestMapping(value = "/syncPing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
 		public String syncPing() {
-			return callWiremockAndReturnOk();
+			return callAndReturnOk();
 		}
 
 		@RequestMapping(value = "/callablePing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
@@ -150,7 +161,7 @@ public class RestTemplateTraceAspectIntegrationTests
 			return new Callable<String>() {
 				@Override
 				public String call() throws Exception {
-					return callWiremockAndReturnOk();
+					return callAndReturnOk();
 				}
 			};
 		}
@@ -160,22 +171,29 @@ public class RestTemplateTraceAspectIntegrationTests
 			return new WebAsyncTask<>(new Callable<String>() {
 				@Override
 				public String call() throws Exception {
-					return callWiremockAndReturnOk();
+					return callAndReturnOk();
 				}
 			});
 		};
 
-		private String callWiremockAndReturnOk() {
-			this.restTemplate.getForObject(
-					"http://localhost:" + this.httpMockServer.port(), String.class);
+		private String callAndReturnOk() {
+			this.restTemplate.getForObject("http://localhost:" + port(), String.class);
 			return "OK";
 		}
 
-		private String callWiremockViaAsyncRestTemplateAndReturnOk()
+		private String callViaAsyncRestTemplateAndReturnOk()
 				throws ExecutionException, InterruptedException {
-			this.asyncRestTemplate.getForEntity(
-					"http://localhost:" + this.httpMockServer.port(), String.class).get();
+			this.asyncRestTemplate
+					.getForEntity("http://localhost:" + port(), String.class).get();
 			return "OK";
+		}
+
+		private int port() {
+			return this.environment.getProperty("local.server.port", Integer.class);
+		}
+
+		String getTraceId() {
+			return this.traceId;
 		}
 	}
 }
