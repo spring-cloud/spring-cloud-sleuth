@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
@@ -15,12 +16,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 
+import java.util.zip.GZIPOutputStream;
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 
 import zipkin.Codec;
 import zipkin.Span;
-import zipkin.internal.Util;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -134,7 +135,11 @@ public final class HttpZipkinSpanReporter
 		connection.addRequestProperty("Content-Type", "application/json");
 		if (this.compressionEnabled) {
 			connection.addRequestProperty("Content-Encoding", "gzip");
-			json = Util.gzip(json);
+			ByteArrayOutputStream gzipped = new ByteArrayOutputStream();
+			try (GZIPOutputStream compressor = new GZIPOutputStream(gzipped)) {
+				compressor.write(json);
+			}
+			json = gzipped.toByteArray();
 		}
 		connection.setDoOutput(true);
 		connection.setFixedLengthStreamingMode(json.length);
