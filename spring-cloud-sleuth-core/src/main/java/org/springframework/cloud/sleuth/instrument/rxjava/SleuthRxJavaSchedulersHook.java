@@ -11,7 +11,6 @@ import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
-import rx.plugins.SleuthRxJavaPlugins;
 
 /**
  * {@link RxJavaSchedulersHook} that wraps an {@link Action0} into its tracing
@@ -41,7 +40,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			RxJavaObservableExecutionHook observableExecutionHook
 				= RxJavaPlugins.getInstance().getObservableExecutionHook();
 			logCurrentStateOfRxJavaPlugins(errorHandler, observableExecutionHook);
-			SleuthRxJavaPlugins.resetPlugins();
+                        RxJavaPlugins.getInstance().reset();
 			RxJavaPlugins.getInstance().registerSchedulersHook(this);
 			RxJavaPlugins.getInstance().registerErrorHandler(errorHandler);
 			RxJavaPlugins.getInstance().registerObservableExecutionHook(observableExecutionHook);
