@@ -74,7 +74,7 @@ final class ConvertToZipkinSpanList {
 	 */
 	// VisibleForTesting
 	static zipkin.Span convert(Span span, Host host) {
-		Builder zipkinSpan = new zipkin.Span.Builder();
+		Builder zipkinSpan = zipkin.Span.builder();
 
 		Endpoint ep = Endpoint.create(host.getServiceName(), host.getIpv4(),
 				host.getPort().shortValue());

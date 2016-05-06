@@ -81,7 +81,7 @@ public class ZipkinMessageListener {
 	 */
 	static void addZipkinAnnotations(Builder zipkinSpan, Span span, Endpoint endpoint) {
 		for (Log ta : span.logs()) {
-			Annotation zipkinAnnotation = new Annotation.Builder()
+			Annotation zipkinAnnotation = Annotation.builder()
 					.endpoint(endpoint)
 					.timestamp(ta.getTimestamp() * 1000) // Zipkin is in microseconds
 					.value(ta.getEvent())
@@ -96,7 +96,7 @@ public class ZipkinMessageListener {
 	static void addZipkinBinaryAnnotations(Builder zipkinSpan, Span span,
 			Endpoint endpoint) {
 		for (Map.Entry<String, String> e : span.tags().entrySet()) {
-			BinaryAnnotation.Builder binaryAnn = new BinaryAnnotation.Builder();
+			BinaryAnnotation.Builder binaryAnn = BinaryAnnotation.builder();
 			binaryAnn.type(Type.STRING);
 			binaryAnn.key(e.getKey());
 			try {
