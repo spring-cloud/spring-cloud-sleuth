@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth;
 
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.springframework.cloud.sleuth.instrument.web.TraceFilterCustomExtractorTests;
-import org.springframework.cloud.sleuth.instrument.web.client.WebClientExceptionTests;
+import org.springframework.cloud.sleuth.instrument.web.RestTemplateTraceAspectIntegrationTests;
+import org.springframework.cloud.sleuth.instrument.web.client.WebClientDiscoveryExceptionTests;
 
 /**
  * A test suite for probing weird ordering problems in the tests.
@@ -29,8 +28,9 @@ import org.springframework.cloud.sleuth.instrument.web.client.WebClientException
  * @author Dave Syer
  */
 @RunWith(Suite.class)
-@SuiteClasses({ TraceFilterCustomExtractorTests.class, WebClientExceptionTests.class })
-@Ignore
+@SuiteClasses({ 		WebClientDiscoveryExceptionTests.class,
+		RestTemplateTraceAspectIntegrationTests.class })
+// @Ignore
 public class AdhocTestSuite {
 
 }

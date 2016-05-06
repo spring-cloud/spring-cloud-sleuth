@@ -14,7 +14,6 @@ import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Configuration;
@@ -29,29 +28,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(TraceFilterAlwaysSamplerIntegrationTests.class)
-@DefaultTestAutoConfiguration
-@RestController
-@Configuration
-@Import(AlwaysSampler.class)
+@SpringApplicationConfiguration(TraceFilterAlwaysSamplerIntegrationTests.Config.class)
 public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private static Log logger = LogFactory
 			.getLog(TraceFilterAlwaysSamplerIntegrationTests.class);
 
-	@Autowired
-	Tracer tracer;
-	@Autowired
-	TraceKeys traceKeys;
-
 	static Span span;
-
-	@RequestMapping("/ping")
-	public String ping() {
-		logger.info("ping");
-		span = this.tracer.getCurrentSpan();
-		return "ping";
-	}
 
 	@Test
 	public void when_always_sampler_is_used_span_is_exportable() throws Exception {
@@ -106,4 +89,23 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
 		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
 	}
+
+	@DefaultTestAutoConfiguration
+	@RestController
+	@Configuration
+	@Import(AlwaysSampler.class)
+	static class Config {
+
+		@Autowired
+		private Tracer tracer;
+
+		@RequestMapping("/ping")
+		public String ping() {
+			logger.info("ping");
+			span = this.tracer.getCurrentSpan();
+			return "ping";
+		}
+
+	}
+
 }

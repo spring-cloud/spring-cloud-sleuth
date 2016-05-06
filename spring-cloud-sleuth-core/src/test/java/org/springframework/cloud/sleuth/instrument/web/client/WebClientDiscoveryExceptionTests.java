@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static junitparams.JUnitParamsRunner.$;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -27,8 +26,6 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,26 +45,19 @@ import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-@RunWith(JUnitParamsRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
 		WebClientDiscoveryExceptionTests.TestConfiguration.class })
 @WebIntegrationTest(value = {
 		"spring.application.name=exceptionservice" }, randomPort = true)
+@DirtiesContext
 public class WebClientDiscoveryExceptionTests {
-
-	@ClassRule
-	public static final SpringClassRule SCR = new SpringClassRule();
-	@Rule
-	public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
 	@Autowired
 	TestFeignInterfaceWithException testFeignInterfaceWithException;
@@ -90,9 +80,7 @@ public class WebClientDiscoveryExceptionTests {
 	}
 
 	// issue #240
-	@Test
-	@Parameters
-	public void shouldCloseSpanUponException(ResponseEntityProvider provider)
+	private void shouldCloseSpanUponException(ResponseEntityProvider provider)
 			throws IOException {
 		Span span = this.tracer.createSpan("new trace");
 
@@ -109,12 +97,17 @@ public class WebClientDiscoveryExceptionTests {
 		this.tracer.close(span);
 	}
 
-	Object[] parametersForShouldCloseSpanUponException() {
-		return $(
+	@Test
+	public void testFeignInterfaceWithException() throws Exception {
+		shouldCloseSpanUponException(
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
-						.shouldFailToConnect(),
-				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://exceptionservice/", Map.class));
+						.shouldFailToConnect());
+	}
+
+	@Test
+	public void testTemplate() throws Exception {
+		shouldCloseSpanUponException((ResponseEntityProvider) (tests) -> tests.template
+				.getForEntity("http://exceptionservice/", Map.class));
 	}
 
 	@FeignClient("exceptionservice")

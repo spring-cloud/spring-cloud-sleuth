@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,7 +38,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 @SpringApplicationConfiguration(classes = {
-		RestTemplateTraceAspectIntegrationTests.CorrelationIdAspectTestConfiguration.class })
+		RestTemplateTraceAspectIntegrationTests.Config.class })
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebIntegrationTest(randomPort = true)
 @DirtiesContext
@@ -113,10 +112,9 @@ public class RestTemplateTraceAspectIntegrationTests {
 				.andExpect(status().isOk());
 	}
 
-	@EnableAsync
 	@DefaultTestAutoConfiguration
 	@Import(AspectTestingController.class)
-	public static class CorrelationIdAspectTestConfiguration {
+	public static class Config {
 		@Bean
 		public RestTemplate restTemplate() {
 			return new RestTemplate();
