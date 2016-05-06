@@ -74,7 +74,7 @@ public class ZipkinSpanListener implements SpanReporter {
 	 */
 	// Visible for testing
 	zipkin.Span convert(Span span) {
-		zipkin.Span.Builder zipkinSpan = new zipkin.Span.Builder();
+		zipkin.Span.Builder zipkinSpan = zipkin.Span.builder();
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
 		if (notClientOrServer(span)) {
@@ -109,7 +109,7 @@ public class ZipkinSpanListener implements SpanReporter {
 		byte[] processId = span.getProcessId() != null
 				? span.getProcessId().toLowerCase().getBytes(UTF_8)
 				: UNKNOWN_BYTES;
-		BinaryAnnotation component = new BinaryAnnotation.Builder()
+		BinaryAnnotation component = BinaryAnnotation.builder()
 				.type(BinaryAnnotation.Type.STRING)
 				.key("lc") // LOCAL_COMPONENT
 				.value(processId)
@@ -121,7 +121,7 @@ public class ZipkinSpanListener implements SpanReporter {
 		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME) ?
 				span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : this.endpointLocator.local().serviceName;
 		zipkinSpan.addBinaryAnnotation(BinaryAnnotation.address(Constants.SERVER_ADDR,
-				new Endpoint.Builder(this.endpointLocator.local()).serviceName(serviceName).build()));
+				this.endpointLocator.local().toBuilder().serviceName(serviceName).build()));
 	}
 
 	private boolean notClientOrServer(Span span) {
@@ -148,7 +148,7 @@ public class ZipkinSpanListener implements SpanReporter {
 	private void addZipkinAnnotations(zipkin.Span.Builder zipkinSpan,
 			Span span, Endpoint endpoint) {
 		for (Log ta : span.logs()) {
-			Annotation zipkinAnnotation = new Annotation.Builder()
+			Annotation zipkinAnnotation = Annotation.builder()
 					.endpoint(endpoint)
 					.timestamp(ta.getTimestamp() * 1000) // Zipkin is in microseconds
 					.value(ta.getEvent()).build();
@@ -162,7 +162,7 @@ public class ZipkinSpanListener implements SpanReporter {
 	private void addZipkinBinaryAnnotations(zipkin.Span.Builder zipkinSpan,
 			Span span, Endpoint ep) {
 		for (Map.Entry<String, String> e : span.tags().entrySet()) {
-			BinaryAnnotation binaryAnn = new BinaryAnnotation.Builder()
+			BinaryAnnotation binaryAnn = BinaryAnnotation.builder()
 					.type(BinaryAnnotation.Type.STRING)
 					.key(e.getKey())
 					.value(e.getValue().getBytes(UTF_8))

@@ -114,6 +114,6 @@ public class HttpZipkinSpanReporterTest {
 	}
 
 	static Span span(long traceId, String spanName) {
-		return new Span.Builder().traceId(traceId).id(traceId).name(spanName).build();
+		return Span.builder().traceId(traceId).id(traceId).name(spanName).build();
 	}
 }
