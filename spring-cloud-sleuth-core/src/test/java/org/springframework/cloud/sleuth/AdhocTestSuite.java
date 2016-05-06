@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth;
 
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -30,7 +31,7 @@ import org.springframework.cloud.sleuth.instrument.web.client.WebClientDiscovery
 @RunWith(Suite.class)
 @SuiteClasses({ 		WebClientDiscoveryExceptionTests.class,
 		RestTemplateTraceAspectIntegrationTests.class })
-// @Ignore
+@Ignore
 public class AdhocTestSuite {
 
 }
