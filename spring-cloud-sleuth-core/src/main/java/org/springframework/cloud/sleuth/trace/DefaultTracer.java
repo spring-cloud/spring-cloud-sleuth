@@ -82,11 +82,7 @@ public class DefaultTracer implements Tracer {
 			if (sampler==null) {
 				sampler = this.defaultSampler;
 			}
-			if (!sampler.isSampled(span)) {
-				// Non-exportable so we keep the trace but not other data
-				span = Span.builder().begin(span.getBegin()).name(name).traceId(id)
-						.spanId(id).exportable(false).build();
-			}
+			span = sampledSpan(name, id, span, sampler);
 			this.spanLogger.logStartedSpan(null, span);
 		}
 		return continueSpan(span);
@@ -147,6 +143,7 @@ public class DefaultTracer implements Tracer {
 		if (parent == null) {
 			Span span = Span.builder().begin(System.currentTimeMillis()).name(name)
 					.traceId(id).spanId(id).build();
+			span = sampledSpan(name, id, span, this.defaultSampler);
 			this.spanLogger.logStartedSpan(null, span);
 			return span;
 		}
@@ -161,6 +158,15 @@ public class DefaultTracer implements Tracer {
 			this.spanLogger.logStartedSpan(parent, span);
 			return span;
 		}
+	}
+
+	private Span sampledSpan(String name, long id, Span span, Sampler sampler) {
+		if (!sampler.isSampled(span)) {
+			// Non-exportable so we keep the trace but not other data
+			return Span.builder().begin(span.getBegin()).name(name).traceId(id)
+					.spanId(id).exportable(false).build();
+		}
+		return span;
 	}
 
 	private long createId() {
