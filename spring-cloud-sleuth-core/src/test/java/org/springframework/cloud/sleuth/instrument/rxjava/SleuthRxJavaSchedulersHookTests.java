@@ -16,7 +16,6 @@ import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
-import rx.plugins.SleuthRxJavaPlugins;
 
 /**
  *
@@ -34,7 +33,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	@Before
 	@After
 	public void setup() {
-		SleuthRxJavaPlugins.resetPlugins();
+		RxJavaPlugins.getInstance().reset();
 		caller = new StringBuilder();
 	}
 
