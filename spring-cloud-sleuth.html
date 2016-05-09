@@ -722,12 +722,307 @@ If you want to use Grok together with the logs from Cloud Foundry you have to us
 </div>
 <div class="sect2">
 <h3 id="_adding_to_the_project">Adding to the project</h3>
+<div class="sect3">
+<h4 id="_only_sleuth_log_correlation">Only Sleuth (log correlation)</h4>
 <div class="paragraph">
-<p>In general if you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
-the <strong>spring-cloud-starter-sleuth</strong> module to your project.</p>
+<p>If you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
+the *spring-cloud-starter-sleuth1 module to your project.</p>
 </div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
+         &lt;dependencies&gt;
+             &lt;dependency&gt;
+                 &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                 &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+                 &lt;version&gt;Brixton.RC2&lt;/version&gt;
+                 &lt;type&gt;pom&lt;/type&gt;
+                 &lt;scope&gt;import&lt;/scope&gt;
+             &lt;/dependency&gt;
+         &lt;/dependencies&gt;
+   &lt;/dependencyManagement&gt;
+
+   &lt;dependency&gt; <b class="conum">(2)</b>
+       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
+   &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
+the Spring BOM</p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-starter-sleuth</code></p>
+</li>
+</ol>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+    }
+}
+
+dependencies { <b class="conum">(2)</b>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
+the Spring BOM</p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-starter-sleuth</code></p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</h4>
 <div class="paragraph">
 <p>If you want both Sleuth and Zipkin just add the <strong>spring-cloud-starter-zipkin</strong> dependency.</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
+         &lt;dependencies&gt;
+             &lt;dependency&gt;
+                 &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                 &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+                 &lt;version&gt;Brixton.RC2&lt;/version&gt;
+                 &lt;type&gt;pom&lt;/type&gt;
+                 &lt;scope&gt;import&lt;/scope&gt;
+             &lt;/dependency&gt;
+         &lt;/dependencies&gt;
+   &lt;/dependencyManagement&gt;
+
+   &lt;dependency&gt; <b class="conum">(2)</b>
+       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+   &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
+the Spring BOM</p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-starter-zipkin</code></p>
+</li>
+</ol>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+    }
+}
+
+dependencies { <b class="conum">(2)</b>
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin"
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
+the Spring BOM</p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-starter-zipkin</code></p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sleuth_with_zipkin_via_spring_cloud_stream">Sleuth with Zipkin via Spring Cloud Stream</h4>
+<div class="paragraph">
+<p>If you want both Sleuth and Zipkin just add the <code>spring-cloud-sleuth-stream</code> dependency.</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
+         &lt;dependencies&gt;
+             &lt;dependency&gt;
+                 &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                 &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+                 &lt;version&gt;Brixton.RC2&lt;/version&gt;
+                 &lt;type&gt;pom&lt;/type&gt;
+                 &lt;scope&gt;import&lt;/scope&gt;
+             &lt;/dependency&gt;
+         &lt;/dependencies&gt;
+   &lt;/dependencyManagement&gt;
+
+   &lt;dependency&gt; <b class="conum">(2)</b>
+       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-cloud-sleuth-stream&lt;/artifactId&gt;
+   &lt;/dependency&gt;
+   &lt;!-- EXAMPLE FOR RABBIT BINDING --&gt;
+   &lt;dependency&gt; <b class="conum">(3)</b>
+       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-cloud-stream-binder-rabbit&lt;/artifactId&gt;
+   &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
+the Spring BOM</p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-sleuth-stream</code></p>
+</li>
+<li>
+<p>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</p>
+</li>
+</ol>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+    }
+}
+
+dependencies {
+    compile "org.springframework.cloud:spring-cloud-sleuth-stream" <b class="conum">(2)</b>
+    // Example for Rabbit binding
+    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <b class="conum">(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
+the Spring BOM</p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-sleuth-stream</code></p>
+</li>
+<li>
+<p>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_spring_cloud_sleuth_stream_zipkin_collector">Spring Cloud Sleuth Stream Zipkin Collector</h4>
+<div class="paragraph">
+<p>If you want to start a Spring Cloud Sleuth Stream Zipkin collector just add the <code>spring-cloud-sleuth-zipkin-stream</code>
+dependency</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
+         &lt;dependencies&gt;
+             &lt;dependency&gt;
+                 &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+                 &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+                 &lt;version&gt;Brixton.RC2&lt;/version&gt;
+                 &lt;type&gt;pom&lt;/type&gt;
+                 &lt;scope&gt;import&lt;/scope&gt;
+             &lt;/dependency&gt;
+         &lt;/dependencies&gt;
+   &lt;/dependencyManagement&gt;
+
+   &lt;dependency&gt; <b class="conum">(2)</b>
+       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-cloud-sleuth-zipkin-stream&lt;/artifactId&gt;
+   &lt;/dependency&gt;
+   &lt;!-- EXAMPLE FOR RABBIT BINDING --&gt;
+   &lt;dependency&gt; <b class="conum">(3)</b>
+       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-cloud-stream-binder-rabbit&lt;/artifactId&gt;
+   &lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
+the Spring BOM</p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-sleuth-zipkin-stream</code></p>
+</li>
+<li>
+<p>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</p>
+</li>
+</ol>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+    }
+}
+
+dependencies {
+    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin-stream" <b class="conum">(2)</b>
+    // Example for Rabbit binding
+    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <b class="conum">(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
+the Spring BOM</p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-sleuth-zipkin-stream</code></p>
+</li>
+<li>
+<p>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>and then just annotate your main class with <code>@EnableZipkinStreamServer</code> annotation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">package example;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.sleuth.zipkin.stream.EnableZipkinStreamServer;
+
+@SpringBootApplication
+@EnableZipkinStreamServer
+public class ZipkinStreamServerApplication {
+
+	public static void main(String[] args) throws Exception {
+		SpringApplication.run(ZipkinStreamServerApplication.class, args);
+	}
+
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1658,8 +1953,8 @@ however will be still there.</p>
 <div class="sect3">
 <h4 id="__async_annotated_methods">@Async annotated methods</h4>
 <div class="paragraph">
-<p>In Spring Cloud Sleuth we&#8217;re instrumenting async related components so that the tracing information is passed between threads. You can disable this behaviour
-by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false</code>.</p>
+<p>In Spring Cloud Sleuth we&#8217;re instrumenting async related components so that the tracing information is passed between threads.
+You can disable this behaviour by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false</code>.</p>
 </div>
 <div class="paragraph">
 <p>If you annotate your method with <code>@Async</code> then we&#8217;ll automatically create a new Span with the following characteristics:</p>
@@ -1758,7 +2053,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-04-26 11:32:37 CEST
+Last updated 2016-05-09 15:17:40 CEST
 </div>
 </div>
 </body>
