@@ -137,7 +137,209 @@ filter {
 
 === Adding to the project
 
-In general if you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
-the *spring-cloud-starter-sleuth* module to your project.
+==== Only Sleuth (log correlation)
+
+If you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
+the *spring-cloud-starter-sleuth1 module to your project.
+
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
+.Maven
+----
+	<dependencyManagement> <1>
+          <dependencies>
+              <dependency>
+                  <groupId>org.springframework.cloud</groupId>
+                  <artifactId>spring-cloud-dependencies</artifactId>
+                  <version>Brixton.RC2</version>
+                  <type>pom</type>
+                  <scope>import</scope>
+              </dependency>
+          </dependencies>
+    </dependencyManagement>
+
+    <dependency> <2>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+    </dependency>
+----
+<1> In order not to pick versions by yourself it's much better if you add the dependency management via
+the Spring BOM
+<2> Add the dependency to `spring-cloud-starter-sleuth`
+
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
+.Gradle
+----
+dependencyManagement { <1>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+    }
+}
+
+dependencies { <2>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
+}
+----
+<1> In order not to pick versions by yourself it's much better if you add the dependency management via
+the Spring BOM
+<2> Add the dependency to `spring-cloud-starter-sleuth`
+
+==== Sleuth with Zipkin via HTTP
 
 If you want both Sleuth and Zipkin just add the *spring-cloud-starter-zipkin* dependency.
+
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
+.Maven
+----
+	<dependencyManagement> <1>
+          <dependencies>
+              <dependency>
+                  <groupId>org.springframework.cloud</groupId>
+                  <artifactId>spring-cloud-dependencies</artifactId>
+                  <version>Brixton.RC2</version>
+                  <type>pom</type>
+                  <scope>import</scope>
+              </dependency>
+          </dependencies>
+    </dependencyManagement>
+
+    <dependency> <2>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-zipkin</artifactId>
+    </dependency>
+----
+<1> In order not to pick versions by yourself it's much better if you add the dependency management via
+the Spring BOM
+<2> Add the dependency to `spring-cloud-starter-zipkin`
+
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
+.Gradle
+----
+dependencyManagement { <1>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+    }
+}
+
+dependencies { <2>
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin"
+}
+----
+<1> In order not to pick versions by yourself it's much better if you add the dependency management via
+the Spring BOM
+<2> Add the dependency to `spring-cloud-starter-zipkin`
+
+==== Sleuth with Zipkin via Spring Cloud Stream
+
+If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dependency.
+
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
+.Maven
+----
+	<dependencyManagement> <1>
+          <dependencies>
+              <dependency>
+                  <groupId>org.springframework.cloud</groupId>
+                  <artifactId>spring-cloud-dependencies</artifactId>
+                  <version>Brixton.RC2</version>
+                  <type>pom</type>
+                  <scope>import</scope>
+              </dependency>
+          </dependencies>
+    </dependencyManagement>
+
+    <dependency> <2>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-sleuth-stream</artifactId>
+    </dependency>
+    <!-- EXAMPLE FOR RABBIT BINDING -->
+    <dependency> <3>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+    </dependency>
+----
+<1> In order not to pick versions by yourself it's much better if you add the dependency management via
+the Spring BOM
+<2> Add the dependency to `spring-cloud-sleuth-stream`
+<3> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
+.Gradle
+----
+dependencyManagement { <1>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+    }
+}
+
+dependencies {
+    compile "org.springframework.cloud:spring-cloud-sleuth-stream" <2>
+    // Example for Rabbit binding
+    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <3>
+}
+----
+<1> In order not to pick versions by yourself it's much better if you add the dependency management via
+the Spring BOM
+<2> Add the dependency to `spring-cloud-sleuth-stream`
+<3> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+
+==== Spring Cloud Sleuth Stream Zipkin Collector
+
+If you want to start a Spring Cloud Sleuth Stream Zipkin collector just add the `spring-cloud-sleuth-zipkin-stream`
+dependency
+
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
+.Maven
+----
+	<dependencyManagement> <1>
+          <dependencies>
+              <dependency>
+                  <groupId>org.springframework.cloud</groupId>
+                  <artifactId>spring-cloud-dependencies</artifactId>
+                  <version>Brixton.RC2</version>
+                  <type>pom</type>
+                  <scope>import</scope>
+              </dependency>
+          </dependencies>
+    </dependencyManagement>
+
+    <dependency> <2>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-sleuth-zipkin-stream</artifactId>
+    </dependency>
+    <!-- EXAMPLE FOR RABBIT BINDING -->
+    <dependency> <3>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+    </dependency>
+----
+<1> In order not to pick versions by yourself it's much better if you add the dependency management via
+the Spring BOM
+<2> Add the dependency to `spring-cloud-sleuth-zipkin-stream`
+<3> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
+.Gradle
+----
+dependencyManagement { <1>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+    }
+}
+
+dependencies {
+    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin-stream" <2>
+    // Example for Rabbit binding
+    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <3>
+}
+----
+<1> In order not to pick versions by yourself it's much better if you add the dependency management via
+the Spring BOM
+<2> Add the dependency to `spring-cloud-sleuth-zipkin-stream`
+<3> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+
+and then just annotate your main class with `@EnableZipkinStreamServer` annotation:
+
+[source,java]
+----
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/src/main/java/example/ZipkinStreamServerApplication.java[]
+----
