@@ -15,13 +15,7 @@
  */
 package integration;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.stream.Collectors;
-
+import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,14 +25,20 @@ import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.config.EnableIntegration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
 import zipkin.Constants;
 import zipkin.Span;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -160,6 +160,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	@Configuration
+	// TODO: Remove once https://github.com/spring-projects/spring-boot/issues/5901 is resolved
+	@EnableIntegration
 	public static class IntegrationSpanCollectorConfig {
 		@Bean
 		ZipkinSpanReporter integrationTestZipkinSpanReporter() {

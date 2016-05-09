@@ -34,6 +34,7 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -178,6 +179,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Configuration
 	@EnableAutoConfiguration
+	// TODO: Remove once https://github.com/spring-projects/spring-boot/issues/5901 is resolved
+	@EnableIntegration
 	static class App {
 
 		@Bean
