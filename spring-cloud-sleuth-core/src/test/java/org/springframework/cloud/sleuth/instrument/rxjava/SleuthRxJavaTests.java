@@ -25,11 +25,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import rx.Observable;
 import rx.functions.Action0;
-import rx.plugins.SleuthRxJavaPlugins;
 import rx.schedulers.Schedulers;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import rx.plugins.RxJavaPlugins;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {SleuthRxJavaTests.TestConfig.class})
@@ -53,7 +53,7 @@ public class SleuthRxJavaTests {
 	@BeforeClass
 	@AfterClass
 	public static void cleanUp() {
-		SleuthRxJavaPlugins.resetPlugins();
+		RxJavaPlugins.getInstance().reset();
 	}
 
 	@Test
