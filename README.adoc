@@ -148,7 +148,7 @@ filter {
 ==== Only Sleuth (log correlation)
 
 If you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
-the *spring-cloud-starter-sleuth1 module to your project.
+the `spring-cloud-starter-sleuth` module to your project.
 
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
@@ -193,7 +193,7 @@ the Spring BOM
 
 ==== Sleuth with Zipkin via HTTP
 
-If you want both Sleuth and Zipkin just add the *spring-cloud-starter-zipkin* dependency.
+If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` dependency.
 
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
