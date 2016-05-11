@@ -13,4 +13,7 @@ curl "${SCRIPT_URL}" --output runAcceptanceTests.sh
 
 chmod +x runAcceptanceTests.sh
 
+echo "Killing all running apps"
+./runAcceptanceTests.sh -t "${AT_WHAT_TO_TEST}" -n
+
 ./runAcceptanceTests.sh --whattotest "${AT_WHAT_TO_TEST}" --killattheend
