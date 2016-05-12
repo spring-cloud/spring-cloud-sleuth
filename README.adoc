@@ -158,7 +158,7 @@ the `spring-cloud-starter-sleuth` module to your project.
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Brixton.RC2</version>
+                  <version>Brixton.RELEASE</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -179,7 +179,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
     }
 }
 
@@ -203,7 +203,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` de
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Brixton.RC2</version>
+                  <version>Brixton.RELEASE</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -224,7 +224,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
     }
 }
 
@@ -248,7 +248,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dep
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Brixton.RC2</version>
+                  <version>Brixton.RELEASE</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -275,7 +275,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
     }
 }
 
@@ -303,7 +303,7 @@ dependency
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Brixton.RC2</version>
+                  <version>Brixton.RELEASE</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -330,7 +330,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RC2"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
     }
 }
 
