@@ -423,6 +423,8 @@ NOTE: the SLF4J MDC is always set and logback users will immediately see the tra
 
 == Building
 
+:jdkversion: 1.7
+
 === Basic Compile and Test
 
 To build the source you will need to install JDK {jdkversion}.
@@ -481,24 +483,21 @@ If you don't have an IDE preference we would recommend that you use
 http://www.springsource.com/developer/sts[Spring Tools Suite] or
 http://eclipse.org[Eclipse] when working with the code. We use the
 http://eclipse.org/m2e/[m2eclipe] eclipse plugin for maven support. Other IDEs and tools
-should also work without issue.
+should also work without issue as long as they use Maven 3.3.3 or better.
 
 ==== Importing into eclipse with m2eclipse
 We recommend the http://eclipse.org/m2e/[m2eclipe] eclipse plugin when working with
 eclipse. If you don't already have m2eclipse installed it is available from the "eclipse
 marketplace".
 
-Unfortunately m2e does not yet support Maven 3.3, so once the projects
-are imported into Eclipse you will also need to tell m2eclipse to use
-the `.settings.xml` file for the projects.  If you do not do this you
-may see many different errors related to the POMs in the
-projects.  Open your Eclipse preferences, expand the Maven
-preferences, and select User Settings.  In the User Settings field
-click Browse and navigate to the Spring Cloud project you imported
-selecting the `.settings.xml` file in that project.  Click Apply and
-then OK to save the preference changes.
-
-NOTE: Alternatively you can copy the repository settings from https://github.com/spring-cloud/spring-cloud-build/blob/master/.settings.xml[`.settings.xml`] into your own `~/.m2/settings.xml`.
+NOTE: Older versions of m2e do not support Maven 3.3, so once the
+projects are imported into Eclipse you will also need to tell
+m2eclipse to use the right profile for the projects.  If you
+see many different errors related to the POMs in the projects, check
+that you have an up to date installation.  If you can't upgrade m2e,
+add the "spring" profile to your `settings.xml`. Alternatively you can
+copy the repository settings from the "spring" profile of the parent
+pom into your `settings.xml`.
 
 ==== Importing into eclipse without m2eclipse
 If you prefer not to use m2eclipse you can generate eclipse project metadata using the
@@ -511,6 +510,7 @@ following command:
 
 The generated eclipse projects can be imported by selecting `import existing projects`
 from the `file` menu.
+
 
 IMPORTANT: There are 2 different versions of language level used in Spring Cloud Sleuth. Java 1.7 is used for main sources and
 Java 1.8 is used for tests. When importing your project to an IDE please activate the `ide` Maven profile to turn on
