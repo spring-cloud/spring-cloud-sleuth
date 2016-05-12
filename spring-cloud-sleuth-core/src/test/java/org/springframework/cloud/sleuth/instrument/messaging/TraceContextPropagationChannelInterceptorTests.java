@@ -32,7 +32,6 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.QueueChannel;
-import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.PollableChannel;
@@ -92,8 +91,6 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 	@Configuration
 	@EnableAutoConfiguration
-	// TODO: Remove once https://github.com/spring-projects/spring-boot/issues/5901 is resolved
-	@EnableIntegration
 	static class App {
 
 		@Bean
