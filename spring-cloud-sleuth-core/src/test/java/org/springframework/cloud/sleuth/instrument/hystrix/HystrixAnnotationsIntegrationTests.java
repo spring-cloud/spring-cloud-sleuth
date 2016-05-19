@@ -16,8 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import java.util.concurrent.atomic.AtomicReference;
-
+import com.jayway.awaitility.Awaitility;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.strategy.HystrixPlugins;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -37,9 +38,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.jayway.awaitility.Awaitility;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import com.netflix.hystrix.strategy.HystrixPlugins;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -131,7 +130,7 @@ public class HystrixAnnotationsIntegrationTests {
 
 	}
 
-	static class HystrixCommandInvocationSpanCatcher {
+	public static class HystrixCommandInvocationSpanCatcher {
 
 		AtomicReference<Span> spanCaughtFromHystrixThread;
 
