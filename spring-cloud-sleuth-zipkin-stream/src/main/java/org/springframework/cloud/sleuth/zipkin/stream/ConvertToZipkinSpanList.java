@@ -39,9 +39,8 @@ import zipkin.Span.Builder;
  * @since 1.0.0
  */
 final class ConvertToZipkinSpanList {
-	private static final List<String> ZIPKIN_START_EVENTS = Arrays.asList(
-			Constants.CLIENT_RECV, Constants.SERVER_RECV
-	);
+	private static final List<String> ZIPKIN_START_EVENTS = Arrays
+			.asList(Constants.CLIENT_RECV, Constants.SERVER_RECV);
 
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(ConvertToZipkinSpanList.class);
@@ -68,9 +67,10 @@ final class ConvertToZipkinSpanList {
 	 * <li>Create binary annotations based on data from Span object.
 	 * </ul>
 	 *
-	 * When logging {@link Constants#CLIENT_SEND}, instrumentation should also log the {@link Constants#SERVER_ADDR}
-	 * Check <a href="https://github.com/openzipkin/zipkin-java/blob/master/zipkin/src/main/java/zipkin/Constants.java#L28">Zipkin code</a>
-	 * for more information
+	 * When logging {@link Constants#CLIENT_SEND}, instrumentation should also log the
+	 * {@link Constants#SERVER_ADDR} Check <a href=
+	 * "https://github.com/openzipkin/zipkin-java/blob/master/zipkin/src/main/java/zipkin/Constants.java#L28">
+	 * Zipkin code</a> for more information
 	 */
 	// VisibleForTesting
 	static zipkin.Span convert(Span span, Host host) {
@@ -95,7 +95,7 @@ final class ConvertToZipkinSpanList {
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
 				log.debug("zipkin doesn't support spans with multiple parents.  Omitting "
-								+ "other parents for " + span);
+						+ "other parents for " + span);
 			}
 			zipkinSpan.parentId(span.getParents().get(0));
 		}
@@ -106,13 +106,11 @@ final class ConvertToZipkinSpanList {
 		return zipkinSpan.build();
 	}
 
-	private static void ensureLocalComponent(Span span, Builder zipkinSpan,
-			Endpoint ep) {
+	private static void ensureLocalComponent(Span span, Builder zipkinSpan, Endpoint ep) {
 		if (span.tags().containsKey(Constants.LOCAL_COMPONENT)) {
 			return;
 		}
-		String processId = span.getProcessId() != null
-				? span.getProcessId().toLowerCase()
+		String processId = span.getProcessId() != null ? span.getProcessId().toLowerCase()
 				: ZipkinMessageListener.UNKNOWN_PROCESS_ID;
 		zipkinSpan.addBinaryAnnotation(
 				BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep));
@@ -120,10 +118,12 @@ final class ConvertToZipkinSpanList {
 
 	private static void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan,
 			Endpoint ep) {
-		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME) ?
-				span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : ep.serviceName;
-		zipkinSpan.addBinaryAnnotation(BinaryAnnotation.address(Constants.SERVER_ADDR,
-				Endpoint.create(serviceName, ep.ipv4, ep.port)));
+		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME)
+				? span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : ep.serviceName;
+		Endpoint endpoint = ep.port == null ? Endpoint.create(serviceName, ep.ipv4)
+				: Endpoint.create(serviceName, ep.ipv4, ep.port);
+		zipkinSpan.addBinaryAnnotation(
+				BinaryAnnotation.address(Constants.SERVER_ADDR, endpoint));
 	}
 
 	private static boolean notClientOrServer(Span span) {

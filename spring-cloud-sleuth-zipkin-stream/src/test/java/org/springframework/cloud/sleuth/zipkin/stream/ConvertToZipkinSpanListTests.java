@@ -44,6 +44,15 @@ public class ConvertToZipkinSpanListTests {
 	}
 
 	@Test
+	public void nullEndpointPort() {
+		this.host.setPort(0);
+		Span span = span("sleuth");
+		span.logEvent(Constants.CLIENT_SEND);
+		zipkin.Span result = ConvertToZipkinSpanList.convert(span, host);
+		assertThat(result).isNotNull();
+	}
+
+	@Test
 	public void retainsValidSpans() {
 		Spans spans = new Spans(this.host,
 				Arrays.asList(span("foo"), span("bar"), span("baz")));
