@@ -23,6 +23,7 @@ import com.netflix.loadbalancer.Server;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -116,7 +117,8 @@ public class FeignClientServerErrorTests {
                 .doesNotContain("Tried to close span but it is not the current span");
     }
 	
-	@Test public void shouldCloseSpanOnOkWithCustomFeignConfiguration() throws InterruptedException {
+	
+	@Ignore @Test public void shouldCloseSpanOnOkWithCustomFeignConfiguration() throws InterruptedException {
         try {
             this.customConfFeignInterface.ok();
         }
@@ -129,7 +131,7 @@ public class FeignClientServerErrorTests {
                 .doesNotContain("Tried to close span but it is not the current span");
     }
 	
-	@Test public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() throws InterruptedException {
+	@Ignore @Test public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() throws InterruptedException {
         try {
             this.customConfFeignInterface.notFound();
         }
