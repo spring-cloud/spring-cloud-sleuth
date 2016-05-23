@@ -457,7 +457,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_zipkin_consumer">Zipkin Consumer</a></li>
 <li><a href="#_custom_consumer">Custom Consumer</a></li>
-<li><a href="#_spring_cloud_stream_kafka_binder_confiuration">Spring Cloud Stream Kafka binder confiuration</a></li>
 </ul>
 </li>
 <li><a href="#_metrics">Metrics</a></li>
@@ -1791,42 +1790,6 @@ the consumer app).
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_spring_cloud_stream_kafka_binder_confiuration">Spring Cloud Stream Kafka binder confiuration</h3>
-<div class="paragraph">
-<p>In order to integrate header propagation with Spring Cloud Stream Kafka as a binder you have to provide in your
-configuration file the following headers:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
-  cloud:
-    stream:
-      kafka:
-        binder:
-           headers:
-             - X-B3-TraceId
-             - X-B3-SpanId
-             - X-B3-Sampled
-             - X-B3-ParentSpanId
-             - X-Span-Name
-             - X-Process-Id</code></pre>
-</div>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">
-If you have a custom <code>SpanExtractor&lt;Message&lt;?&gt;</code> where you pass custom headers you need to provide those too in the
-configuration file.
-</td>
-</tr>
-</table>
-</div>
-</div>
 </div>
 </div>
 <div class="sect1">
@@ -2112,7 +2075,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-23 10:46:43 CEST
+Last updated 2016-05-23 11:03:39 CEST
 </div>
 </div>
 </body>
