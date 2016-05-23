@@ -351,6 +351,30 @@ NOTE: the sample consumer application above explicitly excludes
 but this is optional (you might actually want to trace requests into
 the consumer app).
 
+=== Spring Cloud Stream Kafka binder configuration
+
+In order to integrate header propagation with Spring Cloud Stream Kafka as a binder you have to provide in your
+configuration file the following headers:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    stream:
+      kafka:
+        binder:
+           headers:
+             - X-B3-TraceId
+             - X-B3-SpanId
+             - X-B3-Sampled
+             - X-B3-ParentSpanId
+             - X-Span-Name
+             - X-Process-Id
+----
+
+TIP: If you have a custom `SpanExtractor<Message<?>` where you pass custom headers you need to provide those too in the
+configuration file.
+
 == Metrics
 
 Currently Spring Cloud Sleuth registers very simple metrics related to spans.
