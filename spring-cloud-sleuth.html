@@ -873,8 +873,12 @@ the Spring BOM</p>
        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
        &lt;artifactId&gt;spring-cloud-sleuth-stream&lt;/artifactId&gt;
    &lt;/dependency&gt;
-   &lt;!-- EXAMPLE FOR RABBIT BINDING --&gt;
    &lt;dependency&gt; <b class="conum">(3)</b>
+       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
+   &lt;/dependency&gt;
+   &lt;!-- EXAMPLE FOR RABBIT BINDING --&gt;
+   &lt;dependency&gt; <b class="conum">(4)</b>
        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
        &lt;artifactId&gt;spring-cloud-stream-binder-rabbit&lt;/artifactId&gt;
    &lt;/dependency&gt;</code></pre>
@@ -888,6 +892,9 @@ the Spring BOM</p>
 </li>
 <li>
 <p>Add the dependency to <code>spring-cloud-sleuth-stream</code></p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-starter-sleuth</code> - that way all dependant dependencies will be downloaded</p>
 </li>
 <li>
 <p>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</p>
@@ -905,8 +912,9 @@ the Spring BOM</p>
 
 dependencies {
     compile "org.springframework.cloud:spring-cloud-sleuth-stream" <b class="conum">(2)</b>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth" <b class="conum">(3)</b>
     // Example for Rabbit binding
-    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <b class="conum">(3)</b>
+    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <b class="conum">(4)</b>
 }</code></pre>
 </div>
 </div>
@@ -918,6 +926,9 @@ the Spring BOM</p>
 </li>
 <li>
 <p>Add the dependency to <code>spring-cloud-sleuth-stream</code></p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-starter-sleuth</code> - that way all dependant dependencies will be downloaded</p>
 </li>
 <li>
 <p>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</p>
@@ -950,8 +961,12 @@ dependency</p>
        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
        &lt;artifactId&gt;spring-cloud-sleuth-zipkin-stream&lt;/artifactId&gt;
    &lt;/dependency&gt;
-   &lt;!-- EXAMPLE FOR RABBIT BINDING --&gt;
    &lt;dependency&gt; <b class="conum">(3)</b>
+       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
+   &lt;/dependency&gt;
+   &lt;!-- EXAMPLE FOR RABBIT BINDING --&gt;
+   &lt;dependency&gt; <b class="conum">(4)</b>
        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
        &lt;artifactId&gt;spring-cloud-stream-binder-rabbit&lt;/artifactId&gt;
    &lt;/dependency&gt;</code></pre>
@@ -965,6 +980,9 @@ the Spring BOM</p>
 </li>
 <li>
 <p>Add the dependency to <code>spring-cloud-sleuth-zipkin-stream</code></p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-starter-sleuth</code> - that way all dependant dependencies will be downloaded</p>
 </li>
 <li>
 <p>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</p>
@@ -982,8 +1000,9 @@ the Spring BOM</p>
 
 dependencies {
     compile "org.springframework.cloud:spring-cloud-sleuth-zipkin-stream" <b class="conum">(2)</b>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth" <b class="conum">(3)</b>
     // Example for Rabbit binding
-    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <b class="conum">(3)</b>
+    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <b class="conum">(4)</b>
 }</code></pre>
 </div>
 </div>
@@ -995,6 +1014,9 @@ the Spring BOM</p>
 </li>
 <li>
 <p>Add the dependency to <code>spring-cloud-sleuth-zipkin-stream</code></p>
+</li>
+<li>
+<p>Add the dependency to <code>spring-cloud-starter-sleuth</code> - that way all dependant dependencies will be downloaded</p>
 </li>
 <li>
 <p>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</p>
@@ -2053,7 +2075,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-10 09:08:34 CEST
+Last updated 2016-05-12 17:00:30 CEST
 </div>
 </div>
 </body>
