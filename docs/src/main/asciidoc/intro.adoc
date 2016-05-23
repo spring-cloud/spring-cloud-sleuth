@@ -251,8 +251,12 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dep
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-sleuth-stream</artifactId>
     </dependency>
-    <!-- EXAMPLE FOR RABBIT BINDING -->
     <dependency> <3>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+    </dependency>
+    <!-- EXAMPLE FOR RABBIT BINDING -->
+    <dependency> <4>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
     </dependency>
@@ -260,7 +264,8 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dep
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
 <2> Add the dependency to `spring-cloud-sleuth-stream`
-<3> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+<3> Add the dependency to `spring-cloud-starter-sleuth` - that way all dependant dependencies will be downloaded
+<4> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
 
 [source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
@@ -273,14 +278,16 @@ dependencyManagement { <1>
 
 dependencies {
     compile "org.springframework.cloud:spring-cloud-sleuth-stream" <2>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth" <3>
     // Example for Rabbit binding
-    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <3>
+    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <4>
 }
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
 <2> Add the dependency to `spring-cloud-sleuth-stream`
-<3> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+<3> Add the dependency to `spring-cloud-starter-sleuth` - that way all dependant dependencies will be downloaded
+<4> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
 
 ==== Spring Cloud Sleuth Stream Zipkin Collector
 
@@ -306,8 +313,12 @@ dependency
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-sleuth-zipkin-stream</artifactId>
     </dependency>
-    <!-- EXAMPLE FOR RABBIT BINDING -->
     <dependency> <3>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+    </dependency>
+    <!-- EXAMPLE FOR RABBIT BINDING -->
+    <dependency> <4>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
     </dependency>
@@ -315,7 +326,8 @@ dependency
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
 <2> Add the dependency to `spring-cloud-sleuth-zipkin-stream`
-<3> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+<3> Add the dependency to `spring-cloud-starter-sleuth` - that way all dependant dependencies will be downloaded
+<4> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
 
 [source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
@@ -328,14 +340,16 @@ dependencyManagement { <1>
 
 dependencies {
     compile "org.springframework.cloud:spring-cloud-sleuth-zipkin-stream" <2>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth" <3>
     // Example for Rabbit binding
-    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <3>
+    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <4>
 }
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
 <2> Add the dependency to `spring-cloud-sleuth-zipkin-stream`
-<3> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+<3> Add the dependency to `spring-cloud-starter-sleuth` - that way all dependant dependencies will be downloaded
+<4> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
 
 and then just annotate your main class with `@EnableZipkinStreamServer` annotation:
 
