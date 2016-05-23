@@ -54,8 +54,8 @@
 			<artifactId>spring-cloud-sleuth-zipkin-stream</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin</groupId>
-			<artifactId>zipkin-ui</artifactId>
+			<groupId>io.zipkin.java</groupId>
+			<artifactId>zipkin-autoconfigure-ui</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.integration</groupId>

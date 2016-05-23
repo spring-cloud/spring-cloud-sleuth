@@ -18,14 +18,15 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import zipkin.Annotation;
-import zipkin.AsyncSpanConsumer;
 import zipkin.BinaryAnnotation;
 import zipkin.BinaryAnnotation.Type;
-import zipkin.CollectorMetrics;
-import zipkin.CollectorSampler;
 import zipkin.Endpoint;
 import zipkin.Span.Builder;
-import zipkin.StorageComponent;
+import zipkin.collector.Collector;
+import zipkin.collector.CollectorMetrics;
+import zipkin.collector.CollectorSampler;
+import zipkin.storage.Callback;
+import zipkin.storage.StorageComponent;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
@@ -34,7 +35,7 @@ import java.util.Map;
 
 /**
  * A message listener that is turned on if Sleuth Stream is disabled.
- * Asynchronously stores the received spans using {@link AsyncSpanConsumer}.
+ * Asynchronously stores the received spans using {@link Collector}.
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -48,20 +49,23 @@ public class ZipkinMessageListener {
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
 			.getLog(ZipkinMessageListener.class);
 	static final String UNKNOWN_PROCESS_ID = "unknown";
-	final AsyncSpanConsumer consumer;
+	final Collector collector;
 
 	/** lazy so transient storage errors don't crash bootstrap */
 	@Lazy
 	@Autowired
 	ZipkinMessageListener(StorageComponent storage, CollectorSampler sampler,
 			CollectorMetrics metrics) {
-		this.consumer = storage.asyncSpanConsumer(sampler, metrics);
+		this.collector = Collector.builder(getClass())
+				.storage(storage)
+				.sampler(sampler)
+				.metrics(metrics).build();
 	}
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
 	public void sink(Spans input) {
 		List<zipkin.Span> converted = ConvertToZipkinSpanList.convert(input);
-		this.consumer.accept(converted, AsyncSpanConsumer.NOOP_CALLBACK);
+		this.collector.accept(converted, Callback.NOOP);
 	}
 
 	/**
