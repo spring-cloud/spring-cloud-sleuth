@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth;
 import java.util.concurrent.Callable;
 
 /**
- * The TraceManager class is the primary way for instrumentation code (note user code) to
+ * The Tracer class is the primary way for instrumentation code (note user code) to
  * interact with the library. It provides methods to create and manipulate spans.
  * <p>
  *
