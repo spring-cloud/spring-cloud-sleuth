@@ -27,7 +27,7 @@ and test it
 
 ```
 $ curl localhost:9411/api/v1/services
-["zipkin-query"]
+["zipkin-server"]
 ```
 
 ## Instrumenting Apps

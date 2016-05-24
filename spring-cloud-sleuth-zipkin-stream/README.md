@@ -24,7 +24,7 @@ public class ZipkinStreamServerApplication {
 }
 ```
 
-Zipkin has a web UI, which is enabled by default when you depend on `io.zipkin:zipkin-ui`.
+Zipkin has a web UI, which is enabled by default when you depend on `io.zipkin.java:zipkin-autoconfigure-ui`.
 
 Bind to MySQL and the same Stream service that you did in the apps (rabbit, redis, kafka). Set `spring.datasource.initialize=true` the first time you start to initialize the database.
 

@@ -63,7 +63,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.java</groupId>
-			<artifactId>zipkin-storage-jdbc</artifactId>
+			<artifactId>zipkin-autoconfigure-storage-mysql</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>

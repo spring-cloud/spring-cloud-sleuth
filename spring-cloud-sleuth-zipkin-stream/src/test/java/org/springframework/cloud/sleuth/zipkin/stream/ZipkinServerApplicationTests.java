@@ -13,7 +13,7 @@ import org.springframework.cloud.sleuth.zipkin.stream.ZipkinServerApplicationTes
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import zipkin.SpanStore;
+import zipkin.storage.StorageComponent;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ZipkinStreamServerApplication.class)
@@ -22,11 +22,11 @@ import zipkin.SpanStore;
 public class ZipkinServerApplicationTests {
 
 	@Autowired
-	private SpanStore store;
+	private StorageComponent storage;
 
 	@Test
 	public void contextLoads() {
-		int count = this.store.getServiceNames().size();
+		int count = this.storage.spanStore().getServiceNames().size();
 		assertEquals(0, count);
 	}
 
