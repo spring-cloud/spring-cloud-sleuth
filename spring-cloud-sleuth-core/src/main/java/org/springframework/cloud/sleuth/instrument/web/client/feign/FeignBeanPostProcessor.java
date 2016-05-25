@@ -16,14 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import feign.Retryer;
-import feign.codec.Decoder;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 /**
- * Post processor that wraps Feign related classes {@link Decoder},
- * {@link Retryer}
+ * Post processor that wraps Feign related classes in their tracing representations.
  *
  * @author Marcin Grzejszczak
  *
