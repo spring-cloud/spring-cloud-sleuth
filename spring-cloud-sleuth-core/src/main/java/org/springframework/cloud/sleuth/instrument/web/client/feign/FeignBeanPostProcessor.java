@@ -17,18 +17,10 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.Tracer;
-
-import feign.Client;
-import feign.Retryer;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
 
 /**
- * Post processor that wraps Feign related classes {@link Decoder},
- * {@link Retryer}
+ * Post processor that wraps Feign related classes in their tracing representations.
  *
  * @author Marcin Grzejszczak
  *
@@ -36,33 +28,16 @@ import feign.codec.ErrorDecoder;
  */
 final class FeignBeanPostProcessor implements BeanPostProcessor {
 
-	private Tracer tracer;
-	private final BeanFactory beanFactory;
+	private final TraceFeignObjectWrapper traceFeignObjectWrapper;
 
-	FeignBeanPostProcessor(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
+	FeignBeanPostProcessor(TraceFeignObjectWrapper traceFeignObjectWrapper) {
+		this.traceFeignObjectWrapper = traceFeignObjectWrapper;
 	}
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof Decoder && !(bean instanceof TraceFeignDecoder)) {
-			return new TraceFeignDecoder(getTracer(), (Decoder) bean);
-		} else if (bean instanceof Retryer && !(bean instanceof TraceFeignRetryer)) {
-			return new TraceFeignRetryer(getTracer(), (Retryer) bean);
-		} else if (bean instanceof Client && !(bean instanceof TraceFeignClient)) {
-			return new TraceFeignClient(getTracer(), (Client) bean);
-		} else if (bean instanceof ErrorDecoder && !(bean instanceof TraceFeignErrorDecoder)) {
-			return new TraceFeignErrorDecoder(getTracer(), (ErrorDecoder) bean);
-		}
-		return bean;
-	}
-
-	private Tracer getTracer() {
-		if (this.tracer==null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
-		}
-		return this.tracer;
+		return this.traceFeignObjectWrapper.wrap(bean);
 	}
 
 	@Override
