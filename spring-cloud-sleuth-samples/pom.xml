@@ -59,12 +59,12 @@
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin</artifactId>
-				<version>0.21.5</version>
+				<version>1.0.0</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin-server</artifactId>
-				<version>0.21.5</version>
+				<version>1.0.0</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
