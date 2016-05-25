@@ -16,9 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-
+import com.netflix.hystrix.HystrixCommand;
+import feign.Client;
+import feign.Feign;
+import feign.FeignException;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+import feign.Response;
+import feign.codec.Decoder;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,26 +34,26 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
+import org.springframework.cloud.netflix.feign.FeignClientSpecification;
+import org.springframework.cloud.netflix.feign.FeignContext;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 
-import com.netflix.hystrix.HystrixCommand;
-
-import feign.Client;
-import feign.Feign;
-import feign.FeignException;
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
-import feign.Response;
-import feign.codec.Decoder;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -81,10 +86,15 @@ public class TraceFeignClientAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
-		FeignBeanPostProcessor feignBeanPostProcessor(BeanFactory beanFactory) {
-			return new FeignBeanPostProcessor(beanFactory);
+		FeignBeanPostProcessor feignBeanPostProcessor(TraceFeignObjectWrapper traceFeignObjectWrapper) {
+			return new FeignBeanPostProcessor(traceFeignObjectWrapper);
 		}
 
+	}
+
+	@Bean
+	TraceFeignObjectWrapper traceFeignObjectWrapper(BeanFactory beanFactory) {
+		return new TraceFeignObjectWrapper(beanFactory);
 	}
 
 	@Bean
@@ -118,6 +128,17 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	public RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
 		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector());
+	}
+
+	@Autowired(required = false)
+	private List<FeignClientSpecification> configurations = new ArrayList<>();
+
+	@Bean
+	@Primary
+	FeignContext sleuthFeignContext(TraceFeignObjectWrapper traceFeignObjectWrapper) {
+		FeignContext feignContext = new TraceFeignContext(traceFeignObjectWrapper);
+		feignContext.setConfigurations(this.configurations);
+		return feignContext;
 	}
 
 	private SpanInjector<RequestTemplate> feignRequestTemplateInjector() {

@@ -23,7 +23,6 @@ import com.netflix.loadbalancer.Server;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,24 +64,26 @@ import static org.assertj.core.api.BDDAssertions.then;
  *
  * @author ryarabori
  */
-@RunWith(SpringJUnit4ClassRunner.class) @SpringApplicationConfiguration(
-		classes = { FeignClientServerErrorTests.TestConfiguration.class })
-@WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(
+		classes = {FeignClientServerErrorTests.TestConfiguration.class})
+@WebIntegrationTest(value = {"spring.application.name=fooservice"}, randomPort = true)
 public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;
 	@Autowired TestFeignWithCustomConfInterface customConfFeignInterface;
 	@Rule public OutputCapture capture = new OutputCapture();
 
-	@Before public void setup() {
+	@Before
+	public void setup() {
 		ExceptionUtils.setFail(true);
 	}
 
-	@Test public void shouldCloseSpanOnInternalServerError() throws InterruptedException {
+	@Test
+	public void shouldCloseSpanOnInternalServerError() throws InterruptedException {
 		try {
 			this.feignInterface.internalError();
-		}
-		catch (HystrixRuntimeException e) {
+		} catch (HystrixRuntimeException e) {
 		}
 
 		// ugly :/ waiting for rx thread to complete
@@ -91,11 +92,11 @@ public class FeignClientServerErrorTests {
 				.doesNotContain("Tried to close span but it is not the current span");
 	}
 
-	@Test public void shouldCloseSpanOnNotFound() throws InterruptedException {
+	@Test
+	public void shouldCloseSpanOnNotFound() throws InterruptedException {
 		try {
 			this.feignInterface.notFound();
-		}
-		catch (HystrixRuntimeException e) {
+		} catch (HystrixRuntimeException e) {
 		}
 
 		// ugly :/ waiting for rx thread to complete
@@ -103,116 +104,132 @@ public class FeignClientServerErrorTests {
 		then(this.capture.toString())
 				.doesNotContain("Tried to close span but it is not the current span");
 	}
-	
-	@Test public void shouldCloseSpanOnOk() throws InterruptedException {
-        try {
-            this.feignInterface.ok();
-        }
-        catch (HystrixRuntimeException e) {
-        }
 
-        // ugly :/ waiting for rx thread to complete
-        Thread.sleep(100);
-        then(this.capture.toString())
-                .doesNotContain("Tried to close span but it is not the current span");
-    }
-	
-	
-	@Ignore @Test public void shouldCloseSpanOnOkWithCustomFeignConfiguration() throws InterruptedException {
-        try {
-            this.customConfFeignInterface.ok();
-        }
-        catch (HystrixRuntimeException e) {
-        }
+	@Test
+	public void shouldCloseSpanOnOk() throws InterruptedException {
+		try {
+			this.feignInterface.ok();
+		} catch (HystrixRuntimeException e) {
+		}
 
-        // ugly :/ waiting for rx thread to complete
-        Thread.sleep(100);
-        then(this.capture.toString())
-                .doesNotContain("Tried to close span but it is not the current span");
-    }
-	
-	@Ignore @Test public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() throws InterruptedException {
-        try {
-            this.customConfFeignInterface.notFound();
-        }
-        catch (HystrixRuntimeException e) {
-        }
+		// ugly :/ waiting for rx thread to complete
+		Thread.sleep(100);
+		then(this.capture.toString())
+				.doesNotContain("Tried to close span but it is not the current span");
+	}
 
-        // ugly :/ waiting for rx thread to complete
-        Thread.sleep(100);
-        then(this.capture.toString())
-                .doesNotContain("Tried to close span but it is not the current span");
-    }
+	@Test
+	public void shouldCloseSpanOnOkWithCustomFeignConfiguration() throws InterruptedException {
+		try {
+			this.customConfFeignInterface.ok();
+		} catch (HystrixRuntimeException e) {
+		}
 
-	@Configuration @EnableAutoConfiguration @EnableFeignClients
+		// ugly :/ waiting for rx thread to complete
+		Thread.sleep(100);
+		then(this.capture.toString())
+				.doesNotContain("Tried to close span but it is not the current span");
+	}
+
+	@Test
+	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() throws InterruptedException {
+		try {
+			this.customConfFeignInterface.notFound();
+		} catch (HystrixRuntimeException e) {
+		}
+
+		// ugly :/ waiting for rx thread to complete
+		Thread.sleep(100);
+		then(this.capture.toString())
+				.doesNotContain("Tried to close span but it is not the current span");
+	}
+
+	@Configuration
+	@EnableAutoConfiguration
+	@EnableFeignClients
 	@RibbonClients({@RibbonClient(value = "fooservice",
-			configuration = SimpleRibbonClientConfiguration.class), @RibbonClient(value = "customConfFooService",
-            configuration = SimpleRibbonClientConfiguration.class)})
+			configuration = SimpleRibbonClientConfiguration.class),
+			@RibbonClient(value = "customConfFooService",
+			configuration = SimpleRibbonClientConfiguration.class)})
 	public static class TestConfiguration {
 
-		@Bean FooController fooController() {
+		@Bean
+		FooController fooController() {
 			return new FooController();
 		}
 
-		@Bean Listener listener() {
+		@Bean
+		Listener listener() {
 			return new Listener();
 		}
 
-		@LoadBalanced @Bean public RestTemplate restTemplate() {
+		@LoadBalanced
+		@Bean
+		public RestTemplate restTemplate() {
 			return new RestTemplate();
 		}
 
 	}
 
-	@FeignClient(value = "fooservice") public interface TestFeignInterface {
+	@FeignClient(value = "fooservice")
+	public interface TestFeignInterface {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/internalerror")
 		ResponseEntity<String> internalError();
 
 		@RequestMapping(method = RequestMethod.GET, value = "/notfound")
 		ResponseEntity<String> notFound();
-		
-	    @RequestMapping(method = RequestMethod.GET, value = "/ok")
-        ResponseEntity<String> ok();
-	}
-	
-    @FeignClient(value = "customConfFooService", configuration=CustomFeignClientConfiguration.class) public interface TestFeignWithCustomConfInterface {
 
-        @RequestMapping(method = RequestMethod.GET, value = "/notfound")
-        ResponseEntity<String> notFound();
-        
-        @RequestMapping(method = RequestMethod.GET, value = "/ok")
-        ResponseEntity<String> ok();
-    }
-	
-	
-	@Configuration	public static class CustomFeignClientConfiguration {
-	    @Bean Decoder decoder() {
-            return new Decoder.Default();
-        }
-	    
-	    @Bean ErrorDecoder errorDecoder() {
-	        return new ErrorDecoder.Default();
-	    }
+		@RequestMapping(method = RequestMethod.GET, value = "/ok")
+		ResponseEntity<String> ok();
 	}
 
-	@Component public static class Listener implements SpanReporter {
+	@FeignClient(value = "customConfFooService", configuration = CustomFeignClientConfiguration.class)
+	public interface TestFeignWithCustomConfInterface {
+
+		@RequestMapping(method = RequestMethod.GET, value = "/notfound")
+		ResponseEntity<String> notFound();
+
+		@RequestMapping(method = RequestMethod.GET, value = "/ok")
+		ResponseEntity<String> ok();
+	}
+
+
+	@Configuration
+	public static class CustomFeignClientConfiguration {
+		@Bean
+		Decoder decoder() {
+			return new Decoder.Default();
+		}
+
+		@Bean
+		ErrorDecoder errorDecoder() {
+			return new ErrorDecoder.Default();
+		}
+	}
+
+	@Component
+	public static class Listener implements SpanReporter {
 		private List<Span> events = new ArrayList<>();
 
 		public List<Span> getEvents() {
 			return this.events;
 		}
 
-		@Override public void report(Span span) {
+		@Override
+		public void report(Span span) {
 			this.events.add(span);
 		}
 	}
 
-	@RestController public static class FooController {
+	@RestController
+	public static class FooController {
 
-		@Autowired Tracer tracer;
+		@Autowired
+		Tracer tracer;
 
-		@RequestMapping("/internalerror") public ResponseEntity<String> internalError(
+		@RequestMapping("/internalerror")
+		public ResponseEntity<String> internalError(
 				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
 				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
 				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
@@ -220,26 +237,31 @@ public class FeignClientServerErrorTests {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		@RequestMapping("/notfound") public ResponseEntity<String> notFound(
+		@RequestMapping("/notfound")
+		public ResponseEntity<String> notFound(
 				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
 				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
 				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
 			return new ResponseEntity<>("not found", HttpStatus.NOT_FOUND);
 		}
-		
-		@RequestMapping("/ok") public ResponseEntity<String> ok(
-                @RequestHeader(Span.TRACE_ID_NAME) String traceId,
-                @RequestHeader(Span.SPAN_ID_NAME) String spanId,
-                @RequestHeader(Span.PARENT_ID_NAME) String parentId) {
-            return new ResponseEntity<>("ok", HttpStatus.OK);
+
+		@RequestMapping("/ok")
+		public ResponseEntity<String> ok(
+				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
+				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
+				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+			return new ResponseEntity<>("ok", HttpStatus.OK);
 		}
 	}
 
-	@Configuration public static class SimpleRibbonClientConfiguration {
+	@Configuration
+	public static class SimpleRibbonClientConfiguration {
 
-		@Value("${local.server.port}") private int port = 0;
+		@Value("${local.server.port}")
+		private int port = 0;
 
-		@Bean public ILoadBalancer ribbonLoadBalancer() {
+		@Bean
+		public ILoadBalancer ribbonLoadBalancer() {
 			BaseLoadBalancer balancer = new BaseLoadBalancer();
 			balancer.setServersList(
 					Collections.singletonList(new Server("localhost", this.port)));
