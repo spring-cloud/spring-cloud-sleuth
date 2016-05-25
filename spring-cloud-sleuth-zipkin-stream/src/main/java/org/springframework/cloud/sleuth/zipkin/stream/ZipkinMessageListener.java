@@ -59,7 +59,7 @@ public class ZipkinMessageListener {
 		this.collector = Collector.builder(getClass())
 				.storage(storage)
 				.sampler(sampler)
-				.metrics(metrics).build();
+				.metrics(metrics.forTransport("stream")).build();
 	}
 
 	@ServiceActivator(inputChannel = SleuthSink.INPUT)
