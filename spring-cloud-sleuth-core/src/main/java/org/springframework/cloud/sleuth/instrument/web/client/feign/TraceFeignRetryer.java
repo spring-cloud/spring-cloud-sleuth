@@ -62,6 +62,6 @@ final class TraceFeignRetryer implements Retryer {
 
 	@Override
 	public Retryer clone() {
-		return new TraceFeignRetryer(this.tracer, this.delegate);
+		return new TraceFeignRetryer(this.tracer, this.delegate.clone());
 	}
 }
