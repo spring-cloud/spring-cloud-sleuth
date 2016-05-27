@@ -16,12 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,9 +40,11 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClients;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,9 +58,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -167,6 +171,10 @@ public class FeignClientServerErrorTests {
 		@Bean
 		public RestTemplate restTemplate() {
 			return new RestTemplate();
+		}
+
+		@Bean Sampler testSampler() {
+			return new AlwaysSampler();
 		}
 
 	}
