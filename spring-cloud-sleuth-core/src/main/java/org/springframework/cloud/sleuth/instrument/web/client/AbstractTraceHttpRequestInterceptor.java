@@ -16,12 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.net.URI;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
+import org.springframework.util.StringUtils;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Abstraction over classes that interact with Http requests. Allows you
@@ -35,11 +40,14 @@ abstract class AbstractTraceHttpRequestInterceptor {
 
 	protected final Tracer tracer;
 	protected final SpanInjector<HttpRequest> spanInjector;
+	protected final TraceKeys traceKeys;
 
 	protected AbstractTraceHttpRequestInterceptor(Tracer tracer,
-			SpanInjector<HttpRequest> spanInjector) {
+												SpanInjector<HttpRequest> spanInjector,
+												TraceKeys traceKeys) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
+		this.traceKeys = traceKeys;
 	}
 
 	/**
@@ -56,6 +64,26 @@ abstract class AbstractTraceHttpRequestInterceptor {
 
 	private String uriScheme(URI uri) {
 		return uri.getScheme() == null ? "http" : uri.getScheme();
+	}
+
+	/**
+	 * Adds HTTP tags to the client side span
+	 */
+	protected void addRequestTags(HttpRequest request) {
+		this.tracer.addTag(this.traceKeys.getHttp().getUrl(), request.getURI().toString());
+		this.tracer.addTag(this.traceKeys.getHttp().getHost(), request.getURI().getHost());
+		this.tracer.addTag(this.traceKeys.getHttp().getPath(), request.getURI().getPath());
+		this.tracer.addTag(this.traceKeys.getHttp().getMethod(), request.getMethod().name());
+		for (String name : this.traceKeys.getHttp().getHeaders()) {
+			HttpHeaders values = request.getHeaders();
+			for (Map.Entry<String, List<String>> entry : values.entrySet()) {
+				String key = this.traceKeys.getHttp().getPrefix() + name.toLowerCase();
+				List<String> list = entry.getValue();
+				String value = list.size() == 1 ? list.get(0)
+						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
+				this.tracer.addTag(key, value);
+			}
+		}
 	}
 
 	/**
