@@ -12,7 +12,7 @@ import java.util.Map;
  * @author Marcin Grzejszczak
  * @since 1.0.1
  */
-public class TraceFeignContext extends FeignContext {
+class TraceFeignContext extends FeignContext {
 
 	private final TraceFeignObjectWrapper traceFeignObjectWrapper;
 
