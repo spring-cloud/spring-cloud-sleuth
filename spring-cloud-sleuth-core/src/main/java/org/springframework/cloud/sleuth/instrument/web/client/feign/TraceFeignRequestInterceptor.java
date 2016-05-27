@@ -17,10 +17,14 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.util.StringUtils;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -38,11 +42,14 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor {
 	private final Tracer tracer;
 	private final SpanInjector<RequestTemplate> spanInjector;
 	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
+	private final TraceKeys traceKeys;
 
 	TraceFeignRequestInterceptor(Tracer tracer,
-			SpanInjector<RequestTemplate> spanInjector) {
+								SpanInjector<RequestTemplate> spanInjector,
+								TraceKeys traceKeys) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
+		this.traceKeys = traceKeys;
 	}
 
 	@Override
@@ -50,7 +57,29 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor {
 		String spanName = getSpanName(template);
 		Span span = getSpan(spanName);
 		this.spanInjector.inject(span, template);
+		addRequestTags(template);
 		span.logEvent(Span.CLIENT_SEND);
+	}
+
+	/**
+	 * Adds HTTP tags to the client side span
+	 */
+	protected void addRequestTags(RequestTemplate requestTemplate) {
+		URI uri = URI.create(requestTemplate.url());
+		this.tracer.addTag(this.traceKeys.getHttp().getUrl(), uri.toString());
+		this.tracer.addTag(this.traceKeys.getHttp().getHost(), uri.getHost());
+		this.tracer.addTag(this.traceKeys.getHttp().getPath(), uri.getPath());
+		this.tracer.addTag(this.traceKeys.getHttp().getMethod(), requestTemplate.method());
+		for (String name : this.traceKeys.getHttp().getHeaders()) {
+			Map<String, Collection<String>> values = requestTemplate.headers();
+			for (Map.Entry<String, Collection<String>> entry : values.entrySet()) {
+				String key = this.traceKeys.getHttp().getPrefix() + name.toLowerCase();
+				Collection<String> list = entry.getValue();
+				String value = list.size() == 1 ? list.iterator().next()
+						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
+				this.tracer.addTag(key, value);
+			}
+		}
 	}
 
 	protected String getSpanName(RequestTemplate template) {

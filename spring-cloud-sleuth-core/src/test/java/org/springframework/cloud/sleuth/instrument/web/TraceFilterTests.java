@@ -16,11 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.Random;
-import java.util.regex.Pattern;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Random;
+import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -117,7 +116,7 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
 				this.spanExtractor, this.spanInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
-		verifyHttpTags();
+		verifyHttpResponseTags();
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
@@ -149,7 +148,7 @@ public class TraceFilterTests {
 				this.spanExtractor, this.spanInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyHttpTags();
+		verifyHttpResponseTags();
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -163,13 +162,28 @@ public class TraceFilterTests {
 				this.spanExtractor, this.spanInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyHttpTags();
+		verifyHttpResponseTags();
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
-	public void addsAdditionalHeaders() throws Exception {
+	public void addsAdditionalHeadersForRootSpan() throws Exception {
+		this.request = builder().buildRequest(new MockServletContext());
+
+		this.traceKeys.getHttp().getHeaders().add("x-foo");
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.spanInjector);
+		this.request.addHeader("X-Foo", "bar");
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		assertThat(this.span.tags()).contains(entry("http.x-foo", "bar"));
+
+		assertNull(TestSpanContextHolder.getCurrentSpan());
+	}
+
+	@Test
+	public void doesNotAddAdditionalHeadersForNonRootSpan() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
@@ -179,7 +193,7 @@ public class TraceFilterTests {
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertThat(this.span.tags()).contains(entry("http.x-foo", "bar"));
+		assertThat(this.span.tags()).doesNotContain(entry("http.x-foo", "bar"));
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -199,9 +213,8 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void additionalMultiValuedHeader() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
-				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+	public void additionalMultiValuedHeaderForRootSpan() throws Exception {
+		this.request = builder().buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
@@ -233,24 +246,20 @@ public class TraceFilterTests {
 		catch (RuntimeException e) {
 			assertEquals("Planned", e.getMessage());
 		}
-		verifyHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
+		verifyHttpResponseTags(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
-	public void verifyHttpTags() {
-		verifyHttpTags(HttpStatus.OK);
+	public void verifyHttpResponseTags() {
+		verifyHttpResponseTags(HttpStatus.OK);
 	}
 
 	/**
 	 * Shows the expansion of {@link import
 	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
 	 */
-	public void verifyHttpTags(HttpStatus status) {
-		assertThat(this.span.tags()).contains(entry("http.host", "localhost"),
-				entry("http.url", "http://localhost/?foo=bar"), entry("http.path", "/"),
-				entry("http.method", "GET"));
-
+	public void verifyHttpResponseTags(HttpStatus status) {
 		// Status is only interesting in non-success case. Omitting it saves at least
 		// 20bytes per span.
 		if (status.is2xxSuccessful()) {

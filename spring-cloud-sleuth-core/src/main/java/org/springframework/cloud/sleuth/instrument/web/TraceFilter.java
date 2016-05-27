@@ -15,16 +15,15 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
@@ -181,19 +180,26 @@ public class TraceFilter extends OncePerRequestFilter {
 
 	/** Override to add annotations not defined in {@link TraceKeys}. */
 	protected void addRequestTags(HttpServletRequest request) {
-		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.tracer.addTag(this.traceKeys.getHttp().getUrl(), getFullUrl(request));
-		this.tracer.addTag(this.traceKeys.getHttp().getHost(), request.getServerName());
-		this.tracer.addTag(this.traceKeys.getHttp().getPath(), uri);
-		this.tracer.addTag(this.traceKeys.getHttp().getMethod(), request.getMethod());
-		for (String name : this.traceKeys.getHttp().getHeaders()) {
-			Enumeration<String> values = request.getHeaders(name);
-			if (values.hasMoreElements()) {
-				String key = this.traceKeys.getHttp().getPrefix() + name.toLowerCase();
-				ArrayList<String> list = Collections.list(values);
-				String value = list.size() == 1 ? list.get(0)
-						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
-				this.tracer.addTag(key, value);
+		Span span = this.tracer.getCurrentSpan();
+		addRequestTagsForRootSpan(request, span);
+	}
+
+	private void addRequestTagsForRootSpan(HttpServletRequest request, Span span) {
+		if (span.getParents().isEmpty()) {
+			String uri = this.urlPathHelper.getPathWithinApplication(request);
+			this.tracer.addTag(this.traceKeys.getHttp().getUrl(), getFullUrl(request));
+			this.tracer.addTag(this.traceKeys.getHttp().getHost(), request.getServerName());
+			this.tracer.addTag(this.traceKeys.getHttp().getPath(), uri);
+			this.tracer.addTag(this.traceKeys.getHttp().getMethod(), request.getMethod());
+			for (String name : this.traceKeys.getHttp().getHeaders()) {
+				Enumeration<String> values = request.getHeaders(name);
+				if (values.hasMoreElements()) {
+					String key = this.traceKeys.getHttp().getPrefix() + name.toLowerCase();
+					ArrayList<String> list = Collections.list(values);
+					String value = list.size() == 1 ? list.get(0)
+							: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
+					this.tracer.addTag(key, value);
+				}
 			}
 		}
 	}

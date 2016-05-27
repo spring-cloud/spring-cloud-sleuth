@@ -16,17 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,9 +31,11 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -53,19 +51,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterCustomExtractorTests.Config.class)
 @WebIntegrationTest(randomPort = true)
 @DirtiesContext
 public class TraceFilterCustomExtractorTests {
-	@Autowired
-	Random random;
-	@Autowired
-	RestTemplate restTemplate;
-	@Autowired
-	Config config;
-	@Autowired
-	CustomRestController customRestController;
+	@Autowired Random random;
+	@Autowired RestTemplate restTemplate;
+	@Autowired Config config;
+	@Autowired CustomRestController customRestController;
 
 	@Test
 	@SuppressWarnings("unchecked")
@@ -125,6 +122,11 @@ public class TraceFilterCustomExtractorTests {
 		@Bean
 		CustomRestController customRestController() {
 			return new CustomRestController();
+		}
+
+		@Bean
+		Sampler alwaysSampler() {
+			return new AlwaysSampler();
 		}
 	}
 

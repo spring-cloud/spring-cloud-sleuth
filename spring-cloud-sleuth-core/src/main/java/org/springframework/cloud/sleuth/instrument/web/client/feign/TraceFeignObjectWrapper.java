@@ -1,11 +1,12 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.Tracer;
+
 import feign.Client;
 import feign.Retryer;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * Class that wraps Feign related classes into their Trace representative
@@ -36,7 +37,7 @@ final class TraceFeignObjectWrapper {
 	}
 
 	private Tracer getTracer() {
-		if (this.tracer==null) {
+		if (this.tracer == null) {
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;

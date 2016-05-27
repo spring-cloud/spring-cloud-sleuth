@@ -16,16 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static junitparams.JUnitParamsRunner.$;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 
 import org.junit.After;
 import org.junit.ClassRule;
@@ -41,9 +42,11 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,52 +61,52 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+
+import static junitparams.JUnitParamsRunner.$;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
 @SpringApplicationConfiguration(classes = { WebClientTests.TestConfiguration.class })
 @WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
 public class WebClientTests {
 
-	@ClassRule
-	public static final SpringClassRule SCR = new SpringClassRule();
-	@Rule
-	public final SpringMethodRule springMethodRule = new SpringMethodRule();
+	@ClassRule public static final SpringClassRule SCR = new SpringClassRule();
+	@Rule public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
-	@Autowired
-	TestFeignInterface testFeignInterface;
-	@Autowired
-	@LoadBalanced
-	RestTemplate template;
-	@Autowired
-	Listener listener;
-	@Autowired
-	Tracer tracer;
+	@Autowired TestFeignInterface testFeignInterface;
+	@Autowired @LoadBalanced RestTemplate template;
+	@Autowired Listener listener;
+	@Autowired Tracer tracer;
 
 	@After
 	public void close() {
 		TestSpanContextHolder.removeCurrentSpan();
-		this.listener.getEvents().clear();
+		this.listener.getSpans().clear();
 	}
 
 	@Test
 	@Parameters
 	@SuppressWarnings("unchecked")
-	public void shouldCreateANewSpanWhenNoPreviousTracingWasPresent(
+	public void shouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent(
 			ResponseEntityProvider provider) {
 		ResponseEntity<String> response = provider.get(this);
 
 		then(getHeader(response, Span.TRACE_ID_NAME)).isNotNull();
 		then(getHeader(response, Span.SPAN_ID_NAME)).isNotNull();
-		then(this.listener.getEvents()).isNotEmpty();
+		then(this.listener.getSpans()).isNotEmpty();
+		Optional<Span> noTraceSpan = this.listener.getSpans().stream().filter(span ->
+				"http:/notrace".equals(span.getName()) && !span.tags().isEmpty()).findFirst();
+		then(noTraceSpan.isPresent()).isTrue();
+		// TODO: matches cause there is an issue with Feign not providing the full URL at the interceptor level
+		then(noTraceSpan.get()).matchesATag("http.url", ".*/notrace")
+				.hasATag("http.path", "/notrace")
+				.hasATag("http.method", "GET");
 	}
 
-	Object[] parametersForShouldCreateANewSpanWhenNoPreviousTracingWasPresent() {
+	Object[] parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent() {
 		return $(
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.template
@@ -123,7 +126,7 @@ public class WebClientTests {
 
 		then(response.getBody().get(Span.TRACE_ID_NAME)).isNotNull();
 		then(response.getBody().get(Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_NOT_SAMPLED);
-		then(this.listener.getEvents()).isNotEmpty();
+		then(this.listener.getSpans()).isNotEmpty();
 	}
 
 	Object[] parametersForShouldPropagateNotSamplingHeader() {
@@ -152,7 +155,7 @@ public class WebClientTests {
 	}
 
 	private Span spanWithClientEvents() {
-		return this.listener.getEvents().stream()
+		return this.listener.getSpans().stream()
 				.filter(span -> span.logs().stream()
 						.filter(log -> log.getEvent().contains(Span.CLIENT_RECV)
 								|| log.getEvent().contains(Span.CLIENT_SEND))
@@ -241,13 +244,18 @@ public class WebClientTests {
 		public RestTemplate restTemplate() {
 			return new RestTemplate();
 		}
+
+		@Bean
+		Sampler testSampler() {
+			return new AlwaysSampler();
+		}
 	}
 
 	@Component
 	public static class Listener implements SpanReporter {
 		private List<Span> events = new ArrayList<>();
 
-		public List<Span> getEvents() {
+		public List<Span> getSpans() {
 			return this.events;
 		}
 

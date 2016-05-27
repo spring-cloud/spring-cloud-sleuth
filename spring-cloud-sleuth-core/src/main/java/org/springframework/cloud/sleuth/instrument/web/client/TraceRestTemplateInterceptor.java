@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.io.IOException;
+
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -23,8 +25,6 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-
-import java.io.IOException;
 
 /**
  * Interceptor that verifies whether the trance and span id has been set on the request
@@ -47,7 +47,6 @@ public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterc
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
-		addRequestTags(request);
 		publishStartEvent(request);
 		return response(request, body, execution);
 	}

@@ -123,8 +123,8 @@ public class TraceFeignClientAutoConfiguration {
 	 * an existing one if a retry takes place.
 	 */
 	@Bean
-	public RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
-		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector());
+	public RequestInterceptor traceIdRequestInterceptor(Tracer tracer, TraceKeys traceKeys) {
+		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector(), traceKeys);
 	}
 
 	@Autowired(required = false)

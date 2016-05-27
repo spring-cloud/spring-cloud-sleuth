@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -23,17 +27,11 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.util.StringUtils;
-
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Abstraction over classes that interact with Http requests. Allows you
  * to enrich the request headers with trace related information.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 abstract class AbstractTraceHttpRequestInterceptor {
@@ -43,8 +41,7 @@ abstract class AbstractTraceHttpRequestInterceptor {
 	protected final TraceKeys traceKeys;
 
 	protected AbstractTraceHttpRequestInterceptor(Tracer tracer,
-												SpanInjector<HttpRequest> spanInjector,
-												TraceKeys traceKeys) {
+			SpanInjector<HttpRequest> spanInjector, TraceKeys traceKeys) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
 		this.traceKeys = traceKeys;
@@ -59,6 +56,7 @@ abstract class AbstractTraceHttpRequestInterceptor {
 		String spanName = uriScheme(uri) + ":" + uri.getPath();
 		Span newSpan = this.tracer.createSpan(spanName);
 		this.spanInjector.inject(newSpan, request);
+		addRequestTags(request);
 		newSpan.logEvent(Span.CLIENT_SEND);
 	}
 

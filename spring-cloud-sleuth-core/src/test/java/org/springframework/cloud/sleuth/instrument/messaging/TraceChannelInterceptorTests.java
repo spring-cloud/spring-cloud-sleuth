@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTests.App;
@@ -193,6 +194,11 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		@Bean
 		public MessagingTemplate messagingTemplate() {
 			return new MessagingTemplate(channel());
+		}
+
+		@Bean
+		Sampler alwaysSampler() {
+			return new AlwaysSampler();
 		}
 
 	}

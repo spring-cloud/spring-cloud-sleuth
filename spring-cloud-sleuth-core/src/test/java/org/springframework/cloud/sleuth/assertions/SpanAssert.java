@@ -88,12 +88,7 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 
 	public SpanAssert hasATag(String tagKey, String tagValue) {
 		isNotNull();
-		if (!this.actual.tags().containsKey(tagKey)) {
-			String message = String.format("Expected span to have the tag with key <%s>. "
-					+ "Found tags are <%s>", tagKey, this.actual.tags());
-			log.error(message);
-			failWithMessage(message);
-		}
+		assertThatTagIsPresent(tagKey);
 		String foundTagValue = this.actual.tags().get(tagKey);
 		if (!foundTagValue.equals(tagValue)) {
 			String message = String.format("Expected span to have the tag with key <%s> and value <%s>. "
@@ -102,6 +97,28 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 			failWithMessage(message);
 		}
 		return this;
+	}
+
+	public SpanAssert matchesATag(String tagKey, String tagRegex) {
+		isNotNull();
+		assertThatTagIsPresent(tagKey);
+		String foundTagValue = this.actual.tags().get(tagKey);
+		if (!foundTagValue.matches(tagRegex)) {
+			String message = String.format("Expected span to have the tag with key <%s> and match a regex <%s>. "
+					+ "Found value for that tag is <%s>", tagKey, tagRegex, foundTagValue);
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
+	private void assertThatTagIsPresent(String tagKey) {
+		if (!this.actual.tags().containsKey(tagKey)) {
+			String message = String.format("Expected span to have the tag with key <%s>. "
+					+ "Found tags are <%s>", tagKey, this.actual.tags());
+			log.error(message);
+			failWithMessage(message);
+		}
 	}
 
 	public SpanAssert hasLoggedAnEvent(String event) {
