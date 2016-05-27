@@ -50,6 +50,7 @@ public class TraceFilterMockChainIntegrationTests {
 			new Random(), new DefaultSpanNamer(),
 			new NoOpSpanLogger(), new NoOpSpanReporter());
 	private TraceKeys traceKeys = new TraceKeys();
+	private HttpTraceKeysInjector keysInjector = new HttpTraceKeysInjector(this.tracer, this.traceKeys);
 
 	private MockHttpServletRequest request;
 	private MockHttpServletResponse response;
@@ -73,7 +74,7 @@ public class TraceFilterMockChainIntegrationTests {
 	public void startsNewTrace() throws Exception {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, new NoOpSpanReporter(),
 				new HttpServletRequestExtractor(new Random(), Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN)),
-				new HttpServletResponseInjector());
+				new HttpServletResponseInjector(), keysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -85,7 +86,7 @@ public class TraceFilterMockChainIntegrationTests {
 				.header(Span.TRACE_ID_NAME, generator.nextLong()).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, new NoOpSpanReporter(),
 				new HttpServletRequestExtractor(new Random(), Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN)),
-				new HttpServletResponseInjector());
+				new HttpServletResponseInjector(), keysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}

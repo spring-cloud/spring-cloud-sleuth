@@ -16,9 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.io.IOException;
+import java.net.URI;
+
 import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
@@ -28,9 +31,6 @@ import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-
-import java.io.IOException;
-import java.net.URI;
 
 /**
  * Wrapper that adds trace related headers to the created {@link AsyncClientHttpRequest}
@@ -55,10 +55,11 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	 *
 	 * @see org.springframework.web.client.AsyncRestTemplate#AsyncRestTemplate(AsyncClientHttpRequestFactory)
 	 */
-	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer, SpanInjector<HttpRequest> spanInjector,
-													AsyncClientHttpRequestFactory asyncDelegate,
-													TraceKeys traceKeys) {
-		super(tracer, spanInjector, traceKeys);
+	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer,
+			SpanInjector<HttpRequest> spanInjector,
+			AsyncClientHttpRequestFactory asyncDelegate,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
+		super(tracer, spanInjector, httpTraceKeysInjector);
 		this.asyncDelegate = asyncDelegate;
 		this.syncDelegate = asyncDelegate instanceof ClientHttpRequestFactory ?
 				(ClientHttpRequestFactory) asyncDelegate : defaultClientHttpRequestFactory();
@@ -68,17 +69,20 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	 * Default implementation that creates a {@link SimpleClientHttpRequestFactory} that
 	 * has a wrapped task executor via the {@link TraceAsyncListenableTaskExecutor}
 	 */
-	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer, SpanInjector<HttpRequest> spanInjector,
-													TraceKeys traceKeys) {
-		super(tracer, spanInjector, traceKeys);
+	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer,
+			SpanInjector<HttpRequest> spanInjector, HttpTraceKeysInjector httpTraceKeysInjector) {
+		super(tracer, spanInjector, httpTraceKeysInjector);
 		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = defaultClientHttpRequestFactory();
 		this.asyncDelegate = simpleClientHttpRequestFactory;
 		this.syncDelegate = simpleClientHttpRequestFactory;
 	}
 
-	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer, SpanInjector<HttpRequest> spanInjector,
-			AsyncClientHttpRequestFactory asyncDelegate, ClientHttpRequestFactory syncDelegate, TraceKeys traceKeys) {
-		super(tracer, spanInjector, traceKeys);
+	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer,
+			SpanInjector<HttpRequest> spanInjector,
+			AsyncClientHttpRequestFactory asyncDelegate,
+			ClientHttpRequestFactory syncDelegate,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
+		super(tracer, spanInjector, httpTraceKeysInjector);
 		this.asyncDelegate = asyncDelegate;
 		this.syncDelegate = syncDelegate;
 	}

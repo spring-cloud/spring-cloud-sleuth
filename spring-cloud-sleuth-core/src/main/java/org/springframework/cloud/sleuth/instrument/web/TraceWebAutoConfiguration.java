@@ -76,9 +76,10 @@ public class TraceWebAutoConfiguration {
 	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
 			SpanExtractor<HttpServletRequest> spanExtractor,
-			SpanInjector<HttpServletResponse> spanInjector) {
+			SpanInjector<HttpServletResponse> spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
 		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
-				spanReporter, spanExtractor, spanInjector);
+				spanReporter, spanExtractor, spanInjector, httpTraceKeysInjector);
 	}
 
 	@Bean

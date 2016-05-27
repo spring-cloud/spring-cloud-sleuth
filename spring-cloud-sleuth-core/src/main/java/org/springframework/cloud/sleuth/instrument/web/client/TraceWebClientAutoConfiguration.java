@@ -16,11 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -32,6 +31,7 @@ import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpRequest;
@@ -56,14 +56,20 @@ public class TraceWebClientAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(Tracer tracer,
-																	SpanInjector<HttpRequest> spanInjector,
-																	TraceKeys traceKeys) {
-		return new TraceRestTemplateInterceptor(tracer, spanInjector, traceKeys);
+			SpanInjector<HttpRequest> spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
+		return new TraceRestTemplateInterceptor(tracer, spanInjector, httpTraceKeysInjector);
 	}
 
 	@Bean
 	public SpanInjector<HttpRequest> httpRequestSpanInjector() {
 		return new HttpRequestInjector();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer, TraceKeys traceKeys) {
+		return new HttpTraceKeysInjector(tracer, traceKeys);
 	}
 
 	@Configuration

@@ -78,24 +78,29 @@ public class TraceFilter extends OncePerRequestFilter {
 	private final SpanReporter spanReporter;
 	private final SpanExtractor<HttpServletRequest> spanExtractor;
 	private final SpanInjector<HttpServletResponse> spanInjector;
+	private final HttpTraceKeysInjector httpTraceKeysInjector;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
-			SpanExtractor<HttpServletRequest> spanExtractor, SpanInjector<HttpServletResponse> spanInjector) {
+			SpanExtractor<HttpServletRequest> spanExtractor,
+			SpanInjector<HttpServletResponse> spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
-				spanExtractor, spanInjector);
+				spanExtractor, spanInjector, httpTraceKeysInjector);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
 			SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
-			SpanInjector<HttpServletResponse> spanInjector) {
+			SpanInjector<HttpServletResponse> spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
 		this.spanReporter = spanReporter;
 		this.spanExtractor = spanExtractor;
 		this.spanInjector = spanInjector;
+		this.httpTraceKeysInjector = httpTraceKeysInjector;
 	}
 
 	@Override
@@ -180,26 +185,17 @@ public class TraceFilter extends OncePerRequestFilter {
 
 	/** Override to add annotations not defined in {@link TraceKeys}. */
 	protected void addRequestTags(HttpServletRequest request) {
-		Span span = this.tracer.getCurrentSpan();
-		addRequestTagsForRootSpan(request, span);
-	}
-
-	private void addRequestTagsForRootSpan(HttpServletRequest request, Span span) {
-		if (span.getParents().isEmpty()) {
-			String uri = this.urlPathHelper.getPathWithinApplication(request);
-			this.tracer.addTag(this.traceKeys.getHttp().getUrl(), getFullUrl(request));
-			this.tracer.addTag(this.traceKeys.getHttp().getHost(), request.getServerName());
-			this.tracer.addTag(this.traceKeys.getHttp().getPath(), uri);
-			this.tracer.addTag(this.traceKeys.getHttp().getMethod(), request.getMethod());
-			for (String name : this.traceKeys.getHttp().getHeaders()) {
-				Enumeration<String> values = request.getHeaders(name);
-				if (values.hasMoreElements()) {
-					String key = this.traceKeys.getHttp().getPrefix() + name.toLowerCase();
-					ArrayList<String> list = Collections.list(values);
-					String value = list.size() == 1 ? list.get(0)
-							: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
-					this.tracer.addTag(key, value);
-				}
+		String uri = this.urlPathHelper.getPathWithinApplication(request);
+		this.httpTraceKeysInjector.addRequestTags(getFullUrl(request),
+				request.getServerName(), uri, request.getMethod());
+		for (String name : this.traceKeys.getHttp().getHeaders()) {
+			Enumeration<String> values = request.getHeaders(name);
+			if (values.hasMoreElements()) {
+				String key = this.traceKeys.getHttp().getPrefix() + name.toLowerCase();
+				ArrayList<String> list = Collections.list(values);
+				String value = list.size() == 1 ? list.get(0)
+						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
+				this.tracer.addTag(key, value);
 			}
 		}
 	}

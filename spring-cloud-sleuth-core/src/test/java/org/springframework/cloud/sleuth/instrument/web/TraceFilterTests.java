@@ -66,6 +66,7 @@ public class TraceFilterTests {
 
 	private Tracer tracer;
 	private TraceKeys traceKeys = new TraceKeys();
+	private HttpTraceKeysInjector httpTraceKeysInjector;
 
 	private Span span;
 
@@ -89,6 +90,7 @@ public class TraceFilterTests {
 		this.response = new MockHttpServletResponse();
 		this.response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		this.filterChain = new MockFilterChain();
+		this.httpTraceKeysInjector = new HttpTraceKeysInjector(this.tracer, this.traceKeys);
 	}
 
 	public MockHttpServletRequestBuilder builder() {
@@ -100,7 +102,7 @@ public class TraceFilterTests {
 	public void notTraced() throws Exception {
 		this.sampler = NeverSampler.INSTANCE;
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
@@ -114,9 +116,9 @@ public class TraceFilterTests {
 	@Test
 	public void startsNewTrace() throws Exception {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
-		verifyHttpResponseTags();
+		verifyHttpTags();
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
@@ -128,7 +130,7 @@ public class TraceFilterTests {
 				.header(Span.PARENT_ID_NAME, Span.idToHex(3L))
 				.buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -145,10 +147,10 @@ public class TraceFilterTests {
 		TestSpanContextHolder.removeCurrentSpan();
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyHttpResponseTags();
+		verifyHttpTags();
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -159,21 +161,22 @@ public class TraceFilterTests {
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyHttpResponseTags();
+		verifyHttpTags();
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
-	public void addsAdditionalHeadersForRootSpan() throws Exception {
-		this.request = builder().buildRequest(new MockServletContext());
+	public void addsAdditionalHeaders() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -183,27 +186,11 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void doesNotAddAdditionalHeadersForNonRootSpan() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
-				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-
-		this.traceKeys.getHttp().getHeaders().add("x-foo");
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
-		this.request.addHeader("X-Foo", "bar");
-		filter.doFilter(this.request, this.response, this.filterChain);
-
-		assertThat(this.span.tags()).doesNotContain(entry("http.x-foo", "bar"));
-
-		assertNull(TestSpanContextHolder.getCurrentSpan());
-	}
-
-	@Test
 	public void ensuresThatParentSpanIsStoppedWhenReported() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanIsStoppedVeryfingReporter(),
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 	}
@@ -213,12 +200,13 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void additionalMultiValuedHeaderForRootSpan() throws Exception {
-		this.request = builder().buildRequest(new MockServletContext());
+	public void additionalMultiValuedHeader() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		this.request.addHeader("X-Foo", "bar");
 		this.request.addHeader("X-Foo", "spam");
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -231,7 +219,7 @@ public class TraceFilterTests {
 	@Test
 	public void catchesException() throws Exception {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector);
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		this.filterChain = new MockFilterChain() {
 			@Override
 			public void doFilter(javax.servlet.ServletRequest request,
@@ -246,20 +234,24 @@ public class TraceFilterTests {
 		catch (RuntimeException e) {
 			assertEquals("Planned", e.getMessage());
 		}
-		verifyHttpResponseTags(HttpStatus.INTERNAL_SERVER_ERROR);
+		verifyHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
-	public void verifyHttpResponseTags() {
-		verifyHttpResponseTags(HttpStatus.OK);
+	public void verifyHttpTags() {
+		verifyHttpTags(HttpStatus.OK);
 	}
 
 	/**
 	 * Shows the expansion of {@link import
 	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
 	 */
-	public void verifyHttpResponseTags(HttpStatus status) {
+	public void verifyHttpTags(HttpStatus status) {
+		assertThat(this.span.tags()).contains(entry("http.host", "localhost"),
+				entry("http.url", "http://localhost/?foo=bar"), entry("http.path", "/"),
+				entry("http.method", "GET"));
+
 		// Status is only interesting in non-success case. Omitting it saves at least
 		// 20bytes per span.
 		if (status.is2xxSuccessful()) {

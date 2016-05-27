@@ -17,16 +17,12 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.http.HttpHeaders;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.http.HttpRequest;
-import org.springframework.util.StringUtils;
 /**
  * Abstraction over classes that interact with Http requests. Allows you
  * to enrich the request headers with trace related information.
@@ -38,13 +34,13 @@ abstract class AbstractTraceHttpRequestInterceptor {
 
 	protected final Tracer tracer;
 	protected final SpanInjector<HttpRequest> spanInjector;
-	protected final TraceKeys traceKeys;
+	protected final HttpTraceKeysInjector keysInjector;
 
 	protected AbstractTraceHttpRequestInterceptor(Tracer tracer,
-			SpanInjector<HttpRequest> spanInjector, TraceKeys traceKeys) {
+			SpanInjector<HttpRequest> spanInjector, HttpTraceKeysInjector keysInjector) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
-		this.traceKeys = traceKeys;
+		this.keysInjector = keysInjector;
 	}
 
 	/**
@@ -68,20 +64,11 @@ abstract class AbstractTraceHttpRequestInterceptor {
 	 * Adds HTTP tags to the client side span
 	 */
 	protected void addRequestTags(HttpRequest request) {
-		this.tracer.addTag(this.traceKeys.getHttp().getUrl(), request.getURI().toString());
-		this.tracer.addTag(this.traceKeys.getHttp().getHost(), request.getURI().getHost());
-		this.tracer.addTag(this.traceKeys.getHttp().getPath(), request.getURI().getPath());
-		this.tracer.addTag(this.traceKeys.getHttp().getMethod(), request.getMethod().name());
-		for (String name : this.traceKeys.getHttp().getHeaders()) {
-			HttpHeaders values = request.getHeaders();
-			for (Map.Entry<String, List<String>> entry : values.entrySet()) {
-				String key = this.traceKeys.getHttp().getPrefix() + name.toLowerCase();
-				List<String> list = entry.getValue();
-				String value = list.size() == 1 ? list.get(0)
-						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
-				this.tracer.addTag(key, value);
-			}
-		}
+		this.keysInjector.addRequestTags(request.getURI().toString(),
+				request.getURI().getHost(),
+				request.getURI().getPath(),
+				request.getMethod().name(),
+				request.getHeaders());
 	}
 
 	/**

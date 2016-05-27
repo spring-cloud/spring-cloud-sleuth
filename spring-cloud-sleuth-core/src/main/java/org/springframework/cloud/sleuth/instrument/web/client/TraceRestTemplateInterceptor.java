@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 
 import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -40,8 +40,8 @@ public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterc
 		implements ClientHttpRequestInterceptor {
 
 	public TraceRestTemplateInterceptor(Tracer tracer, SpanInjector<HttpRequest> spanInjector,
-										TraceKeys traceKeys) {
-		super(tracer, spanInjector, traceKeys);
+			HttpTraceKeysInjector httpTraceKeysInjector) {
+		super(tracer, spanInjector, httpTraceKeysInjector);
 	}
 
 	@Override
