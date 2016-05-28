@@ -1,9 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import org.springframework.cloud.netflix.feign.FeignContext;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.cloud.netflix.feign.FeignContext;
 
 /**
  * Custom FeignContext that wraps beans in custom Feign configurations in their
@@ -16,7 +16,7 @@ class TraceFeignContext extends FeignContext {
 
 	private final TraceFeignObjectWrapper traceFeignObjectWrapper;
 
-	public TraceFeignContext(TraceFeignObjectWrapper traceFeignObjectWrapper) {
+	TraceFeignContext(TraceFeignObjectWrapper traceFeignObjectWrapper) {
 		this.traceFeignObjectWrapper = traceFeignObjectWrapper;
 	}
 
