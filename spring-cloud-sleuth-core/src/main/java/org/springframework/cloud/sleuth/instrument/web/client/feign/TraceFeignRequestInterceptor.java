@@ -21,7 +21,6 @@ import java.net.URI;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -39,14 +38,11 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor {
 	private final Tracer tracer;
 	private final SpanInjector<RequestTemplate> spanInjector;
 	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
-	private final HttpTraceKeysInjector keysInjector;
 
 	TraceFeignRequestInterceptor(Tracer tracer,
-			SpanInjector<RequestTemplate> spanInjector,
-			HttpTraceKeysInjector keysInjector) {
+			SpanInjector<RequestTemplate> spanInjector) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
-		this.keysInjector = keysInjector;
 	}
 
 	@Override
@@ -54,17 +50,7 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor {
 		String spanName = getSpanName(template);
 		Span span = getSpan(spanName);
 		this.spanInjector.inject(span, template);
-		addRequestTags(template);
 		span.logEvent(Span.CLIENT_SEND);
-	}
-
-	/**
-	 * Adds HTTP tags to the client side span
-	 */
-	protected void addRequestTags(RequestTemplate requestTemplate) {
-		URI uri = URI.create(requestTemplate.url());
-		this.keysInjector.addRequestTags(uri.toString(), uri.getHost(), uri.getPath(),
-				requestTemplate.method(), requestTemplate.headers());
 	}
 
 	protected String getSpanName(RequestTemplate template) {

@@ -38,7 +38,6 @@ import org.springframework.cloud.netflix.feign.FeignContext;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -77,8 +76,8 @@ public class TraceFeignClientAutoConfiguration {
 	@Scope("prototype")
 	@ConditionalOnClass(HystrixCommand.class)
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
-	Feign.Builder feignHystrixBuilder(Tracer tracer, TraceKeys traceKeys) {
-		return SleuthFeignBuilder.builder(tracer);
+	Feign.Builder feignHystrixBuilder(Tracer tracer, HttpTraceKeysInjector keysInjector) {
+		return SleuthFeignBuilder.builder(tracer, keysInjector);
 	}
 
 	@Configuration
@@ -125,8 +124,8 @@ public class TraceFeignClientAutoConfiguration {
 	 * an existing one if a retry takes place.
 	 */
 	@Bean
-	RequestInterceptor traceIdRequestInterceptor(Tracer tracer, HttpTraceKeysInjector httpTraceKeysInjector) {
-		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector(), httpTraceKeysInjector);
+	RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
+		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector());
 	}
 
 	@Autowired(required = false)

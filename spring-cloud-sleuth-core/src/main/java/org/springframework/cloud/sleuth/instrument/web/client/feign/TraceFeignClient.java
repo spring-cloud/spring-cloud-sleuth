@@ -17,9 +17,11 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Objects;
 
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 
 import feign.Client;
 import feign.Request;
@@ -37,21 +39,25 @@ import feign.RetryableException;
 final class TraceFeignClient extends FeignEventPublisher implements Client {
 
 	private final Client delegate;
+	private final HttpTraceKeysInjector keysInjector;
 
-	TraceFeignClient(Tracer tracer) {
+	TraceFeignClient(Tracer tracer, HttpTraceKeysInjector keysInjector) {
 		super(tracer);
 		this.delegate = new Client.Default(null, null);
+		this.keysInjector = keysInjector;
 	}
 
-	TraceFeignClient(Tracer tracer, Client delegate) {
+	TraceFeignClient(Tracer tracer, Client delegate, HttpTraceKeysInjector keysInjector) {
 		super(tracer);
 		this.delegate = delegate;
+		this.keysInjector = keysInjector;
 	}
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
-		Response response = null;
+		Response response;
 		try {
+			addRequestTags(request);
 			response = this.delegate.execute(request, options);
 		}
 		catch (RetryableException | IOException e) {
@@ -68,5 +74,14 @@ final class TraceFeignClient extends FeignEventPublisher implements Client {
 			finish();
 		}
 		return response;
+	}
+
+	/**
+	 * Adds HTTP tags to the client side span
+	 */
+	private void addRequestTags(Request request) {
+		URI uri = URI.create(request.url());
+		this.keysInjector.addRequestTags(uri.toString(), uri.getHost(), uri.getPath(),
+				request.method(), request.headers());
 	}
 }
