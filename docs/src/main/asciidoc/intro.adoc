@@ -135,6 +135,29 @@ filter {
        }
 }
 
+===== JSON Logback with Logstash
+
+Often you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick. To do that you have to do the following (for readability
+we're passing the dependencies in the `groupId:artifactId:version` notation.
+
+*Dependencies setup*
+
+- Ensure that Logback is on the classpath (`ch.qos.logback:logback-core`)
+- Add Logstash Logback encode - example for version `4.6` : `net.logstash.logback:logstash-logback-encoder:4.6`
+
+*Logback setup*
+
+Below you can find an example of a Logback configuration (file named `https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]`) that:
+
+- logs information from the application in a JSON format to a `build/${spring.application.name}.json` file
+- has commented out two additional appenders - console and standard log file
+- has the same logging pattern as the one presented in the previous section
+
+[source,xml]
+-----
+include::https://raw.githubusercontent.com/spring-cloud-samples/sleuth-documentation-apps/master/service1/src/main/resources/logback-spring.xml[]
+-----
+
 === Adding to the project
 
 ==== Only Sleuth (log correlation)
