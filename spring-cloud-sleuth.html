@@ -718,6 +718,122 @@ If you want to use Grok together with the logs from Cloud Foundry you have to us
 }</code></pre>
 </div>
 </div>
+<div class="sect4">
+<h5 id="_json_logback_with_logstash">JSON Logback with Logstash</h5>
+<div class="paragraph">
+<p>Often you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick. To do that you have to do the following (for readability
+we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</code> notation.</p>
+</div>
+<div class="paragraph">
+<p><strong>Dependencies setup</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Ensure that Logback is on the classpath (<code>ch.qos.logback:logback-core</code>)</p>
+</li>
+<li>
+<p>Add Logstash Logback encode - example for version <code>4.6</code> : <code>net.logstash.logback:logstash-logback-encoder:4.6</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Logback setup</strong></p>
+</div>
+<div class="paragraph">
+<p>Below you can find an example of a Logback configuration (file named <code>https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]</code>) that:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>logs information from the application in a JSON format to a <code>build/${spring.application.name}.json</code> file</p>
+</li>
+<li>
+<p>has commented out two additional appenders - console and standard log file</p>
+</li>
+<li>
+<p>has the same logging pattern as the one presented in the previous section</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+	&lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
+	​
+	&lt;springProperty scope="context" name="springAppName" source="spring.application.name"/&gt;
+	&lt;!-- Example for logging into the build folder of your project --&gt;
+	&lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;​
+
+	&lt;property name="CONSOLE_LOG_PATTERN"
+			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${springAppName:-},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
+
+	&lt;!-- Appender to log to console --&gt;
+	&lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
+		&lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+			&lt;!-- Minimum logging level to be presented in the console logs--&gt;
+			&lt;level&gt;INFO&lt;/level&gt;
+		&lt;/filter&gt;
+		&lt;encoder&gt;
+			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+			&lt;charset&gt;utf8&lt;/charset&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+
+	&lt;!-- Appender to log to file --&gt;​
+	&lt;appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+		&lt;file&gt;${LOG_FILE}&lt;/file&gt;
+		&lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+			&lt;fileNamePattern&gt;${LOG_FILE}.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+			&lt;maxHistory&gt;7&lt;/maxHistory&gt;
+		&lt;/rollingPolicy&gt;
+		&lt;encoder&gt;
+			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+			&lt;charset&gt;utf8&lt;/charset&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+	​
+	&lt;!-- Appender to log to file in a JSON format --&gt;
+	&lt;appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+		&lt;file&gt;${LOG_FILE}.json&lt;/file&gt;
+		&lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+			&lt;fileNamePattern&gt;${LOG_FILE}.json.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+			&lt;maxHistory&gt;7&lt;/maxHistory&gt;
+		&lt;/rollingPolicy&gt;
+		&lt;encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder"&gt;
+			&lt;providers&gt;
+				&lt;timestamp&gt;
+					&lt;timeZone&gt;UTC&lt;/timeZone&gt;
+				&lt;/timestamp&gt;
+				&lt;pattern&gt;
+					&lt;pattern&gt;
+						{
+						"severity": "%level",
+						"service": "${springAppName:-}",
+						"trace": "%X{X-B3-TraceId:-}",
+						"span": "%X{X-B3-SpanId:-}",
+						"exportable": "%X{X-Span-Export:-}",
+						"pid": "${PID:-}",
+						"thread": "%thread",
+						"class": "%logger{40}",
+						"rest": "%message"
+						}
+					&lt;/pattern&gt;
+				&lt;/pattern&gt;
+			&lt;/providers&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+	​
+	&lt;root level="INFO"&gt;
+		&lt;!--&lt;appender-ref ref="console"/&gt;--&gt;
+		&lt;appender-ref ref="logstash"/&gt;
+		&lt;!--&lt;appender-ref ref="flatfile"/&gt;--&gt;
+	&lt;/root&gt;
+&lt;/configuration&gt;</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -2075,7 +2191,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-23 11:03:39 CEST
+Last updated 2016-05-23 11:10:16 CEST
 </div>
 </div>
 </body>
