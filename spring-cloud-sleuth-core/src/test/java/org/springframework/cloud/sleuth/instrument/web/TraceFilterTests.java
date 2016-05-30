@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -37,6 +38,7 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -45,8 +47,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.entry;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -59,7 +61,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public class TraceFilterTests {
 
 	@Mock SpanLogger spanLogger;
-	@Mock SpanReporter spanReporter;
+	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
 	SpanExtractor<HttpServletRequest> spanExtractor = new HttpServletRequestExtractor(new Random(), Pattern
 			.compile(TraceFilter.DEFAULT_SKIP_PATTERN));
 	SpanInjector<HttpServletResponse> spanInjector = new HttpServletResponseInjector();
@@ -118,7 +120,9 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
 				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
-		verifyHttpTags();
+
+		verifyCurrentSpanStatusCode(HttpStatus.OK);
+
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
@@ -136,7 +140,19 @@ public class TraceFilterTests {
 
 		// this creates a child span which is why we'd expect the parents to include 1L)
 		assertThat(this.span.getParents()).containsOnly(1L);
+		assertThat(parentSpan())
+				.hasATag("http.url", "http://localhost/?foo=bar")
+				.hasATag("http.host", "localhost")
+				.hasATag("http.path", "/")
+				.hasATag("http.method", "GET");
 		assertNull(TestSpanContextHolder.getCurrentSpan());
+	}
+
+	private Span parentSpan() {
+		Optional<Span> parent = this.spanReporter.getSpans().stream()
+				.filter(span -> span.getName().contains("parent")).findFirst();
+		assertThat(parent.isPresent()).isTrue();
+		return parent.get();
 	}
 
 	@Test
@@ -150,8 +166,6 @@ public class TraceFilterTests {
 				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyHttpTags();
-
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
@@ -164,7 +178,7 @@ public class TraceFilterTests {
 				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyHttpTags();
+		verifyParentSpanHttpTags();
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -180,7 +194,7 @@ public class TraceFilterTests {
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertThat(this.span.tags()).contains(entry("http.x-foo", "bar"));
+		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "bar"));
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -211,13 +225,15 @@ public class TraceFilterTests {
 		this.request.addHeader("X-Foo", "spam");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertThat(this.span.tags()).contains(entry("http.x-foo", "'bar','spam'"));
+		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "'bar','spam'"));
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
 	@Test
 	public void catchesException() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
 				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		this.filterChain = new MockFilterChain() {
@@ -234,24 +250,28 @@ public class TraceFilterTests {
 		catch (RuntimeException e) {
 			assertEquals("Planned", e.getMessage());
 		}
-		verifyHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
+		verifyParentSpanHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
 
-	public void verifyHttpTags() {
-		verifyHttpTags(HttpStatus.OK);
+	public void verifyParentSpanHttpTags() {
+		verifyParentSpanHttpTags(HttpStatus.OK);
 	}
 
 	/**
 	 * Shows the expansion of {@link import
 	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
 	 */
-	public void verifyHttpTags(HttpStatus status) {
-		assertThat(this.span.tags()).contains(entry("http.host", "localhost"),
+	public void verifyParentSpanHttpTags(HttpStatus status) {
+		assertThat(parentSpan().tags()).contains(entry("http.host", "localhost"),
 				entry("http.url", "http://localhost/?foo=bar"), entry("http.path", "/"),
 				entry("http.method", "GET"));
+		verifyCurrentSpanStatusCode(status);
 
+	}
+
+	private void verifyCurrentSpanStatusCode(HttpStatus status) {
 		// Status is only interesting in non-success case. Omitting it saves at least
 		// 20bytes per span.
 		if (status.is2xxSuccessful()) {

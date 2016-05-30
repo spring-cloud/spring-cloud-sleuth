@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.util.StringUtils;
@@ -24,6 +25,9 @@ public class HttpTraceKeysInjector {
 		this.traceKeys = traceKeys;
 	}
 
+	/**
+	 * Adds tags from the HTTP request to the current Span
+	 */
 	public void addRequestTags(String url, String host, String path, String method) {
 		this.tracer.addTag(this.traceKeys.getHttp().getUrl(), url);
 		this.tracer.addTag(this.traceKeys.getHttp().getHost(), host);
@@ -31,10 +35,32 @@ public class HttpTraceKeysInjector {
 		this.tracer.addTag(this.traceKeys.getHttp().getMethod(), method);
 	}
 
+	/**
+	 * Adds tags from the HTTP request to the given Span
+	 */
+	public void addRequestTags(Span span, String url, String host, String path, String method) {
+		tagSpan(span, this.traceKeys.getHttp().getUrl(), url);
+		tagSpan(span, this.traceKeys.getHttp().getHost(), host);
+		tagSpan(span, this.traceKeys.getHttp().getPath(), path);
+		tagSpan(span, this.traceKeys.getHttp().getMethod(), method);
+	}
+
+	/**
+	 * Adds tags from the HTTP request together with headers to the current Span
+	 */
 	public void addRequestTags(String url, String host, String path, String method,
 			Map<String, ? extends Collection<String>> headers) {
 		addRequestTags(url, host, path, method);
 		addRequestTagsFromHeaders(headers);
+	}
+
+	/**
+	 * Add a tag to the given, exportable Span
+	 */
+	public void tagSpan(Span span, String key, String value) {
+		if (span != null && span.isExportable()) {
+			span.tag(key, value);
+		}
 	}
 
 	private void addRequestTagsFromHeaders(Map<String, ? extends Collection<String>> headers) {

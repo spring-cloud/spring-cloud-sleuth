@@ -119,10 +119,9 @@ public class TraceFilter extends OncePerRequestFilter {
 		spanFromRequest = createSpan(request, skip, spanFromRequest, name);
 		Throwable exception = null;
 		try {
-			addRequestTags(request);
+			this.spanInjector.inject(spanFromRequest, response);
 			// Add headers before filter chain in case one of the filters flushes the
 			// response...
-			this.spanInjector.inject(spanFromRequest, response);
 			filterChain.doFilter(request, response);
 		}
 		catch (Throwable e) {
@@ -153,6 +152,12 @@ public class TraceFilter extends OncePerRequestFilter {
 		}
 	}
 
+	private void addRequestTagsForParentSpan(HttpServletRequest request, Span spanFromRequest) {
+		if (spanFromRequest.getName().contains("parent")) {
+			addRequestTags(spanFromRequest, request);
+		}
+	}
+
 	/**
 	 * Creates a span and appends it as the current request's attribute
 	 */
@@ -161,9 +166,9 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (spanFromRequest != null) {
 			return spanFromRequest;
 		}
-		Span parent = this.spanExtractor
-				.joinTrace(request);
+		Span parent = this.spanExtractor.joinTrace(request);
 		if (parent != null) {
+			addRequestTagsForParentSpan(request, parent);
 			spanFromRequest = this.tracer.createSpan(name, parent);
 			if (parent.isRemote()) {
 				parent.logEvent(Span.SERVER_RECV);
@@ -184,9 +189,9 @@ public class TraceFilter extends OncePerRequestFilter {
 	}
 
 	/** Override to add annotations not defined in {@link TraceKeys}. */
-	protected void addRequestTags(HttpServletRequest request) {
+	protected void addRequestTags(Span span, HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.httpTraceKeysInjector.addRequestTags(getFullUrl(request),
+		this.httpTraceKeysInjector.addRequestTags(span, getFullUrl(request),
 				request.getServerName(), uri, request.getMethod());
 		for (String name : this.traceKeys.getHttp().getHeaders()) {
 			Enumeration<String> values = request.getHeaders(name);
@@ -195,7 +200,7 @@ public class TraceFilter extends OncePerRequestFilter {
 				ArrayList<String> list = Collections.list(values);
 				String value = list.size() == 1 ? list.get(0)
 						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
-				this.tracer.addTag(key, value);
+				this.httpTraceKeysInjector.tagSpan(span, key, value);
 			}
 		}
 	}
