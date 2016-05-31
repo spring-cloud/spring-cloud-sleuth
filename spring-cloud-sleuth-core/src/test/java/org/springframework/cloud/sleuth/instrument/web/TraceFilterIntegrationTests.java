@@ -1,10 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,10 +14,12 @@ import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -31,6 +29,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterIntegrationTests.Config.class)
@@ -38,8 +42,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private static Log logger = LogFactory.getLog(TraceFilterIntegrationTests.class);
 
-	@Autowired
-	private TraceFilter traceFilter;
+	@Autowired TraceFilter traceFilter;
+	@Autowired ArrayListSpanAccumulator spanAccumulator;
 
 	private static Span span;
 
@@ -90,6 +94,21 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 	}
 
+	@Test
+	public void should_add_a_custom_tag_to_the_span_created_in_controller() throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+
+		MvcResult mvcResult = whenSentDeferredWithTraceId(expectedTraceId);
+		mvcResult = this.mockMvc.perform(asyncDispatch(mvcResult))
+				.andExpect(status().isOk()).andReturn();
+
+		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
+		Optional<Span> taggedSpan = this.spanAccumulator.getSpans().stream()
+				.filter(span -> span.tags().containsKey("tag")).findFirst();
+		then(taggedSpan.isPresent()).isTrue();
+		then(taggedSpan.get()).hasATag("tag", "value");
+	}
+
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(this.traceFilter);
@@ -106,20 +125,29 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	private MvcResult whenSentInfoWithTraceId(Long passedTraceId) throws Exception {
-		return sendPingWithTraceId("/additionalContextPath/info", Span.TRACE_ID_NAME,
+		return sendRequestWithTraceId("/additionalContextPath/info", Span.TRACE_ID_NAME,
 				passedTraceId);
 	}
 
 	private MvcResult whenSentFutureWithTraceId(Long passedTraceId) throws Exception {
-		return sendPingWithTraceId("/future", Span.TRACE_ID_NAME, passedTraceId);
+		return sendRequestWithTraceId("/future", Span.TRACE_ID_NAME, passedTraceId);
+	}
+
+	private MvcResult whenSentDeferredWithTraceId(Long passedTraceId) throws Exception {
+		return sendDeferredWithTraceId(Span.TRACE_ID_NAME, passedTraceId);
 	}
 
 	private MvcResult sendPingWithTraceId(String headerName, Long traceId)
 			throws Exception {
-		return sendPingWithTraceId("/ping", headerName, traceId);
+		return sendRequestWithTraceId("/ping", headerName, traceId);
 	}
 
-	private MvcResult sendPingWithTraceId(String path, String headerName, Long traceId)
+	private MvcResult sendDeferredWithTraceId(String headerName, Long traceId)
+			throws Exception {
+		return sendRequestWithTraceId("/deferred", headerName, traceId);
+	}
+
+	private MvcResult sendRequestWithTraceId(String path, String headerName, Long traceId)
 			throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
@@ -152,6 +180,16 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			return "ping";
 		}
 
+		@RequestMapping("/deferred")
+		public DeferredResult<String> deferred() {
+			logger.info("deferred");
+			this.tracer.addTag("tag", "value");
+			span = this.tracer.getCurrentSpan();
+			DeferredResult<String> result = new DeferredResult<>();
+			result.setResult("deferred");
+			return result;
+		}
+
 		@RequestMapping("/future")
 		public CompletableFuture<String> future() {
 			logger.info("future");
@@ -166,6 +204,11 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				managementServerProperties.setContextPath("/additionalContextPath");
 				return managementServerProperties;
 			}
+		}
+
+		@Bean
+		public SpanReporter testSpanReporter() {
+			return new ArrayListSpanAccumulator();
 		}
 
 		@Bean

@@ -11,6 +11,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
@@ -132,6 +133,8 @@ public class RestTemplateTraceAspectIntegrationTests {
 	public static class AspectTestingController {
 
 		@Autowired
+		Tracer tracer;
+		@Autowired
 		RestTemplate restTemplate;
 		@Autowired
 		Environment environment;
@@ -145,6 +148,13 @@ public class RestTemplateTraceAspectIntegrationTests {
 
 		@RequestMapping(value = "/", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
 		public String home(
+				@RequestHeader(value = Span.TRACE_ID_NAME, required = false) String traceId) {
+			this.traceId = traceId == null ? "UNKNOWN" : traceId;
+			return "trace=" + this.getTraceId();
+		}
+
+		@RequestMapping(value = "/customTag", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		public String customTag(
 				@RequestHeader(value = Span.TRACE_ID_NAME, required = false) String traceId) {
 			this.traceId = traceId == null ? "UNKNOWN" : traceId;
 			return "trace=" + this.getTraceId();
