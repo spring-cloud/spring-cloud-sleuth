@@ -16,14 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static junitparams.JUnitParamsRunner.$;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -40,9 +39,11 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
@@ -54,12 +55,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+
+import static junitparams.JUnitParamsRunner.$;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
 
 @RunWith(JUnitParamsRunner.class)
 @SpringApplicationConfiguration(classes = {
@@ -73,13 +75,9 @@ public class WebClientExceptionTests {
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
-	@Autowired
-	TestFeignInterfaceWithException testFeignInterfaceWithException;
-	@Autowired
-	@LoadBalanced
-	RestTemplate template;
-	@Autowired
-	Tracer tracer;
+	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
+	@Autowired @LoadBalanced RestTemplate template;
+	@Autowired Tracer tracer;
 
 	@Before
 	public void open() {
@@ -138,6 +136,11 @@ public class WebClientExceptionTests {
 		@Bean
 		public RestTemplate restTemplate() {
 			return new RestTemplate();
+		}
+
+		@Bean
+		Sampler alwaysSampler() {
+			return new AlwaysSampler();
 		}
 	}
 

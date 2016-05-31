@@ -29,7 +29,9 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -59,7 +61,8 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector())));
+				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector(),
+						new HttpTraceKeysInjector(this.tracer, new TraceKeys()))));
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
@@ -68,7 +71,7 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
-	// issue #198
+	// Issue #198
 	@Test
 	public void spanRemovedFromThreadUponException() throws IOException {
 		this.mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));

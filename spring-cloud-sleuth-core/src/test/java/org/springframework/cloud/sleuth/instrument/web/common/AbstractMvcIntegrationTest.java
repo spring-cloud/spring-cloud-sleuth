@@ -9,6 +9,7 @@ import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -36,6 +37,7 @@ public abstract class AbstractMvcIntegrationTest {
 	@Autowired protected TraceKeys traceKeys;
 	@Autowired protected SpanExtractor<HttpServletRequest> spanExtractor;
 	@Autowired protected SpanInjector<HttpServletResponse> spanInjector;
+	@Autowired protected HttpTraceKeysInjector httpTraceKeysInjector;
 
 	@Before
 	public void setup() {

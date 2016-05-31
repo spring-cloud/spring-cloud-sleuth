@@ -26,6 +26,7 @@ import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -53,6 +54,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 public class TraceWebAsyncClientAutoConfiguration {
 
 	@Autowired Tracer tracer;
+	@Autowired HttpTraceKeysInjector httpTraceKeysInjector;
 	@Autowired SpanInjector<HttpRequest> spanInjector;
 	@Autowired(required = false) ClientHttpRequestFactory clientHttpRequestFactory;
 	@Autowired(required = false) AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
@@ -71,7 +73,7 @@ public class TraceWebAsyncClientAutoConfiguration {
 					(AsyncClientHttpRequestFactory) clientFactory : defaultClientHttpRequestFactory(this.tracer);
 		}
 		return new TraceAsyncClientHttpRequestFactoryWrapper(this.tracer, this.spanInjector,
-				asyncClientFactory, clientFactory);
+				asyncClientFactory, clientFactory, this.httpTraceKeysInjector);
 	}
 
 	private SimpleClientHttpRequestFactory defaultClientHttpRequestFactory(Tracer tracer) {

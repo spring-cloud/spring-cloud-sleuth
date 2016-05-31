@@ -15,16 +15,15 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
@@ -79,24 +78,29 @@ public class TraceFilter extends OncePerRequestFilter {
 	private final SpanReporter spanReporter;
 	private final SpanExtractor<HttpServletRequest> spanExtractor;
 	private final SpanInjector<HttpServletResponse> spanInjector;
+	private final HttpTraceKeysInjector httpTraceKeysInjector;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
-			SpanExtractor<HttpServletRequest> spanExtractor, SpanInjector<HttpServletResponse> spanInjector) {
+			SpanExtractor<HttpServletRequest> spanExtractor,
+			SpanInjector<HttpServletResponse> spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
-				spanExtractor, spanInjector);
+				spanExtractor, spanInjector, httpTraceKeysInjector);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
 			SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
-			SpanInjector<HttpServletResponse> spanInjector) {
+			SpanInjector<HttpServletResponse> spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
 		this.spanReporter = spanReporter;
 		this.spanExtractor = spanExtractor;
 		this.spanInjector = spanInjector;
+		this.httpTraceKeysInjector = httpTraceKeysInjector;
 	}
 
 	@Override
@@ -115,10 +119,9 @@ public class TraceFilter extends OncePerRequestFilter {
 		spanFromRequest = createSpan(request, skip, spanFromRequest, name);
 		Throwable exception = null;
 		try {
-			addRequestTags(request);
+			this.spanInjector.inject(spanFromRequest, response);
 			// Add headers before filter chain in case one of the filters flushes the
 			// response...
-			this.spanInjector.inject(spanFromRequest, response);
 			filterChain.doFilter(request, response);
 		}
 		catch (Throwable e) {
@@ -149,6 +152,12 @@ public class TraceFilter extends OncePerRequestFilter {
 		}
 	}
 
+	private void addRequestTagsForParentSpan(HttpServletRequest request, Span spanFromRequest) {
+		if (spanFromRequest.getName().contains("parent")) {
+			addRequestTags(spanFromRequest, request);
+		}
+	}
+
 	/**
 	 * Creates a span and appends it as the current request's attribute
 	 */
@@ -157,9 +166,9 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (spanFromRequest != null) {
 			return spanFromRequest;
 		}
-		Span parent = this.spanExtractor
-				.joinTrace(request);
+		Span parent = this.spanExtractor.joinTrace(request);
 		if (parent != null) {
+			addRequestTagsForParentSpan(request, parent);
 			spanFromRequest = this.tracer.createSpan(name, parent);
 			if (parent.isRemote()) {
 				parent.logEvent(Span.SERVER_RECV);
@@ -180,12 +189,10 @@ public class TraceFilter extends OncePerRequestFilter {
 	}
 
 	/** Override to add annotations not defined in {@link TraceKeys}. */
-	protected void addRequestTags(HttpServletRequest request) {
+	protected void addRequestTags(Span span, HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		this.tracer.addTag(this.traceKeys.getHttp().getUrl(), getFullUrl(request));
-		this.tracer.addTag(this.traceKeys.getHttp().getHost(), request.getServerName());
-		this.tracer.addTag(this.traceKeys.getHttp().getPath(), uri);
-		this.tracer.addTag(this.traceKeys.getHttp().getMethod(), request.getMethod());
+		this.httpTraceKeysInjector.addRequestTags(span, getFullUrl(request),
+				request.getServerName(), uri, request.getMethod());
 		for (String name : this.traceKeys.getHttp().getHeaders()) {
 			Enumeration<String> values = request.getHeaders(name);
 			if (values.hasMoreElements()) {
@@ -193,7 +200,7 @@ public class TraceFilter extends OncePerRequestFilter {
 				ArrayList<String> list = Collections.list(values);
 				String value = list.size() == 1 ? list.get(0)
 						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
-				this.tracer.addTag(key, value);
+				this.httpTraceKeysInjector.tagSpan(span, key, value);
 			}
 		}
 	}

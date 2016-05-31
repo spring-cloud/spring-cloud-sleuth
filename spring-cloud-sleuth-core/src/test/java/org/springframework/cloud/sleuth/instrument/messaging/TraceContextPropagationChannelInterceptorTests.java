@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceContextPropagationChannelInterceptorTests.App;
@@ -98,5 +99,9 @@ public class TraceContextPropagationChannelInterceptorTests {
 			return new QueueChannel();
 		}
 
+		@Bean
+		Sampler testSampler() {
+			return new AlwaysSampler();
+		}
 	}
 }

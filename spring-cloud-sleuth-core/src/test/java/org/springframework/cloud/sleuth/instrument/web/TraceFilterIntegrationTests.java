@@ -16,10 +16,12 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -164,6 +166,11 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				managementServerProperties.setContextPath("/additionalContextPath");
 				return managementServerProperties;
 			}
+		}
+
+		@Bean
+		Sampler alwaysSampler() {
+			return new AlwaysSampler();
 		}
 	}
 }

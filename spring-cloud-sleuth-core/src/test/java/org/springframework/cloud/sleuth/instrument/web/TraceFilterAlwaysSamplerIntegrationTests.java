@@ -59,7 +59,8 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
-				new NoOpSpanReporter(), this.spanExtractor, this.spanInjector));
+				new NoOpSpanReporter(), this.spanExtractor, this.spanInjector,
+				this.httpTraceKeysInjector));
 	}
 
 	private MvcResult whenSentPingWithTraceIdAndNotSampling(Long traceId)

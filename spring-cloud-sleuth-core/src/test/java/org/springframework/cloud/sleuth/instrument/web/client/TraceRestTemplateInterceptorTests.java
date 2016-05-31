@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -26,12 +27,14 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
@@ -60,12 +63,15 @@ public class TraceRestTemplateInterceptorTests {
 
 	private DefaultTracer tracer;
 
+	private ArrayListSpanAccumulator spanAccumulator = new ArrayListSpanAccumulator();
+
 	@Before
 	public void setup() {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
+				new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanAccumulator);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector())));
+				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector(),
+						new HttpTraceKeysInjector(this.tracer, new TraceKeys()))));
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
@@ -93,6 +99,21 @@ public class TraceRestTemplateInterceptorTests {
 		then(Span.hexToId(headers.get(Span.TRACE_ID_NAME))).isEqualTo(1L);
 		then(Span.hexToId(headers.get(Span.SPAN_ID_NAME))).isNotEqualTo(2L);
 		then(Span.hexToId(headers.get(Span.PARENT_ID_NAME))).isEqualTo(2L);
+	}
+
+	// Issue #290
+	@Test
+	public void requestHeadersAddedWhenTracing() {
+		this.tracer.continueSpan(Span.builder().traceId(1L).spanId(2L).parent(3L).build());
+
+		this.template.getForEntity("/foo?a=b", Map.class);
+
+		List<Span> spans = spanAccumulator.getSpans();
+		then(spans).isNotEmpty();
+		then(spans.get(0))
+				.hasATag("http.url", "/foo?a=b")
+				.hasATag("http.path", "/foo")
+				.hasATag("http.method", "GET");
 	}
 
 	@Test
@@ -143,6 +164,10 @@ public class TraceRestTemplateInterceptorTests {
 			addHeaders(map, headers, Span.SPAN_ID_NAME, Span.TRACE_ID_NAME,
 					Span.PARENT_ID_NAME, Span.SAMPLED_NAME);
 			return map;
+		}
+
+		@RequestMapping("/foo")
+		public void foo() {
 		}
 
 		@RequestMapping("/exception")
