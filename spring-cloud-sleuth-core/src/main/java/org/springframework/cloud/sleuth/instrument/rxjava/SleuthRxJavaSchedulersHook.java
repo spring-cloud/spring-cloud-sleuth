@@ -1,10 +1,13 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
@@ -25,11 +28,14 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 	private static final String RXJAVA_COMPONENT = "rxjava";
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
+	private final List<String> threadsToSample;
 	private RxJavaSchedulersHook delegate;
 
-	SleuthRxJavaSchedulersHook(Tracer tracer, TraceKeys traceKeys) {
+	SleuthRxJavaSchedulersHook(Tracer tracer, TraceKeys traceKeys,
+			List<String> threadsToSample) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
+		this.threadsToSample = threadsToSample;
 		try {
 			this.delegate = RxJavaPlugins.getInstance().getSchedulersHook();
 			if (this.delegate instanceof SleuthRxJavaSchedulersHook) {
@@ -68,7 +74,8 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		if (wrappedAction instanceof TraceAction) {
 			return action;
 		}
-		return super.onSchedule(new TraceAction(this.tracer, this.traceKeys, wrappedAction));
+		return super.onSchedule(new TraceAction(this.tracer, this.traceKeys, wrappedAction,
+				this.threadsToSample));
 	}
 
 	static class TraceAction implements Action0 {
@@ -77,16 +84,29 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		private Tracer tracer;
 		private TraceKeys traceKeys;
 		private Span parent;
+		private final List<String> threadsToIgnore;
 
-		public TraceAction(Tracer tracer, TraceKeys traceKeys, Action0 actual) {
+		public TraceAction(Tracer tracer, TraceKeys traceKeys, Action0 actual,
+				List<String> threadsToIgnore) {
 			this.tracer = tracer;
 			this.traceKeys = traceKeys;
+			this.threadsToIgnore = threadsToIgnore;
 			this.parent = tracer.getCurrentSpan();
 			this.actual = actual;
 		}
 
+		@SuppressWarnings("Duplicates")
 		@Override
 		public void call() {
+			// don't create a span if the thread name is on a list of threads to ignore
+			for (String threadToIgnore : this.threadsToIgnore) {
+				if (Thread.currentThread().getName().matches(threadToIgnore)) {
+					log.debug("Thread with name [" + Thread.currentThread().getName() +"] matches the "
+							+ "regex [" + threadToIgnore + "]. A span will not be created for this Thread.");
+					this.actual.call();
+					return;
+				}
+			}
 			Span span = this.parent;
 			boolean created = false;
 			if (span != null) {

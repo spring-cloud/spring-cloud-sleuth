@@ -414,6 +414,9 @@ that wraps all `Action0` instances into their Sleuth representative -
 the `TraceAction`. The hook either starts or continues a span depending on the fact whether tracing was already going
 on before the Action was scheduled. To disable the custom RxJavaSchedulersHook set the `spring.sleuth.rxjava.schedulers.hook.enabled` to `false`.
 
+You can define a list of regular expressions for thread names, for which you don't want a Span to be created. Just provide a comma separated list
+of regular expressions in the `spring.sleuth.rxjava.schedulers.ignoredthreads` property.
+
 === HTTP integration
 
 Features from this section can be disabled by providing the `spring.sleuth.web.enabled` property with value equal to `false`.
