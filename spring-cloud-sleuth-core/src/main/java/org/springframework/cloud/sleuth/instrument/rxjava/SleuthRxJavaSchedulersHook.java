@@ -100,9 +100,11 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		public void call() {
 			// don't create a span if the thread name is on a list of threads to ignore
 			for (String threadToIgnore : this.threadsToIgnore) {
-				if (Thread.currentThread().getName().matches(threadToIgnore)) {
-					log.debug("Thread with name [" + Thread.currentThread().getName() +"] matches the "
-							+ "regex [" + threadToIgnore + "]. A span will not be created for this Thread.");
+				String threadName = Thread.currentThread().getName();
+				if (threadName.matches(threadToIgnore)) {
+					log.debug(String.format(
+							"Thread with name [%s] matches the regex [%s]. A span will not be created for this Thread.",
+							threadName, threadToIgnore));
 					this.actual.call();
 					return;
 				}

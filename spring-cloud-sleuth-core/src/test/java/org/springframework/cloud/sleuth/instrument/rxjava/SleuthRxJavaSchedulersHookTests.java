@@ -1,7 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -79,7 +79,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		String threadNameToIgnore = "^MyCustomThread.*$";
 		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
 		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-			this.tracer, this.traceKeys, Arrays.asList("HystixMetricPoller", threadNameToIgnore));
+			this.tracer, this.traceKeys, Collections.singletonList(threadNameToIgnore));
 		Future<Void> hello = executorService().submit((Callable<Void>) () -> {
 			Action0 action = schedulersHook.onSchedule(() -> {
 				caller = new StringBuilder("hello");
