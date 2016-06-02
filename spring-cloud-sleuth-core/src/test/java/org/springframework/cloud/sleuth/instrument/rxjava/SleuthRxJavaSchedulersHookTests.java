@@ -1,11 +1,20 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -17,6 +26,11 @@ import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
+
 /**
  *
  * @author Shivang Shah
@@ -24,8 +38,8 @@ import rx.plugins.RxJavaSchedulersHook;
 @RunWith(MockitoJUnitRunner.class)
 public class SleuthRxJavaSchedulersHookTests {
 
-	@Mock
-	Tracer tracer;
+	List<String> threadsToIgnore = new ArrayList<>();
+	@Mock Tracer tracer;
 	TraceKeys traceKeys = new TraceKeys();
 
 	private static StringBuilder caller;
@@ -41,7 +55,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	public void should_not_override_existing_custom_hooks() {
 		RxJavaPlugins.getInstance().registerErrorHandler(new MyRxJavaErrorHandler());
 		RxJavaPlugins.getInstance().registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
-		new SleuthRxJavaSchedulersHook(this.tracer, this.traceKeys);
+		new SleuthRxJavaSchedulersHook(this.tracer, this.traceKeys, threadsToIgnore);
 		then(RxJavaPlugins.getInstance().getErrorHandler()).isExactlyInstanceOf(MyRxJavaErrorHandler.class);
 		then(RxJavaPlugins.getInstance().getObservableExecutionHook()).isExactlyInstanceOf(MyRxJavaObservableExecutionHook.class);
 	}
@@ -50,13 +64,44 @@ public class SleuthRxJavaSchedulersHookTests {
 	public void should_wrap_delegates_action_in_wrapped_action_when_delegate_is_present_on_schedule() {
 		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
 		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-			this.tracer, this.traceKeys);
+			this.tracer, this.traceKeys, threadsToIgnore);
 		Action0 action = schedulersHook.onSchedule(() -> {
 			caller = new StringBuilder("hello");
 		});
 		action.call();
 		then(action).isInstanceOf(SleuthRxJavaSchedulersHook.TraceAction.class);
 		then(caller.toString()).isEqualTo("called_from_schedulers_hook");
+	}
+
+	@Test
+	public void should_not_create_a_span_when_current_thread_should_be_ignored()
+			throws ExecutionException, InterruptedException {
+		String threadNameToIgnore = "^MyCustomThread.*$";
+		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
+		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
+			this.tracer, this.traceKeys, Collections.singletonList(threadNameToIgnore));
+		Future<Void> hello = executorService().submit((Callable<Void>) () -> {
+			Action0 action = schedulersHook.onSchedule(() -> {
+				caller = new StringBuilder("hello");
+			});
+			action.call();
+			return null;
+		});
+
+		hello.get();
+
+		BDDMockito.then(this.tracer).should(never()).createSpan(anyString());
+		BDDMockito.then(this.tracer).should(never()).continueSpan(any());
+	}
+
+	private ExecutorService executorService() {
+		ThreadFactory threadFactory = r -> {
+			Thread thread = new Thread(r);
+			thread.setName("MyCustomThread10");
+			return thread;
+		};
+		return Executors
+				.newSingleThreadExecutor(threadFactory);
 	}
 
 	static class MyRxJavaObservableExecutionHook extends RxJavaObservableExecutionHook {

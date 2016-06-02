@@ -10,3 +10,5 @@ exceptionService.ribbon:
   ReadTimeout: 1
 
 spring.sleuth.scheduled.skipPattern: "^org.*TestBeanWithScheduledMethodToBeIgnored$"
+# comma separated list of matchers
+spring.sleuth.rxjava.schedulers.ignoredthreads: HystixMetricPoller,^MyCustomThread.*$

@@ -25,11 +25,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import rx.Observable;
 import rx.functions.Action0;
+import rx.plugins.RxJavaPlugins;
 import rx.schedulers.Schedulers;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-import rx.plugins.RxJavaPlugins;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {SleuthRxJavaTests.TestConfig.class})
@@ -67,6 +67,7 @@ public class SleuthRxJavaTests {
 		then(this.tracer.getCurrentSpan()).isNull();
 		await().until(() -> then(this.listener.getEvents()).hasSize(1));
 		then(this.listener.getEvents().get(0)).hasNameEqualTo("rxjava");
+		then(this.listener.getEvents().get(0)).isExportable();
 		then(this.listener.getEvents().get(0)).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "rxjava");
 		then(this.listener.getEvents().get(0)).isALocalComponentSpan();
 	}
@@ -86,6 +87,7 @@ public class SleuthRxJavaTests {
 		//making sure here that no new spans were created or reported as closed
 		then(this.listener.getEvents()).isEmpty();
 		then(spanInCurrentThread).hasNameEqualTo(spanInCurrentThread.getName());
+		then(spanInCurrentThread).isExportable();
 		then(spanInCurrentThread).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "current_span");
 		then(spanInCurrentThread).isALocalComponentSpan();
 	}
