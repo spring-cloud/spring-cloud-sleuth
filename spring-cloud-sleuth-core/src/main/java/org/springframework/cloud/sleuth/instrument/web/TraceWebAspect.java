@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
@@ -78,12 +79,13 @@ public class TraceWebAspect {
 	}
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
-	private void anyRestControllerAnnotated() { // NOSONAR
-	}
+	private void anyRestControllerAnnotated() { }// NOSONAR
 
 	@Pointcut("@within(org.springframework.stereotype.Controller)")
-	private void anyControllerAnnotated() { // NOSONAR
-	}
+	private void anyControllerAnnotated() { } // NOSONAR
+
+	@Pointcut("target(org.springframework.boot.autoconfigure.web.ErrorController+)")
+	private void implementingErrorController() { } // NOSONAR
 
 	@Pointcut("execution(public java.util.concurrent.Callable *(..))")
 	private void anyPublicMethodReturningCallable() { } // NOSONAR
@@ -96,6 +98,9 @@ public class TraceWebAspect {
 
 	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethodReturningWebAsyncTask()")
 	private void anyControllerOrRestControllerWithPublicWebAsyncTaskMethod() { } // NOSONAR
+
+	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && implementingErrorController()")
+	private void anyControllerOrRestControllerImplementingErrorController() { } // NOSONAR
 
 	@Around("anyControllerOrRestControllerWithPublicAsyncMethod()")
 	@SuppressWarnings("unchecked")
@@ -127,6 +132,13 @@ public class TraceWebAspect {
 			}
 		}
 		return webAsyncTask;
+	}
+
+	@After("anyControllerOrRestControllerImplementingErrorController()")
+	public void wrapErrorController() throws Throwable {
+		if (this.tracer.isTracing()) {
+			this.tracer.close(this.tracer.getCurrentSpan());
+		}
 	}
 
 }

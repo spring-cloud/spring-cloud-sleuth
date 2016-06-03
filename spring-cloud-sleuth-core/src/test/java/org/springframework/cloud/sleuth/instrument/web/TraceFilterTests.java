@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -47,12 +48,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.entry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
@@ -100,6 +100,11 @@ public class TraceFilterTests {
 				"MockMvc");
 	}
 
+	@After
+	public void cleanup() {
+		TestSpanContextHolder.removeCurrentSpan();
+	}
+
 	@Test
 	public void notTraced() throws Exception {
 		this.sampler = NeverSampler.INSTANCE;
@@ -111,8 +116,8 @@ public class TraceFilterTests {
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertFalse(this.span.isExportable());
-		assertNull(TestSpanContextHolder.getCurrentSpan());
+		then(this.span.isExportable()).isFalse();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -123,7 +128,7 @@ public class TraceFilterTests {
 
 		verifyCurrentSpanStatusCode(HttpStatus.OK);
 
-		assertNull(TestSpanContextHolder.getCurrentSpan());
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -145,7 +150,7 @@ public class TraceFilterTests {
 				.hasATag("http.host", "localhost")
 				.hasATag("http.path", "/")
 				.hasATag("http.method", "GET");
-		assertNull(TestSpanContextHolder.getCurrentSpan());
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	private Span parentSpan() {
@@ -166,7 +171,7 @@ public class TraceFilterTests {
 				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertNull(TestSpanContextHolder.getCurrentSpan());
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -180,7 +185,7 @@ public class TraceFilterTests {
 
 		verifyParentSpanHttpTags();
 
-		assertNull(TestSpanContextHolder.getCurrentSpan());
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -195,8 +200,7 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "bar"));
-
-		assertNull(TestSpanContextHolder.getCurrentSpan());
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -227,7 +231,7 @@ public class TraceFilterTests {
 
 		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "'bar','spam'"));
 
-		assertNull(TestSpanContextHolder.getCurrentSpan());
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -252,7 +256,20 @@ public class TraceFilterTests {
 		}
 		verifyParentSpanHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 
-		assertNull(TestSpanContextHolder.getCurrentSpan());
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
+	public void doesNotCloseSpanWhenResponseStatusIsNot2xx() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+		this.response.setStatus(404);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNotNull();
 	}
 
 	public void verifyParentSpanHttpTags() {

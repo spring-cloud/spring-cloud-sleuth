@@ -22,6 +22,7 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MvcResult;
@@ -109,6 +110,15 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(taggedSpan.get()).hasATag("tag", "value");
 	}
 
+	@Test
+	public void should_log_tracing_information_when_exception_was_thrown() throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+
+		MvcResult mvcResult = whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
+
+		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
+	}
+
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(this.traceFilter);
@@ -137,6 +147,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		return sendDeferredWithTraceId(Span.TRACE_ID_NAME, passedTraceId);
 	}
 
+	private MvcResult whenSentToNonExistentEndpointWithTraceId(Long passedTraceId) throws Exception {
+		return sendRequestWithTraceId("/exception/nonExistent", Span.TRACE_ID_NAME, passedTraceId, HttpStatus.NOT_FOUND);
+	}
+
 	private MvcResult sendPingWithTraceId(String headerName, Long traceId)
 			throws Exception {
 		return sendRequestWithTraceId("/ping", headerName, traceId);
@@ -156,6 +170,16 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				.andReturn();
 	}
 
+	private MvcResult sendRequestWithTraceId(String path, String headerName, Long traceId, HttpStatus status)
+			throws Exception {
+		return this.mockMvc
+				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
+						.header(headerName, Span.idToHex(traceId))
+						.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong())))
+				.andExpect(status().is(status.value()))
+				.andReturn();
+	}
+
 	private Long tracingHeaderFrom(MvcResult mvcResult) {
 		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
 	}
@@ -166,34 +190,36 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@DefaultTestAutoConfiguration
-	@RestController
 	@Configuration
 	protected static class Config {
 
-		@Autowired
-		private Tracer tracer;
+		@RestController
+		public static class TestController {
+			@Autowired
+			private Tracer tracer;
 
-		@RequestMapping("/ping")
-		public String ping() {
-			logger.info("ping");
-			span = this.tracer.getCurrentSpan();
-			return "ping";
-		}
+			@RequestMapping("/ping")
+			public String ping() {
+				logger.info("ping");
+				span = this.tracer.getCurrentSpan();
+				return "ping";
+			}
 
-		@RequestMapping("/deferred")
-		public DeferredResult<String> deferred() {
-			logger.info("deferred");
-			this.tracer.addTag("tag", "value");
-			span = this.tracer.getCurrentSpan();
-			DeferredResult<String> result = new DeferredResult<>();
-			result.setResult("deferred");
-			return result;
-		}
+			@RequestMapping("/deferred")
+			public DeferredResult<String> deferred() {
+				logger.info("deferred");
+				this.tracer.addTag("tag", "value");
+				span = this.tracer.getCurrentSpan();
+				DeferredResult<String> result = new DeferredResult<>();
+				result.setResult("deferred");
+				return result;
+			}
 
-		@RequestMapping("/future")
-		public CompletableFuture<String> future() {
-			logger.info("future");
-			return CompletableFuture.completedFuture("ping");
+			@RequestMapping("/future")
+			public CompletableFuture<String> future() {
+				logger.info("future");
+				return CompletableFuture.completedFuture("ping");
+			}
 		}
 
 		@Configuration
