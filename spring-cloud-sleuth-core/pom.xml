@@ -92,7 +92,6 @@
 		<dependency>
 			<groupId>com.netflix.archaius</groupId>
 			<artifactId>archaius-core</artifactId>
-			<version>0.7.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
