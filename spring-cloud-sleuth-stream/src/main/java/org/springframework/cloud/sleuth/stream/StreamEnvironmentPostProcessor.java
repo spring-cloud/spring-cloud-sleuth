@@ -63,7 +63,8 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 			for (Resource resource : resolver
 					.getResources("classpath*:META-INF/spring.binders")) {
 				for (String binderType : parseBinderConfigurations(resource)) {
-					addHeaders(map, binderType);
+					int startIndex = findStartIndex(environment, binderType);
+					addHeaders(map, binderType, startIndex);
 				}
 			}
 		}
@@ -78,6 +79,15 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 		map.put("spring.cloud.stream.bindings." + SleuthSink.INPUT + ".content-type",
 				environment.getProperty("spring.sleuth.stream.content-type", "application/json"));
 		addOrReplace(environment.getPropertySources(), map);
+	}
+
+	private int findStartIndex(ConfigurableEnvironment environment, String binder) {
+		String prefix = "spring.cloud.stream." + binder + ".binder.headers";
+		int i = 0;
+		while (environment.getProperty(prefix + "[" + i + "]")!=null) {
+			i++;
+		}
+		return i;
 	}
 
 	private Collection<String> parseBinderConfigurations(Resource resource) {
@@ -115,10 +125,10 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 		}
 	}
 
-	private void addHeaders(Map<String, Object> map, String binder) {
-		String stem = "spring.cloud.stream.binder." + binder + ".headers";
+	private void addHeaders(Map<String, Object> map, String binder, int startIndex) {
+		String stem = "spring.cloud.stream." + binder + ".binder.headers";
 		for (int i = 0; i < headers.length; i++) {
-			map.put(stem + "[" + i + "]", headers[i]);
+			map.put(stem + "[" + (i + startIndex) + "]", headers[i]);
 		}
 	}
 
