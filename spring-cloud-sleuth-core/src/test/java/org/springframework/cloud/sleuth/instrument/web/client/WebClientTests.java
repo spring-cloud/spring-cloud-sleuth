@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +51,7 @@ import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -84,7 +84,7 @@ public class WebClientTests {
 
 	@Autowired TestFeignInterface testFeignInterface;
 	@Autowired @LoadBalanced RestTemplate template;
-	@Autowired Listener listener;
+	@Autowired ArrayListSpanAccumulator listener;
 	@Autowired Tracer tracer;
 	@Autowired TestErrorController testErrorController;
 
@@ -210,6 +210,9 @@ public class WebClientTests {
 		} catch (HttpClientErrorException e) { }
 
 		then(this.tracer.getCurrentSpan()).isNull();
+		Optional<Span> storedSpan = this.listener.getSpans().stream()
+				.filter(span -> "404".equals(span.tags().get("http.status_code"))).findFirst();
+		then(storedSpan.isPresent()).isTrue();
 		then(this.testErrorController.getSpan()).isNotNull();
 	}
 
@@ -261,11 +264,6 @@ public class WebClientTests {
 			return new FooController();
 		}
 
-		@Bean
-		Listener listener() {
-			return new Listener();
-		}
-
 		@LoadBalanced
 		@Bean
 		public RestTemplate restTemplate() {
@@ -282,6 +280,10 @@ public class WebClientTests {
 			return new TestErrorController(errorAttributes, tracer);
 		}
 
+		@Bean
+		SpanReporter spanReporter() {
+			return new ArrayListSpanAccumulator();
+		}
 	}
 
 	public static class TestErrorController extends BasicErrorController {
@@ -307,20 +309,6 @@ public class WebClientTests {
 
 		public void clear() {
 			this.span = null;
-		}
-	}
-
-	@Component
-	public static class Listener implements SpanReporter {
-		private List<Span> events = new ArrayList<>();
-
-		public List<Span> getSpans() {
-			return this.events;
-		}
-
-		@Override
-		public void report(Span span) {
-			this.events.add(span);
 		}
 	}
 
