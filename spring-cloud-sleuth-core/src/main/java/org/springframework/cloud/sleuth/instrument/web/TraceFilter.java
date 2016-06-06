@@ -111,7 +111,7 @@ public class TraceFilter extends OncePerRequestFilter {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
 				|| Span.SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, Span.SAMPLED_NAME));
-		Span spanFromRequest = (Span) request.getAttribute(TRACE_REQUEST_ATTR);
+		Span spanFromRequest = getSpanFromAttribute(request);
 		if (spanFromRequest != null) {
 			this.tracer.continueSpan(spanFromRequest);
 		}
@@ -152,9 +152,22 @@ public class TraceFilter extends OncePerRequestFilter {
 				HttpStatus httpStatus = HttpStatus.valueOf(response.getStatus());
 				if (httpStatus.is2xxSuccessful() || httpStatus.is3xxRedirection()) {
 					this.tracer.close(spanFromRequest);
+				} else if(isSpanContinued(request)) {
+					// it means that the span was already detached once and we're processing an error
+					this.tracer.close(spanFromRequest);
+				} else {
+					this.tracer.detach(spanFromRequest);
 				}
 			}
 		}
+	}
+
+	private Span getSpanFromAttribute(HttpServletRequest request) {
+		return (Span) request.getAttribute(TRACE_REQUEST_ATTR);
+	}
+
+	private boolean isSpanContinued(HttpServletRequest request) {
+		return getSpanFromAttribute(request) != null;
 	}
 
 	private void addRequestTagsForParentSpan(HttpServletRequest request, Span spanFromRequest) {
@@ -246,5 +259,10 @@ public class TraceFilter extends OncePerRequestFilter {
 		else {
 			return requestURI.append('?').append(queryString).toString();
 		}
+	}
+
+	@Override
+	protected boolean shouldNotFilterErrorDispatch() {
+		return false;
 	}
 }

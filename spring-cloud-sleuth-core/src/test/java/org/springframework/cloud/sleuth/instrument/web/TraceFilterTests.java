@@ -260,7 +260,7 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void doesNotCloseSpanWhenResponseStatusIsNot2xx() throws Exception {
+	public void detachesSpanWhenResponseStatusIsNot2xx() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
@@ -269,7 +269,7 @@ public class TraceFilterTests {
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(TestSpanContextHolder.getCurrentSpan()).isNotNull();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	public void verifyParentSpanHttpTags() {

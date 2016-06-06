@@ -117,6 +117,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		MvcResult mvcResult = whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
 
 		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Override
