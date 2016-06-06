@@ -34,6 +34,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UrlPathHelper;
@@ -147,7 +148,11 @@ public class TraceFilter extends OncePerRequestFilter {
 				} else {
 					spanFromRequest.logEvent(Span.SERVER_SEND);
 				}
-				this.tracer.close(spanFromRequest);
+				// in case of a response with exception status a exception controller will close the span
+				HttpStatus httpStatus = HttpStatus.valueOf(response.getStatus());
+				if (httpStatus.is2xxSuccessful() || httpStatus.is3xxRedirection()) {
+					this.tracer.close(spanFromRequest);
+				}
 			}
 		}
 	}
@@ -214,7 +219,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
 					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
-		else if ((httpStatus < 200) || (httpStatus > 299)) {
+		else if ((httpStatus < 200) || (httpStatus > 399)) {
 			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
 					String.valueOf(response.getStatus()));
 		}

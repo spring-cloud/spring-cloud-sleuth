@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,6 +37,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.BasicErrorController;
+import org.springframework.boot.autoconfigure.web.ErrorAttributes;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
@@ -59,12 +63,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 import static junitparams.JUnitParamsRunner.$;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -80,11 +86,13 @@ public class WebClientTests {
 	@Autowired @LoadBalanced RestTemplate template;
 	@Autowired Listener listener;
 	@Autowired Tracer tracer;
+	@Autowired TestErrorController testErrorController;
 
 	@After
 	public void close() {
 		TestSpanContextHolder.removeCurrentSpan();
 		this.listener.getSpans().clear();
+		this.testErrorController.clear();
 	}
 
 	@Test
@@ -194,6 +202,25 @@ public class WebClientTests {
 						.getForEntity("http://fooservice/noresponse", String.class));
 	}
 
+	@Test
+	public void shouldCloseSpanWhenErrorControllerGetsCalled() {
+		try {
+			this.template.getForEntity("http://fooservice/nonExistent", String.class);
+			fail("An exception should be thrown");
+		} catch (HttpClientErrorException e) { }
+
+		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.testErrorController.getSpan()).isNotNull();
+	}
+
+	@Test
+	public void shouldNotExecuteErrorControllerWhenUrlIsFound() {
+		this.template.getForEntity("http://fooservice/notrace", String.class);
+
+		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.testErrorController.getSpan()).isNull();
+	}
+
 	private void thenRegisteredClientSentAndReceivedEvents(Span span) {
 		then(span).hasLoggedAnEvent(Span.CLIENT_RECV);
 		then(span).hasLoggedAnEvent(Span.CLIENT_SEND);
@@ -248,6 +275,38 @@ public class WebClientTests {
 		@Bean
 		Sampler testSampler() {
 			return new AlwaysSampler();
+		}
+
+		@Bean
+		TestErrorController testErrorController(ErrorAttributes errorAttributes, Tracer tracer) {
+			return new TestErrorController(errorAttributes, tracer);
+		}
+
+	}
+
+	public static class TestErrorController extends BasicErrorController {
+
+		private final Tracer tracer;
+
+		Span span;
+
+		public TestErrorController(ErrorAttributes errorAttributes, Tracer tracer) {
+			super(errorAttributes, new ServerProperties().getError());
+			this.tracer = tracer;
+		}
+
+		@Override
+		public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
+			this.span = this.tracer.getCurrentSpan();
+			return super.error(request);
+		}
+
+		public Span getSpan() {
+			return this.span;
+		}
+
+		public void clear() {
+			this.span = null;
 		}
 	}
 
