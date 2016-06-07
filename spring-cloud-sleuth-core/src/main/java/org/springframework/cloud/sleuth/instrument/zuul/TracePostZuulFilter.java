@@ -16,10 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import java.lang.invoke.MethodHandles;
 
 import com.netflix.zuul.ZuulFilter;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A post request {@link ZuulFilter} that publishes an event upon start of the filtering
@@ -28,6 +32,8 @@ import com.netflix.zuul.ZuulFilter;
  * @since 1.0.0
  */
 public class TracePostZuulFilter extends ZuulFilter {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final Tracer tracer;
 
@@ -45,6 +51,7 @@ public class TracePostZuulFilter extends ZuulFilter {
 		// TODO: the client sent event should come from the client not the filter!
 		getCurrentSpan().logEvent(Span.CLIENT_RECV);
 		this.tracer.close(getCurrentSpan());
+		TracePreZuulFilter.logSpan(getCurrentSpan());
 		return null;
 	}
 

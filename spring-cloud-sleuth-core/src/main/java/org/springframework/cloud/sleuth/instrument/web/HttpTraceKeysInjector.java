@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 
@@ -43,6 +44,13 @@ public class HttpTraceKeysInjector {
 		tagSpan(span, this.traceKeys.getHttp().getHost(), host);
 		tagSpan(span, this.traceKeys.getHttp().getPath(), path);
 		tagSpan(span, this.traceKeys.getHttp().getMethod(), method);
+	}
+
+	/**
+	 * Adds tags from the HTTP request to the given Span
+	 */
+	public void addRequestTags(Span span, URI uri, String method) {
+		addRequestTags(span, uri.toString(), uri.getHost(), uri.getPath(), method);
 	}
 
 	/**

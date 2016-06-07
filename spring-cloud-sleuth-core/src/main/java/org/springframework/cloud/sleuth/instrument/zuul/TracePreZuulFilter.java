@@ -16,14 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.Tracer;
+import java.lang.invoke.MethodHandles;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.zuul.ExecutionStatus;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.ZuulFilterResult;
 import com.netflix.zuul.context.RequestContext;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A pre request {@link ZuulFilter} that sets tracing related headers on the request
@@ -33,6 +39,8 @@ import com.netflix.zuul.context.RequestContext;
  * @since 1.0.0
  */
 public class TracePreZuulFilter extends ZuulFilter {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final String ZUUL_COMPONENT = "zuul";
 
@@ -59,7 +67,9 @@ public class TracePreZuulFilter extends ZuulFilter {
 	public ZuulFilterResult runFilter() {
 		RequestContext ctx = RequestContext.getCurrentContext();
 		Span span = getCurrentSpan();
+		logSpan(span);
 		Span newSpan = this.tracer.createSpan(span.getName(), span);
+		logSpan(span);
 		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
 		this.spanInjector.inject(newSpan, ctx);
 		ZuulFilterResult result = super.runFilter();
@@ -67,6 +77,15 @@ public class TracePreZuulFilter extends ZuulFilter {
 			this.tracer.close(newSpan);
 		}
 		return result;
+	}
+
+	static void logSpan(Span span) {
+		try {
+			log.debug("Span is [" + new ObjectMapper().writeValueAsString(span) + "]");
+		}
+		catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private Span getCurrentSpan() {

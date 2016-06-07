@@ -20,11 +20,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
@@ -64,6 +67,8 @@ import static org.springframework.util.StringUtils.hasText;
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class TraceFilter extends OncePerRequestFilter {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final String HTTP_COMPONENT = "http";
 
@@ -115,6 +120,7 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (spanFromRequest != null) {
 			this.tracer.continueSpan(spanFromRequest);
 		}
+		log.debug("Received a request to uri [" + uri + "] that matches the skip pattern [" + skip + "]");
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
 			// it means that the span was already detached once and we're processing an error
@@ -193,6 +199,7 @@ public class TraceFilter extends OncePerRequestFilter {
 	private Span createSpan(HttpServletRequest request,
 			boolean skip, Span spanFromRequest, String name) {
 		if (spanFromRequest != null) {
+			log.debug("Span has already been created - continuing with the previous one");
 			return spanFromRequest;
 		}
 		Span parent = this.spanExtractor.joinTrace(request);
@@ -203,6 +210,7 @@ public class TraceFilter extends OncePerRequestFilter {
 				parent.logEvent(Span.SERVER_RECV);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
+			log.debug("Found a parent span in the request");
 		}
 		else {
 			if (skip) {
@@ -213,6 +221,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			}
 			spanFromRequest.logEvent(Span.SERVER_RECV);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
+			log.debug("No parent span present - creating a new span");
 		}
 		return spanFromRequest;
 	}
