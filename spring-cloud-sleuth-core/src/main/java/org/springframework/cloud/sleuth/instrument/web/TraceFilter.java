@@ -115,6 +115,16 @@ public class TraceFilter extends OncePerRequestFilter {
 		if (spanFromRequest != null) {
 			this.tracer.continueSpan(spanFromRequest);
 		}
+		// in case of a response with exception status a exception controller will close the span
+		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
+			// it means that the span was already detached once and we're processing an error
+			try {
+				filterChain.doFilter(request, response);
+			} finally {
+				this.tracer.close(spanFromRequest);
+			}
+			return;
+		}
 		addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 		String name = HTTP_COMPONENT + ":" + uri;
 		spanFromRequest = createSpan(request, skip, spanFromRequest, name);
@@ -148,18 +158,19 @@ public class TraceFilter extends OncePerRequestFilter {
 				} else {
 					spanFromRequest.logEvent(Span.SERVER_SEND);
 				}
-				// in case of a response with exception status a exception controller will close the span
-				HttpStatus httpStatus = HttpStatus.valueOf(response.getStatus());
-				if (httpStatus.is2xxSuccessful() || httpStatus.is3xxRedirection()) {
-					this.tracer.close(spanFromRequest);
-				} else if(isSpanContinued(request)) {
-					// it means that the span was already detached once and we're processing an error
+				// in case of a response with exception status will close the span when exception dispatch is handled
+				if (httpStatusSuccessful(response)) {
 					this.tracer.close(spanFromRequest);
 				} else {
 					this.tracer.detach(spanFromRequest);
 				}
 			}
 		}
+	}
+
+	private boolean httpStatusSuccessful(HttpServletResponse response) {
+		HttpStatus httpStatus = HttpStatus.valueOf(response.getStatus());
+		return httpStatus.is2xxSuccessful() || httpStatus.is3xxRedirection();
 	}
 
 	private Span getSpanFromAttribute(HttpServletRequest request) {

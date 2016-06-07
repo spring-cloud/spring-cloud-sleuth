@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
@@ -45,6 +46,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -213,6 +215,12 @@ public class WebClientTests {
 		Optional<Span> storedSpan = this.listener.getSpans().stream()
 				.filter(span -> "404".equals(span.tags().get("http.status_code"))).findFirst();
 		then(storedSpan.isPresent()).isTrue();
+		this.listener.getSpans().stream()
+				.forEach(span -> {
+					int initialSize = span.logs().size();
+					int distinctSize = span.logs().stream().map(Log::getEvent).distinct().collect(Collectors.toList()).size();
+					then(initialSize).as("there are no duplicate log entries").isEqualTo(distinctSize);
+				});
 		then(this.testErrorController.getSpan()).isNotNull();
 	}
 
