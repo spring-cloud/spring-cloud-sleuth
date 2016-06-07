@@ -6,6 +6,8 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.MDC;
@@ -47,6 +49,12 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	@Autowired ArrayListSpanAccumulator spanAccumulator;
 
 	private static Span span;
+
+	@Before
+	@After
+	public void clearSpans() {
+		this.spanAccumulator.getSpans().clear();
+	}
 
 	@Test
 	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
@@ -120,6 +128,18 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
+	@Test
+	public void should_assume_that_a_request_without_span_and_with_trace_is_a_root_span() throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+
+		whenSentRequestWithTraceIdAndNoSpanId(expectedTraceId);
+		whenSentRequestWithTraceIdAndNoSpanId(expectedTraceId);
+
+		then(this.spanAccumulator.getSpans().stream().filter(span ->
+				span.getSpanId() == span.getTraceId()).findAny().isPresent()).as("a root span exists").isTrue();
+		then(this.tracer.getCurrentSpan()).isNull();
+	}
+
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(this.traceFilter);
@@ -169,6 +189,16 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 						.header(headerName, Span.idToHex(traceId))
 						.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong())))
 				.andReturn();
+	}
+
+	private MvcResult whenSentRequestWithTraceIdAndNoSpanId(Long traceId)
+			throws Exception {
+		MvcResult mvcResult = this.mockMvc
+				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
+						.header(Span.TRACE_ID_NAME, Span.idToHex(traceId)))
+				.andReturn();
+		then(tracingHeaderFrom(mvcResult)).isEqualTo(traceId);
+		return mvcResult;
 	}
 
 	private MvcResult sendRequestWithTraceId(String path, String headerName, Long traceId, HttpStatus status)

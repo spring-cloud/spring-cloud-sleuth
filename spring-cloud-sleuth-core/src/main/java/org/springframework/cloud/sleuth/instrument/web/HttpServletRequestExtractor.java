@@ -16,11 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.Random;
+import javax.servlet.http.HttpServletRequest;
+import java.lang.invoke.MethodHandles;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
 import org.springframework.cloud.sleuth.SpanExtractor;
@@ -36,15 +37,14 @@ import org.springframework.web.util.UrlPathHelper;
  */
 class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 	private static final String HTTP_COMPONENT = "http";
 
-	private final Random random;
 	private final Pattern skipPattern;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
-	public HttpServletRequestExtractor(Random random, Pattern skipPattern) {
-		this.random = random;
+	public HttpServletRequestExtractor(Pattern skipPattern) {
 		this.skipPattern = skipPattern;
 	}
 
@@ -59,10 +59,19 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 				|| Span.SPAN_NOT_SAMPLED.equals(carrier.getHeader(Span.SAMPLED_NAME));
 		long traceId = Span
 				.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
-		long spanId = carrier.getHeader(Span.SPAN_ID_NAME) != null
-				? Span.hexToId(carrier.getHeader(Span.SPAN_ID_NAME))
-				: this.random.nextLong();
+		long spanId = spanId(carrier, traceId);
 		return buildParentSpan(carrier, uri, skip, traceId, spanId);
+	}
+
+	private long spanId(HttpServletRequest carrier, long traceId) {
+		String spanId = carrier.getHeader(Span.SPAN_ID_NAME);
+		if (spanId == null) {
+			log.debug("Request is missing a span id but it has a trace id. We'll assume that this is "
+					+ "a root span with span id equal to trace id");
+			return traceId;
+		} else {
+			return Span.hexToId(spanId);
+		}
 	}
 
 	private Span buildParentSpan(HttpServletRequest carrier, String uri, boolean skip,
