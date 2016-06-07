@@ -114,7 +114,7 @@ public class DefaultTracer implements Tracer {
 		final Span savedSpan = span.getSavedSpan();
 		if (!span.equals(cur)) {
 			ExceptionUtils.warn(
-					"Tried to close span but " + "it is not the current span: " + span
+					"Tried to close span but it is not the current span: " + span
 							+ ".  You may have forgotten to close or detach " + cur);
 		}
 		else {
