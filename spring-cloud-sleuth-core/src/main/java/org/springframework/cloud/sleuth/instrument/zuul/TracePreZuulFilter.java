@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.lang.invoke.MethodHandles;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.zuul.ExecutionStatus;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.ZuulFilterResult;
@@ -67,25 +65,19 @@ public class TracePreZuulFilter extends ZuulFilter {
 	public ZuulFilterResult runFilter() {
 		RequestContext ctx = RequestContext.getCurrentContext();
 		Span span = getCurrentSpan();
-		logSpan(span);
+		log.debug("Current span is " + span + "");
 		Span newSpan = this.tracer.createSpan(span.getName(), span);
-		logSpan(span);
 		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
 		this.spanInjector.inject(newSpan, ctx);
+		log.debug("New Zuul Span is " + newSpan + "");
 		ZuulFilterResult result = super.runFilter();
+		log.debug("Result of Zuul filter is [" + result.getStatus() + "]");
 		if (ExecutionStatus.SUCCESS != result.getStatus()) {
+			log.debug("The result of Zuul filter execution was not successful thus "
+					+ "will close the current span " + newSpan);
 			this.tracer.close(newSpan);
 		}
 		return result;
-	}
-
-	static void logSpan(Span span) {
-		try {
-			log.debug("Span is [" + new ObjectMapper().writeValueAsString(span) + "]");
-		}
-		catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private Span getCurrentSpan() {

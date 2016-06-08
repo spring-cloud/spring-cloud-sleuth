@@ -101,7 +101,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			this.spanInjector.inject(span, requestBuilder);
 			this.httpTraceKeysInjector.addRequestTags(span, getUri(), getVerb().verb());
 			span.logEvent(Span.CLIENT_SEND);
-			TracePreZuulFilter.logSpan(span);
+			log.debug("Span is " + span + "");
 		}
 
 		private Span getCurrentSpan() {

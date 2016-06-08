@@ -16,8 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
@@ -31,6 +34,8 @@ import org.springframework.http.HttpRequest;
  * @since 1.0.0
  */
 abstract class AbstractTraceHttpRequestInterceptor {
+
+	protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	protected final Tracer tracer;
 	protected final SpanInjector<HttpRequest> spanInjector;
@@ -54,6 +59,7 @@ abstract class AbstractTraceHttpRequestInterceptor {
 		this.spanInjector.inject(newSpan, request);
 		addRequestTags(request);
 		newSpan.logEvent(Span.CLIENT_SEND);
+		log.debug("Starting new client span [" + newSpan + "]");
 	}
 
 	private String uriScheme(URI uri) {
