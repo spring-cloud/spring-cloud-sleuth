@@ -59,6 +59,7 @@ public class TracePostZuulFilter extends ZuulFilter {
 		return null;
 	}
 
+	// TODO: Remove this once new version of Netflix gets released
 	// we want to enforce the SendErrorFilter to process the error
 	private void setErrorStatusCodeIfMissing() {
 		RequestContext ctx = RequestContext.getCurrentContext();

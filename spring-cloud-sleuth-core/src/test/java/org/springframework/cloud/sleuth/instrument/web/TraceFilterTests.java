@@ -172,6 +172,23 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(this.request.getAttribute(TraceFilter.TRACE_ERROR_HANDLED_REQUEST_ATTR)).isNull();
+	}
+
+	@Test
+	public void closesSpanInRequestAttrIfStatusCodeNotSuccessful() throws Exception {
+		Span span = this.tracer.createSpan("http:foo");
+		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
+		this.response.setStatus(404);
+		// It should have been removed from the thread local context so simulate that
+		TestSpanContextHolder.removeCurrentSpan();
+
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(this.request.getAttribute(TraceFilter.TRACE_ERROR_HANDLED_REQUEST_ATTR)).isNotNull();
 	}
 
 	@Test

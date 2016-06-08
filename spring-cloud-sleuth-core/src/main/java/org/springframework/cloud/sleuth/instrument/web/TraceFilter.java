@@ -115,7 +115,8 @@ public class TraceFilter extends GenericFilterBean {
 		this.httpTraceKeysInjector = httpTraceKeysInjector;
 	}
 
-	@Override public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
+	@Override
+	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
 			FilterChain filterChain) throws IOException, ServletException {
 		if (!(servletRequest instanceof HttpServletRequest) || !(servletResponse instanceof HttpServletResponse)) {
 			throw new ServletException("OncePerRequestFilter just supports HTTP requests");
