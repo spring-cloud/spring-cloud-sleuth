@@ -43,14 +43,6 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return new ListOfSpansAssert(actual);
 	}
 
-	public ListOfSpansAssert thereIsOnlyOneServerAndClientSideSpanWhoseParentIdIsEqualTo(long traceId) {
-		isNotNull();
-		printSpans();
-		List<Span> spansWithParentSpanAsRootSpan = this.actual.spans.stream().filter(span -> span.getParents().contains(traceId)).collect(Collectors.toList());
-		Assertions.assertThat(spansWithParentSpanAsRootSpan).hasSize(2).extracting("spanId").containsOnly(spansWithParentSpanAsRootSpan.get(0).getSpanId());
-		return this;
-	}
-
 	public ListOfSpansAssert everyParentIdHasItsCorrespondingSpan() {
 		isNotNull();
 		printSpans();

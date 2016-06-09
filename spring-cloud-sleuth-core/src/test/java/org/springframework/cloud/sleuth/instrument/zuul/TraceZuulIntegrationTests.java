@@ -75,7 +75,7 @@ public class TraceZuulIntegrationTests {
 		then(result.getBody()).isEqualTo("Hello world");
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.thereIsOnlyOneServerAndClientSideSpanWhoseParentIdIsEqualTo(span.getTraceId());
+				.everyParentIdHasItsCorrespondingSpan();
 	}
 
 	@Test
@@ -90,7 +90,6 @@ public class TraceZuulIntegrationTests {
 		then(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.thereIsOnlyOneServerAndClientSideSpanWhoseParentIdIsEqualTo(span.getTraceId())
 				.everyParentIdHasItsCorrespondingSpan();
 	}
 }
