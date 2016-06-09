@@ -47,7 +47,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = SampleZuulProxyApplication.class)
 @WebAppConfiguration
-@IntegrationTest({ "server.port: 0", "zuul.routes.simple: /simple/**"})
+@IntegrationTest({ "server.port: 0", "zuul.routes.simple: /simple/**", "hystrix.command.default.execution.isolation.strategy: SEMAPHORE"})
 @DirtiesContext
 public class TraceZuulIntegrationTests {
 

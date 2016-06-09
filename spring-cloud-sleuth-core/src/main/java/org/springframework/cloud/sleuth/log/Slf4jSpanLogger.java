@@ -83,7 +83,9 @@ public class Slf4jSpanLogger implements SpanLogger {
 		if (span != null && this.nameSkipPattern.matcher(span.getName()).matches()) {
 			return;
 		}
-		this.log.trace(text, span);
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(text, span);
+		}
 	}
 
 }
