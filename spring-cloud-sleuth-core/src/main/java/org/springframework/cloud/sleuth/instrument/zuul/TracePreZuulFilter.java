@@ -17,17 +17,19 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.lang.invoke.MethodHandles;
-
-import com.netflix.zuul.ExecutionStatus;
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.ZuulFilterResult;
-import com.netflix.zuul.context.RequestContext;
+import java.net.URI;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+
+import com.netflix.zuul.ExecutionStatus;
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.ZuulFilterResult;
+import com.netflix.zuul.context.RequestContext;
 
 /**
  * A pre request {@link ZuulFilter} that sets tracing related headers on the request
@@ -44,10 +46,13 @@ public class TracePreZuulFilter extends ZuulFilter {
 
 	private final Tracer tracer;
 	private final SpanInjector<RequestContext> spanInjector;
+	private final HttpTraceKeysInjector httpTraceKeysInjector;
 
-	public TracePreZuulFilter(Tracer tracer, SpanInjector<RequestContext> spanInjector) {
+	public TracePreZuulFilter(Tracer tracer, SpanInjector<RequestContext> spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
+		this.httpTraceKeysInjector = httpTraceKeysInjector;
 	}
 
 	@Override
@@ -71,6 +76,7 @@ public class TracePreZuulFilter extends ZuulFilter {
 		Span newSpan = this.tracer.createSpan(span.getName(), span);
 		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
 		this.spanInjector.inject(newSpan, ctx);
+		this.httpTraceKeysInjector.addRequestTags(newSpan, URI.create(ctx.getRequest().getRequestURI()), ctx.getRequest().getMethod());
 		if (log.isTraceEnabled()) {
 			log.trace("New Zuul Span is " + newSpan + "");
 		}

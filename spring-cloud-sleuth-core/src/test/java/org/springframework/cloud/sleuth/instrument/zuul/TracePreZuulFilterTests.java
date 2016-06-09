@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -45,7 +47,8 @@ public class TracePreZuulFilterTests {
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
-	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new RequestContextInjector());
+	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new RequestContextInjector(),
+			new HttpTraceKeysInjector(this.tracer, new TraceKeys()));
 
 	@Before
 	public void setup() {
@@ -91,7 +94,8 @@ public class TracePreZuulFilterTests {
 		Span startedSpan = this.tracer.createSpan("http:start", NeverSampler.INSTANCE);
 		final AtomicReference<Span> span = new AtomicReference<>();
 
-		new TracePreZuulFilter(this.tracer, new RequestContextInjector()) {
+		new TracePreZuulFilter(this.tracer, new RequestContextInjector(),
+				new HttpTraceKeysInjector(this.tracer, new TraceKeys())) {
 			@Override
 			public Object run() {
 				super.run();
@@ -110,7 +114,8 @@ public class TracePreZuulFilterTests {
 		Span startedSpan = this.tracer.createSpan("http:start", NeverSampler.INSTANCE);
 		final AtomicReference<Span> span = new AtomicReference<>();
 
-		new TracePreZuulFilter(this.tracer, new RequestContextInjector()) {
+		new TracePreZuulFilter(this.tracer, new RequestContextInjector(),
+				new HttpTraceKeysInjector(this.tracer, new TraceKeys())) {
 			@Override
 			public Object run() {
 				span.set(TracePreZuulFilterTests.this.tracer.getCurrentSpan());

@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -42,7 +43,7 @@ public class TracePostZuulFilterTests {
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 
-	private TracePostZuulFilter filter = new TracePostZuulFilter(this.tracer);
+	private TracePostZuulFilter filter = new TracePostZuulFilter(this.tracer, new TraceKeys());
 
 	@After
 	@Before

@@ -1,9 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.io.IOException;
-
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.ServerList;
+import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +40,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+import com.netflix.loadbalancer.Server;
+import com.netflix.loadbalancer.ServerList;
+
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -75,7 +76,11 @@ public class TraceZuulIntegrationTests {
 		then(result.getBody()).isEqualTo("Hello world");
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.everyParentIdHasItsCorrespondingSpan();
+				.everyParentIdHasItsCorrespondingSpan()
+				.clientSideSpanWithNameHasTags("http:/simple/", TestTag.tag()
+						.tag("http.method", "GET")
+						.tag("http.status_code", "200")
+						.tag("http.path", "/simple/"));
 	}
 
 	@Test
@@ -90,7 +95,23 @@ public class TraceZuulIntegrationTests {
 		then(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.everyParentIdHasItsCorrespondingSpan();
+				.everyParentIdHasItsCorrespondingSpan()
+				.clientSideSpanWithNameHasTags("http:/simple/nonExistentUrl", TestTag.tag()
+						.tag("http.method", "GET")
+						.tag("http.status_code", "404")
+						.tag("http.path", "/simple/nonExistentUrl"));
+	}
+
+	private static class TestTag extends HashMap<String, String> {
+
+		public static TestTag tag() {
+			return new TestTag();
+		}
+
+		public TestTag tag(String key, String value) {
+			put(key, value);
+			return this;
+		}
 	}
 }
 
