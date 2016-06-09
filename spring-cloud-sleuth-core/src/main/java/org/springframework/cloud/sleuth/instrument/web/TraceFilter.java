@@ -129,12 +129,19 @@ public class TraceFilter extends GenericFilterBean {
 		Span spanFromRequest = getSpanFromAttribute(request);
 		if (spanFromRequest != null) {
 			this.tracer.continueSpan(spanFromRequest);
-			log.debug("There has already been a span in the request " + spanFromRequest + "");
+			if (log.isTraceEnabled()) {
+				log.trace("There has already been a span in the request " + spanFromRequest + "");
+			}
 		}
-		log.debug("Received a request to uri [" + uri + "] that matches the skip pattern [" + skip + "]");
+		if (log.isTraceEnabled()) {
+			log.trace("Received a request to uri [" + uri + "] that matches the skip pattern [" + skip + "]");
+		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
-			log.debug("The span was already detached once and we're processing an error");
+			if (log.isTraceEnabled()) {
+				log.trace(
+						"The span was already detached once and we're processing an error");
+			}
 			try {
 				filterChain.doFilter(request, response);
 			} finally {
@@ -159,7 +166,9 @@ public class TraceFilter extends GenericFilterBean {
 		}
 		finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
-				log.debug("Detaching the span " + spanFromRequest + " since the request is asynchronous");
+				if (log.isTraceEnabled()) {
+					log.trace("Detaching the span " + spanFromRequest + " since the request is asynchronous");
+				}
 				this.tracer.detach(spanFromRequest);
 				// TODO: how to deal with response annotations and async?
 				return;
@@ -170,7 +179,9 @@ public class TraceFilter extends GenericFilterBean {
 				if (spanFromRequest.hasSavedSpan()) {
 					Span parent =  spanFromRequest.getSavedSpan();
 					if (parent.isRemote()) {
-						log.debug("Sending the parent span " + parent + " to Zipkin");
+						if (log.isTraceEnabled()) {
+							log.trace("Sending the parent span " + parent + " to Zipkin");
+						}
 						parent.logEvent(Span.SERVER_SEND);
 						parent.stop();
 						this.spanReporter.report(parent);
@@ -180,12 +191,19 @@ public class TraceFilter extends GenericFilterBean {
 				}
 				// in case of a response with exception status will close the span when exception dispatch is handled
 				if (httpStatusSuccessful(response)) {
-					log.debug("Closing the span " + spanFromRequest + " since the response was successful");
+					if (log.isTraceEnabled()) {
+						log.trace("Closing the span " + spanFromRequest + " since the response was successful");
+					}
 					this.tracer.close(spanFromRequest);
 				} else if (errorAlreadyHandled(request)) {
-					log.debug("Won't detach the span since error has already been handled");
+					if (log.isTraceEnabled()) {
+						log.trace(
+								"Won't detach the span since error has already been handled");
+					}
 				} else {
-					log.debug("Detaching the span " + spanFromRequest + " since the response was unsuccessful");
+					if (log.isTraceEnabled()) {
+						log.trace("Detaching the span " + spanFromRequest + " since the response was unsuccessful");
+					}
 					this.tracer.detach(spanFromRequest);
 				}
 			}
@@ -222,20 +240,28 @@ public class TraceFilter extends GenericFilterBean {
 	private Span createSpan(HttpServletRequest request,
 			boolean skip, Span spanFromRequest, String name) {
 		if (spanFromRequest != null) {
-			log.debug("Span has already been created - continuing with the previous one");
+			if (log.isTraceEnabled()) {
+				log.trace("Span has already been created - continuing with the previous one");
+			}
 			return spanFromRequest;
 		}
 		Span parent = this.spanExtractor.joinTrace(request);
 		if (parent != null) {
-			log.debug("Found a parent span " + parent + " in the request");
+			if (log.isTraceEnabled()) {
+				log.trace("Found a parent span " + parent + " in the request");
+			}
 			addRequestTagsForParentSpan(request, parent);
 			spanFromRequest = this.tracer.createSpan(name, parent);
-			log.debug("Started a new span " + spanFromRequest + " with parent " + parent);
+			if (log.isTraceEnabled()) {
+				log.trace("Started a new span " + spanFromRequest + " with parent " + parent);
+			}
 			if (parent.isRemote()) {
 				parent.logEvent(Span.SERVER_RECV);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
-			log.debug("Parent span is " + parent + "");
+			if (log.isTraceEnabled()) {
+				log.trace("Parent span is " + parent + "");
+			}
 		}
 		else {
 			if (skip) {
@@ -246,7 +272,7 @@ public class TraceFilter extends GenericFilterBean {
 			}
 			spanFromRequest.logEvent(Span.SERVER_RECV);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
-			log.debug("No parent span present - creating a new span");
+			log.trace("No parent span present - creating a new span");
 		}
 		return spanFromRequest;
 	}
@@ -299,8 +325,7 @@ public class TraceFilter extends GenericFilterBean {
 		String queryString = request.getQueryString();
 		if (queryString == null) {
 			return requestURI.toString();
-		}
-		else {
+		} else {
 			return requestURI.append('?').append(queryString).toString();
 		}
 	}

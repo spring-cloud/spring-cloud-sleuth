@@ -50,7 +50,9 @@ public class TracePostZuulFilter extends ZuulFilter {
 	public Object run() {
 		// TODO: the client sent event should come from the client not the filter!
 		getCurrentSpan().logEvent(Span.CLIENT_RECV);
-		log.debug("Closing current client span " + getCurrentSpan() + "");
+		if (log.isTraceEnabled()) {
+			log.trace("Closing current client span " + getCurrentSpan() + "");
+		}
 		this.tracer.close(getCurrentSpan());
 		return null;
 	}

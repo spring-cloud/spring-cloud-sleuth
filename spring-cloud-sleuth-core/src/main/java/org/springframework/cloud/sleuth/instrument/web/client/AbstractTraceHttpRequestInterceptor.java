@@ -59,7 +59,9 @@ abstract class AbstractTraceHttpRequestInterceptor {
 		this.spanInjector.inject(newSpan, request);
 		addRequestTags(request);
 		newSpan.logEvent(Span.CLIENT_SEND);
-		log.debug("Starting new client span [" + newSpan + "]");
+		if (log.isTraceEnabled()) {
+			log.trace("Starting new client span [" + newSpan + "]");
+		}
 	}
 
 	private String uriScheme(URI uri) {
