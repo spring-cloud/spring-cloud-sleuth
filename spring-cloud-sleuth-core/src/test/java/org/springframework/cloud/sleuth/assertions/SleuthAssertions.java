@@ -13,4 +13,13 @@ public class SleuthAssertions extends BDDAssertions {
 		return new SpanAssert(actual);
 	}
 
+
+	public static ListOfSpansAssert then(ListOfSpans actual) {
+		return assertThat(actual);
+	}
+
+	public static ListOfSpansAssert assertThat(ListOfSpans actual) {
+		return new ListOfSpansAssert(actual);
+	}
+
 }

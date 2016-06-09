@@ -16,14 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.Tracer;
+import java.lang.invoke.MethodHandles;
 
 import com.netflix.zuul.ExecutionStatus;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.ZuulFilterResult;
 import com.netflix.zuul.context.RequestContext;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A pre request {@link ZuulFilter} that sets tracing related headers on the request
@@ -33,6 +37,8 @@ import com.netflix.zuul.context.RequestContext;
  * @since 1.0.0
  */
 public class TracePreZuulFilter extends ZuulFilter {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final String ZUUL_COMPONENT = "zuul";
 
@@ -59,11 +65,24 @@ public class TracePreZuulFilter extends ZuulFilter {
 	public ZuulFilterResult runFilter() {
 		RequestContext ctx = RequestContext.getCurrentContext();
 		Span span = getCurrentSpan();
+		if (log.isTraceEnabled()) {
+			log.trace("Current span is " + span + "");
+		}
 		Span newSpan = this.tracer.createSpan(span.getName(), span);
 		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
 		this.spanInjector.inject(newSpan, ctx);
+		if (log.isTraceEnabled()) {
+			log.trace("New Zuul Span is " + newSpan + "");
+		}
 		ZuulFilterResult result = super.runFilter();
+		if (log.isTraceEnabled()) {
+			log.trace("Result of Zuul filter is [" + result.getStatus() + "]");
+		}
 		if (ExecutionStatus.SUCCESS != result.getStatus()) {
+			if (log.isTraceEnabled()) {
+				log.trace("The result of Zuul filter execution was not successful thus "
+						+ "will close the current span " + newSpan);
+			}
 			this.tracer.close(newSpan);
 		}
 		return result;

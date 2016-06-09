@@ -56,12 +56,14 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
 	private void logCurrentStateOfRxJavaPlugins(RxJavaErrorHandler errorHandler,
 		RxJavaObservableExecutionHook observableExecutionHook) {
-		log.debug("Current RxJava plugins configuration is ["
-			+ "schedulersHook [" + this.delegate + "],"
-			+ "errorHandler [" + errorHandler + "],"
-			+ "observableExecutionHook [" + observableExecutionHook + "],"
-			+ "]");
-		log.debug("Registering Sleuth RxJava Schedulers Hook.");
+		if (log.isDebugEnabled()) {
+			log.debug("Current RxJava plugins configuration is ["
+					+ "schedulersHook [" + this.delegate + "],"
+					+ "errorHandler [" + errorHandler + "],"
+					+ "observableExecutionHook [" + observableExecutionHook + "],"
+					+ "]");
+			log.debug("Registering Sleuth RxJava Schedulers Hook.");
+		}
 	}
 
 	@Override
@@ -102,9 +104,11 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			for (String threadToIgnore : this.threadsToIgnore) {
 				String threadName = Thread.currentThread().getName();
 				if (threadName.matches(threadToIgnore)) {
-					log.trace(String.format(
-							"Thread with name [%s] matches the regex [%s]. A span will not be created for this Thread.",
-							threadName, threadToIgnore));
+					if (log.isTraceEnabled()) {
+						log.trace(String.format(
+								"Thread with name [%s] matches the regex [%s]. A span will not be created for this Thread.",
+								threadName, threadToIgnore));
+					}
 					this.actual.call();
 					return;
 				}

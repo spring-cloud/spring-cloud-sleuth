@@ -19,10 +19,10 @@ package org.springframework.cloud.sleuth;
 import java.io.IOException;
 import java.util.Collections;
 
-import org.junit.Test;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.junit.Test;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -31,7 +31,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Rob Winch
  * @author Spencer Gibb
  */
-public class SpanTest {
+public class SpanTests {
 
 	@Test
 	public void should_convert_long_to_hex_string() throws Exception {

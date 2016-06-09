@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
+import com.netflix.client.http.HttpRequest;
+import com.netflix.niws.client.http.RestClient;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
@@ -28,10 +31,8 @@ import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.util.MultiValueMap;
-
-import com.netflix.client.http.HttpRequest;
-import com.netflix.niws.client.http.RestClient;
 
 /**
  * Propagates traces downstream via http headers that contain trace metadata.
@@ -45,12 +46,15 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 
 	private final Tracer tracer;
 	private final SpanInjector<HttpRequest.Builder> spanInjector;
+	private final HttpTraceKeysInjector httpTraceKeysInjector;
 
 	public TraceRestClientRibbonCommandFactory(SpringClientFactory clientFactory,
-			Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector) {
+			Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector) {
 		super(clientFactory);
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
+		this.httpTraceKeysInjector = httpTraceKeysInjector;
 	}
 
 	@Override
@@ -62,7 +66,7 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			return new TraceRestClientRibbonCommand(context.getServiceId(), restClient,
 					getVerb(context.getVerb()), context.getUri(), context.getRetryable(),
 					context.getHeaders(), context.getParams(), context.getRequestEntity(),
-					this.tracer, this.spanInjector);
+					this.tracer, this.spanInjector, this.httpTraceKeysInjector);
 		}
 		catch (URISyntaxException e) {
 			log.error("Exception occurred while trying to create the TraceRestClientRibbonCommand", e);
@@ -74,25 +78,32 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 
 		private final Tracer tracer;
 		private final SpanInjector<HttpRequest.Builder> spanInjector;
+		private final HttpTraceKeysInjector httpTraceKeysInjector;
 
 		@SuppressWarnings("deprecation")
 		public TraceRestClientRibbonCommand(String commandKey, RestClient restClient,
 				HttpRequest.Verb verb, String uri, Boolean retryable,
 				MultiValueMap<String, String> headers,
 				MultiValueMap<String, String> params, InputStream requestEntity,
-				Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector)
+				Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector,
+				HttpTraceKeysInjector httpTraceKeysInjector)
 						throws URISyntaxException {
 			super(commandKey, restClient, verb, uri, retryable, headers, params,
 					requestEntity);
 			this.tracer = tracer;
 			this.spanInjector = spanInjector;
+			this.httpTraceKeysInjector = httpTraceKeysInjector;
 		}
 
 		@Override
 		protected void customizeRequest(HttpRequest.Builder requestBuilder) {
 			Span span = getCurrentSpan();
 			this.spanInjector.inject(span, requestBuilder);
+			this.httpTraceKeysInjector.addRequestTags(span, getUri(), getVerb().verb());
 			span.logEvent(Span.CLIENT_SEND);
+			if (log.isTraceEnabled()) {
+				log.trace("Span is " + span);
+			}
 		}
 
 		private Span getCurrentSpan() {

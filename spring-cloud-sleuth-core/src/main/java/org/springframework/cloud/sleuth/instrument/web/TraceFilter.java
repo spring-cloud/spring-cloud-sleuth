@@ -17,14 +17,19 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
@@ -36,7 +41,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.context.request.async.WebAsyncUtils;
+import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.util.UrlPathHelper;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -63,12 +69,17 @@ import static org.springframework.util.StringUtils.hasText;
  * @see TraceWebAutoConfiguration#traceFilter
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
-public class TraceFilter extends OncePerRequestFilter {
+public class TraceFilter extends GenericFilterBean {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final String HTTP_COMPONENT = "http";
 
 	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".TRACE";
+
+	protected static final String TRACE_ERROR_HANDLED_REQUEST_ATTR = TraceFilter.class.getName()
+			+ ".ERROR_HANDLED";
 
 	public static final String DEFAULT_SKIP_PATTERN =
 			"/api-docs.*|/autoconfig|/configprops|/dump|/health|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream";
@@ -105,22 +116,36 @@ public class TraceFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request,
-			HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
+	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
+			FilterChain filterChain) throws IOException, ServletException {
+		if (!(servletRequest instanceof HttpServletRequest) || !(servletResponse instanceof HttpServletResponse)) {
+			throw new ServletException("Filter just supports HTTP requests");
+		}
+		HttpServletRequest request = (HttpServletRequest) servletRequest;
+		HttpServletResponse response = (HttpServletResponse) servletResponse;
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
 				|| Span.SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, Span.SAMPLED_NAME));
 		Span spanFromRequest = getSpanFromAttribute(request);
 		if (spanFromRequest != null) {
 			this.tracer.continueSpan(spanFromRequest);
+			if (log.isTraceEnabled()) {
+				log.trace("There has already been a span in the request " + spanFromRequest + "");
+			}
+		}
+		if (log.isTraceEnabled()) {
+			log.trace("Received a request to uri [" + uri + "] that matches the skip pattern [" + skip + "]");
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
-			// it means that the span was already detached once and we're processing an error
+			if (log.isTraceEnabled()) {
+				log.trace(
+						"The span was already detached once and we're processing an error");
+			}
 			try {
 				filterChain.doFilter(request, response);
 			} finally {
+				request.setAttribute(TRACE_ERROR_HANDLED_REQUEST_ATTR, true);
 				this.tracer.close(spanFromRequest);
 			}
 			return;
@@ -141,6 +166,9 @@ public class TraceFilter extends OncePerRequestFilter {
 		}
 		finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
+				if (log.isTraceEnabled()) {
+					log.trace("Detaching the span " + spanFromRequest + " since the request is asynchronous");
+				}
 				this.tracer.detach(spanFromRequest);
 				// TODO: how to deal with response annotations and async?
 				return;
@@ -151,6 +179,9 @@ public class TraceFilter extends OncePerRequestFilter {
 				if (spanFromRequest.hasSavedSpan()) {
 					Span parent =  spanFromRequest.getSavedSpan();
 					if (parent.isRemote()) {
+						if (log.isTraceEnabled()) {
+							log.trace("Sending the parent span " + parent + " to Zipkin");
+						}
 						parent.logEvent(Span.SERVER_SEND);
 						parent.stop();
 						this.spanReporter.report(parent);
@@ -160,8 +191,19 @@ public class TraceFilter extends OncePerRequestFilter {
 				}
 				// in case of a response with exception status will close the span when exception dispatch is handled
 				if (httpStatusSuccessful(response)) {
+					if (log.isTraceEnabled()) {
+						log.trace("Closing the span " + spanFromRequest + " since the response was successful");
+					}
 					this.tracer.close(spanFromRequest);
+				} else if (errorAlreadyHandled(request)) {
+					if (log.isTraceEnabled()) {
+						log.trace(
+								"Won't detach the span since error has already been handled");
+					}
 				} else {
+					if (log.isTraceEnabled()) {
+						log.trace("Detaching the span " + spanFromRequest + " since the response was unsuccessful");
+					}
 					this.tracer.detach(spanFromRequest);
 				}
 			}
@@ -175,6 +217,11 @@ public class TraceFilter extends OncePerRequestFilter {
 
 	private Span getSpanFromAttribute(HttpServletRequest request) {
 		return (Span) request.getAttribute(TRACE_REQUEST_ATTR);
+	}
+
+	private boolean errorAlreadyHandled(HttpServletRequest request) {
+		return Boolean.valueOf(
+				String.valueOf(request.getAttribute(TRACE_ERROR_HANDLED_REQUEST_ATTR)));
 	}
 
 	private boolean isSpanContinued(HttpServletRequest request) {
@@ -193,16 +240,28 @@ public class TraceFilter extends OncePerRequestFilter {
 	private Span createSpan(HttpServletRequest request,
 			boolean skip, Span spanFromRequest, String name) {
 		if (spanFromRequest != null) {
+			if (log.isTraceEnabled()) {
+				log.trace("Span has already been created - continuing with the previous one");
+			}
 			return spanFromRequest;
 		}
 		Span parent = this.spanExtractor.joinTrace(request);
 		if (parent != null) {
+			if (log.isTraceEnabled()) {
+				log.trace("Found a parent span " + parent + " in the request");
+			}
 			addRequestTagsForParentSpan(request, parent);
 			spanFromRequest = this.tracer.createSpan(name, parent);
+			if (log.isTraceEnabled()) {
+				log.trace("Started a new span " + spanFromRequest + " with parent " + parent);
+			}
 			if (parent.isRemote()) {
 				parent.logEvent(Span.SERVER_RECV);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
+			if (log.isTraceEnabled()) {
+				log.trace("Parent span is " + parent + "");
+			}
 		}
 		else {
 			if (skip) {
@@ -213,6 +272,7 @@ public class TraceFilter extends OncePerRequestFilter {
 			}
 			spanFromRequest.logEvent(Span.SERVER_RECV);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
+			log.trace("No parent span present - creating a new span");
 		}
 		return spanFromRequest;
 	}
@@ -256,9 +316,8 @@ public class TraceFilter extends OncePerRequestFilter {
 		}
 	}
 
-	@Override
-	protected boolean shouldNotFilterAsyncDispatch() {
-		return false;
+	protected boolean isAsyncStarted(HttpServletRequest request) {
+		return WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted();
 	}
 
 	private String getFullUrl(HttpServletRequest request) {
@@ -266,14 +325,8 @@ public class TraceFilter extends OncePerRequestFilter {
 		String queryString = request.getQueryString();
 		if (queryString == null) {
 			return requestURI.toString();
-		}
-		else {
+		} else {
 			return requestURI.append('?').append(queryString).toString();
 		}
-	}
-
-	@Override
-	protected boolean shouldNotFilterErrorDispatch() {
-		return false;
 	}
 }

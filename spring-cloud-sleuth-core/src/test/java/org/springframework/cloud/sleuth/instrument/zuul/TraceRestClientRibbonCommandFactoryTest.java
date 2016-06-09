@@ -16,10 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import com.netflix.client.http.HttpRequest;
+import com.netflix.niws.client.http.RestClient;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,9 +30,12 @@ import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.niws.client.http.RestClient;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 
 /**
  * @author Marcin Grzejszczak
@@ -42,18 +43,18 @@ import com.netflix.niws.client.http.RestClient;
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRestClientRibbonCommandFactoryTest {
 
-	@Mock
-	Tracer tracer;
-	@Mock
-	SpringClientFactory springClientFactory;
+	@Mock Tracer tracer;
+	@Mock SpringClientFactory springClientFactory;
 	SpanInjector<HttpRequest.Builder> spanInjector = new RequestBuilderContextInjector();
+	@Mock HttpTraceKeysInjector httpTraceKeysInjector;
 	TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory;
 
 	@Before
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void setup() {
 		this.traceRestClientRibbonCommandFactory = new TraceRestClientRibbonCommandFactory(
-				this.springClientFactory, this.tracer, this.spanInjector);
+				this.springClientFactory, this.tracer, this.spanInjector,
+				httpTraceKeysInjector);
 		given(this.springClientFactory.getClient(anyString(), any(Class.class)))
 				.willReturn(new RestClient());
 		Span span = Span.builder().name("name").spanId(1L).traceId(2L).parent(3L)

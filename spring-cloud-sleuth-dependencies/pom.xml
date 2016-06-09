@@ -14,7 +14,7 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<spring-cloud-netflix.version>1.1.1.BUILD-SNAPSHOT</spring-cloud-netflix.version>
+		<spring-cloud-netflix.version>1.1.2.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
 		<zipkin.version>1.1.1</zipkin.version>
 	</properties>

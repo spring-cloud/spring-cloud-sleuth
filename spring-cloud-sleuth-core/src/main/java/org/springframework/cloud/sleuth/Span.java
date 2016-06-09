@@ -27,12 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -377,7 +377,11 @@ public class Span {
 	@Override
 	public String toString() {
 		return "[Trace: " + idToHex(this.traceId) + ", Span: " + idToHex(this.spanId)
-				+ ", exportable=" + this.exportable + "]";
+				+ ", Parent: " + getParentIdIfPresent() + ", exportable=" + this.exportable + "]";
+	}
+
+	private String getParentIdIfPresent() {
+		return this.getParents().isEmpty() ? "null" : idToHex(this.getParents().get(0));
 	}
 
 	@Override
