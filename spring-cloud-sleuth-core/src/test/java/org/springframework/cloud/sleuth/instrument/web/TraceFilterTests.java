@@ -192,6 +192,22 @@ public class TraceFilterTests {
 	}
 
 	@Test
+	public void doesntDetachASpanIfStatusCodeNotSuccessfulAndRequestWasProcessed() throws Exception {
+		Span span = this.tracer.createSpan("http:foo");
+		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
+		this.request.setAttribute(TraceFilter.TRACE_ERROR_HANDLED_REQUEST_ATTR, true);
+		this.response.setStatus(404);
+		// It should have been removed from the thread local context so simulate that
+		TestSpanContextHolder.removeCurrentSpan();
+
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
 	public void continuesSpanFromHeaders() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());

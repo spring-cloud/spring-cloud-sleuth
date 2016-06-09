@@ -119,7 +119,7 @@ public class TraceFilter extends GenericFilterBean {
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
 			FilterChain filterChain) throws IOException, ServletException {
 		if (!(servletRequest instanceof HttpServletRequest) || !(servletResponse instanceof HttpServletResponse)) {
-			throw new ServletException("OncePerRequestFilter just supports HTTP requests");
+			throw new ServletException("Filter just supports HTTP requests");
 		}
 		HttpServletRequest request = (HttpServletRequest) servletRequest;
 		HttpServletResponse response = (HttpServletResponse) servletResponse;
@@ -184,7 +184,7 @@ public class TraceFilter extends GenericFilterBean {
 					this.tracer.close(spanFromRequest);
 				} else if (errorAlreadyHandled(request)) {
 					log.debug("Won't detach the span since error has already been handled");
-				} else if (!errorAlreadyHandled(request)) {
+				} else {
 					log.debug("Detaching the span " + spanFromRequest + " since the response was unsuccessful");
 					this.tracer.detach(spanFromRequest);
 				}
