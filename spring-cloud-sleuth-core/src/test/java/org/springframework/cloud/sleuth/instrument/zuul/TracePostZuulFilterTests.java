@@ -16,11 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.Random;
+
+import com.netflix.zuul.context.RequestContext;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
@@ -30,15 +37,16 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
-import com.netflix.zuul.context.RequestContext;
-
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Dave Syer
  *
  */
+@RunWith(MockitoJUnitRunner.class)
 public class TracePostZuulFilterTests {
+
+	@Mock HttpServletResponse httpServletResponse;
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
@@ -52,12 +60,22 @@ public class TracePostZuulFilterTests {
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
+	@Before
+	public void setup() {
+		RequestContext requestContext = new RequestContext();
+		BDDMockito.given(this.httpServletResponse.getStatus()).willReturn(200);
+		requestContext.setResponse(this.httpServletResponse);
+		RequestContext.testSetCurrentContext(requestContext);
+	}
+
 	@Test
 	public void filterPublishesEventAndClosesSpan() throws Exception {
 		Span span = this.tracer.createSpan("http:start");
 		this.filter.run();
 
-		then(span).hasLoggedAnEvent(Span.CLIENT_RECV);
+		then(span)
+				.hasLoggedAnEvent(Span.CLIENT_RECV)
+				.hasATag("http.status_code", "200");
 		then(this.tracer.getCurrentSpan()).isNull();
 	}
 }

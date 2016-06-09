@@ -16,12 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.monitoring.MonitoringHelper;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
@@ -33,16 +41,16 @@ import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
-import com.netflix.zuul.context.RequestContext;
-import com.netflix.zuul.monitoring.MonitoringHelper;
-
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Dave Syer
  *
  */
+@RunWith(MockitoJUnitRunner.class)
 public class TracePreZuulFilterTests {
+
+	@Mock HttpServletRequest httpServletRequest;
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
@@ -50,16 +58,21 @@ public class TracePreZuulFilterTests {
 	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new RequestContextInjector(),
 			new HttpTraceKeysInjector(this.tracer, new TraceKeys()));
 
-	@Before
-	public void setup() {
-		MonitoringHelper.initMocks();
-	}
-
 	@After
 	@Before
 	public void clean() {
 		RequestContext.getCurrentContext().unset();
 		TestSpanContextHolder.removeCurrentSpan();
+	}
+
+	@Before
+	public void setup() {
+		MonitoringHelper.initMocks();
+		RequestContext requestContext = new RequestContext();
+		BDDMockito.given(this.httpServletRequest.getRequestURI()).willReturn("http://foo.bar");
+		BDDMockito.given(this.httpServletRequest.getMethod()).willReturn("GET");
+		requestContext.setRequest(this.httpServletRequest);
+		RequestContext.testSetCurrentContext(requestContext);
 	}
 
 	@Test
@@ -88,10 +101,9 @@ public class TracePreZuulFilterTests {
 				.isEqualTo(Span.SPAN_NOT_SAMPLED);
 	}
 
-
 	@Test
 	public void shouldCloseSpanWhenExceptionIsThrown() throws Exception {
-		Span startedSpan = this.tracer.createSpan("http:start", NeverSampler.INSTANCE);
+		Span startedSpan = this.tracer.createSpan("http:start");
 		final AtomicReference<Span> span = new AtomicReference<>();
 
 		new TracePreZuulFilter(this.tracer, new RequestContextInjector(),
@@ -106,12 +118,13 @@ public class TracePreZuulFilterTests {
 
 		then(startedSpan).isNotEqualTo(span.get());
 		then(span.get().logs()).extracting("event").contains(Span.CLIENT_SEND);
+		then(span.get()).hasATag("http.method", "GET");
 		then(this.tracer.getCurrentSpan()).isEqualTo(startedSpan);
 	}
 
 	@Test
 	public void shouldNotCloseSpanWhenNoExceptionIsThrown() throws Exception {
-		Span startedSpan = this.tracer.createSpan("http:start", NeverSampler.INSTANCE);
+		Span startedSpan = this.tracer.createSpan("http:start");
 		final AtomicReference<Span> span = new AtomicReference<>();
 
 		new TracePreZuulFilter(this.tracer, new RequestContextInjector(),

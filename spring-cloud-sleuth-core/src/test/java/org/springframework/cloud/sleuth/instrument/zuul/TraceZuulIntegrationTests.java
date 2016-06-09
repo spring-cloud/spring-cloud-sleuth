@@ -1,8 +1,11 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +55,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @DirtiesContext
 public class TraceZuulIntegrationTests {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	@Value("${local.server.port}")
 	private int port;
 	@Autowired Tracer tracer;
@@ -66,8 +71,9 @@ public class TraceZuulIntegrationTests {
 	@Test
 	public void should_close_span_when_routing_to_service_via_discovery() {
 		Span span = this.tracer.createSpan("new_span");
+		log.info("Started span " + span);
 		ResponseEntity<String> result = this.restTemplate.exchange(
-				"http://localhost:" + this.port + "/simple/", HttpMethod.GET,
+				"http://localhost:" + this.port + "/simple/foo", HttpMethod.GET,
 				new HttpEntity<>((Void) null), String.class);
 
 		this.tracer.close(span);
@@ -77,15 +83,16 @@ public class TraceZuulIntegrationTests {
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
 				.everyParentIdHasItsCorrespondingSpan()
-				.clientSideSpanWithNameHasTags("http:/simple/", TestTag.tag()
+				.clientSideSpanWithNameHasTags("http:/simple/foo", TestTag.tag()
 						.tag("http.method", "GET")
 						.tag("http.status_code", "200")
-						.tag("http.path", "/simple/"));
+						.tag("http.path", "/simple/foo"));
 	}
 
 	@Test
 	public void should_close_span_when_routing_to_service_via_discovery_to_a_non_existent_url() {
 		Span span = this.tracer.createSpan("new_span");
+		log.info("Started span " + span);
 		ResponseEntity<String> result = this.restTemplate.exchange(
 				"http://localhost:" + this.port + "/simple/nonExistentUrl", HttpMethod.GET,
 				new HttpEntity<>((Void) null), String.class);
@@ -124,7 +131,7 @@ public class TraceZuulIntegrationTests {
 class SampleZuulProxyApplication {
 
 
-	@RequestMapping("/")
+	@RequestMapping("/foo")
 	public String home() {
 		return "Hello world";
 	}
