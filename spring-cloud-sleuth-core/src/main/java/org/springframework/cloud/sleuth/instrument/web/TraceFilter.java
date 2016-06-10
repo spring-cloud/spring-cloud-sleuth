@@ -134,7 +134,7 @@ public class TraceFilter extends GenericFilterBean {
 			}
 		}
 		if (log.isTraceEnabled()) {
-			log.trace("Received a request to uri [" + uri + "] that matches the skip pattern [" + skip + "]");
+			log.trace("Received a request to uri [" + uri + "] that matches the should be skipped [" + skip + "]");
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {

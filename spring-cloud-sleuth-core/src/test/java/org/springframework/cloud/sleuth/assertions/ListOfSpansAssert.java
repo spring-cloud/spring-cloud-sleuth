@@ -17,17 +17,21 @@
 package org.springframework.cloud.sleuth.assertions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
 import org.springframework.cloud.sleuth.Span;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfSpans> {
 
@@ -47,15 +51,31 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		isNotNull();
 		printSpans();
 		List<Long> parentSpanIds = this.actual.spans.stream().flatMap(span -> span.getParents().stream())
-				.distinct().collect(Collectors.toList());
+				.distinct().collect(toList());
 		List<Long> spanIds = this.actual.spans.stream()
 				.map(Span::getSpanId).distinct()
-				.collect(Collectors.toList());
+				.collect(toList());
 		List<Long> difference = new ArrayList<>(parentSpanIds);
 		difference.removeAll(spanIds);
 		log.info("Difference between parent ids and span ids " +
-				difference.stream().map(span -> "id as long [" + span + "] and as hex [" + Span.idToHex(span) + "]").collect(Collectors.joining("\n")));
+				difference.stream().map(span -> "id as long [" + span + "] and as hex [" + Span.idToHex(span) + "]").collect(
+						joining("\n")));
 		Assertions.assertThat(spanIds).containsAll(parentSpanIds);
+		return this;
+	}
+
+	public ListOfSpansAssert clientSideSpanWithNameHasTags(String name, Map<String, String> tags) {
+		isNotNull();
+		printSpans();
+		List<Span> matchingSpans = this.actual.spans.stream()
+				.filter(span -> span.getName().equals(name) && span.logs().stream().filter(entry ->
+						entry.getEvent().equals(Span.CLIENT_SEND)).findAny().isPresent()).collect(toList());
+		Assertions.assertThat(matchingSpans).isNotEmpty();
+		List<Map<String, String>> matchingSpansTags = matchingSpans.stream().map(Span::tags).collect(
+				toList());
+		Map<String, String> spanTags = new HashMap<>();
+		matchingSpansTags.forEach(spanTags::putAll);
+		Assertions.assertThat(spanTags.entrySet()).containsAll(tags.entrySet());
 		return this;
 	}
 

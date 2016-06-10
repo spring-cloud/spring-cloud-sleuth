@@ -18,7 +18,9 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import com.netflix.client.http.HttpRequest;
 import com.netflix.niws.client.http.RestClient;
+import com.netflix.zuul.context.RequestContext;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +33,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
@@ -61,6 +64,12 @@ public class TraceRestClientRibbonCommandFactoryTest {
 				.processId("processId").build();
 		given(this.tracer.getCurrentSpan()).willReturn(span);
 		given(this.tracer.isTracing()).willReturn(true);
+	}
+
+	@After
+	public void cleanup() {
+		RequestContext.getCurrentContext().unset();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test

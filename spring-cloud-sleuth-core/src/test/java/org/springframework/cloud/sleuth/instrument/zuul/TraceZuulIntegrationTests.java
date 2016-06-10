@@ -1,10 +1,11 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.HashMap;
 
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.ServerList;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,6 +27,7 @@ import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,14 +44,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+import com.netflix.loadbalancer.Server;
+import com.netflix.loadbalancer.ServerList;
+import com.netflix.zuul.context.RequestContext;
+
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = SampleZuulProxyApplication.class)
 @WebAppConfiguration
-@IntegrationTest({ "server.port: 0", "zuul.routes.simple: /simple/**", "hystrix.command.default.execution.isolation.strategy: SEMAPHORE"})
+@IntegrationTest({ "server.port: 0", "zuul.routes.simple: /simple/**" })
 @DirtiesContext
 public class TraceZuulIntegrationTests {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	@Value("${local.server.port}")
 	private int port;
@@ -59,14 +67,17 @@ public class TraceZuulIntegrationTests {
 
 	@Before
 	public void cleanup() {
+		TestSpanContextHolder.removeCurrentSpan();
+		RequestContext.getCurrentContext().unset();
 		this.spanAccumulator.getSpans().clear();
 	}
 
 	@Test
 	public void should_close_span_when_routing_to_service_via_discovery() {
 		Span span = this.tracer.createSpan("new_span");
+		log.info("Started span " + span);
 		ResponseEntity<String> result = this.restTemplate.exchange(
-				"http://localhost:" + this.port + "/simple/", HttpMethod.GET,
+				"http://localhost:" + this.port + "/simple/foo", HttpMethod.GET,
 				new HttpEntity<>((Void) null), String.class);
 
 		this.tracer.close(span);
@@ -75,12 +86,17 @@ public class TraceZuulIntegrationTests {
 		then(result.getBody()).isEqualTo("Hello world");
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.everyParentIdHasItsCorrespondingSpan();
+				.everyParentIdHasItsCorrespondingSpan()
+				.clientSideSpanWithNameHasTags("http:/simple/foo", TestTag.tag()
+						.tag("http.method", "GET")
+						.tag("http.status_code", "200")
+						.tag("http.path", "/simple/foo"));
 	}
 
 	@Test
 	public void should_close_span_when_routing_to_service_via_discovery_to_a_non_existent_url() {
 		Span span = this.tracer.createSpan("new_span");
+		log.info("Started span " + span);
 		ResponseEntity<String> result = this.restTemplate.exchange(
 				"http://localhost:" + this.port + "/simple/nonExistentUrl", HttpMethod.GET,
 				new HttpEntity<>((Void) null), String.class);
@@ -90,7 +106,23 @@ public class TraceZuulIntegrationTests {
 		then(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.everyParentIdHasItsCorrespondingSpan();
+				.everyParentIdHasItsCorrespondingSpan()
+				.clientSideSpanWithNameHasTags("http:/simple/nonExistentUrl", TestTag.tag()
+						.tag("http.method", "GET")
+						.tag("http.status_code", "404")
+						.tag("http.path", "/simple/nonExistentUrl"));
+	}
+
+	private static class TestTag extends HashMap<String, String> {
+
+		public static TestTag tag() {
+			return new TestTag();
+		}
+
+		public TestTag tag(String key, String value) {
+			put(key, value);
+			return this;
+		}
 	}
 }
 
@@ -103,7 +135,7 @@ public class TraceZuulIntegrationTests {
 class SampleZuulProxyApplication {
 
 
-	@RequestMapping("/")
+	@RequestMapping("/foo")
 	public String home() {
 		return "Hello world";
 	}
