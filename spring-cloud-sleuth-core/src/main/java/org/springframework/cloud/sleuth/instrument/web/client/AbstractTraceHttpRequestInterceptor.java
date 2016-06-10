@@ -59,8 +59,8 @@ abstract class AbstractTraceHttpRequestInterceptor {
 		this.spanInjector.inject(newSpan, request);
 		addRequestTags(request);
 		newSpan.logEvent(Span.CLIENT_SEND);
-		if (log.isTraceEnabled()) {
-			log.trace("Starting new client span [" + newSpan + "]");
+		if (log.isDebugEnabled()) {
+			log.debug("Starting new client span [" + newSpan + "]");
 		}
 	}
 

@@ -101,8 +101,8 @@ public class TraceRestClientRibbonCommandFactory extends RestClientRibbonCommand
 			this.spanInjector.inject(span, requestBuilder);
 			this.httpTraceKeysInjector.addRequestTags(span, getUri(), getVerb().verb());
 			span.logEvent(Span.CLIENT_SEND);
-			if (log.isTraceEnabled()) {
-				log.trace("Span from RibbonCommandFactory is " + span);
+			if (log.isDebugEnabled()) {
+				log.debug("Span in RibbonCommandFactory is" + span);
 			}
 		}
 

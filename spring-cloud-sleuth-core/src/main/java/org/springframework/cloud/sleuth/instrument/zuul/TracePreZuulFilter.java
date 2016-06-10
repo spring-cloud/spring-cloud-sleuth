@@ -70,23 +70,23 @@ public class TracePreZuulFilter extends ZuulFilter {
 	public ZuulFilterResult runFilter() {
 		RequestContext ctx = RequestContext.getCurrentContext();
 		Span span = getCurrentSpan();
-		if (log.isTraceEnabled()) {
-			log.trace("Current span is " + span + "");
+		if (log.isDebugEnabled()) {
+			log.debug("Current span is " + span + "");
 		}
 		Span newSpan = this.tracer.createSpan(span.getName(), span);
 		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
 		this.spanInjector.inject(newSpan, ctx);
 		this.httpTraceKeysInjector.addRequestTags(newSpan, URI.create(ctx.getRequest().getRequestURI()), ctx.getRequest().getMethod());
-		if (log.isTraceEnabled()) {
-			log.trace("New Zuul Span is " + newSpan + "");
+		if (log.isDebugEnabled()) {
+			log.debug("New Zuul Span is " + newSpan + "");
 		}
 		ZuulFilterResult result = super.runFilter();
-		if (log.isTraceEnabled()) {
-			log.trace("Result of Zuul filter is [" + result.getStatus() + "]");
+		if (log.isDebugEnabled()) {
+			log.debug("Result of Zuul filter is [" + result.getStatus() + "]");
 		}
 		if (ExecutionStatus.SUCCESS != result.getStatus()) {
-			if (log.isTraceEnabled()) {
-				log.trace("The result of Zuul filter execution was not successful thus "
+			if (log.isDebugEnabled()) {
+				log.debug("The result of Zuul filter execution was not successful thus "
 						+ "will close the current span " + newSpan);
 			}
 			this.tracer.close(newSpan);

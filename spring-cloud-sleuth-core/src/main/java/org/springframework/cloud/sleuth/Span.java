@@ -377,7 +377,7 @@ public class Span {
 	@Override
 	public String toString() {
 		return "[Trace: " + idToHex(this.traceId) + ", Span: " + idToHex(this.spanId)
-				+ ", Parent: " + getParentIdIfPresent() + ", exportable=" + this.exportable + "]";
+				+ ", Parent: " + getParentIdIfPresent() + ", exportable:" + this.exportable + "]";
 	}
 
 	private String getParentIdIfPresent() {
