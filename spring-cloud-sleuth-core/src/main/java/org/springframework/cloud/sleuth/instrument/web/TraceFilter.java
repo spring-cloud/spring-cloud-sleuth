@@ -174,38 +174,43 @@ public class TraceFilter extends GenericFilterBean {
 				return;
 			}
 			addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
-			if (spanFromRequest != null) {
-				addResponseTags(response, exception);
-				if (spanFromRequest.hasSavedSpan()) {
-					Span parent =  spanFromRequest.getSavedSpan();
-					if (parent.isRemote()) {
-						if (log.isDebugEnabled()) {
-							log.debug("Sending the parent span " + parent + " to Zipkin");
-						}
-						parent.logEvent(Span.SERVER_SEND);
-						parent.stop();
-						this.spanReporter.report(parent);
+			detachOrCloseSpans(request, response, spanFromRequest, exception);
+		}
+	}
+
+	private void detachOrCloseSpans(HttpServletRequest request,
+			HttpServletResponse response, Span spanFromRequest, Throwable exception) {
+		if (spanFromRequest != null) {
+			addResponseTags(response, exception);
+			if (spanFromRequest.hasSavedSpan()) {
+				Span parent =  spanFromRequest.getSavedSpan();
+				if (parent.isRemote()) {
+					if (log.isDebugEnabled()) {
+						log.debug("Sending the parent span " + parent + " to Zipkin");
 					}
-				} else {
-					spanFromRequest.logEvent(Span.SERVER_SEND);
+					parent.logEvent(Span.SERVER_SEND);
+					parent.stop();
+					this.spanReporter.report(parent);
 				}
-				// in case of a response with exception status will close the span when exception dispatch is handled
-				if (httpStatusSuccessful(response)) {
-					if (log.isDebugEnabled()) {
-						log.debug("Closing the span " + spanFromRequest + " since the response was successful");
-					}
-					this.tracer.close(spanFromRequest);
-				} else if (errorAlreadyHandled(request)) {
-					if (log.isDebugEnabled()) {
-						log.debug(
-								"Won't detach the span since error has already been handled");
-					}
-				} else {
-					if (log.isDebugEnabled()) {
-						log.debug("Detaching the span " + spanFromRequest + " since the response was unsuccessful");
-					}
-					this.tracer.detach(spanFromRequest);
+			} else {
+				spanFromRequest.logEvent(Span.SERVER_SEND);
+			}
+			// in case of a response with exception status will close the span when exception dispatch is handled
+			if (httpStatusSuccessful(response)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Closing the span " + spanFromRequest + " since the response was successful");
 				}
+				this.tracer.close(spanFromRequest);
+			} else if (errorAlreadyHandled(request)) {
+				if (log.isDebugEnabled()) {
+					log.debug(
+							"Won't detach the span " + spanFromRequest + " since error has already been handled");
+				}
+			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("Detaching the span " + spanFromRequest + " since the response was unsuccessful");
+				}
+				this.tracer.detach(spanFromRequest);
 			}
 		}
 	}
