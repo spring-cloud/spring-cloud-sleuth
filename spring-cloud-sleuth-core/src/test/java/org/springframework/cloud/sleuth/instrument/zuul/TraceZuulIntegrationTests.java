@@ -27,6 +27,7 @@ import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,13 +46,14 @@ import org.springframework.web.client.RestTemplate;
 
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ServerList;
+import com.netflix.zuul.context.RequestContext;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = SampleZuulProxyApplication.class)
 @WebAppConfiguration
-@IntegrationTest({ "server.port: 0", "zuul.routes.simple: /simple/**", "hystrix.command.default.execution.isolation.strategy: SEMAPHORE"})
+@IntegrationTest({ "server.port: 0", "zuul.routes.simple: /simple/**" })
 @DirtiesContext
 public class TraceZuulIntegrationTests {
 
@@ -65,6 +67,8 @@ public class TraceZuulIntegrationTests {
 
 	@Before
 	public void cleanup() {
+		TestSpanContextHolder.removeCurrentSpan();
+		RequestContext.getCurrentContext().unset();
 		this.spanAccumulator.getSpans().clear();
 	}
 

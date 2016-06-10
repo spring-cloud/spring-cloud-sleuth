@@ -59,10 +59,10 @@ public class TracePreZuulFilterTests {
 			new HttpTraceKeysInjector(this.tracer, new TraceKeys()));
 
 	@After
-	@Before
 	public void clean() {
 		RequestContext.getCurrentContext().unset();
 		TestSpanContextHolder.removeCurrentSpan();
+		RequestContext.testSetCurrentContext(null);
 	}
 
 	@Before

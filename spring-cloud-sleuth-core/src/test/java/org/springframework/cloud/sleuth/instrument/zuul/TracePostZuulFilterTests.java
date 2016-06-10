@@ -54,10 +54,10 @@ public class TracePostZuulFilterTests {
 	private TracePostZuulFilter filter = new TracePostZuulFilter(this.tracer, new TraceKeys());
 
 	@After
-	@Before
 	public void clean() {
 		RequestContext.getCurrentContext().unset();
 		TestSpanContextHolder.removeCurrentSpan();
+		RequestContext.testSetCurrentContext(null);
 	}
 
 	@Before
