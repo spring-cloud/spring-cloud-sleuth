@@ -216,6 +216,9 @@ public class TraceFilter extends GenericFilterBean {
 	}
 
 	private boolean httpStatusSuccessful(HttpServletResponse response) {
+		if (response.getStatus() == 0) {
+			return false;
+		}
 		HttpStatus httpStatus = HttpStatus.valueOf(response.getStatus());
 		return httpStatus.is2xxSuccessful() || httpStatus.is3xxRedirection();
 	}
@@ -308,7 +311,8 @@ public class TraceFilter extends GenericFilterBean {
 			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
 					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
-		else if ((httpStatus < 200) || (httpStatus > 399)) {
+		// only tag valid http statuses
+		else if (httpStatus >= 100 && (httpStatus < 200) || (httpStatus > 399)) {
 			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
 					String.valueOf(response.getStatus()));
 		}
