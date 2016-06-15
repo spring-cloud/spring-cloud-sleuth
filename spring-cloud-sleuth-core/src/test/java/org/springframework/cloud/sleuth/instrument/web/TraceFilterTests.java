@@ -132,6 +132,18 @@ public class TraceFilterTests {
 	}
 
 	@Test
+	public void shouldNotStoreHttpStatusCodeWhenResponseCodeHasNotYetBeenSet() throws Exception {
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+		this.response.setStatus(0);
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		assertThat(this.span.tags()).doesNotContainKey("http.status_code");
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
 	public void startsNewTraceWithParentIdInHeaders() throws Exception {
 		this.request = builder()
 				.header(Span.SPAN_ID_NAME, Span.idToHex(1L))
