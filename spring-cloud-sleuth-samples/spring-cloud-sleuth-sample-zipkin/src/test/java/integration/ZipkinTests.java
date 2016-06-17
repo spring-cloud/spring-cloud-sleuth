@@ -15,6 +15,7 @@
  */
 package integration;
 
+import java.net.URI;
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -22,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -33,8 +35,10 @@ import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.SocketUtils;
 
 import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import sample.SampleZipkinApplication;
@@ -52,11 +56,20 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	@Value("${local.server.port}")
 	private int port = 3380;
 	private String sampleAppUrl = "http://localhost:" + this.port;
+	@Autowired ZipkinProperties zipkinProperties;
 
 	@Before
 	public void setup() {
-		ZipkinServer.main(new String[] { "--server.port=9411" });
+		ZipkinServer.main(new String[] { "--server.port=" + getPortFromProps() });
 		await().until(zipkinQueryServerIsUp());
+	}
+
+	@Override protected int getZipkinServerPort() {
+		return getPortFromProps();
+	}
+
+	private int getPortFromProps() {
+		return URI.create(this.zipkinProperties.getBaseUrl()).getPort();
 	}
 
 	@Test
@@ -78,6 +91,15 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	public static class WaitUntilZipkinIsUpConfig {
 
 		private static final Log log = LogFactory.getLog(WaitUntilZipkinIsUpConfig.class);
+
+		@Bean
+		@Primary
+		ZipkinProperties testZipkinProperties() {
+			int freePort = SocketUtils.findAvailableTcpPort();
+			ZipkinProperties zipkinProperties = new ZipkinProperties();
+			zipkinProperties.setBaseUrl("http://localhost:" + freePort);
+			return zipkinProperties;
+		}
 
 		@Bean
 		public ZipkinSpanReporter spanCollector(final ZipkinProperties zipkin,
