@@ -18,14 +18,15 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.lang.invoke.MethodHandles;
 
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.context.RequestContext;
+import org.springframework.http.HttpStatus;
 
 /**8
  * A post request {@link ZuulFilter} that publishes an event upon start of the filtering
@@ -57,10 +58,25 @@ public class TracePostZuulFilter extends ZuulFilter {
 		if (log.isDebugEnabled()) {
 			log.debug("Closing current client span " + getCurrentSpan() + "");
 		}
-		this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
-				String.valueOf(RequestContext.getCurrentContext().getResponse().getStatus()));
+		int httpStatus = RequestContext.getCurrentContext().getResponse().getStatus();
+		if (httpStatus > 0) {
+			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
+					String.valueOf(httpStatus));
+		}
 		this.tracer.close(getCurrentSpan());
+		closeParentSpanIfResponseIsNotSuccess(httpStatus);
 		return null;
+	}
+
+	private void closeParentSpanIfResponseIsNotSuccess(int httpStatus) {
+		if (httpStatus > 0 && httpStatusIsNotSuccess(httpStatus)) {
+			this.tracer.close(getCurrentSpan());
+		}
+	}
+
+	private boolean httpStatusIsNotSuccess(int httpStatus) {
+		return HttpStatus.valueOf(httpStatus).is4xxClientError() ||
+				HttpStatus.valueOf(httpStatus).is5xxServerError();
 	}
 
 	@Override
