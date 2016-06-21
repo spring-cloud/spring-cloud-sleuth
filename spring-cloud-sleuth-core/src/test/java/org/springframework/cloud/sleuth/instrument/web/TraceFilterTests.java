@@ -63,7 +63,7 @@ public class TraceFilterTests {
 	@Mock SpanLogger spanLogger;
 	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
 	SpanExtractor<HttpServletRequest> spanExtractor = new HttpServletRequestExtractor(Pattern
-			.compile(TraceFilter.DEFAULT_SKIP_PATTERN));
+			.compile(TraceFilter.DEFAULT_SKIP_PATTERN), new Random());
 	SpanInjector<HttpServletResponse> spanInjector = new HttpServletResponseInjector();
 
 	private Tracer tracer;

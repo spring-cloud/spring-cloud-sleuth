@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
@@ -100,8 +101,8 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(
-			SkipPatternProvider skipPatternProvider) {
-		return new HttpServletRequestExtractor(skipPatternProvider.skipPattern());
+			SkipPatternProvider skipPatternProvider, Random random) {
+		return new HttpServletRequestExtractor(skipPatternProvider.skipPattern(), random);
 	}
 
 	@Bean
