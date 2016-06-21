@@ -40,7 +40,6 @@ import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -76,8 +75,8 @@ public class TraceFeignClientAutoConfiguration {
 	@Scope("prototype")
 	@ConditionalOnClass(HystrixCommand.class)
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
-	Feign.Builder feignHystrixBuilder(Tracer tracer, HttpTraceKeysInjector keysInjector) {
-		return SleuthFeignBuilder.builder(tracer, keysInjector);
+	Feign.Builder feignHystrixBuilder(BeanFactory beanFactory) {
+		return SleuthFeignBuilder.builder(beanFactory);
 	}
 
 	@Configuration
@@ -97,8 +96,8 @@ public class TraceFeignClientAutoConfiguration {
 
 	@Bean
 	@Primary
-	Decoder feignDecoder(final Tracer tracer) {
-		return new TraceFeignDecoder(tracer,
+	Decoder feignDecoder(BeanFactory beanFactory) {
+		return new TraceFeignDecoder(beanFactory,
 				new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
 					@Override
 					public Object decode(Response response, Type type)

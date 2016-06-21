@@ -19,11 +19,10 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.beans.factory.BeanFactory;
 
 import feign.FeignException;
 import feign.Response;
-import feign.codec.DecodeException;
 import feign.codec.Decoder;
 
 /**
@@ -37,19 +36,19 @@ final class TraceFeignDecoder extends FeignEventPublisher implements Decoder {
 
 	private final Decoder delegate;
 
-	TraceFeignDecoder(Tracer tracer) {
-		super(tracer);
+	TraceFeignDecoder(BeanFactory beanFactory) {
+		super(beanFactory);
 		this.delegate = new Decoder.Default();
 	}
 
-	TraceFeignDecoder(Tracer tracer, Decoder delegate) {
-		super(tracer);
+	TraceFeignDecoder(BeanFactory beanFactory, Decoder delegate) {
+		super(beanFactory);
 		this.delegate = delegate;
 	}
 
 	@Override
 	public Object decode(Response response, Type type)
-			throws IOException, DecodeException, FeignException {
+			throws IOException, FeignException {
 		try {
 			return this.delegate.decode(response, type);
 		} finally {

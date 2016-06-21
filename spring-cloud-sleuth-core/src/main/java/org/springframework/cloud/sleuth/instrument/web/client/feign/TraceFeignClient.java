@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Objects;
 
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 
 import feign.Client;
@@ -39,18 +39,16 @@ import feign.RetryableException;
 final class TraceFeignClient extends FeignEventPublisher implements Client {
 
 	private final Client delegate;
-	private final HttpTraceKeysInjector keysInjector;
+	private HttpTraceKeysInjector keysInjector;
 
-	TraceFeignClient(Tracer tracer, HttpTraceKeysInjector keysInjector) {
-		super(tracer);
+	TraceFeignClient(BeanFactory beanFactory) {
+		super(beanFactory);
 		this.delegate = new Client.Default(null, null);
-		this.keysInjector = keysInjector;
 	}
 
-	TraceFeignClient(Tracer tracer, Client delegate, HttpTraceKeysInjector keysInjector) {
-		super(tracer);
+	TraceFeignClient(BeanFactory beanFactory, Client delegate) {
+		super(beanFactory);
 		this.delegate = delegate;
-		this.keysInjector = keysInjector;
 	}
 
 	@Override
@@ -81,7 +79,14 @@ final class TraceFeignClient extends FeignEventPublisher implements Client {
 	 */
 	private void addRequestTags(Request request) {
 		URI uri = URI.create(request.url());
-		this.keysInjector.addRequestTags(uri.toString(), uri.getHost(), uri.getPath(),
+		getKeysInjector().addRequestTags(uri.toString(), uri.getHost(), uri.getPath(),
 				request.method(), request.headers());
+	}
+
+	HttpTraceKeysInjector getKeysInjector() {
+		if (this.keysInjector == null) {
+			this.keysInjector = this.beanFactory.getBean(HttpTraceKeysInjector.class);
+		}
+		return this.keysInjector;
 	}
 }

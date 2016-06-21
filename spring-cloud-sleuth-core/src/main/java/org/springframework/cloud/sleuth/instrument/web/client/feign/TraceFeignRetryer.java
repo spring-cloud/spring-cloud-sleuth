@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Tracer;
 
 import feign.RetryableException;
@@ -33,35 +34,43 @@ import feign.Retryer;
  */
 final class TraceFeignRetryer implements Retryer {
 
-	private final Tracer tracer;
+	private final BeanFactory beanFactory;
+	private Tracer tracer;
 	private final FeignRequestContext feignRequestContext = FeignRequestContext
 			.getInstance();
 	private final Retryer delegate;
 
-	TraceFeignRetryer(Tracer tracer) {
-		this(tracer, new Retryer.Default());
+	TraceFeignRetryer(BeanFactory beanFactory) {
+		this(beanFactory, new Retryer.Default());
 	}
 
-	TraceFeignRetryer(Tracer tracer, Retryer delegate) {
-		this.tracer = tracer;
+	TraceFeignRetryer(BeanFactory beanFactory, Retryer delegate) {
+		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 	}
 
 	@Override
 	public void continueOrPropagate(RetryableException e) {
 		try {
-			this.feignRequestContext.putSpan(this.tracer.getCurrentSpan(), true);
-			this.tracer.getCurrentSpan().logEvent("feign.retry");
+			this.feignRequestContext.putSpan(getTracer().getCurrentSpan(), true);
+			getTracer().getCurrentSpan().logEvent("feign.retry");
 			this.delegate.continueOrPropagate(e);
 		}
 		catch (RetryableException e2) {
-			this.tracer.close(this.tracer.getCurrentSpan());
+			getTracer().close(getTracer().getCurrentSpan());
 			throw e2;
 		}
 	}
 
 	@Override
 	public Retryer clone() {
-		return new TraceFeignRetryer(this.tracer, this.delegate.clone());
+		return new TraceFeignRetryer(this.beanFactory, this.delegate.clone());
+	}
+
+	Tracer getTracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
+		return this.tracer;
 	}
 }
