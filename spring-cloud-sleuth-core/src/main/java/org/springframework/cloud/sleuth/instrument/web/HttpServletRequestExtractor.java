@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.invoke.MethodHandles;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
@@ -41,11 +42,13 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 	private static final String HTTP_COMPONENT = "http";
 
 	private final Pattern skipPattern;
+	private final Random random;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
-	public HttpServletRequestExtractor(Pattern skipPattern) {
+	public HttpServletRequestExtractor(Pattern skipPattern, Random random) {
 		this.skipPattern = skipPattern;
+		this.random = random;
 	}
 
 	@Override
@@ -57,10 +60,22 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 		String uri = this.urlPathHelper.getPathWithinApplication(carrier);
 		boolean skip = this.skipPattern.matcher(uri).matches()
 				|| Span.SPAN_NOT_SAMPLED.equals(carrier.getHeader(Span.SAMPLED_NAME));
-		long traceId = Span
-				.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
+		long traceId = getTraceIdOrSetDefault(carrier);
 		long spanId = spanId(carrier, traceId);
 		return buildParentSpan(carrier, uri, skip, traceId, spanId);
+	}
+
+	private long getTraceIdOrSetDefault(HttpServletRequest carrier) {
+		try {
+			return Span
+					.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
+		} catch (Exception e) {
+			long id = this.random.nextLong();
+			log.warn("Exception occurred while trying to retrieve the trace "
+					+ "id from headers. Will set id to value ["
+					+ Span.idToHex(id) + "]", e);
+			return id;
+		}
 	}
 
 	private long spanId(HttpServletRequest carrier, long traceId) {
@@ -70,7 +85,15 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 					+ "a root span with span id equal to trace id");
 			return traceId;
 		} else {
-			return Span.hexToId(spanId);
+			try {
+				return Span.hexToId(spanId);
+			} catch (Exception e) {
+				long id = this.random.nextLong();
+				log.warn("Exception occurred while trying to retrieve the span id "
+						+ "from request headers. Will set id to value ["
+						+ Span.idToHex(id) + "]", e);
+				return id;
+			}
 		}
 	}
 
@@ -83,19 +106,27 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 			span.name(parentName);
 		}
 		else {
-			span.name(HTTP_COMPONENT + ":" + "/parent" + uri);
+			span.name(HTTP_COMPONENT + ":/parent" + uri);
 		}
 		if (StringUtils.hasText(processId)) {
 			span.processId(processId);
 		}
 		if (carrier.getHeader(Span.PARENT_ID_NAME) != null) {
-			span.parent(Span
-					.hexToId(carrier.getHeader(Span.PARENT_ID_NAME)));
+			setParentIdIfValid(carrier, span);
 		}
 		span.remote(true);
 		if (skip) {
 			span.exportable(false);
 		}
 		return span.build();
+	}
+
+	private void setParentIdIfValid(HttpServletRequest carrier, SpanBuilder span) {
+		try {
+			span.parent(Span
+					.hexToId(carrier.getHeader(Span.PARENT_ID_NAME)));
+		} catch (Exception e) {
+			log.warn("Exception occurred while trying to set parent id", e);
+		}
 	}
 }
