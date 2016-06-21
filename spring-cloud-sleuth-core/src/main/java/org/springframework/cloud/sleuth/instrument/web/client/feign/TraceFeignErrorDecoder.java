@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.beans.factory.BeanFactory;
 
 import feign.Response;
 import feign.codec.ErrorDecoder;
@@ -32,13 +32,13 @@ final class TraceFeignErrorDecoder extends FeignEventPublisher implements ErrorD
 
 	private final ErrorDecoder delegate;
 
-	TraceFeignErrorDecoder(Tracer tracer) {
-		super(tracer);
+	TraceFeignErrorDecoder(BeanFactory beanFactory) {
+		super(beanFactory);
 		this.delegate = new ErrorDecoder.Default();
 	}
 
-	TraceFeignErrorDecoder(Tracer tracer, ErrorDecoder delegate) {
-		super(tracer);
+	TraceFeignErrorDecoder(BeanFactory beanFactory, ErrorDecoder delegate) {
+		super(beanFactory);
 		this.delegate = delegate;
 	}
 

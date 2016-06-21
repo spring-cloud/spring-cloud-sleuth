@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.beans.factory.BeanFactory;
 
 import feign.Feign;
 import feign.hystrix.HystrixFeign;
@@ -35,11 +34,11 @@ final class SleuthFeignBuilder {
 
 	private SleuthFeignBuilder() {}
 
-	static Feign.Builder builder(Tracer tracer, HttpTraceKeysInjector keysInjector) {
+	static Feign.Builder builder(BeanFactory beanFactory) {
 		return HystrixFeign.builder()
-				.client(new TraceFeignClient(tracer, keysInjector))
-				.retryer(new TraceFeignRetryer(tracer))
-				.decoder(new TraceFeignDecoder(tracer))
-				.errorDecoder(new TraceFeignErrorDecoder(tracer));
+				.client(new TraceFeignClient(beanFactory))
+				.retryer(new TraceFeignRetryer(beanFactory))
+				.decoder(new TraceFeignDecoder(beanFactory))
+				.errorDecoder(new TraceFeignErrorDecoder(beanFactory));
 	}
 }

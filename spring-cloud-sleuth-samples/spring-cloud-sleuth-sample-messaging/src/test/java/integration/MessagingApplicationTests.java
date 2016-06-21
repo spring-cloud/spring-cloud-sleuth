@@ -31,6 +31,7 @@ import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -46,6 +47,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringApplicationConfiguration(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class })
 @WebIntegrationTest
 @TestPropertySource(properties="sample.zipkin.enabled=true")
+@DirtiesContext
 public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private static int port = 3381;
