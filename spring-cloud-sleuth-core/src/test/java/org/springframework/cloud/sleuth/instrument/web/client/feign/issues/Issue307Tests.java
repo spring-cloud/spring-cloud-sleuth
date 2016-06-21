@@ -45,7 +45,7 @@ public class Issue307Tests {
 	@Test
 	public void should_start_context() {
 		try (ConfigurableApplicationContext applicationContext = SpringApplication
-				.run(SleuthSampleApplication.class, "")) {
+				.run(SleuthSampleApplication.class, "--spring.jmx.enabled=false")) {
 		}
 	}
 }
