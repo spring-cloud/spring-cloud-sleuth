@@ -374,7 +374,7 @@ public class Span {
 		try {
 			return new BigInteger(hexString, 16).longValue();
 		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("Malformed id", e);
+			throw new IllegalArgumentException("Malformed id [" + hexString + "]", e);
 		}
 	}
 
