@@ -24,6 +24,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable;
@@ -83,6 +84,9 @@ public class TraceWebAspect {
 	@Pointcut("@within(org.springframework.stereotype.Controller)")
 	private void anyControllerAnnotated() { } // NOSONAR
 
+	@Pointcut("execution(public * *(..))")
+	private void anyPublicMethod() { } // NOSONAR
+
 	@Pointcut("execution(public java.util.concurrent.Callable *(..))")
 	private void anyPublicMethodReturningCallable() { } // NOSONAR
 
@@ -94,6 +98,33 @@ public class TraceWebAspect {
 
 	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethodReturningWebAsyncTask()")
 	private void anyControllerOrRestControllerWithPublicWebAsyncTaskMethod() { } // NOSONAR
+
+	@Around("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethod()")
+	@SuppressWarnings("unchecked")
+	public Object wrapControllerMethodWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
+		String spanName = toLowerHyphen(pjp.getSignature().getName());
+		Span span = this.tracer.createSpan(spanName);
+		log.debug("Wrapping controller method [" + spanName + "] in a span " + span);
+		try {
+			//Thread.sleep(0, 1);
+			return pjp.proceed();
+		} finally {
+			this.tracer.close(span);
+		}
+	}
+
+	static String toLowerHyphen(String name) {
+		StringBuilder result = new StringBuilder();
+		for (int i = 0; i < name.length(); i++) {
+			char c = name.charAt(i);
+			if (c >= 'A' && c <= 'Z') {
+				result.append('-').append((char) (c + 'a' - 'A'));
+			} else {
+				result.append(c);
+			}
+		}
+		return result.toString();
+	}
 
 	@Around("anyControllerOrRestControllerWithPublicAsyncMethod()")
 	@SuppressWarnings("unchecked")

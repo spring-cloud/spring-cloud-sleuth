@@ -15,6 +15,7 @@
  */
 package tools;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,6 +23,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.core.ConditionFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,9 +39,6 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.core.ConditionFactory;
-
 import zipkin.Codec;
 import zipkin.Span;
 
@@ -49,7 +50,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public abstract class AbstractIntegrationTest {
 
-	private static final Log log = LogFactory.getLog(AbstractIntegrationTest.class);
+	protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	protected static final int POLL_INTERVAL = 1;
 	protected static final int TIMEOUT = 20;

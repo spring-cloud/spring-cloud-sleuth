@@ -61,7 +61,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		MvcResult mvcResult = whenSentPingWithoutTracingData();
 
 		then(tracingHeaderFrom(mvcResult)).isNotNull();
-		then(TraceFilterIntegrationTests.span).hasLoggedAnEvent(Span.SERVER_RECV)
+		Span parentSpan = this.spanAccumulator.getSpans().stream().filter(
+				span -> span.getSpanId() == TraceFilterIntegrationTests.span.getParents().get(0))
+				.findFirst().get();
+		then(parentSpan).hasLoggedAnEvent(Span.SERVER_RECV)
 				.hasLoggedAnEvent(Span.SERVER_SEND);
 	}
 

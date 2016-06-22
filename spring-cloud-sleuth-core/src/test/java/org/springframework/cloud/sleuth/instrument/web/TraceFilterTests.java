@@ -48,10 +48,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.entry;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -59,6 +59,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * @author Spencer Gibb
  */
 public class TraceFilterTests {
+
+	public static final long PARENT_ID = 10L;
+	public static final String PARENT_ID_AS_STRING = String.valueOf(PARENT_ID);
 
 	@Mock SpanLogger spanLogger;
 	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
@@ -146,7 +149,7 @@ public class TraceFilterTests {
 	@Test
 	public void startsNewTraceWithParentIdInHeaders() throws Exception {
 		this.request = builder()
-				.header(Span.SPAN_ID_NAME, Span.idToHex(1L))
+				.header(Span.SPAN_ID_NAME, Span.idToHex(PARENT_ID))
 				.header(Span.TRACE_ID_NAME, Span.idToHex(2L))
 				.header(Span.PARENT_ID_NAME, Span.idToHex(3L))
 				.buildRequest(new MockServletContext());
@@ -156,7 +159,7 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		// this creates a child span which is why we'd expect the parents to include 1L)
-		assertThat(this.span.getParents()).containsOnly(1L);
+		assertThat(this.span.getParents()).containsOnly(3L);
 		assertThat(parentSpan())
 				.hasATag("http.url", "http://localhost/?foo=bar")
 				.hasATag("http.host", "localhost")
@@ -167,7 +170,9 @@ public class TraceFilterTests {
 
 	private Span parentSpan() {
 		Optional<Span> parent = this.spanReporter.getSpans().stream()
-				.filter(span -> span.getName().contains("parent")).findFirst();
+				.filter(span -> Span.idToHex(span.getSpanId()).equals(PARENT_ID_AS_STRING)
+				|| span.getName().equals("http:/parent/"))
+				.findFirst();
 		assertThat(parent.isPresent()).isTrue();
 		return parent.get();
 	}
@@ -221,7 +226,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
@@ -235,7 +240,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void addsAdditionalHeaders() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
@@ -245,12 +250,13 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "bar"));
+		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "bar"));
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Test
 	public void ensuresThatParentSpanIsStoppedWhenReported() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanIsStoppedVeryfingReporter(),
 				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
@@ -264,7 +270,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void additionalMultiValuedHeader() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
@@ -281,7 +287,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void catchesException() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
 				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
@@ -306,7 +312,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void detachesSpanWhenResponseStatusIsNot2xx() throws Exception {
-		this.request = builder().header(Span.SPAN_ID_NAME, 10L)
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
 				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
