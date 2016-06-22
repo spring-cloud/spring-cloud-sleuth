@@ -152,7 +152,13 @@ public class TraceFilter extends GenericFilterBean {
 		}
 		addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 		String name = HTTP_COMPONENT + ":" + uri;
-		spanFromRequest = createSpan(request, skip, spanFromRequest, name);
+		try {
+			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
+		} catch (IllegalStateException e) {
+			filterChain.doFilter(request, response);
+			response.sendError(HttpStatus.BAD_REQUEST.value(), "Tracing data is malformed");
+			return;
+		}
 		Throwable exception = null;
 		try {
 			this.spanInjector.inject(spanFromRequest, response);

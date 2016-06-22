@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.invoke.MethodHandles;
-import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
@@ -42,13 +41,11 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 	private static final String HTTP_COMPONENT = "http";
 
 	private final Pattern skipPattern;
-	private final Random random;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
-	public HttpServletRequestExtractor(Pattern skipPattern, Random random) {
+	public HttpServletRequestExtractor(Pattern skipPattern) {
 		this.skipPattern = skipPattern;
-		this.random = random;
 	}
 
 	@Override
@@ -70,11 +67,7 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 			return Span
 					.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
 		} catch (Exception e) {
-			long id = this.random.nextLong();
-			log.warn("Exception occurred while trying to retrieve the trace "
-					+ "id from headers. Will set id to value ["
-					+ Span.idToHex(id) + "]", e);
-			return id;
+			throw new IllegalStateException("Malformed id", e);
 		}
 	}
 
@@ -88,11 +81,7 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 			try {
 				return Span.hexToId(spanId);
 			} catch (Exception e) {
-				long id = this.random.nextLong();
-				log.warn("Exception occurred while trying to retrieve the span id "
-						+ "from request headers. Will set id to value ["
-						+ Span.idToHex(id) + "]", e);
-				return id;
+				throw new IllegalStateException("Malformed id", e);
 			}
 		}
 	}
@@ -126,7 +115,7 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 			span.parent(Span
 					.hexToId(carrier.getHeader(Span.PARENT_ID_NAME)));
 		} catch (Exception e) {
-			log.warn("Exception occurred while trying to set parent id", e);
+			throw new IllegalStateException("Malformed id", e);
 		}
 	}
 }

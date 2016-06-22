@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -35,7 +36,7 @@ public class HttpServletRequestExtractorTests {
 
 	@Mock HttpServletRequest request;
 	HttpServletRequestExtractor extractor = new HttpServletRequestExtractor(
-			Pattern.compile(""), new Random());
+			Pattern.compile(""));
 
 	@Before
 	public void setup() {
@@ -53,10 +54,12 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
 				.willReturn("invalid");
 
-		Span span = this.extractor.joinTrace(this.request);
-
-		then(span).isNotNull();
-		then(span.getTraceId()).isNotZero();
+		try {
+			this.extractor.joinTrace(this.request);
+			fail("should throw an exception");
+		} catch (IllegalStateException e) {
+			then(e).hasMessageContaining("Malformed id");
+		}
 	}
 
 	@Test
@@ -66,11 +69,12 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
 				.willReturn("invalid");
 
-		Span span = this.extractor.joinTrace(this.request);
-
-		then(span).isNotNull();
-		then(span.getTraceId()).isNotZero();
-		then(span.getSpanId()).isNotZero();
+		try {
+			this.extractor.joinTrace(this.request);
+			fail("should throw an exception");
+		} catch (IllegalStateException e) {
+			then(e).hasMessageContaining("Malformed id");
+		}
 	}
 
 	@Test
@@ -82,11 +86,11 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
 				.willReturn("invalid");
 
-		Span span = this.extractor.joinTrace(this.request);
-
-		then(span).isNotNull();
-		then(span.getTraceId()).isNotZero();
-		then(span.getSpanId()).isNotZero();
-		then(span.getParents()).isEmpty();
+		try {
+			this.extractor.joinTrace(this.request);
+			fail("should throw an exception");
+		} catch (IllegalStateException e) {
+			then(e).hasMessageContaining("Malformed id");
+		}
 	}
 }
