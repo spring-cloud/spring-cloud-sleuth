@@ -57,7 +57,7 @@ public class HttpServletRequestExtractorTests {
 		try {
 			this.extractor.joinTrace(this.request);
 			fail("should throw an exception");
-		} catch (IllegalStateException e) {
+		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
 		}
 	}
@@ -72,7 +72,7 @@ public class HttpServletRequestExtractorTests {
 		try {
 			this.extractor.joinTrace(this.request);
 			fail("should throw an exception");
-		} catch (IllegalStateException e) {
+		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
 		}
 	}
@@ -89,7 +89,7 @@ public class HttpServletRequestExtractorTests {
 		try {
 			this.extractor.joinTrace(this.request);
 			fail("should throw an exception");
-		} catch (IllegalStateException e) {
+		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
 		}
 	}

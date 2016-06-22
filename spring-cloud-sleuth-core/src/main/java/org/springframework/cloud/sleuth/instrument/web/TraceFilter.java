@@ -154,9 +154,10 @@ public class TraceFilter extends GenericFilterBean {
 		String name = HTTP_COMPONENT + ":" + uri;
 		try {
 			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
-		} catch (IllegalStateException e) {
+		} catch (IllegalArgumentException e) {
 			filterChain.doFilter(request, response);
-			response.sendError(HttpStatus.BAD_REQUEST.value(), "Tracing data is malformed");
+			response.sendError(HttpStatus.BAD_REQUEST.value(),
+					"Exception tracing request [" + e.getMessage() + "]");
 			return;
 		}
 		Throwable exception = null;

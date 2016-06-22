@@ -44,9 +44,10 @@ public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 			return null;
 			// TODO: Consider throwing IllegalArgumentException;
 		}
-		long traceId = getTraceIdOrSetDefault(carrier);
+		long traceId = Span
+				.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
 		long spanId = hasHeader(carrier, Span.SPAN_ID_NAME)
-				? getSpanIdOrSetDefault(carrier)
+				? Span.hexToId(getHeader(carrier, Span.SPAN_ID_NAME))
 				: this.random.nextLong();
 		SpanBuilder spanBuilder = Span.builder().traceId(traceId).spanId(spanId);
 		spanBuilder.exportable(
@@ -76,31 +77,10 @@ public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 		return message.getHeaders().containsKey(name);
 	}
 
-	private long getTraceIdOrSetDefault(Message<?> carrier) {
-		try {
-			return Span
-					.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
-		} catch (Exception e) {
-			throw new IllegalStateException("Malformed id", e);
-		}
-	}
 	private void setParentIdIfApplicable(Message<?> carrier, SpanBuilder spanBuilder) {
-		try {
-			String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
-			if (parentId != null) {
-				spanBuilder.parent(Span.hexToId(parentId));
-			}
-		} catch (Exception e) {
-			throw new IllegalStateException("Malformed id", e);
-		}
-	}
-
-	private long getSpanIdOrSetDefault(Message<?> carrier) {
-		try {
-			return Span
-					.hexToId(getHeader(carrier, Span.SPAN_ID_NAME));
-		} catch (Exception e) {
-			throw new IllegalStateException("Malformed id", e);
+		String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
+		if (parentId != null) {
+			spanBuilder.parent(Span.hexToId(parentId));
 		}
 	}
 }

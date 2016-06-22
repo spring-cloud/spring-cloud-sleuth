@@ -57,18 +57,10 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 		String uri = this.urlPathHelper.getPathWithinApplication(carrier);
 		boolean skip = this.skipPattern.matcher(uri).matches()
 				|| Span.SPAN_NOT_SAMPLED.equals(carrier.getHeader(Span.SAMPLED_NAME));
-		long traceId = getTraceIdOrSetDefault(carrier);
+		long traceId = Span
+				.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
 		long spanId = spanId(carrier, traceId);
 		return buildParentSpan(carrier, uri, skip, traceId, spanId);
-	}
-
-	private long getTraceIdOrSetDefault(HttpServletRequest carrier) {
-		try {
-			return Span
-					.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
-		} catch (Exception e) {
-			throw new IllegalStateException("Malformed id", e);
-		}
 	}
 
 	private long spanId(HttpServletRequest carrier, long traceId) {
@@ -78,11 +70,7 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 					+ "a root span with span id equal to trace id");
 			return traceId;
 		} else {
-			try {
-				return Span.hexToId(spanId);
-			} catch (Exception e) {
-				throw new IllegalStateException("Malformed id", e);
-			}
+			return Span.hexToId(spanId);
 		}
 	}
 
@@ -101,21 +89,13 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 			span.processId(processId);
 		}
 		if (carrier.getHeader(Span.PARENT_ID_NAME) != null) {
-			setParentIdIfValid(carrier, span);
+			span.parent(Span
+					.hexToId(carrier.getHeader(Span.PARENT_ID_NAME)));
 		}
 		span.remote(true);
 		if (skip) {
 			span.exportable(false);
 		}
 		return span.build();
-	}
-
-	private void setParentIdIfValid(HttpServletRequest carrier, SpanBuilder span) {
-		try {
-			span.parent(Span
-					.hexToId(carrier.getHeader(Span.PARENT_ID_NAME)));
-		} catch (Exception e) {
-			throw new IllegalStateException("Malformed id", e);
-		}
 	}
 }

@@ -51,7 +51,7 @@ public class MessagingSpanExtractorTests {
 		try {
 			this.extractor.joinTrace(message);
 			fail("should throw an exception");
-		} catch (IllegalStateException e) {
+		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
 		}
 	}
@@ -64,7 +64,7 @@ public class MessagingSpanExtractorTests {
 		try {
 			this.extractor.joinTrace(message);
 			fail("should throw an exception");
-		} catch (IllegalStateException e) {
+		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
 		}
 	}
@@ -77,7 +77,7 @@ public class MessagingSpanExtractorTests {
 		try {
 			this.extractor.joinTrace(message);
 			fail("should throw an exception");
-		} catch (IllegalStateException e) {
+		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
 		}
 	}

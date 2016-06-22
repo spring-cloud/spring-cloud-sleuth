@@ -371,7 +371,11 @@ public class Span {
 	 */
 	public static long hexToId(String hexString) {
 		Assert.hasText(hexString, "Can't convert empty hex string to long");
-		return new BigInteger(hexString, 16).longValue();
+		try {
+			return new BigInteger(hexString, 16).longValue();
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("Malformed id", e);
+		}
 	}
 
 	@Override
