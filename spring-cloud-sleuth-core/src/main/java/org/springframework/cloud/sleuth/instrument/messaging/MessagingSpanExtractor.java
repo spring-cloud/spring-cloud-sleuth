@@ -16,11 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
 import org.springframework.cloud.sleuth.SpanExtractor;
@@ -33,8 +30,6 @@ import org.springframework.messaging.Message;
  * @since 1.0.0
  */
 public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
-
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final Random random;
 
@@ -49,9 +44,10 @@ public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 			return null;
 			// TODO: Consider throwing IllegalArgumentException;
 		}
-		long traceId = getTraceIdOrSetDefault(carrier);
+		long traceId = Span
+				.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
 		long spanId = hasHeader(carrier, Span.SPAN_ID_NAME)
-				? getSpanIdOrSetDefault(carrier)
+				? Span.hexToId(getHeader(carrier, Span.SPAN_ID_NAME))
 				: this.random.nextLong();
 		SpanBuilder spanBuilder = Span.builder().traceId(traceId).spanId(spanId);
 		spanBuilder.exportable(
@@ -81,39 +77,10 @@ public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 		return message.getHeaders().containsKey(name);
 	}
 
-	private long getTraceIdOrSetDefault(Message<?> carrier) {
-		try {
-			return Span
-					.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
-		} catch (Exception e) {
-			long id = this.random.nextLong();
-			log.warn("Exception occurred while trying to retrieve the trace "
-					+ "id from headers. Will set id to value ["
-					+ Span.idToHex(id) + "]", e);
-			return id;
-		}
-	}
 	private void setParentIdIfApplicable(Message<?> carrier, SpanBuilder spanBuilder) {
-		try {
-			String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
-			if (parentId != null) {
-				spanBuilder.parent(Span.hexToId(parentId));
-			}
-		} catch (Exception e) {
-			log.warn("Exception occurred while trying to set parentId", e);
-		}
-	}
-
-	private long getSpanIdOrSetDefault(Message<?> carrier) {
-		try {
-			return Span
-					.hexToId(getHeader(carrier, Span.SPAN_ID_NAME));
-		} catch (Exception e) {
-			long id = this.random.nextLong();
-			log.warn("Exception occurred while trying to retrieve the span "
-					+ "id from headers. Will set id to value ["
-					+ Span.idToHex(id) + "]", e);
-			return id;
+		String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
+		if (parentId != null) {
+			spanBuilder.parent(Span.hexToId(parentId));
 		}
 	}
 }

@@ -109,4 +109,9 @@ public class SpanTests {
 		then(deserialized.tags())
 				.isEqualTo(span.tags());
 	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void should_throw_exception_when_converting_invalid_hex_value() {
+		Span.hexToId("invalid");
+	}
 }

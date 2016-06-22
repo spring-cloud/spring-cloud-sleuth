@@ -63,7 +63,7 @@ public class TraceFilterTests {
 	@Mock SpanLogger spanLogger;
 	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
 	SpanExtractor<HttpServletRequest> spanExtractor = new HttpServletRequestExtractor(Pattern
-			.compile(TraceFilter.DEFAULT_SKIP_PATTERN), new Random());
+			.compile(TraceFilter.DEFAULT_SKIP_PATTERN));
 	SpanInjector<HttpServletResponse> spanInjector = new HttpServletResponseInjector();
 
 	private Tracer tracer;
@@ -315,6 +315,19 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
+	public void returns400IfSpanIsMalformed() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, "asd")
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(this.response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
 	}
 
 	public void verifyParentSpanHttpTags() {

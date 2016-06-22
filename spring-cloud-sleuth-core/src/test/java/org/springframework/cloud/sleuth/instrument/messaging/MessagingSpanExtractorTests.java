@@ -27,6 +27,7 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StringUtils;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -47,10 +48,12 @@ public class MessagingSpanExtractorTests {
 		Message message = MessageBuilder.createMessage("", 
 				headers("invalid", randomId()));
 
-		Span span = this.extractor.joinTrace(message);
-
-		then(span).isNotNull();
-		then(span.getTraceId()).isNotZero();
+		try {
+			this.extractor.joinTrace(message);
+			fail("should throw an exception");
+		} catch (IllegalArgumentException e) {
+			then(e).hasMessageContaining("Malformed id");
+		}
 	}
 
 	@Test
@@ -58,11 +61,12 @@ public class MessagingSpanExtractorTests {
 		Message message = MessageBuilder.createMessage("",
 				headers(randomId(), "invalid"));
 
-		Span span = this.extractor.joinTrace(message);
-
-		then(span).isNotNull();
-		then(span.getTraceId()).isNotZero();
-		then(span.getSpanId()).isNotZero();
+		try {
+			this.extractor.joinTrace(message);
+			fail("should throw an exception");
+		} catch (IllegalArgumentException e) {
+			then(e).hasMessageContaining("Malformed id");
+		}
 	}
 
 	@Test
@@ -70,12 +74,12 @@ public class MessagingSpanExtractorTests {
 		Message message = MessageBuilder.createMessage("",
 				headers(randomId(), randomId(), "invalid"));
 
-		Span span = this.extractor.joinTrace(message);
-
-		then(span).isNotNull();
-		then(span.getTraceId()).isNotZero();
-		then(span.getSpanId()).isNotZero();
-		then(span.getParents()).isEmpty();
+		try {
+			this.extractor.joinTrace(message);
+			fail("should throw an exception");
+		} catch (IllegalArgumentException e) {
+			then(e).hasMessageContaining("Malformed id");
+		}
 	}
 
 	private MessageHeaders headers() {
