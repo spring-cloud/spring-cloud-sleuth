@@ -190,18 +190,9 @@ public class TraceFilter extends GenericFilterBean {
 		if (spanFromRequest != null) {
 			addResponseTags(response, exception);
 			if (spanFromRequest.hasSavedSpan()) {
-				Span parent =  spanFromRequest.getSavedSpan();
-				if (parent.isRemote()) {
-					if (log.isDebugEnabled()) {
-						log.debug("Sending the parent span " + parent + " to Zipkin");
-					}
-					parent.logEvent(Span.SERVER_SEND);
-					parent.stop();
-					this.spanReporter.report(parent);
-				}
-			} else {
-				spanFromRequest.logEvent(Span.SERVER_SEND);
+				closeParentSpan(spanFromRequest.getSavedSpan());
 			}
+			closeParentSpan(spanFromRequest);
 			// in case of a response with exception status will close the span when exception dispatch is handled
 			if (httpStatusSuccessful(response)) {
 				if (log.isDebugEnabled()) {
@@ -219,6 +210,19 @@ public class TraceFilter extends GenericFilterBean {
 				}
 				this.tracer.detach(spanFromRequest);
 			}
+		}
+	}
+
+	private void closeParentSpan(Span parent) {
+		if (parent.isRemote()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Sending the parent span " + parent + " to Zipkin");
+			}
+			parent.stop();
+			parent.logEvent(Span.SERVER_SEND);
+			this.spanReporter.report(parent);
+		} else {
+			parent.logEvent(Span.SERVER_SEND);
 		}
 	}
 
@@ -266,10 +270,8 @@ public class TraceFilter extends GenericFilterBean {
 				log.debug("Found a parent span " + parent + " in the request");
 			}
 			addRequestTagsForParentSpan(request, parent);
-			spanFromRequest = this.tracer.createSpan(name, parent);
-			if (log.isDebugEnabled()) {
-				log.debug("Started a new span " + spanFromRequest + " with parent " + parent);
-			}
+			spanFromRequest = parent;
+			this.tracer.continueSpan(spanFromRequest);
 			if (parent.isRemote()) {
 				parent.logEvent(Span.SERVER_RECV);
 			}
@@ -277,8 +279,7 @@ public class TraceFilter extends GenericFilterBean {
 			if (log.isDebugEnabled()) {
 				log.debug("Parent span is " + parent + "");
 			}
-		}
-		else {
+		} else {
 			if (skip) {
 				spanFromRequest = this.tracer.createSpan(name, NeverSampler.INSTANCE);
 			}

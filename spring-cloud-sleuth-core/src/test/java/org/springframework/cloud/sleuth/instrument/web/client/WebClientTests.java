@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import javax.servlet.http.HttpServletRequest;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +30,7 @@ import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 
+import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -81,6 +83,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
 @DirtiesContext
 public class WebClientTests {
+
+	private static final org.apache.commons.logging.Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	@ClassRule public static final SpringClassRule SCR = new SpringClassRule();
 	@Rule public final SpringMethodRule springMethodRule = new SpringMethodRule();
@@ -220,6 +224,7 @@ public class WebClientTests {
 				.forEach(span -> {
 					int initialSize = span.logs().size();
 					int distinctSize = span.logs().stream().map(Log::getEvent).distinct().collect(Collectors.toList()).size();
+					log.info("logs " + span.logs());
 					then(initialSize).as("there are no duplicate log entries").isEqualTo(distinctSize);
 				});
 		then(this.testErrorController.getSpan()).isNotNull();
