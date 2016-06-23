@@ -42,13 +42,13 @@ import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,9 +59,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 import static junitparams.JUnitParamsRunner.$;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
 @SpringApplicationConfiguration(classes = {
@@ -106,9 +104,8 @@ public class WebClientExceptionTests {
 			// SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
 		}
 
-		assertThat(ExceptionUtils.getLastException(), is(nullValue()));
-
-		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
+		then(ExceptionUtils.getLastException()).isNull();
+		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
 	}
 
@@ -135,7 +132,10 @@ public class WebClientExceptionTests {
 		@LoadBalanced
 		@Bean
 		public RestTemplate restTemplate() {
-			return new RestTemplate();
+			SimpleClientHttpRequestFactory clientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+			clientHttpRequestFactory.setReadTimeout(1);
+			clientHttpRequestFactory.setConnectTimeout(1);
+			return new RestTemplate(clientHttpRequestFactory);
 		}
 
 		@Bean
