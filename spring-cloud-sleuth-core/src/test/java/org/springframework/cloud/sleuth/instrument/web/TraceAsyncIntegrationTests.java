@@ -54,7 +54,7 @@ public class TraceAsyncIntegrationTests {
 			public void run() {
 				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())
 						.hasTraceIdEqualTo(span.getTraceId())
-						.hasNameEqualTo("invokeAsynchronousLogic")
+						.hasNameEqualTo("invoke-asynchronous-logic")
 						.isALocalComponentSpan()
 						.hasATag("class", "ClassPerformingAsyncLogic")
 						.hasATag("method", "invokeAsynchronousLogic");
