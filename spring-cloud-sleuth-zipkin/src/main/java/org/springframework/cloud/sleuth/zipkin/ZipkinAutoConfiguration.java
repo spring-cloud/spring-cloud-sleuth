@@ -42,6 +42,7 @@ import org.springframework.context.annotation.Configuration;
  * {@link PercentageBasedSampler}.
  *
  * @author Spencer Gibb
+ * @author Brock Overcash
  * @since 1.0.0
  */
 @Configuration
@@ -52,9 +53,12 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin) {
-		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
-				zipkin.getCompression().isEnabled(), spanMetricReporter);
+	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter,
+			ZipkinProperties zipkin) {
+		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(),
+				zipkin.isBasicAuthenticated(), zipkin.getUsername(), zipkin.getPassword(),
+				zipkin.getFlushInterval(), zipkin.getCompression().isEnabled(),
+				spanMetricReporter);
 	}
 
 	@Bean

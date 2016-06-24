@@ -21,6 +21,9 @@ public class HttpZipkinSpanReporterTest {
 
 	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(
 			this.zipkin.httpUrl(),
+			false,
+			"",
+			"",
 			0, // so that tests can drive flushing explicitly
 			false, // disable compression
 			this.spanMetricReporter
@@ -70,6 +73,9 @@ public class HttpZipkinSpanReporterTest {
 	public void postsCompressedSpans() throws Exception {
 		this.reporter = new HttpZipkinSpanReporter(
 				this.zipkin.httpUrl(),
+				false,
+				"",
+				"",
 				0, // so that tests can drive flushing explicitly
 				false, // enable compression
 				this.spanMetricReporter

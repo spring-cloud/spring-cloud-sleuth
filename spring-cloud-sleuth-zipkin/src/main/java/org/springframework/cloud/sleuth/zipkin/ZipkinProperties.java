@@ -22,6 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Zipkin settings
  *
  * @author Spencer Gibb
+ * @author Brock Overcash
  * @since 1.0.0
  */
 @ConfigurationProperties("spring.zipkin")
@@ -29,6 +30,9 @@ public class ZipkinProperties {
 	/** URL of the zipkin query server instance. */
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;
+	private boolean basicAuthenticated = false;
+	private String username = "admin";
+	private String password = "password";
 	private int flushInterval = 1;
 	private Compression compression = new Compression();
 
@@ -39,6 +43,12 @@ public class ZipkinProperties {
 	public boolean isEnabled() {
 		return this.enabled;
 	}
+
+	public boolean isBasicAuthenticated() { return this.basicAuthenticated; }
+
+	public String getUsername() { return this.username; }
+
+	public String getPassword() { return this.password; }
 
 	public int getFlushInterval() {
 		return this.flushInterval;
@@ -55,6 +65,12 @@ public class ZipkinProperties {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+
+	public void setBasicAuthenticated(boolean basicAuthenticated) { this.basicAuthenticated = basicAuthenticated; }
+
+	public void setUsername(String username) { this.username = username; }
+
+	public void getPassword(String password) { this.password = password; }
 
 	public void setFlushInterval(int flushInterval) {
 		this.flushInterval = flushInterval;
