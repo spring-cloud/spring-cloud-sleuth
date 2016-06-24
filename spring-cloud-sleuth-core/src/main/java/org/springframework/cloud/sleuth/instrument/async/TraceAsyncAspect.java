@@ -22,6 +22,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
@@ -47,7 +48,8 @@ public class TraceAsyncAspect {
 
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		Span span = this.tracer.createSpan(pjp.getSignature().getName());
+		Span span = this.tracer.createSpan(
+				SpanNameUtil.toLowerHyphen(pjp.getSignature().getName()));
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
 		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
 				this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
