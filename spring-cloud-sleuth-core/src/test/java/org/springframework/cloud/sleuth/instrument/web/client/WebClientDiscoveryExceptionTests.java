@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,9 +49,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
@@ -84,12 +82,12 @@ public class WebClientDiscoveryExceptionTests {
 
 		try {
 			provider.get(this);
-			Assert.fail("should throw an exception");
+			Assertions.fail("should throw an exception");
 		}
 		catch (RuntimeException e) {
 		}
 
-		assertThat(ExceptionUtils.getLastException(), is(nullValue()));
+		assertThat(ExceptionUtils.getLastException()).isNull();
 
 		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
