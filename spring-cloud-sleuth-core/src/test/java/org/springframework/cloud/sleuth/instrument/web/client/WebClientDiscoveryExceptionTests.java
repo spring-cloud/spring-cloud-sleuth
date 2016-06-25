@@ -53,9 +53,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
-	WebClientDiscoveryExceptionTests.TestConfiguration.class })
+		WebClientDiscoveryExceptionTests.TestConfiguration.class })
 @WebIntegrationTest(value = {
-	"spring.application.name=exceptionservice" }, randomPort = true)
+		"spring.application.name=exceptionservice" }, randomPort = true)
 @DirtiesContext
 public class WebClientDiscoveryExceptionTests {
 
@@ -96,14 +96,14 @@ public class WebClientDiscoveryExceptionTests {
 	@Test
 	public void testFeignInterfaceWithException() throws Exception {
 		shouldCloseSpanUponException(
-			(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
-				.shouldFailToConnect());
+				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
+						.shouldFailToConnect());
 	}
 
 	@Test
 	public void testTemplate() throws Exception {
 		shouldCloseSpanUponException((ResponseEntityProvider) (tests) -> tests.template
-			.getForEntity("http://exceptionservice/", Map.class));
+				.getForEntity("http://exceptionservice/", Map.class));
 	}
 
 	@FeignClient("exceptionservice")

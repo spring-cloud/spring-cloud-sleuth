@@ -90,14 +90,14 @@ public class DefaultTracerTests {
 
 		List<Span> spans = new ArrayList<>(captor.getAllValues());
 
-        assertThat(spans).hasSize(NUM_SPANS);
+		assertThat(spans).hasSize(NUM_SPANS);
 
 		Span root = assertSpan(spans, null, CREATE_SIMPLE_TRACE);
 		Span child = assertSpan(spans, root.getSpanId(), IMPORTANT_WORK_1);
 		Span grandChild = assertSpan(spans, child.getSpanId(), IMPORTANT_WORK_2);
 
 		List<Span> gen4 = findSpans(spans, grandChild.getSpanId());
-        assertThat(gen4).isEmpty();
+		assertThat(gen4).isEmpty();
 	}
 
 	@Test
@@ -105,7 +105,7 @@ public class DefaultTracerTests {
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
 				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE);
-        assertThat(span.isExportable()).isFalse();
+		assertThat(span.isExportable()).isFalse();
 	}
 
 	@Test
@@ -113,7 +113,7 @@ public class DefaultTracerTests {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE);
-        assertThat(span.isExportable()).isTrue();
+		assertThat(span.isExportable()).isTrue();
 	}
 
 	@Test
@@ -121,9 +121,9 @@ public class DefaultTracerTests {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				this.spanNamer, this.spanLogger, this.spanReporter);
 		Span span = tracer.createSpan(CREATE_SIMPLE_TRACE, NeverSampler.INSTANCE);
-        assertThat(span.isExportable()).isFalse();
+		assertThat(span.isExportable()).isFalse();
 		Span child = tracer.createSpan(CREATE_SIMPLE_TRACE_SPAN_NAME + "/child", span);
-        assertThat(child.isExportable()).isFalse();
+		assertThat(child.isExportable()).isFalse();
 	}
 
 	@Test
@@ -133,7 +133,7 @@ public class DefaultTracerTests {
 		Span parent = tracer.createSpan(CREATE_SIMPLE_TRACE);
 		Span span = tracer.createSpan(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
-        assertThat(tracer.getCurrentSpan()).isEqualTo(parent);
+		assertThat(tracer.getCurrentSpan()).isEqualTo(parent);
 	}
 
 	@Test
@@ -144,7 +144,7 @@ public class DefaultTracerTests {
 				.build();
 		Span span = tracer.createSpan(IMPORTANT_WORK_1, parent);
 		tracer.close(span);
-        assertThat(tracer.getCurrentSpan()).isNull();
+		assertThat(tracer.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -156,7 +156,7 @@ public class DefaultTracerTests {
 				.build();
 		Span span = tracer.createSpan(IMPORTANT_WORK_2, parent);
 		tracer.close(span);
-        assertThat(tracer.getCurrentSpan()).isEqualTo(grandParent);
+		assertThat(tracer.getCurrentSpan()).isEqualTo(grandParent);
 	}
 
 	@Test
@@ -166,7 +166,7 @@ public class DefaultTracerTests {
 
 		Span span = tracer.createChild(null, "childName");
 
-        assertThat(span.isExportable()).isFalse();
+		assertThat(span.isExportable()).isFalse();
 	}
 
 	@Test
@@ -187,9 +187,9 @@ public class DefaultTracerTests {
 
 	private Span assertSpan(List<Span> spans, Long parentId, String name) {
 		List<Span> found = findSpans(spans, parentId);
-        assertThat(found).as("More than one span with parentId %s", parentId).hasSize(1);
+		assertThat(found).as("More than one span with parentId %s", parentId).hasSize(1);
 		Span span = found.get(0);
-        assertThat(span.getName()).as("Name should be %s", name).isEqualTo(name);
+		assertThat(span.getName()).as("Name should be %s", name).isEqualTo(name);
 		return span;
 	}
 
