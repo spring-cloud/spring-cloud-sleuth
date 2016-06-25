@@ -17,6 +17,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 
 import java.util.zip.GZIPOutputStream;
+
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 
@@ -29,6 +32,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * Submits spans using Zipkin's {@code POST /spans} endpoint.
  *
  * @author Adrian Cole
+ * @author Brock Overcash
  * @since 1.0.0
  */
 public final class HttpZipkinSpanReporter
@@ -38,6 +42,9 @@ public final class HttpZipkinSpanReporter
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 
 	private final String url;
+	private final boolean basicAuthenticationEnabled;
+	private final String username;
+	private final String password;
 	private final BlockingQueue<Span> pending = new LinkedBlockingQueue<>(1000);
 	private final Flusher flusher; // Nullable for testing
 	private final boolean compressionEnabled;
@@ -49,9 +56,11 @@ public final class HttpZipkinSpanReporter
 	 * @param compressionEnabled compress spans using gzip before posting to the zipkin server.
 	 * @param spanMetricReporter service to count number of accepted / dropped spans
 	 */
-	public HttpZipkinSpanReporter(String baseUrl, int flushInterval, boolean compressionEnabled,
-			SpanMetricReporter spanMetricReporter) {
+	public HttpZipkinSpanReporter(String baseUrl, boolean basicAuthenticated, String username, String password, int flushInterval, boolean compressionEnabled, SpanMetricReporter spanMetricReporter) {
 		this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
+		this.basicAuthenticationEnabled = basicAuthenticated;
+		this.username = username;
+		this.password = password;
 		this.flusher = flushInterval > 0 ? new Flusher(this, flushInterval) : null;
 		this.compressionEnabled = compressionEnabled;
 		this.spanMetricReporter = spanMetricReporter;
@@ -133,6 +142,12 @@ public final class HttpZipkinSpanReporter
 		HttpURLConnection connection = (HttpURLConnection) new URL(this.url).openConnection();
 		connection.setRequestMethod("POST");
 		connection.addRequestProperty("Content-Type", "application/json");
+		if (this.basicAuthenticationEnabled) {
+			String userpass = this.username + ":" + this.password;
+			String basicAuth = "Basic " + DatatypeConverter.printBase64Binary(userpass.getBytes());
+//			String basicAuth = "Basic " + Base64.encodeToString(userpass.getBytes());
+			connection.setRequestProperty ("Authorization", basicAuth);
+		}
 		if (this.compressionEnabled) {
 			connection.addRequestProperty("Content-Encoding", "gzip");
 			ByteArrayOutputStream gzipped = new ByteArrayOutputStream();
