@@ -24,7 +24,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
-import org.assertj.core.api.Assertions;
 import org.springframework.cloud.sleuth.Span;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfSpans> {
 
@@ -60,7 +60,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		log.info("Difference between parent ids and span ids " +
 				difference.stream().map(span -> "id as long [" + span + "] and as hex [" + Span.idToHex(span) + "]").collect(
 						joining("\n")));
-		Assertions.assertThat(spanIds).containsAll(parentSpanIds);
+		assertThat(spanIds).containsAll(parentSpanIds);
 		return this;
 	}
 
@@ -70,12 +70,12 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		List<Span> matchingSpans = this.actual.spans.stream()
 				.filter(span -> span.getName().equals(name) && span.logs().stream().filter(entry ->
 						entry.getEvent().equals(Span.CLIENT_SEND)).findAny().isPresent()).collect(toList());
-		Assertions.assertThat(matchingSpans).isNotEmpty();
+		assertThat(matchingSpans).isNotEmpty();
 		List<Map<String, String>> matchingSpansTags = matchingSpans.stream().map(Span::tags).collect(
 				toList());
 		Map<String, String> spanTags = new HashMap<>();
 		matchingSpansTags.forEach(spanTags::putAll);
-		Assertions.assertThat(spanTags.entrySet()).containsAll(tags.entrySet());
+		assertThat(spanTags.entrySet()).containsAll(tags.entrySet());
 		return this;
 	}
 
