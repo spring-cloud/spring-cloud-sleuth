@@ -159,7 +159,6 @@ public class HttpZipkinSpanReporterTest {
 
 	private RestTemplate restTemplateWithBasicAuthentication() {
 		ZipkinProperties zipkinProperties = new ZipkinProperties();
-		zipkinProperties.setBasicAuthenticated(true);
 		zipkinProperties.setUsername("user");
 		zipkinProperties.setPassword("pass");
 		RestTemplate restTemplate = restTemplate(zipkinProperties);

@@ -44,6 +44,7 @@ class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomize
 
 	@Override
 	public void customize(RestTemplate restTemplate) {
+		restTemplate.setRequestFactory(new DefaultZipkinConnectionFactory(this.zipkinProperties));
 		if (this.zipkinProperties.isBasicAuthenticated()) {
 			restTemplate.getInterceptors().add(
 					new BasicAuthorizationInterceptor(this.zipkinProperties.getUsername(), this.zipkinProperties.getPassword()));
