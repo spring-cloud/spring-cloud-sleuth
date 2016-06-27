@@ -29,6 +29,9 @@ public class ZipkinProperties {
 	/** URL of the zipkin query server instance. */
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;
+	private boolean basicAuthenticated = false;
+	private String username = "admin";
+	private String password;
 	private int flushInterval = 1;
 	private Compression compression = new Compression();
 
@@ -62,6 +65,30 @@ public class ZipkinProperties {
 
 	public void setCompression(Compression compression) {
 		this.compression = compression;
+	}
+
+	public boolean isBasicAuthenticated() {
+		return this.basicAuthenticated;
+	}
+
+	public void setBasicAuthenticated(boolean basicAuthenticated) {
+		this.basicAuthenticated = basicAuthenticated;
+	}
+
+	public String getUsername() {
+		return this.username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return this.password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 	/** When enabled, spans are gzipped before sent to the zipkin server */

@@ -4,9 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -15,10 +13,15 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-
 import java.util.zip.GZIPOutputStream;
+
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.web.client.RestTemplate;
 
 import zipkin.Codec;
 import zipkin.Span;
@@ -37,6 +40,7 @@ public final class HttpZipkinSpanReporter
 			.getLog(HttpZipkinSpanReporter.class);
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 
+	private final RestTemplate restTemplate;
 	private final String url;
 	private final BlockingQueue<Span> pending = new LinkedBlockingQueue<>(1000);
 	private final Flusher flusher; // Nullable for testing
@@ -44,13 +48,14 @@ public final class HttpZipkinSpanReporter
 	private final SpanMetricReporter spanMetricReporter;
 
 	/**
+	 * @param restTemplate {@link RestTemplate} used for sending requests to Zipkin
 	 * @param baseUrl       URL of the zipkin query server instance. Like: http://localhost:9411/
 	 * @param flushInterval in seconds. 0 implies spans are {@link #flush() flushed} externally.
-	 * @param compressionEnabled compress spans using gzip before posting to the zipkin server.
 	 * @param spanMetricReporter service to count number of accepted / dropped spans
 	 */
-	public HttpZipkinSpanReporter(String baseUrl, int flushInterval, boolean compressionEnabled,
+	public HttpZipkinSpanReporter(RestTemplate restTemplate, String baseUrl, int flushInterval, boolean compressionEnabled,
 			SpanMetricReporter spanMetricReporter) {
+		this.restTemplate = restTemplate;
 		this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
 		this.flusher = flushInterval > 0 ? new Flusher(this, flushInterval) : null;
 		this.compressionEnabled = compressionEnabled;
@@ -95,7 +100,7 @@ public final class HttpZipkinSpanReporter
 		try {
 			postSpans(json);
 		}
-		catch (IOException e) {
+		catch (Exception e) {
 			if (log.isDebugEnabled()) { // don't pollute logs unless debug is on.
 				// TODO: logger test
 				log.debug(
@@ -128,34 +133,23 @@ public final class HttpZipkinSpanReporter
 		}
 	}
 
-	void postSpans(byte[] json) throws IOException {
-		// intentionally not closing the connection, so as to use keep-alives
-		HttpURLConnection connection = (HttpURLConnection) new URL(this.url).openConnection();
-		connection.setRequestMethod("POST");
-		connection.addRequestProperty("Content-Type", "application/json");
+	void postSpans(byte[] json) throws Exception {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+		json = compressRequestIfApplicable(json);
+		RequestEntity<byte[]> requestEntity = new RequestEntity<>(json, httpHeaders, HttpMethod.POST, URI.create(this.url));
+		this.restTemplate.exchange(requestEntity, String.class);
+	}
+
+	private byte[] compressRequestIfApplicable(byte[] json) throws IOException {
 		if (this.compressionEnabled) {
-			connection.addRequestProperty("Content-Encoding", "gzip");
 			ByteArrayOutputStream gzipped = new ByteArrayOutputStream();
 			try (GZIPOutputStream compressor = new GZIPOutputStream(gzipped)) {
 				compressor.write(json);
 			}
-			json = gzipped.toByteArray();
+			return gzipped.toByteArray();
 		}
-		connection.setDoOutput(true);
-		connection.setFixedLengthStreamingMode(json.length);
-		connection.getOutputStream().write(json);
-
-		try (InputStream in = connection.getInputStream()) {
-			while (in.read() != -1); // skip
-		}
-		catch (IOException e) {
-			try (InputStream err = connection.getErrorStream()) {
-				if (err != null) { // possible, if the connection was dropped
-					while (err.read() != -1); // skip
-				}
-			}
-			throw e;
-		}
+		return json;
 	}
 
 	/**
