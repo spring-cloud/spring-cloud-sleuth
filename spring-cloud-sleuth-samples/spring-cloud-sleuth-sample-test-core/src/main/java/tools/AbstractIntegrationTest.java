@@ -70,10 +70,6 @@ public abstract class AbstractIntegrationTest {
 		return Awaitility.await().pollInterval(POLL_INTERVAL, SECONDS).atMost(TIMEOUT, SECONDS);
 	}
 
-	protected Runnable zipkinQueryServerIsUp() {
-		return checkServerHealth("Zipkin Query Server", this::endpointToCheckZipkinQueryHealth);
-	}
-
 	protected Runnable zipkinServerIsUp() {
 		return checkServerHealth("Zipkin Stream Server", this::endpointToCheckZipkinServerHealth);
 	}
@@ -89,12 +85,6 @@ public abstract class AbstractIntegrationTest {
 
 	private interface RequestExchanger {
 		ResponseEntity<String> exchange();
-	}
-
-	protected ResponseEntity<String> endpointToCheckZipkinQueryHealth() {
-		URI uri = URI.create(getZipkinServicesQueryUrl());
-		log.info(String.format("Sending request to the Zipkin query service [%s]", uri));
-		return exchangeRequest(uri);
 	}
 
 	protected ResponseEntity<String> endpointToCheckZipkinServerHealth() {
