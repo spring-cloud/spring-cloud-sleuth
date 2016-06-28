@@ -1,12 +1,9 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.util.List;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
 import zipkin.Span;
@@ -26,9 +23,9 @@ public class HttpZipkinSpanReporterTest {
 
 	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(restTemplate, this.zipkin.httpUrl(),
 			0, // so that tests can drive flushing explicitly
-			false,
 			this.spanMetricReporter
 	);
+
 	@Test
 	public void reportDoesntDoIO() throws Exception {
 		this.reporter.report(span(1L, "foo"));
@@ -73,29 +70,6 @@ public class HttpZipkinSpanReporterTest {
 	public void postsCompressedSpans() throws Exception {
 		this.reporter = new HttpZipkinSpanReporter(restTemplateWithCompression(), this.zipkin.httpUrl(),
 				0, // so that tests can drive flushing explicitly
-				true,
-				this.spanMetricReporter
-		);
-
-		this.reporter.report(span(1L, "foo"));
-		this.reporter.report(span(2L, "bar"));
-
-		this.reporter.flush(); // manually flush the spans
-
-		// Ensure only one request was sent
-		assertThat(this.zipkin.httpRequestCount()).isEqualTo(1);
-
-		assertThat(this.zipkin.getTraces()).containsExactly(
-				asList(span(1L, "foo")),
-				asList(span(2L, "bar"))
-		);
-	}
-
-	@Test
-	public void postsSpansWithBasicAuthentication() throws Exception {
-		this.reporter = new HttpZipkinSpanReporter(restTemplateWithBasicAuthentication(), this.zipkin.httpUrl(),
-				0, // so that tests can drive flushing explicitly
-				false,
 				this.spanMetricReporter
 		);
 
@@ -142,7 +116,7 @@ public class HttpZipkinSpanReporterTest {
 	}
 
 	private RestTemplate restTemplate(ZipkinProperties zipkinProperties) {
-		RestTemplate restTemplate = new RestTemplate(new DefaultZipkinConnectionFactory(zipkinProperties));
+		RestTemplate restTemplate = new RestTemplate();
 		new DefaultZipkinRestTemplateCustomizer(zipkinProperties).customize(restTemplate);
 		return restTemplate;
 	}
@@ -156,24 +130,4 @@ public class HttpZipkinSpanReporterTest {
 		zipkinProperties.getCompression().setEnabled(true);
 		return restTemplate(zipkinProperties);
 	}
-
-	private RestTemplate restTemplateWithBasicAuthentication() {
-		ZipkinProperties zipkinProperties = new ZipkinProperties();
-		zipkinProperties.setUsername("user");
-		zipkinProperties.setPassword("pass");
-		RestTemplate restTemplate = restTemplate(zipkinProperties);
-		restTemplate.getInterceptors().add(assertingInterceptor());
-		return restTemplate;
-	}
-
-	ClientHttpRequestInterceptor assertingInterceptor() {
-		return (request, body, execution) -> {
-			List<String> authorization = request.getHeaders().get("Authorization");
-			assertThat(authorization).isNotEmpty();
-			// encoded Basic user:pass
-			assertThat(authorization.get(0)).isEqualTo("Basic dXNlcjpwYXNz");
-			return execution.execute(request, body);
-		};
-	}
-
 }

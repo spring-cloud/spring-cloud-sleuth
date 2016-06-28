@@ -16,25 +16,25 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.zip.GZIPOutputStream;
 
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.util.Base64Utils;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Default {@link ZipkinRestTemplateCustomizer} that adds Basic Authentication interceptor
+ * Default {@link ZipkinRestTemplateCustomizer} that can customize interceptor
  * to the {@link RestTemplate} responsible for sending spans to Zipkin.
  *
  * @author Marcin Grzejszczak
  *
  * @since 1.1.0
  */
-class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomizer {
+public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomizer {
 	private final ZipkinProperties zipkinProperties;
 
 	public DefaultZipkinRestTemplateCustomizer(
@@ -44,28 +44,21 @@ class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomize
 
 	@Override
 	public void customize(RestTemplate restTemplate) {
-		restTemplate.setRequestFactory(new DefaultZipkinConnectionFactory(this.zipkinProperties));
-		if (this.zipkinProperties.isBasicAuthenticated()) {
-			restTemplate.getInterceptors().add(
-					new BasicAuthorizationInterceptor(this.zipkinProperties.getUsername(), this.zipkinProperties.getPassword()));
+		if (this.zipkinProperties.getCompression().isEnabled()) {
+			restTemplate.getInterceptors().add(0, new GZipInterceptor());
 		}
 	}
 
-	private class BasicAuthorizationInterceptor implements ClientHttpRequestInterceptor {
-		private final String username;
-		private final String password;
-
-		BasicAuthorizationInterceptor(String username, String password) {
-			this.username = username;
-			this.password = password == null ? "" : password;
-		}
+	private class GZipInterceptor implements ClientHttpRequestInterceptor {
 
 		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws
 				IOException {
-			String token = Base64Utils.encodeToString((this.username + ":" + this.password).getBytes(
-					Charset.forName("UTF-8")));
-			request.getHeaders().add("Authorization", "Basic " + token);
-			return execution.execute(request, body);
+			request.getHeaders().add("Content-Encoding", "gzip");
+			ByteArrayOutputStream gzipped = new ByteArrayOutputStream();
+			try (GZIPOutputStream compressor = new GZIPOutputStream(gzipped)) {
+				compressor.write(body);
+			}
+			return execution.execute(request, gzipped.toByteArray());
 		}
 	}
 }

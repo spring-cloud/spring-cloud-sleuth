@@ -57,7 +57,7 @@ public class ZipkinAutoConfiguration {
 		RestTemplate restTemplate = new RestTemplate();
 		zipkinRestTemplateCustomizer.customize(restTemplate);
 		return new HttpZipkinSpanReporter(restTemplate, zipkin.getBaseUrl(), zipkin.getFlushInterval(),
-				zipkin.getCompression().isEnabled(), spanMetricReporter);
+				spanMetricReporter);
 	}
 
 	@Bean

@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.util.StringUtils;
 
 /**
  * Zipkin settings
@@ -30,8 +29,6 @@ public class ZipkinProperties {
 	/** URL of the zipkin query server instance. */
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;
-	private String username;
-	private String password;
 	private int flushInterval = 1;
 	private Compression compression = new Compression();
 
@@ -65,26 +62,6 @@ public class ZipkinProperties {
 
 	public void setCompression(Compression compression) {
 		this.compression = compression;
-	}
-
-	public boolean isBasicAuthenticated() {
-		return StringUtils.hasText(this.username);
-	}
-
-	public String getUsername() {
-		return this.username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getPassword() {
-		return this.password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
 	}
 
 	/** When enabled, spans are gzipped before sent to the zipkin server */

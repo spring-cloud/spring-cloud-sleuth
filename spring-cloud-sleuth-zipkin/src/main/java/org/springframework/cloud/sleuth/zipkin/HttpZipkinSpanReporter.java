@@ -1,6 +1,5 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
@@ -21,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import zipkin.Codec;
@@ -44,7 +43,6 @@ public final class HttpZipkinSpanReporter
 	private final String url;
 	private final BlockingQueue<Span> pending = new LinkedBlockingQueue<>(1000);
 	private final Flusher flusher; // Nullable for testing
-	private final boolean compressionEnabled;
 	private final SpanMetricReporter spanMetricReporter;
 
 	/**
@@ -53,12 +51,11 @@ public final class HttpZipkinSpanReporter
 	 * @param flushInterval in seconds. 0 implies spans are {@link #flush() flushed} externally.
 	 * @param spanMetricReporter service to count number of accepted / dropped spans
 	 */
-	public HttpZipkinSpanReporter(RestTemplate restTemplate, String baseUrl, int flushInterval, boolean compressionEnabled,
+	public HttpZipkinSpanReporter(RestTemplate restTemplate, String baseUrl, int flushInterval,
 			SpanMetricReporter spanMetricReporter) {
 		this.restTemplate = restTemplate;
 		this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
 		this.flusher = flushInterval > 0 ? new Flusher(this, flushInterval) : null;
-		this.compressionEnabled = compressionEnabled;
 		this.spanMetricReporter = spanMetricReporter;
 	}
 
@@ -100,7 +97,7 @@ public final class HttpZipkinSpanReporter
 		try {
 			postSpans(json);
 		}
-		catch (Exception e) {
+		catch (RestClientException e) {
 			if (log.isDebugEnabled()) { // don't pollute logs unless debug is on.
 				// TODO: logger test
 				log.debug(
@@ -133,23 +130,11 @@ public final class HttpZipkinSpanReporter
 		}
 	}
 
-	void postSpans(byte[] json) throws Exception {
+	void postSpans(byte[] json) {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-		json = compressRequestIfApplicable(json);
 		RequestEntity<byte[]> requestEntity = new RequestEntity<>(json, httpHeaders, HttpMethod.POST, URI.create(this.url));
 		this.restTemplate.exchange(requestEntity, String.class);
-	}
-
-	private byte[] compressRequestIfApplicable(byte[] json) throws IOException {
-		if (this.compressionEnabled) {
-			ByteArrayOutputStream gzipped = new ByteArrayOutputStream();
-			try (GZIPOutputStream compressor = new GZIPOutputStream(gzipped)) {
-				compressor.write(json);
-			}
-			return gzipped.toByteArray();
-		}
-		return json;
 	}
 
 	/**
