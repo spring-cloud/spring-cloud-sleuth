@@ -41,8 +41,16 @@ import org.springframework.web.client.RestTemplate;
  * enables reporting to Zipkin via HTTP. Has a default {@link Sampler} set as
  * {@link PercentageBasedSampler}.
  *
+ * The {@link ZipkinRestTemplateCustomizer} allows you to customize the {@link RestTemplate}
+ * that is used to send Spans to Zipkin. Its default implementation - {@link DefaultZipkinRestTemplateCustomizer}
+ * adds the GZip compression,
+ *
  * @author Spencer Gibb
  * @since 1.0.0
+ *
+ * @see PercentageBasedSampler
+ * @see ZipkinRestTemplateCustomizer
+ * @see DefaultZipkinRestTemplateCustomizer
  */
 @Configuration
 @EnableConfigurationProperties({ZipkinProperties.class, SamplerProperties.class})

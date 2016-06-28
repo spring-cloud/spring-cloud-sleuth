@@ -27,8 +27,8 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Default {@link ZipkinRestTemplateCustomizer} that can customize interceptor
- * to the {@link RestTemplate} responsible for sending spans to Zipkin.
+ * Default {@link ZipkinRestTemplateCustomizer} that provides the GZip compression if
+ * {@link ZipkinProperties#compression} is enabled.
  *
  * @author Marcin Grzejszczak
  *
