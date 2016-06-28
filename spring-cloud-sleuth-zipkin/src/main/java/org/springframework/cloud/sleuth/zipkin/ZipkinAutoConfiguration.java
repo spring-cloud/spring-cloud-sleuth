@@ -43,7 +43,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * The {@link ZipkinRestTemplateCustomizer} allows you to customize the {@link RestTemplate}
  * that is used to send Spans to Zipkin. Its default implementation - {@link DefaultZipkinRestTemplateCustomizer}
- * adds the GZip compression,
+ * adds the GZip compression.
  *
  * @author Spencer Gibb
  * @since 1.0.0
