@@ -19,7 +19,11 @@ package org.springframework.cloud.sleuth.zipkin;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Customizes {@link RestTemplate} used to send Spans to Zipkin
+ * Customizes {@link RestTemplate} used to send Spans to Zipkin. Since {@link RestTemplate}
+ * is heavily instrumented by Sleuth we do not want this instrumentation to be present
+ * when sending Spans to Zipkin. A {@code Qualifier} annotated would also get instrumented
+ * thus we've set up this interface so that the {@link RestTemplate} used for communicating
+ * with Zipkin could be configured.
  *
  * @author Marcin Grzejszczak
  *
