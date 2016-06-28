@@ -34,15 +34,23 @@ import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.web.client.RestTemplate;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
  * enables reporting to Zipkin via HTTP. Has a default {@link Sampler} set as
  * {@link PercentageBasedSampler}.
  *
+ * The {@link ZipkinRestTemplateCustomizer} allows you to customize the {@link RestTemplate}
+ * that is used to send Spans to Zipkin. Its default implementation - {@link DefaultZipkinRestTemplateCustomizer}
+ * adds the GZip compression.
+ *
  * @author Spencer Gibb
  * @since 1.0.0
+ *
+ * @see PercentageBasedSampler
+ * @see ZipkinRestTemplateCustomizer
+ * @see DefaultZipkinRestTemplateCustomizer
  */
 @Configuration
 @EnableConfigurationProperties({ZipkinProperties.class, SamplerProperties.class})
@@ -52,9 +60,18 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin) {
-		return new HttpZipkinSpanReporter(zipkin.getBaseUrl(), zipkin.getFlushInterval(),
-				zipkin.getCompression().isEnabled(), spanMetricReporter);
+	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin,
+			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
+		RestTemplate restTemplate = new RestTemplate();
+		zipkinRestTemplateCustomizer.customize(restTemplate);
+		return new HttpZipkinSpanReporter(restTemplate, zipkin.getBaseUrl(), zipkin.getFlushInterval(),
+				spanMetricReporter);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
+		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
 	@Bean

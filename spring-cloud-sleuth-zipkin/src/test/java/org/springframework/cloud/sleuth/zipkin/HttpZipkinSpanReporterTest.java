@@ -4,8 +4,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
-import zipkin.Span;
+import org.springframework.web.client.RestTemplate;
 
+import zipkin.Span;
 import zipkin.junit.HttpFailure;
 import zipkin.junit.ZipkinRule;
 
@@ -18,11 +19,10 @@ public class HttpZipkinSpanReporterTest {
 	InMemorySpanCounter inMemorySpanCounter = new InMemorySpanCounter();
 	SpanMetricReporter spanMetricReporter = new CounterServiceBasedSpanMetricReporter("accepted", "dropped",
 			this.inMemorySpanCounter);
+	RestTemplate restTemplate = defaultRestTemplate();
 
-	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(
-			this.zipkin.httpUrl(),
+	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(restTemplate, this.zipkin.httpUrl(),
 			0, // so that tests can drive flushing explicitly
-			false, // disable compression
 			this.spanMetricReporter
 	);
 
@@ -68,10 +68,8 @@ public class HttpZipkinSpanReporterTest {
 
 	@Test
 	public void postsCompressedSpans() throws Exception {
-		this.reporter = new HttpZipkinSpanReporter(
-				this.zipkin.httpUrl(),
+		this.reporter = new HttpZipkinSpanReporter(restTemplateWithCompression(), this.zipkin.httpUrl(),
 				0, // so that tests can drive flushing explicitly
-				false, // enable compression
 				this.spanMetricReporter
 		);
 
@@ -115,5 +113,21 @@ public class HttpZipkinSpanReporterTest {
 
 	static Span span(long traceId, String spanName) {
 		return Span.builder().traceId(traceId).id(traceId).name(spanName).build();
+	}
+
+	private RestTemplate restTemplate(ZipkinProperties zipkinProperties) {
+		RestTemplate restTemplate = new RestTemplate();
+		new DefaultZipkinRestTemplateCustomizer(zipkinProperties).customize(restTemplate);
+		return restTemplate;
+	}
+
+	private RestTemplate defaultRestTemplate() {
+		return restTemplate(new ZipkinProperties());
+	}
+
+	private RestTemplate restTemplateWithCompression() {
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		zipkinProperties.getCompression().setEnabled(true);
+		return restTemplate(zipkinProperties);
 	}
 }
