@@ -18,17 +18,16 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.util.Map;
 
+import com.netflix.zuul.context.RequestContext;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.util.StringUtils;
-
-import com.netflix.zuul.context.RequestContext;
 
 /**
  * Span injector that injects tracing info to {@link RequestContext}
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 class RequestContextInjector implements SpanInjector<RequestContext> {

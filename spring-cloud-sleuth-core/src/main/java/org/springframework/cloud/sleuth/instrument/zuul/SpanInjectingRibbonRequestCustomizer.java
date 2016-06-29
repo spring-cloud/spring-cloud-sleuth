@@ -16,23 +16,49 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.lang.invoke.MethodHandles;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
-
-import com.netflix.client.http.HttpRequest;
-import com.netflix.client.http.HttpRequest.Builder;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * Span injector that injects tracing info to {@link Builder}
+ * Abstraction over customization of Ribbon Requests. All clients will inject the span
+ * into their respective context. The only difference is how those contexts set the headers.
+ * In order to add a new implementation of the {@link RibbonRequestCustomizer} it's
+ * necessary only to provide the {@link RibbonRequestCustomizer#accepts(Class)} method
+ * with the context class name and {@link SpanInjectingRibbonRequestCustomizer#setHeader(Object, String, String)}
+ * to tell Sleuth how to set a header using the particular library.
  *
  * @author Marcin Grzejszczak
- *
- * @since 1.0.0
+ * @since 1.1.0
  */
-class RequestBuilderContextInjector implements SpanInjector<Builder> {
+abstract class SpanInjectingRibbonRequestCustomizer<T> implements RibbonRequestCustomizer<T>,
+		SpanInjector<T> {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
+	private final Tracer tracer;
+
+	SpanInjectingRibbonRequestCustomizer(Tracer tracer) {
+		this.tracer = tracer;
+	}
 
 	@Override
-	public void inject(Span span, Builder carrier) {
+	public void customize(T context) {
+		Span span = getCurrentSpan();
+		inject(span, context);
+		span.logEvent(Span.CLIENT_SEND);
+		if (log.isDebugEnabled()) {
+			log.debug("Span in the RibbonRequestCustomizer is" + span);
+		}
+	}
+
+	@Override
+	public void inject(Span span, T carrier) {
 		if (span == null) {
 			setHeader(carrier, Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 			return;
@@ -55,9 +81,9 @@ class RequestBuilderContextInjector implements SpanInjector<Builder> {
 				? span.getParents().get(0) : null;
 	}
 
-	public void setHeader(HttpRequest.Builder builder, String name, String value) {
-		if (value != null) {
-			builder.header(name, value);
-		}
+	private Span getCurrentSpan() {
+		return this.tracer.getCurrentSpan();
 	}
+
+	abstract void setHeader(T builder, String name, String value);
 }
