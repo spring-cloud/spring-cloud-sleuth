@@ -64,7 +64,7 @@ public class ZipkinSpanListenerTests {
 
 	/** Sleuth timestamps are millisecond granularity while zipkin is microsecond. */
 	@Test
-	public void convertsTimestampAndDurationToMicroseconds() {
+	public void convertsTimestampToMicrosecondsAndSetsDurationToAccumulatedMicros() {
 		long start = System.currentTimeMillis();
 		this.parent.logEvent("hystrix/retry"); // System.currentTimeMillis
 		this.parent.stop();
@@ -74,10 +74,21 @@ public class ZipkinSpanListenerTests {
 		assertThat(result.timestamp)
 				.isEqualTo(this.parent.getBegin() * 1000);
 		assertThat(result.duration)
-				.isEqualTo((this.parent.getEnd() - this.parent.getBegin()) * 1000);
+				.isEqualTo(this.parent.getAccumulatedMicros());
 		assertThat(result.annotations.get(0).timestamp)
 				.isGreaterThanOrEqualTo(start * 1000)
 				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);
+	}
+
+	/** Zipkin's duration should only be set when the span is finished. */
+	@Test
+	public void doesntSetDurationWhenStillRunning() {
+		zipkin.Span result = this.spanReporter.convert(this.parent);
+
+		assertThat(result.timestamp)
+				.isGreaterThan(0); // sanity check it did start
+		assertThat(result.duration)
+				.isNull();
 	}
 
 	/** Sleuth host corresponds to annotation/binaryAnnotation.host in zipkin. */

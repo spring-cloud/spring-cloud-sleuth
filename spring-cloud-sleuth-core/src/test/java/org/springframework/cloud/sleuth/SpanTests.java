@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -113,5 +114,25 @@ public class SpanTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void should_throw_exception_when_converting_invalid_hex_value() {
 		Span.hexToId("invalid");
+	}
+
+	/** When going over a transport like spring-cloud-stream, we must retain the precise duration. */
+	@Test public void shouldSerializeDurationMicros() throws IOException {
+		Span span = Span.builder().traceId(1L).name("http:parent").remote(true).build();
+		span.stop();
+
+		assertThat(span.getAccumulatedMicros())
+				.isGreaterThan(0L); // sanity check
+
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		String serialized = objectMapper.writeValueAsString(span);
+		assertThat(serialized)
+				.contains("\"durationMicros\"");
+
+		Span deserialized = objectMapper.readValue(serialized, Span.class);
+
+		assertThat(deserialized.getAccumulatedMicros())
+				.isEqualTo(span.getAccumulatedMicros());
 	}
 }
