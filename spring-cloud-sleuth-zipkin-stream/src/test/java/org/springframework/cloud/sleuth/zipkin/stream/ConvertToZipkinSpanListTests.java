@@ -108,6 +108,39 @@ public class ConvertToZipkinSpanListTests {
 				.contains("barservice");
 	}
 
+	/** Sleuth timestamps are millisecond granularity while zipkin is microsecond. */
+	@Test
+	public void convertsTimestampToMicrosecondsAndSetsDurationToAccumulatedMicros() {
+		long start = System.currentTimeMillis();
+		Span span = span("foo");
+		span.logEvent(Constants.CLIENT_SEND);
+		span.stop();
+
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
+
+		assertThat(result.timestamp)
+				.isEqualTo(span.getBegin() * 1000);
+		assertThat(result.duration)
+				.isEqualTo(span.getAccumulatedMicros());
+		assertThat(result.annotations.get(0).timestamp)
+				.isGreaterThanOrEqualTo(start * 1000)
+				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);
+	}
+
+	/** Zipkin's duration should only be set when the span is finished. */
+	@Test
+	public void doesntSetDurationWhenStillRunning() {
+		Span running = Span.builder().traceId(1L).name("http:parent").remote(true).build();
+		Spans spans = new Spans(this.host, Collections.singletonList(running));
+		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
+
+		assertThat(result.timestamp)
+				.isGreaterThan(0); // sanity check it did start
+		assertThat(result.duration)
+				.isNull();
+	}
+
 	Span span(String name) {
 		Long id = new Random().nextLong();
 		return new Span(1, 3, "message:" + name, id, Collections.<Long>emptyList(), id, true, true,

@@ -145,6 +145,11 @@ public class Span {
 	private final List<Log> logs;
 	private final Span savedSpan;
 
+	// Null means we don't know the start tick, so fallback to time
+	@JsonIgnore
+	private final Long startNanos;
+	private Long durationMicros; // serialized in json so micros precision isn't lost
+
 	@SuppressWarnings("unused")
 	private Span() {
 		this(-1, -1, "dummy", 0, Collections.<Long>emptyList(), 0, false, false, null);
@@ -167,6 +172,8 @@ public class Span {
 		this.processId = current.getProcessId();
 		this.tags = current.tags;
 		this.logs = current.logs;
+		this.startNanos = current.startNanos;
+		this.durationMicros = current.durationMicros;
 		this.savedSpan = savedSpan;
 	}
 
@@ -179,8 +186,17 @@ public class Span {
 	public Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId,
 			Span savedSpan) {
-		this.begin = begin <= 0 ? System.currentTimeMillis() : begin;
-		this.end = end;
+		if (begin > 0) { // conventionally, 0 indicates unset
+			this.startNanos = null; // don't know the start tick
+			this.begin = begin;
+		} else {
+			this.startNanos = System.nanoTime();
+			this.begin = System.currentTimeMillis();
+		}
+		if (end > 0) {
+			this.end = end;
+			this.durationMicros = (end - begin) * 1000;
+		}
 		this.name = name != null ? name : "";
 		this.traceId = traceId;
 		this.parents = parents;
@@ -201,28 +217,52 @@ public class Span {
 	 * The block has completed, stop the clock
 	 */
 	public synchronized void stop() {
-		if (this.end == 0) {
+		if (this.durationMicros == null) {
 			if (this.begin == 0) {
 				throw new IllegalStateException(
 						"Span for " + this.name + " has not been started");
 			}
-			this.end = System.currentTimeMillis();
+			if (this.end == 0) {
+				this.end = System.currentTimeMillis();
+			}
+			if (this.startNanos != null) { // set a precise duration
+				this.durationMicros = (System.nanoTime() - this.startNanos) / 1000;
+			} else {
+				this.durationMicros = (this.end - this.begin) * 1000;
+			}
 		}
 	}
 
 	/**
 	 * Return the total amount of time elapsed since start was called, if running, or
 	 * difference between stop and start
+	 *
+	 * @deprecated use {@link #getAccumulatedMicros()} as it is more precise.
 	 */
+	@Deprecated
 	@JsonIgnore
 	public synchronized long getAccumulatedMillis() {
-		if (this.begin == 0) {
-			return 0;
+		return getAccumulatedMicros() / 1000;
+	}
+
+	/**
+	 * Return the total amount of time elapsed since start was called, if running, or
+	 * difference between stop and start, in microseconds.
+	 */
+	@JsonIgnore
+	public synchronized long getAccumulatedMicros() {
+		if (this.durationMicros != null) {
+			return this.durationMicros;
+		} else { // stop() hasn't yet been called
+			if (this.begin == 0) {
+				return 0;
+			}
+			if (this.startNanos != null) {
+				return (System.nanoTime() - this.startNanos) / 1000;
+			} else  {
+				return (System.currentTimeMillis() - this.begin) * 1000;
+			}
 		}
-		if (this.end > 0) {
-			return this.end - this.begin;
-		}
-		return System.currentTimeMillis() - this.begin;
 	}
 
 	/**
@@ -230,7 +270,7 @@ public class Span {
 	 */
 	@JsonIgnore
 	public synchronized boolean isRunning() {
-		return this.begin != 0 && this.end == 0;
+		return this.begin != 0 && this.durationMicros == null;
 	}
 
 	/**
@@ -430,6 +470,13 @@ public class Span {
 		SpanBuilder() {
 		}
 
+		/**
+		 * Call this to record a begin time of a Span you didn't start. Don't call this when you are
+		 * starting the span.
+		 *
+		 * <p>In other words, don't call {@code builder.begin(System.currentTimeMillis());}. doing so is
+		 * redundant and will result in less precision when calculating elapsed time.
+		 */
 		public Span.SpanBuilder begin(long begin) {
 			this.begin = begin;
 			return this;

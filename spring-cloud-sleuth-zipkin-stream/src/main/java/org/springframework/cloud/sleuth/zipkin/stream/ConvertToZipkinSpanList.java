@@ -90,7 +90,9 @@ final class ConvertToZipkinSpanList {
 			ensureServerAddr(span, zipkinSpan, ep);
 		}
 		zipkinSpan.timestamp(span.getBegin() * 1000);
-		zipkinSpan.duration(span.getAccumulatedMillis() * 1000);
+		if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
+			zipkinSpan.duration(span.getAccumulatedMicros());
+		}
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
