@@ -86,7 +86,9 @@ public class ZipkinSpanListener implements SpanReporter {
 			ensureServerAddr(span, zipkinSpan);
 		}
 		zipkinSpan.timestamp(span.getBegin() * 1000L);
-		zipkinSpan.duration(span.getAccumulatedMillis() * 1000L);
+		if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
+			zipkinSpan.duration(span.getAccumulatedMicros());
+		}
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
