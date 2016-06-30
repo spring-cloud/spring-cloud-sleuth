@@ -47,7 +47,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	}
 
 	@Override
-	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
+	public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
 		Span spanFromHeader = getSpanFromHeader(message);
 		if (containsServerReceived(spanFromHeader)) {
 			spanFromHeader.logEvent(Span.SERVER_SEND);
