@@ -15,13 +15,19 @@
  */
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import com.netflix.client.http.HttpRequest;
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
+
+import org.apache.http.client.methods.RequestBuilder;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
+import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -30,9 +36,7 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.context.RequestContext;
+import okhttp3.Request;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -57,13 +61,6 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	public TraceRestClientRibbonCommandFactory traceRestClientRibbonCommandFactory(SpringClientFactory factory,
-			Tracer tracer, SpanInjector<HttpRequest.Builder> spanInjector, HttpTraceKeysInjector httpTraceKeysInjector) {
-		return new TraceRestClientRibbonCommandFactory(factory, tracer, spanInjector,
-				httpTraceKeysInjector);
-	}
-
-	@Bean
 	@ConditionalOnMissingBean
 	public TracePostZuulFilter tracePostZuulFilter(Tracer tracer, TraceKeys traceKeys) {
 		return new TracePostZuulFilter(tracer, traceKeys);
@@ -75,8 +72,26 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	public SpanInjector<HttpRequest.Builder> requestBuilderContextSpanInjector() {
-		return new RequestBuilderContextInjector();
+	public TraceRibbonCommandFactoryBeanPostProcessor traceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
+		return new TraceRibbonCommandFactoryBeanPostProcessor(beanFactory);
+	}
+
+	@Bean
+	@ConditionalOnClass(name = "com.netflix.client.http.HttpRequest.Builder")
+	public RibbonRequestCustomizer<HttpRequest.Builder> restClientRibbonRequestCustomizer(Tracer tracer) {
+		return new RestClientRibbonRequestCustomizer(tracer);
+	}
+
+	@Bean
+	@ConditionalOnClass(name = "org.apache.http.client.methods.RequestBuilder")
+	public RibbonRequestCustomizer<RequestBuilder> apacheHttpRibbonRequestCustomizer(Tracer tracer) {
+		return new ApacheHttpClientRibbonRequestCustomizer(tracer);
+	}
+
+	@Bean
+	@ConditionalOnClass(name = "okhttp3.Request.Builder")
+	public RibbonRequestCustomizer<Request.Builder> okHttpRibbonRequestCustomizer(Tracer tracer) {
+		return new OkHttpClientRibbonRequestCustomizer(tracer);
 	}
 
 }
