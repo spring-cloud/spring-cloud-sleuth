@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.netflix.hystrix.HystrixCommand;
 
@@ -33,8 +31,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
-import org.springframework.cloud.netflix.feign.FeignClientSpecification;
-import org.springframework.cloud.netflix.feign.FeignContext;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.SpanInjector;
@@ -80,12 +76,17 @@ public class TraceFeignClientAutoConfiguration {
 	}
 
 	@Configuration
+	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
 	protected static class FeignBeanPostProcessorConfiguration {
 
 		@Bean
-		@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
 		FeignBeanPostProcessor feignBeanPostProcessor(TraceFeignObjectWrapper traceFeignObjectWrapper) {
 			return new FeignBeanPostProcessor(traceFeignObjectWrapper);
+		}
+
+		@Bean
+		FeignContextBeanPostProcessor feignContextBeanPostProcessor(BeanFactory beanFactory) {
+			return new FeignContextBeanPostProcessor(beanFactory);
 		}
 	}
 
@@ -125,17 +126,6 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
 		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector());
-	}
-
-	@Autowired(required = false)
-	private List<FeignClientSpecification> configurations = new ArrayList<>();
-
-	@Bean
-	@Primary
-	FeignContext sleuthFeignContext(TraceFeignObjectWrapper traceFeignObjectWrapper) {
-		FeignContext feignContext = new TraceFeignContext(traceFeignObjectWrapper);
-		feignContext.setConfigurations(this.configurations);
-		return feignContext;
 	}
 
 	private SpanInjector<RequestTemplate> feignRequestTemplateInjector() {
