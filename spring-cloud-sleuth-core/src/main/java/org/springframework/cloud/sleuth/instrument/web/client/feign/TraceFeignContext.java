@@ -15,20 +15,23 @@ import org.springframework.cloud.netflix.feign.FeignContext;
 class TraceFeignContext extends FeignContext {
 
 	private final TraceFeignObjectWrapper traceFeignObjectWrapper;
+	private final FeignContext delegate;
 
-	TraceFeignContext(TraceFeignObjectWrapper traceFeignObjectWrapper) {
+	TraceFeignContext(TraceFeignObjectWrapper traceFeignObjectWrapper,
+			FeignContext delegate) {
 		this.traceFeignObjectWrapper = traceFeignObjectWrapper;
+		this.delegate = delegate;
 	}
 
 	@Override
 	public <T> T getInstance(String name, Class<T> type) {
-		T object = super.getInstance(name, type);
+		T object = this.delegate.getInstance(name, type);
 		return (T) this.traceFeignObjectWrapper.wrap(object);
 	}
 
 	@Override
 	public <T> Map<String, T> getInstances(String name, Class<T> type) {
-		Map<String, T> instances = super.getInstances(name, type);
+		Map<String, T> instances = this.delegate.getInstances(name, type);
 		Map<String, T> convertedInstances = new HashMap<>();
 		for (Map.Entry<String, T> entry : instances.entrySet()) {
 			convertedInstances.put(entry.getKey(), (T) this.traceFeignObjectWrapper.wrap(entry.getValue()));
