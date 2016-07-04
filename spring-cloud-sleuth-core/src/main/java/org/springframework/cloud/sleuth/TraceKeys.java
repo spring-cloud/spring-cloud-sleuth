@@ -221,6 +221,18 @@ public class TraceKeys {
 		private String responseSize = "http.response.size";
 
 		/**
+		 * The lower case, hyphen delimited name of the class that processes the request.
+		 * Ex. class named "BookController" will result in "book-controller" tag value.
+		 */
+		private String className = "http.class.name";
+
+		/**
+		 * The lower case, hyphen delimited name of the class that processes the request.
+		 * Ex. method named "listOfBooks" will result in "list-of-books" tag value.
+		 */
+		private String classMethod = "http.class.method";
+
+		/**
 		 * Prefix for header names if they are added as tags.
 		 */
 		private String prefix = "http.";
@@ -302,6 +314,22 @@ public class TraceKeys {
 
 		public void setHeaders(Collection<String> headers) {
 			this.headers = headers;
+		}
+
+		public String getClassName() {
+			return this.className;
+		}
+
+		public void setClassName(String className) {
+			this.className = className;
+		}
+
+		public String getClassMethod() {
+			return this.classMethod;
+		}
+
+		public void setClassMethod(String classMethod) {
+			this.classMethod = classMethod;
 		}
 	}
 

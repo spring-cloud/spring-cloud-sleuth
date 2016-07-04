@@ -19,17 +19,18 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 
+import com.netflix.zuul.ExecutionStatus;
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.ZuulFilterResult;
+import com.netflix.zuul.context.RequestContext;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
-
-import com.netflix.zuul.ExecutionStatus;
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.ZuulFilterResult;
-import com.netflix.zuul.context.RequestContext;
+import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
 
 /**
  * A pre request {@link ZuulFilter} that sets tracing related headers on the request
@@ -73,6 +74,7 @@ public class TracePreZuulFilter extends ZuulFilter {
 		if (log.isDebugEnabled()) {
 			log.debug("Current span is " + span + "");
 		}
+		markRequestAsHandled(ctx);
 		Span newSpan = this.tracer.createSpan(span.getName(), span);
 		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
 		this.spanInjector.inject(newSpan, ctx);
@@ -92,6 +94,11 @@ public class TracePreZuulFilter extends ZuulFilter {
 			this.tracer.close(newSpan);
 		}
 		return result;
+	}
+
+	// TraceFilter will not create the "fallback" span
+	private void markRequestAsHandled(RequestContext ctx) {
+		ctx.getRequest().setAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR, "true");
 	}
 
 	private Span getCurrentSpan() {

@@ -128,26 +128,14 @@ public class TraceFilter extends GenericFilterBean {
 				|| Span.SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, Span.SAMPLED_NAME));
 		Span spanFromRequest = getSpanFromAttribute(request);
 		if (spanFromRequest != null) {
-			this.tracer.continueSpan(spanFromRequest);
-			if (log.isDebugEnabled()) {
-				log.debug("There has already been a span in the request " + spanFromRequest + "");
-			}
+			continueSpan(request, spanFromRequest);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "] that should be skipped [" + skip + "]");
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug(
-						"The span was already detached once and we're processing an error");
-			}
-			try {
-				filterChain.doFilter(request, response);
-			} finally {
-				request.setAttribute(TRACE_ERROR_HANDLED_REQUEST_ATTR, true);
-				this.tracer.close(spanFromRequest);
-			}
+			processErrorRequest(filterChain, request, response, spanFromRequest);
 			return;
 		}
 		addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
@@ -166,33 +154,75 @@ public class TraceFilter extends GenericFilterBean {
 			// Add headers before filter chain in case one of the filters flushes the
 			// response...
 			filterChain.doFilter(request, response);
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			exception = e;
 			throw e;
-		}
-		finally {
+		} finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
 				if (log.isDebugEnabled()) {
-					log.debug("Detaching the span " + spanFromRequest + " since the request is asynchronous");
+					log.debug("The span " + spanFromRequest + " will get detached by a HandleInterceptor");
 				}
-				this.tracer.detach(spanFromRequest);
 				// TODO: how to deal with response annotations and async?
 				return;
 			}
+			spanFromRequest = createSpanIfRequestNotHandled(request, spanFromRequest, name, skip);
 			addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 			detachOrCloseSpans(request, response, spanFromRequest, exception);
 		}
+	}
+
+	private void processErrorRequest(FilterChain filterChain, HttpServletRequest request,
+			HttpServletResponse response, Span spanFromRequest)
+			throws IOException, ServletException {
+		if (log.isDebugEnabled()) {
+			log.debug("The span was already detached once and we're processing an error");
+		}
+		try {
+			filterChain.doFilter(request, response);
+		} finally {
+			request.setAttribute(TRACE_ERROR_HANDLED_REQUEST_ATTR, true);
+			this.tracer.close(spanFromRequest);
+		}
+	}
+
+	private void continueSpan(HttpServletRequest request, Span spanFromRequest) {
+		this.tracer.continueSpan(spanFromRequest);
+		request.setAttribute(TraceRequestAttributes.SPAN_CONTINUED_REQUEST_ATTR, "true");
+		if (log.isDebugEnabled()) {
+			log.debug("There has already been a span in the request " + spanFromRequest);
+		}
+	}
+
+	// This method is a fallback in case if handler interceptors didn't catch the request.
+	// In that case we are creating an artificial span so that it can be visible in Zipkin.
+	private Span createSpanIfRequestNotHandled(HttpServletRequest request,
+			Span spanFromRequest, String name, boolean skip) {
+		if (!requestHasAlreadyBeenHandled(request)) {
+			if (log.isDebugEnabled() && !skip) {
+				log.debug("The request with uri [" + request.getRequestURI() + "] hasn't been handled by any of Sleuth's components. "
+						+ "That means that most likely you're using custom HandlerMappings and didn't add Sleuth's TraceHandlerInterceptor. "
+						+ "Sleuth will create a span to ensure that the graph of calls remains valid in Zipkin");
+			}
+			spanFromRequest = this.tracer.createSpan(name);
+			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
+		}
+		return spanFromRequest;
+	}
+
+	private boolean requestHasAlreadyBeenHandled(HttpServletRequest request) {
+		return request.getAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR) != null;
 	}
 
 	private void detachOrCloseSpans(HttpServletRequest request,
 			HttpServletResponse response, Span spanFromRequest, Throwable exception) {
 		if (spanFromRequest != null) {
 			addResponseTags(response, exception);
-			if (spanFromRequest.hasSavedSpan()) {
-				closeParentSpan(spanFromRequest.getSavedSpan());
+			if (spanFromRequest.hasSavedSpan() && requestHasAlreadyBeenHandled(request)) {
+				recordParentSpan(spanFromRequest.getSavedSpan());
+			} else if (!requestHasAlreadyBeenHandled(request)) {
+				spanFromRequest = this.tracer.close(spanFromRequest);
 			}
-			closeParentSpan(spanFromRequest);
+			recordParentSpan(spanFromRequest);
 			// in case of a response with exception status will close the span when exception dispatch is handled
 			if (httpStatusSuccessful(response)) {
 				if (log.isDebugEnabled()) {
@@ -213,7 +243,10 @@ public class TraceFilter extends GenericFilterBean {
 		}
 	}
 
-	private void closeParentSpan(Span parent) {
+	private void recordParentSpan(Span parent) {
+		if (parent == null) {
+			return;
+		}
 		if (parent.isRemote()) {
 			if (log.isDebugEnabled()) {
 				log.debug("Sending the parent span " + parent + " to Zipkin");
@@ -247,6 +280,10 @@ public class TraceFilter extends GenericFilterBean {
 		return getSpanFromAttribute(request) != null;
 	}
 
+	/**
+	 * In order not to send unnecessary data we're not adding request tags to the server
+	 * side spans. All the tags are there on the client side.
+	 */
 	private void addRequestTagsForParentSpan(HttpServletRequest request, Span spanFromRequest) {
 		if (spanFromRequest.getName().contains("parent")) {
 			addRequestTags(spanFromRequest, request);

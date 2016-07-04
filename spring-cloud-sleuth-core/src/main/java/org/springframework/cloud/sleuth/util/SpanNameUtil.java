@@ -20,21 +20,38 @@ package org.springframework.cloud.sleuth.util;
  * Utility class that provides the name in hyphen based notation
  *
  * @author Adrian Cole
- *
  * @since 1.0.2
  */
 public final class SpanNameUtil {
 
 	public static String toLowerHyphen(String name) {
 		StringBuilder result = new StringBuilder();
-		for (int i = 0; i < name.length(); i++) {
+		appendFirstChar(name, result);
+		for (int i = 1; i < name.length(); i++) {
 			char c = name.charAt(i);
-			if (c >= 'A' && c <= 'Z') {
+			if (isUppercase(c)) {
 				result.append('-').append((char) (c + 'a' - 'A'));
 			} else {
 				result.append(c);
 			}
 		}
 		return result.toString();
+	}
+
+	private static void appendFirstChar(String name, StringBuilder result) {
+		char c = name.charAt(0);
+		if (isUppercase(c)) {
+			result.append(toLowerCase(c));
+		} else {
+			result.append(c);
+		}
+	}
+
+	private static char toLowerCase(char c) {
+		return (char) (c + 'a' - 'A');
+	}
+
+	private static boolean isUppercase(char c) {
+		return c >= 'A' && c <= 'Z';
 	}
 }

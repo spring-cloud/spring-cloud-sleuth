@@ -20,14 +20,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.Span;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -76,6 +77,36 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		Map<String, String> spanTags = new HashMap<>();
 		matchingSpansTags.forEach(spanTags::putAll);
 		assertThat(spanTags.entrySet()).containsAll(tags.entrySet());
+		return this;
+	}
+
+	public ListOfSpansAssert hasASpanWithTagKeyEqualTo(String tagKey) {
+		isNotNull();
+		printSpans();
+		List<Span> matchingSpans = this.actual.spans.stream()
+				.filter(span -> span.tags().containsKey(tagKey))
+				.collect(toList());
+		if (matchingSpans.isEmpty()) {
+			failWithMessage("Expected spans " + spansToString() + " to contain at least one span with tag "
+					+ "equal to <%s>", tagKey);
+		}
+		return this;
+	}
+
+	private String spansToString() {
+		return this.actual.spans.stream().map(span ->  span.toString() + " tags \n" + span.tags()).collect(
+				Collectors.joining("\n"));
+	}
+
+	public ListOfSpansAssert doesNotHaveASpanWithName(String name) {
+		isNotNull();
+		printSpans();
+		List<Span> matchingSpans = this.actual.spans.stream()
+				.filter(span -> span.getName().equals(name))
+				.collect(toList());
+		if (!matchingSpans.isEmpty()) {
+			failWithMessage("Expected spans not to contain a span with name <%s>", name);
+		}
 		return this;
 	}
 

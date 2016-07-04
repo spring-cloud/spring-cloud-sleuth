@@ -15,11 +15,11 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.regex.Pattern;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -31,8 +31,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -40,6 +40,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.util.StringUtils;
 
 import static javax.servlet.DispatcherType.ASYNC;
@@ -64,6 +65,7 @@ import static javax.servlet.DispatcherType.REQUEST;
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(TraceKeys.class)
+@Import(TraceWebMvcConfigurer.class)
 public class TraceWebAutoConfiguration {
 
 	/**
@@ -75,6 +77,12 @@ public class TraceWebAutoConfiguration {
 	@Bean
 	public TraceWebAspect traceWebAspect(Tracer tracer, SpanNamer spanNamer) {
 		return new TraceWebAspect(tracer, spanNamer);
+	}
+
+	@Bean
+	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
+	public TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(BeanFactory beanFactory) {
+		return new TraceSpringDataBeanPostProcessor(beanFactory);
 	}
 
 	@Bean
