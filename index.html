@@ -55,21 +55,18 @@ Spring Cloud Sleuth features:
 
 
 As long as Spring Cloud Sleuth is on the classpath any Spring Boot
-application will generate trace data, but you have to add a `Sampler`
-bean to tell it how often to start a new span (default is never):
+application will generate trace data:
 
 ```java
 @SpringBootApplication
 @RestController
 public class Application {
 
-  @Bean
-  public AlwaysSampler defaultSampler() {
-    return new AlwaysSampler();
-  }
+  private static Logger log = LoggerFactory.getLogger(DemoController.class);
 
   @RequestMapping("/")
   public String home() {
+    log.info("Handling home");
     return "Hello World";
   }
 
@@ -80,16 +77,18 @@ public class Application {
 }
 ```
 
-Run this app and this MDC pattern will be set:
+Run this app and then hit the home page. You will see traceId and
+spanId populated in the logs. If this app calls out to another one
+(e.g. with `RestTemplate`) it will send the trace data in headers and
+if the receiver is another Sleuth app you will see the trace continue
+there.
 
-```
-%clr([${spring.application.name:},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]){yellow}'
-```
+> NOTE: instead of logging the request in the handler explicitly, you
+could set
+`logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`
 
-Hit the home page. You will see traceId and spanId populated
-in the logs. If this app calls out to another one (e.g. with
-`RestTemplate`) it will send the trace data in headers and if the
-receiver is another Sleuth app you will see the trace continue there.
+> NOTE: Set `spring.application.name=bar` (for instance) to see the
+service name as well as the trace and span ids.
 
 {% endcapture %}
 
