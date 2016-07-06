@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -83,11 +84,11 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 	public ListOfSpansAssert hasASpanWithTagKeyEqualTo(String tagKey) {
 		isNotNull();
 		printSpans();
-		List<Span> matchingSpans = this.actual.spans.stream()
+		Optional<Span> matchingSpans = this.actual.spans.stream()
 				.filter(span -> span.tags().containsKey(tagKey))
-				.collect(toList());
-		if (matchingSpans.isEmpty()) {
-			failWithMessage("Expected spans \n <%s> \n\nto contain at least one span with tag "
+				.findAny();
+		if (!matchingSpans.isPresent()) {
+			failWithMessage("Expected spans \n <%s> \nto contain at least one span with tag key "
 					+ "equal to <%s>", spansToString(), tagKey);
 		}
 		return this;
@@ -100,7 +101,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 				.filter(span -> tagValue.equals(span.tags().get(tagKey)))
 				.collect(toList());
 		if (matchingSpans.isEmpty()) {
-			failWithMessage("Expected spans \n <%s> \n\nto contain at least one span with tag "
+			failWithMessage("Expected spans \n <%s> \nto contain at least one span with tag key "
 					+ "equal to <%s> and value equal to <%s>", spansToString(), tagKey, tagValue);
 		}
 		return this;
@@ -116,7 +117,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		printSpans();
 		List<Span> matchingSpans = findSpansWithName(name);
 		if (!matchingSpans.isEmpty()) {
-			failWithMessage("Expected spans \n <%s> \n\nnot to contain a span with name <%s>", spansToString(), name);
+			failWithMessage("Expected spans \n <%s> \nnot to contain a span with name <%s>", spansToString(), name);
 		}
 		return this;
 	}
