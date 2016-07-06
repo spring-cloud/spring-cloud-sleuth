@@ -85,7 +85,13 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		isNotNull();
 		printSpans();
 		Optional<Span> matchingSpans = this.actual.spans.stream()
-				.filter(span -> span.tags().containsKey(tagKey))
+				.filter(span -> {
+					boolean contains = span.tags().containsKey(tagKey);
+					if (!contains) {
+						log.warn("Span [" + span + "] doesn't contain tag with key [" + tagKey + "] in his tags " + span.tags());
+					}
+					return contains;
+				})
 				.findAny();
 		if (!matchingSpans.isPresent()) {
 			failWithMessage("Expected spans \n <%s> \nto contain at least one span with tag key "
