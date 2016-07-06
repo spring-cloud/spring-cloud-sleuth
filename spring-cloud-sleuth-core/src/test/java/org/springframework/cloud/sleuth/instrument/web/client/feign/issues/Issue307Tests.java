@@ -23,6 +23,7 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -31,6 +32,7 @@ import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -41,6 +43,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 public class Issue307Tests {
+
+	@Before
+	public void setup() {
+		TestSpanContextHolder.removeCurrentSpan();
+	}
 
 	@Test
 	public void should_start_context() {

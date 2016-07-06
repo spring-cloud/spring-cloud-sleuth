@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,6 +64,11 @@ public class SpringDataInstrumentationTests {
 	@Autowired Environment environment;
 	@Autowired Tracer tracer;
 	@Autowired ArrayListSpanAccumulator arrayListSpanAccumulator;
+
+	@Before
+	public void setup() {
+		TestSpanContextHolder.removeCurrentSpan();
+	}
 
 	@Test
 	public void should_create_span_instrumented_by_a_handler_interceptor() {

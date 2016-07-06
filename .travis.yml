@@ -28,7 +28,7 @@ install:
 #- ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
 #- '[ "${MVN_GOAL}" == "deploy" ] && ./docs/src/main/asciidoc/ghpages.sh || echo "Not updating docs"'
 script:
-- "./mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu --batch-mode | grep -v 'Download.* http://' "
+- ./mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu --batch-mode > log.log && grep -v 'Download.* http://' log.log || echo "FAILED!" &&  grep -v 'Download.* http://' log.log && exit 1
 env:
   global:
   - GIT_NAME="Spencer Gibb"
