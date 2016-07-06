@@ -87,8 +87,21 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 				.filter(span -> span.tags().containsKey(tagKey))
 				.collect(toList());
 		if (matchingSpans.isEmpty()) {
-			failWithMessage("Expected spans \n" + spansToString() + " \n\nto contain at least one span with tag "
-					+ "equal to <%s>", tagKey);
+			failWithMessage("Expected spans \n <%s> \n\nto contain at least one span with tag "
+					+ "equal to <%s>", spansToString(), tagKey);
+		}
+		return this;
+	}
+
+	public ListOfSpansAssert hasASpanWithTagEqualTo(String tagKey, String tagValue) {
+		isNotNull();
+		printSpans();
+		List<Span> matchingSpans = this.actual.spans.stream()
+				.filter(span -> tagValue.equals(span.tags().get(tagKey)))
+				.collect(toList());
+		if (matchingSpans.isEmpty()) {
+			failWithMessage("Expected spans \n <%s> \n\nto contain at least one span with tag "
+					+ "equal to <%s> and value equal to <%s>", spansToString(), tagKey, tagValue);
 		}
 		return this;
 	}
@@ -103,7 +116,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		printSpans();
 		List<Span> matchingSpans = findSpansWithName(name);
 		if (!matchingSpans.isEmpty()) {
-			failWithMessage("Expected spans \n" + spansToString() + " \n\nnot to contain a span with name <%s>", name);
+			failWithMessage("Expected spans \n <%s> \n\nnot to contain a span with name <%s>", spansToString(), name);
 		}
 		return this;
 	}
@@ -119,7 +132,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		printSpans();
 		List<Span> matchingSpans = findSpansWithName(name);
 		if (matchingSpans.isEmpty()) {
-			failWithMessage("Expected spans" + spansToString() + "to contain a span with name <%s>", name);
+			failWithMessage("Expected spans <%s> to contain a span with name <%s>", spansToString(), name);
 		}
 		return this;
 	}

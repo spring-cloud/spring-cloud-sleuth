@@ -59,7 +59,9 @@ public class TraceFilterWebIntegrationTests {
 		this.restTemplate.getForObject("http://localhost:" + port() + "/", String.class);
 
 		then(this.tracer.getCurrentSpan()).isNull();
-		then(new ListOfSpans(this.accumulator.getSpans())).doesNotHaveASpanWithName("error");
+		then(new ListOfSpans(this.accumulator.getSpans()))
+				.doesNotHaveASpanWithName("error")
+				.hasASpanWithTagEqualTo("http.status_code", "500");
 	}
 
 	private int port() {
