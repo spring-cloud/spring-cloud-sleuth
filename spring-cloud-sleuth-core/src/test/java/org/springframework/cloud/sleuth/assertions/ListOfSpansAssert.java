@@ -140,7 +140,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 
 	private void printSpans() {
 		try {
-			log.info("Stored spans " + this.objectMapper.writeValueAsString(this.actual.spans));
+			log.info("Stored spans " + this.objectMapper.writeValueAsString(new ArrayList<>(this.actual.spans)));
 		}
 		catch (JsonProcessingException e) {
 		}
