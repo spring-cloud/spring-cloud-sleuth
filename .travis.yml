@@ -25,10 +25,10 @@ install:
     TRAVIS_PULL_REQUEST=${TRAVIS_PULL_REQUEST}
 
     EOF
-- ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
-- '[ "${MVN_GOAL}" == "deploy" ] && ./docs/src/main/asciidoc/ghpages.sh || echo "Not updating docs"'
+#- ./mvnw install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
+#- '[ "${MVN_GOAL}" == "deploy" ] && ./docs/src/main/asciidoc/ghpages.sh || echo "Not updating docs"'
 script:
-- './mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu -Dmaven.test.redirectTestOutputToFile=true'
+- './mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu'
 env:
   global:
   - GIT_NAME="Spencer Gibb"
