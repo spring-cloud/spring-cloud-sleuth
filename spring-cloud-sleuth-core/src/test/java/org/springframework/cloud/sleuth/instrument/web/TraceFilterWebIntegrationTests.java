@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.io.IOException;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,9 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -53,6 +57,13 @@ public class TraceFilterWebIntegrationTests {
 	@Autowired ArrayListSpanAccumulator accumulator;
 	@Autowired RestTemplate restTemplate;
 	@Autowired Environment environment;
+
+	@Before
+	@After
+	public void cleanup() {
+		ExceptionUtils.setFail(true);
+		TestSpanContextHolder.removeCurrentSpan();
+	}
 
 	@Test
 	public void should_not_create_a_span_for_error_controller() {
