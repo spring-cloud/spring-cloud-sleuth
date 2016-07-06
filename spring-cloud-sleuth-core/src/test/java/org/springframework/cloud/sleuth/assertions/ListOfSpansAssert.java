@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -84,14 +83,20 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 	public ListOfSpansAssert hasASpanWithTagKeyEqualTo(String tagKey) {
 		isNotNull();
 		printSpans();
-		Optional<Span> matchingSpans = this.actual.spans.stream()
-				.filter(span -> span.tags().containsKey(tagKey))
-				.findAny();
-		if (!matchingSpans.isPresent()) {
+		if (!spanWithKeyTagExists(tagKey)) {
 			failWithMessage("Expected spans \n <%s> \nto contain at least one span with tag key "
 					+ "equal to <%s>", spansToString(), tagKey);
 		}
 		return this;
+	}
+
+	private boolean spanWithKeyTagExists(String tagKey) {
+		for (Span span : this.actual.spans) {
+			if (span.tags().containsKey(tagKey)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public ListOfSpansAssert hasASpanWithTagEqualTo(String tagKey, String tagValue) {
