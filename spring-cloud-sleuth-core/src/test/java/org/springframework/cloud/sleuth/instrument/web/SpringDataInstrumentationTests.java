@@ -69,7 +69,9 @@ public class SpringDataInstrumentationTests {
 
 		then(names).isNotEmpty();
 		then(this.arrayListSpanAccumulator.getSpans()).isNotEmpty();
-		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasASpanWithTagKeyEqualTo("http.class.name");
+		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
+				.hasASpanWithName("http:/reservations")
+				.hasASpanWithTagKeyEqualTo("mvc.controller.class");
 		then(this.tracer.getCurrentSpan()).isNull();
 	}
 

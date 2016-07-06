@@ -120,8 +120,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				.filter(span -> span.tags().containsKey("tag")).findFirst();
 		then(taggedSpan.isPresent()).isTrue();
 		then(taggedSpan.get()).hasATag("tag", "value");
-		then(taggedSpan.get()).hasATag("http.class.method", "deferred");
-		then(taggedSpan.get()).hasATag("http.class.name", "test-controller");
+		then(taggedSpan.get()).hasATag("mvc.controller.method", "deferred");
+		then(taggedSpan.get()).hasATag("mvc.controller.class", "test-controller");
 	}
 
 	@Test

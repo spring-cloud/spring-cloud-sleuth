@@ -38,6 +38,10 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
  *
  * The interceptor will not create spans for error controller related paths.
  *
+ * It's important to note that this implementation will set the request attribute
+ * {@link TraceRequestAttributes#HANDLED_SPAN_REQUEST_ATTR} when the request is processed.
+ * That way the {@link TraceFilter} will not create the "fallback" span.
+ *
  * @author Marcin Grzejszczak
  * @since 1.0.3
  */
@@ -59,15 +63,11 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
 			Object handler) throws Exception {
 		if (isErrorControllerRelated(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Skipping creation of a span for error controller processing");
-			}
+			log.debug("Skipping creation of a span for error controller processing");
 			return true;
 		}
 		if (isSpanContinued(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Skipping creation of a span since the span is continued");
-			}
+			log.debug("Skipping creation of a span since the span is continued");
 			return true;
 		}
 		String spanName = spanName(handler);
@@ -90,7 +90,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		if (handler instanceof HandlerMethod) {
 			String methodName = SpanNameUtil.toLowerHyphen(
 					((HandlerMethod) handler).getMethod().getName());
-			getTracer().addTag(getTraceKeys().getHttp().getClassMethod(), methodName);
+			getTracer().addTag(getTraceKeys().getMvc().getControllerMethod(), methodName);
 			if (log.isDebugEnabled()) {
 				log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
 			}
@@ -108,7 +108,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		if (log.isDebugEnabled()) {
 			log.debug("Adding a class tag with value [" + className + "] to a span " + span);
 		}
-		getTracer().addTag(getTraceKeys().getHttp().getClassName(), className);
+		getTracer().addTag(getTraceKeys().getMvc().getControllerClass(), className);
 	}
 
 	private String spanName(Object handler) {
@@ -134,15 +134,11 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	public void postHandle(HttpServletRequest request, HttpServletResponse response,
 			Object handler, ModelAndView modelAndView) throws Exception {
 		if (isErrorControllerRelated(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Skipping closing of a span for error controller processing");
-			}
+			log.debug("Skipping closing of a span for error controller processing");
 			return;
 		}
 		if (isSpanContinued(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Skipping closing of a span since it's been continued");
-			}
+			log.debug("Skipping closing of a span since it's been continued");
 			return;
 		}
 		Span span = getSpanFromAttribute(request);

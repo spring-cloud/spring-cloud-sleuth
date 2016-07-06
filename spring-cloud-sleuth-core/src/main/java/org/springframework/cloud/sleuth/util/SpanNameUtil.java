@@ -26,25 +26,16 @@ public final class SpanNameUtil {
 
 	public static String toLowerHyphen(String name) {
 		StringBuilder result = new StringBuilder();
-		appendFirstChar(name, result);
-		for (int i = 1; i < name.length(); i++) {
+		for (int i = 0; i < name.length(); i++) {
 			char c = name.charAt(i);
 			if (isUppercase(c)) {
-				result.append('-').append((char) (c + 'a' - 'A'));
+				if (i != 0) result.append('-');
+				result.append(toLowerCase(c));
 			} else {
 				result.append(c);
 			}
 		}
 		return result.toString();
-	}
-
-	private static void appendFirstChar(String name, StringBuilder result) {
-		char c = name.charAt(0);
-		if (isUppercase(c)) {
-			result.append(toLowerCase(c));
-		} else {
-			result.append(c);
-		}
 	}
 
 	private static char toLowerCase(char c) {

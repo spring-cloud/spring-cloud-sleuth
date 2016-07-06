@@ -59,6 +59,8 @@ public class TraceKeys {
 
 	private Async async = new Async();
 
+	private Mvc mvc = new Mvc();
+
 	public Http getHttp() {
 		return this.http;
 	}
@@ -75,6 +77,10 @@ public class TraceKeys {
 		return this.async;
 	}
 
+	public Mvc getMvc() {
+		return this.mvc;
+	}
+
 	public void setHttp(Http http) {
 		this.http = http;
 	}
@@ -89,6 +95,10 @@ public class TraceKeys {
 
 	public void setAsync(Async async) {
 		this.async = async;
+	}
+
+	public void setMvc(Mvc mvc) {
+		this.mvc = mvc;
 	}
 
 	public static class Message {
@@ -221,18 +231,6 @@ public class TraceKeys {
 		private String responseSize = "http.response.size";
 
 		/**
-		 * The lower case, hyphen delimited name of the class that processes the request.
-		 * Ex. class named "BookController" will result in "book-controller" tag value.
-		 */
-		private String className = "http.class.name";
-
-		/**
-		 * The lower case, hyphen delimited name of the class that processes the request.
-		 * Ex. method named "listOfBooks" will result in "list-of-books" tag value.
-		 */
-		private String classMethod = "http.class.method";
-
-		/**
 		 * Prefix for header names if they are added as tags.
 		 */
 		private String prefix = "http.";
@@ -315,22 +313,6 @@ public class TraceKeys {
 		public void setHeaders(Collection<String> headers) {
 			this.headers = headers;
 		}
-
-		public String getClassName() {
-			return this.className;
-		}
-
-		public void setClassName(String className) {
-			this.className = className;
-		}
-
-		public String getClassMethod() {
-			return this.classMethod;
-		}
-
-		public void setClassMethod(String classMethod) {
-			this.classMethod = classMethod;
-		}
 	}
 
 	/**
@@ -404,7 +386,6 @@ public class TraceKeys {
 		public void setThreadPoolKey(String threadPoolKey) {
 			this.threadPoolKey = threadPoolKey;
 		}
-
 	}
 
 	/**
@@ -470,7 +451,40 @@ public class TraceKeys {
 		public void setMethodNameKey(String methodNameKey) {
 			this.methodNameKey = methodNameKey;
 		}
+	}
 
+	/**
+	 * Trace keys related to MVC controller tags
+	 */
+	public static class Mvc {
+
+		/**
+		 * The lower case, hyphen delimited name of the class that processes the request.
+		 * Ex. class named "BookController" will result in "book-controller" tag value.
+		 */
+		private String controllerClass = "mvc.controller.class";
+
+		/**
+		 * The lower case, hyphen delimited name of the class that processes the request.
+		 * Ex. method named "listOfBooks" will result in "list-of-books" tag value.
+		 */
+		private String controllerMethod = "mvc.controller.method";
+
+		public String getControllerClass() {
+			return this.controllerClass;
+		}
+
+		public void setControllerClass(String controllerClass) {
+			this.controllerClass = controllerClass;
+		}
+
+		public String getControllerMethod() {
+			return this.controllerMethod;
+		}
+
+		public void setControllerMethod(String controllerMethod) {
+			this.controllerMethod = controllerMethod;
+		}
 	}
 
 }

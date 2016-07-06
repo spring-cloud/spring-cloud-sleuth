@@ -175,7 +175,7 @@ public class TraceFilter extends GenericFilterBean {
 			HttpServletResponse response, Span spanFromRequest)
 			throws IOException, ServletException {
 		if (log.isDebugEnabled()) {
-			log.debug("The span was already detached once and we're processing an error");
+			log.debug("The span [" + spanFromRequest + "] was already detached once and we're processing an error");
 		}
 		try {
 			filterChain.doFilter(request, response);
