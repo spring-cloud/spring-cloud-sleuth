@@ -73,6 +73,7 @@ public class TraceFilterWebIntegrationTests {
 		then(new ListOfSpans(this.accumulator.getSpans()))
 				.doesNotHaveASpanWithName("error")
 				.hasASpanWithTagEqualTo("http.status_code", "500");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	private int port() {
