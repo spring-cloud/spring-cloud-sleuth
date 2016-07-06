@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.assertj.core.api.BDDAssertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,6 +39,7 @@ import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.ParameterizedTypeReference;
@@ -80,6 +82,7 @@ public class SpringDataInstrumentationTests {
 				.hasASpanWithName("http:/reservations")
 				.hasASpanWithTagKeyEqualTo("mvc.controller.class");
 		then(this.tracer.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	Collection<String> names() {

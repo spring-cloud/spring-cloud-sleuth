@@ -28,21 +28,13 @@ public final class SpanNameUtil {
 		StringBuilder result = new StringBuilder();
 		for (int i = 0; i < name.length(); i++) {
 			char c = name.charAt(i);
-			if (isUppercase(c)) {
+			if (Character.isUpperCase(c)) {
 				if (i != 0) result.append('-');
-				result.append(toLowerCase(c));
+				result.append(Character.toLowerCase(c));
 			} else {
 				result.append(c);
 			}
 		}
 		return result.toString();
-	}
-
-	private static char toLowerCase(char c) {
-		return (char) (c + 'a' - 'A');
-	}
-
-	private static boolean isUppercase(char c) {
-		return c >= 'A' && c <= 'Z';
 	}
 }

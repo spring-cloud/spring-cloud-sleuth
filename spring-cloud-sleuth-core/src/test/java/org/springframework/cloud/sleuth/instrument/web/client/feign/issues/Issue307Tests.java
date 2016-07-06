@@ -33,6 +33,7 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -41,6 +42,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class Issue307Tests {
 
@@ -54,6 +57,7 @@ public class Issue307Tests {
 		try (ConfigurableApplicationContext applicationContext = SpringApplication
 				.run(SleuthSampleApplication.class, "--spring.jmx.enabled=false")) {
 		}
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 }
 

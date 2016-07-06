@@ -94,6 +94,7 @@ public class FeignClientServerErrorTests {
 		Thread.sleep(100);
 		then(this.capture.toString())
 				.doesNotContain("Tried to close span but it is not the current span");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -107,6 +108,7 @@ public class FeignClientServerErrorTests {
 		Thread.sleep(100);
 		then(this.capture.toString())
 				.doesNotContain("Tried to close span but it is not the current span");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -120,6 +122,7 @@ public class FeignClientServerErrorTests {
 		Thread.sleep(100);
 		then(this.capture.toString())
 				.doesNotContain("Tried to close span but it is not the current span");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -133,6 +136,7 @@ public class FeignClientServerErrorTests {
 		Thread.sleep(100);
 		then(this.capture.toString())
 				.doesNotContain("Tried to close span but it is not the current span");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -146,6 +150,7 @@ public class FeignClientServerErrorTests {
 		Thread.sleep(100);
 		then(this.capture.toString())
 				.doesNotContain("Tried to close span but it is not the current span");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Configuration

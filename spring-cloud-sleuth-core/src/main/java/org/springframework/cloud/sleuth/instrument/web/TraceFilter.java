@@ -199,13 +199,13 @@ public class TraceFilter extends GenericFilterBean {
 	private Span createSpanIfRequestNotHandled(HttpServletRequest request,
 			Span spanFromRequest, String name, boolean skip) {
 		if (!requestHasAlreadyBeenHandled(request)) {
+			spanFromRequest = this.tracer.createSpan(name);
+			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 			if (log.isDebugEnabled() && !skip) {
 				log.debug("The request with uri [" + request.getRequestURI() + "] hasn't been handled by any of Sleuth's components. "
 						+ "That means that most likely you're using custom HandlerMappings and didn't add Sleuth's TraceHandlerInterceptor. "
 						+ "Sleuth will create a span to ensure that the graph of calls remains valid in Zipkin");
 			}
-			spanFromRequest = this.tracer.createSpan(name);
-			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 		}
 		return spanFromRequest;
 	}

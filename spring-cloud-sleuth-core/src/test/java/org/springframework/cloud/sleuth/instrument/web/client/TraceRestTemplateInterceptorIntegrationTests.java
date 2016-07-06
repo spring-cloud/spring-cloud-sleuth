@@ -36,6 +36,7 @@ import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -44,6 +45,8 @@ import org.springframework.web.client.RestTemplate;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -88,6 +91,7 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 
 		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	private ClientHttpRequestFactory clientHttpRequestFactory() {
