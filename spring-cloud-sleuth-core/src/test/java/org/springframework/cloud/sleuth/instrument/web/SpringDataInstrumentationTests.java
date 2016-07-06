@@ -49,6 +49,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.RestTemplate;
 
@@ -60,6 +61,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebIntegrationTest({ "server.port=0" })
 @SpringApplicationConfiguration(classes = { ReservationServiceApplication.class })
+@DirtiesContext
 public class SpringDataInstrumentationTests {
 
 	@Autowired RestTemplate restTemplate;
