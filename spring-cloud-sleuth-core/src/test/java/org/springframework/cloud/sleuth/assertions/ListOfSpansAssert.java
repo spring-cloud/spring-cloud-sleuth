@@ -108,7 +108,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 	}
 
 	private String spansToString() {
-		return this.actual.spans.stream().map(span ->  "\n\nSPAN: " + span.toString() + " with name [" + span.getName() + "] " +
+		return this.actual.spans.stream().map(span ->  "\nSPAN: " + span.toString() + " with name [" + span.getName() + "] " +
 				"\nwith tags " + span.tags() + "\nwith logs " + span.logs()).collect(Collectors.joining("\n"));
 	}
 

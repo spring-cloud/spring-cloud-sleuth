@@ -20,7 +20,7 @@ install:
 
     EOF
 script:
-- ./mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu --batch-mode > log.log && exit 0 || echo "FAILED!" &&  grep -v '^.*Download.* http.*$' log.log && exit 1
+- ./mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu --batch-mode > log.log || echo "FAILED!" &&  grep -v '^.*Download.* http.*$' log.log && exit 1
 env:
   global:
   - FEATURE_BRANCH=$(echo ${TRAVIS_BRANCH} | grep -v "master" && echo true || echo false)
