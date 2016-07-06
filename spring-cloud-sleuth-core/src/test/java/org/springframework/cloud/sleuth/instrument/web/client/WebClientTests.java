@@ -171,7 +171,7 @@ public class WebClientTests {
 	}
 
 	private Span spanWithClientEvents() {
-		return this.listener.getSpans().stream()
+		return new ArrayList<>(this.listener.getSpans()).stream()
 				.filter(span -> span.logs().stream()
 						.filter(log -> log.getEvent().contains(Span.CLIENT_RECV)
 								|| log.getEvent().contains(Span.CLIENT_SEND))
