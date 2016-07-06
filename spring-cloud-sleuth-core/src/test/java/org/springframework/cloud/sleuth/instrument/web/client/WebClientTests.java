@@ -171,12 +171,17 @@ public class WebClientTests {
 	}
 
 	private Span spanWithClientEvents() {
-		return new ArrayList<>(this.listener.getSpans()).stream()
-				.filter(span -> span.logs().stream()
-						.filter(log -> log.getEvent().contains(Span.CLIENT_RECV)
-								|| log.getEvent().contains(Span.CLIENT_SEND))
-						.findFirst().isPresent())
-				.findFirst().get();
+		List<Span> spans = new ArrayList<>(this.listener.getSpans());
+		for(Span span : spans) {
+			boolean present = span.logs().stream()
+					.filter(log -> log.getEvent().contains(Span.CLIENT_RECV)
+							|| log.getEvent().contains(Span.CLIENT_SEND))
+					.findFirst().isPresent();
+			if (present) {
+				return span;
+			}
+		}
+		return null;
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
