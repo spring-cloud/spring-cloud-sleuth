@@ -26,4 +26,10 @@ public class SpanNameUtilTests {
 		SleuthAssertions.then(SpanNameUtil.toLowerHyphen("aMethodNameInCamelCaseNotation"))
 				.isEqualTo("a-method-name-in-camel-case-notation");
 	}
+
+	@Test
+	public void should_convert_a_class_name_in_hyphen_based_notation() throws Exception {
+		SleuthAssertions.then(SpanNameUtil.toLowerHyphen("MySuperClassName"))
+				.isEqualTo("my-super-class-name");
+	}
 }

@@ -44,7 +44,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
-@EnableConfigurationProperties
+@EnableConfigurationProperties(TraceKeys.class)
 public class TraceAutoConfiguration {
 
 	@Bean
@@ -66,12 +66,6 @@ public class TraceAutoConfiguration {
 			SpanReporter spanReporter) {
 		return new DefaultTracer(sampler, random, spanNamer, spanLogger,
 				spanReporter);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public TraceKeys traceKeys() {
-		return new TraceKeys();
 	}
 
 	@Bean

@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.http.HttpStatus;
 
 /**8
  * A post request {@link ZuulFilter} that publishes an event upon start of the filtering
@@ -56,7 +55,7 @@ public class TracePostZuulFilter extends ZuulFilter {
 		// TODO: the client sent event should come from the client not the filter!
 		getCurrentSpan().logEvent(Span.CLIENT_RECV);
 		if (log.isDebugEnabled()) {
-			log.debug("Closing current client span " + getCurrentSpan() + "");
+			log.debug("Closing current client span " + getCurrentSpan());
 		}
 		int httpStatus = RequestContext.getCurrentContext().getResponse().getStatus();
 		if (httpStatus > 0) {
@@ -64,19 +63,7 @@ public class TracePostZuulFilter extends ZuulFilter {
 					String.valueOf(httpStatus));
 		}
 		this.tracer.close(getCurrentSpan());
-		closeParentSpanIfResponseIsNotSuccess(httpStatus);
 		return null;
-	}
-
-	private void closeParentSpanIfResponseIsNotSuccess(int httpStatus) {
-		if (httpStatus > 0 && httpStatusIsNotSuccess(httpStatus)) {
-			this.tracer.close(getCurrentSpan());
-		}
-	}
-
-	private boolean httpStatusIsNotSuccess(int httpStatus) {
-		return HttpStatus.valueOf(httpStatus).is4xxClientError() ||
-				HttpStatus.valueOf(httpStatus).is5xxServerError();
 	}
 
 	@Override

@@ -22,6 +22,7 @@ import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -66,6 +67,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				.findFirst().get();
 		then(parentSpan).hasLoggedAnEvent(Span.SERVER_RECV)
 				.hasLoggedAnEvent(Span.SERVER_SEND);
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -74,6 +76,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		MvcResult mvcResult = whenSentInfoWithTraceId(new Random().nextLong());
 
 		then(notSampledHeaderIsPresent(mvcResult)).isEqualTo(true);
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -84,6 +87,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
 		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -93,6 +97,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		whenSentPingWithTraceId(expectedTraceId);
 
 		then(MDC.getCopyOfContextMap()).isEmpty();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -104,6 +109,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				.andExpect(status().isOk()).andReturn();
 
 		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
+		then(this.tracer.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -119,6 +126,9 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				.filter(span -> span.tags().containsKey("tag")).findFirst();
 		then(taggedSpan.isPresent()).isTrue();
 		then(taggedSpan.get()).hasATag("tag", "value");
+		then(taggedSpan.get()).hasATag("mvc.controller.method", "deferred");
+		then(taggedSpan.get()).hasATag("mvc.controller.class", "test-controller");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -129,6 +139,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 		then(this.tracer.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -141,6 +152,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(this.spanAccumulator.getSpans().stream().filter(span ->
 				span.getSpanId() == span.getTraceId()).findAny().isPresent()).as("a root span exists").isTrue();
 		then(this.tracer.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Override
@@ -237,6 +249,11 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				logger.info("ping");
 				span = this.tracer.getCurrentSpan();
 				return "ping";
+			}
+
+			@RequestMapping("/throwsException")
+			public void throwsException() {
+				throw new RuntimeException();
 			}
 
 			@RequestMapping("/deferred")

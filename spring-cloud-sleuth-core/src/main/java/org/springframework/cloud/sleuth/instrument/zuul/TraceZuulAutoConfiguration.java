@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -77,6 +78,11 @@ public class TraceZuulAutoConfiguration {
 	@Bean
 	public SpanInjector<HttpRequest.Builder> requestBuilderContextSpanInjector() {
 		return new RequestBuilderContextInjector();
+	}
+
+	@Bean
+	public TraceZuulHandlerMappingBeanPostProcessor traceHandlerMappingBeanPostProcessor(BeanFactory beanFactory) {
+		return new TraceZuulHandlerMappingBeanPostProcessor(beanFactory);
 	}
 
 }

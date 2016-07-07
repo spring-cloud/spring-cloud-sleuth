@@ -145,7 +145,7 @@ be low cardinality (e.g. not include identifiers).
 Since there is a lot of instrumentation going on some of the span names will be
 artificial like:
 
-- `http:path` when received an http request on a given path
+- `controller-method-name` when received by a Controller with a method name `conrollerMethodName`
 - `async` for asynchronous operations done via wrapped `Callable` and `Runnable`.
 - `@Scheduled` annotated methods will return the simple name of the class.
 
@@ -427,6 +427,15 @@ Via the `TraceFilter` all sampled incoming requests result in creation of a Span
  the request was sent. E.g. if the request was sent to `/foo/bar` then the name will be `http:/foo/bar`. You can configure which URIs you would
  like to skip via the `spring.sleuth.web.skipPattern` property. If you have `ManagementServerProperties` on classpath then
  its value of `contextPath` gets appended to the provided skip pattern.
+
+==== HandlerInterceptor
+
+Since we want the span names to be precise we're using a `TraceHandlerInterceptor` that either wraps an
+ existing `HandlerInterceptor` or is added directly to the list of existing `HandlerInterceptors`. The
+ `TraceHandlerInterceptor` adds a special request attribute to the given `HttpServletRequest`. If the
+ the `TraceFilter` doesn't see this attribute set it will create a "fallback" span which is an additional
+ span created on the server side so that the trace is presented properly in the UI. Seeing that most likely
+ signifies that there is a missing instrumentation. In that case please file an issue in Spring Cloud Sleuth.
 
 ==== Async Servlet support
 

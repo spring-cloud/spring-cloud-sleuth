@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.assertions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.cloud.sleuth.Span;
@@ -27,6 +28,6 @@ public class ListOfSpans {
 	public final List<Span> spans;
 
 	public ListOfSpans(List<Span> spans) {
-		this.spans = spans;
+		this.spans = new ArrayList<>(spans);
 	}
 }

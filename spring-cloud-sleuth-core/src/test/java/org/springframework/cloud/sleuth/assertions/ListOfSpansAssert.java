@@ -20,14 +20,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.Span;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -79,12 +80,80 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return this;
 	}
 
+	public ListOfSpansAssert hasASpanWithTagKeyEqualTo(String tagKey) {
+		isNotNull();
+		printSpans();
+		if (!spanWithKeyTagExists(tagKey)) {
+			failWithMessage("Expected spans \n <%s> \nto contain at least one span with tag key "
+					+ "equal to <%s>", spansToString(), tagKey);
+		}
+		return this;
+	}
+
+	private boolean spanWithKeyTagExists(String tagKey) {
+		for (Span span : this.actual.spans) {
+			if (span.tags().containsKey(tagKey)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public ListOfSpansAssert hasASpanWithTagEqualTo(String tagKey, String tagValue) {
+		isNotNull();
+		printSpans();
+		List<Span> matchingSpans = this.actual.spans.stream()
+				.filter(span -> tagValue.equals(span.tags().get(tagKey)))
+				.collect(toList());
+		if (matchingSpans.isEmpty()) {
+			failWithMessage("Expected spans \n <%s> \nto contain at least one span with tag key "
+					+ "equal to <%s> and value equal to <%s>", spansToString(), tagKey, tagValue);
+		}
+		return this;
+	}
+
+	private String spansToString() {
+		return this.actual.spans.stream().map(span ->  "\nSPAN: " + span.toString() + " with name [" + span.getName() + "] " +
+				"\nwith tags " + span.tags() + "\nwith logs " + span.logs()).collect(Collectors.joining("\n"));
+	}
+
+	public ListOfSpansAssert doesNotHaveASpanWithName(String name) {
+		isNotNull();
+		printSpans();
+		List<Span> matchingSpans = findSpansWithName(name);
+		if (!matchingSpans.isEmpty()) {
+			failWithMessage("Expected spans \n <%s> \nnot to contain a span with name <%s>", spansToString(), name);
+		}
+		return this;
+	}
+
+	private List<Span> findSpansWithName(String name) {
+		return this.actual.spans.stream()
+				.filter(span -> span.getName().equals(name))
+				.collect(toList());
+	}
+
+	public ListOfSpansAssert hasASpanWithName(String name) {
+		isNotNull();
+		printSpans();
+		List<Span> matchingSpans = findSpansWithName(name);
+		if (matchingSpans.isEmpty()) {
+			failWithMessage("Expected spans <%s> to contain a span with name <%s>", spansToString(), name);
+		}
+		return this;
+	}
+
 	private void printSpans() {
 		try {
-			log.info("Stored spans " + this.objectMapper.writeValueAsString(this.actual.spans));
+			log.info("Stored spans " + this.objectMapper.writeValueAsString(new ArrayList<>(this.actual.spans)));
 		}
 		catch (JsonProcessingException e) {
 		}
 	}
 
+	@Override
+	protected void failWithMessage(String errorMessage, Object... arguments) {
+		log.error(errorMessage);
+		super.failWithMessage(errorMessage, arguments);
+	}
 }
