@@ -14,6 +14,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -35,6 +36,7 @@ import org.springframework.web.context.request.async.WebAsyncTask;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -67,6 +69,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 		whenARequestIsSentToASyncEndpoint();
 
 		thenTraceIdHasBeenSetOnARequestHeader();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -75,6 +78,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 		whenARequestIsSentToAnAsyncRestTemplateEndpoint();
 
 		thenTraceIdHasBeenSetOnARequestHeader();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -82,6 +86,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 			throws Exception {
 		whenARequestIsSentToAnAsyncEndpoint("/callablePing");
 		thenTraceIdHasBeenSetOnARequestHeader();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -89,6 +94,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 			throws Exception {
 		whenARequestIsSentToAnAsyncEndpoint("/webAsyncTaskPing");
 		thenTraceIdHasBeenSetOnARequestHeader();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	private void whenARequestIsSentToAnAsyncRestTemplateEndpoint() throws Exception {

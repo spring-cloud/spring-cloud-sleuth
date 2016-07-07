@@ -10,6 +10,7 @@ import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -42,6 +43,7 @@ public abstract class AbstractMvcIntegrationTest {
 	@Before
 	public void setup() {
 		ExceptionUtils.setFail(true);
+		TestSpanContextHolder.removeCurrentSpan();
 		DefaultMockMvcBuilder mockMvcBuilder = MockMvcBuilders.webAppContextSetup(this.webApplicationContext);
 		configureMockMvcBuilder(mockMvcBuilder);
 		this.mockMvc = mockMvcBuilder.build();

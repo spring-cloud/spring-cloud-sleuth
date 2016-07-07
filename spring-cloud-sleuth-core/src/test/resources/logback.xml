@@ -5,8 +5,6 @@
 	<logger name="org.springframework.cloud.sleuth.log" level="DEBUG"/>
 	<logger name="org.springframework.cloud.sleuth.trace" level="DEBUG"/>
 	<logger name="org.springframework.cloud.sleuth.instrument.rxjava" level="DEBUG"/>
-	<logger name="org.springframework.boot" level="DEBUG"/>
-	<logger name="org.springframework.web" level="DEBUG"/>
 	<root level="INFO">
 		<appender-ref ref="CONSOLE"/>
 		<appender-ref ref="FILE"/>

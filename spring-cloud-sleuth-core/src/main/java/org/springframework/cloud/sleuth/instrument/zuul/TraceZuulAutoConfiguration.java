@@ -15,10 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.context.RequestContext;
-
 import org.apache.http.client.methods.RequestBuilder;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -37,6 +33,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import okhttp3.Request;
+import com.netflix.client.http.HttpRequest;
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -92,6 +91,11 @@ public class TraceZuulAutoConfiguration {
 	@ConditionalOnClass(name = "okhttp3.Request.Builder")
 	public RibbonRequestCustomizer<Request.Builder> okHttpRibbonRequestCustomizer(Tracer tracer) {
 		return new OkHttpClientRibbonRequestCustomizer(tracer);
+	}
+
+	@Bean
+	public TraceZuulHandlerMappingBeanPostProcessor traceHandlerMappingBeanPostProcessor(BeanFactory beanFactory) {
+		return new TraceZuulHandlerMappingBeanPostProcessor(beanFactory);
 	}
 
 }

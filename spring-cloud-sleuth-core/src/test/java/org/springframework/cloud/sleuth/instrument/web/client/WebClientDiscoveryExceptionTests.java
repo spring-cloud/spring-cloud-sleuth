@@ -50,6 +50,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {
@@ -71,7 +72,6 @@ public class WebClientDiscoveryExceptionTests {
 
 	@After
 	public void close() {
-		ExceptionUtils.setFail(false);
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
@@ -91,6 +91,7 @@ public class WebClientDiscoveryExceptionTests {
 
 		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test

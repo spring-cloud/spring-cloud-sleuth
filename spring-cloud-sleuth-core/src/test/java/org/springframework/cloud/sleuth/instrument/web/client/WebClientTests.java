@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -170,12 +171,17 @@ public class WebClientTests {
 	}
 
 	private Span spanWithClientEvents() {
-		return this.listener.getSpans().stream()
-				.filter(span -> span.logs().stream()
-						.filter(log -> log.getEvent().contains(Span.CLIENT_RECV)
-								|| log.getEvent().contains(Span.CLIENT_SEND))
-						.findFirst().isPresent())
-				.findFirst().get();
+		List<Span> spans = new ArrayList<>(this.listener.getSpans());
+		for(Span span : spans) {
+			boolean present = span.logs().stream()
+					.filter(log -> log.getEvent().contains(Span.CLIENT_RECV)
+							|| log.getEvent().contains(Span.CLIENT_SEND))
+					.findFirst().isPresent();
+			if (present) {
+				return span;
+			}
+		}
+		return null;
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
@@ -220,7 +226,8 @@ public class WebClientTests {
 		Optional<Span> storedSpan = this.listener.getSpans().stream()
 				.filter(span -> "404".equals(span.tags().get("http.status_code"))).findFirst();
 		then(storedSpan.isPresent()).isTrue();
-		this.listener.getSpans().stream()
+		List<Span> spans = new ArrayList<>(this.listener.getSpans());
+		spans.stream()
 				.forEach(span -> {
 					int initialSize = span.logs().size();
 					int distinctSize = span.logs().stream().map(Log::getEvent).distinct().collect(Collectors.toList()).size();

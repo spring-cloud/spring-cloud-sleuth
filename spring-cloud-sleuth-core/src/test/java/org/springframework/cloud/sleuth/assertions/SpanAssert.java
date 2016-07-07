@@ -99,6 +99,19 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
+	public SpanAssert hasATagWithKey(String tagKey) {
+		isNotNull();
+		assertThatTagIsPresent(tagKey);
+		boolean foundTagValue = this.actual.tags().containsKey(tagKey);
+		if (!foundTagValue) {
+			String message = String.format("Expected span to have the tag with key <%s>. "
+					+ "Found tags are <%s>", tagKey, this.actual.tags());
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
 	public SpanAssert matchesATag(String tagKey, String tagRegex) {
 		isNotNull();
 		assertThatTagIsPresent(tagKey);

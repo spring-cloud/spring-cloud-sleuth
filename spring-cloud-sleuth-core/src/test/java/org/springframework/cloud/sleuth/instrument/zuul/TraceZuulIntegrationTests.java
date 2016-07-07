@@ -10,6 +10,7 @@ import com.netflix.zuul.context.RequestContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,7 @@ import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpEntity;
@@ -67,6 +69,7 @@ public class TraceZuulIntegrationTests {
 	@Autowired RestTemplate restTemplate;
 
 	@Before
+	@After
 	public void cleanup() {
 		TestSpanContextHolder.removeCurrentSpan();
 		RequestContext.getCurrentContext().unset();
@@ -92,6 +95,7 @@ public class TraceZuulIntegrationTests {
 						.tag("http.method", "GET")
 						.tag("http.status_code", "200")
 						.tag("http.path", "/simple/foo"));
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
@@ -112,6 +116,7 @@ public class TraceZuulIntegrationTests {
 						.tag("http.method", "GET")
 						.tag("http.status_code", "404")
 						.tag("http.path", "/simple/nonExistentUrl"));
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	private static class TestTag extends HashMap<String, String> {

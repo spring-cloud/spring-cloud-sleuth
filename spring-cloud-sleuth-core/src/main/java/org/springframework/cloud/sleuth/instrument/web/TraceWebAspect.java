@@ -24,11 +24,9 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable;
-import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 /**
@@ -85,9 +83,6 @@ public class TraceWebAspect {
 	@Pointcut("@within(org.springframework.stereotype.Controller)")
 	private void anyControllerAnnotated() { } // NOSONAR
 
-	@Pointcut("@annotation(org.springframework.web.bind.annotation.RequestMapping)")
-	private void anyRequestMappingAnnotatedMethod() { } // NOSONAR
-
 	@Pointcut("execution(public java.util.concurrent.Callable *(..))")
 	private void anyPublicMethodReturningCallable() { } // NOSONAR
 
@@ -99,21 +94,6 @@ public class TraceWebAspect {
 
 	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethodReturningWebAsyncTask()")
 	private void anyControllerOrRestControllerWithPublicWebAsyncTaskMethod() { } // NOSONAR
-
-	@Around("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyRequestMappingAnnotatedMethod()")
-	@SuppressWarnings("unchecked")
-	public Object wrapControllerMethodWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
-		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
-		Span span = this.tracer.createSpan(spanName);
-		if (log.isDebugEnabled()) {
-			log.debug("Wrapping controller method [" + spanName + "] in a span " + span);
-		}
-		try {
-			return pjp.proceed();
-		} finally {
-			this.tracer.close(span);
-		}
-	}
 
 	@Around("anyControllerOrRestControllerWithPublicAsyncMethod()")
 	@SuppressWarnings("unchecked")

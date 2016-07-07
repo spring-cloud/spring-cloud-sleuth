@@ -158,8 +158,10 @@ public class TraceFilterTests {
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		// this creates a child span which is why we'd expect the parents to include 1L)
-		assertThat(this.span.getParents()).containsOnly(3L);
+		// this creates a child span which is why we'd expect the parents to include the parent id
+		// especially important if no handler interceptors have been used.
+		// We add a child span on the server side to show which controller serviced the request
+		assertThat(this.span.getParents()).containsOnly(PARENT_ID);
 		assertThat(parentSpan())
 				.hasATag("http.url", "http://localhost/?foo=bar")
 				.hasATag("http.host", "localhost")
