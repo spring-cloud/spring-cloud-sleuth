@@ -30,7 +30,7 @@ env:
   global:
   - FEATURE_BRANCH=$(echo ${TRAVIS_BRANCH} | grep -v "master" && echo true || echo false)
   - SPRING_CLOUD_BUILD=$(echo ${TRAVIS_REPO_SLUG} | grep -q "^spring-cloud/.*$" && echo true || echo false)
-  - MVN_GOAL=$([ "${TRAVIS_PULL_REQUEST}" == "false" -a "${TRAVIS_TAG}" == "" -a "${FEATURE_BRANCH}" == "false" -a "${SPRING_CLOUD_BUILD}" == "true" ] && echo deploy || echo install)
+  - MVN_GOAL=install
   - VERSION=$(mvn validate | grep Building | head -1 | sed -e 's/.* //')
   - MILESTONE=$(echo ${VERSION} | egrep 'M|RC' && echo true || echo false)
   - MVN_PROFILE=$([ "${MILESTONE}" == "true" ] && echo -P milestone)
