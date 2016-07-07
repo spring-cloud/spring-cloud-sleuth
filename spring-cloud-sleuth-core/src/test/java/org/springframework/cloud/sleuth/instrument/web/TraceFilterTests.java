@@ -160,8 +160,7 @@ public class TraceFilterTests {
 
 		// this creates a child span which is why we'd expect the parents to include the parent id
 		// especially important if no handler interceptors have been used.
-		// We add a child span on the server side to show which controller serviced the request,
-		// and for how long (the tim
+		// We add a child span on the server side to show which controller serviced the request
 		assertThat(this.span.getParents()).containsOnly(PARENT_ID);
 		assertThat(parentSpan())
 				.hasATag("http.url", "http://localhost/?foo=bar")
