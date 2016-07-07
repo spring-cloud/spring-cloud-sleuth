@@ -151,4 +151,9 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		}
 	}
 
+	@Override
+	protected void failWithMessage(String errorMessage, Object... arguments) {
+		log.error(errorMessage);
+		super.failWithMessage(errorMessage, arguments);
+	}
 }

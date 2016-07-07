@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.jayway.awaitility.Awaitility;
+
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,9 +82,10 @@ public class SpringDataInstrumentationTests {
 
 		then(names).isNotEmpty();
 		then(this.arrayListSpanAccumulator.getSpans()).isNotEmpty();
-		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
-				.hasASpanWithName("http:/reservations")
-				.hasASpanWithTagKeyEqualTo("mvc.controller.class");
+		Awaitility.await().until( () -> {
+					then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasASpanWithName("http:/reservations")
+							.hasASpanWithTagKeyEqualTo("mvc.controller.class");
+				});
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
 	}
