@@ -3,6 +3,9 @@ jdk:
   - oraclejdk8
 sudo: required
 dist: trusty
+cache:
+  directories:
+  - $HOME/.m2
 install:
 -  |
     cat <<EOF
@@ -22,7 +25,7 @@ install:
     EOF
 script:
 #- ./mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu --batch-mode > log.log || echo "FAILED!" &&  grep -v '^.*Download.* http.*$' log.log && exit 1
-- './mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu --batch-mode -Dmaven.test.redirectTestOutputToFile=true'
+- './mvnw -s .settings.xml $MVN_GOAL $MVN_PROFILE -nsu -U --batch-mode -Dmaven.test.redirectTestOutputToFile=true'
 env:
   global:
   - FEATURE_BRANCH=$(echo ${TRAVIS_BRANCH} | grep -v "master" && echo true || echo false)
