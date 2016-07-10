@@ -190,7 +190,7 @@ public class Span {
 			this.startNanos = null; // don't know the start tick
 			this.begin = begin;
 		} else {
-			this.startNanos = System.nanoTime();
+			this.startNanos = nanoTime();
 			this.begin = System.currentTimeMillis();
 		}
 		if (end > 0) {
@@ -226,7 +226,7 @@ public class Span {
 				this.end = System.currentTimeMillis();
 			}
 			if (this.startNanos != null) { // set a precise duration
-				this.durationMicros = (System.nanoTime() - this.startNanos) / 1000;
+				this.durationMicros = Math.max(1, (nanoTime() - this.startNanos) / 1000);
 			} else {
 				this.durationMicros = (this.end - this.begin) * 1000;
 			}
@@ -248,6 +248,8 @@ public class Span {
 	/**
 	 * Return the total amount of time elapsed since start was called, if running, or
 	 * difference between stop and start, in microseconds.
+	 *
+	 * @return zero if not running, or a positive number of microseconds.
 	 */
 	@JsonIgnore
 	public synchronized long getAccumulatedMicros() {
@@ -258,11 +260,17 @@ public class Span {
 				return 0;
 			}
 			if (this.startNanos != null) {
-				return (System.nanoTime() - this.startNanos) / 1000;
+				return Math.max(1, (nanoTime() - this.startNanos) / 1000);
 			} else  {
 				return (System.currentTimeMillis() - this.begin) * 1000;
 			}
 		}
+	}
+
+	// Visible for testing
+	@JsonIgnore
+	long nanoTime() {
+		return System.nanoTime();
 	}
 
 	/**

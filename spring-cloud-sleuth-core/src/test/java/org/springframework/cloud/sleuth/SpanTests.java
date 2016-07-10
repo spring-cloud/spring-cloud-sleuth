@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -134,5 +135,44 @@ public class SpanTests {
 
 		assertThat(deserialized.getAccumulatedMicros())
 				.isEqualTo(span.getAccumulatedMicros());
+	}
+
+	// Duration of 0 is confusing to plot and can be misinterpreted as null
+	@Test public void getAccumulatedMicros_roundsUpToOneWhenRunning() throws IOException {
+		AtomicLong nanoTime = new AtomicLong();
+
+		// starts the span, recording its initial tick as zero
+		Span span = new Span(0, 0, "http:name", 1L, Collections.<Long>emptyList(), 2L, true,
+				true, "process", null) {
+			@Override long nanoTime() {
+				return nanoTime.get();
+			}
+		};
+
+		// When only 100 nanoseconds passed
+		nanoTime.set(100L);
+
+		// We round so that we don't confuse "not started" with a short span.
+		assertThat(span.getAccumulatedMicros()).isEqualTo(1L);
+	}
+
+	// Duration of 0 is confusing to plot and can be misinterpreted as null
+	@Test public void getAccumulatedMicros_roundsUpToOneWhenStopped() throws IOException {
+		AtomicLong nanoTime = new AtomicLong();
+
+		// starts the span, recording its initial tick as zero
+		Span span = new Span(0, 0, "http:name", 1L, Collections.<Long>emptyList(), 2L, true,
+				true, "process", null) {
+			@Override long nanoTime() {
+				return nanoTime.get();
+			}
+		};
+
+		// When only 100 nanoseconds passed
+		nanoTime.set(100L);
+		span.stop();
+
+		// We round so that we don't confuse "not started" with a short span.
+		assertThat(span.getAccumulatedMicros()).isEqualTo(1L);
 	}
 }
