@@ -32,7 +32,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -44,8 +43,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.async.WebAsyncUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.util.UrlPathHelper;
-
-import static org.springframework.util.StringUtils.hasText;
 
 /**
  * Filter that takes the value of the {@link Span#SPAN_ID_NAME} and
@@ -89,29 +86,25 @@ public class TraceFilter extends GenericFilterBean {
 	private final Pattern skipPattern;
 	private final SpanReporter spanReporter;
 	private final SpanExtractor<HttpServletRequest> spanExtractor;
-	private final SpanInjector<HttpServletResponse> spanInjector;
 	private final HttpTraceKeysInjector httpTraceKeysInjector;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
 			SpanExtractor<HttpServletRequest> spanExtractor,
-			SpanInjector<HttpServletResponse> spanInjector,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
-				spanExtractor, spanInjector, httpTraceKeysInjector);
+				spanExtractor, httpTraceKeysInjector);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
 			SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
-			SpanInjector<HttpServletResponse> spanInjector,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
 		this.spanReporter = spanReporter;
 		this.spanExtractor = spanExtractor;
-		this.spanInjector = spanInjector;
 		this.httpTraceKeysInjector = httpTraceKeysInjector;
 	}
 
@@ -138,7 +131,6 @@ public class TraceFilter extends GenericFilterBean {
 			processErrorRequest(filterChain, request, response, spanFromRequest);
 			return;
 		}
-		addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 		String name = HTTP_COMPONENT + ":" + uri;
 		try {
 			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
@@ -150,9 +142,6 @@ public class TraceFilter extends GenericFilterBean {
 		}
 		Throwable exception = null;
 		try {
-			this.spanInjector.inject(spanFromRequest, response);
-			// Add headers before filter chain in case one of the filters flushes the
-			// response...
 			filterChain.doFilter(request, response);
 		} catch (Throwable e) {
 			exception = e;
@@ -166,7 +155,6 @@ public class TraceFilter extends GenericFilterBean {
 				return;
 			}
 			spanFromRequest = createSpanIfRequestNotHandled(request, spanFromRequest, name, skip);
-			addToResponseIfNotPresent(response, Span.SAMPLED_NAME, skip ? Span.SPAN_NOT_SAMPLED : Span.SPAN_SAMPLED);
 			detachOrCloseSpans(request, response, spanFromRequest, exception);
 		}
 	}
@@ -361,13 +349,6 @@ public class TraceFilter extends GenericFilterBean {
 		else if (httpStatus >= 100 && (httpStatus < 200) || (httpStatus > 399)) {
 			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
 					String.valueOf(response.getStatus()));
-		}
-	}
-
-	private void addToResponseIfNotPresent(HttpServletResponse response, String name,
-			String value) {
-		if (!hasText(response.getHeader(name))) {
-			response.addHeader(name, value);
 		}
 	}
 

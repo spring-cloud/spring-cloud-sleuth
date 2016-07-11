@@ -110,8 +110,8 @@ public class WebClientTests {
 			ResponseEntityProvider provider) {
 		ResponseEntity<String> response = provider.get(this);
 
-		then(getHeader(response, Span.TRACE_ID_NAME)).isNotNull();
-		then(getHeader(response, Span.SPAN_ID_NAME)).isNotNull();
+		then(getHeader(response, Span.TRACE_ID_NAME)).isNull();
+		then(getHeader(response, Span.SPAN_ID_NAME)).isNull();
 		then(this.listener.getSpans()).isNotEmpty();
 		Optional<Span> noTraceSpan = this.listener.getSpans().stream().filter(span ->
 				"http:/notrace".equals(span.getName()) && !span.tags().isEmpty()).findFirst();
@@ -164,9 +164,10 @@ public class WebClientTests {
 
 		ResponseEntity<String> response = provider.get(this);
 
-		then(getHeader(response, Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_SAMPLED);
-		then(Span.hexToId(getHeader(response, Span.TRACE_ID_NAME)))
-				.isEqualTo(currentTraceId);
+		// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
+		// we don't want to respond with any tracing data
+		then(getHeader(response, Span.SAMPLED_NAME)).isNull();
+		then(getHeader(response, Span.TRACE_ID_NAME)).isNull();
 		thenRegisteredClientSentAndReceivedEvents(spanWithClientEvents());
 	}
 
