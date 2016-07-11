@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -49,7 +50,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOne(final Span span) {
-		Awaitility.await().until(new Runnable() {
+		Awaitility.await().atMost(5, SECONDS).until(new Runnable() {
 			@Override
 			public void run() {
 				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())

@@ -41,6 +41,7 @@ import tools.AbstractIntegrationTest;
 import zipkin.Constants;
 import zipkin.Span;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -63,9 +64,9 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId));
+		await().atMost(5, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId));
 
-		await().until(() -> {
+		await().atMost(5, SECONDS).until(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 		});
 	}
@@ -75,9 +76,9 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		long traceId = new Random().nextLong();
 		long spanId = new Random().nextLong();
 
-		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId));
+		await().atMost(5, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId));
 
-		await().until(() -> {
+		await().atMost(5, SECONDS).until(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenTheSpansHaveProperParentStructure();
 		});
@@ -87,9 +88,9 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_with_annotations_in_async_thread_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId));
+		await().atMost(5, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId));
 
-		await().until(() -> {
+		await().atMost(5, SECONDS).until(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenThereIsAtLeastOneBinaryAnnotationWithKey("background-sleep-millis");
 		});

@@ -33,6 +33,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -44,18 +45,18 @@ public class TracingOnScheduledTests {
 
 	@Test
 	public void should_have_span_set_after_scheduled_method_has_been_executed() {
-		await().until(spanIsSetOnAScheduledMethod());
+		await().atMost(5, SECONDS).until(spanIsSetOnAScheduledMethod());
 	}
 
 	@Test
 	public void should_have_a_new_span_set_each_time_a_scheduled_method_has_been_executed() {
 		Span firstSpan = this.beanWithScheduledMethod.getSpan();
-		await().until(differentSpanHasBeenSetThan(firstSpan));
+		await().atMost(5, SECONDS).until(differentSpanHasBeenSetThan(firstSpan));
 	}
 
 	@Test
 	public void should_not_span_in_the_scheduled_class_that_matches_skip_pattern() throws Exception {
-		await().untilAtomic(this.beanWithScheduledMethodToBeIgnored.isExecuted(), Matchers.is(true));
+		await().atMost(5, SECONDS).untilAtomic(this.beanWithScheduledMethodToBeIgnored.isExecuted(), Matchers.is(true));
 		then(this.beanWithScheduledMethodToBeIgnored.getSpan()).isNull();
 	}
 

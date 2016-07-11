@@ -40,6 +40,8 @@ import tools.AbstractIntegrationTest;
 import zipkin.junit.ZipkinRule;
 import zipkin.server.EnableZipkinServer;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { WaitUntilZipkinIsUpConfig.class,
 		SampleZipkinApplication.class })
@@ -67,10 +69,10 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	public void should_propagate_spans_to_zipkin() {
 		long traceId = new Random().nextLong();
 
-		await().until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
+		await().atMost(5, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
 				this.sampleAppUrl + "/hi2", traceId));
 
-		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
+		await().atMost(5, SECONDS).until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
 	}
 
 	@Override

@@ -18,7 +18,6 @@ package integration;
 import java.util.Collections;
 import java.util.Random;
 
-import example.ZipkinStreamServerApplication;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +36,11 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import example.ZipkinStreamServerApplication;
 import tools.AbstractIntegrationTest;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = { TestSupportBinderAutoConfiguration.class,
@@ -57,7 +60,7 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 	@Before
 	public void setup() {
-		await().until(zipkinServerIsUp());
+		await().atMost(5, SECONDS).until(zipkinServerIsUp());
 	}
 
 	@Test
@@ -67,7 +70,7 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 		this.input.send(messageWithSpan(span));
 
-		await().until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(this.traceId));
+		await().atMost(5, SECONDS).until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(this.traceId));
 	}
 
 	private Message<Spans> messageWithSpan(Span span) {

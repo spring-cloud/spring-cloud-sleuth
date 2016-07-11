@@ -16,9 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.jayway.awaitility.Awaitility;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.strategy.HystrixPlugins;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -38,8 +41,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.concurrent.atomic.AtomicReference;
-
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -89,7 +91,7 @@ public class HystrixAnnotationsIntegrationTests {
 
 	private void thenSpanInHystrixThreadIsContinued(final Span span) {
 		then(span).isNotNull();
-		Awaitility.await().until(new Runnable() {
+		Awaitility.await().atMost(5, SECONDS).until(new Runnable() {
 			@Override
 			public void run() {
 				then(HystrixAnnotationsIntegrationTests.this.catcher).isNotNull();
@@ -103,7 +105,7 @@ public class HystrixAnnotationsIntegrationTests {
 	}
 
 	private void thenSpanInHystrixThreadIsCreated() {
-		Awaitility.await().until(new Runnable() {
+		Awaitility.await().atMost(5, SECONDS).until(new Runnable() {
 			@Override
 			public void run() {
 				then(HystrixAnnotationsIntegrationTests.this.catcher.getSpan())

@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,7 +47,7 @@ public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 		this.mockMvc.perform(get("/greeting")).andExpect(
 				MockMvcResultMatchers.status().isOk());
 
-		await().until(() -> {
+		await().atMost(5, SECONDS).until(() -> {
 			then(this.arrayListSpanAccumulator.getSpans().stream().map(Span::getName)
 					.collect(
 					toList())).containsAll(asList("http:/greeting", "message:greetings",

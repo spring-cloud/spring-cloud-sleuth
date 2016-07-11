@@ -53,6 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -86,7 +87,7 @@ public class TraceFilterCustomExtractorTests {
 		ResponseEntity<Map> responseHeaders = this.restTemplate.exchange(requestEntity,
 				Map.class);
 
-		await().until(() -> then(this.accumulator.getSpans().stream().filter(
+		await().atMost(5, SECONDS).until(() -> then(this.accumulator.getSpans().stream().filter(
 				span -> span.getSpanId() == spanId).findFirst().get())
 				.hasTraceIdEqualTo(traceId));
 		then(responseHeaders.getBody())
