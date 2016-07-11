@@ -16,7 +16,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -32,7 +31,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -89,7 +87,6 @@ public class TraceWebAutoConfiguration {
 	public FilterRegistrationBean traceWebFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
 			SpanExtractor<HttpServletRequest> spanExtractor,
-			SpanInjector<HttpServletResponse> spanInjector,
 			HttpTraceKeysInjector httpTraceKeysInjector, TraceFilter traceFilter) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(traceFilter);
 		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
@@ -100,21 +97,15 @@ public class TraceWebAutoConfiguration {
 	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
 			SpanExtractor<HttpServletRequest> spanExtractor,
-			SpanInjector<HttpServletResponse> spanInjector,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
-				spanReporter, spanExtractor, spanInjector, httpTraceKeysInjector);
+				spanReporter, spanExtractor, httpTraceKeysInjector);
 	}
 
 	@Bean
 	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(
 			SkipPatternProvider skipPatternProvider) {
 		return new HttpServletRequestExtractor(skipPatternProvider.skipPattern());
-	}
-
-	@Bean
-	public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
-		return new HttpServletResponseInjector();
 	}
 
 	@Configuration

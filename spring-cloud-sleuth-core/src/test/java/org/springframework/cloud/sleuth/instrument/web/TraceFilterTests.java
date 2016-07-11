@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Pattern;
@@ -30,7 +29,6 @@ import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -51,8 +49,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import static org.junit.Assert.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.entry;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
@@ -67,7 +65,6 @@ public class TraceFilterTests {
 	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
 	SpanExtractor<HttpServletRequest> spanExtractor = new HttpServletRequestExtractor(Pattern
 			.compile(TraceFilter.DEFAULT_SKIP_PATTERN));
-	SpanInjector<HttpServletResponse> spanInjector = new HttpServletResponseInjector();
 
 	private Tracer tracer;
 	private TraceKeys traceKeys = new TraceKeys();
@@ -112,7 +109,7 @@ public class TraceFilterTests {
 	public void notTraced() throws Exception {
 		this.sampler = NeverSampler.INSTANCE;
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
@@ -126,7 +123,7 @@ public class TraceFilterTests {
 	@Test
 	public void startsNewTrace() throws Exception {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyCurrentSpanStatusCode(HttpStatus.OK);
@@ -137,7 +134,7 @@ public class TraceFilterTests {
 	@Test
 	public void shouldNotStoreHttpStatusCodeWhenResponseCodeHasNotYetBeenSet() throws Exception {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		this.response.setStatus(0);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -154,7 +151,7 @@ public class TraceFilterTests {
 				.header(Span.PARENT_ID_NAME, Span.idToHex(3L))
 				.buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -187,7 +184,7 @@ public class TraceFilterTests {
 		TestSpanContextHolder.removeCurrentSpan();
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
@@ -203,7 +200,7 @@ public class TraceFilterTests {
 		TestSpanContextHolder.removeCurrentSpan();
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
@@ -220,7 +217,7 @@ public class TraceFilterTests {
 		TestSpanContextHolder.removeCurrentSpan();
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
@@ -232,7 +229,7 @@ public class TraceFilterTests {
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyParentSpanHttpTags();
@@ -247,7 +244,7 @@ public class TraceFilterTests {
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -261,7 +258,7 @@ public class TraceFilterTests {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanIsStoppedVeryfingReporter(),
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 	}
@@ -277,7 +274,7 @@ public class TraceFilterTests {
 
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		this.request.addHeader("X-Foo", "bar");
 		this.request.addHeader("X-Foo", "spam");
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -292,7 +289,7 @@ public class TraceFilterTests {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		this.filterChain = new MockFilterChain() {
 			@Override
 			public void doFilter(javax.servlet.ServletRequest request,
@@ -317,7 +314,7 @@ public class TraceFilterTests {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 		this.response.setStatus(404);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -330,7 +327,7 @@ public class TraceFilterTests {
 		this.request = builder().header(Span.SPAN_ID_NAME, "asd")
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.spanInjector, this.httpTraceKeysInjector);
+				this.spanExtractor, this.httpTraceKeysInjector);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 

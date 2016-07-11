@@ -59,9 +59,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Test
 	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
-		MvcResult mvcResult = whenSentPingWithoutTracingData();
+		whenSentPingWithoutTracingData();
 
-		then(tracingHeaderFrom(mvcResult)).isNotNull();
 		Span parentSpan = this.spanAccumulator.getSpans().stream().filter(
 				span -> span.getSpanId() == TraceFilterIntegrationTests.span.getParents().get(0))
 				.findFirst().get();
@@ -75,7 +74,9 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			throws Exception {
 		MvcResult mvcResult = whenSentInfoWithTraceId(new Random().nextLong());
 
-		then(notSampledHeaderIsPresent(mvcResult)).isEqualTo(true);
+		// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
+		// we don't want to respond with any tracing data
+		then(notSampledHeaderIsPresent(mvcResult)).isEqualTo(false);
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -86,7 +87,6 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
-		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -108,7 +108,6 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		this.mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().isOk()).andReturn();
 
-		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
 	}
@@ -121,7 +120,6 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		this.mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().isOk()).andReturn();
 
-		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 		Optional<Span> taggedSpan = this.spanAccumulator.getSpans().stream()
 				.filter(span -> span.tags().containsKey("tag")).findFirst();
 		then(taggedSpan.isPresent()).isTrue();
@@ -137,7 +135,6 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		MvcResult mvcResult = whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
 
-		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
 	}
@@ -208,12 +205,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private MvcResult whenSentRequestWithTraceIdAndNoSpanId(Long traceId)
 			throws Exception {
-		MvcResult mvcResult = this.mockMvc
+		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
 						.header(Span.TRACE_ID_NAME, Span.idToHex(traceId)))
 				.andReturn();
-		then(tracingHeaderFrom(mvcResult)).isEqualTo(traceId);
-		return mvcResult;
 	}
 
 	private MvcResult sendRequestWithTraceId(String path, String headerName, Long traceId, HttpStatus status)
@@ -224,10 +219,6 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 						.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong())))
 				.andExpect(status().is(status.value()))
 				.andReturn();
-	}
-
-	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
 	}
 
 	private boolean notSampledHeaderIsPresent(MvcResult mvcResult) {
