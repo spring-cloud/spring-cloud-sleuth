@@ -42,7 +42,6 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
-		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 		then(span.isExportable());
 	}
 
@@ -52,14 +51,13 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 
 		MvcResult mvcResult = whenSentPingWithTraceIdAndNotSampling(expectedTraceId);
 
-		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
 		then(span.isExportable()).isFalse();
 	}
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
-				new NoOpSpanReporter(), this.spanExtractor, this.spanInjector,
+				new NoOpSpanReporter(), this.spanExtractor,
 				this.httpTraceKeysInjector));
 	}
 
@@ -85,10 +83,6 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 				.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong()));
 		request.header(Span.SAMPLED_NAME, sampling ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		return this.mockMvc.perform(request).andReturn();
-	}
-
-	private Long tracingHeaderFrom(MvcResult mvcResult) {
-		return Span.hexToId(mvcResult.getResponse().getHeader(Span.TRACE_ID_NAME));
 	}
 
 	@DefaultTestAutoConfiguration

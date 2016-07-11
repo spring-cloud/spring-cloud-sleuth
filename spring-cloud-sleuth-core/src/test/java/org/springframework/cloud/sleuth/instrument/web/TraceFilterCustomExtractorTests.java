@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -84,20 +83,16 @@ public class TraceFilterCustomExtractorTests {
 				.header("mySpanId", Span.idToHex(spanId)).build();
 
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> requestHeaders = this.restTemplate.exchange(requestEntity,
+		ResponseEntity<Map> responseHeaders = this.restTemplate.exchange(requestEntity,
 				Map.class);
 
 		await().until(() -> then(this.accumulator.getSpans().stream().filter(
 				span -> span.getSpanId() == spanId).findFirst().get())
 				.hasTraceIdEqualTo(traceId));
-		then(requestHeaders.getBody())
+		then(responseHeaders.getBody())
 				.containsEntry("correlationid", Span.idToHex(traceId))
 				.containsEntry("myspanid", Span.idToHex(spanId))
 				.as("input request headers");
-		then(requestHeaders.getHeaders())
-				.containsEntry("correlationId",
-						Collections.singletonList(Span.idToHex(traceId)))
-				.containsKey("mySpanId").as("response headers");
 	}
 
 	@Configuration
