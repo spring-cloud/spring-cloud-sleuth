@@ -36,6 +36,7 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,7 +56,7 @@ public class Issue307Tests {
 	@Test
 	public void should_start_context() {
 		try (ConfigurableApplicationContext applicationContext = SpringApplication
-				.run(SleuthSampleApplication.class, "--spring.jmx.enabled=false")) {
+				.run(SleuthSampleApplication.class, "--spring.jmx.enabled=false", "server.port=0")) {
 		}
 		then(ExceptionUtils.getLastException()).isNull();
 	}
@@ -71,6 +72,9 @@ class SleuthSampleApplication {
 
 	@Autowired
 	private RestTemplate restTemplate;
+
+	@Autowired
+	private Environment environment;
 
 	@Autowired
 	private ParticipantsBean participantsBean;
@@ -94,7 +98,11 @@ class SleuthSampleApplication {
 	@RequestMapping("/callhome")
 	public String callHome() {
 		LOG.log(Level.INFO, "calling home");
-		return restTemplate.getForObject("http://localhost:8080", String.class);
+		return restTemplate.getForObject("http://localhost:" + port(), String.class);
+	}
+
+	private int port() {
+		return this.environment.getProperty("local.server.port", Integer.class);
 	}
 }
 
