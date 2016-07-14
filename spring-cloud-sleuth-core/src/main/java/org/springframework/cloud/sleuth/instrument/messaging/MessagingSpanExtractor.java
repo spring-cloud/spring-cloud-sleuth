@@ -16,8 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Random;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
 import org.springframework.cloud.sleuth.SpanExtractor;
@@ -30,6 +33,8 @@ import org.springframework.messaging.Message;
  * @since 1.0.0
  */
 class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final Random random;
 
@@ -48,6 +53,8 @@ class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 		}
 		if (hasHeader(carrier, Span.TRACE_ID_NAME)
 				|| hasHeader(carrier, Span.SPAN_ID_NAME)) {
+			log.warn("Deprecated trace headers detected. Please upgrade Sleuth to 1.1 "
+					+ "or start sending headers present in the TraceMessageHeaders class");
 			return extractSpanFromOldHeaders(carrier, Span.builder());
 		}
 		return extractSpanFromNewHeaders(carrier, Span.builder());
