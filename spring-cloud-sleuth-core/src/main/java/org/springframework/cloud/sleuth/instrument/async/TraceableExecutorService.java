@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -25,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors
@@ -110,24 +111,35 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-		return this.delegate.invokeAll(tasks);
+		return this.delegate.invokeAll(wrapCallableCollection(tasks));
 	}
 
 	@Override
 	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
 			throws InterruptedException {
-		return this.delegate.invokeAll(tasks, timeout, unit);
+		return this.delegate.invokeAll(wrapCallableCollection(tasks), timeout, unit);
 	}
 
 	@Override
 	public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-		return this.delegate.invokeAny(tasks);
+		return this.delegate.invokeAny(wrapCallableCollection(tasks));
 	}
 
 	@Override
 	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
 			throws InterruptedException, ExecutionException, TimeoutException {
-		return this.delegate.invokeAny(tasks, timeout, unit);
+		return this.delegate.invokeAny(wrapCallableCollection(tasks), timeout, unit);
+	}
+
+	private <T> Collection<? extends Callable<T>> wrapCallableCollection(Collection<? extends Callable<T>> tasks) {
+		List<Callable<T>> ts = new ArrayList<>();
+		for (Callable<T> task : tasks) {
+			if (!(task instanceof LocalComponentTraceCallable)) {
+				ts.add(new LocalComponentTraceCallable<>(this.tracer, this.traceKeys,
+						this.spanNamer, this.spanName, task));
+			}
+		}
+		return ts;
 	}
 
 }
