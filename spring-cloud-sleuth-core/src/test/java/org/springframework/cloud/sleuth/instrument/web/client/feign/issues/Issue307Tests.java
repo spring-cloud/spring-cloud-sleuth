@@ -19,8 +19,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign.issues;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Before;
@@ -44,6 +42,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+
 import static org.assertj.core.api.BDDAssertions.then;
 
 public class Issue307Tests {
@@ -56,7 +56,7 @@ public class Issue307Tests {
 	@Test
 	public void should_start_context() {
 		try (ConfigurableApplicationContext applicationContext = SpringApplication
-				.run(SleuthSampleApplication.class, "--spring.jmx.enabled=false", "server.port=0")) {
+				.run(SleuthSampleApplication.class, "--spring.jmx.enabled=false", "--server.port=0")) {
 		}
 		then(ExceptionUtils.getLastException()).isNull();
 	}
