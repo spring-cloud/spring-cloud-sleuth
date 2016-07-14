@@ -17,7 +17,9 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 /**
- * Contains trace related messaging headers
+ * Contains trace related messaging headers. The deprecated headers contained `-` which
+ * for example in the JMS specs is invalid. That's why the public constants in this class
+ * represent the valid names for the tracing headers.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.4
