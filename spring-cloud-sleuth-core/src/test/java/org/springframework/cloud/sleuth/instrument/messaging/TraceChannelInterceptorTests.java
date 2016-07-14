@@ -88,12 +88,14 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Before
 	public void init() {
 		this.channel.subscribe(this);
+		this.accumulator.getSpans().clear();
 	}
 
 	@After
 	public void close() {
 		TestSpanContextHolder.removeCurrentSpan();
 		this.channel.unsubscribe(this);
+		this.accumulator.getSpans().clear();
 	}
 
 	@Test
@@ -122,6 +124,51 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		then(this.accumulator.getSpans()).hasSize(1);
+	}
+
+	// #332
+	@Test
+	public void shouldSendNewAndOldHeadersWhenNewHeadersWerePassed() {
+		this.channel.send(MessageBuilder.withPayload("hi")
+				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
+		then(this.message).isNotNull();
+
+		String newSpanId = thenNewSpanIdEqualsOldSpanId();
+		thenNewTraceIdEqualsOldTraceId();
+		then(newSpanId).isNotEqualTo(20L);
+		then(this.accumulator.getSpans()).hasSize(1);
+	}
+
+	private String thenNewSpanIdEqualsOldSpanId() {
+		String newSpanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		then(newSpanId).isNotNull();
+		String oldSpanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		then(oldSpanId).isEqualTo(newSpanId);
+		return newSpanId;
+	}
+
+	// #332
+	@Test
+	public void shouldSendNewAndOldHeadersWhenOldHeadersWerePassed() {
+		this.channel.send(MessageBuilder.withPayload("hi")
+				.setHeader(Span.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
+		then(this.message).isNotNull();
+
+		String newSpanId = thenNewSpanIdEqualsOldSpanId();
+		thenNewTraceIdEqualsOldTraceId();
+		then(newSpanId).isNotEqualTo(20L);
+		then(this.accumulator.getSpans()).hasSize(1);
+	}
+
+	private void thenNewTraceIdEqualsOldTraceId() {
+		long traceId = Span
+				.hexToId(this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
+		then(traceId).isEqualTo(10L);
+		long oldTraceId = Span
+				.hexToId(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+		then(oldTraceId).isEqualTo(traceId);
 	}
 
 	@Test

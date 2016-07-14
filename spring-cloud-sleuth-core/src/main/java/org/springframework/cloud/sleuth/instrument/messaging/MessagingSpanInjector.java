@@ -36,8 +36,6 @@ import org.springframework.util.StringUtils;
  */
 class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 
-	public static final String SPAN_HEADER = "X-Current-Span";
-
 	private final TraceKeys traceKeys;
 
 	public MessagingSpanInjector(TraceKeys traceKeys) {
@@ -50,31 +48,19 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(initialMessage);
 		if (span == null) {
-			if (!Span.SPAN_SAMPLED
-					.equals(initialMessage.getHeaders().get(Span.SAMPLED_NAME))) {
+			if (!isSampled(initialMessage, Span.SAMPLED_NAME) ||
+					!isSampled(initialMessage, TraceMessageHeaders.SAMPLED_NAME)) {
+				// Backwards compatibility
 				accessor.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
+				accessor.setHeader(TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 				carrier.setHeaders(accessor);
 				return;
 			}
 			return;
 		}
 		Map<String, String> headers = new HashMap<>();
-		addHeader(headers, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		addHeader(headers, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		if (span.isExportable()) {
-			addAnnotations(this.traceKeys, initialMessage, span);
-			Long parentId = getFirst(span.getParents());
-			if (parentId != null) {
-				addHeader(headers, Span.PARENT_ID_NAME, Span.idToHex(parentId));
-			}
-			addHeader(headers, Span.SPAN_NAME_NAME, span.getName());
-			addHeader(headers, Span.PROCESS_ID_NAME, span.getProcessId());
-			addHeader(headers, Span.SAMPLED_NAME, Span.SPAN_SAMPLED);
-		}
-		else {
-			addHeader(headers, Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
-		}
-		accessor.setHeader(SPAN_HEADER, span);
+		addOldHeaders(span, initialMessage, accessor, headers);
+		addNewHeaders(span, initialMessage, accessor, headers);
 		accessor.copyHeaders(headers);
 		if (accessor instanceof NativeMessageHeaderAccessor) {
 			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
@@ -83,6 +69,48 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 			}
 		}
 		carrier.setHeaders(accessor);
+	}
+
+	private boolean isSampled(Message<?> initialMessage, String sampledHeaderName) {
+		return Span.SPAN_SAMPLED
+				.equals(initialMessage.getHeaders().get(sampledHeaderName));
+	}
+
+	// Backwards compatibility
+	private void addOldHeaders(Span span, Message<?> initialMessage,
+			MessageHeaderAccessor accessor, Map<String, String> headers) {
+		addHeaders(span, initialMessage, accessor, headers, Span.TRACE_ID_NAME,
+				Span.SPAN_ID_NAME, Span.PARENT_ID_NAME, Span.SPAN_NAME_NAME, Span.PROCESS_ID_NAME,
+				Span.SAMPLED_NAME, TraceMessageHeaders.OLD_SPAN_HEADER);
+	}
+
+	private void addNewHeaders(Span span, Message<?> initialMessage,
+			MessageHeaderAccessor accessor, Map<String, String> headers) {
+		addHeaders(span, initialMessage, accessor, headers, TraceMessageHeaders.TRACE_ID_NAME,
+				TraceMessageHeaders.SPAN_ID_NAME, TraceMessageHeaders.PARENT_ID_NAME, TraceMessageHeaders.SPAN_NAME_NAME,
+				TraceMessageHeaders.PROCESS_ID_NAME, TraceMessageHeaders.SAMPLED_NAME, TraceMessageHeaders.SPAN_HEADER);
+	}
+
+	private void addHeaders(Span span, Message<?> initialMessage,
+			MessageHeaderAccessor accessor, Map<String, String> headers, String traceIdHeader,
+			String spanIdHeader, String parentIdHeader, String spanNameHeader, String processIdHeader,
+			String spanSampledHeader, String spanHeader) {
+		addHeader(headers, traceIdHeader, Span.idToHex(span.getTraceId()));
+		addHeader(headers, spanIdHeader, Span.idToHex(span.getSpanId()));
+		if (span.isExportable()) {
+			addAnnotations(this.traceKeys, initialMessage, span);
+			Long parentId = getFirst(span.getParents());
+			if (parentId != null) {
+				addHeader(headers, parentIdHeader, Span.idToHex(parentId));
+			}
+			addHeader(headers, spanNameHeader, span.getName());
+			addHeader(headers, processIdHeader, span.getProcessId());
+			addHeader(headers, spanSampledHeader, Span.SPAN_SAMPLED);
+		}
+		else {
+			addHeader(headers, spanSampledHeader, Span.SPAN_NOT_SAMPLED);
+		}
+		accessor.setHeader(spanHeader, span);
 	}
 
 	private void addAnnotations(TraceKeys traceKeys, Message<?> message, Span span) {
