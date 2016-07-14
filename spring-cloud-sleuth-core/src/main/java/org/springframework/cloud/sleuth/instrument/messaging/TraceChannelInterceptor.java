@@ -37,9 +37,6 @@ import org.springframework.messaging.support.MessageBuilder;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
-	private static final String SPAN_HEADER = "X-Current-Span";
-	private static final String MESSAGE_SENT_FROM_CLIENT = "X-Message-Sent";
-
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			SpanExtractor<Message<?>> spanExtractor,
 			SpanInjector<MessageBuilder<?>> spanInjector) {
@@ -76,11 +73,15 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		String name = getMessageChannelName(channel);
 		Span span = startSpan(parentSpan, name, message);
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
-		if (message.getHeaders().containsKey(MESSAGE_SENT_FROM_CLIENT)) {
+		// Backwards compatibility
+		if (message.getHeaders().containsKey(TraceMessageHeaders.OLD_MESSAGE_SENT_FROM_CLIENT) ||
+				message.getHeaders().containsKey(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT)) {
 			span.logEvent(Span.SERVER_RECV);
 		} else {
 			span.logEvent(Span.CLIENT_SEND);
-			messageBuilder.setHeader(MESSAGE_SENT_FROM_CLIENT, true);
+			// Backwards compatibility
+			messageBuilder.setHeader(TraceMessageHeaders.OLD_MESSAGE_SENT_FROM_CLIENT, true);
+			messageBuilder.setHeader(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT, true);
 		}
 		getSpanInjector().inject(span, messageBuilder);
 		return messageBuilder.build();
@@ -90,7 +91,9 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		if (span != null) {
 			return getTracer().createSpan(name, span);
 		}
-		if (Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(Span.SAMPLED_NAME))) {
+		// Backwards compatibility
+		if (Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(Span.SAMPLED_NAME)) ||
+				Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(TraceMessageHeaders.SAMPLED_NAME))) {
 			return getTracer().createSpan(name, NeverSampler.INSTANCE);
 		}
 		return getTracer().createSpan(name);
@@ -121,7 +124,11 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		if (message == null) {
 			return null;
 		}
-		Object object = message.getHeaders().get(SPAN_HEADER);
+		Object object = message.getHeaders().get(TraceMessageHeaders.OLD_SPAN_HEADER);
+		if (object instanceof Span) {
+			return (Span) object;
+		}
+		object = message.getHeaders().get(TraceMessageHeaders.SPAN_HEADER);
 		if (object instanceof Span) {
 			return (Span) object;
 		}

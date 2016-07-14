@@ -1,0 +1,40 @@
+/*
+ * Copyright 2013-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.cloud.sleuth.instrument.messaging;
+
+/**
+ * Contains trace related messaging headers
+ *
+ * @author Marcin Grzejszczak
+ * @since 1.0.4
+ */
+public class TraceMessageHeaders {
+
+	public static final String SPAN_ID_NAME = "spanId";
+	public static final String SAMPLED_NAME = "spanSampled";
+	public static final String PROCESS_ID_NAME = "spanProcessId";
+	public static final String PARENT_ID_NAME = "spanParentSpanId";
+	public static final String TRACE_ID_NAME = "spanTraceId";
+	public static final String SPAN_NAME_NAME = "spanName";
+
+	static final String OLD_SPAN_HEADER = "X-Current-Span";
+	static final String OLD_MESSAGE_SENT_FROM_CLIENT = "X-Message-Sent";
+	static final String SPAN_HEADER = "currentSpan";
+	static final String MESSAGE_SENT_FROM_CLIENT = "messageSent";
+
+	private TraceMessageHeaders() {}
+}

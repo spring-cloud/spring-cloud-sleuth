@@ -29,7 +29,7 @@ import org.springframework.messaging.Message;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
-public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
+class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 
 	private final Random random;
 
@@ -39,28 +39,53 @@ public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 
 	@Override
 	public Span joinTrace(Message<?> carrier) {
-		if (!hasHeader(carrier, Span.TRACE_ID_NAME)
-				|| !hasHeader(carrier, Span.SPAN_ID_NAME)) {
+		if ((!hasHeader(carrier, Span.TRACE_ID_NAME)
+				|| !hasHeader(carrier, Span.SPAN_ID_NAME))
+				&& (!hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME)
+				|| !hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME))) {
 			return null;
 			// TODO: Consider throwing IllegalArgumentException;
 		}
+		if (hasHeader(carrier, Span.TRACE_ID_NAME)
+				|| hasHeader(carrier, Span.SPAN_ID_NAME)) {
+			return extractSpanFromOldHeaders(carrier, Span.builder());
+		}
+		return extractSpanFromNewHeaders(carrier, Span.builder());
+	}
+
+	// Backwards compatibility
+	private Span extractSpanFromOldHeaders(Message<?> carrier, SpanBuilder spanBuilder) {
+		return extractSpanFromHeaders(carrier, spanBuilder, Span.TRACE_ID_NAME, Span.SPAN_ID_NAME,
+				Span.SAMPLED_NAME, Span.PROCESS_ID_NAME, Span.SPAN_NAME_NAME, Span.PARENT_ID_NAME);
+	}
+
+	private Span extractSpanFromNewHeaders(Message<?> carrier, SpanBuilder spanBuilder) {
+		return extractSpanFromHeaders(carrier, spanBuilder, TraceMessageHeaders.TRACE_ID_NAME,
+				TraceMessageHeaders.SPAN_ID_NAME, TraceMessageHeaders.SAMPLED_NAME,
+				TraceMessageHeaders.PROCESS_ID_NAME, TraceMessageHeaders.SPAN_NAME_NAME,
+				TraceMessageHeaders.PARENT_ID_NAME);
+	}
+
+	private Span extractSpanFromHeaders(Message<?> carrier, SpanBuilder spanBuilder,
+			String traceIdHeader, String spanIdHeader, String spanSampledHeader,
+			String spanProcessIdHeader, String spanNameHeader, String spanParentIdHeader) {
 		long traceId = Span
-				.hexToId(getHeader(carrier, Span.TRACE_ID_NAME));
-		long spanId = hasHeader(carrier, Span.SPAN_ID_NAME)
-				? Span.hexToId(getHeader(carrier, Span.SPAN_ID_NAME))
+				.hexToId(getHeader(carrier, traceIdHeader));
+		long spanId = hasHeader(carrier, spanIdHeader)
+				? Span.hexToId(getHeader(carrier, spanIdHeader))
 				: this.random.nextLong();
-		SpanBuilder spanBuilder = Span.builder().traceId(traceId).spanId(spanId);
+		spanBuilder = spanBuilder.traceId(traceId).spanId(spanId);
 		spanBuilder.exportable(
-				Span.SPAN_SAMPLED.equals(getHeader(carrier, Span.SAMPLED_NAME)));
-		String processId = getHeader(carrier, Span.PROCESS_ID_NAME);
-		String spanName = getHeader(carrier, Span.SPAN_NAME_NAME);
+				Span.SPAN_SAMPLED.equals(getHeader(carrier, spanSampledHeader)));
+		String processId = getHeader(carrier, spanProcessIdHeader);
+		String spanName = getHeader(carrier, spanNameHeader);
 		if (spanName != null) {
 			spanBuilder.name(spanName);
 		}
 		if (processId != null) {
 			spanBuilder.processId(processId);
 		}
-		setParentIdIfApplicable(carrier, spanBuilder);
+		setParentIdIfApplicable(carrier, spanBuilder, spanParentIdHeader);
 		spanBuilder.remote(true);
 		return spanBuilder.build();
 	}
@@ -77,8 +102,9 @@ public class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 		return message.getHeaders().containsKey(name);
 	}
 
-	private void setParentIdIfApplicable(Message<?> carrier, SpanBuilder spanBuilder) {
-		String parentId = getHeader(carrier, Span.PARENT_ID_NAME);
+	private void setParentIdIfApplicable(Message<?> carrier, SpanBuilder spanBuilder,
+			String spanParentIdHeader) {
+		String parentId = getHeader(carrier, spanParentIdHeader);
 		if (parentId != null) {
 			spanBuilder.parent(Span.hexToId(parentId));
 		}
