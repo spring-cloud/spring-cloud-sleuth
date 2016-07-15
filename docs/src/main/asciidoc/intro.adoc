@@ -383,7 +383,7 @@ include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/mast
 
 == Additional resources
 
-*Adrian Cole giving an introduction to ditributed tracing with Zipkin*
+*Adrian Cole giving an introduction to distributed tracing with Zipkin*
 
 video::f9J1Av8rwCE[youtube]
 

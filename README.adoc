@@ -506,6 +506,16 @@ public class ZipkinStreamServerApplication {
 }
 ----
 
+== Additional resources
+
+*Adrian Cole giving an introduction to distributed tracing with Zipkin*
+
+video::f9J1Av8rwCE[youtube]
+
+*Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin*
+
+video::eQV71Mw1u1c[youtube]
+
 == Features
 
 * Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator. Example logs:
