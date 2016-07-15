@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -53,7 +53,7 @@ public class StreamSpanReporter implements SpanReporter {
 
 	@InboundChannelAdapter(value = SleuthSource.OUTPUT)
 	public Spans poll() {
-		List<Span> result = new ArrayList<>();
+		List<Span> result = new LinkedList<>();
 		this.queue.drainTo(result);
 		for (Iterator<Span> iterator = result.iterator(); iterator.hasNext();) {
 			Span span = iterator.next();
