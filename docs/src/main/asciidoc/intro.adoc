@@ -387,6 +387,10 @@ include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/mast
 
 video::f9J1Av8rwCE[youtube]
 
+https://www.youtube.com/watch?v=f9J1Av8rwCE[click here to see the video]
+
 *Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin*
 
 video::eQV71Mw1u1c[youtube]
+
+https://www.youtube.com/watch?v=eQV71Mw1u1c[click here to see the video]
