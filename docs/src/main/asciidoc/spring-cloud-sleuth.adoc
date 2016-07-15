@@ -456,7 +456,12 @@ If you create a `RestTemplate` instance with a `new` keyword then the instrument
 
 Custom instrumentation is set to create and close Spans upon sending and receiving requests. You can customize the `ClientHttpRequestFactory`
 and the `AsyncClientHttpRequestFactory` by registering your beans. Remember to use tracing compatible implementations (e.g. don't forget to
-wrap `ThreadPoolTaskScheduler` in a `TraceAsyncListenableTaskExecutor`).
+wrap `ThreadPoolTaskScheduler` in a `TraceAsyncListenableTaskExecutor`). Example of custom request factories:
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebAsyncClientAutoConfigurationTest.java[tags=async_template_factories,indent=0]
+----
 
 To block the `AsyncRestTemplate` features set `spring.sleuth.web.async.client.enabled` to `false`.
 To disable creation of the default `TraceAsyncClientHttpRequestFactoryWrapper` set `spring.sleuth.web.async.client.factory.enabled`
