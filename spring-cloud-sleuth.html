@@ -2110,7 +2110,25 @@ If you create a <code>RestTemplate</code> instance with a <code>new</code> keywo
 <div class="paragraph">
 <p>Custom instrumentation is set to create and close Spans upon sending and receiving requests. You can customize the <code>ClientHttpRequestFactory</code>
 and the <code>AsyncClientHttpRequestFactory</code> by registering your beans. Remember to use tracing compatible implementations (e.g. don&#8217;t forget to
-wrap <code>ThreadPoolTaskScheduler</code> in a <code>TraceAsyncListenableTaskExecutor</code>).</p>
+wrap <code>ThreadPoolTaskScheduler</code> in a <code>TraceAsyncListenableTaskExecutor</code>). Example of custom request factories:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@EnableAutoConfiguration
+@Configuration
+public static class TestConfiguration {
+
+	@Bean
+	ClientHttpRequestFactory mySyncClientFactory() {
+		return new MySyncClientHttpRequestFactory();
+	}
+
+	@Bean
+	AsyncClientHttpRequestFactory myAsyncClientFactory() {
+		return new MyAsyncClientHttpRequestFactory();
+	}
+}</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>To block the <code>AsyncRestTemplate</code> features set <code>spring.sleuth.web.async.client.enabled</code> to <code>false</code>.
@@ -2247,7 +2265,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-07-15 09:06:41 CEST
+Last updated 2016-07-15 16:25:45 CEST
 </div>
 </div>
 </body>
