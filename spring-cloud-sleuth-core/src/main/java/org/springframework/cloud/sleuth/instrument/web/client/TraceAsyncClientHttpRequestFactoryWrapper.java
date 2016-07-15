@@ -43,8 +43,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttpRequestInterceptor
 		implements ClientHttpRequestFactory, AsyncClientHttpRequestFactory {
 
-	private final AsyncClientHttpRequestFactory asyncDelegate;
-	private final ClientHttpRequestFactory syncDelegate;
+	final AsyncClientHttpRequestFactory asyncDelegate;
+	final ClientHttpRequestFactory syncDelegate;
 
 	/**
 	 * According to the JavaDocs all Spring {@link AsyncClientHttpRequestFactory} implement
