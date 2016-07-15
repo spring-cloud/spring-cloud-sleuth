@@ -430,6 +430,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_terminology">Terminology</a></li>
 <li><a href="#_purpose">Purpose</a></li>
 <li><a href="#_adding_to_the_project">Adding to the project</a></li>
+<li><a href="#_additional_resources">Additional resources</a></li>
 <li><a href="#_features">Features</a></li>
 <li><a href="#_sampling">Sampling</a></li>
 <li><a href="#_instrumentation">Instrumentation</a></li>
@@ -1164,6 +1165,27 @@ public class ZipkinStreamServerApplication {
 </div>
 </div>
 <div class="sect1">
+<h2 id="_additional_resources">Additional resources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>Adrian Cole giving an introduction to distributed tracing with Zipkin</strong></p>
+</div>
+<div class="videoblock">
+<div class="content">
+<iframe src="https://www.youtube.com/embed/f9J1Av8rwCE?rel=0" frameborder="0" allowfullscreen></iframe>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin</strong></p>
+</div>
+<div class="videoblock">
+<div class="content">
+<iframe src="https://www.youtube.com/embed/eQV71Mw1u1c?rel=0" frameborder="0" allowfullscreen></iframe>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_features">Features</h2>
 <div class="sectionbody">
 <div class="ulist">
@@ -1567,7 +1589,7 @@ artificial like:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>http:path</code> when received an http request on a given path</p>
+<p><code>controller-method-name</code> when received by a Controller with a method name <code>conrollerMethodName</code></p>
 </li>
 <li>
 <p><code>async</code> for asynchronous operations done via wrapped <code>Callable</code> and <code>Runnable</code>.</p>
@@ -2048,6 +2070,17 @@ of regular expressions in the <code>spring.sleuth.rxjava.schedulers.ignoredthrea
 </div>
 </div>
 <div class="sect3">
+<h4 id="_handlerinterceptor">HandlerInterceptor</h4>
+<div class="paragraph">
+<p>Since we want the span names to be precise we&#8217;re using a <code>TraceHandlerInterceptor</code> that either wraps an
+ existing <code>HandlerInterceptor</code> or is added directly to the list of existing <code>HandlerInterceptors</code>. The
+ <code>TraceHandlerInterceptor</code> adds a special request attribute to the given <code>HttpServletRequest</code>. If the
+ the <code>TraceFilter</code> doesn&#8217;t see this attribute set it will create a "fallback" span which is an additional
+ span created on the server side so that the trace is presented properly in the UI. Seeing that most likely
+ signifies that there is a missing instrumentation. In that case please file an issue in Spring Cloud Sleuth.</p>
+</div>
+</div>
+<div class="sect3">
 <h4 id="_async_servlet_support">Async Servlet support</h4>
 <div class="paragraph">
 <p>If your controller returns a <code>Callable</code> or a <code>WebAsyncTask</code> Spring Cloud Sleuth will continue the existing span instead of creating a new one.</p>
@@ -2062,6 +2095,19 @@ of regular expressions in the <code>spring.sleuth.rxjava.schedulers.ignoredthrea
 <p>We&#8217;re injecting a <code>RestTemplate</code> interceptor that ensures that all the tracing information is passed to the requests. Each time a
 call is made a new Span is created. It gets closed upon receiving the response. In order to block the synchronous <code>RestTemplate</code> features
 just set <code>spring.sleuth.web.client.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+You have to register <code>RestTemplate</code> as a bean so that the interceptors will get injected.
+If you create a <code>RestTemplate</code> instance with a <code>new</code> keyword then the instrumentation WILL NOT work.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect3">
@@ -2164,6 +2210,17 @@ are creating Spans each time a new task is submitted, invoked or scheduled.</p>
 <p>Spring Cloud Sleuth integrates with <a href="http://projects.spring.io/spring-integration/">Spring Integration</a>. It creates spans for publish and
 subscribe events. To disable Spring Integration instrumentation, set <code>spring.sleuth.integration.enabled</code> to false.</p>
 </div>
+<div class="paragraph">
+<p>Spring Cloud Sleuth up till version 1.0.4 is sending invalid tracing headers when using messaging. Those headers are actually
+the same as the ones sent in HTTP (they contain a <code>-</code>) in its name. For the sake of
+backwards compatibility in 1.0.4 we&#8217;ve started sending both valid and invalid headers. Please upgrade to 1.0.4 because
+in Spring Cloud Sleuth 1.1 we will remove the support for the deprecated headers.</p>
+</div>
+<div class="paragraph">
+<p>You can provide the <code>spring.sleuth.integration.patterns</code> pattern to explicitly
+provide the names of channels that you want to include for tracing. By default all channels
+are included.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_zuul">Zuul</h3>
@@ -2195,7 +2252,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-06-10 12:55:57 CEST
+Last updated 2016-07-15 08:56:08 CEST
 </div>
 </div>
 </body>
