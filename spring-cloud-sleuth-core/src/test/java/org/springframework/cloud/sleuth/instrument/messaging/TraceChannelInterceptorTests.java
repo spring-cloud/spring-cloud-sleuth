@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,8 +30,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -45,23 +49,25 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import static org.junit.Assert.assertNotNull;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Dave Syer
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = App.class)
-@IntegrationTest
+@SpringBootTest(classes = App.class, webEnvironment = WebEnvironment.NONE)
 @DirtiesContext
+@TestPropertySource(properties = "spring.sleuth.integration.patterns=traced*")
 public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Autowired
-	@Qualifier("channel")
-	private DirectChannel channel;
+	@Qualifier("tracedChannel")
+	private DirectChannel tracedChannel;
+
+	@Autowired
+	@Qualifier("ignoredChannel")
+	private DirectChannel ignoredChannel;
 
 	@Autowired
 	private Tracer tracer;
@@ -87,20 +93,22 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Before
 	public void init() {
-		this.channel.subscribe(this);
+		this.tracedChannel.subscribe(this);
+		this.ignoredChannel.subscribe(this);
 		this.accumulator.getSpans().clear();
 	}
 
 	@After
 	public void close() {
 		TestSpanContextHolder.removeCurrentSpan();
-		this.channel.unsubscribe(this);
+		this.tracedChannel.unsubscribe(this);
+		this.ignoredChannel.unsubscribe(this);
 		this.accumulator.getSpans().clear();
 	}
 
 	@Test
 	public void nonExportableSpanCreation() {
-		this.channel.send(MessageBuilder.withPayload("hi")
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
 		assertNotNull("message was null", this.message);
 
@@ -112,7 +120,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void parentSpanIncluded() {
-		this.channel.send(MessageBuilder.withPayload("hi")
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader(Span.TRACE_ID_NAME, Span.idToHex(10L))
 				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
 		then(this.message).isNotNull();
@@ -129,7 +137,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	// #332
 	@Test
 	public void shouldSendNewAndOldHeadersWhenNewHeadersWerePassed() {
-		this.channel.send(MessageBuilder.withPayload("hi")
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
 				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
 		then(this.message).isNotNull();
@@ -141,7 +149,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	}
 
 	private String thenNewSpanIdEqualsOldSpanId() {
-		String newSpanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		String newSpanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME,
+				String.class);
 		then(newSpanId).isNotNull();
 		String oldSpanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
 		then(oldSpanId).isEqualTo(newSpanId);
@@ -151,7 +160,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	// #332
 	@Test
 	public void shouldSendNewAndOldHeadersWhenOldHeadersWerePassed() {
-		this.channel.send(MessageBuilder.withPayload("hi")
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader(Span.TRACE_ID_NAME, Span.idToHex(10L))
 				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
 		then(this.message).isNotNull();
@@ -163,8 +172,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	}
 
 	private void thenNewTraceIdEqualsOldTraceId() {
-		long traceId = Span
-				.hexToId(this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
+		long traceId = Span.hexToId(this.message.getHeaders()
+				.get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		long oldTraceId = Span
 				.hexToId(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
@@ -173,7 +182,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void spanCreation() {
-		this.channel.send(MessageBuilder.withPayload("hi").build());
+		this.tracedChannel.send(MessageBuilder.withPayload("hi").build());
 		then(this.message).isNotNull();
 
 		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
@@ -186,22 +195,25 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void shouldLogClientReceivedClientSentEventWhenTheMessageIsSentAndReceived() {
-		this.channel.send(MessageBuilder.withPayload("hi").build());
+		this.tracedChannel.send(MessageBuilder.withPayload("hi").build());
 
-		then(this.span.logs()).extracting("event").contains(Span.CLIENT_SEND, Span.CLIENT_RECV);
+		then(this.span.logs()).extracting("event").contains(Span.CLIENT_SEND,
+				Span.CLIENT_RECV);
 	}
 
 	@Test
 	public void shouldLogServerReceivedServerSentEventWhenTheMessageIsPropagatedToTheNextListener() {
-		this.channel.send(MessageBuilder.withPayload("hi").setHeader("X-Message-Sent", true).build());
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader("X-Message-Sent", true).build());
 
-		then(this.span.logs()).extracting("event").contains(Span.SERVER_RECV, Span.SERVER_SEND);
+		then(this.span.logs()).extracting("event").contains(Span.SERVER_RECV,
+				Span.SERVER_SEND);
 	}
 
 	@Test
 	public void headerCreation() {
 		Span span = this.tracer.createSpan("http:testSendMessage", new AlwaysSampler());
-		this.channel.send(MessageBuilder.withPayload("hi").build());
+		this.tracedChannel.send(MessageBuilder.withPayload("hi").build());
 		this.tracer.close(span);
 		then(this.message).isNotNull();
 
@@ -237,12 +249,30 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		errorHeaders.put("THROW_EXCEPTION", "TRUE");
 
 		try {
-			this.messagingTemplate.send(MessageBuilder.withPayload("hi").copyHeaders(errorHeaders).build());
+			this.messagingTemplate.send(
+					MessageBuilder.withPayload("hi").copyHeaders(errorHeaders).build());
 			SleuthAssertions.fail("Exception should occur");
-		} catch (RuntimeException e) {}
+		}
+		catch (RuntimeException e) {
+		}
 
 		then(this.message).isNotNull();
 		this.tracer.close(span);
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
+	public void shouldNotTraceIgnoredChannel() {
+		this.ignoredChannel.send(MessageBuilder.withPayload("hi").build());
+		then(this.message).isNotNull();
+
+		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		then(spanId).isNull();
+
+		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
+		then(traceId).isNull();
+
+		then(accumulator.getSpans()).isEmpty();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
@@ -256,13 +286,18 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		}
 
 		@Bean
-		public DirectChannel channel() {
+		public DirectChannel tracedChannel() {
+			return new DirectChannel();
+		}
+
+		@Bean
+		public DirectChannel ignoredChannel() {
 			return new DirectChannel();
 		}
 
 		@Bean
 		public MessagingTemplate messagingTemplate() {
-			return new MessagingTemplate(channel());
+			return new MessagingTemplate(tracedChannel());
 		}
 
 		@Bean
