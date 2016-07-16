@@ -38,20 +38,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.integration.config.GlobalChannelInterceptor;
+import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.scheduling.support.PeriodicTrigger;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * for sending spans over Spring Cloud Stream. This is for the producer
- * (via {@link SleuthSource}). A consumer can enable binding to {@link SleuthSink} and
- * receive the messages coming from the source (they have the same channel name so there
- * is no additional configuration to do by default).
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} for sending spans over Spring Cloud Stream. This is for
+ * the producer (via {@link SleuthSource}). A consumer can enable binding to
+ * {@link SleuthSink} and receive the messages coming from the source (they have
+ * the same channel name so there is no additional configuration to do by
+ * default).
  *
  * @author Dave Syer
  * @since 1.0.0
  */
 @Configuration
-@EnableConfigurationProperties({SleuthStreamProperties.class, SamplerProperties.class})
+@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class })
 @AutoConfigureAfter(TraceMetricsAutoConfiguration.class)
 @AutoConfigureBefore(ChannelBindingAutoConfiguration.class)
 @EnableBinding(SleuthSource.class)
@@ -75,6 +78,15 @@ public class SleuthStreamAutoConfiguration {
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
 			SpanMetricReporter spanMetricReporter) {
 		return new StreamSpanReporter(endpointLocator, spanMetricReporter);
+	}
+
+	@Bean(name = StreamSpanReporter.POLLER)
+	@ConditionalOnMissingBean(name = StreamSpanReporter.POLLER)
+	public PollerMetadata defaultStreamSpanReporterPoller(SleuthStreamProperties sleuth) {
+		PollerMetadata poller = new PollerMetadata();
+		poller.setTrigger(new PeriodicTrigger(sleuth.getPoller().getFixedDelay()));
+		poller.setMaxMessagesPerPoll(sleuth.getPoller().getMaxMessagesPerPoll());
+		return poller;
 	}
 
 	@Configuration
