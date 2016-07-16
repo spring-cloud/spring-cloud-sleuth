@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *	  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,7 +29,6 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
@@ -54,15 +53,16 @@ import org.springframework.web.client.AsyncRestTemplate;
 public class TraceWebAsyncClientAutoConfiguration {
 
 	@Autowired Tracer tracer;
-	@Autowired HttpTraceKeysInjector httpTraceKeysInjector;
-	@Autowired SpanInjector<HttpRequest> spanInjector;
-	@Autowired(required = false) ClientHttpRequestFactory clientHttpRequestFactory;
-	@Autowired(required = false) AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
+	@Autowired
+	private HttpTraceKeysInjector httpTraceKeysInjector;
+	@Autowired
+	private SpanInjector<HttpRequest> spanInjector;
+	@Autowired(required = false)
+	private ClientHttpRequestFactory clientHttpRequestFactory;
+	@Autowired(required = false)
+	private AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
 
-	@Bean
-	@Primary
-	@ConditionalOnProperty(value = "spring.sleuth.web.async.client.factory.enabled", matchIfMissing = true)
-	public TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactory() {
+	private TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactory() {
 		ClientHttpRequestFactory clientFactory = this.clientHttpRequestFactory;
 		AsyncClientHttpRequestFactory asyncClientFactory = this.asyncClientHttpRequestFactory;
 		if (clientFactory == null) {
