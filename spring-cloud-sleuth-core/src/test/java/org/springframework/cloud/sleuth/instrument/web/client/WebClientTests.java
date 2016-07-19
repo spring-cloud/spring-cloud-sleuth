@@ -81,7 +81,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
 @SpringApplicationConfiguration(classes = { WebClientTests.TestConfiguration.class })
-@WebIntegrationTest(value = { "spring.application.name=fooservice" }, randomPort = true)
+@WebIntegrationTest(value = { "spring.application.name=fooservice", "feign.hystrix.enabled=false" }, randomPort = true)
 @DirtiesContext
 public class WebClientTests {
 
