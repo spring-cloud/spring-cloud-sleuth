@@ -20,11 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,8 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.OutputCapture;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -51,12 +45,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import com.netflix.hystrix.exception.HystrixRuntimeException;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
@@ -69,9 +69,9 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author ryarabori
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(
-		classes = {FeignClientServerErrorTests.TestConfiguration.class})
-@WebIntegrationTest(value = {"spring.application.name=fooservice"}, randomPort = true)
+@SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = { "spring.application.name=fooservice" })
 public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;

@@ -26,8 +26,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,9 +44,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class })
-@WebIntegrationTest
-@TestPropertySource(properties="sample.zipkin.enabled=true")
+@SpringBootTest(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class },
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestPropertySource(properties = { "sample.zipkin.enabled=true" })
 @DirtiesContext
 public class MessagingApplicationTests extends AbstractIntegrationTest {
 

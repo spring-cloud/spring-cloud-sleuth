@@ -7,8 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -42,10 +41,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringApplicationConfiguration(classes = {
-		RestTemplateTraceAspectIntegrationTests.Config.class })
 @RunWith(SpringJUnit4ClassRunner.class)
-@WebIntegrationTest(randomPort = true)
+@SpringBootTest(classes = RestTemplateTraceAspectIntegrationTests.Config.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class RestTemplateTraceAspectIntegrationTests {
 

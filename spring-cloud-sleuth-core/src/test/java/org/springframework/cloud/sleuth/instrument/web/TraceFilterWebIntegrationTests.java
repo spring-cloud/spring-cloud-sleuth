@@ -24,8 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
@@ -49,8 +48,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@WebIntegrationTest({ "server.port=0" })
-@SpringApplicationConfiguration(classes = { TraceFilterWebIntegrationTests.Config.class })
+@SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TraceFilterWebIntegrationTests {
 
 	@Autowired Tracer tracer;

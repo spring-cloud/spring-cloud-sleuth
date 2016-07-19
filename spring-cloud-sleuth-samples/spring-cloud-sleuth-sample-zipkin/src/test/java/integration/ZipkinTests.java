@@ -25,8 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,9 +42,8 @@ import zipkin.server.EnableZipkinServer;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { WaitUntilZipkinIsUpConfig.class,
-		SampleZipkinApplication.class })
-@WebIntegrationTest
+@SpringBootTest(classes = { WaitUntilZipkinIsUpConfig.class, SampleZipkinApplication.class },
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = {"sample.zipkin.enabled=true"})
 public class ZipkinTests extends AbstractIntegrationTest {
 
@@ -69,10 +67,10 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	public void should_propagate_spans_to_zipkin() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
+		await().atMost(10, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
 				this.sampleAppUrl + "/hi2", traceId));
 
-		await().atMost(5, SECONDS).until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
+		await().atMost(10, SECONDS).until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
 	}
 
 	@Override

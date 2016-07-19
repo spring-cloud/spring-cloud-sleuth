@@ -16,12 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,8 +29,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
@@ -58,8 +57,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(TraceFilterCustomExtractorTests.Config.class)
-@WebIntegrationTest(randomPort = true)
+@SpringBootTest(classes = TraceFilterCustomExtractorTests.Config.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class TraceFilterCustomExtractorTests {
 	@Autowired Random random;

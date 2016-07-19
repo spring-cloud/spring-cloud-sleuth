@@ -45,6 +45,7 @@ import org.springframework.boot.autoconfigure.web.ErrorAttributes;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -62,6 +63,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -80,8 +82,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
-@SpringApplicationConfiguration(classes = { WebClientTests.TestConfiguration.class })
-@WebIntegrationTest(value = { "spring.application.name=fooservice", "feign.hystrix.enabled=false" }, randomPort = true)
+@SpringBootTest(classes = WebClientTests.TestConfiguration.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = { "spring.application.name=fooservice", "feign.hystrix.enabled=false" })
 @DirtiesContext
 public class WebClientTests {
 
