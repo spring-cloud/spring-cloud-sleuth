@@ -19,21 +19,23 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import org.springframework.beans.factory.BeanFactory;
 
 import feign.Feign;
+import feign.hystrix.HystrixFeign;
 
 /**
- * Contains {@link feign.Feign.Builder} implementation with tracing components
+ * Contains {@link Feign.Builder} implementation that delegates execution
+ * {@link HystrixFeign} with tracing components
  * that close spans on exceptions / success and continues them on retries.
  *
  * @author Marcin Grzejszczak
  *
- * @since 1.0.0
+ * @since 1.0.4
  */
-final class SleuthFeignBuilder {
+final class SleuthHystrixFeignBuilder {
 
-	private SleuthFeignBuilder() {}
+	private SleuthHystrixFeignBuilder() {}
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
-		return Feign.builder()
+		return HystrixFeign.builder()
 				.client(new TraceFeignClient(beanFactory))
 				.retryer(new TraceFeignRetryer(beanFactory))
 				.decoder(new TraceFeignDecoder(beanFactory))
