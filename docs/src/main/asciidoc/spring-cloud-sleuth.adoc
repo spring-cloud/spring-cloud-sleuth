@@ -460,7 +460,7 @@ wrap `ThreadPoolTaskScheduler` in a `TraceAsyncListenableTaskExecutor`). Example
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebAsyncClientAutoConfigurationTest.java[tags=async_template_factories,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebAsyncClientAutoConfigurationTests.java[tags=async_template_factories,indent=0]
 ----
 
 To block the `AsyncRestTemplate` features set `spring.sleuth.web.async.client.enabled` to `false`.
