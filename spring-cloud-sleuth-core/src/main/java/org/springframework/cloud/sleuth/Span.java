@@ -27,12 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -305,7 +305,7 @@ public class Span {
 	 * Will never be null.
 	 */
 	public Map<String, String> tags() {
-		return Collections.unmodifiableMap(this.tags);
+		return Collections.unmodifiableMap(new LinkedHashMap<>(this.tags));
 	}
 
 	/**
@@ -315,7 +315,7 @@ public class Span {
 	 * Will never be null.
 	 */
 	public List<Log> logs() {
-		return Collections.unmodifiableList(this.logs);
+		return Collections.unmodifiableList(new ArrayList<>(this.logs));
 	}
 
 	/**
