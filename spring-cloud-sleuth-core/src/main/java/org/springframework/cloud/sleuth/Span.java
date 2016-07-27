@@ -26,6 +26,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -142,7 +144,7 @@ public class Span {
 	private boolean exportable = true;
 	private final Map<String, String> tags;
 	private final String processId;
-	private final List<Log> logs;
+	private final Collection<Log> logs;
 	private final Span savedSpan;
 
 	// Null means we don't know the start tick, so fallback to time
@@ -205,8 +207,8 @@ public class Span {
 		this.exportable = exportable;
 		this.processId = processId;
 		this.savedSpan = savedSpan;
-		this.tags = new LinkedHashMap<>();
-		this.logs = new ArrayList<>();
+		this.tags = new ConcurrentHashMap<>();
+		this.logs = new ConcurrentLinkedQueue<>();
 	}
 
 	public static SpanBuilder builder() {
