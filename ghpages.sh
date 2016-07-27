@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-git remote set-url --push origin `git config remote.origin.url | sed -e 's/^git:/https:/'`
+#git remote set-url --push origin `git config remote.origin.url | sed -e 's/^git:/https:/'`
 
 if ! (git remote set-branches --add origin gh-pages && git fetch -q); then
     echo "No gh-pages, so not syncing"
