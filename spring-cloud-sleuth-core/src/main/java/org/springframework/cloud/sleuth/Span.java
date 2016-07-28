@@ -26,13 +26,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -142,7 +144,7 @@ public class Span {
 	private boolean exportable = true;
 	private final Map<String, String> tags;
 	private final String processId;
-	private final List<Log> logs;
+	private final Collection<Log> logs;
 	private final Span savedSpan;
 
 	// Null means we don't know the start tick, so fallback to time
@@ -205,8 +207,8 @@ public class Span {
 		this.exportable = exportable;
 		this.processId = processId;
 		this.savedSpan = savedSpan;
-		this.tags = new LinkedHashMap<>();
-		this.logs = new ArrayList<>();
+		this.tags = new ConcurrentHashMap<>();
+		this.logs = new ConcurrentLinkedQueue<>();
 	}
 
 	public static SpanBuilder builder() {
@@ -297,7 +299,7 @@ public class Span {
 	 * Will never be null.
 	 */
 	public Map<String, String> tags() {
-		return Collections.unmodifiableMap(this.tags);
+		return Collections.unmodifiableMap(new LinkedHashMap<>(this.tags));
 	}
 
 	/**
@@ -307,7 +309,7 @@ public class Span {
 	 * Will never be null.
 	 */
 	public List<Log> logs() {
-		return Collections.unmodifiableList(this.logs);
+		return Collections.unmodifiableList(new ArrayList<>(this.logs));
 	}
 
 	/**
