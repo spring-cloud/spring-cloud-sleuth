@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.lang.invoke.MethodHandles;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -87,8 +87,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 
 	private void addClassMethodTag(Object handler, Span span) {
 		if (handler instanceof HandlerMethod) {
-			String methodName = SpanNameUtil.toLowerHyphen(
-					((HandlerMethod) handler).getMethod().getName());
+			String methodName = ((HandlerMethod) handler).getMethod().getName();
 			getTracer().addTag(getTraceKeys().getMvc().getControllerMethod(), methodName);
 			if (log.isDebugEnabled()) {
 				log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
@@ -99,10 +98,9 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	private void addClassNameTag(Object handler, Span span) {
 		String className;
 		if (handler instanceof HandlerMethod) {
-			className = SpanNameUtil.toLowerHyphen(
-					((HandlerMethod) handler).getBeanType().getSimpleName());
+			className = ((HandlerMethod) handler).getBeanType().getSimpleName();
 		} else {
-			className = SpanNameUtil.toLowerHyphen(handler.getClass().getSimpleName());
+			className = handler.getClass().getSimpleName();
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Adding a class tag with value [" + className + "] to a span " + span);

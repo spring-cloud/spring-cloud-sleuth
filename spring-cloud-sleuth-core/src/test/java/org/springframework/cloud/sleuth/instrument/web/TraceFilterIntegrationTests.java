@@ -105,7 +105,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentFutureWithTraceId(expectedTraceId);
-		mvcResult = this.mockMvc.perform(asyncDispatch(mvcResult))
+		this.mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().isOk()).andReturn();
 
 		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
@@ -118,7 +118,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentDeferredWithTraceId(expectedTraceId);
-		mvcResult = this.mockMvc.perform(asyncDispatch(mvcResult))
+		this.mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().isOk()).andReturn();
 
 		then(tracingHeaderFrom(mvcResult)).isEqualTo(expectedTraceId);
@@ -126,8 +126,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				.filter(span -> span.tags().containsKey("tag")).findFirst();
 		then(taggedSpan.isPresent()).isTrue();
 		then(taggedSpan.get()).hasATag("tag", "value");
-		then(taggedSpan.get()).hasATag("mvc.controller.method", "deferred");
-		then(taggedSpan.get()).hasATag("mvc.controller.class", "test-controller");
+		then(taggedSpan.get()).hasATag("mvc.controller.method", "deferredMethod");
+		then(taggedSpan.get()).hasATag("mvc.controller.class", "TestController");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -257,7 +257,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			}
 
 			@RequestMapping("/deferred")
-			public DeferredResult<String> deferred() {
+			public DeferredResult<String> deferredMethod() {
 				logger.info("deferred");
 				this.tracer.addTag("tag", "value");
 				span = this.tracer.getCurrentSpan();
