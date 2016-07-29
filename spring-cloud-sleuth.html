@@ -1925,6 +1925,25 @@ the consumer app).
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>In order to customize the polling mechanism you can create a bean of <code>PollerMetadata</code> type
+with name equal to <code>StreamSpanReporter.POLLER</code>. Here you can find an example of such a configuration.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public static class CustomPollerConfiguration {
+
+	@Bean(name = StreamSpanReporter.POLLER)
+	PollerMetadata customPoller() {
+		PollerMetadata poller = new PollerMetadata();
+		poller.setMaxMessagesPerPoll(500);
+		poller.setTrigger(new PeriodicTrigger(5000L));
+		return poller;
+	}
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -2281,7 +2300,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-07-29 13:40:55 UTC
+Last updated 2016-07-29 13:49:27 UTC
 </div>
 </div>
 </body>
