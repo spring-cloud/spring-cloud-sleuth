@@ -87,7 +87,7 @@ public class ZipkinSpanListener implements SpanReporter {
 		}
 		zipkinSpan.timestamp(span.getBegin() * 1000L);
 		if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
-			zipkinSpan.duration(span.getAccumulatedMicros());
+			zipkinSpan.duration(calculateDurationInMicros(span));
 		}
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
@@ -171,6 +171,24 @@ public class ZipkinSpanListener implements SpanReporter {
 					.endpoint(ep).build();
 			zipkinSpan.addBinaryAnnotation(binaryAnn);
 		}
+	}
+
+	private long calculateDurationInMicros(Span span) {
+		org.springframework.cloud.sleuth.Log clientSend = hasLog(Span.CLIENT_SEND, span);
+		org.springframework.cloud.sleuth.Log clientReceived = hasLog(Span.CLIENT_RECV, span);
+		if (clientSend != null && clientReceived != null) {
+			return (clientReceived.getTimestamp() - clientSend.getTimestamp()) * 1000;
+		}
+		return span.getAccumulatedMicros();
+	}
+
+	private org.springframework.cloud.sleuth.Log hasLog(String logName, Span span) {
+		for (org.springframework.cloud.sleuth.Log log : span.logs()) {
+			if (logName.equals(log.getEvent())) {
+				return log;
+			}
+		}
+		return null;
 	}
 
 	@Override
