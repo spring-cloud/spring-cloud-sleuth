@@ -85,7 +85,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
-		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
+		whenSentPingWithTraceId(expectedTraceId);
 
 		then(ExceptionUtils.getLastException()).isNull();
 	}
@@ -105,7 +105,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentFutureWithTraceId(expectedTraceId);
-		mvcResult = this.mockMvc.perform(asyncDispatch(mvcResult))
+		this.mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().isOk()).andReturn();
 
 		then(this.tracer.getCurrentSpan()).isNull();
@@ -117,15 +117,15 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentDeferredWithTraceId(expectedTraceId);
-		mvcResult = this.mockMvc.perform(asyncDispatch(mvcResult))
+		this.mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().isOk()).andReturn();
 
 		Optional<Span> taggedSpan = this.spanAccumulator.getSpans().stream()
 				.filter(span -> span.tags().containsKey("tag")).findFirst();
 		then(taggedSpan.isPresent()).isTrue();
 		then(taggedSpan.get()).hasATag("tag", "value");
-		then(taggedSpan.get()).hasATag("mvc.controller.method", "deferred");
-		then(taggedSpan.get()).hasATag("mvc.controller.class", "test-controller");
+		then(taggedSpan.get()).hasATag("mvc.controller.method", "deferredMethod");
+		then(taggedSpan.get()).hasATag("mvc.controller.class", "TestController");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -133,7 +133,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	public void should_log_tracing_information_when_exception_was_thrown() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
-		MvcResult mvcResult = whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
+		whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
 
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
@@ -248,7 +248,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			}
 
 			@RequestMapping("/deferred")
-			public DeferredResult<String> deferred() {
+			public DeferredResult<String> deferredMethod() {
 				logger.info("deferred");
 				this.tracer.addTag("tag", "value");
 				span = this.tracer.getCurrentSpan();
