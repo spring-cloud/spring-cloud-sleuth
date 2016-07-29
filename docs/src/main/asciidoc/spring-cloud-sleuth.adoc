@@ -532,6 +532,9 @@ You can provide the `spring.sleuth.integration.patterns` pattern to explicitly
 provide the names of channels that you want to include for tracing. By default all channels
 are included.
 
+IMPORTANT: When using the `Executor` to build a Spring Integration `IntegrationFlow` remember to use the *untraced* version of the `Executor`.
+Decorating Spring Integration Executor Channel with `TraceableExecutorService` will cause the spans to be improperly closed.
+
 === Zuul
 
 We're registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
