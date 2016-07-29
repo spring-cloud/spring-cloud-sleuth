@@ -16,16 +16,22 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
+import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.DefaultTracer;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
@@ -34,21 +40,23 @@ import com.netflix.hystrix.strategy.executionhook.HystrixCommandExecutionHook;
 import com.netflix.hystrix.strategy.metrics.HystrixMetricsPublisher;
 import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
 public class SleuthHystrixConcurrencyStrategyTest {
 
-	@Mock Tracer tracer;
+	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
+	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+			new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanReporter);
 	TraceKeys traceKeys = new TraceKeys();
 
 	@Before
 	@After
 	public void setup() {
+		ExceptionUtils.setFail(true);
 		HystrixPlugins.reset();
+		this.spanReporter.getSpans().clear();
 	}
 
 	@Test
@@ -92,6 +100,58 @@ public class SleuthHystrixConcurrencyStrategyTest {
 		Callable<String> callable = strategy.wrapCallable(() -> "hello");
 
 		then(callable).isInstanceOf(SleuthHystrixConcurrencyStrategy.HystrixTraceCallable.class);
+	}
+
+	@Test
+	public void should_add_trace_keys_when_span_is_created()
+			throws Exception {
+		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
+				this.tracer, this.traceKeys);
+		Callable<String> callable = strategy.wrapCallable(() -> "hello");
+
+		callable.call();
+
+		String asyncKey = this.traceKeys.getAsync().getPrefix()
+				+ this.traceKeys.getAsync().getThreadNameKey();
+		then(new ListOfSpans(this.spanReporter.getSpans()))
+				.hasASpanWithTagEqualTo(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "hystrix")
+				.hasASpanWithTagKeyEqualTo(asyncKey);
+	}
+
+	@Test
+	public void should_add_trace_keys_when_span_is_continued()
+			throws Exception {
+		Span span = this.tracer.createSpan("new_span");
+		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
+				this.tracer, this.traceKeys);
+		Callable<String> callable = strategy.wrapCallable(() -> "hello");
+
+		callable.call();
+
+		String asyncKey = this.traceKeys.getAsync().getPrefix()
+				+ this.traceKeys.getAsync().getThreadNameKey();
+		then(span)
+				.hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "hystrix")
+				.hasATagWithKey(asyncKey);
+	}
+
+	@Test
+	public void should_not_override_trace_keys_when_span_is_continued()
+			throws Exception {
+		Span span = this.tracer.createSpan("new_span");
+		String asyncKey = this.traceKeys.getAsync().getPrefix()
+				+ this.traceKeys.getAsync().getThreadNameKey();
+		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "foo");
+		this.tracer.addTag(asyncKey, "bar");
+		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
+				this.tracer, this.traceKeys);
+		Callable<String> callable = strategy.wrapCallable(() -> "hello");
+
+		callable.call();
+
+		then(span)
+				.hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "foo")
+				.hasATag(asyncKey, "bar");
 	}
 
 	static class MyHystrixCommandExecutionHook extends HystrixCommandExecutionHook {}
