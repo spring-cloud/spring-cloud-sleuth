@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.PostConstruct;
 
 import org.junit.Test;
@@ -78,6 +77,28 @@ public class ZipkinSpanListenerTests {
 		assertThat(result.annotations.get(0).timestamp)
 				.isGreaterThanOrEqualTo(start * 1000)
 				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);
+	}
+
+	@Test
+	public void setsTheDurationToTheDifferenceBetweenCRandCS()
+			throws InterruptedException {
+		this.parent.logEvent(Span.CLIENT_SEND);
+		Thread.sleep(10);
+		this.parent.logEvent(Span.CLIENT_RECV);
+		Thread.sleep(20);
+		this.parent.stop();
+
+		zipkin.Span result = this.spanReporter.convert(this.parent);
+
+		assertThat(result.timestamp)
+				.isEqualTo(this.parent.getBegin() * 1000);
+		long clientSendTimestamp = this.parent.logs().stream().filter(log -> Span.CLIENT_SEND.equals(log.getEvent()))
+				.findFirst().get().getTimestamp();
+		long clientRecvTimestamp = this.parent.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
+				.findFirst().get().getTimestamp();
+		assertThat(result.duration)
+				.isNotEqualTo(this.parent.getAccumulatedMicros())
+				.isEqualTo((clientRecvTimestamp - clientSendTimestamp) * 1000);
 	}
 
 	/** Zipkin's duration should only be set when the span is finished. */

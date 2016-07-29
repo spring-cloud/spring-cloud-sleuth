@@ -251,6 +251,10 @@ public class Span {
 	 * Return the total amount of time elapsed since start was called, if running, or
 	 * difference between stop and start, in microseconds.
 	 *
+	 * Note that in case of the spans that have CS / CR events we will not
+	 * send to Zipkin the accumulated microseconds but will calculate the
+	 * duration basing on the timestamps of the CS / CR events.
+	 *
 	 * @return zero if not running, or a positive number of microseconds.
 	 */
 	@JsonIgnore

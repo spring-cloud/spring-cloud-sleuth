@@ -128,6 +128,30 @@ public class ConvertToZipkinSpanListTests {
 				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);
 	}
 
+	@Test
+	public void setsTheDurationToTheDifferenceBetweenCRandCS()
+			throws InterruptedException {
+		Span span = span("foo");
+		span.logEvent(Span.CLIENT_SEND);
+		Thread.sleep(10);
+		span.logEvent(Span.CLIENT_RECV);
+		Thread.sleep(20);
+		span.stop();
+
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
+
+		assertThat(result.timestamp)
+				.isEqualTo(span.getBegin() * 1000);
+		long clientSendTimestamp = span.logs().stream().filter(log -> Span.CLIENT_SEND.equals(log.getEvent()))
+				.findFirst().get().getTimestamp();
+		long clientRecvTimestamp = span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
+				.findFirst().get().getTimestamp();
+		assertThat(result.duration)
+				.isNotEqualTo(span.getAccumulatedMicros())
+				.isEqualTo((clientRecvTimestamp - clientSendTimestamp) * 1000);
+	}
+
 	/** Zipkin's duration should only be set when the span is finished. */
 	@Test
 	public void doesntSetDurationWhenStillRunning() {
