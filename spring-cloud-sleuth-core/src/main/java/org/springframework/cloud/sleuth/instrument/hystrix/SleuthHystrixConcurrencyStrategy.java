@@ -129,12 +129,15 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 			}
 			else {
 				span = this.tracer.createSpan(HYSTRIX_COMPONENT);
-				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
-				this.tracer.addTag(
-						this.traceKeys.getAsync().getPrefix()
-								+ this.traceKeys.getAsync().getThreadNameKey(),
-						Thread.currentThread().getName());
 				created = true;
+			}
+			if (!span.tags().containsKey(Span.SPAN_LOCAL_COMPONENT_TAG_NAME)) {
+				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
+			}
+			String asyncKey = this.traceKeys.getAsync().getPrefix()
+					+ this.traceKeys.getAsync().getThreadNameKey();
+			if (!span.tags().containsKey(asyncKey)) {
+				this.tracer.addTag(asyncKey, Thread.currentThread().getName());
 			}
 			try {
 				return this.callable.call();
