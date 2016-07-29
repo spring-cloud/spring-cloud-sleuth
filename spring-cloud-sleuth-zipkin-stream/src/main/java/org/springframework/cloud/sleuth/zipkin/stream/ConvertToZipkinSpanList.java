@@ -146,6 +146,15 @@ final class ConvertToZipkinSpanList {
 		return false;
 	}
 
+	/**
+	 * There could be instrumentation delay between span creation and the
+	 * semantic start of the span (client send). When there's a difference,
+	 * spans look confusing. Ex users expect duration to be client
+	 * receive - send, but it is a little more than that. Rather than have
+	 * to teach each user about the possibility of instrumentation overhead,
+	 * we truncate absolute duration (span finish - create) to semantic
+	 * duration (client receive - send)
+	 */
 	private static long calculateDurationInMicros(Span span) {
 		org.springframework.cloud.sleuth.Log clientSend = hasLog(Span.CLIENT_SEND, span);
 		org.springframework.cloud.sleuth.Log clientReceived = hasLog(Span.CLIENT_RECV, span);
