@@ -61,7 +61,7 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>com.netflix.feign</groupId>
+			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-core</artifactId>
 			<optional>true</optional>
 		</dependency>
