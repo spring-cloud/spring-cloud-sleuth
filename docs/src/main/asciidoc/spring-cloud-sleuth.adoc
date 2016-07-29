@@ -354,6 +354,14 @@ NOTE: the sample consumer application above explicitly excludes
 but this is optional (you might actually want to trace requests into
 the consumer app).
 
+In order to customize the polling mechanism you can create a bean of `PollerMetadata` type
+with name equal to `StreamSpanReporter.POLLER`. Here you can find an example of such a configuration.
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-stream/src/test/java/org/springframework/cloud/sleuth/stream/SleuthStreamAutoConfigurationTest.java[tags=custom_poller,indent=0]
+----
+
 == Metrics
 
 Currently Spring Cloud Sleuth registers very simple metrics related to spans.

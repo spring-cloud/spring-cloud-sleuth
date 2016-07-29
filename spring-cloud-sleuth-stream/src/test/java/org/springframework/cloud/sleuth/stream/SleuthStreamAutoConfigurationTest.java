@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,6 +26,8 @@ import org.springframework.scheduling.TriggerContext;
 import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.scheduling.support.SimpleTriggerContext;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class SleuthStreamAutoConfigurationTest {
 
 	private AnnotationConfigApplicationContext ctx;
@@ -47,17 +47,17 @@ public class SleuthStreamAutoConfigurationTest {
 
 	@After
 	public void cleanup() {
-		if (ctx != null) {
-			ctx.close();
+		if (this.ctx != null) {
+			this.ctx.close();
 		}
 	}
 
 	@Test
 	public void shouldUseDefaultPollerConfiguration() {
-		ctx = createContext();
-		ctx.refresh();
+		this.ctx = createContext();
+		this.ctx.refresh();
 
-		PollerMetadata poller = ctx.getBean(StreamSpanReporter.POLLER,
+		PollerMetadata poller = this.ctx.getBean(StreamSpanReporter.POLLER,
 				PollerMetadata.class);
 		assertThat(poller).isNotNull();
 		assertPollerConfigurationUsingConfigurationProperties(poller);
@@ -65,13 +65,13 @@ public class SleuthStreamAutoConfigurationTest {
 
 	@Test
 	public void shouldUseCustomPollerConfiguration() {
-		ctx = createContext();
-		EnvironmentTestUtils.addEnvironment(ctx,
+		this.ctx = createContext();
+		EnvironmentTestUtils.addEnvironment(this.ctx,
 				"spring.sleuth.stream.poller.fixed-delay=5000",
 				"spring.sleuth.stream.poller.max-messages-per-poll=100");
-		ctx.refresh();
+		this.ctx.refresh();
 
-		PollerMetadata poller = ctx.getBean(StreamSpanReporter.POLLER,
+		PollerMetadata poller = this.ctx.getBean(StreamSpanReporter.POLLER,
 				PollerMetadata.class);
 		assertThat(poller).isNotNull();
 		assertPollerConfigurationUsingConfigurationProperties(poller);
@@ -79,8 +79,8 @@ public class SleuthStreamAutoConfigurationTest {
 
 	@Test
 	public void shouldUseCustomPollerBean() {
-		ctx = createContext(CustomPollerConfiguration.class);
-		ctx.refresh();
+		this.ctx = createContext(CustomPollerConfiguration.class);
+		this.ctx.refresh();
 
 		PollerMetadata poller = ctx.getBean(StreamSpanReporter.POLLER,
 				PollerMetadata.class);
@@ -90,7 +90,7 @@ public class SleuthStreamAutoConfigurationTest {
 
 	private void assertPollerConfigurationUsingConfigurationProperties(
 			PollerMetadata poller) {
-		SleuthStreamProperties sleuth = ctx.getBean(SleuthStreamProperties.class);
+		SleuthStreamProperties sleuth = this.ctx.getBean(SleuthStreamProperties.class);
 		assertPollerConfiguration(poller, sleuth.getPoller().getMaxMessagesPerPoll(),
 				sleuth.getPoller().getFixedDelay());
 	}
@@ -128,6 +128,7 @@ public class SleuthStreamAutoConfigurationTest {
 		}
 	}
 
+	// tag::custom_poller[]
 	@Configuration
 	public static class CustomPollerConfiguration {
 
@@ -139,4 +140,5 @@ public class SleuthStreamAutoConfigurationTest {
 			return poller;
 		}
 	}
+	// end::custom_poller[]
 }
