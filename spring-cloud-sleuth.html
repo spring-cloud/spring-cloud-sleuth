@@ -2237,6 +2237,19 @@ in Spring Cloud Sleuth 1.1 we will remove the support for the deprecated headers
 provide the names of channels that you want to include for tracing. By default all channels
 are included.</p>
 </div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+When using the <code>Executor</code> to build a Spring Integration <code>IntegrationFlow</code> remember to use the <strong>untraced</strong> version of the <code>Executor</code>.
+Decorating Spring Integration Executor Channel with <code>TraceableExecutorService</code> will cause the spans to be improperly closed.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_zuul">Zuul</h3>
@@ -2268,7 +2281,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-07-29 10:44:28 UTC
+Last updated 2016-07-29 10:54:39 UTC
 </div>
 </div>
 </body>
