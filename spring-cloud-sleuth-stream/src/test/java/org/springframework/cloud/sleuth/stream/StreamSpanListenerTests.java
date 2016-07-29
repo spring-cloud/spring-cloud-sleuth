@@ -33,7 +33,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -53,22 +52,29 @@ import org.springframework.context.annotation.Import;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Dave Syer
  *
  */
-@SpringApplicationConfiguration(classes = TestConfiguration.class)
+@ContextConfiguration(classes = TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 public class StreamSpanListenerTests {
 
-	@Autowired Tracer tracer;
-	@Autowired ApplicationContext application;
-	@Autowired ZipkinTestConfiguration test;
-	@Autowired StreamSpanReporter listener;
-	@Autowired CounterService counterService;
-	@Autowired SpanReporter spanReporter;
+	@Autowired
+	Tracer tracer;
+	@Autowired
+	ApplicationContext application;
+	@Autowired
+	ZipkinTestConfiguration test;
+	@Autowired
+	StreamSpanReporter listener;
+	@Autowired
+	CounterService counterService;
+	@Autowired
+	SpanReporter spanReporter;
 
 	@PostConstruct
 	public void init() {
@@ -149,7 +155,8 @@ public class StreamSpanListenerTests {
 			TraceMetricsAutoConfiguration.class, TestSupportBinderAutoConfiguration.class,
 			ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class,
 			PropertyPlaceholderAutoConfiguration.class })
-	protected static class TestConfiguration {}
+	protected static class TestConfiguration {
+	}
 
 	@Configuration
 	@MessageEndpoint
@@ -160,7 +167,7 @@ public class StreamSpanListenerTests {
 		@Autowired
 		StreamSpanReporter listener;
 
-		@ServiceActivator(inputChannel=SleuthSource.OUTPUT)
+		@ServiceActivator(inputChannel = SleuthSource.OUTPUT)
 		public void handle(Message<?> msg) {
 		}
 
@@ -174,7 +181,8 @@ public class StreamSpanListenerTests {
 			return new AlwaysSampler();
 		}
 
-		@Bean CounterService counterService() {
+		@Bean
+		CounterService counterService() {
 			return Mockito.mock(CounterService.class);
 		}
 
