@@ -28,6 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthStreamProperties {
 	private boolean enabled = true;
 	private String group = SleuthSink.INPUT;
+	private Poller poller = new Poller();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -43,5 +44,37 @@ public class SleuthStreamProperties {
 
 	public void setGroup(String group) {
 		this.group = group;
+	}
+
+	public Poller getPoller() {
+		return this.poller;
+	}
+
+	public static class Poller {
+		/**
+		 * Fixed delay (ms). Default: 1000
+		 */
+		private long fixedDelay = 1000L;
+
+		/**
+		 * Max messages per poll. Default: -1 (unbounded)
+		 */
+		private int maxMessagesPerPoll = -1;
+
+		public long getFixedDelay() {
+			return this.fixedDelay;
+		}
+
+		public int getMaxMessagesPerPoll() {
+			return this.maxMessagesPerPoll;
+		}
+
+		public void setFixedDelay(long fixedDelay) {
+			this.fixedDelay = fixedDelay;
+		}
+
+		public void setMaxMessagesPerPoll(int maxMessagesPerPoll) {
+			this.maxMessagesPerPoll = maxMessagesPerPoll;
+		}
 	}
 }

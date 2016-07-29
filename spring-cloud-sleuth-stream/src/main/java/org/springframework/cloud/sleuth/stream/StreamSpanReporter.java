@@ -27,7 +27,7 @@ import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.MessageEndpoint;
-
+import org.springframework.integration.annotation.Poller;
 
 /**
  * A message source for spans. Also handles RPC flavoured annotations.
@@ -37,6 +37,13 @@ import org.springframework.integration.annotation.MessageEndpoint;
  */
 @MessageEndpoint
 public class StreamSpanReporter implements SpanReporter {
+
+	/**
+	 * Bean name for the
+	 * {@link org.springframework.integration.scheduling.PollerMetadata
+	 * PollerMetadata}
+	 */
+	public static final String POLLER = "streamSpanReporterPoller";
 
 	private BlockingQueue<Span> queue = new LinkedBlockingQueue<>();
 	private final HostLocator endpointLocator;
@@ -51,7 +58,7 @@ public class StreamSpanReporter implements SpanReporter {
 		this.queue = queue;
 	}
 
-	@InboundChannelAdapter(value = SleuthSource.OUTPUT)
+	@InboundChannelAdapter(value = SleuthSource.OUTPUT, poller = @Poller(POLLER))
 	public Spans poll() {
 		List<Span> result = new LinkedList<>();
 		this.queue.drainTo(result);
