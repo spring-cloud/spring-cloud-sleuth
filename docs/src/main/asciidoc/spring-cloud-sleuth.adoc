@@ -309,7 +309,7 @@ spring:
     host: ${RABBIT_HOST:localhost}
   datasource:
     schema: classpath:/mysql.sql
-    url: jdbc:mysql://localhost:3306/zipkin
+    url: jdbc:mysql://${MYSQL_HOST:localhost}/test
     username: root
     password: root
 # Switch this on to create the schema on startup:
@@ -319,10 +319,7 @@ spring:
     enabled: false
 zipkin:
   storage:
-    type: 
-      mysql:
-        username: root
-        password: root
+    type: mysql
 ----
 
 NOTE: The `@EnableZipkinStreamServer` is also annotated with
