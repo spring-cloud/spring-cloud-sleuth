@@ -1858,7 +1858,7 @@ started quickly). For a more robust solution you can add MySQL and
     host: ${RABBIT_HOST:localhost}
   datasource:
     schema: classpath:/mysql.sql
-    url: jdbc:mysql://localhost:3306/zipkin
+    url: jdbc:mysql://${MYSQL_HOST:localhost}/test
     username: root
     password: root
 # Switch this on to create the schema on startup:
@@ -1868,10 +1868,7 @@ started quickly). For a more robust solution you can add MySQL and
     enabled: false
 zipkin:
   storage:
-    type:
-      mysql:
-        username: root
-        password: root</code></pre>
+    type: mysql</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -2300,7 +2297,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-07-30 19:19:01 UTC
+Last updated 2016-07-30 19:53:17 UTC
 </div>
 </div>
 </body>
