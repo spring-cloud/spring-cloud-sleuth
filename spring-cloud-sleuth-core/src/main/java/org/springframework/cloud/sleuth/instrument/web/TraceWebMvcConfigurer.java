@@ -32,7 +32,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
  */
 @Configuration
 class TraceWebMvcConfigurer extends WebMvcConfigurerAdapter {
-	@Autowired TraceHandlerInterceptor traceHandlerInterceptor;
+	@Autowired BeanFactory beanFactory;
 
 	@Bean
 	public TraceHandlerInterceptor traceHandlerInterceptor(BeanFactory beanFactory) {
@@ -41,6 +41,6 @@ class TraceWebMvcConfigurer extends WebMvcConfigurerAdapter {
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(this.traceHandlerInterceptor);
+		registry.addInterceptor(this.beanFactory.getBean(TraceHandlerInterceptor.class));
 	}
 }
