@@ -19,8 +19,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-import com.netflix.hystrix.HystrixCommand;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +68,7 @@ public class TraceFeignClientAutoConfiguration {
 
 	@Bean
 	@Scope("prototype")
-	@ConditionalOnClass(HystrixCommand.class)
+	@ConditionalOnClass(name = "com.netflix.hystrix.HystrixCommand")
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
 	Feign.Builder feignHystrixBuilder(BeanFactory beanFactory) {
 		return SleuthHystrixFeignBuilder.builder(beanFactory);

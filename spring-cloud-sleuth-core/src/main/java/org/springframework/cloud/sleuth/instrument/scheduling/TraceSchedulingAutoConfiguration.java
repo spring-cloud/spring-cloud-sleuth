@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import java.util.regex.Pattern;
 
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -52,7 +51,7 @@ public class TraceSchedulingAutoConfiguration {
 	 */
 	private @Value("${spring.sleuth.scheduled.skipPattern:}") String skipPattern;
 
-	@ConditionalOnClass(ProceedingJoinPoint.class)
+	@ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
 	@Bean
 	public TraceSchedulingAspect traceSchedulingAspect(Tracer tracer, TraceKeys traceKeys) {
 		return new TraceSchedulingAspect(tracer, traceKeys, Pattern.compile(this.skipPattern));
