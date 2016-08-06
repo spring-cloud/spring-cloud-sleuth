@@ -34,9 +34,6 @@ final class SleuthFeignBuilder {
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
 		return Feign.builder()
-				.client(new TraceFeignClient(beanFactory))
-				.retryer(new TraceFeignRetryer(beanFactory))
-				.decoder(new TraceFeignDecoder(beanFactory))
-				.errorDecoder(new TraceFeignErrorDecoder(beanFactory));
+				.client(new TraceFeignClient(beanFactory));
 	}
 }

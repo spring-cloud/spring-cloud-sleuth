@@ -36,9 +36,6 @@ final class SleuthHystrixFeignBuilder {
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
 		return HystrixFeign.builder()
-				.client(new TraceFeignClient(beanFactory))
-				.retryer(new TraceFeignRetryer(beanFactory))
-				.decoder(new TraceFeignDecoder(beanFactory))
-				.errorDecoder(new TraceFeignErrorDecoder(beanFactory));
+				.client(new TraceFeignClient(beanFactory));
 	}
 }

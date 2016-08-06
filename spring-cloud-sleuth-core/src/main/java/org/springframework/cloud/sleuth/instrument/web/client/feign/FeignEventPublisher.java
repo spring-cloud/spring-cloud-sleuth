@@ -29,8 +29,6 @@ import org.springframework.cloud.sleuth.Tracer;
  */
 abstract class FeignEventPublisher {
 
-	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
-
 	protected final BeanFactory beanFactory;
 	private Tracer tracer;
 
@@ -39,11 +37,10 @@ abstract class FeignEventPublisher {
 	}
 
 	protected void finish() {
-		Span span = this.feignRequestContext.getCurrentSpan();
+		Span span = getTracer().getCurrentSpan();
 		if (span != null) {
 			span.logEvent(Span.CLIENT_RECV);
 			getTracer().close(span);
-			this.feignRequestContext.clearContext();
 		}
 	}
 

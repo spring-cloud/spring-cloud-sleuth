@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Objects;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -26,7 +25,6 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import feign.Client;
 import feign.Request;
 import feign.Response;
-import feign.RetryableException;
 
 /**
  * A Feign Client that closes a Span if there is no response body. In other cases Span
@@ -36,41 +34,27 @@ import feign.RetryableException;
  *
  * @since 1.0.0
  */
-final class TraceFeignClient extends FeignEventPublisher implements Client {
+final class TraceFeignClient implements Client {
 
 	private final Client delegate;
+	private final BeanFactory beanFactory;
 	private HttpTraceKeysInjector keysInjector;
 
 	TraceFeignClient(BeanFactory beanFactory) {
-		super(beanFactory);
+		this.beanFactory = beanFactory;
 		this.delegate = new Client.Default(null, null);
 	}
 
 	TraceFeignClient(BeanFactory beanFactory, Client delegate) {
-		super(beanFactory);
+		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 	}
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
 		Response response;
-		try {
-			addRequestTags(request);
-			response = this.delegate.execute(request, options);
-		}
-		catch (RetryableException | IOException e) {
-			// IOException will be wrapped into a RetryableException in the caller
-			throw e;
-		}
-		catch (RuntimeException e) {
-			// Any other exception is going to be propagated so we need to tidy up
-			finish();
-			throw e;
-		}
-		if (response != null && response.body() == null || (response.body() != null
-				&& Objects.equals(response.body().length(), 0))) {
-			finish();
-		}
+		addRequestTags(request);
+		response = this.delegate.execute(request, options);
 		return response;
 	}
 
