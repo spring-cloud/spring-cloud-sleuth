@@ -69,12 +69,8 @@ final class TraceFeignRequestInterceptor extends FeignEventPublisher implements 
 	 * or continues an existing one.
 	 */
 	protected Span getSpan(String spanName, RequestTemplate template) {
-		if (!getTracer().isTracing()) {
-			return getTracer().createSpan(spanName);
-		} else {
-			if (template.request().retried()) {
-				return getTracer().continueSpan(getTracer().getCurrentSpan());
-			}
+		if (getTracer().isTracing() && template.request().retried()) {
+			return getTracer().continueSpan(getTracer().getCurrentSpan());
 		}
 		return getTracer().createSpan(spanName);
 	}
@@ -89,11 +85,11 @@ final class TraceFeignRequestInterceptor extends FeignEventPublisher implements 
 			log.debug("No span was started so won't do anything new");
 			return;
 		}
-		if (e == null) {
-			log.debug("There is no retry to take place so closing the span");
+		boolean retried = requestTemplate.request().retried();
+		if (e == null || !retried) {
+			log.debug("There is no successful retry to take place so closing the span. "
+					+ "Exception is [" + e + "] and request template was retried [" + retried + "]");
 			finish();
-		} else {
-			requestTemplate.retried(true);
 		}
 	}
 }
