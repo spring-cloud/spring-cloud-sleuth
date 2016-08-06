@@ -105,8 +105,7 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	@Primary
 	Decoder feignDecoder(BeanFactory beanFactory) {
-		return new TraceFeignDecoder(beanFactory,
-				new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
+		return new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
 					@Override
 					public Object decode(Response response, Type type)
 							throws IOException, FeignException {
@@ -123,7 +122,7 @@ public class TraceFeignClientAutoConfiguration {
 										response.body()),
 								type);
 					}
-				});
+				};
 	}
 
 	/**
@@ -131,8 +130,8 @@ public class TraceFeignClientAutoConfiguration {
 	 * an existing one if a retry takes place.
 	 */
 	@Bean
-	RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
-		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector());
+	RequestInterceptor traceIdRequestInterceptor(BeanFactory beanFactory) {
+		return new TraceFeignRequestInterceptor(beanFactory, feignRequestTemplateInjector());
 	}
 
 	private SpanInjector<RequestTemplate> feignRequestTemplateInjector() {

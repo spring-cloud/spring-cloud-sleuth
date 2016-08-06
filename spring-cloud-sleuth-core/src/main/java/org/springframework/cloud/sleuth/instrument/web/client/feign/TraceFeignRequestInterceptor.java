@@ -16,14 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.Tracer;
 
 import feign.RequestInterceptor;
+import feign.RequestPostProcessor;
 import feign.RequestTemplate;
+import feign.RetryableException;
 
 /**
  * A request interceptor that sets tracing information in the headers
@@ -33,22 +37,24 @@ import feign.RequestTemplate;
  *
  * @since 1.0.0
  */
-final class TraceFeignRequestInterceptor implements RequestInterceptor {
+final class TraceFeignRequestInterceptor extends FeignEventPublisher implements RequestInterceptor,
+		RequestPostProcessor {
 
-	private final Tracer tracer;
+	private static final org.apache.commons.logging.Log log = LogFactory.getLog(
+			MethodHandles.lookup().lookupClass());
+
 	private final SpanInjector<RequestTemplate> spanInjector;
-	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
 
-	TraceFeignRequestInterceptor(Tracer tracer,
+	TraceFeignRequestInterceptor(BeanFactory beanFactory,
 			SpanInjector<RequestTemplate> spanInjector) {
-		this.tracer = tracer;
+		super(beanFactory);
 		this.spanInjector = spanInjector;
 	}
 
 	@Override
 	public void apply(RequestTemplate template) {
 		String spanName = getSpanName(template);
-		Span span = getSpan(spanName);
+		Span span = getSpan(spanName, template);
 		this.spanInjector.inject(span, template);
 		span.logEvent(Span.CLIENT_SEND);
 	}
@@ -62,21 +68,32 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor {
 	 * Depending on the presence of a Span in context, either starts a new Span
 	 * or continues an existing one.
 	 */
-	protected Span getSpan(String spanName) {
-		if (!this.feignRequestContext.hasSpanInProcess()) {
-			Span span = this.tracer.createSpan(spanName);
-			this.feignRequestContext.putSpan(span, false);
-			return span;
+	protected Span getSpan(String spanName, RequestTemplate template) {
+		if (!getTracer().isTracing()) {
+			return getTracer().createSpan(spanName);
 		} else {
-			if (this.feignRequestContext.wasSpanRetried()) {
-				return this.tracer.continueSpan(this.feignRequestContext.getCurrentSpan());
+			if (template.request().headers().containsKey("feign.retry")) {
+				return getTracer().continueSpan(getTracer().getCurrentSpan());
 			}
 		}
-		return this.tracer.createSpan(spanName);
+		return getTracer().createSpan(spanName);
 	}
 
 	private String uriScheme(URI uri) {
 		return uri.getScheme() == null ? "http" : uri.getScheme();
 	}
 
+	@Override
+	public void apply(RequestTemplate requestTemplate, RetryableException e) {
+		if (!getTracer().isTracing()) {
+			log.debug("No span was started so won't do anything new");
+			return;
+		}
+		if (e == null) {
+			log.debug("There is no retry to take place so closing the span");
+			finish();
+		} else {
+			requestTemplate.header("feign.retried", "true");
+		}
+	}
 }
