@@ -32,6 +32,9 @@ class TraceFeignContext extends FeignContext {
 	@Override
 	public <T> Map<String, T> getInstances(String name, Class<T> type) {
 		Map<String, T> instances = this.delegate.getInstances(name, type);
+		if (instances == null) {
+			return null;
+		}
 		Map<String, T> convertedInstances = new HashMap<>();
 		for (Map.Entry<String, T> entry : instances.entrySet()) {
 			convertedInstances.put(entry.getKey(), (T) this.traceFeignObjectWrapper.wrap(entry.getValue()));
