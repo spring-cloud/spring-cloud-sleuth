@@ -18,9 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -57,27 +54,8 @@ final class TraceFeignClient implements Client {
 	public Response execute(Request request, Request.Options options) throws IOException {
 		Response response;
 		addRequestTags(request);
-		response = this.delegate.execute(request(request), options);
+		response = this.delegate.execute(request, options);
 		return response;
-	}
-
-	private Request request(Request request) {
-		if (request.headers().containsKey("feign.retry")) {
-			return Request.create(request.method(), request.url(),
-					headersWithoutRetry(request), request.body(), request.charset());
-		}
-		return request;
-	}
-
-	private Map<String, Collection<String>> headersWithoutRetry(Request request) {
-		Map<String, Collection<String>> headersWithoutRetry = new LinkedHashMap<>();
-		for (Map.Entry<String, Collection<String>> entry : request.headers()
-				.entrySet()) {
-			if (!"feign.retry".equals(entry.getKey())) {
-				headersWithoutRetry.put(entry.getKey(), entry.getValue());
-			}
-		}
-		return headersWithoutRetry;
 	}
 
 	/**

@@ -72,7 +72,7 @@ final class TraceFeignRequestInterceptor extends FeignEventPublisher implements 
 		if (!getTracer().isTracing()) {
 			return getTracer().createSpan(spanName);
 		} else {
-			if (template.request().headers().containsKey("feign.retry")) {
+			if (template.request().retried()) {
 				return getTracer().continueSpan(getTracer().getCurrentSpan());
 			}
 		}
@@ -93,7 +93,7 @@ final class TraceFeignRequestInterceptor extends FeignEventPublisher implements 
 			log.debug("There is no retry to take place so closing the span");
 			finish();
 		} else {
-			requestTemplate.header("feign.retried", "true");
+			requestTemplate.retried(true);
 		}
 	}
 }
