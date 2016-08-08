@@ -20,8 +20,10 @@ import java.util.Random;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,15 +40,18 @@ import org.springframework.messaging.support.MessageBuilder;
 @Configuration
 @ConditionalOnClass(Message.class)
 @ConditionalOnBean({ TraceKeys.class, Random.class })
+@EnableConfigurationProperties(TraceMessageHeaders.class)
 public class TraceSpanMessagingAutoConfiguration {
 
 	@Bean
-	public SpanExtractor<Message<?>> messagingSpanExtractor(Random random) {
-		return new MessagingSpanExtractor(random);
+	public SpanExtractor<Message<?>> messagingSpanExtractor(Random random,
+			TraceHeaders traceHeaders, TraceMessageHeaders traceMessageHeaders) {
+		return new MessagingSpanExtractor(random, traceHeaders, traceMessageHeaders);
 	}
 
 	@Bean
-	public SpanInjector<MessageBuilder<?>> messagingSpanInjector(TraceKeys traceKeys) {
-		return new MessagingSpanInjector(traceKeys);
+	public SpanInjector<MessageBuilder<?>> messagingSpanInjector(TraceKeys traceKeys,
+			TraceHeaders traceHeaders, TraceMessageHeaders traceMessageHeaders) {
+		return new MessagingSpanInjector(traceKeys, traceHeaders, traceMessageHeaders);
 	}
 }

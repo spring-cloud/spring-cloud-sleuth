@@ -26,6 +26,7 @@ import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.SpanLogger;
@@ -44,7 +45,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
-@EnableConfigurationProperties(TraceKeys.class)
+@EnableConfigurationProperties({TraceKeys.class, TraceHeaders.class})
 public class TraceAutoConfiguration {
 
 	@Bean

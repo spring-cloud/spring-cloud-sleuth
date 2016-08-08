@@ -1,0 +1,7 @@
+spring.sleuth:
+  headers:
+    traceId: correlationId
+    spanId: mySpanId
+  integration.headers:
+    traceId: correlationId
+    spanId: mySpanId

@@ -16,9 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import com.netflix.client.http.HttpRequest;
-
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
+
+import com.netflix.client.http.HttpRequest;
 
 /**
  * Customization of a Ribbon request for Netflix HttpClient
@@ -28,8 +29,8 @@ import org.springframework.cloud.sleuth.Tracer;
  */
 class RestClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCustomizer<HttpRequest.Builder> {
 
-	RestClientRibbonRequestCustomizer(Tracer tracer) {
-		super(tracer);
+	RestClientRibbonRequestCustomizer(Tracer tracer, TraceHeaders traceHeaders) {
+		super(tracer, traceHeaders);
 	}
 
 	@Override

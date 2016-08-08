@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.SpanBuilder;
 import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.messaging.Message;
 
 /**
@@ -37,22 +38,27 @@ class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final Random random;
+	private final TraceHeaders traceHeaders;
+	private final TraceMessageHeaders traceMessageHeaders;
 
-	public MessagingSpanExtractor(Random random) {
+	public MessagingSpanExtractor(Random random, TraceHeaders traceHeaders,
+			TraceMessageHeaders traceMessageHeaders) {
 		this.random = random;
+		this.traceHeaders = traceHeaders;
+		this.traceMessageHeaders = traceMessageHeaders;
 	}
 
 	@Override
 	public Span joinTrace(Message<?> carrier) {
-		if ((!hasHeader(carrier, Span.TRACE_ID_NAME)
-				|| !hasHeader(carrier, Span.SPAN_ID_NAME))
-				&& (!hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME)
-				|| !hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME))) {
+		if ((!hasHeader(carrier, this.traceHeaders.getTraceId())
+				|| !hasHeader(carrier, this.traceHeaders.getSpanId()))
+				&& (!hasHeader(carrier, this.traceMessageHeaders.getSpanId())
+				|| !hasHeader(carrier, this.traceMessageHeaders.getTraceId()))) {
 			return null;
 			// TODO: Consider throwing IllegalArgumentException;
 		}
-		if (hasHeader(carrier, Span.TRACE_ID_NAME)
-				|| hasHeader(carrier, Span.SPAN_ID_NAME)) {
+		if (hasHeader(carrier, this.traceHeaders.getTraceId())
+				|| hasHeader(carrier, this.traceHeaders.getSpanId())) {
 			log.warn("Deprecated trace headers detected. Please upgrade Sleuth to 1.1 "
 					+ "or start sending headers present in the TraceMessageHeaders class");
 			return extractSpanFromOldHeaders(carrier, Span.builder());
@@ -62,15 +68,16 @@ class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 
 	// Backwards compatibility
 	private Span extractSpanFromOldHeaders(Message<?> carrier, SpanBuilder spanBuilder) {
-		return extractSpanFromHeaders(carrier, spanBuilder, Span.TRACE_ID_NAME, Span.SPAN_ID_NAME,
-				Span.SAMPLED_NAME, Span.PROCESS_ID_NAME, Span.SPAN_NAME_NAME, Span.PARENT_ID_NAME);
+		return extractSpanFromHeaders(carrier, spanBuilder, this.traceHeaders.getTraceId(),
+				this.traceHeaders.getSpanId(), this.traceHeaders.getSampled(),
+				Span.PROCESS_ID_NAME, Span.SPAN_NAME_NAME, this.traceHeaders.getParentId());
 	}
 
 	private Span extractSpanFromNewHeaders(Message<?> carrier, SpanBuilder spanBuilder) {
-		return extractSpanFromHeaders(carrier, spanBuilder, TraceMessageHeaders.TRACE_ID_NAME,
-				TraceMessageHeaders.SPAN_ID_NAME, TraceMessageHeaders.SAMPLED_NAME,
+		return extractSpanFromHeaders(carrier, spanBuilder, this.traceMessageHeaders.getTraceId(),
+				this.traceMessageHeaders.getSpanId(), this.traceMessageHeaders.getSampled(),
 				TraceMessageHeaders.PROCESS_ID_NAME, TraceMessageHeaders.SPAN_NAME_NAME,
-				TraceMessageHeaders.PARENT_ID_NAME);
+				this.traceMessageHeaders.getParentId());
 	}
 
 	private Span extractSpanFromHeaders(Message<?> carrier, SpanBuilder spanBuilder,

@@ -15,8 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +33,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -97,15 +98,16 @@ public class TraceWebAutoConfiguration {
 	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
 			SpanExtractor<HttpServletRequest> spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
+			HttpTraceKeysInjector httpTraceKeysInjector, TraceHeaders traceHeaders) {
 		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
-				spanReporter, spanExtractor, httpTraceKeysInjector);
+				spanReporter, spanExtractor, httpTraceKeysInjector, traceHeaders);
 	}
 
 	@Bean
 	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(
-			SkipPatternProvider skipPatternProvider) {
-		return new HttpServletRequestExtractor(skipPatternProvider.skipPattern());
+			SkipPatternProvider skipPatternProvider, TraceHeaders traceHeaders) {
+		return new HttpServletRequestExtractor(skipPatternProvider.skipPattern(),
+				traceHeaders);
 	}
 
 	@Configuration

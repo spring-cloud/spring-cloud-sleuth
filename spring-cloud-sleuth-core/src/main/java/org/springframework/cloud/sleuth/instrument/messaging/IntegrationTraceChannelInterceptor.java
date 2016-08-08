@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.ChannelInterceptorAware;
@@ -34,8 +35,9 @@ class IntegrationTraceChannelInterceptor extends TraceChannelInterceptor impleme
 
 	public IntegrationTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			SpanExtractor<Message<?>> spanExtractor,
-			SpanInjector<MessageBuilder<?>> spanInjector) {
-		super(tracer, traceKeys, spanExtractor, spanInjector);
+			SpanInjector<MessageBuilder<?>> spanInjector, TraceHeaders traceHeaders,
+			TraceMessageHeaders traceMessageHeaders) {
+		super(tracer, traceKeys, spanExtractor, spanInjector, traceHeaders, traceMessageHeaders);
 	}
 
 	@Override

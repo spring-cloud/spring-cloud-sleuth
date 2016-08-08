@@ -28,6 +28,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
@@ -54,7 +55,7 @@ import org.springframework.scheduling.support.PeriodicTrigger;
  * @since 1.0.0
  */
 @Configuration
-@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class })
+@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class, TraceMessageHeaders.class})
 @AutoConfigureAfter(TraceMetricsAutoConfiguration.class)
 @AutoConfigureBefore(ChannelBindingAutoConfiguration.class)
 @EnableBinding(SleuthSource.class)
@@ -69,8 +70,10 @@ public class SleuthStreamAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = SleuthSource.OUTPUT, order = Ordered.HIGHEST_PRECEDENCE)
-	public ChannelInterceptor zipkinChannelInterceptor(SpanMetricReporter spanMetricReporter) {
-		return new TracerIgnoringChannelInterceptor(spanMetricReporter);
+	public ChannelInterceptor zipkinChannelInterceptor(SpanMetricReporter spanMetricReporter,
+			TraceMessageHeaders traceMessageHeaders) {
+		return new TracerIgnoringChannelInterceptor(spanMetricReporter,
+				traceMessageHeaders);
 	}
 
 	@Bean

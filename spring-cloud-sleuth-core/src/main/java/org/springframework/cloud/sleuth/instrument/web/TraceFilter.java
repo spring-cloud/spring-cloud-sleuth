@@ -15,24 +15,25 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -87,25 +88,27 @@ public class TraceFilter extends GenericFilterBean {
 	private final SpanReporter spanReporter;
 	private final SpanExtractor<HttpServletRequest> spanExtractor;
 	private final HttpTraceKeysInjector httpTraceKeysInjector;
+	private final TraceHeaders traceHeaders;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
 			SpanExtractor<HttpServletRequest> spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
+			HttpTraceKeysInjector httpTraceKeysInjector, TraceHeaders traceHeaders) {
 		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
-				spanExtractor, httpTraceKeysInjector);
+				spanExtractor, httpTraceKeysInjector, traceHeaders);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
 			SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
+			HttpTraceKeysInjector httpTraceKeysInjector, TraceHeaders traceHeaders) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
 		this.spanReporter = spanReporter;
 		this.spanExtractor = spanExtractor;
 		this.httpTraceKeysInjector = httpTraceKeysInjector;
+		this.traceHeaders = traceHeaders;
 	}
 
 	@Override
@@ -118,7 +121,7 @@ public class TraceFilter extends GenericFilterBean {
 		HttpServletResponse response = (HttpServletResponse) servletResponse;
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| Span.SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, Span.SAMPLED_NAME));
+				|| Span.SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, this.traceHeaders.getSampled()));
 		Span spanFromRequest = getSpanFromAttribute(request);
 		if (spanFromRequest != null) {
 			continueSpan(request, spanFromRequest);

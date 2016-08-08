@@ -40,11 +40,11 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,6 +60,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @SpringBootTest(classes = TraceFilterCustomExtractorTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
+@ActiveProfiles("customheaders")
 public class TraceFilterCustomExtractorTests {
 	@Autowired Random random;
 	@Autowired RestTemplate restTemplate;
@@ -100,20 +101,6 @@ public class TraceFilterCustomExtractorTests {
 	static class Config
 			implements ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int port;
-
-		// tag::configuration[]
-		@Bean
-		@Primary
-		SpanExtractor<HttpServletRequest> customHttpServletRequestSpanExtractor() {
-			return new CustomHttpServletRequestSpanExtractor();
-		}
-
-		@Bean
-		@Primary
-		SpanInjector<HttpServletResponse> customHttpServletResponseSpanInjector() {
-			return new CustomHttpServletResponseSpanInjector();
-		}
-		// end::configuration[]
 
 		@Override
 		public void onApplicationEvent(EmbeddedServletContainerInitializedEvent event) {

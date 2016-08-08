@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -42,9 +43,11 @@ abstract class SpanInjectingRibbonRequestCustomizer<T> implements RibbonRequestC
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final Tracer tracer;
+	private final TraceHeaders traceHeaders;
 
-	SpanInjectingRibbonRequestCustomizer(Tracer tracer) {
+	SpanInjectingRibbonRequestCustomizer(Tracer tracer, TraceHeaders traceHeaders) {
 		this.tracer = tracer;
+		this.traceHeaders = traceHeaders;
 	}
 
 	@Override
@@ -60,16 +63,16 @@ abstract class SpanInjectingRibbonRequestCustomizer<T> implements RibbonRequestC
 	@Override
 	public void inject(Span span, T carrier) {
 		if (span == null) {
-			setHeader(carrier, Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
+			setHeader(carrier, this.traceHeaders.getSampled(), Span.SPAN_NOT_SAMPLED);
 			return;
 		}
-		setHeader(carrier, Span.SAMPLED_NAME, span.isExportable() ?
+		setHeader(carrier, this.traceHeaders.getSampled(), span.isExportable() ?
 				Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
-		setHeader(carrier, Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-		setHeader(carrier, Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+		setHeader(carrier, this.traceHeaders.getTraceId(), Span.idToHex(span.getTraceId()));
+		setHeader(carrier, this.traceHeaders.getSpanId(), Span.idToHex(span.getSpanId()));
 		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
 		if (getParentId(span) != null) {
-			setHeader(carrier, Span.PARENT_ID_NAME,
+			setHeader(carrier, this.traceHeaders.getParentId(),
 					Span.idToHex(getParentId(span)));
 		}
 		setHeader(carrier, Span.PROCESS_ID_NAME,

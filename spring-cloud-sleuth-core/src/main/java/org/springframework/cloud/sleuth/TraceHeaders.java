@@ -14,40 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.messaging;
+package org.springframework.cloud.sleuth;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Contains trace related messaging headers. The deprecated headers contained `-` which
- * for example in the JMS specs is invalid. That's why the public constants in this class
- * represent the valid names for the tracing headers.
+ * Header names representing most important Trace related headers.
  *
- * @author Marcin Grzejszczak
- * @since 1.0.4
+ * @since 1.1.0
  */
-@ConfigurationProperties("spring.sleuth.integration.headers")
-public class TraceMessageHeaders {
+@ConfigurationProperties("spring.sleuth.headers")
+public class TraceHeaders {
 
-	public static final String SPAN_ID_NAME = "spanId";
-	public static final String SAMPLED_NAME = "spanSampled";
-	public static final String PROCESS_ID_NAME = "spanProcessId";
-	public static final String PARENT_ID_NAME = "spanParentSpanId";
-	public static final String TRACE_ID_NAME = "spanTraceId";
-	public static final String SPAN_NAME_NAME = "spanName";
+	private String traceId = Span.TRACE_ID_NAME;
 
-	static final String OLD_SPAN_HEADER = "X-Current-Span";
-	static final String OLD_MESSAGE_SENT_FROM_CLIENT = "X-Message-Sent";
-	static final String SPAN_HEADER = "currentSpan";
-	static final String MESSAGE_SENT_FROM_CLIENT = "messageSent";
+	private String spanId = Span.SPAN_ID_NAME;
 
-	private String traceId = TRACE_ID_NAME;
+	private String parentId = Span.PARENT_ID_NAME;
 
-	private String spanId = SPAN_ID_NAME;
-
-	private String parentId = PARENT_ID_NAME;
-
-	private String sampled = SAMPLED_NAME;
+	private String sampled = Span.SAMPLED_NAME;
 
 	public String getTraceId() {
 		return this.traceId;
@@ -80,5 +65,4 @@ public class TraceMessageHeaders {
 	public void setSampled(String sampled) {
 		this.sampled = sampled;
 	}
-
 }

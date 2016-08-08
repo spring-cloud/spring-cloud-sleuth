@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Random;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +27,7 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -36,7 +37,7 @@ public class HttpServletRequestExtractorTests {
 
 	@Mock HttpServletRequest request;
 	HttpServletRequestExtractor extractor = new HttpServletRequestExtractor(
-			Pattern.compile(""));
+			Pattern.compile(""), new TraceHeaders());
 
 	@Before
 	public void setup() {

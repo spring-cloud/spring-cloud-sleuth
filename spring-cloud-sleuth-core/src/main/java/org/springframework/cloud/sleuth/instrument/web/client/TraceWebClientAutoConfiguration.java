@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -28,6 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -62,8 +63,8 @@ public class TraceWebClientAutoConfiguration {
 	}
 
 	@Bean
-	public SpanInjector<HttpRequest> httpRequestSpanInjector() {
-		return new HttpRequestInjector();
+	public SpanInjector<HttpRequest> httpRequestSpanInjector(TraceHeaders traceHeaders) {
+		return new HttpRequestInjector(traceHeaders);
 	}
 
 	@Bean
