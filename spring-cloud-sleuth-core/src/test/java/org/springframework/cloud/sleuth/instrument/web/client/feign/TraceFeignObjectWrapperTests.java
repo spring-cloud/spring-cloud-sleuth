@@ -1,9 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import feign.Client;
-import feign.Retryer;
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,6 +8,8 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Tracer;
+
+import feign.Client;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
@@ -33,23 +31,8 @@ public class TraceFeignObjectWrapperTests {
 	}
 
 	@Test
-	public void should_wrap_a_decoder_into_trace_decoder() throws Exception {
-		then(this.traceFeignObjectWrapper.wrap(mock(Decoder.class))).isExactlyInstanceOf(TraceFeignDecoder.class);
-	}
-
-	@Test
-	public void should_wrap_a_retryer_into_trace_retryer() throws Exception {
-		then(this.traceFeignObjectWrapper.wrap(mock(Retryer.class))).isExactlyInstanceOf(TraceFeignRetryer.class);
-	}
-
-	@Test
 	public void should_wrap_a_client_into_trace_client() throws Exception {
 		then(this.traceFeignObjectWrapper.wrap(mock(Client.class))).isExactlyInstanceOf(TraceFeignClient.class);
-	}
-
-	@Test
-	public void should_wrap_a_error_decoder_into_trace_error_decoder() throws Exception {
-		then(this.traceFeignObjectWrapper.wrap(mock(ErrorDecoder.class))).isExactlyInstanceOf(TraceFeignErrorDecoder.class);
 	}
 
 	@Test

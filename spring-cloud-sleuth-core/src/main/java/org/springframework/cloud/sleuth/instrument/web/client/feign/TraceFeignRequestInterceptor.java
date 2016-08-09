@@ -26,8 +26,7 @@ import feign.RequestInterceptor;
 import feign.RequestTemplate;
 
 /**
- * A request interceptor that sets tracing information in the headers
- * and retrieves the span from the current {@link FeignRequestContext}.
+ * A request interceptor that sets tracing information in the headers.
  *
  * @author Marcin Grzejszczak
  *
@@ -37,7 +36,6 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor {
 
 	private final Tracer tracer;
 	private final SpanInjector<RequestTemplate> spanInjector;
-	private final FeignRequestContext feignRequestContext = FeignRequestContext.getInstance();
 
 	TraceFeignRequestInterceptor(Tracer tracer,
 			SpanInjector<RequestTemplate> spanInjector) {
@@ -48,31 +46,14 @@ final class TraceFeignRequestInterceptor implements RequestInterceptor {
 	@Override
 	public void apply(RequestTemplate template) {
 		String spanName = getSpanName(template);
-		Span span = getSpan(spanName);
+		Span span = this.tracer.createSpan(spanName);
 		this.spanInjector.inject(span, template);
 		span.logEvent(Span.CLIENT_SEND);
 	}
 
-	protected String getSpanName(RequestTemplate template) {
+	private String getSpanName(RequestTemplate template) {
 		URI uri = URI.create(template.url());
 		return uriScheme(uri) + ":" + uri.getPath();
-	}
-
-	/**
-	 * Depending on the presence of a Span in context, either starts a new Span
-	 * or continues an existing one.
-	 */
-	protected Span getSpan(String spanName) {
-		if (!this.feignRequestContext.hasSpanInProcess()) {
-			Span span = this.tracer.createSpan(spanName);
-			this.feignRequestContext.putSpan(span, false);
-			return span;
-		} else {
-			if (this.feignRequestContext.wasSpanRetried()) {
-				return this.tracer.continueSpan(this.feignRequestContext.getCurrentSpan());
-			}
-		}
-		return this.tracer.createSpan(spanName);
 	}
 
 	private String uriScheme(URI uri) {

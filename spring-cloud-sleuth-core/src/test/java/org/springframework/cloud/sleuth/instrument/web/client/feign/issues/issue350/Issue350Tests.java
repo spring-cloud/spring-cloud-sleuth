@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client.feign.issues;
+package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issue350;
 
 import java.util.concurrent.ExecutionException;
 
