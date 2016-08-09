@@ -16,11 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
-
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -28,6 +26,9 @@ import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -37,7 +38,7 @@ public class MessagingSpanInjectorTests {
 
 	private TraceKeys traceKeys = new TraceKeys();
 	private MessagingSpanInjector messagingSpanInjector = new MessagingSpanInjector(
-			this.traceKeys);
+			this.traceKeys, new TraceHeaders(), new TraceMessageHeaders());
 
 	@Test
 	public void spanHeadersAdded() {

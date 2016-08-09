@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -12,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
@@ -26,6 +25,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(TraceFilterAlwaysSamplerIntegrationTests.Config.class)
@@ -58,7 +59,7 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
 				new NoOpSpanReporter(), this.spanExtractor,
-				this.httpTraceKeysInjector));
+				this.httpTraceKeysInjector, new TraceHeaders()));
 	}
 
 	private MvcResult whenSentPingWithTraceIdAndNotSampling(Long traceId)

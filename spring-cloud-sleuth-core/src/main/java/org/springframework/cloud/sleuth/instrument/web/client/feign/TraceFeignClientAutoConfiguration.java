@@ -33,6 +33,7 @@ import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringDecoder;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -104,7 +105,7 @@ public class TraceFeignClientAutoConfiguration {
 
 	@Bean
 	@Primary
-	Decoder feignDecoder(BeanFactory beanFactory) {
+	Decoder feignDecoder(BeanFactory beanFactory, final TraceHeaders traceHeaders) {
 		return new TraceFeignDecoder(beanFactory,
 				new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
 					@Override
@@ -114,7 +115,7 @@ public class TraceFeignClientAutoConfiguration {
 								.getInstance();
 						FeignResponseHeadersHolder feignResponseHeadersHolder = new FeignResponseHeadersHolder(
 								response.headers());
-						feignResponseHeadersInjector().inject(
+						feignResponseHeadersInjector(traceHeaders).inject(
 								feignRequestContext.getCurrentSpan(),
 								feignResponseHeadersHolder);
 						return super.decode(
@@ -131,15 +132,15 @@ public class TraceFeignClientAutoConfiguration {
 	 * an existing one if a retry takes place.
 	 */
 	@Bean
-	RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
-		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector());
+	RequestInterceptor traceIdRequestInterceptor(Tracer tracer, TraceHeaders traceHeaders) {
+		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector(traceHeaders));
 	}
 
-	private SpanInjector<RequestTemplate> feignRequestTemplateInjector() {
-		return new FeignRequestTemplateInjector();
+	private SpanInjector<RequestTemplate> feignRequestTemplateInjector(TraceHeaders traceHeaders) {
+		return new FeignRequestTemplateInjector(traceHeaders);
 	}
 
-	private SpanInjector<FeignResponseHeadersHolder> feignResponseHeadersInjector() {
-		return new FeignResponseHeadersInjector();
+	private SpanInjector<FeignResponseHeadersHolder> feignResponseHeadersInjector(TraceHeaders traceHeaders) {
+		return new FeignResponseHeadersInjector(traceHeaders);
 	}
 }

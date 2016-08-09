@@ -21,10 +21,10 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -35,8 +35,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class ApacheHttpClientRibbonRequestCustomizerTests {
 
-	@Mock Tracer tracer;
-	@InjectMocks ApacheHttpClientRibbonRequestCustomizer customizer;
+	ApacheHttpClientRibbonRequestCustomizer customizer = new ApacheHttpClientRibbonRequestCustomizer(
+			Mockito.mock(Tracer.class), new TraceHeaders());
 	Span span = Span.builder().name("name").spanId(1L).traceId(2L).parent(3L)
 			.processId("processId").build();
 

@@ -269,6 +269,24 @@ And you could register them like this:
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=configuration,indent=0]
 ----
 
+=== Custom tracing headers
+
+TIP: Feature available since 1.1.0
+
+If in your system you have different header values for your trace id (e.g. `correlationId`) and
+ for span id (e.g. `mySpanId`), and they are both propagated like this via HTTP and messaging,
+ then it's enough to provide the following properties:
+
+[source,yml]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/resources/application-customheaders.yml[indent=0]
+----
+
+By customizing:
+
+- `spring.sleuth.headers.(traceId|spanId|parentId|sampled)` you customize the HTTP based communication.
+- `spring.sleuth.integration.headers.(traceId|spanId|parentId|sampled)` you customize the Spring Integration based communication.
+
 == Span Data as Messages
 
 You can accumulate and send span data over

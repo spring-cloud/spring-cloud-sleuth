@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.util.StringUtils;
 
@@ -30,13 +31,19 @@ import org.springframework.util.StringUtils;
  */
 class HttpRequestInjector implements SpanInjector<HttpRequest> {
 
+	private final TraceHeaders traceHeaders;
+
+	HttpRequestInjector(TraceHeaders traceHeaders) {
+		this.traceHeaders = traceHeaders;
+	}
+
 	@Override
 	public void inject(Span span, HttpRequest carrier) {
-		setIdHeader(carrier, Span.TRACE_ID_NAME, span.getTraceId());
-		setIdHeader(carrier, Span.SPAN_ID_NAME, span.getSpanId());
-		setHeader(carrier, Span.SAMPLED_NAME, span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
+		setIdHeader(carrier, this.traceHeaders.getTraceId(), span.getTraceId());
+		setIdHeader(carrier, this.traceHeaders.getSpanId(), span.getSpanId());
+		setHeader(carrier, this.traceHeaders.getSampled(), span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
-		setIdHeader(carrier, Span.PARENT_ID_NAME, getParentId(span));
+		setIdHeader(carrier, this.traceHeaders.getParentId(), getParentId(span));
 		setHeader(carrier, Span.PROCESS_ID_NAME, span.getProcessId());
 	}
 

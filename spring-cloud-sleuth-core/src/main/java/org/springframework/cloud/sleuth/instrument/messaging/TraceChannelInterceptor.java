@@ -20,6 +20,7 @@ import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -39,8 +40,11 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			SpanExtractor<Message<?>> spanExtractor,
-			SpanInjector<MessageBuilder<?>> spanInjector) {
-		super(tracer, traceKeys, spanExtractor, spanInjector);
+			SpanInjector<MessageBuilder<?>> spanInjector,
+			TraceHeaders traceHeaders,
+			TraceMessageHeaders traceMessageHeaders) {
+		super(tracer, traceKeys, spanExtractor, spanInjector, traceHeaders,
+				traceMessageHeaders);
 	}
 
 	@Override
@@ -92,8 +96,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			return getTracer().createSpan(name, span);
 		}
 		// Backwards compatibility
-		if (Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(Span.SAMPLED_NAME)) ||
-				Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(TraceMessageHeaders.SAMPLED_NAME))) {
+		if (Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(getTraceHeaders().getSampled())) ||
+				Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(getTraceMessageHeaders().getSampled()))) {
 			return getTracer().createSpan(name, NeverSampler.INSTANCE);
 		}
 		return getTracer().createSpan(name);

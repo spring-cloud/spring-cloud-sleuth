@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -37,9 +38,14 @@ import org.springframework.util.StringUtils;
 class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 
 	private final TraceKeys traceKeys;
+	private final TraceHeaders traceHeaders;
+	private final TraceMessageHeaders traceMessageHeaders;
 
-	public MessagingSpanInjector(TraceKeys traceKeys) {
+	public MessagingSpanInjector(TraceKeys traceKeys, TraceHeaders traceHeaders,
+			TraceMessageHeaders traceMessageHeaders) {
 		this.traceKeys = traceKeys;
+		this.traceHeaders = traceHeaders;
+		this.traceMessageHeaders = traceMessageHeaders;
 	}
 
 	@Override
@@ -48,11 +54,11 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(initialMessage);
 		if (span == null) {
-			if (!isSampled(initialMessage, Span.SAMPLED_NAME) ||
-					!isSampled(initialMessage, TraceMessageHeaders.SAMPLED_NAME)) {
+			if (!isSampled(initialMessage, this.traceHeaders.getSampled()) ||
+					!isSampled(initialMessage, this.traceMessageHeaders.getSampled())) {
 				// Backwards compatibility
-				accessor.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
-				accessor.setHeader(TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
+				accessor.setHeader(this.traceHeaders.getSampled(), Span.SPAN_NOT_SAMPLED);
+				accessor.setHeader(this.traceMessageHeaders.getSampled(), Span.SPAN_NOT_SAMPLED);
 				carrier.setHeaders(accessor);
 				return;
 			}
@@ -79,16 +85,16 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 	// Backwards compatibility
 	private void addOldHeaders(Span span, Message<?> initialMessage,
 			MessageHeaderAccessor accessor, Map<String, String> headers) {
-		addHeaders(span, initialMessage, accessor, headers, Span.TRACE_ID_NAME,
-				Span.SPAN_ID_NAME, Span.PARENT_ID_NAME, Span.SPAN_NAME_NAME, Span.PROCESS_ID_NAME,
-				Span.SAMPLED_NAME, TraceMessageHeaders.OLD_SPAN_HEADER);
+		addHeaders(span, initialMessage, accessor, headers, this.traceHeaders.getTraceId(),
+				this.traceHeaders.getSpanId(), this.traceHeaders.getParentId(), Span.SPAN_NAME_NAME, Span.PROCESS_ID_NAME,
+				this.traceHeaders.getSampled(), TraceMessageHeaders.OLD_SPAN_HEADER);
 	}
 
 	private void addNewHeaders(Span span, Message<?> initialMessage,
 			MessageHeaderAccessor accessor, Map<String, String> headers) {
-		addHeaders(span, initialMessage, accessor, headers, TraceMessageHeaders.TRACE_ID_NAME,
-				TraceMessageHeaders.SPAN_ID_NAME, TraceMessageHeaders.PARENT_ID_NAME, TraceMessageHeaders.SPAN_NAME_NAME,
-				TraceMessageHeaders.PROCESS_ID_NAME, TraceMessageHeaders.SAMPLED_NAME, TraceMessageHeaders.SPAN_HEADER);
+		addHeaders(span, initialMessage, accessor, headers, this.traceMessageHeaders.getTraceId(),
+				this.traceMessageHeaders.getSpanId(), this.traceMessageHeaders.getParentId(), TraceMessageHeaders.SPAN_NAME_NAME,
+				TraceMessageHeaders.PROCESS_ID_NAME, this.traceMessageHeaders.getSampled(), TraceMessageHeaders.SPAN_HEADER);
 	}
 
 	private void addHeaders(Span span, Message<?> initialMessage,

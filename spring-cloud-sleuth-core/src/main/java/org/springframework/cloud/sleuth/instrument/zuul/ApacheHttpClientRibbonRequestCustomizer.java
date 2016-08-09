@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import org.apache.http.client.methods.RequestBuilder;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -27,8 +28,8 @@ import org.springframework.cloud.sleuth.Tracer;
  */
 class ApacheHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCustomizer<RequestBuilder> {
 
-	ApacheHttpClientRibbonRequestCustomizer(Tracer tracer) {
-		super(tracer);
+	ApacheHttpClientRibbonRequestCustomizer(Tracer tracer, TraceHeaders traceHeaders) {
+		super(tracer, traceHeaders);
 	}
 
 	@Override

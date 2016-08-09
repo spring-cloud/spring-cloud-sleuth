@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -32,10 +33,11 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import okhttp3.Request;
 import com.netflix.client.http.HttpRequest;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
+
+import okhttp3.Request;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -66,8 +68,8 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	public SpanInjector<RequestContext> requestContextSpanInjector() {
-		return new RequestContextInjector();
+	public SpanInjector<RequestContext> requestContextSpanInjector(TraceHeaders traceHeaders) {
+		return new RequestContextInjector(traceHeaders);
 	}
 
 	@Bean
@@ -77,20 +79,20 @@ public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnClass(name = "com.netflix.client.http.HttpRequest.Builder")
-	public RibbonRequestCustomizer<HttpRequest.Builder> restClientRibbonRequestCustomizer(Tracer tracer) {
-		return new RestClientRibbonRequestCustomizer(tracer);
+	public RibbonRequestCustomizer<HttpRequest.Builder> restClientRibbonRequestCustomizer(Tracer tracer, TraceHeaders traceHeaders) {
+		return new RestClientRibbonRequestCustomizer(tracer, traceHeaders);
 	}
 
 	@Bean
 	@ConditionalOnClass(name = "org.apache.http.client.methods.RequestBuilder")
-	public RibbonRequestCustomizer<RequestBuilder> apacheHttpRibbonRequestCustomizer(Tracer tracer) {
-		return new ApacheHttpClientRibbonRequestCustomizer(tracer);
+	public RibbonRequestCustomizer<RequestBuilder> apacheHttpRibbonRequestCustomizer(Tracer tracer, TraceHeaders traceHeaders) {
+		return new ApacheHttpClientRibbonRequestCustomizer(tracer, traceHeaders);
 	}
 
 	@Bean
 	@ConditionalOnClass(name = "okhttp3.Request.Builder")
-	public RibbonRequestCustomizer<Request.Builder> okHttpRibbonRequestCustomizer(Tracer tracer) {
-		return new OkHttpClientRibbonRequestCustomizer(tracer);
+	public RibbonRequestCustomizer<Request.Builder> okHttpRibbonRequestCustomizer(Tracer tracer, TraceHeaders traceHeaders) {
+		return new OkHttpClientRibbonRequestCustomizer(tracer, traceHeaders);
 	}
 
 	@Bean

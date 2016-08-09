@@ -24,13 +24,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.core.ConditionFactory;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.trace.IntegrationTestSpanContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -38,6 +36,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.core.ConditionFactory;
 
 import zipkin.Codec;
 import zipkin.Span;
@@ -55,6 +56,7 @@ public abstract class AbstractIntegrationTest {
 	protected static final int POLL_INTERVAL = 1;
 	protected static final int TIMEOUT = 20;
 	protected RestTemplate restTemplate = new AssertingRestTemplate();
+	protected TraceHeaders traceHeaders = new TraceHeaders();
 
 	@Before
 	public void clearSpanBefore() {
@@ -119,11 +121,13 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId) {
-		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, null);
+		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, null,
+				this.traceHeaders);
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId, Long spanId) {
-		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, spanId);
+		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, spanId,
+				this.traceHeaders);
 	}
 
 	protected Runnable allSpansWereRegisteredInZipkinWithTraceIdEqualTo(long traceId) {

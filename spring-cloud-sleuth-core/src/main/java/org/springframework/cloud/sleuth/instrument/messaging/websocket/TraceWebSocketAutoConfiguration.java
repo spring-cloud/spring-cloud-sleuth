@@ -7,9 +7,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptor;
+import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceSpanMessagingAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -38,14 +40,12 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 public class TraceWebSocketAutoConfiguration
 		extends AbstractWebSocketMessageBrokerConfigurer {
 
-	@Autowired
-	Tracer tracer;
-	@Autowired
-	TraceKeys traceKeys;
-	@Autowired
-	SpanExtractor<Message<?>> spanExtractor;
-	@Autowired
-	SpanInjector<MessageBuilder<?>> spanInjector;
+	@Autowired Tracer tracer;
+	@Autowired TraceKeys traceKeys;
+	@Autowired SpanExtractor<Message<?>> spanExtractor;
+	@Autowired SpanInjector<MessageBuilder<?>> spanInjector;
+	@Autowired TraceHeaders traceHeaders;
+	@Autowired TraceMessageHeaders traceMessageHeaders;
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -55,12 +55,12 @@ public class TraceWebSocketAutoConfiguration
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(new TraceChannelInterceptor(this.tracer,
-				this.traceKeys, this.spanExtractor, this.spanInjector));
+				this.traceKeys, this.spanExtractor, this.spanInjector, this.traceHeaders, this.traceMessageHeaders));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(new TraceChannelInterceptor(this.tracer,
-				this.traceKeys, this.spanExtractor, this.spanInjector));
+				this.traceKeys, this.spanExtractor, this.spanInjector, this.traceHeaders, this.traceMessageHeaders));
 	}
 }

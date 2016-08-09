@@ -22,6 +22,7 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -32,7 +33,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 public class MessagingSpanExtractorTests {
-	MessagingSpanExtractor extractor = new MessagingSpanExtractor(new Random());
+	MessagingSpanExtractor extractor = new MessagingSpanExtractor(new Random(),
+			new TraceHeaders(), new TraceMessageHeaders());
 
 	@Test
 	public void should_return_null_if_trace_or_span_is_missing() {

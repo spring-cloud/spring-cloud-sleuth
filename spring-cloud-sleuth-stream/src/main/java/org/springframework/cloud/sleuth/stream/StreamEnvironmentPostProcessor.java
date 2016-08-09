@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.stream;
 
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
@@ -35,6 +37,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link EnvironmentPostProcessor} that sets the default properties for
@@ -46,9 +49,15 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
-	private static String[] headers = new String[] { Span.SPAN_ID_NAME,
-			Span.TRACE_ID_NAME, Span.PARENT_ID_NAME, Span.PROCESS_ID_NAME,
-			Span.SAMPLED_NAME, Span.SPAN_NAME_NAME };
+	private static final String HEADER_PREFIX = "spring.sleuth.integration.headers";
+	// Tuples containing the default header value (key) and the header name (value)
+	private static SimpleEntry[] DEFAULT_HEADERS = new SimpleEntry[] {
+		new SimpleEntry<String, String>(Span.SPAN_ID_NAME, "spanId"),
+		new SimpleEntry<String, String>(Span.TRACE_ID_NAME, "traceId"),
+		new SimpleEntry<String, String>(Span.PARENT_ID_NAME, "parentId"),
+		new SimpleEntry<String, String>(Span.PROCESS_ID_NAME, null),
+		new SimpleEntry<String, String>(Span.SAMPLED_NAME, "sampled"),
+		new SimpleEntry<String, String>(Span.SPAN_NAME_NAME, null)};
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
@@ -64,7 +73,7 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 					.getResources("classpath*:META-INF/spring.binders")) {
 				for (String binderType : parseBinderConfigurations(resource)) {
 					int startIndex = findStartIndex(environment, binderType);
-					addHeaders(map, binderType, startIndex);
+					addHeaders(map, binderType, startIndex, environment);
 				}
 			}
 		}
@@ -125,11 +134,21 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 		}
 	}
 
-	private void addHeaders(Map<String, Object> map, String binder, int startIndex) {
+	private void addHeaders(Map<String, Object> map, String binder, int startIndex, Environment environment) {
 		String stem = "spring.cloud.stream." + binder + ".binder.headers";
-		for (int i = 0; i < headers.length; i++) {
-			map.put(stem + "[" + (i + startIndex) + "]", headers[i]);
+		for (int i = 0; i < DEFAULT_HEADERS.length; i++) {
+			map.put(stem + "[" + (i + startIndex) + "]", headerValue(DEFAULT_HEADERS[i], environment));
 		}
+	}
+
+	private String headerValue(SimpleEntry<String, String> tuple, Environment environment) {
+		if (tuple.getValue() != null) {
+			String property = environment.getProperty(HEADER_PREFIX + "." + tuple.getValue());
+			if (StringUtils.hasText(property)) {
+				return property;
+			}
+		}
+		return tuple.getKey();
 	}
 
 }

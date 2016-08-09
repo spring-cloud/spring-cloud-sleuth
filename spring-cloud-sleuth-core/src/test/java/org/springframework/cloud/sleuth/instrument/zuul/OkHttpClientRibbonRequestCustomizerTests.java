@@ -18,10 +18,10 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceHeaders;
 import org.springframework.cloud.sleuth.Tracer;
 
 import okhttp3.Request;
@@ -34,8 +34,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class OkHttpClientRibbonRequestCustomizerTests {
 
-	@Mock Tracer tracer;
-	@InjectMocks OkHttpClientRibbonRequestCustomizer customizer;
+	OkHttpClientRibbonRequestCustomizer customizer = new OkHttpClientRibbonRequestCustomizer(
+			Mockito.mock(Tracer.class), new TraceHeaders());
 	Span span = Span.builder().name("name").spanId(1L).traceId(2L).parent(3L)
 			.processId("processId").build();
 
