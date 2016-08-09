@@ -40,9 +40,8 @@ final class FeignContextBeanPostProcessor implements BeanPostProcessor {
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof FeignContext) {
-			return new TraceFeignContext(getTraceFeignObjectWrapper(),
-					(FeignContext) bean);
+		if (bean instanceof FeignContext && !(bean instanceof TraceFeignContext)) {
+			return new TraceFeignContext(getTraceFeignObjectWrapper(), (FeignContext) bean);
 		}
 		return bean;
 	}
@@ -53,7 +52,7 @@ final class FeignContextBeanPostProcessor implements BeanPostProcessor {
 		return bean;
 	}
 
-	TraceFeignObjectWrapper getTraceFeignObjectWrapper() {
+	private TraceFeignObjectWrapper getTraceFeignObjectWrapper() {
 		if (this.traceFeignObjectWrapper == null) {
 			this.traceFeignObjectWrapper = this.beanFactory.getBean(TraceFeignObjectWrapper.class);
 		}

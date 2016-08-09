@@ -16,37 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
-import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
-import org.springframework.cloud.netflix.feign.support.SpringDecoder;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 
 import feign.Client;
 import feign.Feign;
-import feign.FeignException;
 import feign.RequestInterceptor;
-import feign.RequestTemplate;
-import feign.Response;
-import feign.codec.Decoder;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -62,9 +48,6 @@ import feign.codec.Decoder;
 @AutoConfigureBefore(FeignAutoConfiguration.class)
 @AutoConfigureAfter(SleuthHystrixAutoConfiguration.class)
 public class TraceFeignClientAutoConfiguration {
-
-	@Autowired
-	private ObjectFactory<HttpMessageConverters> messageConverters;
 
 	@Bean
 	@Scope("prototype")
@@ -102,44 +85,12 @@ public class TraceFeignClientAutoConfiguration {
 		return new TraceFeignObjectWrapper(beanFactory);
 	}
 
-	@Bean
-	@Primary
-	Decoder feignDecoder(BeanFactory beanFactory) {
-		return new TraceFeignDecoder(beanFactory,
-				new ResponseEntityDecoder(new SpringDecoder(this.messageConverters)) {
-					@Override
-					public Object decode(Response response, Type type)
-							throws IOException, FeignException {
-						FeignRequestContext feignRequestContext = FeignRequestContext
-								.getInstance();
-						FeignResponseHeadersHolder feignResponseHeadersHolder = new FeignResponseHeadersHolder(
-								response.headers());
-						feignResponseHeadersInjector().inject(
-								feignRequestContext.getCurrentSpan(),
-								feignResponseHeadersHolder);
-						return super.decode(
-								Response.create(response.status(), response.reason(),
-										feignResponseHeadersHolder.responseHeaders,
-										response.body()),
-								type);
-					}
-				});
-	}
-
 	/**
 	 * Sleuth {@link feign.RequestInterceptor} that either starts a new Span or continues
 	 * an existing one if a retry takes place.
 	 */
 	@Bean
 	RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
-		return new TraceFeignRequestInterceptor(tracer, feignRequestTemplateInjector());
-	}
-
-	private SpanInjector<RequestTemplate> feignRequestTemplateInjector() {
-		return new FeignRequestTemplateInjector();
-	}
-
-	private SpanInjector<FeignResponseHeadersHolder> feignResponseHeadersInjector() {
-		return new FeignResponseHeadersInjector();
+		return new TraceFeignRequestInterceptor(tracer, new FeignRequestTemplateInjector());
 	}
 }
