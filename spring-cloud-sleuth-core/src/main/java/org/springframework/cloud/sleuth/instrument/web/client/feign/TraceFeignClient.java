@@ -17,16 +17,19 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
-import java.util.Objects;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 
 import feign.Client;
 import feign.Request;
 import feign.Response;
-import feign.RetryableException;
 
 /**
  * A Feign Client that closes a Span if there is no response body. In other cases Span
@@ -36,42 +39,38 @@ import feign.RetryableException;
  *
  * @since 1.0.0
  */
-final class TraceFeignClient extends FeignEventPublisher implements Client {
+final class TraceFeignClient implements Client {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final Client delegate;
 	private HttpTraceKeysInjector keysInjector;
+	private final BeanFactory beanFactory;
+	private Tracer tracer;
 
 	TraceFeignClient(BeanFactory beanFactory) {
-		super(beanFactory);
+		this.beanFactory = beanFactory;
 		this.delegate = new Client.Default(null, null);
 	}
 
 	TraceFeignClient(BeanFactory beanFactory, Client delegate) {
-		super(beanFactory);
 		this.delegate = delegate;
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
-		Response response;
 		try {
 			addRequestTags(request);
-			response = this.delegate.execute(request, options);
-		}
-		catch (RetryableException | IOException e) {
-			// IOException will be wrapped into a RetryableException in the caller
+			Response response = this.delegate.execute(request, options);
+			logCr();
+			return response;
+		} catch (RuntimeException | IOException e) {
+			logError(e);
 			throw e;
+		} finally {
+			closeSpan();
 		}
-		catch (RuntimeException e) {
-			// Any other exception is going to be propagated so we need to tidy up
-			finish();
-			throw e;
-		}
-		if (response != null && response.body() == null || (response.body() != null
-				&& Objects.equals(response.body().length(), 0))) {
-			finish();
-		}
-		return response;
 	}
 
 	/**
@@ -83,10 +82,42 @@ final class TraceFeignClient extends FeignEventPublisher implements Client {
 				request.method(), request.headers());
 	}
 
-	HttpTraceKeysInjector getKeysInjector() {
+	private HttpTraceKeysInjector getKeysInjector() {
 		if (this.keysInjector == null) {
 			this.keysInjector = this.beanFactory.getBean(HttpTraceKeysInjector.class);
 		}
 		return this.keysInjector;
+	}
+
+	private void closeSpan() {
+		Span span = getTracer().getCurrentSpan();
+		if (span != null) {
+			log.debug("Closing Feign span " + span);
+			getTracer().close(span);
+		}
+	}
+
+	private void logCr() {
+		Span span = getTracer().getCurrentSpan();
+		if (span != null) {
+			log.debug("Closing Feign span and logging CR" + span);
+			span.logEvent(Span.CLIENT_RECV);
+		}
+	}
+
+	private void logError(Exception e) {
+		Span span = getTracer().getCurrentSpan();
+		if (span != null) {
+			String message = e.getMessage() != null ? e.getMessage() : e.toString();
+			log.debug("Appending exception [" + message + "] to span "  + span);
+			getTracer().addTag("error", message);
+		}
+	}
+
+	private Tracer getTracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
+		return this.tracer;
 	}
 }

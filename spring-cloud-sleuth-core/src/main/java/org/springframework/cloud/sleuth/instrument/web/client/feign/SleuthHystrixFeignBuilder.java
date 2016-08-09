@@ -24,7 +24,7 @@ import feign.hystrix.HystrixFeign;
 /**
  * Contains {@link Feign.Builder} implementation that delegates execution
  * {@link HystrixFeign} with tracing components
- * that close spans on exceptions / success and continues them on retries.
+ * that close spans upon completion of request processing.
  *
  * @author Marcin Grzejszczak
  *
@@ -36,9 +36,6 @@ final class SleuthHystrixFeignBuilder {
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
 		return HystrixFeign.builder()
-				.client(new TraceFeignClient(beanFactory))
-				.retryer(new TraceFeignRetryer(beanFactory))
-				.decoder(new TraceFeignDecoder(beanFactory))
-				.errorDecoder(new TraceFeignErrorDecoder(beanFactory));
+				.client(new TraceFeignClient(beanFactory));
 	}
 }

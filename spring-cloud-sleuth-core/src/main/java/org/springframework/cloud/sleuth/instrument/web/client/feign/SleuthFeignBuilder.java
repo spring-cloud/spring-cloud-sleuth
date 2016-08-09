@@ -22,7 +22,7 @@ import feign.Feign;
 
 /**
  * Contains {@link feign.Feign.Builder} implementation with tracing components
- * that close spans on exceptions / success and continues them on retries.
+ * that close spans on completion of request processing.
  *
  * @author Marcin Grzejszczak
  *
@@ -34,9 +34,6 @@ final class SleuthFeignBuilder {
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
 		return Feign.builder()
-				.client(new TraceFeignClient(beanFactory))
-				.retryer(new TraceFeignRetryer(beanFactory))
-				.decoder(new TraceFeignDecoder(beanFactory))
-				.errorDecoder(new TraceFeignErrorDecoder(beanFactory));
+				.client(new TraceFeignClient(beanFactory));
 	}
 }

@@ -146,6 +146,18 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
+	public SpanAssert hasNotLoggedAnEvent(String event) {
+		isNotNull();
+		if (this.actual.logs().stream().map(org.springframework.cloud.sleuth.Log::getEvent)
+				.filter(s -> s.equals(event)).findAny().isPresent()) {
+			String message = String.format("Expected span NOT to have the event with event value <%s>. "
+					+ "Found logs are <%s>", event, this.actual.logs());
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
 	public SpanAssert isExportable() {
 		isNotNull();
 		if (!this.actual.isExportable()) {
