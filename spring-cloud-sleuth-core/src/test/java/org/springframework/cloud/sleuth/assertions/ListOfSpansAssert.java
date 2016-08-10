@@ -20,15 +20,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.Span;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -114,7 +113,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 
 	private String spansToString() {
 		return this.actual.spans.stream().map(span ->  "\nSPAN: " + span.toString() + " with name [" + span.getName() + "] " +
-				"\nwith tags " + span.tags() + "\nwith logs " + span.logs()).collect(Collectors.joining("\n"));
+				"\nwith tags " + span.tags() + "\nwith logs " + span.logs()).collect(joining("\n"));
 	}
 
 	public ListOfSpansAssert doesNotHaveASpanWithName(String name) {

@@ -32,7 +32,6 @@ import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
 import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
@@ -103,8 +102,7 @@ public class TraceCommandTests {
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
 		TraceKeys traceKeys = new TraceKeys();
-		HystrixCommand.Setter setter = HystrixCommand.Setter
-				.withGroupKey(HystrixCommandGroupKey.Factory.asKey("group"))
+		HystrixCommand.Setter setter = withGroupKey(asKey("group"))
 				.andCommandKey(HystrixCommandKey.Factory.asKey("command"));
 		// tag::hystrix_command[]
 		HystrixCommand<String> hystrixCommand = new HystrixCommand<String>(setter) {

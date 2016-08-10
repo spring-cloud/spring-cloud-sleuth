@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import javax.servlet.http.HttpServletRequest;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,13 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import com.jayway.awaitility.Awaitility;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -72,6 +66,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -115,19 +113,13 @@ public class WebClientTests {
 		then(getHeader(response, Span.TRACE_ID_NAME)).isNull();
 		then(getHeader(response, Span.SPAN_ID_NAME)).isNull();
 		then(this.listener.getSpans()).isNotEmpty();
-		Awaitility.await().atMost(3, TimeUnit.SECONDS).until(() -> {
-			log.info("Seraching for a notrace span in " + this.listener.getSpans());
-			Optional<Span> noTraceSpan = this.listener.getSpans().stream().filter(span ->
-					"http:/notrace".equals(span.getName()) && !span.tags().isEmpty()).findFirst();
-			then(noTraceSpan.isPresent()).isTrue();
-			log.info("No trace span found");
-			// TODO: matches cause there is an issue with Feign not providing the full URL at the interceptor level
-			then(noTraceSpan.get()).matchesATag("http.url", ".*/notrace")
-					.hasATag("http.path", "/notrace")
-					.hasATag("http.method", "GET");
-			log.info("Notrace has all the necessary tags");
-		});
-
+		Optional<Span> noTraceSpan = this.listener.getSpans().stream().filter(span ->
+				"http:/notrace".equals(span.getName()) && !span.tags().isEmpty()).findFirst();
+		then(noTraceSpan.isPresent()).isTrue();
+		// TODO: matches cause there is an issue with Feign not providing the full URL at the interceptor level
+		then(noTraceSpan.get()).matchesATag("http.url", ".*/notrace")
+				.hasATag("http.path", "/notrace")
+				.hasATag("http.method", "GET");
 	}
 
 	Object[] parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent() {

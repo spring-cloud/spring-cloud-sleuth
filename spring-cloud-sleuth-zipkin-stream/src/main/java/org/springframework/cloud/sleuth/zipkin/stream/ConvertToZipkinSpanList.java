@@ -118,7 +118,7 @@ final class ConvertToZipkinSpanList {
 				BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep));
 	}
 
-	private static void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan,
+	private static void ensureServerAddr(Span span, Builder zipkinSpan,
 			Endpoint ep) {
 		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME)
 				? span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : ep.serviceName;

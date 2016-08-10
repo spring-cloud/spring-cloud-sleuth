@@ -15,18 +15,18 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -204,30 +204,31 @@ public class TraceFilter extends GenericFilterBean {
 
 	private void detachOrCloseSpans(HttpServletRequest request,
 			HttpServletResponse response, Span spanFromRequest, Throwable exception) {
-		if (spanFromRequest != null) {
+		Span span = spanFromRequest;
+		if (span != null) {
 			addResponseTags(response, exception);
-			if (spanFromRequest.hasSavedSpan() && requestHasAlreadyBeenHandled(request)) {
-				recordParentSpan(spanFromRequest.getSavedSpan());
+			if (span.hasSavedSpan() && requestHasAlreadyBeenHandled(request)) {
+				recordParentSpan(span.getSavedSpan());
 			} else if (!requestHasAlreadyBeenHandled(request)) {
-				spanFromRequest = this.tracer.close(spanFromRequest);
+				span = this.tracer.close(span);
 			}
-			recordParentSpan(spanFromRequest);
+			recordParentSpan(span);
 			// in case of a response with exception status will close the span when exception dispatch is handled
 			if (httpStatusSuccessful(response)) {
 				if (log.isDebugEnabled()) {
-					log.debug("Closing the span " + spanFromRequest + " since the response was successful");
+					log.debug("Closing the span " + span + " since the response was successful");
 				}
-				this.tracer.close(spanFromRequest);
+				this.tracer.close(span);
 			} else if (errorAlreadyHandled(request)) {
 				if (log.isDebugEnabled()) {
 					log.debug(
-							"Won't detach the span " + spanFromRequest + " since error has already been handled");
+							"Won't detach the span " + span + " since error has already been handled");
 				}
 			} else {
 				if (log.isDebugEnabled()) {
-					log.debug("Detaching the span " + spanFromRequest + " since the response was unsuccessful");
+					log.debug("Detaching the span " + span + " since the response was unsuccessful");
 				}
-				this.tracer.detach(spanFromRequest);
+				this.tracer.detach(span);
 			}
 		}
 	}

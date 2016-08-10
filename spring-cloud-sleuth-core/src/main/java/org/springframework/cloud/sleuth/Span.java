@@ -462,9 +462,7 @@ public class Span {
 		Span other = (Span) obj;
 		if (this.spanId != other.spanId)
 			return false;
-		if (this.traceId != other.traceId)
-			return false;
-		return true;
+		return this.traceId == other.traceId;
 	}
 
 	public static class SpanBuilder {
