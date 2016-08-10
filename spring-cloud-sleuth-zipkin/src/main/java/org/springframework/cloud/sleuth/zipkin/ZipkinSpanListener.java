@@ -136,7 +136,7 @@ public class ZipkinSpanListener implements SpanReporter {
 	}
 
 	private boolean hasClientSend(Span span) {
-		for (org.springframework.cloud.sleuth.Log log : span.logs()) {
+		for (Log log : span.logs()) {
 			if (Constants.CLIENT_SEND.equals(log.getEvent())) {
 				return !span.tags().containsKey(Constants.SERVER_ADDR);
 			}
@@ -183,16 +183,16 @@ public class ZipkinSpanListener implements SpanReporter {
 	 * duration (client receive - send)
 	 */
 	private long calculateDurationInMicros(Span span) {
-		org.springframework.cloud.sleuth.Log clientSend = hasLog(Span.CLIENT_SEND, span);
-		org.springframework.cloud.sleuth.Log clientReceived = hasLog(Span.CLIENT_RECV, span);
+		Log clientSend = hasLog(Span.CLIENT_SEND, span);
+		Log clientReceived = hasLog(Span.CLIENT_RECV, span);
 		if (clientSend != null && clientReceived != null) {
 			return (clientReceived.getTimestamp() - clientSend.getTimestamp()) * 1000;
 		}
 		return span.getAccumulatedMicros();
 	}
 
-	private org.springframework.cloud.sleuth.Log hasLog(String logName, Span span) {
-		for (org.springframework.cloud.sleuth.Log log : span.logs()) {
+	private Log hasLog(String logName, Span span) {
+		for (Log log : span.logs()) {
 			if (logName.equals(log.getEvent())) {
 				return log;
 			}
