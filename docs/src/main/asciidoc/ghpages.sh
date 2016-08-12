@@ -85,7 +85,7 @@ else
             # Not ignored...
             cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
             if [[ "${file}" == "${MAIN_ADOC_VALUE}.html" ]] ; then
-                ln -s ${ROOT_FOLDER}/${VERSION_VALUE}/index.html ${ROOT_FOLDER}/${VERSION_VALUE}/${MAIN_ADOC_VALUE}.adoc
+                ln -s ${ROOT_FOLDER}/${VERSION_VALUE}/${MAIN_ADOC_VALUE}.adoc ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
                 git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
             fi
             git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/$file
