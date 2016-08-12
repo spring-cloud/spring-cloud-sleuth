@@ -70,7 +70,7 @@ if [[ "${CURRENT_BRANCH}" == "master" ]] ; then
             cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
             # We want users to access 1.0.0.RELEASE/ instead of 1.0.0.RELEASE/spring-cloud.sleuth.html
             if [[ "${file}" == "${MAIN_ADOC_VALUE}.html" ]] ; then
-                (cd ${VERSION_VALUE}/; ln -s ${MAIN_ADOC_VALUE}.adoc index.html)
+                (cd ${VERSION_VALUE}/; ln -s ${MAIN_ADOC_VALUE}.html index.html)
                 git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
             fi
             git add -A $file
@@ -85,7 +85,7 @@ else
             # Not ignored...
             cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
             if [[ "${file}" == "${MAIN_ADOC_VALUE}.html" ]] ; then
-                (cd ${VERSION_VALUE}/; ln -s ${MAIN_ADOC_VALUE}.adoc index.html)
+                (cd ${VERSION_VALUE}/; ln -s ${MAIN_ADOC_VALUE}.html index.html)
                 git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
             fi
             git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/$file
