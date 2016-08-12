@@ -69,16 +69,17 @@ if [[ "${CURRENT_BRANCH}" == "master" ]] ; then
             cp -rf $f ${ROOT_FOLDER}/
             cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
             git add -A $file
+            git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/$file
         fi
     done
 else
-    echo -e "Current branch is master - will copy the current docs ONLY to [${VERSION_VALUE}] folder"
+    echo -e "Current branch is [${CURRENT_BRANCH}] - will copy the current docs ONLY to [${VERSION_VALUE}] folder"
     for f in docs/target/generated-docs/*; do
         file=${f#docs/target/generated-docs/*}
         if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
             # Not ignored...
             cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
-            git add -A $file
+            git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/$file
         fi
     done
 fi
@@ -103,7 +104,7 @@ git commit -a -m "Sync docs from ${CURRENT_BRANCH} to gh-pages"
 git push origin gh-pages
 
 # Finally, switch back to the master branch and exit block
-git checkout master
+git checkout ${CURRENT_BRANCH}
 if [ "$dirty" != "0" ]; then git stash pop; fi
 
 exit 0
