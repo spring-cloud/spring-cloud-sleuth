@@ -36,8 +36,8 @@ echo "Extracted version from root pom.xml is [${VERSION_VALUE}]"
 # First one is parent, second project version.
 MAIN_ADOC_NODE=`awk '/docs.main/{i++}i==1{print; exit}' $ROOT_FOLDER/docs/pom.xml`
 # Extract the contents of the version node
-MAIN_ADOC=$(sed -ne '/docs.main/{s/.*<docs.main>\(.*\)<\/docs.main>.*/\1/p;q;}' <<< "$MAIN_ADOC_NODE")
-echo "Extracted version from docs pom.xml is [${MAIN_ADOC}]"
+MAIN_ADOC_VALUE=$(sed -ne '/docs.main/{s/.*<docs.main>\(.*\)<\/docs.main>.*/\1/p;q;}' <<< "$MAIN_ADOC_NODE")
+echo "Extracted version from docs pom.xml is [${MAIN_ADOC_VALUE}]"
 
 # Code getting the name of the current branch. For master we want to publish as we did until now
 # http://stackoverflow.com/questions/1593051/how-to-programmatically-determine-the-current-checked-out-git-branch
@@ -68,6 +68,11 @@ if [[ "${CURRENT_BRANCH}" == "master" ]] ; then
             # Not ignored...
             cp -rf $f ${ROOT_FOLDER}/
             cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
+            # We want users to access 1.0.0.RELEASE/ instead of 1.0.0.RELEASE/spring-cloud.sleuth.html
+            if [[ "${file}" == "${MAIN_ADOC_VALUE}" ]] ; then
+                ln -s ${ROOT_FOLDER}/${VERSION_VALUE}/index.html ${ROOT_FOLDER}/${VERSION_VALUE}/${MAIN_ADOC_VALUE}.adoc
+                git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
+            fi
             git add -A $file
             git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/$file
         fi
@@ -79,6 +84,10 @@ else
         if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
             # Not ignored...
             cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
+            if [[ "${file}" == "${MAIN_ADOC_VALUE}" ]] ; then
+                ln -s ${ROOT_FOLDER}/${VERSION_VALUE}/index.html ${ROOT_FOLDER}/${VERSION_VALUE}/${MAIN_ADOC_VALUE}.adoc
+                git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
+            fi
             git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/$file
         fi
     done
