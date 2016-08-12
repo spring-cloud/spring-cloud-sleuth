@@ -25,9 +25,9 @@ fi
 # Retrieve version number, name of the main adoc and name of the current branch
 ###################################################################
 
-# Code grepping for the 2nd presence of "version>" in pom.xml.
-# First one is parent, second project version.
-VERSION_NODE=`awk '/version>/{i++}i==2{print; exit}' $ROOT_FOLDER/pom.xml`
+# Code grepping for the 1st presence of "version>" in pom.xml.
+# First one is project version, second parent version.
+VERSION_NODE=`awk '/version>/{i++}i==1{print; exit}' $ROOT_FOLDER/pom.xml`
 # Extract the contents of the version node
 VERSION_VALUE=$(sed -ne '/version/{s/.*<version>\(.*\)<\/version>.*/\1/p;q;}' <<< "$VERSION_NODE")
 echo "Extracted version from root pom.xml is [${VERSION_VALUE}]"
