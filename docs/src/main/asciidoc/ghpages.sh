@@ -12,6 +12,40 @@ if ! [ -d docs/target/generated-docs ]; then
     exit 0
 fi
 
+# The script should be executed from the root folder
+
+ROOT_FOLDER=`pwd`
+echo "Current folder is ${ROOT_FOLDER}"
+
+if [[ ! -e "${ROOT_FOLDER}/.git" ]]; then
+    echo "You're not in the root folder of the project!"
+    exit 1
+fi
+
+# Retrieve version number, name of the main adoc and name of the current branch
+###################################################################
+
+# Code grepping for the 2nd presence of "version>" in pom.xml.
+# First one is parent, second project version.
+VERSION_NODE=`awk '/version>/{i++}i==2{print; exit}' $ROOT_FOLDER/pom.xml`
+# Extract the contents of the version node
+VERSION_VALUE=$(sed -ne '/version/{s/.*<version>\(.*\)<\/version>.*/\1/p;q;}' <<< "$VERSION_NODE")
+echo "Extracted version from root pom.xml is [${VERSION_VALUE}]"
+
+# Code grepping for the 2nd presence of "version>" in pom.xml.
+# First one is parent, second project version.
+MAIN_ADOC_NODE=`awk '/docs.main/{i++}i==1{print; exit}' $ROOT_FOLDER/docs/pom.xml`
+# Extract the contents of the version node
+MAIN_ADOC=$(sed -ne '/docs.main/{s/.*<docs.main>\(.*\)<\/docs.main>.*/\1/p;q;}' <<< "$MAIN_ADOC_NODE")
+echo "Extracted version from docs pom.xml is [${MAIN_ADOC}]"
+
+# Code getting the name of the current branch. For master we want to publish as we did until now
+# http://stackoverflow.com/questions/1593051/how-to-programmatically-determine-the-current-checked-out-git-branch
+CURRENT_BRANCH=$(git symbolic-ref -q HEAD)
+CURRENT_BRANCH=${CURRENT_BRANCH##refs/heads/}
+CURRENT_BRANCH=${CURRENT_BRANCH:-HEAD}
+echo "Current branch is [${CURRENT_BRANCH}]"
+
 # Stash any outstanding changes
 ###################################################################
 git diff-index --quiet HEAD
@@ -21,7 +55,36 @@ if [ "$dirty" != "0" ]; then git stash; fi
 # Switch to gh-pages branch to sync it with master
 ###################################################################
 git checkout gh-pages
+git pull origin gh-pages
 
+# For all branches copy the generated docs to proper project version subfolder
+###################################################################
+mkdir -p ${ROOT_FOLDER}/${VERSION_VALUE}
+if [[ "${CURRENT_BRANCH}" == "master" ]] ; then
+    echo -e "Current branch is master - will copy the current docs also to [${VERSION_VALUE}] folder"
+    for f in docs/target/generated-docs/*; do
+        file=${f#docs/target/generated-docs/*}
+        if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
+            # Not ignored...
+            cp -rf $f ${ROOT_FOLDER}/
+            cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
+            git add -A $file
+        fi
+    done
+else
+    echo -e "Current branch is master - will copy the current docs ONLY to [${VERSION_VALUE}] folder"
+    for f in docs/target/generated-docs/*; do
+        file=${f#docs/target/generated-docs/*}
+        if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
+            # Not ignored...
+            cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
+            git add -A $file
+        fi
+    done
+fi
+
+# Add git branches
+###################################################################
 for f in docs/target/generated-docs/*; do
     file=${f#docs/target/generated-docs/*}
     if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
@@ -31,7 +94,7 @@ for f in docs/target/generated-docs/*; do
     fi
 done
 
-git commit -a -m "Sync docs from master to gh-pages"
+git commit -a -m "Sync docs from ${CURRENT_BRANCH} to gh-pages"
 
 # Uncomment the following push if you want to auto push to
 # the gh-pages branch whenever you commit to master locally.
