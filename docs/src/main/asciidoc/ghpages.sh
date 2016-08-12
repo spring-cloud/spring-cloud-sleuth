@@ -57,7 +57,7 @@ if [ "$dirty" != "0" ]; then git stash; fi
 git checkout gh-pages
 git pull origin gh-pages
 
-# For all branches copy the generated docs to proper project version subfolder
+# Add git branches
 ###################################################################
 mkdir -p ${ROOT_FOLDER}/${VERSION_VALUE}
 if [[ "${CURRENT_BRANCH}" == "master" ]] ; then
@@ -83,17 +83,6 @@ else
         fi
     done
 fi
-
-# Add git branches
-###################################################################
-for f in docs/target/generated-docs/*; do
-    file=${f#docs/target/generated-docs/*}
-    if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
-        # Not ignored...
-        cp -rf $f .
-        git add -A $file
-    fi
-done
 
 git commit -a -m "Sync docs from ${CURRENT_BRANCH} to gh-pages"
 
