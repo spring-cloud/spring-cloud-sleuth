@@ -1841,8 +1841,17 @@ public class Consumer {
 <p>will listen for the Span data on whatever transport you provide via a
 Spring Cloud Stream <code>Binder</code> (e.g. include
 <code>spring-cloud-starter-stream-rabbit</code> for RabbitMQ, and similar
-starters exist for Redis and Kafka). The app will also be a
-<a href="https://github.com/openzipkin/zipkin-java">Zipkin server</a>, which hosts
+starters exist for Redis and Kafka). If you add the following UI dependency</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;groupId&gt;io.zipkin.java&lt;/groupId&gt;
+&lt;artifactId&gt;zipkin-autoconfigure-ui&lt;/artifactId&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then you&#8217;ll have your app a
+<a href="https://github.com/openzipkin/zipkin">Zipkin server</a>, which hosts
 the UI and api on port 9411.</p>
 </div>
 <div class="paragraph">
@@ -2297,7 +2306,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-08-16 10:23:07 UTC
+Last updated 2016-08-16 14:06:01 CEST
 </div>
 </div>
 </body>
