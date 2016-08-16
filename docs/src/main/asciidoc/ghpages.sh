@@ -26,7 +26,7 @@ fi
 ###################################################################
 
 # Get the name of the `docs.main` property
-MAIN_ADOC_VALUE=MVN_VERSION=$(mvn -q \
+MAIN_ADOC_VALUE=$(mvn -q \
     -Dexec.executable="echo" \
     -Dexec.args='${docs.main}' \
     --non-recursive \
