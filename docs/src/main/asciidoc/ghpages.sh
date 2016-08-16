@@ -22,21 +22,15 @@ if [[ ! -e "${ROOT_FOLDER}/.git" ]]; then
     exit 1
 fi
 
-# Retrieve version number, name of the main adoc and name of the current branch
+# Retrieve properties
 ###################################################################
 
-# Code grepping for the 1st presence of "version>" in pom.xml.
-# First one is project version, second parent version.
-VERSION_NODE=`awk '/version>/{i++}i==1{print; exit}' $ROOT_FOLDER/pom.xml`
-# Extract the contents of the version node
-VERSION_VALUE=$(sed -ne '/version/{s/.*<version>\(.*\)<\/version>.*/\1/p;q;}' <<< "$VERSION_NODE")
-echo "Extracted version from root pom.xml is [${VERSION_VALUE}]"
-
-# Code grepping for the 2nd presence of "version>" in pom.xml.
-# First one is parent, second project version.
-MAIN_ADOC_NODE=`awk '/docs.main/{i++}i==1{print; exit}' $ROOT_FOLDER/docs/pom.xml`
-# Extract the contents of the version node
-MAIN_ADOC_VALUE=$(sed -ne '/docs.main/{s/.*<docs.main>\(.*\)<\/docs.main>.*/\1/p;q;}' <<< "$MAIN_ADOC_NODE")
+# Get the name of the `docs.main` property
+MAIN_ADOC_VALUE=MVN_VERSION=$(mvn -q \
+    -Dexec.executable="echo" \
+    -Dexec.args='${docs.main}' \
+    --non-recursive \
+    org.codehaus.mojo:exec-maven-plugin:1.3.1:exec)
 echo "Extracted version from docs pom.xml is [${MAIN_ADOC_VALUE}]"
 
 # Code getting the name of the current branch. For master we want to publish as we did until now
@@ -59,26 +53,19 @@ git pull origin gh-pages
 
 # Add git branches
 ###################################################################
-mkdir -p ${ROOT_FOLDER}/${VERSION_VALUE}
+mkdir -p ${ROOT_FOLDER}/${CURRENT_BRANCH}
 if [[ "${CURRENT_BRANCH}" == "master" ]] ; then
-    echo -e "Current branch is master - will copy the current docs also to [${VERSION_VALUE}] folder"
+    echo -e "Current branch is master - will copy the current docs only to the root folder"
     for f in docs/target/generated-docs/*; do
         file=${f#docs/target/generated-docs/*}
         if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
             # Not ignored...
             cp -rf $f ${ROOT_FOLDER}/
-            cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
-            # We want users to access 1.0.0.RELEASE/ instead of 1.0.0.RELEASE/spring-cloud.sleuth.html
-            if [[ "${file}" == "${MAIN_ADOC_VALUE}.html" ]] ; then
-                cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
-                git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
-            fi
-            git add -A $file
-            git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/$file
+            git add -A ${ROOT_FOLDER}/$file
         fi
     done
 else
-    echo -e "Current branch is [${CURRENT_BRANCH}] - will copy the current docs ONLY to [${VERSION_VALUE}] folder"
+    echo -e "Current branch is [${CURRENT_BRANCH}] - will copy the current docs only to the [${CURRENT_BRANCH}] folder"
     for f in docs/target/generated-docs/*; do
         file=${f#docs/target/generated-docs/*}
         if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
@@ -87,11 +74,11 @@ else
             if [[ "${file}" == "${MAIN_ADOC_VALUE}.html" ]] ; then
                 # We don't want to copy the spring-cloud-sleuth.html
                 # we want it to be converted to index.html
-                cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
-                git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/index.html
+                cp -rf $f ${ROOT_FOLDER}/${CURRENT_BRANCH}/index.html
+                git add -A ${ROOT_FOLDER}/${CURRENT_BRANCH}/index.html
             else
-                cp -rf $f ${ROOT_FOLDER}/${VERSION_VALUE}
-                git add -A ${ROOT_FOLDER}/${VERSION_VALUE}/$file
+                cp -rf $f ${ROOT_FOLDER}/${CURRENT_BRANCH}
+                git add -A ${ROOT_FOLDER}/${CURRENT_BRANCH}/$file
             fi
         fi
     done
