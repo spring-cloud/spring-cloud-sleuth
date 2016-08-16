@@ -293,9 +293,18 @@ include::../../../../spring-cloud-sleuth-zipkin-stream/src/test/java/org/springf
 will listen for the Span data on whatever transport you provide via a
 Spring Cloud Stream `Binder` (e.g. include
 `spring-cloud-starter-stream-rabbit` for RabbitMQ, and similar
-starters exist for Redis and Kafka). The app will also be a
-https://github.com/openzipkin/zipkin-java[Zipkin server], which hosts
+starters exist for Redis and Kafka). If you add the following UI dependency
+
+[source,xml]
+----
+<groupId>io.zipkin.java</groupId>
+<artifactId>zipkin-autoconfigure-ui</artifactId>
+----
+
+Then you'll have your app a
+https://github.com/openzipkin/zipkin[Zipkin server], which hosts
 the UI and api on port 9411.
+
 
 The default `SpanStore` is in-memory (good for demos and getting
 started quickly). For a more robust solution you can add MySQL and
