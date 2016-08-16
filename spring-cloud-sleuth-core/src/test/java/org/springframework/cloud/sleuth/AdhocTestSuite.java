@@ -21,7 +21,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.cloud.sleuth.instrument.web.RestTemplateTraceAspectIntegrationTests;
-import org.springframework.cloud.sleuth.instrument.web.client.WebClientDiscoveryExceptionTests;
+import org.springframework.cloud.sleuth.instrument.web.client.discoveryexception.WebClientDiscoveryExceptionTests;
 
 /**
  * A test suite for probing weird ordering problems in the tests.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client;
+package org.springframework.cloud.sleuth.instrument.web.client.integration;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;

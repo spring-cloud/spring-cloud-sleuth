@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issue362;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
@@ -42,7 +44,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import feign.Client;
 import feign.Logger;
 import feign.Response;
 import feign.RetryableException;
@@ -62,9 +63,11 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class Issue362Tests {
 
 	RestTemplate template = new RestTemplate();
+	@Autowired FeignComponentAsserter feignComponentAsserter;
 
 	@Before
 	public void setup() {
+		this.feignComponentAsserter.executedComponents.clear();
 		ExceptionUtils.setFail(true);
 	}
 
@@ -88,6 +91,8 @@ public class Issue362Tests {
 		} catch (Exception e) { }
 
 		then(ExceptionUtils.getLastException()).isNull();
+		then(this.feignComponentAsserter.executedComponents)
+				.containsEntry(ErrorDecoder.class, true);
 	}
 }
 
@@ -118,17 +123,20 @@ class Application {
 	}
 
 	@Bean
-	public Client client() {
-		return new Client.Default(null, null);
-	}
+	public FeignComponentAsserter testHolder() { return new FeignComponentAsserter(); }
+
+}
+
+class FeignComponentAsserter {
+	Map<Class, Boolean> executedComponents = new ConcurrentHashMap<>();
 }
 
 @Configuration
 class CustomConfig {
 
 	@Bean
-	public ErrorDecoder errorDecoder() {
-		return new CustomErrorDecoder();
+	public ErrorDecoder errorDecoder(FeignComponentAsserter feignComponentAsserter) {
+		return new CustomErrorDecoder(feignComponentAsserter);
 	}
 
 	@Bean
@@ -138,22 +146,25 @@ class CustomConfig {
 
 	public static class CustomErrorDecoder extends ErrorDecoder.Default {
 
-		public CustomErrorDecoder() {
+		private final FeignComponentAsserter feignComponentAsserter;
+
+		public CustomErrorDecoder(FeignComponentAsserter feignComponentAsserter) {
+			this.feignComponentAsserter = feignComponentAsserter;
 		}
 
 		@Override
 		public Exception decode(String methodKey, Response response) {
+			this.feignComponentAsserter.executedComponents.put(ErrorDecoder.class, true);
 			if (response.status() == 409) {
 				return new RetryableException("Article not Ready", new Date());
 			} else {
 				return super.decode(methodKey, response);
 			}
 		}
-
 	}
 }
 
-@FeignClient(value="myFeignClient", url="http://localhost:9998",
+@FeignClient(name="myFeignClient", url="http://localhost:9998",
 		configuration = CustomConfig.class)
 interface MyFeignClient {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client;
+package org.springframework.cloud.sleuth.instrument.web.client.exception;
 
 import java.io.IOException;
 import java.util.Collections;
