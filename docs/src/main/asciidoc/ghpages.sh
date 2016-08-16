@@ -37,13 +37,14 @@ MAIN_ADOC_VALUE=$(mvn -q \
 echo "Extracted 'main.adoc' from Maven build [${MAIN_ADOC_VALUE}]"
 
 # Get whitelisted branches - assumes that a `docs` module is available under `docs` profile
+WHITELIST_PROPERTY="docs.whitelisted.branches"
 WHITELISTED_BRANCHES_VALUE=$(mvn -q \
     -Dexec.executable="echo" \
-    -Dexec.args='${docs.whitelisted.branches}' \
+    -Dexec.args="\${${WHITELIST_PROPERTY}}" \
     org.codehaus.mojo:exec-maven-plugin:1.3.1:exec \
     -P docs \
     -pl docs)
-echo "Extracted 'docs.whitelisted.branches' from Maven build [${WHITELISTED_BRANCHES_VALUE}]"
+echo "Extracted '${WHITELIST_PROPERTY}' from Maven build [${WHITELISTED_BRANCHES_VALUE}]"
 
 # Code getting the name of the current branch. For master we want to publish as we did until now
 # http://stackoverflow.com/questions/1593051/how-to-programmatically-determine-the-current-checked-out-git-branch
@@ -100,7 +101,8 @@ else
         done
         COMMIT_CHANGES="yes"
     else
-        echo -e "Branch [${CURRENT_BRANCH}] is not on the whitelist! Won't do anything about this..."
+        echo -e "Branch [${CURRENT_BRANCH}] is not on the white list! Check out the Maven [${WHITELIST_PROPERTY}] property in
+         [docs] module available under [docs] profile. Won't commit any changes to gh-pages for this branch."
     fi
 fi
 
