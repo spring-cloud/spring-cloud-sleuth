@@ -7,6 +7,9 @@
 Spring Cloud Sleuth
 ====================
 Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer
+
+*{spring-cloud-version}*
+
 :doctype: book
 
 include::intro.adoc[]
