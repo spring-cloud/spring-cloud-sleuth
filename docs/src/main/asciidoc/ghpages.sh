@@ -31,7 +31,15 @@ MAIN_ADOC_VALUE=$(mvn -q \
     -Dexec.args='${docs.main}' \
     --non-recursive \
     org.codehaus.mojo:exec-maven-plugin:1.3.1:exec)
-echo "Extracted version from docs pom.xml is [${MAIN_ADOC_VALUE}]"
+echo "Extracted 'main.adoc' from Maven build [${MAIN_ADOC_VALUE}]"
+
+# Get whitelisted branches
+WHITELISTED_BRANCHES_VALUE=$(mvn -q \
+    -Dexec.executable="echo" \
+    -Dexec.args='${docs.whitelisted.branches}' \
+    --non-recursive \
+    org.codehaus.mojo:exec-maven-plugin:1.3.1:exec)
+echo "Extracted 'docs.whitelisted.branches' from Maven build [${WHITELISTED_BRANCHES_VALUE}]"
 
 # Code getting the name of the current branch. For master we want to publish as we did until now
 # http://stackoverflow.com/questions/1593051/how-to-programmatically-determine-the-current-checked-out-git-branch
@@ -65,23 +73,29 @@ if [[ "${CURRENT_BRANCH}" == "master" ]] ; then
         fi
     done
 else
-    echo -e "Current branch is [${CURRENT_BRANCH}] - will copy the current docs only to the [${CURRENT_BRANCH}] folder"
-    for f in docs/target/generated-docs/*; do
-        file=${f#docs/target/generated-docs/*}
-        if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
-            # Not ignored...
-            # We want users to access 1.0.0.RELEASE/ instead of 1.0.0.RELEASE/spring-cloud.sleuth.html
-            if [[ "${file}" == "${MAIN_ADOC_VALUE}.html" ]] ; then
-                # We don't want to copy the spring-cloud-sleuth.html
-                # we want it to be converted to index.html
-                cp -rf $f ${ROOT_FOLDER}/${CURRENT_BRANCH}/index.html
-                git add -A ${ROOT_FOLDER}/${CURRENT_BRANCH}/index.html
-            else
-                cp -rf $f ${ROOT_FOLDER}/${CURRENT_BRANCH}
-                git add -A ${ROOT_FOLDER}/${CURRENT_BRANCH}/$file
+    echo -e "Current branch is [${CURRENT_BRANCH}]"
+    # http://stackoverflow.com/questions/29300806/a-bash-script-to-check-if-a-string-is-present-in-a-comma-separated-list-of-strin
+    if [[ ",${WHITELISTED_BRANCHES_VALUE}," = *",${CURRENT_BRANCH},"* ]] ; then
+        echo -e "Branch [${CURRENT_BRANCH}] is whitelisted! Will copy the current docs to the [${CURRENT_BRANCH}] folder"
+        for f in docs/target/generated-docs/*; do
+            file=${f#docs/target/generated-docs/*}
+            if ! git ls-files -i -o --exclude-standard --directory | grep -q ^$file$; then
+                # Not ignored...
+                # We want users to access 1.0.0.RELEASE/ instead of 1.0.0.RELEASE/spring-cloud.sleuth.html
+                if [[ "${file}" == "${MAIN_ADOC_VALUE}.html" ]] ; then
+                    # We don't want to copy the spring-cloud-sleuth.html
+                    # we want it to be converted to index.html
+                    cp -rf $f ${ROOT_FOLDER}/${CURRENT_BRANCH}/index.html
+                    git add -A ${ROOT_FOLDER}/${CURRENT_BRANCH}/index.html
+                else
+                    cp -rf $f ${ROOT_FOLDER}/${CURRENT_BRANCH}
+                    git add -A ${ROOT_FOLDER}/${CURRENT_BRANCH}/$file
+                fi
             fi
-        fi
-    done
+        done
+    else
+        echo -e "Branch [${CURRENT_BRANCH}] is no ton the whitelist! Won't do anything about this..."
+    fi
 fi
 
 git commit -a -m "Sync docs from ${CURRENT_BRANCH} to gh-pages"
