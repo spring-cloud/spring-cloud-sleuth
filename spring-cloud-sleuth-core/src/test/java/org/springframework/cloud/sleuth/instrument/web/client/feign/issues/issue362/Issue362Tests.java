@@ -16,7 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issue362;
 
+import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
@@ -43,6 +46,7 @@ import org.springframework.web.client.RestTemplate;
 
 import feign.Client;
 import feign.Logger;
+import feign.Request;
 import feign.Response;
 import feign.RetryableException;
 import feign.Retryer;
@@ -61,9 +65,11 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class Issue362Tests {
 
 	RestTemplate template = new RestTemplate();
+	@Autowired FeignComponentAsserter feignComponentAsserter;
 
 	@Before
 	public void setup() {
+		this.feignComponentAsserter.executedComponents.clear();
 		ExceptionUtils.setFail(true);
 	}
 
@@ -75,6 +81,7 @@ public class Issue362Tests {
 
 		SleuthAssertions.then(response.getBody()).isEqualTo("I'm OK");
 		then(ExceptionUtils.getLastException()).isNull();
+		then(this.feignComponentAsserter.executedComponents).containsEntry(Client.class, true);
 	}
 
 	@Test
@@ -87,6 +94,9 @@ public class Issue362Tests {
 		} catch (Exception e) { }
 
 		then(ExceptionUtils.getLastException()).isNull();
+		then(this.feignComponentAsserter.executedComponents)
+				.containsEntry(ErrorDecoder.class, true)
+				.containsEntry(Client.class, true);
 	}
 }
 
@@ -117,17 +127,20 @@ class Application {
 	}
 
 	@Bean
-	public Client client() {
-		return new Client.Default(null, null);
-	}
+	public FeignComponentAsserter testHolder() { return new FeignComponentAsserter(); }
+
+}
+
+class FeignComponentAsserter {
+	Map<Class, Boolean> executedComponents = new ConcurrentHashMap<>();
 }
 
 @Configuration
 class CustomConfig {
 
 	@Bean
-	public ErrorDecoder errorDecoder() {
-		return new CustomErrorDecoder();
+	public ErrorDecoder errorDecoder(FeignComponentAsserter feignComponentAsserter) {
+		return new CustomErrorDecoder(feignComponentAsserter);
 	}
 
 	@Bean
@@ -137,18 +150,42 @@ class CustomConfig {
 
 	public static class CustomErrorDecoder extends ErrorDecoder.Default {
 
-		public CustomErrorDecoder() {
+		private final FeignComponentAsserter feignComponentAsserter;
+
+		public CustomErrorDecoder(FeignComponentAsserter feignComponentAsserter) {
+			this.feignComponentAsserter = feignComponentAsserter;
 		}
 
 		@Override
 		public Exception decode(String methodKey, Response response) {
+			this.feignComponentAsserter.executedComponents.put(ErrorDecoder.class, true);
 			if (response.status() == 409) {
 				return new RetryableException("Article not Ready", new Date());
 			} else {
 				return super.decode(methodKey, response);
 			}
 		}
+	}
 
+	@Bean
+	public Client client(FeignComponentAsserter feignComponentAsserter) {
+		return new CustomClient(feignComponentAsserter);
+	}
+
+	public static class CustomClient extends Client.Default {
+
+		private final FeignComponentAsserter feignComponentAsserter;
+
+		public CustomClient(FeignComponentAsserter feignComponentAsserter) {
+			super(null, null);
+			this.feignComponentAsserter = feignComponentAsserter;
+		}
+
+		@Override public Response execute(Request request, Request.Options options)
+				throws IOException {
+			this.feignComponentAsserter.executedComponents.put(Client.class, true);
+			return super.execute(request, options);
+		}
 	}
 }
 

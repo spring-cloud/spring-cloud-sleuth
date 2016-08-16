@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client.feign;
+package org.springframework.cloud.sleuth.instrument.web.client.feign.servererrors;
 
 import java.util.ArrayList;
 import java.util.Collections;

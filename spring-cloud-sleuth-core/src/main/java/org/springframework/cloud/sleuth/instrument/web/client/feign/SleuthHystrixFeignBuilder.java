@@ -16,8 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 
+import feign.Client;
 import feign.Feign;
 import feign.hystrix.HystrixFeign;
 
@@ -36,6 +38,15 @@ final class SleuthHystrixFeignBuilder {
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
 		return HystrixFeign.builder()
-				.client(new TraceFeignClient(beanFactory));
+				.client(client(beanFactory));
+	}
+
+	private static Client client(BeanFactory beanFactory) {
+		try {
+			Client client = beanFactory.getBean(Client.class);
+			return (Client) new TraceFeignObjectWrapper(beanFactory).wrap(client);
+		} catch (BeansException e) {
+			return new TraceFeignClient(beanFactory);
+		}
 	}
 }
