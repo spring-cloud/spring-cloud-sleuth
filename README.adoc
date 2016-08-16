@@ -2,7 +2,8 @@
 
 :jdkversion: 1.8
 
-image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"]
+image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth/tree/1.0.x.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth/tree/1.0.x"]
+image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/1.0.x/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 == Spring Cloud Sleuth
 
@@ -636,7 +637,7 @@ follow the guidelines below.
 
 === Sign the Contributor License Agreement
 Before we accept a non-trivial patch or pull request we will need you to sign the
-https://support.springsource.com/spring_committer_signup[contributor's agreement].
+https://cla.pivotal.io/sign/spring[Contributor License Agreement].
 Signing the contributor's agreement does not grant anyone commit rights to the main
 repository, but it does mean that we can accept your contributions, and you will get an
 author credit if we do.  Active contributors might be asked to join the core team, and
