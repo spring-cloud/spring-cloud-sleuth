@@ -25,6 +25,9 @@ fi
 # Retrieve properties
 ###################################################################
 
+# Prop that will let commit the changes
+COMMIT_CHANGES="no"
+
 # Get the name of the `docs.main` property
 MAIN_ADOC_VALUE=$(mvn -q \
     -Dexec.executable="echo" \
@@ -37,8 +40,9 @@ echo "Extracted 'main.adoc' from Maven build [${MAIN_ADOC_VALUE}]"
 WHITELISTED_BRANCHES_VALUE=$(mvn -q \
     -Dexec.executable="echo" \
     -Dexec.args='${docs.whitelisted.branches}' \
-    --non-recursive \
-    org.codehaus.mojo:exec-maven-plugin:1.3.1:exec)
+    org.codehaus.mojo:exec-maven-plugin:1.3.1:exec \
+    -P docs \
+    -pl docs)
 echo "Extracted 'docs.whitelisted.branches' from Maven build [${WHITELISTED_BRANCHES_VALUE}]"
 
 # Code getting the name of the current branch. For master we want to publish as we did until now
@@ -72,6 +76,7 @@ if [[ "${CURRENT_BRANCH}" == "master" ]] ; then
             git add -A ${ROOT_FOLDER}/$file
         fi
     done
+    COMMIT_CHANGES="yes"
 else
     echo -e "Current branch is [${CURRENT_BRANCH}]"
     # http://stackoverflow.com/questions/29300806/a-bash-script-to-check-if-a-string-is-present-in-a-comma-separated-list-of-strin
@@ -93,18 +98,21 @@ else
                 fi
             fi
         done
+        COMMIT_CHANGES="yes"
     else
         echo -e "Branch [${CURRENT_BRANCH}] is no ton the whitelist! Won't do anything about this..."
     fi
 fi
 
-git commit -a -m "Sync docs from ${CURRENT_BRANCH} to gh-pages"
+if [[ "${COMMIT_CHANGES}" == "yes" ]] ; then
+    git commit -a -m "Sync docs from ${CURRENT_BRANCH} to gh-pages"
 
-# Uncomment the following push if you want to auto push to
-# the gh-pages branch whenever you commit to master locally.
-# This is a little extreme. Use with care!
-###################################################################
-git push origin gh-pages
+    # Uncomment the following push if you want to auto push to
+    # the gh-pages branch whenever you commit to master locally.
+    # This is a little extreme. Use with care!
+    ###################################################################
+    git push origin gh-pages
+fi
 
 # Finally, switch back to the master branch and exit block
 git checkout ${CURRENT_BRANCH}
