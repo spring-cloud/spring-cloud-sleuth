@@ -36,7 +36,7 @@ MAIN_ADOC_VALUE=$(mvn -q \
     org.codehaus.mojo:exec-maven-plugin:1.3.1:exec)
 echo "Extracted 'main.adoc' from Maven build [${MAIN_ADOC_VALUE}]"
 
-# Get whitelisted branches
+# Get whitelisted branches - assumes that a `docs` module is available under `docs` profile
 WHITELISTED_BRANCHES_VALUE=$(mvn -q \
     -Dexec.executable="echo" \
     -Dexec.args='${docs.whitelisted.branches}' \
