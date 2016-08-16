@@ -100,7 +100,7 @@ else
         done
         COMMIT_CHANGES="yes"
     else
-        echo -e "Branch [${CURRENT_BRANCH}] is no ton the whitelist! Won't do anything about this..."
+        echo -e "Branch [${CURRENT_BRANCH}] is not on the whitelist! Won't do anything about this..."
     fi
 fi
 
