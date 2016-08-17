@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
 import java.lang.invoke.MethodHandles;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -66,8 +66,10 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 	private long spanId(HttpServletRequest carrier, long traceId) {
 		String spanId = carrier.getHeader(Span.SPAN_ID_NAME);
 		if (spanId == null) {
-			log.debug("Request is missing a span id but it has a trace id. We'll assume that this is "
-					+ "a root span with span id equal to trace id");
+			if (log.isDebugEnabled()) {
+				log.debug("Request is missing a span id but it has a trace id. We'll assume that this is "
+						+ "a root span with span id equal to trace id");
+			}
 			return traceId;
 		} else {
 			return Span.hexToId(spanId);

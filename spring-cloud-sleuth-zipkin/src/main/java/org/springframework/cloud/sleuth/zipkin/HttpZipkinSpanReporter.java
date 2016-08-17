@@ -86,7 +86,9 @@ public final class HttpZipkinSpanReporter
 		byte[] json = Codec.JSON.writeSpans(drained);
 		// NOTE: https://github.com/openzipkin/zipkin-java/issues/66 will throw instead of return null.
 		if (json == null) {
-			log.debug("failed to encode spans, dropping them: " + drained);
+			if (log.isDebugEnabled()) {
+				log.debug("failed to encode spans, dropping them: " + drained);
+			}
 			this.spanMetricReporter.incrementDroppedSpans(drained.size());
 			return;
 		}

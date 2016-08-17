@@ -100,8 +100,9 @@ public class TraceWebAspect {
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		Callable<Object> callable = (Callable<Object>) pjp.proceed();
 		if (this.tracer.isTracing()) {
-			log.debug("Wrapping callable with span ["
-					+ this.tracer.getCurrentSpan() + "]");
+			if (log.isDebugEnabled()) {
+				log.debug("Wrapping callable with span [" + this.tracer.getCurrentSpan() + "]");
+			}
 			return new TraceContinuingCallable<>(this.tracer, this.spanNamer, callable);
 		}
 		else {
@@ -114,8 +115,10 @@ public class TraceWebAspect {
 		final WebAsyncTask<?> webAsyncTask = (WebAsyncTask<?>) pjp.proceed();
 		if (this.tracer.isTracing()) {
 			try {
-				log.debug("Wrapping callable with span ["
-						+ this.tracer.getCurrentSpan() + "]");
+				if (log.isDebugEnabled()) {
+					log.debug("Wrapping callable with span [" + this.tracer.getCurrentSpan()
+							+ "]");
+				}
 				Field callableField = WebAsyncTask.class.getDeclaredField("callable");
 				callableField.setAccessible(true);
 				callableField.set(webAsyncTask, new TraceContinuingCallable<>(this.tracer,

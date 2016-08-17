@@ -315,7 +315,9 @@ public class TraceFilter extends GenericFilterBean {
 			}
 			spanFromRequest.logEvent(Span.SERVER_RECV);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
-			log.debug("No parent span present - creating a new span");
+			if (log.isDebugEnabled()) {
+				log.debug("No parent span present - creating a new span");
+			}
 		}
 		return spanFromRequest;
 	}

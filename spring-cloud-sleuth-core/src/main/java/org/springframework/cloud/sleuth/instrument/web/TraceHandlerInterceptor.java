@@ -62,11 +62,15 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
 			Object handler) throws Exception {
 		if (isErrorControllerRelated(request)) {
-			log.debug("Skipping creation of a span for error controller processing");
+			if (log.isDebugEnabled()) {
+				log.debug("Skipping creation of a span for error controller processing");
+			}
 			return true;
 		}
 		if (isSpanContinued(request)) {
-			log.debug("Skipping creation of a span since the span is continued");
+			if (log.isDebugEnabled()) {
+				log.debug("Skipping creation of a span since the span is continued");
+			}
 			return true;
 		}
 		String spanName = spanName(handler);
@@ -131,11 +135,15 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
 			Object handler, Exception ex) throws Exception {
 		if (isErrorControllerRelated(request)) {
-			log.debug("Skipping closing of a span for error controller processing");
+			if (log.isDebugEnabled()) {
+				log.debug("Skipping closing of a span for error controller processing");
+			}
 			return;
 		}
 		if (isSpanContinued(request)) {
-			log.debug("Skipping closing of a span since it's been continued");
+			if (log.isDebugEnabled()) {
+				log.debug("Skipping closing of a span since it's been continued");
+			}
 			return;
 		}
 		Span span = getSpanFromAttribute(request);
