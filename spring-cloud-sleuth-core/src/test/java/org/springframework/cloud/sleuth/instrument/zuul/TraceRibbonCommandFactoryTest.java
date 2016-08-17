@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import com.netflix.niws.client.http.RestClient;
-import com.netflix.zuul.context.RequestContext;
+import java.util.ArrayList;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,6 +34,9 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
+
+import com.netflix.niws.client.http.RestClient;
+import com.netflix.zuul.context.RequestContext;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -84,6 +86,6 @@ public class TraceRibbonCommandFactoryTest {
 
 	private RibbonCommandContext ribbonCommandContext() {
 		return new RibbonCommandContext("serviceId", "GET", "http://localhost:1234/foo",
-				false, new HttpHeaders(), new LinkedMultiValueMap<>(), null);
+				false, new HttpHeaders(), new LinkedMultiValueMap<>(), null, new ArrayList<>());
 	}
 }
