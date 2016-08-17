@@ -96,8 +96,11 @@ final class ConvertToZipkinSpanList {
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
-				log.debug("zipkin doesn't support spans with multiple parents.  Omitting "
-						+ "other parents for " + span);
+				if (log.isDebugEnabled()) {
+					log.debug(
+							"zipkin doesn't support spans with multiple parents.  Omitting "
+									+ "other parents for " + span);
+				}
 			}
 			zipkinSpan.parentId(span.getParents().get(0));
 		}

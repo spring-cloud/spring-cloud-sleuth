@@ -92,7 +92,9 @@ final class TraceFeignClient implements Client {
 	private void closeSpan() {
 		Span span = getTracer().getCurrentSpan();
 		if (span != null) {
-			log.debug("Closing Feign span " + span);
+			if (log.isDebugEnabled()) {
+				log.debug("Closing Feign span " + span);
+			}
 			getTracer().close(span);
 		}
 	}
@@ -100,7 +102,9 @@ final class TraceFeignClient implements Client {
 	private void logCr() {
 		Span span = getTracer().getCurrentSpan();
 		if (span != null) {
-			log.debug("Closing Feign span and logging CR" + span);
+			if (log.isDebugEnabled()) {
+				log.debug("Closing Feign span and logging CR" + span);
+			}
 			span.logEvent(Span.CLIENT_RECV);
 		}
 	}
@@ -109,7 +113,9 @@ final class TraceFeignClient implements Client {
 		Span span = getTracer().getCurrentSpan();
 		if (span != null) {
 			String message = e.getMessage() != null ? e.getMessage() : e.toString();
-			log.debug("Appending exception [" + message + "] to span "  + span);
+			if (log.isDebugEnabled()) {
+				log.debug("Appending exception [" + message + "] to span "  + span);
+			}
 			getTracer().addTag("error", message);
 		}
 	}
