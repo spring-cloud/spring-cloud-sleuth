@@ -430,6 +430,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_terminology">Terminology</a></li>
 <li><a href="#_purpose">Purpose</a></li>
 <li><a href="#_adding_to_the_project">Adding to the project</a></li>
+<li><a href="#_additional_resources">Additional resources</a></li>
 <li><a href="#_features">Features</a></li>
 <li><a href="#_sampling">Sampling</a></li>
 <li><a href="#_instrumentation">Instrumentation</a></li>
@@ -481,7 +482,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p><strong>1.0.5.BUILD-SNAPSHOT</strong></p>
+<p><strong>1.1.0.BUILD-SNAPSHOT</strong></p>
 </div>
 <div class="paragraph">
 <p>Spring Cloud Sleuth implements a distributed tracing solution for <a href="http://cloud.spring.io">Spring Cloud</a>.</p>
@@ -1163,6 +1164,22 @@ public class ZipkinStreamServerApplication {
 
 }</code></pre>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_additional_resources">Additional resources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin</strong></p>
+</div>
+<div class="videoblock">
+<div class="content">
+<iframe src="https://www.youtube.com/embed/eQV71Mw1u1c?rel=0" frameborder="0" allowfullscreen></iframe>
+</div>
+</div>
+<div class="paragraph">
+<p><a href="https://www.youtube.com/watch?v=eQV71Mw1u1c">click here to see the video</a></p>
 </div>
 </div>
 </div>
@@ -1917,6 +1934,25 @@ the consumer app).
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>In order to customize the polling mechanism you can create a bean of <code>PollerMetadata</code> type
+with name equal to <code>StreamSpanReporter.POLLER</code>. Here you can find an example of such a configuration.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public static class CustomPollerConfiguration {
+
+	@Bean(name = StreamSpanReporter.POLLER)
+	PollerMetadata customPoller() {
+		PollerMetadata poller = new PollerMetadata();
+		poller.setMaxMessagesPerPoll(500);
+		poller.setTrigger(new PeriodicTrigger(5000L));
+		return poller;
+	}
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -2109,7 +2145,20 @@ wrap <code>ThreadPoolTaskScheduler</code> in a <code>TraceAsyncListenableTaskExe
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebAsyncClientAutoConfigurationTest.java[tags=async_template_factories,indent=0]</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">@EnableAutoConfiguration
+@Configuration
+public static class TestConfiguration {
+
+	@Bean
+	ClientHttpRequestFactory mySyncClientFactory() {
+		return new MySyncClientHttpRequestFactory();
+	}
+
+	@Bean
+	AsyncClientHttpRequestFactory myAsyncClientFactory() {
+		return new MyAsyncClientHttpRequestFactory();
+	}
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2212,9 +2261,22 @@ backwards compatibility in 1.0.4 we&#8217;ve started sending both valid and inva
 in Spring Cloud Sleuth 1.1 we will remove the support for the deprecated headers.</p>
 </div>
 <div class="paragraph">
-<p>Since 1.0.4 you can provide the <code>spring.sleuth.integration.patterns</code> pattern to explicitly
+<p>You can provide the <code>spring.sleuth.integration.patterns</code> pattern to explicitly
 provide the names of channels that you want to include for tracing. By default all channels
 are included.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+When using the <code>Executor</code> to build a Spring Integration <code>IntegrationFlow</code> remember to use the <strong>untraced</strong> version of the <code>Executor</code>.
+Decorating Spring Integration Executor Channel with <code>TraceableExecutorService</code> will cause the spans to be improperly closed.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -2247,7 +2309,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-08-18 09:23:05 UTC
+Last updated 2016-08-18 10:40:46 UTC
 </div>
 </div>
 </body>
