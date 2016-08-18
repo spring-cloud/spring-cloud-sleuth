@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.cloud.sleuth.Span;
@@ -30,7 +31,7 @@ import org.springframework.cloud.sleuth.SpanReporter;
  * @since 1.0.0
  */
 public class ArrayListSpanAccumulator implements SpanReporter {
-	private final List<Span> spans = new ArrayList<>();
+	private final List<Span> spans = Collections.synchronizedList(new ArrayList<Span>());
 
 	public List<Span> getSpans() {
 		return this.spans;
