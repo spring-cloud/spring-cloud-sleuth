@@ -836,6 +836,19 @@ we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</co
 &lt;/configuration&gt;</code></pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+If you&#8217;re using a custom <code>logback-spring.xml</code> then you have to pass the <code>spring.application.name</code> in
+<code>bootstrap</code> instead of <code>application</code> property file. Otherwise your custom logback file won&#8217;t read the property properly.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -2247,7 +2260,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-08-18 12:23:05 UTC
+Last updated 2016-08-18 13:44:41 UTC
 </div>
 </div>
 </body>
