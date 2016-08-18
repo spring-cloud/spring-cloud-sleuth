@@ -45,7 +45,7 @@ public class StreamSpanReporter implements SpanReporter {
 	 */
 	public static final String POLLER = "streamSpanReporterPoller";
 
-	private BlockingQueue<Span> queue = new LinkedBlockingQueue<>();
+	private BlockingQueue<Span> queue = new LinkedBlockingQueue<>(1000);
 	private final HostLocator endpointLocator;
 	private final SpanMetricReporter spanMetricReporter;
 
