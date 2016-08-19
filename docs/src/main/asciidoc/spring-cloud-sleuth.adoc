@@ -272,6 +272,19 @@ And you could register them like this:
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=configuration,indent=0]
 ----
 
+=== Custom SA tag in Zipkin
+
+Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
+What you can do is to create a span with the `peer.service` tag that will contain a value of the service that you want to call.
+Below you can see an example of a call to Redis that is wrapped in such a span.
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin/HttpZipkinSpanReporterTest.java[tags=service_name,indent=0]
+----
+
+IMPORTANT: Remember not to add both `peer.service` tag and the `SA` tag! You have to add only `peer.service`.
+
 == Span Data as Messages
 
 You can accumulate and send span data over
