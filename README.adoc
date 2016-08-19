@@ -239,6 +239,9 @@ Below you can find an example of a Logback configuration (file named `https://gi
 </configuration>
 -----
 
+NOTE: If you're using a custom `logback-spring.xml` then you have to pass the `spring.application.name` in
+`bootstrap` instead of `application` property file. Otherwise your custom logback file won't read the property properly.
+
 === Adding to the project
 
 ==== Only Sleuth (log correlation)

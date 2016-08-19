@@ -20,7 +20,7 @@ or running the packaged app from the root:
 
 ```
 ./mvnw package --projects spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream
-java -jar spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/target/spring-cloud-sleuth-sample-zipkin-stream-1.0.0.BUILD-SNAPSHOT-exec.jar
+java -jar spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/target/spring-cloud-sleuth-sample-zipkin-stream-1.0.0.RELEASE-exec.jar
 ```
 
 and test it
