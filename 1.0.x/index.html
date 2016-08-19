@@ -482,7 +482,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p><strong>1.0.5.BUILD-SNAPSHOT</strong></p>
+<p><strong>1.0.6.BUILD-SNAPSHOT</strong></p>
 </div>
 <div class="paragraph">
 <p>Spring Cloud Sleuth implements a distributed tracing solution for <a href="http://cloud.spring.io">Spring Cloud</a>.</p>
@@ -2161,7 +2161,20 @@ wrap <code>ThreadPoolTaskScheduler</code> in a <code>TraceAsyncListenableTaskExe
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebAsyncClientAutoConfigurationTest.java[tags=async_template_factories,indent=0]</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">@EnableAutoConfiguration
+@Configuration
+public static class TestConfiguration {
+
+	@Bean
+	ClientHttpRequestFactory mySyncClientFactory() {
+		return new MySyncClientHttpRequestFactory();
+	}
+
+	@Bean
+	AsyncClientHttpRequestFactory myAsyncClientFactory() {
+		return new MyAsyncClientHttpRequestFactory();
+	}
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2299,7 +2312,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-08-19 12:23:05 UTC
+Last updated 2016-08-19 13:07:33 UTC
 </div>
 </div>
 </body>
