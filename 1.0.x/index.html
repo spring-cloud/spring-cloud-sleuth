@@ -451,6 +451,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_spring_integration">Spring Integration</a></li>
 <li><a href="#_http">HTTP</a></li>
 <li><a href="#_example">Example</a></li>
+<li><a href="#_custom_sa_tag_in_zipkin">Custom SA tag in Zipkin</a></li>
 </ul>
 </li>
 <li><a href="#_span_data_as_messages">Span Data as Messages</a>
@@ -1804,6 +1805,44 @@ SpanInjector&lt;HttpServletResponse&gt; customHttpServletResponseSpanInjector() 
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_custom_sa_tag_in_zipkin">Custom SA tag in Zipkin</h3>
+<div class="paragraph">
+<p>Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
+What you can do is to create a span with the <code>peer.service</code> tag that will contain a value of the service that you want to call.
+Below you can see an example of a call to Redis that is wrapped in such a span.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
+try {
+	newSpan.tag("redis.op", "get");
+	newSpan.tag("lc", "redis");
+	newSpan.logEvent(org.springframework.cloud.sleuth.Span.CLIENT_SEND);
+	// call redis service e.g
+	// return (SomeObj) redisTemplate.opsForHash().get("MYHASH", someObjKey);
+} finally {
+	newSpan.tag("peer.service", "redisService");
+	newSpan.tag("peer.ipv4", "1.2.3.4");
+	newSpan.tag("peer.port", "1234");
+	newSpan.logEvent(org.springframework.cloud.sleuth.Span.CLIENT_RECV);
+	tracer.close(newSpan);
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+Remember not to add both <code>peer.service</code> tag and the <code>SA</code> tag! You have to add only <code>peer.service</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -2260,7 +2299,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-08-19 09:47:37 UTC
+Last updated 2016-08-19 11:25:52 UTC
 </div>
 </div>
 </body>
