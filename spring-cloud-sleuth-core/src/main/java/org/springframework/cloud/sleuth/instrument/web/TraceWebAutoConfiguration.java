@@ -15,8 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,6 +90,7 @@ public class TraceWebAutoConfiguration {
 			HttpTraceKeysInjector httpTraceKeysInjector, TraceFilter traceFilter) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(traceFilter);
 		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
+		filterRegistrationBean.setOrder(TraceFilter.ORDER);
 		return filterRegistrationBean;
 	}
 
