@@ -65,12 +65,14 @@ import org.springframework.web.util.UrlPathHelper;
  * @see TraceKeys
  * @see TraceWebAutoConfiguration#traceFilter
  */
-@Order(Ordered.HIGHEST_PRECEDENCE + 5)
+@Order(TraceFilter.ORDER)
 public class TraceFilter extends GenericFilterBean {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final String HTTP_COMPONENT = "http";
+
+	protected static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
 	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".TRACE";
