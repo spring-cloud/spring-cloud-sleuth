@@ -74,9 +74,9 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 		// Technically this is only needed on the consumer, but it's fine to be explicit
 		// on producers as well. It puts all consumers in the same "group", meaning they
 		// compete with each other and only one gets each message.
-		map.put("spring.cloud.stream.bindings." + SleuthSink.INPUT + ".group",
+		map.put("spring.cloud.stream.bindings." + SleuthSource.OUTPUT + ".group",
 				environment.getProperty("spring.sleuth.stream.group", SleuthSink.INPUT));
-		map.put("spring.cloud.stream.bindings." + SleuthSink.INPUT + ".content-type",
+		map.put("spring.cloud.stream.bindings." + SleuthSource.OUTPUT + ".content-type",
 				environment.getProperty("spring.sleuth.stream.content-type", "application/json"));
 		addOrReplace(environment.getPropertySources(), map);
 	}

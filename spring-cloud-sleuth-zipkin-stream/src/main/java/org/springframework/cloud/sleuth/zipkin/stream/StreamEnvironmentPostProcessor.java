@@ -22,7 +22,6 @@ import java.util.Map;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
-import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -44,8 +43,7 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 			SpringApplication application) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("spring.cloud.stream.bindings." + SleuthSink.INPUT + ".content-type",
-				environment.getProperty("spring.sleuth.stream.content-type",
-						"application/x-java-object;type=" + Spans.class.getName()));
+				"");
 		addOrReplace(environment.getPropertySources(), map);
 	}
 
