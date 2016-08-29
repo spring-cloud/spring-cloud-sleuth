@@ -51,6 +51,9 @@ annotations (tags), the ID of the span that caused them, and process ID's (norma
 Spans are started and stopped, and they keep track of their timing information.  Once you create a
 span, you must stop it at some point in the future.
 
+TIP: The initial span that starts a trace is called a `root span`. The value of span id
+of that span is equal to trace id.
+
 *Trace:* A set of spans forming a tree-like structure.  For example, if you are running a distributed
 big-data store, a trace might be formed by a put request.
 
@@ -268,6 +271,9 @@ Below you can find an example of a Logback configuration (file named `https://gi
 	</root>
 </configuration>
 -----
+
+NOTE: If you're using a custom `logback-spring.xml` then you have to pass the `spring.application.name` in
+`bootstrap` instead of `application` property file. Otherwise your custom logback file won't read the property properly.
 
 === Adding to the project
 
