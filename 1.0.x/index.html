@@ -504,6 +504,19 @@ annotations (tags), the ID of the span that caused them, and process ID&#8217;s 
 <p>Spans are started and stopped, and they keep track of their timing information.  Once you create a
 span, you must stop it at some point in the future.</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+The initial span that starts a trace is called a <code>root span</code>. The value of span id
+of that span is equal to trace id.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p><strong>Trace:</strong> A set of spans forming a tree-like structure.  For example, if you are running a distributed
 big-data store, a trace might be formed by a put request.</p>
@@ -2312,7 +2325,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-08-29 12:23:05 UTC
+Last updated 2016-08-29 13:10:03 UTC
 </div>
 </div>
 </body>
