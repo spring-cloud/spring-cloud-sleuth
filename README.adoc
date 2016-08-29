@@ -21,6 +21,9 @@ annotations (tags), the ID of the span that caused them, and process ID's (norma
 Spans are started and stopped, and they keep track of their timing information.  Once you create a
 span, you must stop it at some point in the future.
 
+TIP: The initial span that starts a trace is called a `root span`. The value of span id
+of that span is equal to trace id.
+
 *Trace:* A set of spans forming a tree-like structure.  For example, if you are running a distributed
 big-data store, a trace might be formed by a put request.
 
