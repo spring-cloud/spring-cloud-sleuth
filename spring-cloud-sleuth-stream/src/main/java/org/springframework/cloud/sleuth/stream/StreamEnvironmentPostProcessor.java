@@ -46,7 +46,7 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
-	private static String[] headers = new String[] { Span.SPAN_ID_NAME,
+	static String[] headers = new String[] { Span.SPAN_ID_NAME,
 			Span.TRACE_ID_NAME, Span.PARENT_ID_NAME, Span.PROCESS_ID_NAME,
 			Span.SAMPLED_NAME, Span.SPAN_NAME_NAME };
 
@@ -64,7 +64,7 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 					.getResources("classpath*:META-INF/spring.binders")) {
 				for (String binderType : parseBinderConfigurations(resource)) {
 					int startIndex = findStartIndex(environment, binderType);
-					addHeaders(map, binderType, startIndex);
+					addHeaders(map, environment.getPropertySources(), binderType, startIndex);
 				}
 			}
 		}
@@ -125,11 +125,23 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 		}
 	}
 
-	private void addHeaders(Map<String, Object> map, String binder, int startIndex) {
+	private void addHeaders(Map<String, Object> map, MutablePropertySources propertySources,
+			String binder, int startIndex) {
 		String stem = "spring.cloud.stream." + binder + ".binder.headers";
 		for (int i = 0; i < headers.length; i++) {
-			map.put(stem + "[" + (i + startIndex) + "]", headers[i]);
+			if (!hasTracingHeadersValue(propertySources, headers[i])) {
+				map.put(stem + "[" + (i + startIndex) + "]", headers[i]);
+			}
 		}
+	}
+
+	private boolean hasTracingHeadersValue(MutablePropertySources propertySources, String header) {
+		PropertySource<?> source = propertySources.get(PROPERTY_SOURCE_NAME);
+		if (source instanceof MapPropertySource) {
+			Collection<Object> values = ((MapPropertySource) source).getSource().values();
+			return values.contains(header);
+		}
+		return false;
 	}
 
 }
