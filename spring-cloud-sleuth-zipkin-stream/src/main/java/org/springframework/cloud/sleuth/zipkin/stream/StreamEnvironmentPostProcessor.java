@@ -42,6 +42,12 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
 			SpringApplication application) {
 		Map<String, Object> map = new HashMap<String, Object>();
+		// Clearing the content type on the inbound channel means that the payload
+		// of inbound messages can be coerced by a `@StreamListener` method to
+		// its argument type based on the 'contentType' header of the inbound message.
+		// Necessary to be done explicitly because the property is set by by
+		// org.springframework.cloud.sleuth.stream.StreamEnvironmentPostProcessor to
+		// 'application/json' for outbound channels
 		map.put("spring.cloud.stream.bindings." + SleuthSink.INPUT + ".content-type",
 				"");
 		addOrReplace(environment.getPropertySources(), map);
