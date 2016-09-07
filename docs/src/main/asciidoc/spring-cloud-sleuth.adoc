@@ -3,6 +3,7 @@
 :github-raw: http://raw.github.com/{github-repo}/{github-tag}
 :github-code: http://github.com/{github-repo}/tree/{github-tag}
 :toc: left
+:nofooter:
 
 Spring Cloud Sleuth
 ====================
@@ -34,8 +35,8 @@ to Zipkin or Spring Cloud Stream, there is also an `AlwaysSampler`
 that exports everything and a `PercentageBasedSampler` that samples a
 fixed fraction of spans.
 
-NOTE: the `PercentageBasedSampler` is the default if you are using 
-`spring-cloud-sleuth-zipkin` or `spring-cloud-sleuth-stream`. You can 
+NOTE: the `PercentageBasedSampler` is the default if you are using
+`spring-cloud-sleuth-zipkin` or `spring-cloud-sleuth-stream`. You can
 configure the exports using `spring.sleuth.sampler.percentage`.
 
 A sampler can be installed just by creating a bean definition, e.g:
@@ -298,7 +299,7 @@ type `Spans`.
 
 === Zipkin Consumer
 
-There is a special convenience annotation for setting up a message consumer 
+There is a special convenience annotation for setting up a message consumer
 for the Span data and pushing it into a Zipkin `SpanStore`. This application
 
 [source,java]
