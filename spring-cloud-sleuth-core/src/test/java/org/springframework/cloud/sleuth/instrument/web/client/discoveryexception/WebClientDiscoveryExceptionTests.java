@@ -30,13 +30,13 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
@@ -77,7 +77,7 @@ public class WebClientDiscoveryExceptionTests {
 
 	// issue #240
 	private void shouldCloseSpanUponException(ResponseEntityProvider provider)
-			throws IOException {
+			throws IOException, InterruptedException {
 		Span span = this.tracer.createSpan("new trace");
 
 		try {
@@ -89,8 +89,10 @@ public class WebClientDiscoveryExceptionTests {
 
 		assertThat(ExceptionUtils.getLastException()).isNull();
 
-		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
+		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
+		// hystrix commands should finish at this point
+		Thread.sleep(200);
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -114,7 +116,7 @@ public class WebClientDiscoveryExceptionTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = EurekaClientAutoConfiguration.class)
 	@EnableDiscoveryClient
 	@EnableFeignClients
 	@RibbonClient("exceptionservice")

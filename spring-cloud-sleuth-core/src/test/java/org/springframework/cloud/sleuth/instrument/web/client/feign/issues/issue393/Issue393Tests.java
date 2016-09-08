@@ -16,18 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issue393;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,32 +28,20 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import feign.Logger;
-import feign.Response;
-import feign.RetryableException;
-import feign.Retryer;
-import feign.codec.ErrorDecoder;
-
-import static org.assertj.core.api.Assertions.fail;
-import static org.assertj.core.api.Assertions.registerCustomDateFormat;
-import static org.assertj.core.api.Assertions.registerFormatterForType;
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -73,7 +51,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringApplicationConfiguration(Application.class)
 @WebIntegrationTest
 @TestPropertySource(properties = {"spring.application.name=demo-feign-uri",
-		"server.port=9978"})
+		"server.port=9978", "eureka.client.enabled=true", "ribbon.eureka.enabled=true"})
 public class Issue393Tests {
 
 	RestTemplate template = new RestTemplate();
