@@ -8,6 +8,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.cloud.sleuth.zipkin.stream.ZipkinMessageListener.NotSleuthStreamClient;
+import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Lazy;
@@ -16,7 +17,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.integration.annotation.MessageEndpoint;
-import org.springframework.integration.annotation.ServiceActivator;
 import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.BinaryAnnotation.Type;
@@ -62,7 +62,7 @@ public class ZipkinMessageListener {
 				.metrics(metrics.forTransport("stream")).build();
 	}
 
-	@ServiceActivator(inputChannel = SleuthSink.INPUT)
+	@StreamListener(SleuthSink.INPUT)
 	public void sink(Spans input) {
 		List<zipkin.Span> converted = ConvertToZipkinSpanList.convert(input);
 		this.collector.accept(converted, Callback.NOOP);
