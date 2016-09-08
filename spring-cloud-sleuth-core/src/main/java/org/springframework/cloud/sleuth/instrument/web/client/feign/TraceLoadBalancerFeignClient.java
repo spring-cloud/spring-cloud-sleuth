@@ -2,7 +2,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.Objects;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.feign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.netflix.feign.ribbon.LoadBalancerFeignClient;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 
 import feign.Client;
@@ -40,23 +38,7 @@ class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 
 	@Override public Response execute(Request request, Request.Options options)
 			throws IOException {
-		Span currentSpan = tracer().getCurrentSpan();
-		if (log.isDebugEnabled()) {
-			log.debug("Current span is " + currentSpan);
-		}
-		try {
-			return super.execute(request, options);
-		} catch (Exception e) {
-			if (Objects.equals(currentSpan, tracer().getCurrentSpan())) {
-				if (log.isDebugEnabled()) {
-					log.debug("Closing span " + currentSpan + " due to exception which is "
-							+ "not handled by Feign. This can happen when the load balancer "
-							+ "threw exception before Feign even managed to do sth about it");
-				}
-				tracer().close(currentSpan);
-			}
-			throw e;
-		}
+		return super.execute(request, options);
 	}
 
 	private static Client wrap(Client delegate, BeanFactory beanFactory) {

@@ -204,6 +204,10 @@ public class ZipkinSpanListener implements SpanReporter {
 	public void report(Span span) {
 		if (span.isExportable()) {
 			this.reporter.report(convert(span));
+		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("The span " + span + " will not be sent to Zipkin due to sampling");
+			}
 		}
 	}
 }

@@ -46,7 +46,7 @@ import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import feign.Client;
 import feign.Feign;
 import feign.FeignException;
-import feign.RequestInterceptor;
+import feign.Request;
 import feign.RequestLine;
 import feign.Response;
 import okhttp3.mockwebserver.MockWebServer;
@@ -68,8 +68,6 @@ public class FeignRetriesTests {
 	ArrayListSpanAccumulator spanAccumulator = new ArrayListSpanAccumulator();
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
 			new NoOpSpanLogger(), this.spanAccumulator);
-	FeignRequestTemplateInjector injector = new FeignRequestTemplateInjector();
-	TraceFeignRequestInterceptor interceptor = new TraceFeignRequestInterceptor(tracer, injector);
 
 	@Before
 	@After
@@ -91,7 +89,6 @@ public class FeignRetriesTests {
 		TestInterface api =
 				Feign.builder()
 						.client(new TraceFeignClient(beanFactory, client))
-						.requestInterceptor(interceptor)
 						.target(TestInterface.class, url);
 
 		try {
@@ -118,14 +115,15 @@ public class FeignRetriesTests {
 						"OK", Charset.defaultCharset());
 			}
 		};
-		RequestInterceptor requestInterceptor = template -> {
-			atomicInteger.incrementAndGet();
-			interceptor.apply(template);
-		};
 		TestInterface api =
 				Feign.builder()
-						.client(new TraceFeignClient(beanFactory, client))
-						.requestInterceptor(requestInterceptor)
+						.client(new TraceFeignClient(beanFactory, client) {
+							@Override public Response execute(Request request,
+									Request.Options options) throws IOException {
+								atomicInteger.incrementAndGet();
+								return super.execute(request, options);
+							}
+						})
 						.target(TestInterface.class, url);
 
 		then(api.decodedPost()).isEqualTo("OK");

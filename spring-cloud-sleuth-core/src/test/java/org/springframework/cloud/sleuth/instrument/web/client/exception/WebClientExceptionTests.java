@@ -17,9 +17,16 @@
 package org.springframework.cloud.sleuth.instrument.web.client.exception;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -51,10 +59,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
@@ -68,10 +72,14 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 		"spring.application.name=exceptionservice" })
 public class WebClientExceptionTests {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	@ClassRule
 	public static final SpringClassRule SCR = new SpringClassRule();
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
+	@Rule
+	public final OutputCapture capture = new OutputCapture();
 
 	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
 	@Autowired @LoadBalanced RestTemplate template;
@@ -85,7 +93,6 @@ public class WebClientExceptionTests {
 
 	@After
 	public void close() {
-		ExceptionUtils.setFail(false);
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
@@ -95,6 +102,7 @@ public class WebClientExceptionTests {
 	public void shouldCloseSpanUponException(ResponseEntityProvider provider)
 			throws IOException {
 		Span span = this.tracer.createSpan("new trace");
+		log.info("Started new span " + span);
 
 		try {
 			provider.get(this);
@@ -107,6 +115,8 @@ public class WebClientExceptionTests {
 		then(ExceptionUtils.getLastException()).isNull();
 		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
+		then(ExceptionUtils.getLastException()).isNull();
+		then(this.capture.toString()).doesNotContain("Tried to detach trace span but it is not the current span");
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
