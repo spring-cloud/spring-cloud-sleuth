@@ -15,18 +15,18 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.regex.Pattern;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -126,7 +126,7 @@ public class TraceFilter extends GenericFilterBean {
 			continueSpan(request, spanFromRequest);
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("Received a request to uri [" + uri + "] that should be skipped [" + skip + "]");
+			log.debug("Received a request to uri [" + uri + "] that should not be sampled [" + skip + "]");
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {

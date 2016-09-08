@@ -28,6 +28,7 @@ import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
@@ -54,6 +55,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class Issue350Tests {
 
 	RestTemplate template = new TestRestTemplate();
+	@Autowired Tracer tracer;
 
 	@Before
 	public void setup() {
@@ -64,6 +66,7 @@ public class Issue350Tests {
 	public void should_successfully_work_without_hystrix() {
 		this.template.getForEntity("http://localhost:9988/sleuth/test-not-ok", String.class);
 		then(ExceptionUtils.getLastException()).isNull();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 }
 

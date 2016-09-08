@@ -30,6 +30,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
@@ -64,6 +65,7 @@ public class Issue362Tests {
 
 	RestTemplate template = new RestTemplate();
 	@Autowired FeignComponentAsserter feignComponentAsserter;
+	@Autowired Tracer tracer;
 
 	@Before
 	public void setup() {
@@ -77,8 +79,9 @@ public class Issue362Tests {
 
 		ResponseEntity<String> response = this.template.getForEntity(securedURl, String.class);
 
-		SleuthAssertions.then(response.getBody()).isEqualTo("I'm OK");
+		then(response.getBody()).isEqualTo("I'm OK");
 		then(ExceptionUtils.getLastException()).isNull();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -93,6 +96,7 @@ public class Issue362Tests {
 		then(ExceptionUtils.getLastException()).isNull();
 		then(this.feignComponentAsserter.executedComponents)
 				.containsEntry(ErrorDecoder.class, true);
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 }
 
