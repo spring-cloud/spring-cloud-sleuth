@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +14,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -59,6 +61,12 @@ public class RestTemplateTraceAspectIntegrationTests {
 	public void init() {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 		this.controller.reset();
+		TestSpanContextHolder.removeCurrentSpan();
+	}
+
+	@After
+	public void cleanup() {
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test

@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -70,10 +71,9 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(Application.class)
-@WebIntegrationTest
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = {"spring.application.name=demo-feign-uri",
-		"server.port=9978"})
+		"server.port=9978", "eureka.client.enabled=true"})
 public class Issue393Tests {
 
 	RestTemplate template = new RestTemplate();
@@ -86,7 +86,7 @@ public class Issue393Tests {
 	}
 
 	@After
-	public void close() {
+	public void cleanup() {
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
