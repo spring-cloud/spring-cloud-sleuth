@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = {"spring.application.name=demo-feign-uri",
 		"server.port=9978", "eureka.client.enabled=true"})
+@Ignore
 public class Issue393Tests {
 
 	RestTemplate template = new RestTemplate();
