@@ -9,8 +9,6 @@ exceptionService.ribbon:
   ConnectTimeout: 1
   ReadTimeout: 1
 
-eureka.client.enabled: false
-
 spring.sleuth.scheduled.skipPattern: "^org.*TestBeanWithScheduledMethodToBeIgnored$"
 # comma separated list of matchers
 spring.sleuth.rxjava.schedulers.ignoredthreads: HystixMetricPoller,^MyCustomThread.*$,^RxComputation.*$
