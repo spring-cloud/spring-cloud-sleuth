@@ -10,6 +10,7 @@ exceptionService.ribbon:
   ReadTimeout: 1
 
 eureka.client.enabled: false
+ribbon.eureka.enabled: false
 
 spring.sleuth.scheduled.skipPattern: "^org.*TestBeanWithScheduledMethodToBeIgnored$"
 # comma separated list of matchers
