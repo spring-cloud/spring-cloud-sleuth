@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,7 +40,7 @@ import feign.Response;
  *
  * @since 1.0.0
  */
-final class TraceFeignClient implements Client {
+class TraceFeignClient implements Client {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
@@ -47,6 +48,7 @@ final class TraceFeignClient implements Client {
 	private HttpTraceKeysInjector keysInjector;
 	private final BeanFactory beanFactory;
 	private Tracer tracer;
+	private final FeignRequestInjector spanInjector = new FeignRequestInjector();
 
 	TraceFeignClient(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -60,17 +62,38 @@ final class TraceFeignClient implements Client {
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
+		String spanName = getSpanName(request);
+		Span span = getTracer().createSpan(spanName);
+		if (log.isDebugEnabled()) {
+			log.debug("Created new Feign span " + span);
+		}
 		try {
+			AtomicReference<Request> feignRequest = new AtomicReference<>(request);
+			this.spanInjector.inject(span, feignRequest);
+			span.logEvent(Span.CLIENT_SEND);
 			addRequestTags(request);
-			Response response = this.delegate.execute(request, options);
+			Request modifiedRequest = feignRequest.get();
+			if (log.isDebugEnabled()) {
+				log.debug("The modified request equals " + modifiedRequest);
+			}
+			Response response = this.delegate.execute(modifiedRequest, options);
 			logCr();
 			return response;
 		} catch (RuntimeException | IOException e) {
 			logError(e);
 			throw e;
 		} finally {
-			closeSpan();
+			closeSpan(span);
 		}
+	}
+
+	private String getSpanName(Request request) {
+		URI uri = URI.create(request.url());
+		return uriScheme(uri) + ":" + uri.getPath();
+	}
+
+	private String uriScheme(URI uri) {
+		return uri.getScheme() == null ? "http" : uri.getScheme();
 	}
 
 	/**
@@ -89,8 +112,7 @@ final class TraceFeignClient implements Client {
 		return this.keysInjector;
 	}
 
-	private void closeSpan() {
-		Span span = getTracer().getCurrentSpan();
+	private void closeSpan(Span span) {
 		if (span != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Closing Feign span " + span);
@@ -103,7 +125,7 @@ final class TraceFeignClient implements Client {
 		Span span = getTracer().getCurrentSpan();
 		if (span != null) {
 			if (log.isDebugEnabled()) {
-				log.debug("Closing Feign span and logging CR" + span);
+				log.debug("Closing Feign span and logging CR " + span);
 			}
 			span.logEvent(Span.CLIENT_RECV);
 		}

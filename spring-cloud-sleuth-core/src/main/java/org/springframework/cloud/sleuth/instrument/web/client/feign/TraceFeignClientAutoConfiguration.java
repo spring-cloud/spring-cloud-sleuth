@@ -32,7 +32,6 @@ import org.springframework.context.annotation.Scope;
 
 import feign.Client;
 import feign.Feign;
-import feign.RequestInterceptor;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -83,14 +82,5 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	TraceFeignObjectWrapper traceFeignObjectWrapper(BeanFactory beanFactory) {
 		return new TraceFeignObjectWrapper(beanFactory);
-	}
-
-	/**
-	 * Sleuth {@link feign.RequestInterceptor} that either starts a new Span or continues
-	 * an existing one if a retry takes place.
-	 */
-	@Bean
-	RequestInterceptor traceIdRequestInterceptor(Tracer tracer) {
-		return new TraceFeignRequestInterceptor(tracer, new FeignRequestTemplateInjector());
 	}
 }

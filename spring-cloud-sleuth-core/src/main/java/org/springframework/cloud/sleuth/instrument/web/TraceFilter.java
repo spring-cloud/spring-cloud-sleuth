@@ -241,7 +241,7 @@ public class TraceFilter extends GenericFilterBean {
 		}
 		if (parent.isRemote()) {
 			if (log.isDebugEnabled()) {
-				log.debug("Sending the parent span " + parent + " to Zipkin");
+				log.debug("Trying to send the parent span " + parent + " to Zipkin");
 			}
 			parent.stop();
 			parent.logEvent(Span.SERVER_SEND);

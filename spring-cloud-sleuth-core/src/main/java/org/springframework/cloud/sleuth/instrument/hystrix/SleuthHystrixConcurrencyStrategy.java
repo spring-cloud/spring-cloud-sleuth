@@ -16,13 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Callable;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
@@ -30,6 +25,12 @@ import com.netflix.hystrix.strategy.eventnotifier.HystrixEventNotifier;
 import com.netflix.hystrix.strategy.executionhook.HystrixCommandExecutionHook;
 import com.netflix.hystrix.strategy.metrics.HystrixMetricsPublisher;
 import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A {@link HystrixConcurrencyStrategy} that wraps a {@link Callable} in a
@@ -109,6 +110,8 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 	// Visible for testing
 	static class HystrixTraceCallable<S> implements Callable<S> {
 
+		private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 		private Tracer tracer;
 		private TraceKeys traceKeys;
 		private Callable<S> callable;
@@ -128,10 +131,16 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 			boolean created = false;
 			if (span != null) {
 				span = this.tracer.continueSpan(span);
+				if (log.isDebugEnabled()) {
+					log.debug("Continuing span " + span);
+				}
 			}
 			else {
 				span = this.tracer.createSpan(HYSTRIX_COMPONENT);
 				created = true;
+				if (log.isDebugEnabled()) {
+					log.debug("Creating new span " + span);
+				}
 			}
 			if (!span.tags().containsKey(Span.SPAN_LOCAL_COMPONENT_TAG_NAME)) {
 				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
@@ -146,9 +155,15 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 			}
 			finally {
 				if (created) {
+					if (log.isDebugEnabled()) {
+						log.debug("Closing span since it was created" + span);
+					}
 					this.tracer.close(span);
 				}
 				else {
+					if (log.isDebugEnabled()) {
+						log.debug("Detaching span since it was continued " + span);
+					}
 					this.tracer.detach(span);
 				}
 			}

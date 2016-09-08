@@ -16,12 +16,15 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
@@ -37,6 +40,8 @@ import org.springframework.integration.annotation.Poller;
  */
 @MessageEndpoint
 public class StreamSpanReporter implements SpanReporter {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	/**
 	 * Bean name for the
@@ -79,6 +84,10 @@ public class StreamSpanReporter implements SpanReporter {
 	public void report(Span span) {
 		if (span.isExportable()) {
 			this.queue.add(span);
+		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("The span " + span + " will not be sent to Zipkin due to sampling");
+			}
 		}
 	}
 }

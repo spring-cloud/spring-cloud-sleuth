@@ -74,18 +74,18 @@ public class TraceFeignClientTests {
 
 	@Test
 	public void should_log_cr_when_response_successful() throws IOException {
-		this.tracer.createSpan("foo");
+		Span span = this.tracer.createSpan("foo");
 		Response response = this.traceFeignClient.execute(
 				Request.create("GET", "http://foo", new HashMap<>(), "".getBytes(),
 						Charset.defaultCharset()), new Request.Options());
 
-		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		then(this.spanAccumulator.getSpans().get(0)).hasLoggedAnEvent(Span.CLIENT_RECV);
 	}
 
 	@Test
 	public void should_log_error_when_exception_thrown() throws IOException {
-		this.tracer.createSpan("foo");
+		Span span = this.tracer.createSpan("foo");
 		BDDMockito.given(this.client.execute(BDDMockito.any(), BDDMockito.any()))
 				.willThrow(new RuntimeException("exception has occurred"));
 
@@ -96,7 +96,7 @@ public class TraceFeignClientTests {
 			SleuthAssertions.fail("Exception should have been thrown");
 		} catch (Exception e) {}
 
-		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		then(this.spanAccumulator.getSpans().get(0))
 				.hasNotLoggedAnEvent(Span.CLIENT_RECV)
 				.hasATag("error", "exception has occurred");

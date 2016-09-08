@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client.exception;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
@@ -24,12 +25,16 @@ import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.SystemErrRule;
+import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -68,10 +73,16 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 		"spring.application.name=exceptionservice" }, randomPort = true)
 public class WebClientExceptionTests {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	@ClassRule
 	public static final SpringClassRule SCR = new SpringClassRule();
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
+	@Rule
+	public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
+	@Rule
+	public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
 
 	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
 	@Autowired @LoadBalanced RestTemplate template;
@@ -85,7 +96,6 @@ public class WebClientExceptionTests {
 
 	@After
 	public void close() {
-		ExceptionUtils.setFail(false);
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
@@ -95,6 +105,7 @@ public class WebClientExceptionTests {
 	public void shouldCloseSpanUponException(ResponseEntityProvider provider)
 			throws IOException {
 		Span span = this.tracer.createSpan("new trace");
+		log.info("Started new span " + span);
 
 		try {
 			provider.get(this);
@@ -107,6 +118,9 @@ public class WebClientExceptionTests {
 		then(ExceptionUtils.getLastException()).isNull();
 		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
+		then(ExceptionUtils.getLastException()).isNull();
+		then(this.systemErrRule.getLog()).doesNotContain("Tried to detach trace span but it is not the current span");
+		then(this.systemOutRule.getLog()).doesNotContain("Tried to detach trace span but it is not the current span");
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
