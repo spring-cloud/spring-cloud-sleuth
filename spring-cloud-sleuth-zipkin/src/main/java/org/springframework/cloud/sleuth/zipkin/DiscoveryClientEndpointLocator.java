@@ -32,9 +32,12 @@ import zipkin.Endpoint;
 public class DiscoveryClientEndpointLocator implements EndpointLocator {
 
 	private DiscoveryClient client;
+	private EndpointCache endpointCache;
 
-	public DiscoveryClientEndpointLocator(DiscoveryClient client) {
+	public DiscoveryClientEndpointLocator(DiscoveryClient client,
+			EndpointCache endpointCache) {
 		this.client = client;
+		this.endpointCache = endpointCache;
 	}
 
 	@Override
@@ -43,10 +46,22 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 		if (instance == null) {
 			throw new NoServiceInstanceAvailableException();
 		}
-		return Endpoint.create(instance.getServiceId(), getIpAddress(instance), instance.getPort());
+		return this.endpointCache.getEndpoint(createEndpointFactory(instance),
+				getHost(instance), instance.getPort(), instance.getServiceId());
 	}
 
-	private int getIpAddress(ServiceInstance instance) {
+	private EndpointCache.EndpointFactory createEndpointFactory(
+			final ServiceInstance instance) {
+		return new EndpointCacheImpl.EndpointFactory() {
+			@Override
+			public Endpoint create() {
+				return Endpoint.create(instance.getServiceId(), getIpAddress(instance),
+						instance.getPort());
+			}
+		};
+	}
+
+	private static int getIpAddress(ServiceInstance instance) {
 		try {
 			return InetUtils.getIpAddressAsInt(instance.getHost());
 		}
@@ -55,5 +70,16 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 		}
 	}
 
-	static class NoServiceInstanceAvailableException extends RuntimeException { }
+	private static String getHost(ServiceInstance instance) {
+		try {
+			return instance.getHost();
+		}
+		catch (Exception e) {
+			return null;
+		}
+	}
+
+	static class NoServiceInstanceAvailableException extends RuntimeException {
+	}
+
 }

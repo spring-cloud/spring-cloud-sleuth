@@ -115,6 +115,9 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private DiscoveryClient client;
 
+		@Autowired
+		ZipkinProperties zipkinProperties;
+
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
@@ -123,7 +126,7 @@ public class ZipkinAutoConfiguration {
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
 			if (this.client!=null) {
-				return new DiscoveryClientEndpointLocator(this.client);
+				return new DiscoveryClientEndpointLocator(this.client, new EndpointCacheImpl(this.zipkinProperties));
 			}
 			return null;
 		}
