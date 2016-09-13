@@ -40,69 +40,84 @@ import zipkin.Endpoint;
 @RunWith(MockitoJUnitRunner.class)
 public class DiscoveryClientEndpointLocatorTest {
 
-	@Mock DiscoveryClient discoveryClient;
-	@Mock EndpointCache endpointCache;
+	@Mock
+	DiscoveryClient discoveryClient;
+	@Mock
+	EndpointCache endpointCache;
 
-	@InjectMocks DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
+	@InjectMocks
+	DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
 
-    @Before
-    public void initMocks(){
-        when(endpointCache.getEndpoint(Mockito.anyObject(), Mockito.anyVararg()))
-                .then((invocationOnMock) ->
-                        ((EndpointCacheImpl.EndpointFactory)invocationOnMock.getArguments()[0]).create());
-    }
+	@Before
+	public void initMocks() {
+		when(endpointCache.getEndpoint(Mockito.anyObject(), Mockito.anyVararg()))
+				.then((invocationOnMock) -> ((EndpointCache.EndpointFactory) invocationOnMock
+						.getArguments()[0]).create());
+	}
 
 	@Test(expected = NoServiceInstanceAvailableException.class)
-	public void should_throw_exception_when_no_instances_are_available() throws Exception {
+	public void should_throw_exception_when_no_instances_are_available()
+			throws Exception {
 		this.discoveryClientEndpointLocator.local();
 	}
 
 	@Test
-	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_resolving_host() throws Exception {
-		ServiceInstance serviceInstanceWithInvalidHost =
-				serviceInstanceWithHost("_ invalid host name with space * and other funny stuff");
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithInvalidHost);
+	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_resolving_host()
+			throws Exception {
+		ServiceInstance serviceInstanceWithInvalidHost = serviceInstanceWithHost(
+				"_ invalid host name with space * and other funny stuff");
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(serviceInstanceWithInvalidHost);
 
 		Endpoint local = this.discoveryClientEndpointLocator.local();
 
 		then(local.serviceName).isEqualTo("serviceid");
-		then(local.port).isEqualTo((short)8_000);
+		then(local.port).isEqualTo((short) 8_000);
 		then(local.ipv4).isEqualTo(0);
 	}
 
 	@Test
-	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_getting_host() throws Exception {
+	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_getting_host()
+			throws Exception {
 		ServiceInstance serviceInstanceWithExceptionInGetHost = serviceInstanceWithExceptionInGetHost();
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithExceptionInGetHost);
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(serviceInstanceWithExceptionInGetHost);
 
 		Endpoint local = this.discoveryClientEndpointLocator.local();
 
 		then(local.serviceName).isEqualTo("serviceid");
-		then(local.port).isEqualTo((short)8_000);
+		then(local.port).isEqualTo((short) 8_000);
 		then(local.ipv4).isEqualTo(0);
 	}
 
 	@Test
-	public void should_create_valid_endpoint_when_proper_host_is_passed() throws Exception {
-		ServiceInstance serviceInstanceWithValidHost = serviceInstanceWithHost("localhost");
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost);
+	public void should_create_valid_endpoint_when_proper_host_is_passed()
+			throws Exception {
+		ServiceInstance serviceInstanceWithValidHost = serviceInstanceWithHost(
+				"localhost");
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(serviceInstanceWithValidHost);
 
 		Endpoint local = this.discoveryClientEndpointLocator.local();
 
 		then(local.serviceName).isEqualTo("serviceid");
-		then(local.port).isEqualTo((short)8_000);
+		then(local.port).isEqualTo((short) 8_000);
 		then(local.ipv4).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
 	}
 
 	@Test
-	public void should_return_different_instance_of_endpoint_when_service_instance_changed_hostname() throws Exception {
-		ServiceInstance serviceInstanceWithLocalhost = serviceInstanceWithHost("localhost");
+	public void should_return_different_instance_of_endpoint_when_service_instance_changed_hostname()
+			throws Exception {
+		ServiceInstance serviceInstanceWithLocalhost = serviceInstanceWithHost(
+				"localhost");
 		ServiceInstance serviceInstanceWithLocalIp = serviceInstanceWithHost("127.0.0.1");
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithLocalhost);
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(serviceInstanceWithLocalhost);
 
 		Endpoint local1 = this.discoveryClientEndpointLocator.local();
 
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithLocalIp);
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(serviceInstanceWithLocalIp);
 
 		Endpoint local2 = this.discoveryClientEndpointLocator.local();
 
@@ -111,8 +126,8 @@ public class DiscoveryClientEndpointLocatorTest {
 	}
 
 	/**
-	 * Original test case asumed there is exception in getHost(), so I keep
-	 * it but don't think it's required.
+	 * Original test case asumed there is exception in getHost(), so I keep it but don't
+	 * think it's required.
 	 * @return
 	 */
 	private ServiceInstance serviceInstanceWithExceptionInGetHost() {
@@ -121,16 +136,14 @@ public class DiscoveryClientEndpointLocatorTest {
 		return serviceInstanceMock;
 	}
 
-	private ServiceInstance serviceInstanceMock() {
+	static ServiceInstance serviceInstanceMock() {
 		ServiceInstance mock = Mockito.mock(ServiceInstance.class);
 		when(mock.getServiceId()).thenReturn("serviceId");
 		when(mock.getPort()).thenReturn(8000);
 		return mock;
 	}
 
-
-
-	private ServiceInstance serviceInstanceWithHost(String host) {
+	static ServiceInstance serviceInstanceWithHost(String host) {
 		ServiceInstance serviceInstanceMock = serviceInstanceMock();
 		when(serviceInstanceMock.getHost()).thenReturn(host);
 		return serviceInstanceMock;

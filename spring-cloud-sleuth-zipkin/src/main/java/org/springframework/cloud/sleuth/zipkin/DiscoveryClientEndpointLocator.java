@@ -47,12 +47,12 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 			throw new NoServiceInstanceAvailableException();
 		}
 		return this.endpointCache.getEndpoint(createEndpointFactory(instance),
-				getHost(instance), instance.getPort(), instance.getServiceId());
+				instance);
 	}
 
 	private EndpointCache.EndpointFactory createEndpointFactory(
 			final ServiceInstance instance) {
-		return new EndpointCacheImpl.EndpointFactory() {
+		return new EndpointCache.EndpointFactory() {
 			@Override
 			public Endpoint create() {
 				return Endpoint.create(instance.getServiceId(), getIpAddress(instance),
@@ -70,14 +70,6 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 		}
 	}
 
-	private static String getHost(ServiceInstance instance) {
-		try {
-			return instance.getHost();
-		}
-		catch (Exception e) {
-			return null;
-		}
-	}
 
 	static class NoServiceInstanceAvailableException extends RuntimeException {
 	}
