@@ -1409,7 +1409,7 @@ This approach may change in the future towards being lazy on this matter.
 <h2 id="_span_lifecycle">Span lifecycle</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>You can do the following operations on the Span by means of <strong>Tracer</strong> interface:</p>
+<p>You can do the following operations on the Span by means of <strong>org.springframework.cloud.sleuth.Tracer</strong> interface:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1432,6 +1432,18 @@ one that it continues.</p>
 <p><a href="#creating-spans-with-explicit-parent">create with explicit parent</a> - you can create a new span and set an explicit parent to it</p>
 </li>
 </ul>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+Spring creates the instance of <code>Tracer</code> for you. In order to use it all you need is to just autowire it.
+</td>
+</tr>
+</table>
 </div>
 <div class="sect2">
 <h3 id="creating-and-closing-spans">Creating and closing spans</h3>
