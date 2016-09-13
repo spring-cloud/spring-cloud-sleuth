@@ -73,7 +73,7 @@ This approach may change in the future towards being lazy on this matter.
 
 == Span lifecycle
 
-You can do the following operations on the Span by means of *Tracer* interface:
+You can do the following operations on the Span by means of *org.springframework.cloud.sleuth.Tracer* interface:
 
 - <<creating-and-closing-spans, start>> - when you start a span its name is assigned and start timestamp is recorded.
 - <<creating-and-closing-spans, close>> - the span gets finished (the end time of the span is recorded) and if
@@ -83,6 +83,8 @@ The span is also removed from the current thread.
 one that it continues.
 - <<continuing-spans, detach>> - the span doesn't get stopped or closed. It only gets removed from the current thread.
 - <<creating-spans-with-explicit-parent, create with explicit parent>> - you can create a new span and set an explicit parent to it
+
+TIP: Spring creates the instance of `Tracer` for you. In order to use it all you need is to just autowire it.
 
 === Creating and closing spans [[creating-and-closing-spans]]
 
