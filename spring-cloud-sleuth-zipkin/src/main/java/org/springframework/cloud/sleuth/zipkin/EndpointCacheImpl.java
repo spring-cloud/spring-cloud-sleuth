@@ -2,12 +2,13 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.util.ObjectUtils;
 
 import zipkin.Endpoint;
 
 /**
- * Caches or not, depending on {@link ZipkinProperties#localEndpointCachingEnabled}.
+ * Caches
  *
  * @author Marcin Wielgus
  * @since 1.1.0
@@ -15,38 +16,27 @@ import zipkin.Endpoint;
 class EndpointCacheImpl implements EndpointCache {
 
 	private final AtomicReference<CachedEntpoint> cachedEndpoint = new AtomicReference<>();
-	private ZipkinProperties zipkinProperties;
 
-	public EndpointCacheImpl(ZipkinProperties zipkinProperties) {
-		this.zipkinProperties = zipkinProperties;
-	}
-
-	private boolean isCachingEnabled() {
-		return this.zipkinProperties.isLocalEndpointCachingEnabled();
-	}
-
-	public Endpoint getEndpoint(EndpointFactory factory, Object... keys) {
-		if (isCachingEnabled()) {
-			return updateAndGet(factory, keys).getEndpoint();
-		}
-		else {
-			return factory.create();
-		}
-
+	public Endpoint getEndpoint(EndpointFactory factory, ServiceInstance instance) {
+		return updateAndGet(factory, instance).getEndpoint();
 	}
 
 	/**
 	 * Copied from 1.8 AtomicReference#updateAndGet
 	 * @param factory
-	 * @param keys
+	 * @param instance
 	 * @return
 	 */
-	private CachedEntpoint updateAndGet(EndpointFactory factory, Object... keys) {
+	private CachedEntpoint updateAndGet(EndpointFactory factory,
+			ServiceInstance instance) {
 		CachedEntpoint prev, next;
 		do {
 			prev = this.cachedEndpoint.get();
-			if (prev == null || !prev.matches(keys)) {
-				next = new CachedEntpoint(factory.create(), keys);
+
+			if (prev == null || !prev.matches(getHost(instance), instance.getPort(),
+					instance.getServiceId())) {
+				next = new CachedEntpoint(factory.create(), getHost(instance),
+						instance.getPort(), instance.getServiceId());
 			}
 			else {
 				next = prev;
@@ -60,17 +50,26 @@ class EndpointCacheImpl implements EndpointCache {
 		private final Endpoint endpoint;
 		private final Object[] keys;
 
-		public CachedEntpoint(Endpoint endpoint, Object[] keys) {
+		public CachedEntpoint(Endpoint endpoint, Object... keys) {
 			this.endpoint = endpoint;
 			this.keys = keys;
 		}
 
-		boolean matches(Object[] keys) {
+		boolean matches(Object... keys) {
 			return ObjectUtils.nullSafeEquals(keys, this.keys);
 		}
 
 		public Endpoint getEndpoint() {
 			return this.endpoint;
+		}
+	}
+
+	private static String getHost(ServiceInstance instance) {
+		try {
+			return instance.getHost();
+		}
+		catch (Exception e) {
+			return null;
 		}
 	}
 

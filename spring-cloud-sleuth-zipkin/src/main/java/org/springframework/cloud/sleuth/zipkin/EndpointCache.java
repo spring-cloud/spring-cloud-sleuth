@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.zipkin;
 
+import org.springframework.cloud.client.ServiceInstance;
 import zipkin.Endpoint;
 
 /**
@@ -12,15 +13,16 @@ interface EndpointCache {
 
 	/**
 	 * When first called will create new Endpoint with <code>factory</code> and store it
-	 * for later usage along with provided <code>keys</code>. Upon next calls will check
-	 * if <code>keys</code> are equal to previously stored. If they are previous instance
+	 * for later usage along with 'some data' from <code>instance</code>.
+	 * Upon next calls will check if 'some data' of <code>instance</code> are equal
+	 * to previously stored or not. If they are, previous instance
 	 * of Endpoint will be returned, otherwise it will recreate Endpoint using
 	 * <code>factory</code>.
 	 * @param factory
-	 * @param keys
+	 * @param instance
 	 * @return
 	 */
-	Endpoint getEndpoint(EndpointCacheImpl.EndpointFactory factory, Object... keys);
+	Endpoint getEndpoint(EndpointCache.EndpointFactory factory, ServiceInstance instance);
 
 	interface EndpointFactory {
 		Endpoint create();
