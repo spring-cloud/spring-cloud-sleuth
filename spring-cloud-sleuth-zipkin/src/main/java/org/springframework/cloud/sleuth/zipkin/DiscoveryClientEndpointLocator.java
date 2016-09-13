@@ -16,14 +16,9 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.lang.invoke.MethodHandles;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.util.StringUtils;
 
 import zipkin.Endpoint;
 
@@ -31,27 +26,18 @@ import zipkin.Endpoint;
  * An {@link EndpointLocator} that tries to find local service information from a
  * {@link DiscoveryClient}.
  *
- * You can override the name using {@link ZipkinProperties.Service#setName(String)}
- *
  * @author Dave Syer
  * @since 1.0.0
  */
 public class DiscoveryClientEndpointLocator implements EndpointLocator {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
-
-	private final DiscoveryClient client;
-	private final ZipkinProperties zipkinProperties;
-
-	@Deprecated
-	public DiscoveryClientEndpointLocator(DiscoveryClient client) {
-		this(client, new ZipkinProperties());
-	}
+	private DiscoveryClient client;
+	private EndpointCache endpointCache;
 
 	public DiscoveryClientEndpointLocator(DiscoveryClient client,
-			ZipkinProperties zipkinProperties) {
+			EndpointCache endpointCache) {
 		this.client = client;
-		this.zipkinProperties = zipkinProperties;
+		this.endpointCache = endpointCache;
 	}
 
 	@Override
@@ -60,18 +46,22 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 		if (instance == null) {
 			throw new NoServiceInstanceAvailableException();
 		}
-		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
-				this.zipkinProperties.getService().getName() : instance.getServiceId();
-		if (log.isDebugEnabled()) {
-			log.debug("Span will contain serviceName [" + serviceName + "]");
-		}
-		return Endpoint.builder()
-				.serviceName(serviceName)
-				.ipv4(getIpAddress(instance))
-				.port(instance.getPort()).build();
+		return this.endpointCache.getEndpoint(createEndpointFactory(instance),
+				getHost(instance), instance.getPort(), instance.getServiceId());
 	}
 
-	private int getIpAddress(ServiceInstance instance) {
+	private EndpointCache.EndpointFactory createEndpointFactory(
+			final ServiceInstance instance) {
+		return new EndpointCacheImpl.EndpointFactory() {
+			@Override
+			public Endpoint create() {
+				return Endpoint.create(instance.getServiceId(), getIpAddress(instance),
+						instance.getPort());
+			}
+		};
+	}
+
+	private static int getIpAddress(ServiceInstance instance) {
 		try {
 			return InetUtils.getIpAddressAsInt(instance.getHost());
 		}
@@ -80,5 +70,16 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 		}
 	}
 
-	static class NoServiceInstanceAvailableException extends RuntimeException { }
+	private static String getHost(ServiceInstance instance) {
+		try {
+			return instance.getHost();
+		}
+		catch (Exception e) {
+			return null;
+		}
+	}
+
+	static class NoServiceInstanceAvailableException extends RuntimeException {
+	}
+
 }

@@ -31,8 +31,7 @@ public class ZipkinProperties {
 	private boolean enabled = true;
 	private int flushInterval = 1;
 	private Compression compression = new Compression();
-
-	private Service service = new Service();
+	private boolean localEndpointCachingEnabled = false;
 
 	public String getBaseUrl() {
 		return this.baseUrl;
@@ -50,8 +49,12 @@ public class ZipkinProperties {
 		return this.compression;
 	}
 
-	public Service getService() {
-		return this.service;
+	public boolean isLocalEndpointCachingEnabled() {
+		return this.localEndpointCachingEnabled;
+	}
+
+	public void setLocalEndpointCachingEnabled(boolean localEndpointCachingEnabled) {
+		this.localEndpointCachingEnabled = localEndpointCachingEnabled;
 	}
 
 	public void setBaseUrl(String baseUrl) {
@@ -70,10 +73,6 @@ public class ZipkinProperties {
 		this.compression = compression;
 	}
 
-	public void setService(Service service) {
-		this.service = service;
-	}
-
 	/** When enabled, spans are gzipped before sent to the zipkin server */
 	public static class Compression {
 
@@ -85,21 +84,6 @@ public class ZipkinProperties {
 
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
-		}
-	}
-
-	/** When set will override the default {@code spring.application.name} value of the service id */
-	public static class Service {
-
-		/** The name of the service, from which the Span was sent via HTTP, that should appear in Zipkin */
-		private String name;
-
-		public String getName() {
-			return this.name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
 		}
 	}
 }

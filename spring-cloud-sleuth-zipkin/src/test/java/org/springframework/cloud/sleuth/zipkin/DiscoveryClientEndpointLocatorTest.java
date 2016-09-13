@@ -16,23 +16,23 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import zipkin.Endpoint;
-
-import java.net.URI;
-import java.util.Map;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.zipkin.DiscoveryClientEndpointLocator.NoServiceInstanceAvailableException;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.BDDMockito.given;
+import zipkin.Endpoint;
 
 /**
  * @author Marcin Grzejszczak
@@ -41,12 +41,16 @@ import static org.mockito.BDDMockito.given;
 public class DiscoveryClientEndpointLocatorTest {
 
 	@Mock DiscoveryClient discoveryClient;
-	DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
+	@Mock EndpointCache endpointCache;
 
-	@Before
-	public void setup() {
-		this.discoveryClientEndpointLocator = new DiscoveryClientEndpointLocator(this.discoveryClient, new ZipkinProperties());
-	}
+	@InjectMocks DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
+
+    @Before
+    public void initMocks(){
+        when(endpointCache.getEndpoint(Mockito.anyObject(), Mockito.anyVararg()))
+                .then((invocationOnMock) ->
+                        ((EndpointCacheImpl.EndpointFactory)invocationOnMock.getArguments()[0]).create());
+    }
 
 	@Test(expected = NoServiceInstanceAvailableException.class)
 	public void should_throw_exception_when_no_instances_are_available() throws Exception {
@@ -55,7 +59,21 @@ public class DiscoveryClientEndpointLocatorTest {
 
 	@Test
 	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_resolving_host() throws Exception {
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithInvalidHost());
+		ServiceInstance serviceInstanceWithInvalidHost =
+				serviceInstanceWithHost("_ invalid host name with space * and other funny stuff");
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithInvalidHost);
+
+		Endpoint local = this.discoveryClientEndpointLocator.local();
+
+		then(local.serviceName).isEqualTo("serviceid");
+		then(local.port).isEqualTo((short)8_000);
+		then(local.ipv4).isEqualTo(0);
+	}
+
+	@Test
+	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_getting_host() throws Exception {
+		ServiceInstance serviceInstanceWithExceptionInGetHost = serviceInstanceWithExceptionInGetHost();
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithExceptionInGetHost);
 
 		Endpoint local = this.discoveryClientEndpointLocator.local();
 
@@ -66,7 +84,8 @@ public class DiscoveryClientEndpointLocatorTest {
 
 	@Test
 	public void should_create_valid_endpoint_when_proper_host_is_passed() throws Exception {
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost());
+		ServiceInstance serviceInstanceWithValidHost = serviceInstanceWithHost("localhost");
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost);
 
 		Endpoint local = this.discoveryClientEndpointLocator.local();
 
@@ -76,72 +95,44 @@ public class DiscoveryClientEndpointLocatorTest {
 	}
 
 	@Test
-	public void should_create_endpoint_with_overridden_name() throws Exception {
-		ZipkinProperties zipkinProperties = new ZipkinProperties();
-		zipkinProperties.getService().setName("foo");
-		DiscoveryClientEndpointLocator locator = new DiscoveryClientEndpointLocator(this.discoveryClient, zipkinProperties);
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost());
+	public void should_return_different_instance_of_endpoint_when_service_instance_changed_hostname() throws Exception {
+		ServiceInstance serviceInstanceWithLocalhost = serviceInstanceWithHost("localhost");
+		ServiceInstance serviceInstanceWithLocalIp = serviceInstanceWithHost("127.0.0.1");
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithLocalhost);
 
-		Endpoint local = locator.local();
+		Endpoint local1 = this.discoveryClientEndpointLocator.local();
 
-		then(local.serviceName).isEqualTo("foo");
-		then(local.port).isEqualTo((short)8_000);
-		then(local.ipv4).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithLocalIp);
+
+		Endpoint local2 = this.discoveryClientEndpointLocator.local();
+
+		then(local1).isNotSameAs(local2);
+
 	}
 
-	private ServiceInstance serviceInstanceWithInvalidHost() {
-		return new ServiceInstance() {
-			@Override public String getServiceId() {
-				return "serviceId";
-			}
-
-			@Override public String getHost() {
-				throw new RuntimeException();
-			}
-
-			@Override public int getPort() {
-				return 8000;
-			}
-
-			@Override public boolean isSecure() {
-				return false;
-			}
-
-			@Override public URI getUri() {
-				return null;
-			}
-
-			@Override public Map<String, String> getMetadata() {
-				return null;
-			}
-		};
+	/**
+	 * Original test case asumed there is exception in getHost(), so I keep
+	 * it but don't think it's required.
+	 * @return
+	 */
+	private ServiceInstance serviceInstanceWithExceptionInGetHost() {
+		ServiceInstance serviceInstanceMock = serviceInstanceMock();
+		when(serviceInstanceMock.getHost()).thenThrow(new RuntimeException());
+		return serviceInstanceMock;
 	}
 
-	private ServiceInstance serviceInstanceWithValidHost() {
-		return new ServiceInstance() {
-			@Override public String getServiceId() {
-				return "serviceId";
-			}
+	private ServiceInstance serviceInstanceMock() {
+		ServiceInstance mock = Mockito.mock(ServiceInstance.class);
+		when(mock.getServiceId()).thenReturn("serviceId");
+		when(mock.getPort()).thenReturn(8000);
+		return mock;
+	}
 
-			@Override public String getHost() {
-				return "localhost";
-			}
 
-			@Override public int getPort() {
-				return 8000;
-			}
 
-			@Override public boolean isSecure() {
-				return false;
-			}
-
-			@Override public URI getUri() {
-				return null;
-			}
-
-			@Override public Map<String, String> getMetadata() {
-				return null;
-			}
-		};
+	private ServiceInstance serviceInstanceWithHost(String host) {
+		ServiceInstance serviceInstanceMock = serviceInstanceMock();
+		when(serviceInstanceMock.getHost()).thenReturn(host);
+		return serviceInstanceMock;
 	}
 }

@@ -35,7 +35,6 @@ import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.core.env.Environment;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -82,9 +81,8 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
-			Environment environment) {
-		return new ZipkinSpanListener(reporter, endpointLocator, environment);
+	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
+		return new ZipkinSpanListener(reporter, endpointLocator);
 	}
 
 	@Configuration
@@ -94,16 +92,12 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
 
-		@Autowired
-		private ZipkinProperties zipkinProperties;
-
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
-					this.zipkinProperties);
+			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName);
 		}
 
 	}
@@ -115,25 +109,24 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
 
-		@Autowired
-		private ZipkinProperties zipkinProperties;
-
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Autowired(required=false)
 		private DiscoveryClient client;
 
+		@Autowired
+		ZipkinProperties zipkinProperties;
+
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
-							this.zipkinProperties));
+					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
 			if (this.client!=null) {
-				return new DiscoveryClientEndpointLocator(this.client, this.zipkinProperties);
+				return new DiscoveryClientEndpointLocator(this.client, new EndpointCacheImpl(this.zipkinProperties));
 			}
 			return null;
 		}
