@@ -30,6 +30,8 @@
 		<module>spring-cloud-sleuth-core</module>
 		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-sleuth-stream</module>
+		<module>spring-cloud-sleuth-reactor</module>
+		<module>spring-cloud-sleuth-test</module>
 		<module>spring-cloud-sleuth-zipkin-stream</module>
 		<module>spring-cloud-starter-sleuth</module>
 		<module>spring-cloud-starter-zipkin</module>

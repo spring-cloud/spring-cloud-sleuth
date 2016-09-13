@@ -17,6 +17,7 @@
 		<zipkin.version>1.16.2</zipkin.version>
 		<zipkin-reporter.version>0.6.9</zipkin-reporter.version>
 		<reactivestreams.version>1.0.0</reactivestreams.version>
+		<reactor.version>3.0.2.RELEASE</reactor.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -32,7 +33,17 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-reactor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-stream</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-test</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -79,6 +90,11 @@
 				<groupId>org.reactivestreams</groupId>
 				<artifactId>reactive-streams</artifactId>
 				<version>${reactivestreams.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-core</artifactId>
+				<version>${reactor.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.reporter</groupId>

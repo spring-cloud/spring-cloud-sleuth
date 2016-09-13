@@ -28,7 +28,7 @@ latency in your applications. Sleuth is written to not log too much, and to not 
   - can report to a Zipkin system for query and visualization
 
 * Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints,
-rest template, scheduled actions, message channels, zuul filters, feign client).
+rest template, scheduled actions, message channels, zuul filters, feign client, project Reactor).
 
 * Sleuth includes default logic to join a trace across http or messaging boundaries. For example, http propagation
 works via Zipkin-compatible request headers. This propagation logic is defined and customized via

@@ -14,33 +14,29 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.reactive;
+package org.springframework.cloud.sleuth.instrument.reactive;
 
-import java.util.Random;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.reactive.TracePublisher;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.jayway.awaitility.Awaitility;
 
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -48,26 +44,22 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration(classes = ReactorTests.Config.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = ReactorTests.Config.class)
 public class ReactorTests {
 
-	@Autowired Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
+	@Autowired Tracer tracer;
+	@Autowired TraceKeys traceKeys;
 
 	@Before public void setup() {
 		ExceptionUtils.setFail(true);
-		TestSpanContextHolder.removeCurrentSpan();
-	}
-
-	@After public void cleanup() {
-		TestSpanContextHolder.removeCurrentSpan();
 	}
 
 	@Test public void should_pass_tracing_info_when_using_reactor() {
 		Span span = this.tracer.createSpan("foo");
 		final AtomicReference<Span> spanInOperation = new AtomicReference<>();
-		Publisher<Integer> traced = TracePublisher.from(Flux.just(1, 2, 3), this.tracer);
+		Publisher<Integer> traced = TracePublisher.from(Flux.just(1, 2, 3),
+				this.tracer, this.traceKeys);
 
 		Flux.from(traced)
 				.map( d -> d + 1)
@@ -82,20 +74,12 @@ public class ReactorTests {
 
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(spanInOperation.get()).isEqualTo(span);
+		then(span).hasALocalComponentTagWithValue("reactive")
+					.hasATagWithKey("thread");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
-	void initHook(Tracer tracer) {
-		Schedulers.setFactory(new Schedulers.Factory() {
-			@Override public Scheduler newSingle(ThreadFactory threadFactory) {
-				return new TraceScheduler(Schedulers.Factory.super.newSingle(threadFactory), tracer);
-			}
-
-		});
-	}
-
 	@Test public void should_pass_tracing_info_when_using_reactor_async() {
-		initHook(this.tracer);
 		Span span = this.tracer.createSpan("foo");
 		final AtomicReference<Span> spanInOperation = new AtomicReference<>();
 
@@ -114,6 +98,8 @@ public class ReactorTests {
 		Awaitility.await().until(() -> {
 				then(spanInOperation.get()).isEqualTo(span);
 				then(this.tracer.getCurrentSpan()).isNull();
+				then(span).hasALocalComponentTagWithValue("reactive")
+					.hasATagWithKey("thread");
 				then(ExceptionUtils.getLastException()).isNull();
 		});
 		
@@ -134,9 +120,13 @@ public class ReactorTests {
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
 		then(spanInOperation.get()).isEqualTo(foo2);
+		then(foo2).hasALocalComponentTagWithValue("reactive")
+				.hasATagWithKey("thread");
 	}
 
 	@EnableAutoConfiguration static class Config {
-
+		@Bean Sampler sampler() {
+			return new AlwaysSampler();
+		}
 	}
 }
