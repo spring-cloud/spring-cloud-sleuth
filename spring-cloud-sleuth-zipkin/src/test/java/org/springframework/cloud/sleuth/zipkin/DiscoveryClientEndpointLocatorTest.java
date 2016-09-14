@@ -43,23 +43,17 @@ public class DiscoveryClientEndpointLocatorTest {
 	@Mock
 	DiscoveryClient discoveryClient;
 	@Mock
-	EndpointCache endpointCache;
+	ZipkinProperties zipkinProperties;
 
 	@InjectMocks
 	DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
-
-	@Before
-	public void initMocks() {
-		when(endpointCache.getEndpoint(Mockito.anyObject(), Mockito.anyVararg()))
-				.then((invocationOnMock) -> ((EndpointCache.EndpointFactory) invocationOnMock
-						.getArguments()[0]).create());
-	}
 
 	@Test(expected = NoServiceInstanceAvailableException.class)
 	public void should_throw_exception_when_no_instances_are_available()
 			throws Exception {
 		this.discoveryClientEndpointLocator.local();
 	}
+
 
 	@Test
 	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_resolving_host()
@@ -76,6 +70,8 @@ public class DiscoveryClientEndpointLocatorTest {
 		then(local.ipv4).isEqualTo(0);
 	}
 
+
+
 	@Test
 	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_getting_host()
 			throws Exception {
@@ -88,6 +84,20 @@ public class DiscoveryClientEndpointLocatorTest {
 		then(local.serviceName).isEqualTo("serviceid");
 		then(local.port).isEqualTo((short) 8_000);
 		then(local.ipv4).isEqualTo(0);
+	}
+
+	@Test
+	public void should_create_endpoint_with_localhost_ip_when_null_host_is_passed()
+			throws Exception {
+		ServiceInstance serviceInstanceWithNullHost = serviceInstanceWithHost(null);
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(serviceInstanceWithNullHost);
+
+		Endpoint local = this.discoveryClientEndpointLocator.local();
+
+		then(local.serviceName).isEqualTo("serviceid");
+		then(local.port).isEqualTo((short) 8_000);
+		then(local.ipv4).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
 	}
 
 	@Test
@@ -124,6 +134,25 @@ public class DiscoveryClientEndpointLocatorTest {
 		then(local1).isNotSameAs(local2);
 
 	}
+
+	@Test
+	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_resolving_ho()
+			throws Exception {
+		ServiceInstance serviceInstanceWithInvalidHost = serviceInstanceWithHost(
+				"very_ invalid host name with space * and other funny stuff");
+		given(this.zipkinProperties.isLocalEndpointCachingEnabled()).willReturn(true);
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(serviceInstanceWithInvalidHost);
+
+		Endpoint local1 = this.discoveryClientEndpointLocator.local();
+
+		Endpoint local2 = this.discoveryClientEndpointLocator.local();
+
+		then(local1).isNotSameAs(local2);
+		//TODO: how to check if cached value was used?
+	}
+
+
 
 	/**
 	 * Original test case asumed there is exception in getHost(), so I keep it but don't
