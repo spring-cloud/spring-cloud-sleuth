@@ -25,7 +25,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -36,7 +35,6 @@ import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
-import zipkin.Endpoint;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -121,38 +119,18 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required = false)
 		private DiscoveryClient client;
 
-		@Bean(name = "discoveryClientEndpointCache")
-		@ConditionalOnMissingBean
-		@ConditionalOnProperty(value = "spring.zipkin.localEndpointCachingEnabled", matchIfMissing = false, havingValue = "true")
-		public EndpointCache discoveryClientEndpointEnabledCache() {
-			return new EndpointCacheImpl();
-		}
-
-		@Bean(name = "discoveryClientEndpointCache")
-		@ConditionalOnMissingBean
-		@ConditionalOnProperty(value = "spring.zipkin.localEndpointCachingEnabled", matchIfMissing = true, havingValue = "false")
-		public EndpointCache discoveryClientEndpointNoOpCache() {
-			return new EndpointCache() {
-				@Override
-				public Endpoint getEndpoint(EndpointFactory factory,
-						ServiceInstance instance) {
-					return factory.create();
-				}
-			};
-		}
-
 		@Bean
-		public EndpointLocator zipkinEndpointLocator(EndpointCache cache) {
+		public EndpointLocator zipkinEndpointLocator(ZipkinProperties zipkinProperties) {
 			return new FallbackHavingEndpointLocator(
-					discoveryClientEndpointLocator(cache),
+					discoveryClientEndpointLocator(zipkinProperties),
 					new ServerPropertiesEndpointLocator(this.serverProperties,
 							this.appName));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator(
-				EndpointCache cache) {
+				ZipkinProperties zipkinProperties) {
 			if (this.client != null) {
-				return new DiscoveryClientEndpointLocator(this.client, cache);
+				return new DiscoveryClientEndpointLocator(this.client, zipkinProperties);
 			}
 			return null;
 		}
