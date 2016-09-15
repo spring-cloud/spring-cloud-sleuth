@@ -222,6 +222,9 @@
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
 				</repository>
 				<repository>
 					<id>spring-milestones</id>
@@ -233,14 +236,6 @@
 					<releases>
 						<enabled>false</enabled>
 					</releases>
-				</repository>
-				<repository>
-					<id>spring-staging</id>
-					<name>Spring Staging</name>
-					<url>https://repo.spring.io/libs-staging-local/</url>
-					<snapshots>
-						<enabled>false</enabled>
-					</snapshots>
 				</repository>
 				<repository>
 					<id>spring-releases</id>
