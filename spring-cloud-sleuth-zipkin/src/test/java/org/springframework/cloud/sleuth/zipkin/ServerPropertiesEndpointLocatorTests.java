@@ -16,20 +16,25 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import org.junit.Test;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import zipkin.Endpoint;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.junit.Test;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ServerPropertiesEndpointLocatorTests {
 
 	@Test
 	public void portDefaultsTo8080() {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown", new ZipkinProperties());
+				new ServerProperties(), "unknown");
 
 		assertThat(locator.local().port).isEqualTo((short) 8080);
 	}
@@ -40,7 +45,7 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setPort(1234);
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", new ZipkinProperties());
+				properties, "unknown");
 
 		assertThat(locator.local().port).isEqualTo((short) 1234);
 	}
@@ -48,7 +53,7 @@ public class ServerPropertiesEndpointLocatorTests {
 	@Test
 	public void portDefaultsToLocalhost() {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown", new ZipkinProperties());
+				new ServerProperties(), "unknown");
 
 		assertThat(locator.local().ipv4).isEqualTo(127 << 24 | 1);
 	}
@@ -59,20 +64,37 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", new ZipkinProperties());
+				properties, "unknown");
 
 		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
 	}
 
 	@Test
-	public void appNameFromProperties() throws UnknownHostException {
+	public void endpointIsCached() throws UnknownHostException {
 		ServerProperties properties = new ServerProperties();
-		ZipkinProperties zipkinProperties = new ZipkinProperties();
-		zipkinProperties.getService().setName("foo");
+		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", zipkinProperties);
+				properties, "unknown");
+		Endpoint local1 = locator.local();
+		Endpoint local2 = locator.local();
+		assertThat(local1).isSameAs(local2);
+	}
 
-		assertThat(locator.local().serviceName).isEqualTo("foo");
+	@Test
+	public void endpointCacheIsInvalidatedOnContainerInitializedEvent() throws UnknownHostException {
+		ServerProperties properties = new ServerProperties();
+		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
+		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
+				properties, "unknown");
+
+		assertThat(locator.local().port).isEqualTo((short) 8080);
+
+		EmbeddedServletContainerInitializedEvent event = mock(EmbeddedServletContainerInitializedEvent.class, RETURNS_DEEP_STUBS);
+		when(event.getEmbeddedServletContainer().getPort()).thenReturn(1234);
+
+		locator.grabPort(event);
+
+		assertThat(locator.local().port).isEqualTo((short) 1234);
 	}
 }

@@ -16,17 +16,12 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import zipkin.Endpoint;
-
-import java.lang.invoke.MethodHandles;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.context.event.EventListener;
-import org.springframework.util.StringUtils;
+
+import zipkin.Endpoint;
 
 /**
  * {@link EndpointLocator} implementation that:
@@ -36,44 +31,39 @@ import org.springframework.util.StringUtils;
  *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
- * You can override the name using {@link ZipkinProperties.Service#setName(String)}
- *
  * @author Dave Syer
  * @since 1.0.0
  */
-public class ServerPropertiesEndpointLocator implements EndpointLocator {
-
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+public class ServerPropertiesEndpointLocator implements EndpointLocator,DclSingleton.InstanceFactory<Endpoint> {
 
 	private final ServerProperties serverProperties;
 	private final String appName;
-	private final ZipkinProperties zipkinProperties;
-	private Integer port;
+	private final DclSingleton<Endpoint> endpoint = new DclSingleton<>();
+	private volatile Integer port;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-			String appName, ZipkinProperties zipkinProperties) {
+																				String appName) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
-		this.zipkinProperties = zipkinProperties;
+
 	}
 
 	@Override
 	public Endpoint local() {
-		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
-				this.zipkinProperties.getService().getName() : this.appName;
-		if (log.isDebugEnabled()) {
-			log.debug("Span will contain serviceName [" + serviceName + "]");
-		}
-		return Endpoint.builder()
-				.serviceName(serviceName)
-				.ipv4(getAddress())
-				.port(getPort())
-				.build();
+		return this.endpoint.get(this);
+	}
+
+	@Override
+	public Endpoint newInstance() {
+		int address = getAddress();
+		Integer port = getPort();
+		return Endpoint.create(this.appName, address, port);
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)
 	public void grabPort(EmbeddedServletContainerInitializedEvent event) {
 		this.port = event.getEmbeddedServletContainer().getPort();
+		this.endpoint.invalidate();
 	}
 
 	private Integer getPort() {
@@ -98,4 +88,6 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 			return 127 << 24 | 1;
 		}
 	}
+
+
 }

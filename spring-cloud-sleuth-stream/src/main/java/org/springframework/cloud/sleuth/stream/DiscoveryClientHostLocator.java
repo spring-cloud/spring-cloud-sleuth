@@ -22,50 +22,68 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * An {@link HostLocator} that tries to find local service information from a
  * {@link DiscoveryClient}.
  *
- * You can override the value of service id by {@link ZipkinProperties#setName(String)}
- *
  * @author Dave Syer
  * @since 1.0.0
  */
 public class DiscoveryClientHostLocator implements HostLocator {
 
-	private final DiscoveryClient client;
-	private final ZipkinProperties zipkinProperties;
+	private DiscoveryClient client;
+	private SleuthStreamProperties sleuthStreamProperties;
+	private Host cachedHost;
+	private String cachedForHostname;
 
-	@Deprecated
-	public DiscoveryClientHostLocator(DiscoveryClient client) {
-		this(client, new ZipkinProperties());
-	}
-
-	public DiscoveryClientHostLocator(DiscoveryClient client, ZipkinProperties zipkinProperties) {
+	public DiscoveryClientHostLocator(DiscoveryClient client,
+			SleuthStreamProperties sleuthStreamProperties) {
 		this.client = client;
+		this.sleuthStreamProperties = sleuthStreamProperties;
 		Assert.notNull(this.client, "client");
-		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
-	public Host locate(Span span) {
+	public synchronized Host locate(Span span) {
 		ServiceInstance instance = this.client.getLocalServiceInstance();
-		String serviceId = StringUtils.hasText(this.zipkinProperties.getName()) ?
-				this.zipkinProperties.getName() : instance.getServiceId();
-		return new Host(serviceId, getIpAddress(instance),
-				instance.getPort());
+		String host = getHost(instance);
+
+		if (!this.sleuthStreamProperties.isLocalEndpointCachingEnabled()) {
+			return new Host(instance.getServiceId(), getIpAddress(host),
+					instance.getPort());
+		}
+		if (this.cachedHost == null || !ObjectUtils.nullSafeEquals(host, this.cachedForHostname)) {
+			this.cachedHost = new Host(instance.getServiceId(), getIpAddress(host),
+					instance.getPort());
+			this.cachedForHostname = host;
+		}
+		return this.cachedHost;
 	}
 
-	private String getIpAddress(ServiceInstance instance) {
+	private String getIpAddress(String host) {
+		if (StringUtils.isEmpty(host)) {
+			return "0.0.0.0";
+		}
 		try {
-			InetAddress address = InetAddress.getByName(instance.getHost());
+			InetAddress address = InetAddress.getByName(host);
 			return address.getHostAddress();
 		}
 		catch (Exception e) {
 			return "0.0.0.0";
 		}
+	}
+
+	private String getHost(ServiceInstance instance) {
+		try {
+			return instance.getHost();
+		}
+		catch (Exception e) {
+			return null;
+		}
+
 	}
 
 }
