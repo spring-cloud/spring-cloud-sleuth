@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -421,15 +420,30 @@ public class Span {
 	}
 
 	/**
-	 * Represents hex string as long
+	 * Parses a 1 to 32 character lower-hex string with no prefix into an unsigned long, tossing any
+	 * bits higher than 64.
 	 */
 	public static long hexToId(String hexString) {
 		Assert.hasText(hexString, "Can't convert empty hex string to long");
-		try {
-			return new BigInteger(hexString, 16).longValue();
-		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("Malformed id [" + hexString + "]", e);
+		int length = hexString.length();
+		if (length < 1 || length > 32) throw new IllegalArgumentException("Malformed id");
+
+		// trim off any high bits
+		int i = length > 16 ? length - 16 : 0;
+
+		long result = 0;
+		for (; i < length; i++) {
+			char c = hexString.charAt(i);
+			result <<= 4;
+			if (c >= '0' && c <= '9') {
+				result |= c - '0';
+			} else if (c >= 'a' && c <= 'f') {
+				result |= c - 'a' + 10;
+			} else {
+				throw new IllegalArgumentException("Malformed id");
+			}
 		}
+		return result;
 	}
 
 	@Override
