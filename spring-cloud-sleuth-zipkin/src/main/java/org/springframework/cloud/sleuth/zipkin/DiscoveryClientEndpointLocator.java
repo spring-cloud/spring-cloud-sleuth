@@ -16,13 +16,12 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.util.ObjectUtils;
 
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import zipkin.Endpoint;
 
 /**
@@ -36,7 +35,8 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 
 	private DiscoveryClient client;
 	private ZipkinProperties zipkinProperties;
-	private final AtomicReference<Host> resolvedHostCache = new AtomicReference<>();
+	private Endpoint cachedEndpoint;
+	private String cachedForHostname;
 
 	public DiscoveryClientEndpointLocator(DiscoveryClient client,
 			ZipkinProperties zipkinProperties) {
@@ -45,70 +45,47 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 	}
 
 	@Override
-	public Endpoint local() {
+	public synchronized Endpoint local() {
 		ServiceInstance instance = this.client.getLocalServiceInstance();
 		if (instance == null) {
 			throw new NoServiceInstanceAvailableException();
 		}
-		return Endpoint.create(instance.getServiceId(), getIpAddress(instance),
-				instance.getPort());
+		String host = getHost(instance);
 
+		if (!this.zipkinProperties.isLocalEndpointCachingEnabled()) {
+			return Endpoint.create(instance.getServiceId(), getIpAddress(host),
+					instance.getPort());
+		}
+		if (this.cachedEndpoint == null || !ObjectUtils.nullSafeEquals(host, this.cachedForHostname)) {
+			this.cachedEndpoint = Endpoint.create(instance.getServiceId(), getIpAddress(host),
+					instance.getPort());
+			this.cachedForHostname = host;
+		}
+		return this.cachedEndpoint;
 	}
 
-	private int getIpAddress(ServiceInstance serviceInstance) {
-		String hostName;
-		try {
-			hostName = serviceInstance.getHost();
+	private int getIpAddress(String host) {
+		if (StringUtils.isEmpty(host)) {
+			return 127 << 24 | 1;
 		}
-		catch (Exception e) {
-			// this is because there was a test that assumed getHost
-			// can throw an exception...
-			return 0;
-		}
-		return this.zipkinProperties.isLocalEndpointCachingEnabled()
-				? updateCacheAndGetIpAddressAsInt(hostName)
-				: resolveIpAddressToInt(hostName);
-	}
-
-	private static int resolveIpAddressToInt(String hostName) {
 		try {
-			return InetUtils.getIpAddressAsInt(hostName);
+			return InetUtils.getIpAddressAsInt(host);
 		}
 		catch (Exception e) {
 			return 0;
 		}
 	}
 
-	/**
-	 * Based on java 1.8 AtomicReference#updateAndGet...
-	 * @param hostName
-	 * @return
-	 */
-	private int updateCacheAndGetIpAddressAsInt(String hostName) {
-		Host prev, next;
-		do {
-			prev = this.resolvedHostCache.get();
-			if (prev == null || !ObjectUtils.nullSafeEquals(prev.hostName, hostName)) {
-				next = new Host(hostName, resolveIpAddressToInt(hostName));
-			}
-			else {
-				next = prev;
-			}
+	private String getHost(ServiceInstance instance) {
+		try {
+			return instance.getHost();
 		}
-		while (!this.resolvedHostCache.compareAndSet(prev, next));
-		return next.host;
+		catch (Exception e) {
+			return null;
+		}
+
 	}
 
 	static class NoServiceInstanceAvailableException extends RuntimeException {
-	}
-
-	private static class Host {
-		private final String hostName;
-		private final int host;
-
-		private Host(String hostName, int host) {
-			this.hostName = hostName;
-			this.host = host;
-		}
 	}
 }

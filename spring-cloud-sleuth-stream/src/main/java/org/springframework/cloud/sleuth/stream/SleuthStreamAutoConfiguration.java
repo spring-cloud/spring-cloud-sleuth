@@ -120,9 +120,9 @@ public class SleuthStreamAutoConfiguration {
 		private DiscoveryClient client;
 
 		@Bean
-		public HostLocator zipkinEndpointLocator() {
+		public HostLocator zipkinEndpointLocator(SleuthStreamProperties sleuthStreamProperties) {
 			if (this.client != null) {
-				return new DiscoveryClientHostLocator(this.client);
+				return new DiscoveryClientHostLocator(this.client, sleuthStreamProperties);
 			}
 			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
 		}

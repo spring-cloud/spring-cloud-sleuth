@@ -54,7 +54,6 @@ public class DiscoveryClientEndpointLocatorTest {
 		this.discoveryClientEndpointLocator.local();
 	}
 
-
 	@Test
 	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_resolving_host()
 			throws Exception {
@@ -70,10 +69,8 @@ public class DiscoveryClientEndpointLocatorTest {
 		then(local.ipv4).isEqualTo(0);
 	}
 
-
-
 	@Test
-	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_getting_host()
+	public void should_create_endpoint_with_localhost_ip_when_exception_occurs_on_getting_host()
 			throws Exception {
 		ServiceInstance serviceInstanceWithExceptionInGetHost = serviceInstanceWithExceptionInGetHost();
 		given(this.discoveryClient.getLocalServiceInstance())
@@ -83,7 +80,7 @@ public class DiscoveryClientEndpointLocatorTest {
 
 		then(local.serviceName).isEqualTo("serviceid");
 		then(local.port).isEqualTo((short) 8_000);
-		then(local.ipv4).isEqualTo(0);
+		then(local.ipv4).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
 	}
 
 	@Test
@@ -136,23 +133,55 @@ public class DiscoveryClientEndpointLocatorTest {
 	}
 
 	@Test
-	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_resolving_ho()
-			throws Exception {
-		ServiceInstance serviceInstanceWithInvalidHost = serviceInstanceWithHost(
-				"very_ invalid host name with space * and other funny stuff");
-		given(this.zipkinProperties.isLocalEndpointCachingEnabled()).willReturn(true);
+	public void should_create_new_endpoint_when_caching_is_off() throws Exception {
+		ServiceInstance serviceInstanceWithValidHost = serviceInstanceWithHost(
+				"localhost");
+		given(this.zipkinProperties.isLocalEndpointCachingEnabled()).willReturn(false);
 		given(this.discoveryClient.getLocalServiceInstance())
-				.willReturn(serviceInstanceWithInvalidHost);
+				.willReturn(serviceInstanceWithValidHost);
 
-		Endpoint local1 = this.discoveryClientEndpointLocator.local();
+		Endpoint endpoint1 = this.discoveryClientEndpointLocator.local();
+		Endpoint endpoint2 = this.discoveryClientEndpointLocator.local();
 
-		Endpoint local2 = this.discoveryClientEndpointLocator.local();
-
-		then(local1).isNotSameAs(local2);
-		//TODO: how to check if cached value was used?
+		then(endpoint1.serviceName).isEqualTo("serviceid");
+		then(endpoint1.port).isEqualTo((short) 8_000);
+		then(endpoint1.ipv4).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
+		then(endpoint1).isNotSameAs(endpoint2);
 	}
 
+	@Test
+	public void should_not_create_new_endpoint_when_caching_is_on() throws Exception {
+		ServiceInstance serviceInstanceWithValidHost = serviceInstanceWithHost(
+				"localhost");
+		given(this.zipkinProperties.isLocalEndpointCachingEnabled()).willReturn(true);
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(serviceInstanceWithValidHost);
 
+		Endpoint endpoint1 = this.discoveryClientEndpointLocator.local();
+		Endpoint endpoint2 = this.discoveryClientEndpointLocator.local();
+
+		then(endpoint1).isSameAs(endpoint2);
+	}
+
+	@Test
+	public void should_create_new_endpoint_when_caching_is_on_and_host_changes() throws Exception {
+		ServiceInstance host1 = serviceInstanceWithHost(
+				"localhost");
+		ServiceInstance host2 = serviceInstanceWithHost(
+				"127.0.0.1");
+		given(this.zipkinProperties.isLocalEndpointCachingEnabled()).willReturn(true);
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(host1);
+
+		Endpoint endpoint1 = this.discoveryClientEndpointLocator.local();
+
+		given(this.discoveryClient.getLocalServiceInstance())
+				.willReturn(host2);
+
+		Endpoint endpoint2 = this.discoveryClientEndpointLocator.local();
+
+		then(endpoint1).isNotSameAs(endpoint2);
+	}
 
 	/**
 	 * Original test case asumed there is exception in getHost(), so I keep it but don't
