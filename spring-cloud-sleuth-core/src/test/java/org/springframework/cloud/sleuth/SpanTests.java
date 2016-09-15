@@ -52,6 +52,16 @@ public class SpanTests {
 		then(someLong).isEqualTo(123123L);
 	}
 
+	@Test
+	public void should_convert_lower_64bits_of_hex_string_to_long() throws Exception {
+		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
+		String lower64Bits = "48485a3953bb6124";
+
+		long someLong = Span.hexToId(hex128Bits);
+
+		then(someLong).isEqualTo(Span.hexToId(lower64Bits));
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void should_throw_exception_when_null_string_is_to_be_converted_to_long() throws Exception {
 		Span.hexToId(null);

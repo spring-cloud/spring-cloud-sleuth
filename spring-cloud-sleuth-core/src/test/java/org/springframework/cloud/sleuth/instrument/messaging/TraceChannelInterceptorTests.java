@@ -275,6 +275,20 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
+	@Test
+	public void downgrades128bitIdsByDroppingHighBits() {
+		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
+		String lower64Bits = "48485a3953bb6124";
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader(Span.TRACE_ID_NAME, hex128Bits)
+				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
+		then(this.message).isNotNull();
+
+		long traceId = Span.hexToId(this.message.getHeaders()
+				.get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
+		then(traceId).isEqualTo(Span.hexToId(lower64Bits));
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	static class App {
