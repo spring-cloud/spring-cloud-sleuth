@@ -14,20 +14,11 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<spring-cloud-netflix.version>1.2.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
-		<aspectj.version>1.8.4</aspectj.version>
 		<zipkin.version>1.11.1</zipkin.version>
 		<zipkin-reporter.version>0.4.3</zipkin-reporter.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-netflix-dependencies</artifactId>
-				<version>${spring-cloud-netflix.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-core</artifactId>
@@ -57,16 +48,6 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-sleuth</artifactId>
 				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aspectj</groupId>
-				<artifactId>aspectjrt</artifactId>
-				<version>${aspectj.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aspectj</groupId>
-				<artifactId>aspectjweaver</artifactId>
-				<version>${aspectj.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
