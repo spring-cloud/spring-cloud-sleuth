@@ -17,7 +17,7 @@
 		<spring-cloud-netflix.version>1.2.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<aspectj.version>1.8.4</aspectj.version>
 		<zipkin.version>1.11.1</zipkin.version>
-		<zipkin-reporter.version>0.4.3</zipkin-reporter.version>
+		<zipkin-reporter.version>0.5.0</zipkin-reporter.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
