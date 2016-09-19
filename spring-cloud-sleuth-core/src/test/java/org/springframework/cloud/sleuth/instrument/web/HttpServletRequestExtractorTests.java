@@ -93,4 +93,19 @@ public class HttpServletRequestExtractorTests {
 			then(e).hasMessageContaining("Malformed id");
 		}
 	}
+
+	@Test
+	public void should_downgrade_128bit_trace_id_by_dropping_high_bits() {
+		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
+		String lower64Bits = "48485a3953bb6124";
+
+		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(hex128Bits);
+		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(lower64Bits);
+
+		Span span = this.extractor.joinTrace(this.request);
+
+		then(span.getTraceId()).isEqualTo(Span.hexToId(lower64Bits));
+	}
 }
