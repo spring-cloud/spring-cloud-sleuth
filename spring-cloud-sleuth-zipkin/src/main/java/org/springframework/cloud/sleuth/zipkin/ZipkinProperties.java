@@ -31,7 +31,6 @@ public class ZipkinProperties {
 	private boolean enabled = true;
 	private int flushInterval = 1;
 	private Compression compression = new Compression();
-	private boolean localEndpointCachingEnabled = true;
 
 	public String getBaseUrl() {
 		return this.baseUrl;
@@ -47,14 +46,6 @@ public class ZipkinProperties {
 
 	public Compression getCompression() {
 		return this.compression;
-	}
-
-	public boolean isLocalEndpointCachingEnabled() {
-		return this.localEndpointCachingEnabled;
-	}
-
-	public void setLocalEndpointCachingEnabled(boolean localEndpointCachingEnabled) {
-		this.localEndpointCachingEnabled = localEndpointCachingEnabled;
 	}
 
 	public void setBaseUrl(String baseUrl) {
