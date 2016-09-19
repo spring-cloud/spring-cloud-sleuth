@@ -29,7 +29,6 @@ public class SleuthStreamProperties {
 	private boolean enabled = true;
 	private String group = SleuthSink.INPUT;
 	private Poller poller = new Poller();
-	private boolean localEndpointCachingEnabled = true;
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -37,14 +36,6 @@ public class SleuthStreamProperties {
 
 	public String getGroup() {
 		return this.group;
-	}
-
-	public boolean isLocalEndpointCachingEnabled() {
-		return this.localEndpointCachingEnabled;
-	}
-
-	public void setLocalEndpointCachingEnabled(boolean localEndpointCachingEnabled) {
-		this.localEndpointCachingEnabled = localEndpointCachingEnabled;
 	}
 
 	public void setEnabled(boolean enabled) {

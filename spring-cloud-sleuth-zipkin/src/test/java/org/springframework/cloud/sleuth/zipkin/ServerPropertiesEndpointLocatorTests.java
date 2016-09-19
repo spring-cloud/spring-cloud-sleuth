@@ -18,16 +18,11 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import zipkin.Endpoint;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class ServerPropertiesEndpointLocatorTests {
 
@@ -67,34 +62,5 @@ public class ServerPropertiesEndpointLocatorTests {
 				properties, "unknown");
 
 		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
-	}
-
-	@Test
-	public void endpointIsCached() throws UnknownHostException {
-		ServerProperties properties = new ServerProperties();
-		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
-
-		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown");
-		Endpoint local1 = locator.local();
-		Endpoint local2 = locator.local();
-		assertThat(local1).isSameAs(local2);
-	}
-
-	@Test
-	public void endpointCacheIsInvalidatedOnContainerInitializedEvent() throws UnknownHostException {
-		ServerProperties properties = new ServerProperties();
-		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
-		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown");
-
-		assertThat(locator.local().port).isEqualTo((short) 8080);
-
-		EmbeddedServletContainerInitializedEvent event = mock(EmbeddedServletContainerInitializedEvent.class, RETURNS_DEEP_STUBS);
-		when(event.getEmbeddedServletContainer().getPort()).thenReturn(1234);
-
-		locator.grabPort(event);
-
-		assertThat(locator.local().port).isEqualTo((short) 1234);
 	}
 }

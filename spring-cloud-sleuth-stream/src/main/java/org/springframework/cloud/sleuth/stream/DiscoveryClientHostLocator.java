@@ -22,8 +22,6 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * An {@link HostLocator} that tries to find local service information from a
@@ -35,55 +33,27 @@ import org.springframework.util.StringUtils;
 public class DiscoveryClientHostLocator implements HostLocator {
 
 	private DiscoveryClient client;
-	private SleuthStreamProperties sleuthStreamProperties;
-	private Host cachedHost;
-	private String cachedForHostname;
 
-	public DiscoveryClientHostLocator(DiscoveryClient client,
-			SleuthStreamProperties sleuthStreamProperties) {
+	public DiscoveryClientHostLocator(DiscoveryClient client) {
 		this.client = client;
-		this.sleuthStreamProperties = sleuthStreamProperties;
 		Assert.notNull(this.client, "client");
 	}
 
 	@Override
-	public synchronized Host locate(Span span) {
+	public Host locate(Span span) {
 		ServiceInstance instance = this.client.getLocalServiceInstance();
-		String host = getHost(instance);
-
-		if (!this.sleuthStreamProperties.isLocalEndpointCachingEnabled()) {
-			return new Host(instance.getServiceId(), getIpAddress(host),
-					instance.getPort());
-		}
-		if (this.cachedHost == null || !ObjectUtils.nullSafeEquals(host, this.cachedForHostname)) {
-			this.cachedHost = new Host(instance.getServiceId(), getIpAddress(host),
-					instance.getPort());
-			this.cachedForHostname = host;
-		}
-		return this.cachedHost;
+		return new Host(instance.getServiceId(), getIpAddress(instance),
+				instance.getPort());
 	}
 
-	private String getIpAddress(String host) {
-		if (StringUtils.isEmpty(host)) {
-			return "0.0.0.0";
-		}
+	private String getIpAddress(ServiceInstance instance) {
 		try {
-			InetAddress address = InetAddress.getByName(host);
+			InetAddress address = InetAddress.getByName(instance.getHost());
 			return address.getHostAddress();
 		}
 		catch (Exception e) {
 			return "0.0.0.0";
 		}
-	}
-
-	private String getHost(ServiceInstance instance) {
-		try {
-			return instance.getHost();
-		}
-		catch (Exception e) {
-			return null;
-		}
-
 	}
 
 }

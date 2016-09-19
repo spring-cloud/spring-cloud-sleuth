@@ -16,152 +16,106 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.when;
+import java.net.URI;
+import java.util.Map;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.BDDMockito.given;
+
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
 public class DiscoveryClientHostLocatorTest {
-	@Mock
-	DiscoveryClient discoveryClient;
-	@Mock
-	SleuthStreamProperties properties;
-	@InjectMocks
-	DiscoveryClientHostLocator discoveryClientHostLocator;
+	DiscoveryClient discoveryClient = Mockito.mock(DiscoveryClient.class);
+	DiscoveryClientHostLocator discoveryClientHostLocator =
+			new DiscoveryClientHostLocator(this.discoveryClient);
 
 	@Test(expected = IllegalArgumentException.class)
-	public void should_throw_exception_when_no_discovery_client_is_present()
-			throws Exception {
-		new DiscoveryClientHostLocator(null, new SleuthStreamProperties());
+	public void should_throw_exception_when_no_discovery_client_is_present() throws Exception {
+		new DiscoveryClientHostLocator(null);
 	}
 
 	@Test
-	public void should_create_Host_with_0_ip_when_exception_occurs_on_resolving_host()
-			throws Exception {
-		ServiceInstance serviceInstanceWithHost = serviceInstanceWithExceptionInGetHost();
-		given(this.discoveryClient.getLocalServiceInstance())
-				.willReturn(serviceInstanceWithHost);
+	public void should_create_Host_with_0_ip_when_exception_occurs_on_resolving_host() throws Exception {
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithInvalidHost());
 
 		Host host = this.discoveryClientHostLocator.locate(null);
 
 		then(host.getServiceName()).isEqualTo("serviceId");
-		then(host.getPort()).isEqualTo((short) 8_000);
-		then(host.getIpv4()).isEqualTo(0);
-	}
-
-
-	@Test
-	public void should_create_Host_with_0_ip_when_host_is_unresolvable()
-			throws Exception {
-		ServiceInstance serviceInstanceWithHost = serviceInstanceWithHost(
-				"_ invalid host name with space * and other funny stuff");
-		given(this.discoveryClient.getLocalServiceInstance())
-				.willReturn(serviceInstanceWithHost);
-
-		Host host = this.discoveryClientHostLocator.locate(null);
-
-		then(host.getServiceName()).isEqualTo("serviceId");
-		then(host.getPort()).isEqualTo((short) 8_000);
+		then(host.getPort()).isEqualTo((short)8_000);
 		then(host.getIpv4()).isEqualTo(0);
 	}
 
 	@Test
 	public void should_create_valid_Host_when_proper_host_is_passed() throws Exception {
-		ServiceInstance serviceInstanceWithHost = serviceInstanceWithHost("localhost");
-		given(this.discoveryClient.getLocalServiceInstance())
-				.willReturn(serviceInstanceWithHost);
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost());
 
 		Host host = this.discoveryClientHostLocator.locate(null);
 
 		then(host.getServiceName()).isEqualTo("serviceId");
-		then(host.getPort()).isEqualTo((short) 8_000);
+		then(host.getPort()).isEqualTo((short)8_000);
 		then(host.getIpv4()).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
 	}
 
-	@Test
-	public void should_create_new_endpoint_when_caching_is_off() throws Exception {
-		ServiceInstance serviceInstanceWithValidHost = serviceInstanceWithHost(
-				"localhost");
-		given(this.properties.isLocalEndpointCachingEnabled()).willReturn(false);
-		given(this.discoveryClient.getLocalServiceInstance())
-				.willReturn(serviceInstanceWithValidHost);
+	private ServiceInstance serviceInstanceWithInvalidHost() {
+		return new ServiceInstance() {
+			@Override public String getServiceId() {
+				return "serviceId";
+			}
 
-		Host host1 = this.discoveryClientHostLocator.locate(null);
-		Host host2 = this.discoveryClientHostLocator.locate(null);
+			@Override public String getHost() {
+				throw new RuntimeException();
+			}
 
-		then(host1.getServiceName()).isEqualTo("serviceId");
-		then(host1.getPort()).isEqualTo((short) 8_000);
-		then(host1.getIpv4()).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
-		then(host1).isNotSameAs(host2);
+			@Override public int getPort() {
+				return 8000;
+			}
+
+			@Override public boolean isSecure() {
+				return false;
+			}
+
+			@Override public URI getUri() {
+				return null;
+			}
+
+			@Override public Map<String, String> getMetadata() {
+				return null;
+			}
+		};
 	}
 
-	@Test
-	public void should_not_create_new_endpoint_when_caching_is_on() throws Exception {
-		ServiceInstance serviceInstanceWithValidHost = serviceInstanceWithHost(
-				"localhost");
-		given(this.properties.isLocalEndpointCachingEnabled()).willReturn(true);
-		given(this.discoveryClient.getLocalServiceInstance())
-				.willReturn(serviceInstanceWithValidHost);
+	private ServiceInstance serviceInstanceWithValidHost() {
+		return new ServiceInstance() {
+			@Override public String getServiceId() {
+				return "serviceId";
+			}
 
-		Host endpoint1 = this.discoveryClientHostLocator.locate(null);
-		Host endpoint2 = this.discoveryClientHostLocator.locate(null);
+			@Override public String getHost() {
+				return "localhost";
+			}
 
-		then(endpoint1).isSameAs(endpoint2);
-	}
+			@Override public int getPort() {
+				return 8000;
+			}
 
-	@Test
-	public void should_create_new_endpoint_when_caching_is_on_and_host_changes()
-			throws Exception {
-		ServiceInstance serviceInstance1 = serviceInstanceWithHost("localhost");
-		ServiceInstance serviceInstance2 = serviceInstanceWithHost("127.0.0.1");
-		given(this.properties.isLocalEndpointCachingEnabled()).willReturn(true);
-		given(this.discoveryClient.getLocalServiceInstance())
-				.willReturn(serviceInstance1);
+			@Override public boolean isSecure() {
+				return false;
+			}
 
-		Host endpoint1 = this.discoveryClientHostLocator.locate(null);
+			@Override public URI getUri() {
+				return null;
+			}
 
-		given(this.discoveryClient.getLocalServiceInstance())
-				.willReturn(serviceInstance2);
-
-		Host endpoint2 = this.discoveryClientHostLocator.locate(null);
-
-		then(endpoint1).isNotSameAs(endpoint2);
-	}
-
-	/**
-	 * Original test case asumed there is exception in getHost(), so I keep it but don't
-	 * think it's required.
-	 * @return
-	 */
-	private ServiceInstance serviceInstanceWithExceptionInGetHost() {
-		ServiceInstance serviceInstanceMock = serviceInstanceMock();
-		when(serviceInstanceMock.getHost()).thenThrow(new RuntimeException());
-		return serviceInstanceMock;
-	}
-
-	static ServiceInstance serviceInstanceMock() {
-		ServiceInstance mock = Mockito.mock(ServiceInstance.class);
-		when(mock.getServiceId()).thenReturn("serviceId");
-		when(mock.getPort()).thenReturn(8000);
-		return mock;
-	}
-
-	static ServiceInstance serviceInstanceWithHost(String host) {
-		ServiceInstance serviceInstanceMock = serviceInstanceMock();
-		when(serviceInstanceMock.getHost()).thenReturn(host);
-		return serviceInstanceMock;
+			@Override public Map<String, String> getMetadata() {
+				return null;
+			}
+		};
 	}
 }

@@ -20,8 +20,6 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import zipkin.Endpoint;
 
 /**
@@ -34,58 +32,28 @@ import zipkin.Endpoint;
 public class DiscoveryClientEndpointLocator implements EndpointLocator {
 
 	private DiscoveryClient client;
-	private ZipkinProperties zipkinProperties;
-	private Endpoint cachedEndpoint;
-	private String cachedForHostname;
 
-	public DiscoveryClientEndpointLocator(DiscoveryClient client,
-			ZipkinProperties zipkinProperties) {
+	public DiscoveryClientEndpointLocator(DiscoveryClient client) {
 		this.client = client;
-		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
-	public synchronized Endpoint local() {
+	public Endpoint local() {
 		ServiceInstance instance = this.client.getLocalServiceInstance();
 		if (instance == null) {
 			throw new NoServiceInstanceAvailableException();
 		}
-		String host = getHost(instance);
-
-		if (!this.zipkinProperties.isLocalEndpointCachingEnabled()) {
-			return Endpoint.create(instance.getServiceId(), getIpAddress(host),
-					instance.getPort());
-		}
-		if (this.cachedEndpoint == null || !ObjectUtils.nullSafeEquals(host, this.cachedForHostname)) {
-			this.cachedEndpoint = Endpoint.create(instance.getServiceId(), getIpAddress(host),
-					instance.getPort());
-			this.cachedForHostname = host;
-		}
-		return this.cachedEndpoint;
+		return Endpoint.create(instance.getServiceId(), getIpAddress(instance), instance.getPort());
 	}
 
-	private int getIpAddress(String host) {
-		if (StringUtils.isEmpty(host)) {
-			return 127 << 24 | 1;
-		}
+	private int getIpAddress(ServiceInstance instance) {
 		try {
-			return InetUtils.getIpAddressAsInt(host);
+			return InetUtils.getIpAddressAsInt(instance.getHost());
 		}
 		catch (Exception e) {
 			return 0;
 		}
 	}
 
-	private String getHost(ServiceInstance instance) {
-		try {
-			return instance.getHost();
-		}
-		catch (Exception e) {
-			return null;
-		}
-
-	}
-
-	static class NoServiceInstanceAvailableException extends RuntimeException {
-	}
+	static class NoServiceInstanceAvailableException extends RuntimeException { }
 }

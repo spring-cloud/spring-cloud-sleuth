@@ -34,27 +34,20 @@ import zipkin.Endpoint;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class ServerPropertiesEndpointLocator implements EndpointLocator,DclSingleton.InstanceFactory<Endpoint> {
+public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	private final ServerProperties serverProperties;
 	private final String appName;
-	private final DclSingleton<Endpoint> endpoint = new DclSingleton<>();
-	private volatile Integer port;
+	private Integer port;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
 																				String appName) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
-
 	}
 
 	@Override
 	public Endpoint local() {
-		return this.endpoint.get(this);
-	}
-
-	@Override
-	public Endpoint newInstance() {
 		int address = getAddress();
 		Integer port = getPort();
 		return Endpoint.create(this.appName, address, port);
@@ -63,7 +56,6 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,DclSingl
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)
 	public void grabPort(EmbeddedServletContainerInitializedEvent event) {
 		this.port = event.getEmbeddedServletContainer().getPort();
-		this.endpoint.invalidate();
 	}
 
 	private Integer getPort() {
@@ -88,6 +80,4 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,DclSingl
 			return 127 << 24 | 1;
 		}
 	}
-
-
 }
