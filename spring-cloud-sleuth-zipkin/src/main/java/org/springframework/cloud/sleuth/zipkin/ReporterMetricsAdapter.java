@@ -12,16 +12,11 @@ final class ReporterMetricsAdapter implements ReporterMetrics {
 	}
 
 	@Override
-	public ReporterMetrics forTransport(String transport) {
-		return this;
-	}
-
-	@Override
 	public void incrementMessages() {
 	}
 
 	@Override
-	public void incrementMessagesDropped() {
+	public void incrementMessagesDropped(Throwable throwable) {
 	}
 
 	@Override
@@ -37,7 +32,16 @@ final class ReporterMetricsAdapter implements ReporterMetrics {
 	public void incrementMessageBytes(int i) {
 	}
 
-	@Override public void incrementSpansDropped(int i) {
+	@Override
+	public void incrementSpansDropped(int i) {
 		this.spanMetricReporter.incrementDroppedSpans(i);
+	}
+
+	@Override
+	public void updateQueuedSpans(int i) {
+	}
+
+	@Override
+	public void updateQueuedBytes(int i) {
 	}
 }
