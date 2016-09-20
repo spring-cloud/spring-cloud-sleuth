@@ -21,8 +21,10 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,7 +35,7 @@ public class ServerPropertiesHostLocatorTests {
 	@Test
 	public void portDefaultsTo8080() {
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(
-				new ServerProperties(), "unknown", new ZipkinProperties());
+				new ServerProperties(), "unknown",mockResolver("127.0.0.1"));
 
 		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 8080);
 	}
@@ -44,7 +46,7 @@ public class ServerPropertiesHostLocatorTests {
 		properties.setPort(1234);
 
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
-				"unknown", new ZipkinProperties());
+				"unknown",mockResolver("127.0.0.1"));
 
 		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 1234);
 	}
@@ -52,9 +54,9 @@ public class ServerPropertiesHostLocatorTests {
 	@Test
 	public void portDefaultsToLocalhost() {
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(
-				new ServerProperties(), "unknown", new ZipkinProperties());
+				new ServerProperties(), "unknown",mockResolver("129.0.0.1"));
 
-		assertThat(locator.locate(this.span).getAddress()).isEqualTo("127.0.0.1");
+		assertThat(locator.locate(this.span).getAddress()).isEqualTo("129.0.0.1");
 	}
 
 	@Test
@@ -63,21 +65,14 @@ public class ServerPropertiesHostLocatorTests {
 		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
 
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
-				"unknown", new ZipkinProperties());
+				"unknown",mockResolver("127.0.0.1"));
 
 		assertThat(locator.locate(this.span).getAddress()).isEqualTo("1.2.3.4");
 	}
 
-	@Test
-	public void nameTakenFromProperties() throws UnknownHostException {
-		ServerProperties properties = new ServerProperties();
-		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
-		ZipkinProperties zipkinProperties = new ZipkinProperties();
-		zipkinProperties.setName("foo");
-
-		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
-				"unknown", zipkinProperties);
-
-		assertThat(locator.locate(this.span).getServiceName()).isEqualTo("foo");
+	private LocalAdressResolver mockResolver(String address){
+		LocalAdressResolver spy = Mockito.spy(new LocalAdressResolver());
+		Mockito.when(spy.getLocalIp4AddressAsString()).thenReturn(address);
+		return spy;
 	}
 }

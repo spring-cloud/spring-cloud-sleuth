@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.context.event.EventListener;
 
 import zipkin.Endpoint;
@@ -27,8 +27,8 @@ import zipkin.Endpoint;
  * {@link EndpointLocator} implementation that:
  *
  * <ul>
- *     <li><b>address</b> - from {@link ServerProperties}</li>
- *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
+ * <li><b>address</b> - from {@link ServerProperties}</li>
+ * <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
  * @author Dave Syer
@@ -39,11 +39,13 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	private final ServerProperties serverProperties;
 	private final String appName;
 	private Integer port;
+	private final LocalAdressResolver localAdressResolver;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-																				String appName) {
+			String appName,LocalAdressResolver localAdressResolver) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
+		this.localAdressResolver = localAdressResolver;
 	}
 
 	@Override
@@ -59,11 +61,11 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	}
 
 	private Integer getPort() {
-		if (this.port!=null) {
+		if (this.port != null) {
 			return this.port;
 		}
 		Integer port;
-		if (this.serverProperties!=null && this.serverProperties.getPort() != null) {
+		if (this.serverProperties != null && this.serverProperties.getPort() != null) {
 			port = this.serverProperties.getPort();
 		}
 		else {
@@ -73,11 +75,11 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	}
 
 	private int getAddress() {
-		if (this.serverProperties!=null && this.serverProperties.getAddress() != null) {
-			return InetUtils.getIpAddressAsInt(this.serverProperties.getAddress().getHostAddress());
+		if (this.serverProperties != null && this.serverProperties.getAddress() != null) {
+			return this.localAdressResolver.asInt(this.serverProperties.getAddress());
 		}
 		else {
-			return 127 << 24 | 1;
+			return this.localAdressResolver.getLocalIp4AddressAsInt();
 		}
 	}
 }

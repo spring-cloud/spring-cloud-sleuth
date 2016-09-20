@@ -19,9 +19,9 @@ package org.springframework.cloud.sleuth.stream;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * A {@link HostLocator} that retrieves:
@@ -32,24 +32,22 @@ import org.springframework.util.StringUtils;
  *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
- * You can override the value of service id by {@link ZipkinProperties#setName(String)}
- *
  * @author Dave Syer
  * @since 1.0.0
  */
 public class ServerPropertiesHostLocator implements HostLocator {
 
 	private final ServerProperties serverProperties; // Nullable
+	private final LocalAdressResolver localAdressResolver;
 	private final String appName;
-	private final ZipkinProperties zipkinProperties;
 	private Integer port; // Lazy assigned
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
-			String appName, ZipkinProperties zipkinProperties) {
+			String appName,LocalAdressResolver localAdressResolver) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
+		this.localAdressResolver = localAdressResolver;
 		Assert.notNull(this.appName, "appName");
-		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
@@ -85,16 +83,14 @@ public class ServerPropertiesHostLocator implements HostLocator {
 			address = this.serverProperties.getAddress().getHostAddress();
 		}
 		else {
-			address = "127.0.0.1";
+			address = this.localAdressResolver.getLocalIp4AddressAsString();
 		}
 		return address;
 	}
 
 	private String getServiceName(Span span) {
 		String serviceName;
-		if (StringUtils.hasText(this.zipkinProperties.getName())) {
-			serviceName = this.zipkinProperties.getName();
-		} else if (span.getProcessId() != null) {
+		if (span.getProcessId() != null) {
 			serviceName = span.getProcessId();
 		}
 		else {

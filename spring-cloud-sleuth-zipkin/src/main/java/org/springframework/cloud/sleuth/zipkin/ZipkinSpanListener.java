@@ -74,16 +74,17 @@ public class ZipkinSpanListener implements SpanReporter {
 	 */
 	// Visible for testing
 	zipkin.Span convert(Span span) {
+		Endpoint endpoint = this.endpointLocator.local();
 		zipkin.Span.Builder zipkinSpan = zipkin.Span.builder();
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
 		if (notClientOrServer(span)) {
-			ensureLocalComponent(span, zipkinSpan);
+			ensureLocalComponent(span, zipkinSpan,endpoint);
 		}
-		addZipkinAnnotations(zipkinSpan, span, this.endpointLocator.local());
-		addZipkinBinaryAnnotations(zipkinSpan, span, this.endpointLocator.local());
+		addZipkinAnnotations(zipkinSpan, span, endpoint);
+		addZipkinBinaryAnnotations(zipkinSpan, span, endpoint);
 		if (hasClientSend(span)) {
-			ensureServerAddr(span, zipkinSpan);
+			ensureServerAddr(span, zipkinSpan,endpoint);
 		}
 		zipkinSpan.timestamp(span.getBegin() * 1000L);
 		if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
@@ -104,7 +105,7 @@ public class ZipkinSpanListener implements SpanReporter {
 		return zipkinSpan.build();
 	}
 
-	private void ensureLocalComponent(Span span, zipkin.Span.Builder zipkinSpan) {
+	private void ensureLocalComponent(Span span, zipkin.Span.Builder zipkinSpan,Endpoint endpoint) {
 		if (span.tags().containsKey(Constants.LOCAL_COMPONENT)) {
 			return;
 		}
@@ -115,15 +116,15 @@ public class ZipkinSpanListener implements SpanReporter {
 				.type(BinaryAnnotation.Type.STRING)
 				.key("lc") // LOCAL_COMPONENT
 				.value(processId)
-				.endpoint(this.endpointLocator.local()).build();
+				.endpoint(endpoint).build();
 		zipkinSpan.addBinaryAnnotation(component);
 	}
 
-	private void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan) {
+	private void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan,Endpoint endpoint) {
 		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME) ?
-				span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : this.endpointLocator.local().serviceName;
+				span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : endpoint.serviceName;
 		zipkinSpan.addBinaryAnnotation(BinaryAnnotation.address(Constants.SERVER_ADDR,
-				this.endpointLocator.local().toBuilder().serviceName(serviceName).build()));
+				endpoint.toBuilder().serviceName(serviceName).build()));
 	}
 
 	private boolean notClientOrServer(Span span) {
