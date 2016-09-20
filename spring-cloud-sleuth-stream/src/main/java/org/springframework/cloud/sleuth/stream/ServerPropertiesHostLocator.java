@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.stream;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
 
@@ -37,13 +38,15 @@ import org.springframework.util.Assert;
 public class ServerPropertiesHostLocator implements HostLocator {
 
 	private final ServerProperties serverProperties; // Nullable
+	private final LocalAdressResolver localAdressResolver;
 	private final String appName;
 	private Integer port; // Lazy assigned
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
-			String appName) {
+			String appName,LocalAdressResolver localAdressResolver) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
+		this.localAdressResolver = localAdressResolver;
 		Assert.notNull(this.appName, "appName");
 	}
 
@@ -80,7 +83,7 @@ public class ServerPropertiesHostLocator implements HostLocator {
 			address = this.serverProperties.getAddress().getHostAddress();
 		}
 		else {
-			address = "127.0.0.1";
+			address = this.localAdressResolver.getLocalIp4AddressAsString();
 		}
 		return address;
 	}

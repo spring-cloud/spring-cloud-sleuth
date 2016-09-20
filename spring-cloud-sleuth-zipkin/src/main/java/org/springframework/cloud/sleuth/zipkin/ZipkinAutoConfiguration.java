@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,6 +31,7 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
+import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -86,7 +86,8 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnMissingClass("org.springframework.cloud.client.discovery.DiscoveryClient")
+	@ConditionalOnMissingBean(EndpointLocator.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "false", matchIfMissing = true)
 	protected static class DefaultEndpointLocatorConfiguration {
 
 		@Autowired(required=false)
@@ -97,13 +98,15 @@ public class ZipkinAutoConfiguration {
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName);
+			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName, new LocalAdressResolver());
 		}
 
 	}
 
 	@Configuration
 	@ConditionalOnClass(DiscoveryClient.class)
+	@ConditionalOnMissingBean(EndpointLocator.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "true")
 	protected static class DiscoveryClientEndpointLocatorConfiguration {
 
 		@Autowired(required=false)
@@ -118,7 +121,7 @@ public class ZipkinAutoConfiguration {
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName));
+					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,new LocalAdressResolver()));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {

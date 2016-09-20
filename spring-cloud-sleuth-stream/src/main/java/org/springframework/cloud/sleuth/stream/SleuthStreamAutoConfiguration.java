@@ -22,7 +22,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,6 +31,7 @@ import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
+import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -44,11 +44,10 @@ import org.springframework.scheduling.support.PeriodicTrigger;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for sending spans over Spring Cloud Stream. This is for
- * the producer (via {@link SleuthSource}). A consumer can enable binding to
- * {@link SleuthSink} and receive the messages coming from the source (they have
- * the same channel name so there is no additional configuration to do by
- * default).
+ * Auto-configuration} for sending spans over Spring Cloud Stream. This is for the
+ * producer (via {@link SleuthSource}). A consumer can enable binding to
+ * {@link SleuthSink} and receive the messages coming from the source (they have the same
+ * channel name so there is no additional configuration to do by default).
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -69,7 +68,8 @@ public class SleuthStreamAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = SleuthSource.OUTPUT, order = Ordered.HIGHEST_PRECEDENCE)
-	public ChannelInterceptor zipkinChannelInterceptor(SpanMetricReporter spanMetricReporter) {
+	public ChannelInterceptor zipkinChannelInterceptor(
+			SpanMetricReporter spanMetricReporter) {
 		return new TracerIgnoringChannelInterceptor(spanMetricReporter);
 	}
 
@@ -90,7 +90,8 @@ public class SleuthStreamAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnMissingClass("org.springframework.cloud.client.discovery.DiscoveryClient")
+	@ConditionalOnMissingBean(HostLocator.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "false", matchIfMissing = true)
 	protected static class DefaultEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
@@ -101,13 +102,16 @@ public class SleuthStreamAutoConfiguration {
 
 		@Bean
 		public HostLocator zipkinEndpointLocator() {
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName,
+					new LocalAdressResolver());
 		}
 
 	}
 
 	@Configuration
 	@ConditionalOnClass(DiscoveryClient.class)
+	@ConditionalOnMissingBean(HostLocator.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "true")
 	protected static class DiscoveryClientEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
@@ -124,7 +128,8 @@ public class SleuthStreamAutoConfiguration {
 			if (this.client != null) {
 				return new DiscoveryClientHostLocator(this.client);
 			}
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName,
+					new LocalAdressResolver());
 		}
 
 	}
