@@ -1,5 +1,9 @@
 package org.springframework.cloud.sleuth.zipkin;
 
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -15,16 +19,11 @@ import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
-import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.web.client.RestTemplate;
 
 import zipkin.Span;
 import zipkin.junit.HttpFailure;
 import zipkin.junit.ZipkinRule;
-
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
 
 public class HttpZipkinSpanReporterTest {
 
@@ -129,7 +128,7 @@ public class HttpZipkinSpanReporterTest {
 		AtomicReference<Span> receivedSpan = new AtomicReference<>();
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
 				new NoOpSpanLogger(), new ZipkinSpanListener(receivedSpan::set,
-				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo",mockResolver())));
+				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo")));
 		// tag::service_name[]
 		org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
 		try {
@@ -174,9 +173,5 @@ public class HttpZipkinSpanReporterTest {
 		return restTemplate(zipkinProperties);
 	}
 
-	private LocalAdressResolver mockResolver(){
-		LocalAdressResolver spy = Mockito.spy(new LocalAdressResolver());
-		Mockito.when(spy.getLocalIp4AddressAsInt()).thenReturn(127 << 24 | 1);
-		return spy;
-	}
+
 }
