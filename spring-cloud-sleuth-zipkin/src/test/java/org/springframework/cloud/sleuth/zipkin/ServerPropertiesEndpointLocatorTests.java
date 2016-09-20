@@ -16,22 +16,20 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.cloud.sleuth.util.LocalAdressResolver;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 
 public class ServerPropertiesEndpointLocatorTests {
 
 	@Test
 	public void portDefaultsTo8080() {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown",mockResolver(127 << 24 | 1));
+				new ServerProperties(), "unknown");
 
 		assertThat(locator.local().port).isEqualTo((short) 8080);
 	}
@@ -42,7 +40,7 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setPort(1234);
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown",mockResolver(127 << 24 | 1));
+				properties, "unknown");
 
 		assertThat(locator.local().port).isEqualTo((short) 1234);
 	}
@@ -50,9 +48,19 @@ public class ServerPropertiesEndpointLocatorTests {
 	@Test
 	public void portDefaultsToLocalhost() {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown",mockResolver(129 << 24 | 1));
+				new ServerProperties(), "unknown"){
+			@Override
+			InetAddress getFirstNonLoopbackAddress() {
+				try {
+					return InetAddress.getByAddress("1.2.3.4", new byte[] { 1, 2, 3, 4 });
+				}
+				catch (UnknownHostException e) {
+					throw new RuntimeException();
+				}
+			}
+		};
 
-		assertThat(locator.local().ipv4).isEqualTo(129 << 24 | 1);
+		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
 	}
 
 	@Test
@@ -61,14 +69,10 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", mockResolver(127 << 24 | 1));
+				properties, "unknown");
 
 		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
 	}
 
-	private LocalAdressResolver mockResolver(int address){
-		LocalAdressResolver spy = Mockito.spy(new LocalAdressResolver());
-		Mockito.when(spy.getLocalIp4AddressAsInt()).thenReturn(address);
-		return spy;
-	}
+
 }

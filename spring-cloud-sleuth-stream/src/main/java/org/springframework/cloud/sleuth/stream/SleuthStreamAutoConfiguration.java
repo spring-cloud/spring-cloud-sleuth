@@ -31,7 +31,6 @@ import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
-import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -102,8 +101,7 @@ public class SleuthStreamAutoConfiguration {
 
 		@Bean
 		public HostLocator zipkinEndpointLocator() {
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName,
-					new LocalAdressResolver());
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
 		}
 
 	}
@@ -128,8 +126,7 @@ public class SleuthStreamAutoConfiguration {
 			if (this.client != null) {
 				return new DiscoveryClientHostLocator(this.client);
 			}
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName,
-					new LocalAdressResolver());
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
 		}
 
 	}

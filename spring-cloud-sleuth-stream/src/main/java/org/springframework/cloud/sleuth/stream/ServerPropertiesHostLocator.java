@@ -18,10 +18,13 @@ package org.springframework.cloud.sleuth.stream;
 
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
+
+import java.net.InetAddress;
 
 /**
  * A {@link HostLocator} that retrieves:
@@ -38,15 +41,14 @@ import org.springframework.util.Assert;
 public class ServerPropertiesHostLocator implements HostLocator {
 
 	private final ServerProperties serverProperties; // Nullable
-	private final LocalAdressResolver localAdressResolver;
 	private final String appName;
+	private final InetUtils inetUtils = new InetUtils(new InetUtilsProperties());
 	private Integer port; // Lazy assigned
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
-			String appName,LocalAdressResolver localAdressResolver) {
+			String appName) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
-		this.localAdressResolver = localAdressResolver;
 		Assert.notNull(this.appName, "appName");
 	}
 
@@ -83,9 +85,13 @@ public class ServerPropertiesHostLocator implements HostLocator {
 			address = this.serverProperties.getAddress().getHostAddress();
 		}
 		else {
-			address = this.localAdressResolver.getLocalIp4AddressAsString();
+			address = getFirstNonLoopbackAddress().getHostAddress();
 		}
 		return address;
+	}
+
+	InetAddress getFirstNonLoopbackAddress() {
+		return this.inetUtils.findFirstNonLoopbackAddress();
 	}
 
 	private String getServiceName(Span span) {

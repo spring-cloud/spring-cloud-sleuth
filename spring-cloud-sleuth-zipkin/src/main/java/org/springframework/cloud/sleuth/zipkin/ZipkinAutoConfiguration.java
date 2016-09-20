@@ -31,7 +31,6 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
-import org.springframework.cloud.sleuth.util.LocalAdressResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -98,7 +97,7 @@ public class ZipkinAutoConfiguration {
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName, new LocalAdressResolver());
+			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName);
 		}
 
 	}
@@ -121,7 +120,7 @@ public class ZipkinAutoConfiguration {
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,new LocalAdressResolver()));
+					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {

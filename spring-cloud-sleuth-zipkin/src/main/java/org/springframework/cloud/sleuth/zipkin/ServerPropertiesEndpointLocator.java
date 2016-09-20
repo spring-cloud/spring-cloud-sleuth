@@ -16,9 +16,13 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import org.springframework.cloud.sleuth.util.LocalAdressResolver;
+import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.event.EventListener;
 
 import zipkin.Endpoint;
@@ -38,14 +42,13 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	private final ServerProperties serverProperties;
 	private final String appName;
+	private final InetUtils inetUtils = new InetUtils(new InetUtilsProperties());
 	private Integer port;
-	private final LocalAdressResolver localAdressResolver;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-			String appName,LocalAdressResolver localAdressResolver) {
+			String appName) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
-		this.localAdressResolver = localAdressResolver;
 	}
 
 	@Override
@@ -76,10 +79,17 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	private int getAddress() {
 		if (this.serverProperties != null && this.serverProperties.getAddress() != null) {
-			return this.localAdressResolver.asInt(this.serverProperties.getAddress());
+			return ByteBuffer.wrap(this.serverProperties.getAddress().getAddress())
+					.getInt();
 		}
 		else {
-			return this.localAdressResolver.getLocalIp4AddressAsInt();
+			return ByteBuffer
+					.wrap(getFirstNonLoopbackAddress().getAddress())
+					.getInt();
 		}
+	}
+
+	InetAddress getFirstNonLoopbackAddress() {
+		return this.inetUtils.findFirstNonLoopbackAddress();
 	}
 }
