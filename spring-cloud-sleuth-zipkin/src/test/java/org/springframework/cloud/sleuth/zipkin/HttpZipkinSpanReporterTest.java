@@ -9,8 +9,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
@@ -27,16 +28,16 @@ import zipkin.junit.ZipkinRule;
 
 public class HttpZipkinSpanReporterTest {
 
-	@Rule public final ZipkinRule zipkin = new ZipkinRule();
+	@Rule
+	public final ZipkinRule zipkin = new ZipkinRule();
 	InMemorySpanCounter inMemorySpanCounter = new InMemorySpanCounter();
-	SpanMetricReporter spanMetricReporter = new CounterServiceBasedSpanMetricReporter("accepted", "dropped",
-			this.inMemorySpanCounter);
+	SpanMetricReporter spanMetricReporter = new CounterServiceBasedSpanMetricReporter(
+			"accepted", "dropped", this.inMemorySpanCounter);
 	RestTemplate restTemplate = defaultRestTemplate();
 
-	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(restTemplate, this.zipkin.httpUrl(),
-			0, // so that tests can drive flushing explicitly
-			this.spanMetricReporter
-	);
+	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(restTemplate,
+			this.zipkin.httpUrl(), 0, // so that tests can drive flushing explicitly
+			this.spanMetricReporter);
 
 	@Test
 	public void reportDoesntDoIO() throws Exception {
@@ -72,18 +73,15 @@ public class HttpZipkinSpanReporterTest {
 		// Ensure only one request was sent
 		assertThat(this.zipkin.httpRequestCount()).isEqualTo(1);
 
-		assertThat(this.zipkin.getTraces()).containsExactly(
-				asList(span(1L, "foo")),
-				asList(span(2L, "bar"))
-		);
+		assertThat(this.zipkin.getTraces()).containsExactly(asList(span(1L, "foo")),
+				asList(span(2L, "bar")));
 	}
 
 	@Test
 	public void postsCompressedSpans() throws Exception {
-		this.reporter = new HttpZipkinSpanReporter(restTemplateWithCompression(), this.zipkin.httpUrl(),
-				0, // so that tests can drive flushing explicitly
-				this.spanMetricReporter
-		);
+		this.reporter = new HttpZipkinSpanReporter(restTemplateWithCompression(),
+				this.zipkin.httpUrl(), 0, // so that tests can drive flushing explicitly
+				this.spanMetricReporter);
 
 		this.reporter.report(span(1L, "foo"));
 		this.reporter.report(span(2L, "bar"));
@@ -93,10 +91,8 @@ public class HttpZipkinSpanReporterTest {
 		// Ensure only one request was sent
 		assertThat(this.zipkin.httpRequestCount()).isEqualTo(1);
 
-		assertThat(this.zipkin.getTraces()).containsExactly(
-				asList(span(1L, "foo")),
-				asList(span(2L, "bar"))
-		);
+		assertThat(this.zipkin.getTraces()).containsExactly(asList(span(1L, "foo")),
+				asList(span(2L, "bar")));
 	}
 
 	@Test
@@ -126,9 +122,11 @@ public class HttpZipkinSpanReporterTest {
 	@Test
 	public void should_change_the_service_name_in_zipkin_to_the_manually_provided_one() {
 		AtomicReference<Span> receivedSpan = new AtomicReference<>();
-		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
-				new NoOpSpanLogger(), new ZipkinSpanListener(receivedSpan::set,
-				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo")));
+		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				new DefaultSpanNamer(), new NoOpSpanLogger(),
+				new ZipkinSpanListener(receivedSpan::set,
+						new ServerPropertiesEndpointLocator(new ServerProperties(), "foo",
+								new InetUtils(new InetUtilsProperties()))));
 		// tag::service_name[]
 		org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
 		try {
@@ -137,7 +135,8 @@ public class HttpZipkinSpanReporterTest {
 			newSpan.logEvent(org.springframework.cloud.sleuth.Span.CLIENT_SEND);
 			// call redis service e.g
 			// return (SomeObj) redisTemplate.opsForHash().get("MYHASH", someObjKey);
-		} finally {
+		}
+		finally {
 			newSpan.tag("peer.service", "redisService");
 			newSpan.tag("peer.ipv4", "1.2.3.4");
 			newSpan.tag("peer.port", "1234");
@@ -172,6 +171,5 @@ public class HttpZipkinSpanReporterTest {
 		zipkinProperties.getCompression().setEnabled(true);
 		return restTemplate(zipkinProperties);
 	}
-
 
 }

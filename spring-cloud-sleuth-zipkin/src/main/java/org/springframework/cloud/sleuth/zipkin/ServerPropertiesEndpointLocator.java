@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.event.EventListener;
 
 import zipkin.Endpoint;
@@ -42,13 +41,14 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	private final ServerProperties serverProperties;
 	private final String appName;
-	private final InetUtils inetUtils = new InetUtils(new InetUtilsProperties());
+	private final InetUtils inetUtils;
 	private Integer port;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-			String appName) {
+			String appName, InetUtils inetUtils) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
+		this.inetUtils = inetUtils;
 	}
 
 	@Override
@@ -83,13 +83,11 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 					.getInt();
 		}
 		else {
-			return ByteBuffer
-					.wrap(getFirstNonLoopbackAddress().getAddress())
-					.getInt();
+			return ByteBuffer.wrap(getFirstNonLoopbackAddress().getAddress()).getInt();
 		}
 	}
 
-	InetAddress getFirstNonLoopbackAddress() {
+	private InetAddress getFirstNonLoopbackAddress() {
 		return this.inetUtils.findFirstNonLoopbackAddress();
 	}
 }
