@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
@@ -100,8 +101,9 @@ public class SleuthStreamAutoConfiguration {
 		private String appName;
 
 		@Bean
-		public HostLocator zipkinEndpointLocator() {
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
+		public HostLocator zipkinEndpointLocator(InetUtils inetUtils) {
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName,
+					inetUtils);
 		}
 
 	}
@@ -122,11 +124,12 @@ public class SleuthStreamAutoConfiguration {
 		private DiscoveryClient client;
 
 		@Bean
-		public HostLocator zipkinEndpointLocator() {
+		public HostLocator zipkinEndpointLocator(InetUtils inetUtils) {
 			if (this.client != null) {
 				return new DiscoveryClientHostLocator(this.client);
 			}
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName,
+					inetUtils);
 		}
 
 	}

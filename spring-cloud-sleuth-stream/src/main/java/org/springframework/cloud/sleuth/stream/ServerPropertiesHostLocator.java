@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.stream;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
@@ -30,9 +29,10 @@ import java.net.InetAddress;
  * A {@link HostLocator} that retrieves:
  *
  * <ul>
- *     <li><b>service name</b> - either from {@link Span#getProcessId()} or current application name</li>
- *     <li><b>address</b> - from {@link ServerProperties}</li>
- *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
+ * <li><b>service name</b> - either from {@link Span#getProcessId()} or current
+ * application name</li>
+ * <li><b>address</b> - from {@link ServerProperties}</li>
+ * <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
  * @author Dave Syer
@@ -42,13 +42,14 @@ public class ServerPropertiesHostLocator implements HostLocator {
 
 	private final ServerProperties serverProperties; // Nullable
 	private final String appName;
-	private final InetUtils inetUtils = new InetUtils(new InetUtilsProperties());
+	private final InetUtils inetUtils;
 	private Integer port; // Lazy assigned
 
-	public ServerPropertiesHostLocator(ServerProperties serverProperties,
-			String appName) {
+	public ServerPropertiesHostLocator(ServerProperties serverProperties, String appName,
+			InetUtils inetUtils) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
+		this.inetUtils = inetUtils;
 		Assert.notNull(this.appName, "appName");
 	}
 
@@ -90,7 +91,7 @@ public class ServerPropertiesHostLocator implements HostLocator {
 		return address;
 	}
 
-	InetAddress getFirstNonLoopbackAddress() {
+	private InetAddress getFirstNonLoopbackAddress() {
 		return this.inetUtils.findFirstNonLoopbackAddress();
 	}
 

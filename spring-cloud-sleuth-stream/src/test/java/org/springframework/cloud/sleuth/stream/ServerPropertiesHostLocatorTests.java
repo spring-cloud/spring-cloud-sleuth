@@ -25,45 +25,38 @@ import java.util.Collections;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.Span;
 
 public class ServerPropertiesHostLocatorTests {
+	public static final byte[] ADR1234 = { 1, 2, 3, 4 };
 	Span span = new Span(1, 3, "http:name", 1L, Collections.<Long> emptyList(), 2L, true,
 			true, "process");
 
 	@Test
-	public void portDefaultsTo8080() {
+	public void portDefaultsTo8080() throws UnknownHostException {
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(
-				new ServerProperties(), "unknown");
+				new ServerProperties(), "unknown", localAddress(ADR1234));
 
 		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 8080);
 	}
 
 	@Test
-	public void portFromServerProperties() {
+	public void portFromServerProperties() throws UnknownHostException {
 		ServerProperties properties = new ServerProperties();
 		properties.setPort(1234);
 
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
-				"unknown");
+				"unknown", localAddress(ADR1234));
 
 		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 1234);
 	}
 
 	@Test
-	public void portDefaultsToLocalhost() {
+	public void portDefaultsToLocalhost() throws UnknownHostException {
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(
-				new ServerProperties(), "unknown") {
-			@Override
-			InetAddress getFirstNonLoopbackAddress() {
-				try {
-					return InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 });
-				}
-				catch (UnknownHostException e) {
-					throw new RuntimeException();
-				}
-			}
-		};
+				new ServerProperties(), "unknown", localAddress(ADR1234));
 
 		assertThat(locator.locate(this.span).getAddress()).isEqualTo("1.2.3.4");
 	}
@@ -71,12 +64,19 @@ public class ServerPropertiesHostLocatorTests {
 	@Test
 	public void hostFromServerPropertiesIp() throws UnknownHostException {
 		ServerProperties properties = new ServerProperties();
-		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
+		properties.setAddress(InetAddress.getByAddress(ADR1234));
 
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
-				"unknown");
+				"unknown", localAddress(new byte[] { 1, 1, 1, 1 }));
 
 		assertThat(locator.locate(this.span).getAddress()).isEqualTo("1.2.3.4");
+	}
+
+	private InetUtils localAddress(byte[] address) throws UnknownHostException {
+		InetUtils mocked = Mockito.spy(new InetUtils(new InetUtilsProperties()));
+		Mockito.when(mocked.findFirstNonLoopbackAddress())
+				.thenReturn(InetAddress.getByAddress(address));
+		return mocked;
 	}
 
 }

@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -36,13 +37,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables reporting to Zipkin via HTTP. Has a default {@link Sampler} set as
- * {@link PercentageBasedSampler}.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} enables reporting to Zipkin via HTTP. Has a default {@link Sampler}
+ * set as {@link PercentageBasedSampler}.
  *
- * The {@link ZipkinRestTemplateCustomizer} allows you to customize the {@link RestTemplate}
- * that is used to send Spans to Zipkin. Its default implementation - {@link DefaultZipkinRestTemplateCustomizer}
- * adds the GZip compression.
+ * The {@link ZipkinRestTemplateCustomizer} allows you to customize the
+ * {@link RestTemplate} that is used to send Spans to Zipkin. Its default implementation -
+ * {@link DefaultZipkinRestTemplateCustomizer} adds the GZip compression.
  *
  * @author Spencer Gibb
  * @since 1.0.0
@@ -52,24 +53,26 @@ import org.springframework.web.client.RestTemplate;
  * @see DefaultZipkinRestTemplateCustomizer
  */
 @Configuration
-@EnableConfigurationProperties({ZipkinProperties.class, SamplerProperties.class})
+@EnableConfigurationProperties({ ZipkinProperties.class, SamplerProperties.class })
 @ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin,
+	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter,
+			ZipkinProperties zipkin,
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = new RestTemplate();
 		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return new HttpZipkinSpanReporter(restTemplate, zipkin.getBaseUrl(), zipkin.getFlushInterval(),
-				spanMetricReporter);
+		return new HttpZipkinSpanReporter(restTemplate, zipkin.getBaseUrl(),
+				zipkin.getFlushInterval(), spanMetricReporter);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
+	public ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer(
+			ZipkinProperties zipkinProperties) {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
@@ -80,7 +83,8 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
+	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter,
+			EndpointLocator endpointLocator) {
 		return new ZipkinSpanListener(reporter, endpointLocator);
 	}
 
@@ -89,15 +93,16 @@ public class ZipkinAutoConfiguration {
 	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "false", matchIfMissing = true)
 	protected static class DefaultEndpointLocatorConfiguration {
 
-		@Autowired(required=false)
+		@Autowired(required = false)
 		private ServerProperties serverProperties;
 
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Bean
-		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName);
+		public EndpointLocator zipkinEndpointLocator(InetUtils inetUtils) {
+			return new ServerPropertiesEndpointLocator(this.serverProperties,
+					this.appName, inetUtils);
 		}
 
 	}
@@ -108,23 +113,24 @@ public class ZipkinAutoConfiguration {
 	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "true")
 	protected static class DiscoveryClientEndpointLocatorConfiguration {
 
-		@Autowired(required=false)
+		@Autowired(required = false)
 		private ServerProperties serverProperties;
 
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
-		@Autowired(required=false)
+		@Autowired(required = false)
 		private DiscoveryClient client;
 
 		@Bean
-		public EndpointLocator zipkinEndpointLocator() {
+		public EndpointLocator zipkinEndpointLocator(InetUtils inetUtils) {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName));
+					new ServerPropertiesEndpointLocator(this.serverProperties,
+							this.appName, inetUtils));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
-			if (this.client!=null) {
+			if (this.client != null) {
 				return new DiscoveryClientEndpointLocator(this.client);
 			}
 			return null;
