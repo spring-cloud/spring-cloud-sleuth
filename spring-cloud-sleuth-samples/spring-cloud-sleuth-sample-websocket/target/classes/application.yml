@@ -1,0 +1,10 @@
+server:
+  port: 3383
+
+spring:
+  application:
+    name: testSleuthWebsocket
+
+sample:
+  zipkin:
+#   enabled: false

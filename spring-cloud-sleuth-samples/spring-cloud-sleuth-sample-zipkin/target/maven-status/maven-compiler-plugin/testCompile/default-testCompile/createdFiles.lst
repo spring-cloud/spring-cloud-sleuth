@@ -1,0 +1,4 @@
+integration/ZipkinTests$ZipkinServer.class
+integration/ZipkinTests$WaitUntilZipkinIsUpConfig.class
+sample/SampleSleuthApplicationTests.class
+integration/ZipkinTests.class

@@ -1,0 +1,4 @@
+integration/IntegrationTestZipkinSpanReporter.class
+integration/MessagingApplicationTests.class
+sample/SampleMessagingApplicationTests.class
+integration/MessagingApplicationTests$IntegrationSpanCollectorConfig.class

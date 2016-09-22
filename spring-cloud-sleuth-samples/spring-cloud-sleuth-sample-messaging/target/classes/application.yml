@@ -1,0 +1,13 @@
+server:
+  port: 3381
+
+spring:
+  application:
+    name: testSleuthMessaging
+  sleuth:
+    log:
+      json:
+
+sample:
+  zipkin:
+#   enabled: false

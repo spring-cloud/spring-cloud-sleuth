@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="6.11.2">
+<file name="/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-test-core/src/main/java/org/springframework/cloud/sleuth/trace/IntegrationTestSpanContextHolder.java">
+</file>
+<file name="/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-test-core/src/main/java/tools/AssertingRestTemplate.java">
+</file>
+<file name="/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-test-core/src/main/java/tools/RequestSendingRunnable.java">
+</file>
+<file name="/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-test-core/src/main/java/tools/AbstractIntegrationTest.java">
+</file>
+</checkstyle>

@@ -1,0 +1,16 @@
+org/springframework/cloud/sleuth/stream/SleuthStreamAutoConfiguration.class
+org/springframework/cloud/sleuth/stream/SleuthSink.class
+META-INF/spring-configuration-metadata.json
+org/springframework/cloud/sleuth/stream/Host.class
+org/springframework/cloud/sleuth/stream/HostLocator.class
+org/springframework/cloud/sleuth/stream/SleuthSource.class
+org/springframework/cloud/sleuth/stream/SleuthStreamProperties.class
+org/springframework/cloud/sleuth/stream/SleuthStreamAutoConfiguration$DiscoveryClientEndpointLocatorConfiguration.class
+org/springframework/cloud/sleuth/stream/StreamEnvironmentPostProcessor.class
+org/springframework/cloud/sleuth/stream/TracerIgnoringChannelInterceptor.class
+org/springframework/cloud/sleuth/stream/DiscoveryClientHostLocator.class
+org/springframework/cloud/sleuth/stream/StreamSpanReporter.class
+org/springframework/cloud/sleuth/stream/ServerPropertiesHostLocator.class
+org/springframework/cloud/sleuth/stream/SleuthStreamAutoConfiguration$DefaultEndpointLocatorConfiguration.class
+org/springframework/cloud/sleuth/stream/Spans.class
+org/springframework/cloud/sleuth/stream/SleuthStreamProperties$Poller.class

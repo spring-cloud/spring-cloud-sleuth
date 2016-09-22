@@ -1,0 +1,43 @@
+{
+  "groups": [
+    {
+      "name": "spring.sleuth.stream",
+      "type": "org.springframework.cloud.sleuth.stream.SleuthStreamProperties",
+      "sourceType": "org.springframework.cloud.sleuth.stream.SleuthStreamProperties"
+    },
+    {
+      "name": "spring.sleuth.stream.poller",
+      "type": "org.springframework.cloud.sleuth.stream.SleuthStreamProperties$Poller",
+      "sourceType": "org.springframework.cloud.sleuth.stream.SleuthStreamProperties",
+      "sourceMethod": "getPoller()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.sleuth.stream.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "org.springframework.cloud.sleuth.stream.SleuthStreamProperties",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.stream.group",
+      "type": "java.lang.String",
+      "sourceType": "org.springframework.cloud.sleuth.stream.SleuthStreamProperties"
+    },
+    {
+      "name": "spring.sleuth.stream.poller.fixed-delay",
+      "type": "java.lang.Long",
+      "description": "Fixed delay (ms). Default: 1000",
+      "sourceType": "org.springframework.cloud.sleuth.stream.SleuthStreamProperties$Poller",
+      "defaultValue": 1000
+    },
+    {
+      "name": "spring.sleuth.stream.poller.max-messages-per-poll",
+      "type": "java.lang.Integer",
+      "description": "Max messages per poll. Default: -1 (unbounded)",
+      "sourceType": "org.springframework.cloud.sleuth.stream.SleuthStreamProperties$Poller",
+      "defaultValue": -1
+    }
+  ],
+  "hints": []
+}

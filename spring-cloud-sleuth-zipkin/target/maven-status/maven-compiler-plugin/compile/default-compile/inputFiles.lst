@@ -1,0 +1,13 @@
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/ReporterMetricsAdapter.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/ZipkinRestTemplateCustomizer.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/RestTemplateSender.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/DefaultZipkinRestTemplateCustomizer.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/ZipkinAutoConfiguration.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/FallbackHavingEndpointLocator.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/ZipkinSpanListener.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/ZipkinSpanReporter.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/DiscoveryClientEndpointLocator.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/HttpZipkinSpanReporter.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/EndpointLocator.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/ZipkinProperties.java
+/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin/src/main/java/org/springframework/cloud/sleuth/zipkin/ServerPropertiesEndpointLocator.java

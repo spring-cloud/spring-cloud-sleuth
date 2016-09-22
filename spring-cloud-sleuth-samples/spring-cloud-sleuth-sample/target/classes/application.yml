@@ -1,0 +1,6 @@
+server:
+  port: 3379
+
+spring:
+  application:
+    name: testSleuthApp

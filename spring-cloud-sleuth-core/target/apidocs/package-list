@@ -1,0 +1,17 @@
+org.springframework.cloud.sleuth
+org.springframework.cloud.sleuth.autoconfig
+org.springframework.cloud.sleuth.instrument.async
+org.springframework.cloud.sleuth.instrument.hystrix
+org.springframework.cloud.sleuth.instrument.messaging
+org.springframework.cloud.sleuth.instrument.messaging.websocket
+org.springframework.cloud.sleuth.instrument.rxjava
+org.springframework.cloud.sleuth.instrument.scheduling
+org.springframework.cloud.sleuth.instrument.web
+org.springframework.cloud.sleuth.instrument.web.client
+org.springframework.cloud.sleuth.instrument.web.client.feign
+org.springframework.cloud.sleuth.instrument.zuul
+org.springframework.cloud.sleuth.log
+org.springframework.cloud.sleuth.metric
+org.springframework.cloud.sleuth.sampler
+org.springframework.cloud.sleuth.trace
+org.springframework.cloud.sleuth.util

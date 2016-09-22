@@ -1,0 +1,9 @@
+org/springframework/cloud/sleuth/zipkin/DiscoveryClientEndpointLocatorTest.class
+org/springframework/cloud/sleuth/zipkin/ZipkinSpanListenerTests.class
+org/springframework/cloud/sleuth/zipkin/FallbackHavingEndpointLocatorTests.class
+org/springframework/cloud/sleuth/zipkin/ZipkinSpanListenerTests$TestConfiguration.class
+org/springframework/cloud/sleuth/zipkin/InMemorySpanCounter.class
+org/springframework/cloud/sleuth/zipkin/ServerPropertiesEndpointLocatorTests.class
+org/springframework/cloud/sleuth/zipkin/DiscoveryClientEndpointLocatorTest$1.class
+org/springframework/cloud/sleuth/zipkin/DiscoveryClientEndpointLocatorTest$2.class
+org/springframework/cloud/sleuth/zipkin/HttpZipkinSpanReporterTest.class

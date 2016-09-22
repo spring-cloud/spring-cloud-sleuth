@@ -1,0 +1,36 @@
+server:
+  port: 3382
+
+sample:
+  zipkin:
+    enabled: false
+
+spring:
+  application:
+    name: testSleuthRibbon
+
+zipkin:
+  ribbon:
+    listOfServers: localhost:3380
+messaging:
+  ribbon:
+    listOfServers: localhost:3381
+vanilla:
+  ribbon:
+    listOfServers: localhost:3379
+
+# This doesn't do anything in this app (no service discovery), but it's here as a 
+# reminder that you need it if the routes are discovered
+hystrix:
+  execution:
+    isolation:
+      strategy: SEMAPHORE
+
+zuul:
+  routes:
+    zipkin:
+      url: http://localhost:3380
+    messaging:
+      url: http://localhost:3381
+    vanilla:
+      url: http://localhost:3379

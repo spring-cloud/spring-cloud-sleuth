@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="6.11.2">
+<file name="/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample/src/main/java/sample/SampleSleuthApplication.java">
+</file>
+<file name="/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample/src/main/java/sample/SampleBackground.java">
+</file>
+<file name="/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample/src/main/java/sample/SampleController.java">
+</file>
+</checkstyle>
