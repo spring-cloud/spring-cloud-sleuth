@@ -34,7 +34,7 @@ public class ArrayListSpanAccumulator implements SpanReporter {
 
 	public List<Span> getSpans() {
 		synchronized (this.spans) {
-			return this.spans;
+			return new ArrayList<>(this.spans);
 		}
 	}
 
