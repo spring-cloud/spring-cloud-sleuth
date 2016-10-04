@@ -16,11 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Executor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -34,8 +31,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * @since 1.0.10
  */
 class TraceExecutorBeanPostProcessor implements BeanPostProcessor {
-
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final BeanFactory beanFactory;
 

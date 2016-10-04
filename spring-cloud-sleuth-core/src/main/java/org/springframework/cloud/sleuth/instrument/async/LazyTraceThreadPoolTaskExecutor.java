@@ -32,7 +32,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.concurrent.ListenableFuture;
 
 /**
- * {@link ThreadPoolTaskExecutor} that delegates execution to {@link LazyTraceExecutor}
+ * {@link ThreadPoolTaskExecutor} that continues a span if one was passed or creates a new one
  *
  * @author Marcin Grzejszczak
  * @since 1.0.10
