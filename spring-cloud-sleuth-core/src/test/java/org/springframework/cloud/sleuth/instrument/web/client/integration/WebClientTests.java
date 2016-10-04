@@ -114,7 +114,7 @@ public class WebClientTests {
 		then(getHeader(response, Span.TRACE_ID_NAME)).isNull();
 		then(getHeader(response, Span.SPAN_ID_NAME)).isNull();
 		then(this.listener.getSpans()).isNotEmpty();
-		Optional<Span> noTraceSpan = this.listener.getSpans().stream().filter(span ->
+		Optional<Span> noTraceSpan = new ArrayList<>(this.listener.getSpans()).stream().filter(span ->
 				"http:/notrace".equals(span.getName()) && !span.tags().isEmpty()).findFirst();
 		then(noTraceSpan.isPresent()).isTrue();
 		// TODO: matches cause there is an issue with Feign not providing the full URL at the interceptor level
