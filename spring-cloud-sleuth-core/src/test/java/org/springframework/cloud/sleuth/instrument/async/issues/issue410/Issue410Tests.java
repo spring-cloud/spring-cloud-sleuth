@@ -45,6 +45,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.jayway.awaitility.Awaitility;
+
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -68,8 +70,10 @@ public class Issue410Tests {
 		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/without_pool", String.class);
 
 		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
-		then(this.asyncTask.getSpan().get()).isNotNull();
-		then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+		Awaitility.await().until(() -> {
+			then(this.asyncTask.getSpan().get()).isNotNull();
+			then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+		});
 	}
 
 	@Test
@@ -79,8 +83,10 @@ public class Issue410Tests {
 		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
 
 		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
-		then(this.asyncTask.getSpan().get()).isNotNull();
-		then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+		Awaitility.await().until(() -> {
+			then(this.asyncTask.getSpan().get()).isNotNull();
+			then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+		});
 	}
 
 	private int port() {
