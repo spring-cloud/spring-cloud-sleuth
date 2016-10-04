@@ -73,6 +73,14 @@ public class TraceCallable<V> implements Callable<V> {
 		this.tracer.close(span);
 	}
 
+	protected Span continueSpan(Span span) {
+		return this.tracer.continueSpan(span);
+	}
+
+	protected Span detachSpan(Span span) {
+		return this.tracer.detach(span);
+	}
+
 	public Tracer getTracer() {
 		return this.tracer;
 	}
