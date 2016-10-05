@@ -30,6 +30,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -167,6 +168,16 @@ public class DefaultTracerTests {
 		Span span = tracer.createChild(null, "childName");
 
 		assertThat(span.isExportable()).isFalse();
+	}
+
+	@Test
+	public void samplingIsRanAgainstChildSpanWhenThereIsNoParent() {
+		DefaultTracer tracer = new DefaultTracer(new NeverSampler(), new Random(),
+				this.spanNamer, this.spanLogger, this.spanReporter);
+
+		Span span = tracer.createChild(null, "childName");
+
+		SleuthAssertions.assertThat(span.isExportable()).isFalse();
 	}
 
 	@Test
