@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.zipkin.stream;
 
 import java.util.Collections;
-
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
@@ -30,7 +29,10 @@ public class ZipkinMessageListenerTests {
 	Span span = new Span(1, 3, "http:name", 1L, Collections.<Long>emptyList(), 2L, true, true,
 			"process");
 	Host host = new Host("myservice", "1.2.3.4", 8080);
-	Endpoint endpoint = Endpoint.create("myservice", 1 << 24 | 2 << 16 | 3 << 8 | 4, 8080);
+	Endpoint endpoint = Endpoint.builder()
+			.serviceName("myservice")
+			.ipv4(1 << 24 | 2 << 16 | 3 << 8 | 4)
+			.port(8080).build();
 
 	/** Sleuth timestamps are millisecond granularity while zipkin is microsecond. */
 	@Test

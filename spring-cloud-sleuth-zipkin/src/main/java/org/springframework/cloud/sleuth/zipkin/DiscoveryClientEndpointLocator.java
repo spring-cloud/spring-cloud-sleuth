@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.zipkin;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
-
 import zipkin.Endpoint;
 
 /**
@@ -43,7 +42,10 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 		if (instance == null) {
 			throw new NoServiceInstanceAvailableException();
 		}
-		return Endpoint.create(instance.getServiceId(), getIpAddress(instance), instance.getPort());
+		return Endpoint.builder()
+				.serviceName(instance.getServiceId())
+				.ipv4(getIpAddress(instance))
+				.port(instance.getPort()).build();
 	}
 
 	private int getIpAddress(ServiceInstance instance) {
