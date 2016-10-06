@@ -15,7 +15,8 @@ public class FallbackHavingEndpointLocatorTests {
 
 	@Mock DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
 	@Mock ServerPropertiesEndpointLocator serverPropertiesEndpointLocator;
-	Endpoint expectedEndpoint = Endpoint.create("my-tomcat", 127 << 24 | 1, 8080);
+	Endpoint expectedEndpoint = Endpoint.builder()
+			.serviceName("my-tomcat").ipv4(127 << 24 | 1).port(8080).build();
 
 	@Test
 	public void should_use_system_property_locator_if_discovery_client_locator_is_not_present() {
