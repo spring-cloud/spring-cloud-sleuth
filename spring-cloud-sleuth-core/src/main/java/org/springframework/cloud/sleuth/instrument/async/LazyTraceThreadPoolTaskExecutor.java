@@ -37,6 +37,7 @@ import org.springframework.util.concurrent.ListenableFuture;
  * @author Marcin Grzejszczak
  * @since 1.0.10
  */
+@SuppressWarnings("serial")
 public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
@@ -81,6 +82,17 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
 		return this.delegate.submitListenable(new SpanContinuingTraceCallable<>(tracer(), traceKeys(), spanNamer(), task));
+	}
+
+	public void destroy() {
+		this.delegate.destroy();
+		super.destroy();
+	}
+
+	@Override
+	public void afterPropertiesSet() {
+		this.delegate.afterPropertiesSet();
+		super.afterPropertiesSet();
 	}
 
 	private Tracer tracer() {
