@@ -44,6 +44,7 @@ import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -115,6 +116,15 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(spanId).isNotNull();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 		then(this.span.isExportable()).isFalse();
+	}
+
+	@Test
+	public void messageHeadersStillMutable() {
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
+		assertNotNull("message was null", this.message);
+		MessageHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class);
+		assertNotNull("Message header accessor should be still available", accessor);
 	}
 
 	@Test
