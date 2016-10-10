@@ -26,7 +26,9 @@ import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 
 /**
  * A channel interceptor that automatically starts / continues / closes and detaches
@@ -84,7 +86,9 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			messageBuilder.setHeader(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT, true);
 		}
 		getSpanInjector().inject(span, messageBuilder);
-		return messageBuilder.build();
+		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
+		headers.copyHeaders(messageBuilder.build().getHeaders());
+		return new GenericMessage<Object>(message.getPayload(), headers.getMessageHeaders());
 	}
 
 	private Span startSpan(Span span, String name, Message<?> message) {
