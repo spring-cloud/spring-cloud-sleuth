@@ -159,7 +159,7 @@ Fortunately, for the asynchronous processing you can provide explicit naming.
 
 === @SpanName annotation
 
-You can do name the span explicitly via the `@SpanName` annotation.
+You can name the span explicitly via the `@SpanName` annotation.
 
 [source,java]
 ----
