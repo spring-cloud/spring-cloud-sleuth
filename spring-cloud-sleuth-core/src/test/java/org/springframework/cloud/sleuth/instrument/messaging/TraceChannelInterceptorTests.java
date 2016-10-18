@@ -282,7 +282,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		then(traceId).isNull();
 
-		then(accumulator.getSpans()).isEmpty();
+		then(this.accumulator.getSpans()).isEmpty();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
@@ -298,6 +298,18 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		long traceId = Span.hexToId(this.message.getHeaders()
 				.get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(Span.hexToId(lower64Bits));
+	}
+
+	@Test
+	public void shouldNotBreakWhenInvalidHeadersAreSent() {
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader(TraceMessageHeaders.PARENT_ID_NAME, "-")
+				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
+
+		then(this.message).isNotNull();
+		then(this.accumulator.getSpans()).isNotEmpty();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Configuration

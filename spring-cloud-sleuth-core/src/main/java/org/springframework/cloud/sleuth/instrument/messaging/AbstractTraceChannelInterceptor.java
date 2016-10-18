@@ -1,5 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.lang.invoke.MethodHandles;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
@@ -21,6 +25,8 @@ import org.springframework.util.ClassUtils;
  */
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		implements ExecutorChannelInterceptor {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	/**
 	 * If a span comes from messaging components then it will have this value as a prefix
@@ -63,7 +69,12 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 * missing.
 	 */
 	protected Span buildSpan(Message<?> message) {
-		return this.spanExtractor.joinTrace(message);
+		try {
+			return this.spanExtractor.joinTrace(message);
+		} catch (Exception e) {
+			log.error("Exception occurred while trying to extract span from carrier", e);
+			return null;
+		}
 	}
 
 	String getChannelName(MessageChannel channel) {
