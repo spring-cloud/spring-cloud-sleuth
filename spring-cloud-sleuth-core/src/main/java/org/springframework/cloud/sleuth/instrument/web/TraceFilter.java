@@ -15,18 +15,18 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -134,16 +134,9 @@ public class TraceFilter extends GenericFilterBean {
 			return;
 		}
 		String name = HTTP_COMPONENT + ":" + uri;
-		try {
-			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
-		} catch (IllegalArgumentException e) {
-			filterChain.doFilter(request, response);
-			response.sendError(HttpStatus.BAD_REQUEST.value(),
-					"Exception tracing request [" + e.getMessage() + "]");
-			return;
-		}
 		Throwable exception = null;
 		try {
+			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
 			filterChain.doFilter(request, response);
 		} catch (Throwable e) {
 			exception = e;
