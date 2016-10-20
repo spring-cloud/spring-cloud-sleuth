@@ -3,6 +3,7 @@
 :github-raw: http://raw.github.com/{github-repo}/{github-tag}
 :github-code: http://github.com/{github-repo}/tree/{github-tag}
 :toc: left
+:toclevels: 8
 :nofooter:
 
 Spring Cloud Sleuth
