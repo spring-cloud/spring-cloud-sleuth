@@ -228,18 +228,12 @@ to your bean definition.
 
 === HTTP
 
-For HTTP these are the beans responsible for creation of a Span from a `HttpServletRequest`
-  and filling in the `HttpServletResponse` with tracing information.
+For HTTP these are the beans responsible for creation of a Span from a `HttpServletRequest`.
 
 [source,java]
 ----
 @Bean
 public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor() {
-    ...
-}
-
-@Bean
-public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
     ...
 }
 ----
@@ -262,18 +256,25 @@ This is a an example of a `SpanExtractor`
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=extractor,indent=0]
 ----
 
-The following `SpanInjector` could be created
-
-[source,java]
-----
-include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=injector,indent=0]
-----
-
-And you could register them like this:
+And you could register it like this:
 
 [source,java]
 ----
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=configuration,indent=0]
+----
+
+Spring Cloud Sleuth does not add trace/span related headers to the Http Response for security reasons. If you need the headers then a custom `SpanInjector`
+that injects the headers into the Http Response and a Servlet filter which makes use of this can be added the following way:
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceCustomFilterResponseInjectorTests.java[tags=injector,indent=0]
+----
+
+And you could register them like this:
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceCustomFilterResponseInjectorTests.java[tags=configuration,indent=0]
 ----
 
 === Custom SA tag in Zipkin
