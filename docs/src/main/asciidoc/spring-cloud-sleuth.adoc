@@ -38,7 +38,9 @@ fixed fraction of spans.
 
 NOTE: the `PercentageBasedSampler` is the default if you are using
 `spring-cloud-sleuth-zipkin` or `spring-cloud-sleuth-stream`. You can
-configure the exports using `spring.sleuth.sampler.percentage`.
+configure the exports using `spring.sleuth.sampler.percentage`. The passed
+value needs to be a double from `0.0` to `1.0` so it's not a percentage.
+For backwards compatibility reasons we're not changing the property name.
 
 A sampler can be installed just by creating a bean definition, e.g:
 
