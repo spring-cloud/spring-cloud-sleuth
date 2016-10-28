@@ -50,4 +50,22 @@ public class ExceptionUtilsTest {
 			then(e).isInstanceOf(IllegalStateException.class);
 		}
 	}
+
+	@Test
+	public void should_print_error_message_when_there_is_one() throws Exception {
+		Throwable e = new RuntimeException("Foo");
+
+		String message = ExceptionUtils.getExceptionMessage(e);
+
+		then(message).isEqualTo("Foo");
+	}
+
+	@Test
+	public void should_print_to_string_when_there_is_no_error() throws Exception {
+		Throwable e = new RuntimeException();
+
+		String message = ExceptionUtils.getExceptionMessage(e);
+
+		then(message).isEqualTo("java.lang.RuntimeException");
+	}
 }
