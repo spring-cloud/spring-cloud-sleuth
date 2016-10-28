@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.async.issues.issue410;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -23,7 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -31,6 +35,7 @@ import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.async.LazyTraceExecutor;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,7 +52,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.jayway.awaitility.Awaitility;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -81,6 +86,38 @@ public class Issue410Tests {
 		Span span = this.tracer.createSpan("foo");
 
 		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
+
+		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+		Awaitility.await().until(() -> {
+			then(this.asyncTask.getSpan().get()).isNotNull();
+			then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+		});
+	}
+
+	/**
+	 * Related to issue #423
+	 */
+	@Test
+	public void should_pass_tracing_info_for_completable_futures_with_executor() {
+		Span span = this.tracer.createSpan("foo");
+
+		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/completable", String.class);
+
+		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+		Awaitility.await().until(() -> {
+			then(this.asyncTask.getSpan().get()).isNotNull();
+			then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+		});
+	}
+
+	/**
+	 * Related to issue #423
+	 */
+	@Test
+	public void should_pass_tracing_info_for_completable_futures_with_task_scheduler() {
+		Span span = this.tracer.createSpan("foo");
+
+		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler", String.class);
 
 		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
 		Awaitility.await().until(() -> {
@@ -123,6 +160,9 @@ class AsyncTask {
 	private AtomicReference<Span> span = new AtomicReference<>();
 
 	@Autowired Tracer tracer;
+	@Autowired @Qualifier("poolTaskExecutor") Executor executor;
+	@Autowired @Qualifier("taskScheduler") Executor taskScheduler;
+	@Autowired BeanFactory beanFactory;
 
 	@Async("poolTaskExecutor")
 	public void runWithPool() {
@@ -134,6 +174,58 @@ class AsyncTask {
 	public void runWithoutPool() {
 		log.info("This task is running without a pool.");
 		this.span.set(this.tracer.getCurrentSpan());
+	}
+
+	public Span completableFutures() throws ExecutionException, InterruptedException {
+		log.info("This task is running with completable future");
+		CompletableFuture<Span> span1 = CompletableFuture
+				.supplyAsync(() -> {
+					AsyncTask.log.info("First completable future");
+					return AsyncTask.this.tracer.getCurrentSpan();
+				}, AsyncTask.this.executor);
+		CompletableFuture<Span> span2 = CompletableFuture
+				.supplyAsync(() -> {
+					AsyncTask.log.info("Second completable future");
+					return AsyncTask.this.tracer.getCurrentSpan();
+				}, AsyncTask.this.executor);
+		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2)
+				.thenApply(ignoredVoid -> {
+					AsyncTask.log.info("Third completable future");
+					Span joinedSpan1 = span1.join();
+					Span joinedSpan2 = span2.join();
+					then(joinedSpan2).isNotNull();
+					then(joinedSpan1).hasTraceIdEqualTo(joinedSpan2.getTraceId());
+					AsyncTask.log.info("TraceIds are correct");
+					return joinedSpan2;
+				});
+		this.span.set(response.get());
+		return this.span.get();
+	}
+
+	public Span taskScheduler() throws ExecutionException, InterruptedException {
+		log.info("This task is running with completable future");
+		CompletableFuture<Span> span1 = CompletableFuture
+				.supplyAsync(() -> {
+					AsyncTask.log.info("First completable future");
+					return AsyncTask.this.tracer.getCurrentSpan();
+				}, new LazyTraceExecutor(AsyncTask.this.beanFactory, AsyncTask.this.taskScheduler));
+		CompletableFuture<Span> span2 = CompletableFuture
+				.supplyAsync(() -> {
+					AsyncTask.log.info("Second completable future");
+					return AsyncTask.this.tracer.getCurrentSpan();
+				}, new LazyTraceExecutor(AsyncTask.this.beanFactory, AsyncTask.this.taskScheduler));
+		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2)
+				.thenApply(ignoredVoid -> {
+					AsyncTask.log.info("Third completable future");
+					Span joinedSpan1 = span1.join();
+					Span joinedSpan2 = span2.join();
+					then(joinedSpan2).isNotNull();
+					then(joinedSpan1).hasTraceIdEqualTo(joinedSpan2.getTraceId());
+					AsyncTask.log.info("TraceIds are correct");
+					return joinedSpan2;
+				});
+		this.span.set(response.get());
+		return this.span.get();
 	}
 
 	public AtomicReference<Span> getSpan() {
@@ -163,6 +255,18 @@ class Application {
 		log.info("Executing without pool.");
 		this.asyncTask.runWithoutPool();
 		return Span.idToHex(this.tracer.getCurrentSpan().getTraceId());
+	}
+
+	@RequestMapping("/completable")
+	public String completable() throws ExecutionException, InterruptedException {
+		log.info("Executing completable");
+		return Span.idToHex(this.asyncTask.completableFutures().getTraceId());
+	}
+
+	@RequestMapping("/taskScheduler")
+	public String taskScheduler() throws ExecutionException, InterruptedException {
+		log.info("Executing completable via task scheduler");
+		return Span.idToHex(this.asyncTask.taskScheduler().getTraceId());
 	}
 
 }
