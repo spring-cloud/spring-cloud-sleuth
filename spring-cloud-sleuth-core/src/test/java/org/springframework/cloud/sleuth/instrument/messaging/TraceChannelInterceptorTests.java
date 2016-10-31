@@ -35,6 +35,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -88,7 +89,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.message = message;
 		this.span = TestSpanContextHolder.getCurrentSpan();
 		if (message.getHeaders().containsKey("THROW_EXCEPTION")) {
-			throw new RuntimeException();
+			throw new RuntimeException("A terrible exception has occurred");
 		}
 	}
 
@@ -269,6 +270,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(this.message).isNotNull();
 		this.tracer.close(span);
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(new ListOfSpans(this.accumulator.getSpans()))
+				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
+						"A terrible exception has occurred");
 	}
 
 	@Test
