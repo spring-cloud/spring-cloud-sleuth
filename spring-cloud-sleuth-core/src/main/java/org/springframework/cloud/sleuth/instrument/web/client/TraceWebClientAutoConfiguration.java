@@ -16,19 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -37,6 +30,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
+
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -47,7 +45,7 @@ import org.springframework.web.client.RestTemplate;
  * @since 1.0.0
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.sleuth.web.client.enabled", matchIfMissing = true)
+@SleuthWebClientEnabled
 @ConditionalOnClass(RestTemplate.class)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
@@ -64,12 +62,6 @@ public class TraceWebClientAutoConfiguration {
 	@Bean
 	public SpanInjector<HttpRequest> httpRequestSpanInjector() {
 		return new HttpRequestInjector();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer, TraceKeys traceKeys) {
-		return new HttpTraceKeysInjector(tracer, traceKeys);
 	}
 
 	@Configuration

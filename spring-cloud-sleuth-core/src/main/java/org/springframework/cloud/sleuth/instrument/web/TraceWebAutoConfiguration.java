@@ -84,6 +84,12 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
+	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer, TraceKeys traceKeys) {
+		return new HttpTraceKeysInjector(tracer, traceKeys);
+	}
+
+	@Bean
 	public FilterRegistrationBean traceWebFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
 			SpanExtractor<HttpServletRequest> spanExtractor,
