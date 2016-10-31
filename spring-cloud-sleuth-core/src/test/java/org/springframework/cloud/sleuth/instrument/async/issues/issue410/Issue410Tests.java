@@ -71,27 +71,33 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_without_a_pool() {
 		Span span = this.tracer.createSpan("foo");
+		try {
+			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/without_pool", String.class);
 
-		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/without_pool", String.class);
-
-		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
-		Awaitility.await().until(() -> {
-			then(this.asyncTask.getSpan().get()).isNotNull();
-			then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
-		});
+			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			Awaitility.await().until(() -> {
+				then(this.asyncTask.getSpan().get()).isNotNull();
+				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+			});
+		} finally {
+			this.tracer.close(span);
+		}
 	}
 
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_with_a_pool() {
 		Span span = this.tracer.createSpan("foo");
+		try {
+			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
 
-		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
-
-		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
-		Awaitility.await().until(() -> {
-			then(this.asyncTask.getSpan().get()).isNotNull();
-			then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
-		});
+			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			Awaitility.await().until(() -> {
+				then(this.asyncTask.getSpan().get()).isNotNull();
+				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+			});
+		} finally {
+			this.tracer.close(span);
+		}
 	}
 
 	/**
@@ -100,14 +106,17 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_executor() {
 		Span span = this.tracer.createSpan("foo");
+		try {
+			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/completable", String.class);
 
-		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/completable", String.class);
-
-		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
-		Awaitility.await().until(() -> {
-			then(this.asyncTask.getSpan().get()).isNotNull();
-			then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
-		});
+			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			Awaitility.await().until(() -> {
+				then(this.asyncTask.getSpan().get()).isNotNull();
+				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+			});
+		} finally {
+			this.tracer.close(span);
+		}
 	}
 
 	/**
@@ -116,14 +125,17 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_task_scheduler() {
 		Span span = this.tracer.createSpan("foo");
+		try {
+			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler", String.class);
 
-		String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler", String.class);
-
-		then(response).isEqualTo(Span.idToHex(span.getTraceId()));
-		Awaitility.await().until(() -> {
-			then(this.asyncTask.getSpan().get()).isNotNull();
-			then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
-		});
+			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			Awaitility.await().until(() -> {
+				then(this.asyncTask.getSpan().get()).isNotNull();
+				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+			});
+		} finally {
+			this.tracer.close(span);
+		}
 	}
 
 	private int port() {

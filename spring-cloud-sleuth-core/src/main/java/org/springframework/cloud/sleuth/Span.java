@@ -90,6 +90,7 @@ public class Span {
 	public static final String SPAN_NOT_SAMPLED = "0";
 
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
+	public static final String SPAN_ERROR_TAG_NAME = "error";
 
 	/**
 	 * <b>cr</b> - Client Receive. Signifies the end of the span. The client has

@@ -27,15 +27,16 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -59,10 +60,12 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 
 	private DefaultTracer tracer;
 
+	private ArrayListSpanAccumulator spanAccumulator = new ArrayListSpanAccumulator();
+
 	@Before
 	public void setup() {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
+				new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanAccumulator);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector(),
 						new HttpTraceKeysInjector(this.tracer, new TraceKeys()))));
@@ -91,6 +94,9 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 
 		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
+		SleuthAssertions.then(new ListOfSpans(this.spanAccumulator.getSpans()))
+				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
+						"Read timed out");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 

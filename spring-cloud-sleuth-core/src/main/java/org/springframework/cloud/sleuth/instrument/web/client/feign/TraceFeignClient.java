@@ -31,6 +31,7 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import feign.Client;
 import feign.Request;
 import feign.Response;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 
 /**
  * A Feign Client that closes a Span if there is no response body. In other cases Span
@@ -134,11 +135,7 @@ class TraceFeignClient implements Client {
 	private void logError(Exception e) {
 		Span span = getTracer().getCurrentSpan();
 		if (span != null) {
-			String message = e.getMessage() != null ? e.getMessage() : e.toString();
-			if (log.isDebugEnabled()) {
-				log.debug("Appending exception [" + message + "] to span "  + span);
-			}
-			getTracer().addTag("error", message);
+			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(e));
 		}
 	}
 
