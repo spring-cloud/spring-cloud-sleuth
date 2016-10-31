@@ -15,8 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
