@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -28,7 +27,6 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
 /**
- * Creates a {@link Span.SpanBuilder} from {@link Message}
  *
  * @author Marcin Grzejszczak
  */
