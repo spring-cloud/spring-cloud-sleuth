@@ -15,8 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,6 +81,12 @@ public class TraceWebAutoConfiguration {
 	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
 	public TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(BeanFactory beanFactory) {
 		return new TraceSpringDataBeanPostProcessor(beanFactory);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer, TraceKeys traceKeys) {
+		return new HttpTraceKeysInjector(tracer, traceKeys);
 	}
 
 	@Bean
