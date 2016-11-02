@@ -26,12 +26,10 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpRequest;
@@ -47,10 +45,10 @@ import org.springframework.web.client.RestTemplate;
  * @since 1.0.0
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.sleuth.web.client.enabled", matchIfMissing = true)
+@SleuthWebClientEnabled
 @ConditionalOnClass(RestTemplate.class)
-@ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
+@ConditionalOnBean(HttpTraceKeysInjector.class)
+@AutoConfigureAfter(TraceWebAutoConfiguration.class)
 public class TraceWebClientAutoConfiguration {
 
 	@Bean
@@ -64,12 +62,6 @@ public class TraceWebClientAutoConfiguration {
 	@Bean
 	public SpanInjector<HttpRequest> httpRequestSpanInjector() {
 		return new HttpRequestInjector();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer, TraceKeys traceKeys) {
-		return new HttpTraceKeysInjector(tracer, traceKeys);
 	}
 
 	@Configuration

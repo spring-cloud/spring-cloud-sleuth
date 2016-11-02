@@ -27,8 +27,8 @@ import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -49,7 +49,7 @@ import com.netflix.zuul.context.RequestContext;
 @ConditionalOnWebApplication
 @ConditionalOnClass(ZuulFilter.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
+@AutoConfigureAfter(TraceWebAutoConfiguration.class)
 public class TraceZuulAutoConfiguration {
 
 	@Bean

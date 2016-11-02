@@ -22,11 +22,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
@@ -46,21 +45,18 @@ import org.springframework.web.client.AsyncRestTemplate;
  * @since 1.0.0
  */
 @Configuration
+@SleuthWebClientEnabled
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(AsyncRestTemplate.class)
-@ConditionalOnBean(SpanAccessor.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
+@ConditionalOnBean(HttpTraceKeysInjector.class)
+@AutoConfigureAfter(TraceWebAutoConfiguration.class)
 public class TraceWebAsyncClientAutoConfiguration {
 
 	@Autowired Tracer tracer;
-	@Autowired
-	private HttpTraceKeysInjector httpTraceKeysInjector;
-	@Autowired
-	private SpanInjector<HttpRequest> spanInjector;
-	@Autowired(required = false)
-	private ClientHttpRequestFactory clientHttpRequestFactory;
-	@Autowired(required = false)
-	private AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
+	@Autowired private HttpTraceKeysInjector httpTraceKeysInjector;
+	@Autowired private SpanInjector<HttpRequest> spanInjector;
+	@Autowired(required = false) private ClientHttpRequestFactory clientHttpRequestFactory;
+	@Autowired(required = false) private AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
 
 	private TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactory() {
 		ClientHttpRequestFactory clientFactory = this.clientHttpRequestFactory;
