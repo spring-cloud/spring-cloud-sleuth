@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
-
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -29,15 +26,16 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
+
 /**
  * @author Dave Syer
  *
  */
 public class MessagingSpanInjectorTests {
 
-	private TraceKeys traceKeys = new TraceKeys();
-	private MessagingSpanInjector messagingSpanInjector = new MessagingSpanInjector(
-			this.traceKeys);
+	private ZipkinMessagingInjector spanInjector = new ZipkinMessagingInjector(new TraceKeys());
 
 	@Test
 	public void spanHeadersAdded() {
@@ -45,9 +43,9 @@ public class MessagingSpanInjectorTests {
 		Message<?> message = new GenericMessage<>("Hello World");
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
 
-		this.messagingSpanInjector.inject(span, messageBuilder);
+		this.spanInjector.inject(span, new MessagingTextMap(messageBuilder));
 
-		assertThat(messageBuilder.build().getHeaders()).containsKey(Span.SPAN_ID_NAME);
+		assertThat(messageBuilder.build().getHeaders()).containsKey(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
 	@Test
@@ -55,9 +53,9 @@ public class MessagingSpanInjectorTests {
 		Span span = spanWithStringPayloadType();
 		MessageBuilder<?> messageBuilder = messageWithIntegerPayloadType();
 
-		this.messagingSpanInjector.inject(span, messageBuilder);
+		this.spanInjector.inject(span, new MessagingTextMap(messageBuilder));
 
-		assertThat(messageBuilder.build().getHeaders()).containsKeys(Span.SPAN_ID_NAME,
+		assertThat(messageBuilder.build().getHeaders()).containsKeys(TraceMessageHeaders.SPAN_ID_NAME,
 				"message/payload-type");
 		assertThat(span).hasATag("message/payload-type", "java.lang.String");
 	}
@@ -83,14 +81,14 @@ public class MessagingSpanInjectorTests {
 		MessageBuilder<String> messageBuilder = MessageBuilder
 				.fromMessage(messageToBuild);
 
-		this.messagingSpanInjector.inject(span, messageBuilder);
+		this.spanInjector.inject(span, new MessagingTextMap(messageBuilder));
 
 		Message<String> message = messageBuilder.build();
 		assertThat(message.getHeaders())
 				.containsKey(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 		MessageHeaderAccessor natives = NativeMessageHeaderAccessor
 				.getMutableAccessor(message);
-		assertThat(natives.getMessageHeaders()).containsKey(Span.SPAN_ID_NAME);
+		assertThat(natives.getMessageHeaders()).containsKey(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
 }

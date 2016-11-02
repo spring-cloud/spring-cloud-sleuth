@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -41,8 +39,8 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			SpanExtractor<Message<?>> spanExtractor,
-			SpanInjector<MessageBuilder<?>> spanInjector) {
+			MessagingSpanTextMapExtractor spanExtractor,
+			MessagingSpanTextMapInjector spanInjector) {
 		super(tracer, traceKeys, spanExtractor, spanInjector);
 	}
 
@@ -72,22 +70,18 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
+		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
 		Span parentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
-				: buildSpan(message);
+				: buildSpan(new MessagingTextMap(messageBuilder));
 		String name = getMessageChannelName(channel);
 		Span span = startSpan(parentSpan, name, message);
-		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
-		// Backwards compatibility
-		if (message.getHeaders().containsKey(TraceMessageHeaders.OLD_MESSAGE_SENT_FROM_CLIENT) ||
-				message.getHeaders().containsKey(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT)) {
+		if (message.getHeaders().containsKey(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT)) {
 			span.logEvent(Span.SERVER_RECV);
 		} else {
 			span.logEvent(Span.CLIENT_SEND);
-			// Backwards compatibility
-			messageBuilder.setHeader(TraceMessageHeaders.OLD_MESSAGE_SENT_FROM_CLIENT, true);
 			messageBuilder.setHeader(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT, true);
 		}
-		getSpanInjector().inject(span, messageBuilder);
+		getSpanInjector().inject(span, new MessagingTextMap(messageBuilder));
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
 		headers.copyHeaders(messageBuilder.build().getHeaders());
 		return new GenericMessage<Object>(message.getPayload(), headers.getMessageHeaders());
@@ -97,9 +91,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		if (span != null) {
 			return getTracer().createSpan(name, span);
 		}
-		// Backwards compatibility
-		if (Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(Span.SAMPLED_NAME)) ||
-				Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(TraceMessageHeaders.SAMPLED_NAME))) {
+		if (Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(TraceMessageHeaders.SAMPLED_NAME))) {
 			return getTracer().createSpan(name, NeverSampler.INSTANCE);
 		}
 		return getTracer().createSpan(name);
@@ -137,11 +129,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		if (message == null) {
 			return null;
 		}
-		Object object = message.getHeaders().get(TraceMessageHeaders.OLD_SPAN_HEADER);
-		if (object instanceof Span) {
-			return (Span) object;
-		}
-		object = message.getHeaders().get(TraceMessageHeaders.SPAN_HEADER);
+		Object object = message.getHeaders().get(TraceMessageHeaders.SPAN_HEADER);
 		if (object instanceof Span) {
 			return (Span) object;
 		}

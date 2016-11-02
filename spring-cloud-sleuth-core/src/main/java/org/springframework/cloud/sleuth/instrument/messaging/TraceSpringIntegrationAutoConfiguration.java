@@ -56,8 +56,8 @@ public class TraceSpringIntegrationAutoConfiguration {
 	@Bean
 	@GlobalChannelInterceptor(patterns = "${spring.sleuth.integration.patterns:*}")
 	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
-			TraceKeys traceKeys, Random random, SpanExtractor<Message<?>> spanExtractor,
-			SpanInjector<MessageBuilder<?>> spanInjector) {
+			TraceKeys traceKeys, Random random, MessagingSpanTextMapExtractor spanExtractor,
+			MessagingSpanTextMapInjector spanInjector) {
 		return new IntegrationTraceChannelInterceptor(tracer, traceKeys, spanExtractor,
 				spanInjector);
 	}

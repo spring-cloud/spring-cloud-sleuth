@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertNotNull;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +49,10 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Dave Syer
@@ -111,10 +111,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void nonExportableSpanCreation() {
 		this.tracedChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
+				.setHeader(TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
 		assertNotNull("message was null", this.message);
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(spanId).isNotNull();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 		then(this.span.isExportable()).isFalse();
@@ -123,7 +123,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void messageHeadersStillMutable() {
 		this.tracedChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
+				.setHeader(TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
 		assertNotNull("message was null", this.message);
 		MessageHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class);
 		assertNotNull("Message header accessor should be still available", accessor);
@@ -132,14 +132,14 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void parentSpanIncluded() {
 		this.tracedChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.TRACE_ID_NAME, Span.idToHex(10L))
-				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
+				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
 		then(this.message).isNotNull();
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(spanId).isNotNull();
 		long traceId = Span
-				.hexToId(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+				.hexToId(this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		then(this.accumulator.getSpans()).hasSize(1);
@@ -163,7 +163,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		String newSpanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME,
 				String.class);
 		then(newSpanId).isNotNull();
-		String oldSpanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String oldSpanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(oldSpanId).isEqualTo(newSpanId);
 		return newSpanId;
 	}
@@ -172,8 +172,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Test
 	public void shouldSendNewAndOldHeadersWhenOldHeadersWerePassed() {
 		this.tracedChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.TRACE_ID_NAME, Span.idToHex(10L))
-				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
+				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
 		then(this.message).isNotNull();
 
 		String newSpanId = thenNewSpanIdEqualsOldSpanId();
@@ -187,7 +187,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 				.get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		long oldTraceId = Span
-				.hexToId(this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+				.hexToId(this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		then(oldTraceId).isEqualTo(traceId);
 	}
 
@@ -196,10 +196,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.tracedChannel.send(MessageBuilder.withPayload("hi").build());
 		then(this.message).isNotNull();
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(spanId).isNotNull();
 
-		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class);
 		then(traceId).isNotNull();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
@@ -228,10 +228,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.tracer.close(span);
 		then(this.message).isNotNull();
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(spanId).isNotNull();
 
-		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class);
 		then(traceId).isNotNull();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
@@ -245,10 +245,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.tracer.close(span);
 		then(this.message).isNotNull();
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(spanId).isNotNull();
 
-		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class);
 		then(traceId).isNotNull();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
@@ -280,10 +280,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.ignoredChannel.send(MessageBuilder.withPayload("hi").build());
 		then(this.message).isNotNull();
 
-		String spanId = this.message.getHeaders().get(Span.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(spanId).isNull();
 
-		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class);
 		then(traceId).isNull();
 
 		then(this.accumulator.getSpans()).isEmpty();
@@ -295,8 +295,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
 		String lower64Bits = "48485a3953bb6124";
 		this.tracedChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader(Span.TRACE_ID_NAME, hex128Bits)
-				.setHeader(Span.SPAN_ID_NAME, Span.idToHex(20L)).build());
+				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, hex128Bits)
+				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
 		then(this.message).isNotNull();
 
 		long traceId = Span.hexToId(this.message.getHeaders()

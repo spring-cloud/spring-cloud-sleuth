@@ -20,13 +20,11 @@ import java.util.Random;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 
 /**
  * AutoConfiguration containing Span extractor and injector for messaging. Will be reused
@@ -41,12 +39,14 @@ import org.springframework.messaging.support.MessageBuilder;
 public class TraceSpanMessagingAutoConfiguration {
 
 	@Bean
-	public SpanExtractor<Message<?>> messagingSpanExtractor(Random random) {
-		return new MessagingSpanExtractor(random);
+	@ConditionalOnMissingBean
+	public MessagingSpanTextMapExtractor messagingSpanExtractor() {
+		return new ZipkinMessagingExtractor();
 	}
 
 	@Bean
-	public SpanInjector<MessageBuilder<?>> messagingSpanInjector(TraceKeys traceKeys) {
-		return new MessagingSpanInjector(traceKeys);
+	@ConditionalOnMissingBean
+	public MessagingSpanTextMapInjector messagingSpanInjector(TraceKeys traceKeys) {
+		return new ZipkinMessagingInjector(traceKeys);
 	}
 }

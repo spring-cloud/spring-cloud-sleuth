@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.Random;
 
 import org.junit.Test;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StringUtils;
@@ -32,24 +30,23 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 public class MessagingSpanExtractorTests {
-	MessagingSpanExtractor extractor = new MessagingSpanExtractor(new Random());
+	ZipkinMessagingExtractor extractor = new ZipkinMessagingExtractor();
 
 	@Test
 	public void should_return_null_if_trace_or_span_is_missing() {
-		Message message = MessageBuilder.createMessage("", headers());
-		then(this.extractor.joinTrace(message)).isNull();
+		then(this.extractor.joinTrace(
+				new MessagingTextMap(MessageBuilder.withPayload("")))).isNull();
 
-		message = MessageBuilder.createMessage("", headers("trace"));
-		then(this.extractor.joinTrace(message)).isNull();
+		then(this.extractor.joinTrace(
+				new MessagingTextMap(MessageBuilder.withPayload("").copyHeaders(headers("trace"))))).isNull();
 	}
 
 	@Test
 	public void should_set_random_traceid_if_header_value_is_invalid() {
-		Message message = MessageBuilder.createMessage("", 
-				headers("invalid", randomId()));
-
 		try {
-			this.extractor.joinTrace(message);
+			this.extractor.joinTrace(
+					new MessagingTextMap(MessageBuilder.withPayload("")
+							.copyHeaders(headers("invalid", randomId()))));
 			fail("should throw an exception");
 		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
@@ -58,11 +55,10 @@ public class MessagingSpanExtractorTests {
 
 	@Test
 	public void should_set_random_spanid_if_header_value_is_invalid() {
-		Message message = MessageBuilder.createMessage("",
-				headers(randomId(), "invalid"));
-
 		try {
-			this.extractor.joinTrace(message);
+			this.extractor.joinTrace(
+					new MessagingTextMap(MessageBuilder.withPayload("")
+							.copyHeaders(headers(randomId(), "invalid"))));
 			fail("should throw an exception");
 		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
@@ -71,19 +67,14 @@ public class MessagingSpanExtractorTests {
 
 	@Test
 	public void should_not_throw_exception_if_parent_id_is_invalid() {
-		Message message = MessageBuilder.createMessage("",
-				headers(randomId(), randomId(), "invalid"));
-
 		try {
-			this.extractor.joinTrace(message);
+			this.extractor.joinTrace(
+					new MessagingTextMap(MessageBuilder.withPayload("")
+							.copyHeaders(headers(randomId(), randomId(), "invalid"))));
 			fail("should throw an exception");
 		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
 		}
-	}
-
-	private MessageHeaders headers() {
-		return headers(null, null, null);
 	}
 
 	private MessageHeaders headers(String traceId) {
@@ -97,13 +88,13 @@ public class MessagingSpanExtractorTests {
 	private MessageHeaders headers(String traceId, String spanId, String parentId) {
 		Map<String, Object> map = new HashMap<>();
 		if (StringUtils.hasText(traceId)) {
-			map.put(Span.TRACE_ID_NAME, traceId);
+			map.put(TraceMessageHeaders.TRACE_ID_NAME, traceId);
 		}
 		if (StringUtils.hasText(spanId)) {
-			map.put(Span.SPAN_ID_NAME, spanId);
+			map.put(TraceMessageHeaders.SPAN_ID_NAME, spanId);
 		}
 		if (StringUtils.hasText(parentId)) {
-			map.put(Span.PARENT_ID_NAME, parentId);
+			map.put(TraceMessageHeaders.PARENT_ID_NAME, parentId);
 		}
 		return new MessageHeaders(map);
 	}
