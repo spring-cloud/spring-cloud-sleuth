@@ -4,21 +4,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.cloud.sleuth.*;
 import org.springframework.util.StringUtils;
 
 /**
- * Default implementation, compatible with Zipkin propagation.
+ * Default implementation for messaging
  *
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
-public class ZipkinMessagingInjector implements MessagingSpanTextMapInjector {
+public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjector {
 
 	private final TraceKeys traceKeys;
+	private final ObjectMapper objectMapper;
 
-	public ZipkinMessagingInjector(TraceKeys traceKeys) {
+	public HeaderBasedMessagingInjector(TraceKeys traceKeys, ObjectMapper objectMapper) {
 		this.traceKeys = traceKeys;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -31,36 +36,38 @@ public class ZipkinMessagingInjector implements MessagingSpanTextMapInjector {
 			}
 			return;
 		}
-		addNewHeaders(span, carrier);
+		addHeaders(span, carrier);
 	}
 
 	private boolean isSampled(Map<String, String> initialMessage, String sampledHeaderName) {
 		return Span.SPAN_SAMPLED.equals(initialMessage.get(sampledHeaderName));
 	}
 
-	private void addNewHeaders(Span span, SpanTextMap initialMessage) {
-		addHeaders(span, initialMessage, TraceMessageHeaders.TRACE_ID_NAME,
-				TraceMessageHeaders.SPAN_ID_NAME, TraceMessageHeaders.PARENT_ID_NAME, TraceMessageHeaders.SPAN_NAME_NAME,
-				TraceMessageHeaders.PROCESS_ID_NAME, TraceMessageHeaders.SAMPLED_NAME, TraceMessageHeaders.SPAN_HEADER);
-	}
-
-	private void addHeaders(Span span, SpanTextMap textMap, String traceIdHeader,
-			String spanIdHeader, String parentIdHeader, String spanNameHeader, String processIdHeader,
-			String spanSampledHeader, String spanHeader) {
-		addHeader(textMap, traceIdHeader, Span.idToHex(span.getTraceId()));
-		addHeader(textMap, spanIdHeader, Span.idToHex(span.getSpanId()));
+	private void addHeaders(Span span, SpanTextMap textMap) {
+		addHeader(textMap, TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		addHeader(textMap, TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		if (span.isExportable()) {
 			addAnnotations(this.traceKeys, textMap, span);
 			Long parentId = getFirst(span.getParents());
 			if (parentId != null) {
-				addHeader(textMap, parentIdHeader, Span.idToHex(parentId));
+				addHeader(textMap, TraceMessageHeaders.PARENT_ID_NAME, Span.idToHex(parentId));
 			}
-			addHeader(textMap, spanNameHeader, span.getName());
-			addHeader(textMap, processIdHeader, span.getProcessId());
-			addHeader(textMap, spanSampledHeader, Span.SPAN_SAMPLED);
+			addHeader(textMap, TraceMessageHeaders.SPAN_NAME_NAME, span.getName());
+			addHeader(textMap, TraceMessageHeaders.PROCESS_ID_NAME, span.getProcessId());
+			addHeader(textMap, TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_SAMPLED);
 		}
 		else {
-			addHeader(textMap, spanSampledHeader, Span.SPAN_NOT_SAMPLED);
+			addHeader(textMap, TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
+		}
+		addHeader(textMap, TraceMessageHeaders.SPAN_HEADER, storeSpanAsJson(span));
+	}
+
+	private String storeSpanAsJson(Span span) {
+		try {
+			return this.objectMapper.writeValueAsString(span);
+		}
+		catch (JsonProcessingException e) {
+			throw new IllegalStateException(e);
 		}
 	}
 

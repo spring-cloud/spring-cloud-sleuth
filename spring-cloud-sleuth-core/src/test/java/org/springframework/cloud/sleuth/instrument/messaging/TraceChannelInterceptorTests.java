@@ -208,16 +208,18 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	public void shouldLogClientReceivedClientSentEventWhenTheMessageIsSentAndReceived() {
 		this.tracedChannel.send(MessageBuilder.withPayload("hi").build());
 
-		then(this.span.logs()).extracting("event").contains(Span.CLIENT_SEND,
+		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.accumulator.getSpans().get(0).logs()).extracting("event").contains(Span.CLIENT_SEND,
 				Span.CLIENT_RECV);
 	}
 
 	@Test
 	public void shouldLogServerReceivedServerSentEventWhenTheMessageIsPropagatedToTheNextListener() {
 		this.tracedChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader("X-Message-Sent", true).build());
+				.setHeader(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT, true).build());
 
-		then(this.span.logs()).extracting("event").contains(Span.SERVER_RECV,
+		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.accumulator.getSpans().get(0).logs()).extracting("event").contains(Span.SERVER_RECV,
 				Span.SERVER_SEND);
 	}
 

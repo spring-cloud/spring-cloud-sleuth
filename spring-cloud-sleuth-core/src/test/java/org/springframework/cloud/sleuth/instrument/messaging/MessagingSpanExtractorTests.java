@@ -30,7 +30,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 public class MessagingSpanExtractorTests {
-	ZipkinMessagingExtractor extractor = new ZipkinMessagingExtractor();
+	HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
 
 	@Test
 	public void should_return_null_if_trace_or_span_is_missing() {

@@ -49,6 +49,7 @@ class MessagingTextMap implements SpanTextMap {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void put(String key, String value) {
 		Message<?> initialMessage = this.delegate.build();
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
@@ -62,6 +63,6 @@ class MessagingTextMap implements SpanTextMap {
 				nativeAccessor.setNativeHeader(name, headers.get(name));
 			}
 		}
-		this.delegate.setHeaders(accessor);
+		this.delegate.copyHeaders(accessor.toMessageHeaders());
 	}
 }

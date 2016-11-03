@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.ChannelInterceptorAware;
@@ -28,10 +30,11 @@ import org.springframework.messaging.support.ChannelInterceptor;
  */
 class IntegrationTraceChannelInterceptor extends TraceChannelInterceptor implements VetoCapableInterceptor {
 
+
 	public IntegrationTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			MessagingSpanTextMapExtractor spanExtractor,
-			MessagingSpanTextMapInjector spanInjector) {
-		super(tracer, traceKeys, spanExtractor, spanInjector);
+			MessagingSpanTextMapInjector spanInjector, ObjectMapper objectMapper) {
+		super(tracer, traceKeys, spanExtractor, spanInjector, objectMapper);
 	}
 
 	@Override

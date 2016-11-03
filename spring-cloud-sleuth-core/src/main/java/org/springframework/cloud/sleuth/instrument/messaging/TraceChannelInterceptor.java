@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.io.IOException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -38,22 +42,27 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
+	private final ObjectMapper objectMapper;
+
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			MessagingSpanTextMapExtractor spanExtractor,
-			MessagingSpanTextMapInjector spanInjector) {
+			MessagingSpanTextMapInjector spanInjector, ObjectMapper objectMapper) {
 		super(tracer, traceKeys, spanExtractor, spanInjector);
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
 	public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
 		Span spanFromHeader = getSpanFromHeader(message);
-		if (containsServerReceived(spanFromHeader)) {
-			spanFromHeader.logEvent(Span.SERVER_SEND);
+		getTracer().continueSpan(spanFromHeader);
+		Span continuedSpan = getTracer().getCurrentSpan();
+		if (containsServerReceived(continuedSpan)) {
+			continuedSpan.logEvent(Span.SERVER_SEND);
 		} else if (spanFromHeader != null) {
-			spanFromHeader.logEvent(Span.CLIENT_RECV);
+			continuedSpan.logEvent(Span.CLIENT_RECV);
 		}
 		addErrorTag(ex);
-		getTracer().close(spanFromHeader);
+		getTracer().close(continuedSpan);
 	}
 
 	private boolean containsServerReceived(Span span) {
@@ -130,10 +139,18 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			return null;
 		}
 		Object object = message.getHeaders().get(TraceMessageHeaders.SPAN_HEADER);
-		if (object instanceof Span) {
-			return (Span) object;
+		if (object instanceof String) {
+			return readSpan((String) object);
 		}
 		return null;
+	}
+
+	private Span readSpan(String object) {
+		try {
+			return this.objectMapper.readValue(object, Span.class);
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 }

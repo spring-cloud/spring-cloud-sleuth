@@ -7,12 +7,12 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 
 /**
- * Default implementation, compatible with Zipkin propagation.
+ * Default implementation for messaging
  *
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
-public class ZipkinMessagingExtractor implements MessagingSpanTextMapExtractor {
+public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtractor {
 
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
@@ -22,34 +22,25 @@ public class ZipkinMessagingExtractor implements MessagingSpanTextMapExtractor {
 			return null;
 			// TODO: Consider throwing IllegalArgumentException;
 		}
-		return extractSpanFromNewHeaders(carrier, Span.builder());
+		return extractSpanFromHeaders(carrier, Span.builder());
 	}
 
-	private Span extractSpanFromNewHeaders(Map<String, String> carrier, Span.SpanBuilder spanBuilder) {
-		return extractSpanFromHeaders(carrier, spanBuilder, TraceMessageHeaders.TRACE_ID_NAME,
-				TraceMessageHeaders.SPAN_ID_NAME, TraceMessageHeaders.SAMPLED_NAME,
-				TraceMessageHeaders.PROCESS_ID_NAME, TraceMessageHeaders.SPAN_NAME_NAME,
-				TraceMessageHeaders.PARENT_ID_NAME);
-	}
-
-	private Span extractSpanFromHeaders(Map<String, String> carrier, Span.SpanBuilder spanBuilder,
-			String traceIdHeader, String spanIdHeader, String spanSampledHeader,
-			String spanProcessIdHeader, String spanNameHeader, String spanParentIdHeader) {
+	private Span extractSpanFromHeaders(Map<String, String> carrier, Span.SpanBuilder spanBuilder) {
 		long traceId = Span
-				.hexToId(carrier.get(traceIdHeader));
-		long spanId = Span.hexToId(carrier.get(spanIdHeader));
+				.hexToId(carrier.get(TraceMessageHeaders.TRACE_ID_NAME));
+		long spanId = Span.hexToId(carrier.get(TraceMessageHeaders.SPAN_ID_NAME));
 		spanBuilder = spanBuilder.traceId(traceId).spanId(spanId);
 		spanBuilder.exportable(
-				Span.SPAN_SAMPLED.equals(carrier.get(spanSampledHeader)));
-		String processId = carrier.get(spanProcessIdHeader);
-		String spanName = carrier.get(spanNameHeader);
+				Span.SPAN_SAMPLED.equals(carrier.get(TraceMessageHeaders.SAMPLED_NAME)));
+		String processId = carrier.get(TraceMessageHeaders.PROCESS_ID_NAME);
+		String spanName = carrier.get(TraceMessageHeaders.SPAN_NAME_NAME);
 		if (spanName != null) {
 			spanBuilder.name(spanName);
 		}
 		if (processId != null) {
 			spanBuilder.processId(processId);
 		}
-		setParentIdIfApplicable(carrier, spanBuilder, spanParentIdHeader);
+		setParentIdIfApplicable(carrier, spanBuilder, TraceMessageHeaders.PARENT_ID_NAME);
 		spanBuilder.remote(true);
 		return spanBuilder.build();
 	}
