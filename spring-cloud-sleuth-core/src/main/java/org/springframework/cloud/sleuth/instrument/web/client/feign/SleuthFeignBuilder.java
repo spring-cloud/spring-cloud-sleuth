@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import org.springframework.beans.factory.BeanFactory;
-
 import feign.Feign;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  * Contains {@link feign.Feign.Builder} implementation with tracing components
@@ -33,7 +32,7 @@ final class SleuthFeignBuilder {
 	private SleuthFeignBuilder() {}
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
-		return Feign.builder()
+		return Feign.builder().retryer(NeverRetry.INSTANCE)
 				.client(new TraceFeignClient(beanFactory));
 	}
 }

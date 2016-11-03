@@ -16,10 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import org.springframework.beans.factory.BeanFactory;
-
 import feign.Feign;
 import feign.hystrix.HystrixFeign;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  * Contains {@link Feign.Builder} implementation that delegates execution
@@ -35,7 +34,7 @@ final class SleuthHystrixFeignBuilder {
 	private SleuthHystrixFeignBuilder() {}
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
-		return HystrixFeign.builder()
+		return HystrixFeign.builder().retryer(NeverRetry.INSTANCE)
 				.client(new TraceFeignClient(beanFactory));
 	}
 }
