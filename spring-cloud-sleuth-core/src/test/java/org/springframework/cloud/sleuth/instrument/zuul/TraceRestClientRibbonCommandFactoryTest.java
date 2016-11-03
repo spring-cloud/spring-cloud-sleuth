@@ -34,6 +34,7 @@ import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.http.HttpHeaders;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
@@ -105,6 +106,6 @@ public class TraceRestClientRibbonCommandFactoryTest {
 
 	private RibbonCommandContext ribbonCommandContext() {
 		return new RibbonCommandContext("serviceId", "GET", "http://localhost:1234/foo",
-				false, null, null, null);
+				false, new HttpHeaders(), new HttpHeaders(), null);
 	}
 }
