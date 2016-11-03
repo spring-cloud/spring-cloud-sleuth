@@ -16,13 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,16 +33,12 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
-import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -49,48 +48,33 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.filter.GenericFilterBean;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(TraceFilterCustomExtractorTests.Config.class)
+@SpringApplicationConfiguration(TraceCustomFilterResponseInjectorTests.Config.class)
 @WebIntegrationTest(randomPort = true)
 @DirtiesContext
-public class TraceFilterCustomExtractorTests {
-	@Autowired Random random;
+public class TraceCustomFilterResponseInjectorTests {
 	@Autowired RestTemplate restTemplate;
 	@Autowired Config config;
 	@Autowired CustomRestController customRestController;
-	@Autowired ArrayListSpanAccumulator accumulator;
 
-	@Before
-	public void setup() {
-		this.accumulator.getSpans().clear();
-	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void should_create_a_valid_span_from_custom_headers() {
-		long spanId = this.random.nextLong();
-		long traceId = this.random.nextLong();
+	public void should_inject_trace_and_span_ids_in_response_headers() {
 		RequestEntity<?> requestEntity = RequestEntity
 				.get(URI.create("http://localhost:" + this.config.port + "/headers"))
-				.header("correlationId", Span.idToHex(traceId))
-				.header("mySpanId", Span.idToHex(spanId)).build();
+				.build();
 
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity,
-				Map.class);
+		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity, Map.class);
 
-		await().until(() -> then(this.accumulator.getSpans().stream().filter(
-				span -> span.getSpanId() == spanId).findFirst().get())
-				.hasTraceIdEqualTo(traceId));
-		then(responseEntity.getBody())
-				.containsEntry("correlationid", Span.idToHex(traceId))
-				.containsEntry("myspanid", Span.idToHex(spanId))
-				.as("input request headers");
+		then(responseEntity.getHeaders())
+				.containsKeys(Span.TRACE_ID_NAME, Span.SPAN_ID_NAME)
+				.as("Trace headers must be present in response headers");
 	}
 
 	@Configuration
@@ -101,9 +85,13 @@ public class TraceFilterCustomExtractorTests {
 
 		// tag::configuration[]
 		@Bean
-		@Primary
-		SpanExtractor<HttpServletRequest> customHttpServletRequestSpanExtractor() {
-			return new CustomHttpServletRequestSpanExtractor();
+		SpanInjector<HttpServletResponse> customHttpServletResponseSpanInjector() {
+			return new CustomHttpServletResponseSpanInjector();
+		}
+
+		@Bean
+		HttpResponseInjectingTraceFilter responseInjectingTraceFilter(Tracer tracer) {
+			return new HttpResponseInjectingTraceFilter(tracer, customHttpServletResponseSpanInjector());
 		}
 		// end::configuration[]
 
@@ -122,32 +110,39 @@ public class TraceFilterCustomExtractorTests {
 			return new CustomRestController();
 		}
 
-		@Bean
-		Sampler alwaysSampler() {
-			return new AlwaysSampler();
-		}
 
-		@Bean
-		SpanReporter spanReporter() {
-			return new ArrayListSpanAccumulator();
-		}
 	}
 
-	// tag::extractor[]
-	static class CustomHttpServletRequestSpanExtractor
-			implements SpanExtractor<HttpServletRequest> {
+	// tag::injector[]
+	static class CustomHttpServletResponseSpanInjector
+			implements SpanInjector<HttpServletResponse> {
 
 		@Override
-		public Span joinTrace(HttpServletRequest carrier) {
-			long traceId = Span.hexToId(carrier.getHeader("correlationId"));
-			long spanId = Span.hexToId(carrier.getHeader("mySpanId"));
-			// extract all necessary headers
-			Span.SpanBuilder builder = Span.builder().traceId(traceId).spanId(spanId);
-			// build rest of the Span
-			return builder.build();
+		public void inject(Span span, HttpServletResponse carrier) {
+			carrier.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+			carrier.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		}
 	}
-	// end::extractor[]
+
+	static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
+
+		private final Tracer tracer;
+		private final SpanInjector<HttpServletResponse> spanInjector;
+
+		public HttpResponseInjectingTraceFilter(Tracer tracer, SpanInjector<HttpServletResponse> spanInjector) {
+			this.tracer = tracer;
+			this.spanInjector = spanInjector;
+		}
+
+		@Override
+		public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+			HttpServletResponse response = (HttpServletResponse) servletResponse;
+			Span currentSpan = this.tracer.getCurrentSpan();
+			this.spanInjector.inject(currentSpan, response);
+			filterChain.doFilter(request, response);
+		}
+	}
+	// end::injector[]
 
 	@RestController
 	static class CustomRestController {

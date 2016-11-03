@@ -55,4 +55,8 @@ public final class ExceptionUtils {
 		ExceptionUtils.fail = fail;
 		ExceptionUtils.lastException = null;
 	}
+
+	public static String getExceptionMessage(Throwable e) {
+		return e.getMessage() != null ? e.getMessage() : e.toString();
+	}
 }

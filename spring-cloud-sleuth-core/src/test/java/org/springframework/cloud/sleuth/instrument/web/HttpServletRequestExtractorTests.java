@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Random;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
 
-import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -54,12 +53,7 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
 				.willReturn("invalid");
 
-		try {
-			this.extractor.joinTrace(this.request);
-			fail("should throw an exception");
-		} catch (IllegalArgumentException e) {
-			then(e).hasMessageContaining("Malformed id");
-		}
+		then(this.extractor.joinTrace(this.request)).isNull();
 	}
 
 	@Test
@@ -69,12 +63,7 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
 				.willReturn("invalid");
 
-		try {
-			this.extractor.joinTrace(this.request);
-			fail("should throw an exception");
-		} catch (IllegalArgumentException e) {
-			then(e).hasMessageContaining("Malformed id");
-		}
+		then(this.extractor.joinTrace(this.request)).isNull();
 	}
 
 	@Test
@@ -86,12 +75,7 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
 				.willReturn("invalid");
 
-		try {
-			this.extractor.joinTrace(this.request);
-			fail("should throw an exception");
-		} catch (IllegalArgumentException e) {
-			then(e).hasMessageContaining("Malformed id");
-		}
+		then(this.extractor.joinTrace(this.request)).isNull();
 	}
 
 	@Test

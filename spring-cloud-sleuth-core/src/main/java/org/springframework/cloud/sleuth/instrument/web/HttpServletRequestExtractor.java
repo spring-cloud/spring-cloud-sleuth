@@ -54,13 +54,18 @@ class HttpServletRequestExtractor implements SpanExtractor<HttpServletRequest> {
 			// can't build a Span without trace id
 			return null;
 		}
-		String uri = this.urlPathHelper.getPathWithinApplication(carrier);
-		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| Span.SPAN_NOT_SAMPLED.equals(carrier.getHeader(Span.SAMPLED_NAME));
-		long traceId = Span
-				.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
-		long spanId = spanId(carrier, traceId);
-		return buildParentSpan(carrier, uri, skip, traceId, spanId);
+		try {
+			String uri = this.urlPathHelper.getPathWithinApplication(carrier);
+			boolean skip = this.skipPattern.matcher(uri).matches()
+					|| Span.SPAN_NOT_SAMPLED.equals(carrier.getHeader(Span.SAMPLED_NAME));
+			long traceId = Span
+					.hexToId(carrier.getHeader(Span.TRACE_ID_NAME));
+			long spanId = spanId(carrier, traceId);
+			return buildParentSpan(carrier, uri, skip, traceId, spanId);
+		} catch (Exception e) {
+			log.error("Exception occurred while trying to extract span from carrier", e);
+			return null;
+		}
 	}
 
 	private long spanId(HttpServletRequest carrier, long traceId) {

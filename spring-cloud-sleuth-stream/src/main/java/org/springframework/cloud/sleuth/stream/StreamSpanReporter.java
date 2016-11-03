@@ -83,7 +83,14 @@ public class StreamSpanReporter implements SpanReporter {
 	@Override
 	public void report(Span span) {
 		if (span.isExportable()) {
-			this.queue.add(span);
+			try {
+				this.queue.add(span);
+			} catch (Exception e) {
+				this.spanMetricReporter.incrementDroppedSpans(1);
+				if (log.isDebugEnabled()) {
+					log.debug("The span " + span + " will not be sent to Zipkin due to [" + e + "]");
+				}
+			}
 		} else {
 			if (log.isDebugEnabled()) {
 				log.debug("The span " + span + " will not be sent to Zipkin due to sampling");

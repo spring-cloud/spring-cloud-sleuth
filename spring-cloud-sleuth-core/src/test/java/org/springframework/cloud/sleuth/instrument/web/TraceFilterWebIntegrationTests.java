@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -74,6 +75,9 @@ public class TraceFilterWebIntegrationTests {
 				.doesNotHaveASpanWithName("error")
 				.hasASpanWithTagEqualTo("http.status_code", "500");
 		then(ExceptionUtils.getLastException()).isNull();
+		then(new ListOfSpans(this.accumulator.getSpans()))
+				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
+						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 	}
 
 	private int port() {

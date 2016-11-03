@@ -23,6 +23,7 @@ import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
@@ -53,6 +54,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		} else if (spanFromHeader != null) {
 			spanFromHeader.logEvent(Span.CLIENT_RECV);
 		}
+		addErrorTag(ex);
 		getTracer().close(spanFromHeader);
 	}
 
@@ -120,8 +122,15 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		Span spanFromHeader = getSpanFromHeader(message);
 		if (spanFromHeader!= null) {
 			spanFromHeader.logEvent(Span.SERVER_SEND);
+			addErrorTag(ex);
 		}
 		getTracer().detach(spanFromHeader);
+	}
+
+	private void addErrorTag(Exception ex) {
+		if (ex != null) {
+			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
+		}
 	}
 
 	private Span getSpanFromHeader(Message<?> message) {

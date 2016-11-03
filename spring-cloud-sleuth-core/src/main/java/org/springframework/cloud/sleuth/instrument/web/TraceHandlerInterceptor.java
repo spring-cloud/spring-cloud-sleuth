@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -149,6 +150,9 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		Span span = getSpanFromAttribute(request);
 		if (log.isDebugEnabled()) {
 			log.debug("Closing span " + span);
+		}
+		if (ex != null) {
+			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
 		}
 		getTracer().close(span);
 	}

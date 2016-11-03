@@ -31,6 +31,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTests.App;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -87,7 +88,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.message = message;
 		this.span = TestSpanContextHolder.getCurrentSpan();
 		if (message.getHeaders().containsKey("THROW_EXCEPTION")) {
-			throw new RuntimeException();
+			throw new RuntimeException("A terrible exception has occurred");
 		}
 	}
 
@@ -268,6 +269,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(this.message).isNotNull();
 		this.tracer.close(span);
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(new ListOfSpans(this.accumulator.getSpans()))
+				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
+						"A terrible exception has occurred");
 	}
 
 	@Test
@@ -281,7 +285,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		String traceId = this.message.getHeaders().get(Span.TRACE_ID_NAME, String.class);
 		then(traceId).isNull();
 
-		then(accumulator.getSpans()).isEmpty();
+		then(this.accumulator.getSpans()).isEmpty();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
@@ -297,6 +301,18 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		long traceId = Span.hexToId(this.message.getHeaders()
 				.get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(Span.hexToId(lower64Bits));
+	}
+
+	@Test
+	public void shouldNotBreakWhenInvalidHeadersAreSent() {
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader(TraceMessageHeaders.PARENT_ID_NAME, "-")
+				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
+
+		then(this.message).isNotNull();
+		then(this.accumulator.getSpans()).isNotEmpty();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
 	@Configuration

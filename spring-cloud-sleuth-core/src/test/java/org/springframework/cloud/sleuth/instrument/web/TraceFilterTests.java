@@ -16,10 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -32,12 +33,14 @@ import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -285,7 +288,7 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void catchesException() throws Exception {
+	public void shouldAnnotateSpanWithErrorWhenExceptionIsThrown() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
@@ -296,7 +299,7 @@ public class TraceFilterTests {
 					javax.servlet.ServletResponse response)
 							throws java.io.IOException, javax.servlet.ServletException {
 				throw new RuntimeException("Planned");
-			};
+			}
 		};
 		try {
 			filter.doFilter(this.request, this.response, this.filterChain);
@@ -307,6 +310,8 @@ public class TraceFilterTests {
 		verifyParentSpanHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(new ListOfSpans(this.spanReporter.getSpans()))
+				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME, "Planned");
 	}
 
 	@Test
@@ -323,7 +328,7 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void returns400IfSpanIsMalformed() throws Exception {
+	public void returns400IfSpanIsMalformedAndCreatesANewSpan() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, "asd")
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
@@ -331,8 +336,26 @@ public class TraceFilterTests {
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
+		then(new ArrayList<>(this.spanReporter.getSpans())).isNotEmpty();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
-		then(this.response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+		then(ExceptionUtils.getLastException()).isNull();
+		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
+	}
+
+	@Test
+	public void returns200IfSpanParentIsMalformedAndCreatesANewSpan() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
+				.header(Span.PARENT_ID_NAME, "-")
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.httpTraceKeysInjector);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(new ArrayList<>(this.spanReporter.getSpans())).isNotEmpty();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
+		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
 	}
 
 	public void verifyParentSpanHttpTags() {
