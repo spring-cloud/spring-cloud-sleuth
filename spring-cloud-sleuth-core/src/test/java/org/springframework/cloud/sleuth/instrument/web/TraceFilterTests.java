@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.HttpSpanExtractor;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanExtractor;
@@ -66,7 +67,7 @@ public class TraceFilterTests {
 
 	@Mock SpanLogger spanLogger;
 	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
-	SpanExtractor<HttpServletRequest> spanExtractor = new HttpServletRequestExtractor(Pattern
+	HttpSpanExtractor spanExtractor = new ZipkinHttpSpanExtractor(Pattern
 			.compile(TraceFilter.DEFAULT_SKIP_PATTERN));
 
 	private Tracer tracer;

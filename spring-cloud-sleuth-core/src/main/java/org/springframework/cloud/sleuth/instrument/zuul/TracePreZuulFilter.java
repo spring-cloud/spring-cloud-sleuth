@@ -16,20 +16,21 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+
 import com.netflix.zuul.ExecutionStatus;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.ZuulFilterResult;
 import com.netflix.zuul.context.RequestContext;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
-
-import java.lang.invoke.MethodHandles;
-import java.net.URI;
 
 /**
  * A pre request {@link ZuulFilter} that sets tracing related headers on the request
@@ -45,10 +46,10 @@ public class TracePreZuulFilter extends ZuulFilter {
 	private static final String ZUUL_COMPONENT = "zuul";
 
 	private final Tracer tracer;
-	private final SpanInjector<RequestContext> spanInjector;
+	private final HttpSpanInjector spanInjector;
 	private final HttpTraceKeysInjector httpTraceKeysInjector;
 
-	public TracePreZuulFilter(Tracer tracer, SpanInjector<RequestContext> spanInjector,
+	public TracePreZuulFilter(Tracer tracer, HttpSpanInjector spanInjector,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
@@ -76,7 +77,7 @@ public class TracePreZuulFilter extends ZuulFilter {
 		markRequestAsHandled(ctx);
 		Span newSpan = this.tracer.createSpan(span.getName(), span);
 		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
-		this.spanInjector.inject(newSpan, ctx);
+		this.spanInjector.inject(newSpan, new RequestContextTextMap(ctx));
 		this.httpTraceKeysInjector.addRequestTags(newSpan, URI.create(ctx.getRequest().getRequestURI()), ctx.getRequest().getMethod());
 		if (log.isDebugEnabled()) {
 			log.debug("New Zuul Span is " + newSpan + "");

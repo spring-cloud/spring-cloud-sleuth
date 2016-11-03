@@ -25,6 +25,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
+import org.springframework.util.StringUtils;
 
 /**
  *
@@ -51,6 +52,9 @@ class MessagingTextMap implements SpanTextMap {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void put(String key, String value) {
+		if (!StringUtils.hasText(value)) {
+			return;
+		}
 		Message<?> initialMessage = this.delegate.build();
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(initialMessage);

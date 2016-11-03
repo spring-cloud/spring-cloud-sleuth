@@ -1,10 +1,14 @@
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.instrument.web;
 
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.HttpSpanExtractor;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.util.StringUtils;
 
 /**
@@ -13,45 +17,17 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
-public class ZipkinHttpSpanPropagator implements HttpSpanExtractor, HttpSpanInjector {
+public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 
 	private static final org.apache.commons.logging.Log log = LogFactory.getLog(
 			MethodHandles.lookup().lookupClass());
 	static final String URI_HEADER = "X-Span-Uri";
 	private static final String HTTP_COMPONENT = "http";
 
-	@Override
-	public void inject(Span span, SpanTextMap carrier) {
-		setIdHeader(carrier, Span.TRACE_ID_NAME, span.getTraceId());
-		setIdHeader(carrier, Span.SPAN_ID_NAME, span.getSpanId());
-		setHeader(carrier, Span.SAMPLED_NAME, span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
-		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
-		setIdHeader(carrier, Span.PARENT_ID_NAME, getParentId(span));
-		setHeader(carrier, Span.PROCESS_ID_NAME, span.getProcessId());
-	}
-	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty() ? span.getParents().get(0) : null;
-	}
+	private final Pattern skipPattern;
 
-	private void setHeader(SpanTextMap carrier, String name, String value) {
-		if (StringUtils.hasText(value) && !entryPresent(carrier, name)) {
-			carrier.put(name, value);
-		}
-	}
-
-	private void setIdHeader(SpanTextMap carrier, String name, Long value) {
-		if (value != null) {
-			setHeader(carrier, name, Span.idToHex(value));
-		}
-	}
-
-	private boolean entryPresent(SpanTextMap carrier, String name) {
-		for (Map.Entry<String, String> entry : carrier) {
-			if (entry.getKey().equals(name)) {
-				return true;
-			}
-		}
-		return false;
+	public ZipkinHttpSpanExtractor(Pattern skipPattern) {
+		this.skipPattern = skipPattern;
 	}
 
 	@Override
@@ -62,11 +38,12 @@ public class ZipkinHttpSpanPropagator implements HttpSpanExtractor, HttpSpanInje
 			return null;
 		}
 		try {
-			boolean skip = Boolean.parseBoolean(carrier.get(Span.SAMPLED_NAME));
+			String uri = carrier.get(URI_HEADER);
+			boolean skip = this.skipPattern.matcher(uri).matches()
+					|| Span.SPAN_NOT_SAMPLED.equals(carrier.get(Span.SAMPLED_NAME));
 			long traceId = Span
 					.hexToId(carrier.get(Span.TRACE_ID_NAME));
 			long spanId = spanId(carrier, traceId);
-			String uri = carrier.get(URI_HEADER);
 			return buildParentSpan(carrier, uri, skip, traceId, spanId);
 		} catch (Exception e) {
 			log.error("Exception occurred while trying to extract span from carrier", e);
@@ -114,10 +91,26 @@ public class ZipkinHttpSpanPropagator implements HttpSpanExtractor, HttpSpanInje
 
 	// TODO: Seems to be faster than iterating with iterator each time
 	private Map<String, String> asMap(SpanTextMap carrier) {
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new CaseInsensitiveMap();
 		for (Map.Entry<String, String> entry : carrier) {
 			map.put(entry.getKey(), entry.getValue());
 		}
 		return map;
+	}
+
+	private class CaseInsensitiveMap extends HashMap<String, String> {
+
+		@Override
+		public String get(Object key) {
+			if (key instanceof String) {
+				return super.get(((String) key).toLowerCase());
+			}
+			return super.get(key);
+		}
+
+		@Override
+		public String put(String key, String value) {
+			return super.put(key.toLowerCase(), value);
+		}
 	}
 }

@@ -16,6 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.Tracer;
 
 import okhttp3.Request;
@@ -38,9 +44,21 @@ class OkHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCust
 	}
 
 	@Override
-	void setHeader(Request.Builder builder, String name, String value) {
-		if (value != null) {
-			builder.addHeader(name, value);
-		}
+	protected SpanTextMap toSpanTextMap(final Request.Builder context) {
+		return new SpanTextMap() {
+			@Override public Iterator<Map.Entry<String, String>> iterator() {
+				Map<String, String> map = new HashMap<>();
+				for (Map.Entry<String, List<String>> entry : context.build().headers().toMultimap().entrySet()) {
+					if (!entry.getValue().isEmpty()) {
+						map.put(entry.getKey(), entry.getValue().get(0));
+					}
+				}
+				return map.entrySet().iterator();
+			}
+
+			@Override public void put(String key, String value) {
+				context.addHeader(key, value);
+			}
+		};
 	}
 }

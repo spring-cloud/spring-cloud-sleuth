@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async.issues.issue410;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -63,6 +64,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @TestPropertySource(properties = {"ribbon.eureka.enabled=false", "feign.hystrix.enabled=false", "server.port=0"})
 public class Issue410Tests {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	@Autowired Environment environment;
 	@Autowired Tracer tracer;
 	@Autowired AsyncTask asyncTask;
@@ -71,6 +74,7 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_without_a_pool() {
 		Span span = this.tracer.createSpan("foo");
+		log.info("Starting test");
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/without_pool", String.class);
 
@@ -87,6 +91,7 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_with_a_pool() {
 		Span span = this.tracer.createSpan("foo");
+		log.info("Starting test");
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
 
@@ -106,6 +111,7 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_executor() {
 		Span span = this.tracer.createSpan("foo");
+		log.info("Starting test");
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/completable", String.class);
 
@@ -125,6 +131,7 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_task_scheduler() {
 		Span span = this.tracer.createSpan("foo");
+		log.info("Starting test");
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler", String.class);
 

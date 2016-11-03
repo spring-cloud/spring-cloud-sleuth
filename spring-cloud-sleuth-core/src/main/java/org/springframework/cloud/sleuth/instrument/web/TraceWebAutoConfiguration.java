@@ -15,7 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -30,7 +29,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.SpanExtractor;
+import org.springframework.cloud.sleuth.HttpSpanExtractor;
+import org.springframework.cloud.sleuth.HttpSpanInjector;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -90,10 +90,7 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public FilterRegistrationBean traceWebFilter(Tracer tracer, TraceKeys traceKeys,
-			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
-			SpanExtractor<HttpServletRequest> spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector, TraceFilter traceFilter) {
+	public FilterRegistrationBean traceWebFilter(TraceFilter traceFilter) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(traceFilter);
 		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
 		filterRegistrationBean.setOrder(TraceFilter.ORDER);
@@ -103,16 +100,22 @@ public class TraceWebAutoConfiguration {
 	@Bean
 	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
 			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
-			SpanExtractor<HttpServletRequest> spanExtractor,
+			HttpSpanExtractor spanExtractor,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
 				spanReporter, spanExtractor, httpTraceKeysInjector);
 	}
 
 	@Bean
-	public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor(
-			SkipPatternProvider skipPatternProvider) {
-		return new HttpServletRequestExtractor(skipPatternProvider.skipPattern());
+	@ConditionalOnMissingBean
+	public HttpSpanExtractor httpSpanExtractor(@Value("${spring.sleuth.web.skipPattern:}") String skipPattern) {
+		return new ZipkinHttpSpanExtractor(Pattern.compile(skipPattern));
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public HttpSpanInjector httpSpanInjector() {
+		return new ZipkinHttpSpanInjector();
 	}
 
 	@Configuration

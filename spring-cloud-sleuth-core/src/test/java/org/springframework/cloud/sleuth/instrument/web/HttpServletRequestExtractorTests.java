@@ -16,9 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.Random;
-import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.Vector;
+import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +36,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 public class HttpServletRequestExtractorTests {
 
 	@Mock HttpServletRequest request;
-	HttpServletRequestExtractor extractor = new HttpServletRequestExtractor(
+	ZipkinHttpSpanExtractor extractor = new ZipkinHttpSpanExtractor(
 			Pattern.compile(""));
 
 	@Before
@@ -45,7 +47,7 @@ public class HttpServletRequestExtractorTests {
 
 	@Test
 	public void should_return_null_if_there_is_no_trace_id() {
-		then(extractor.joinTrace(request)).isNull();
+		then(extractor.joinTrace(new HttpServletRequestTextMap(this.request))).isNull();
 	}
 
 	@Test
@@ -53,7 +55,7 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
 				.willReturn("invalid");
 
-		then(this.extractor.joinTrace(this.request)).isNull();
+		then(this.extractor.joinTrace(new HttpServletRequestTextMap(this.request))).isNull();
 	}
 
 	@Test
@@ -63,7 +65,7 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
 				.willReturn("invalid");
 
-		then(this.extractor.joinTrace(this.request)).isNull();
+		then(this.extractor.joinTrace(new HttpServletRequestTextMap(this.request))).isNull();
 	}
 
 	@Test
@@ -75,7 +77,7 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
 				.willReturn("invalid");
 
-		then(this.extractor.joinTrace(this.request)).isNull();
+		then(this.extractor.joinTrace(new HttpServletRequestTextMap(this.request))).isNull();
 	}
 
 	@Test
@@ -83,12 +85,14 @@ public class HttpServletRequestExtractorTests {
 		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
 		String lower64Bits = "48485a3953bb6124";
 
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.TRACE_ID_NAME, Span.SPAN_ID_NAME)).elements());
 		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
 				.willReturn(hex128Bits);
 		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
 				.willReturn(lower64Bits);
 
-		Span span = this.extractor.joinTrace(this.request);
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
 
 		then(span.getTraceId()).isEqualTo(Span.hexToId(lower64Bits));
 	}
