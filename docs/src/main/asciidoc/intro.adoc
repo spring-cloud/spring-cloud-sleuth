@@ -33,7 +33,7 @@ the start and stop of a request are:
 
 Visualization of what *Span* and *Trace* will look in a system together with the Zipkin annotations:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
+image::{github-raw}/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
 
 Each color of a note signifies a span (7 spans - from *A* to *G*). If you have such information in the note:
 
@@ -47,7 +47,7 @@ That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*
 
 This is how the visualization of the parent / child relationship of spans would look like:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/parents.png[Parent child relationship]
+image::{github-raw}/docs/src/main/asciidoc/images/parents.png[Parent child relationship]
 
 === Purpose
 
@@ -57,11 +57,11 @@ In the following sections the example from the image above will be taken into co
 
 Altogether there are *10 spans* . If you go to traces in Zipkin you will see this number:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-traces.png[Traces]
+image::{github-raw}/docs/src/main/asciidoc/images/zipkin-traces.png[Traces]
 
 However if you pick a particular trace then you will see *7 spans*:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-ui.png[Traces Info propagation]
+image::{github-raw}/docs/src/main/asciidoc/images/zipkin-ui.png[Traces Info propagation]
 
 NOTE: When picking a particular trace you will see merged spans. That means that if there were 2 spans sent to
 Zipkin with Server Received and Server Sent / Client Received and Client Sent
@@ -89,15 +89,15 @@ Altogether *10* spans.
 
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
+image::{github-raw}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
 
 The dependency graph in Zipkin would look like this:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/dependencies.png[Dependencies]
+image::{github-raw}/docs/src/main/asciidoc/images/dependencies.png[Dependencies]
 
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
+image::{github-raw}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
 
 
 ==== Log correlation
@@ -117,7 +117,7 @@ If you're using a log aggregating tool like https://www.elastic.co/products/kiba
 http://www.splunk.com/[Splunk] etc. you can order the events that took place. An example of
 Kibana would look like this:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png[Log correlation with Kibana]
+image::{github-raw}/docs/src/main/asciidoc/images/kibana.png[Log correlation with Kibana]
 
 If you want to use https://www.elastic.co/guide/en/logstash/current/index.html[Logstash] here is the Grok pattern for Logstash:
 
@@ -164,6 +164,34 @@ include::https://raw.githubusercontent.com/spring-cloud-samples/sleuth-documenta
 NOTE: If you're using a custom `logback-spring.xml` then you have to pass the `spring.application.name` in
 `bootstrap` instead of `application` property file. Otherwise your custom logback file won't read the property properly.
 
+===== Propagating Span Context
+
+The span context is the state that must get propagated to any child Spans across process boundaries.
+Part of the Span Context is the Baggage.
+
+Baggage is a set of key:value pairs stored in the span context. Baggage travels together with the trace
+and is attached to every span. Spring Cloud Sleuth will understand that a header is baggage related if the HTTP
+ header is prefixed with `baggage-` and for messaging it starts with `baggage_`.
+
+IMPORTANT: Since you can attach as many baggage elements as you want and it's propagated through the network
+then if it's weighing too much or you have too many elements then you it may decrease system throughput or increase RPC latencies.
+
+Example of setting span:
+
+[source,java]
+----
+include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+----
+
+====== Baggage vs. Span Tags
+
+Baggage travels with the trace (i.e. every child span contains the baggage of its parent). Zipkin has no knowledge of
+baggage and will not even receive that information.
+
+Tags are not passed from a parent to a child, however they are sent to Zipkin and will get presented in the
+Zipkin UI for every span.
+
+
 === Adding to the project
 
 ==== Only Sleuth (log correlation)
@@ -179,7 +207,7 @@ the `spring-cloud-starter-sleuth` module to your project.
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Brixton.RELEASE</version>
+                  <version>Dalston.BUILD-SNAPSHOT</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -200,7 +228,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.BUILD-SNAPSHOT"
     }
 }
 
@@ -224,7 +252,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` de
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Brixton.RELEASE</version>
+                  <version>Dalston.BUILD-SNAPSHOT</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -245,7 +273,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.BUILD-SNAPSHOT"
     }
 }
 
@@ -269,7 +297,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dep
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Brixton.RELEASE</version>
+                  <version>Dalston.BUILD-SNAPSHOT</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -301,7 +329,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.BUILD-SNAPSHOT"
     }
 }
 
@@ -331,7 +359,7 @@ dependency
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Brixton.RELEASE</version>
+                  <version>Dalston.BUILD-SNAPSHOT</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -363,7 +391,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.BUILD-SNAPSHOT"
     }
 }
 
@@ -384,7 +412,7 @@ and then just annotate your main class with `@EnableZipkinStreamServer` annotati
 
 [source,java]
 ----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/src/main/java/example/ZipkinStreamServerApplication.java[]
+include::{github-raw}/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/src/main/java/example/ZipkinStreamServerApplication.java[]
 ----
 
 == Additional resources

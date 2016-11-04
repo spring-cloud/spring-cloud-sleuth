@@ -67,8 +67,11 @@ public class MultipleHopsIntegrationTests {
 	// issue #237 - baggage
 	@Test
 	public void should_propagate_the_baggage() throws Exception {
+		//tag::baggage[]
 		Span initialSpan = this.tracer.createSpan("span");
 		initialSpan.setBaggageItem("foo", "bar");
+		//end::baggage[]
+
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.put("baggage-baz", Collections.singletonList("baz"));
