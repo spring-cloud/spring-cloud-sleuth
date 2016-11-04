@@ -3,7 +3,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.cloud.sleuth.Span;
@@ -60,16 +59,6 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 		}
 		else {
 			addHeader(textMap, TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
-		}
-		addHeader(textMap, TraceMessageHeaders.SPAN_HEADER, storeSpanAsJson(span));
-	}
-
-	private String storeSpanAsJson(Span span) {
-		try {
-			return this.objectMapper.writeValueAsString(span);
-		}
-		catch (JsonProcessingException e) {
-			throw new IllegalStateException(e);
 		}
 	}
 

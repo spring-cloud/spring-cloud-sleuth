@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.nio.charset.Charset;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,13 +47,18 @@ class FeignRequestTextMap implements SpanTextMap {
 
 	@Override
 	public Iterator<Map.Entry<String, String>> iterator() {
-		Map<String, String> map = new HashMap<>();
-		for (Map.Entry<String, Collection<String>> entry : this.delegate.get().headers().entrySet()) {
-			if (!entry.getValue().isEmpty()) {
-				map.put(entry.getKey(), entry.getValue().iterator().next());
+		final Iterator<Map.Entry<String, Collection<String>>> iterator = this.delegate.get().headers().entrySet().iterator();
+		return new Iterator<Map.Entry<String, String>>() {
+			@Override public boolean hasNext() {
+				return iterator.hasNext();
 			}
-		}
-		return map.entrySet().iterator();
+
+			@Override public Map.Entry<String, String> next() {
+				Map.Entry<String, Collection<String>> next = iterator.next();
+				Collection<String> value = next.getValue();
+				return new AbstractMap.SimpleEntry<>(next.getKey(), value.isEmpty() ? "" : value.iterator().next());
+			}
+		};
 	}
 
 	@Override

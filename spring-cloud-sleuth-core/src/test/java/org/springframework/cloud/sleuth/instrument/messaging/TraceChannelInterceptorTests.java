@@ -37,6 +37,7 @@ import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterce
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
@@ -102,6 +103,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@After
 	public void close() {
+		then(ExceptionUtils.getLastException()).isNull();
 		TestSpanContextHolder.removeCurrentSpan();
 		this.tracedChannel.unsubscribe(this);
 		this.ignoredChannel.unsubscribe(this);
@@ -143,52 +145,6 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		then(this.accumulator.getSpans()).hasSize(1);
-	}
-
-	// #332
-	@Test
-	public void shouldSendNewAndOldHeadersWhenNewHeadersWerePassed() {
-		this.tracedChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
-				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
-		then(this.message).isNotNull();
-
-		String newSpanId = thenNewSpanIdEqualsOldSpanId();
-		thenNewTraceIdEqualsOldTraceId();
-		then(newSpanId).isNotEqualTo(20L);
-		then(this.accumulator.getSpans()).hasSize(1);
-	}
-
-	private String thenNewSpanIdEqualsOldSpanId() {
-		String newSpanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME,
-				String.class);
-		then(newSpanId).isNotNull();
-		String oldSpanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
-		then(oldSpanId).isEqualTo(newSpanId);
-		return newSpanId;
-	}
-
-	// #332
-	@Test
-	public void shouldSendNewAndOldHeadersWhenOldHeadersWerePassed() {
-		this.tracedChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
-				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
-		then(this.message).isNotNull();
-
-		String newSpanId = thenNewSpanIdEqualsOldSpanId();
-		thenNewTraceIdEqualsOldTraceId();
-		then(newSpanId).isNotEqualTo(20L);
-		then(this.accumulator.getSpans()).hasSize(1);
-	}
-
-	private void thenNewTraceIdEqualsOldTraceId() {
-		long traceId = Span.hexToId(this.message.getHeaders()
-				.get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
-		then(traceId).isEqualTo(10L);
-		long oldTraceId = Span
-				.hexToId(this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
-		then(oldTraceId).isEqualTo(traceId);
 	}
 
 	@Test

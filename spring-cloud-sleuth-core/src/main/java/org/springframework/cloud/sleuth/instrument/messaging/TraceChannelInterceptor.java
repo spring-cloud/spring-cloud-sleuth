@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.cloud.sleuth.Log;
@@ -53,16 +51,14 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	@Override
 	public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
-		Span spanFromHeader = getSpanFromHeader(message);
-		getTracer().continueSpan(spanFromHeader);
-		Span continuedSpan = getTracer().getCurrentSpan();
-		if (containsServerReceived(continuedSpan)) {
-			continuedSpan.logEvent(Span.SERVER_SEND);
-		} else if (spanFromHeader != null) {
-			continuedSpan.logEvent(Span.CLIENT_RECV);
+		Span currentSpan = getTracer().getCurrentSpan();
+		if (containsServerReceived(currentSpan)) {
+			currentSpan.logEvent(Span.SERVER_SEND);
+		} else if (currentSpan != null) {
+			currentSpan.logEvent(Span.CLIENT_RECV);
 		}
 		addErrorTag(ex);
-		getTracer().close(continuedSpan);
+		getTracer().close(currentSpan);
 	}
 
 	private boolean containsServerReceived(Span span) {
@@ -109,7 +105,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
 			MessageHandler handler) {
-		Span spanFromHeader = getSpanFromHeader(message);
+		Span spanFromHeader = getTracer().getCurrentSpan();
 		if (spanFromHeader!= null) {
 			spanFromHeader.logEvent(Span.SERVER_RECV);
 		}
@@ -120,7 +116,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public void afterMessageHandled(Message<?> message, MessageChannel channel,
 			MessageHandler handler, Exception ex) {
-		Span spanFromHeader = getSpanFromHeader(message);
+		Span spanFromHeader = getTracer().getCurrentSpan();
 		if (spanFromHeader!= null) {
 			spanFromHeader.logEvent(Span.SERVER_SEND);
 			addErrorTag(ex);
@@ -131,25 +127,6 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	private void addErrorTag(Exception ex) {
 		if (ex != null) {
 			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
-		}
-	}
-
-	private Span getSpanFromHeader(Message<?> message) {
-		if (message == null) {
-			return null;
-		}
-		Object object = message.getHeaders().get(TraceMessageHeaders.SPAN_HEADER);
-		if (object instanceof String) {
-			return readSpan((String) object);
-		}
-		return null;
-	}
-
-	private Span readSpan(String object) {
-		try {
-			return this.objectMapper.readValue(object, Span.class);
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
 		}
 	}
 
