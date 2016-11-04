@@ -1,7 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.lang.invoke.MethodHandles;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -9,6 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.HttpSpanExtractor;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
+import org.springframework.cloud.sleuth.util.TextMapUtil;
 import org.springframework.util.StringUtils;
 
 /**
@@ -32,7 +32,7 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
-		Map<String, String> carrier = asMap(textMap);
+		Map<String, String> carrier = TextMapUtil.asMap(textMap);
 		if (carrier.get(Span.TRACE_ID_NAME) == null) {
 			// can't build a Span without trace id
 			return null;
@@ -89,28 +89,4 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 		return span.build();
 	}
 
-	// TODO: Seems to be faster than iterating with iterator each time
-	private Map<String, String> asMap(SpanTextMap carrier) {
-		Map<String, String> map = new CaseInsensitiveMap();
-		for (Map.Entry<String, String> entry : carrier) {
-			map.put(entry.getKey(), entry.getValue());
-		}
-		return map;
-	}
-
-	private class CaseInsensitiveMap extends HashMap<String, String> {
-
-		@Override
-		public String get(Object key) {
-			if (key instanceof String) {
-				return super.get(((String) key).toLowerCase());
-			}
-			return super.get(key);
-		}
-
-		@Override
-		public String put(String key, String value) {
-			return super.put(key.toLowerCase(), value);
-		}
-	}
 }

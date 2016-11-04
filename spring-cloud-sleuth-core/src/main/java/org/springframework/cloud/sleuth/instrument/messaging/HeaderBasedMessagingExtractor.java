@@ -1,10 +1,10 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
+import org.springframework.cloud.sleuth.util.TextMapUtil;
 
 /**
  * Default implementation for messaging
@@ -16,7 +16,7 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
-		Map<String, String> carrier = asMap(textMap);
+		Map<String, String> carrier = TextMapUtil.asMap(textMap);
 		if (!hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME)
 				|| !hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME)) {
 			return null;
@@ -57,12 +57,4 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 		}
 	}
 
-	// TODO: Seems to be faster than iterating with iterator each time
-	private Map<String, String> asMap(SpanTextMap carrier) {
-		Map<String, String> map = new HashMap<>();
-		for (Map.Entry<String, String> entry : carrier) {
-			map.put(entry.getKey(), entry.getValue());
-		}
-		return map;
-	}
 }

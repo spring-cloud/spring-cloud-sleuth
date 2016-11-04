@@ -1,13 +1,15 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.springframework.cloud.sleuth.*;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanTextMap;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.util.TextMapUtil;
 import org.springframework.util.StringUtils;
 
 /**
@@ -28,7 +30,7 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 
 	@Override
 	public void inject(Span span, SpanTextMap carrier) {
-		Map<String, String> map = asMap(carrier);
+		Map<String, String> map = TextMapUtil.asMap(carrier);
 		if (span == null) {
 			if (!isSampled(map, TraceMessageHeaders.SAMPLED_NAME)) {
 				carrier.put(TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
@@ -72,7 +74,7 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 	}
 
 	private void addAnnotations(TraceKeys traceKeys, SpanTextMap spanTextMap, Span span) {
-		Map<String, String> map = asMap(spanTextMap);
+		Map<String, String> map = TextMapUtil.asMap(spanTextMap);
 		for (String name : traceKeys.getMessage().getHeaders()) {
 			if (map.containsKey(name)) {
 				String key = traceKeys.getMessage().getPrefix() + name.toLowerCase();
@@ -112,12 +114,4 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 		return parents.isEmpty() ? null : parents.get(0);
 	}
 
-	// TODO: Seems to be faster than iterating with iterator each time
-	private Map<String, String> asMap(SpanTextMap carrier) {
-		Map<String, String> map = new HashMap<>();
-		for (Map.Entry<String, String> entry : carrier) {
-			map.put(entry.getKey(), entry.getValue());
-		}
-		return map;
-	}
 }

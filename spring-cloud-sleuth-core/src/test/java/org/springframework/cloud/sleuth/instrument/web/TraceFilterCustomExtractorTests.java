@@ -37,6 +37,7 @@ import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.TextMapUtil;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -141,21 +142,13 @@ public class TraceFilterCustomExtractorTests {
 	static class CustomHttpSpanExtractor implements HttpSpanExtractor {
 
 		@Override public Span joinTrace(SpanTextMap carrier) {
-			Map<String, String> map = asMap(carrier);
+			Map<String, String> map = TextMapUtil.asMap(carrier);
 			long traceId = Span.hexToId(map.get("correlationid"));
 			long spanId = Span.hexToId(map.get("myspanid"));
 			// extract all necessary headers
 			Span.SpanBuilder builder = Span.builder().traceId(traceId).spanId(spanId);
 			// build rest of the Span
 			return builder.build();
-		}
-
-		private Map<String, String> asMap(SpanTextMap carrier) {
-			Map<String, String> map = new HashMap<>();
-			for (Map.Entry<String, String> entry : carrier) {
-				map.put(entry.getKey(), entry.getValue());
-			}
-			return map;
 		}
 	}
 
