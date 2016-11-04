@@ -1,6 +1,0 @@
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-stream/src/test/java/org/springframework/cloud/sleuth/stream/DiscoveryClientHostLocatorTest.java
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-stream/src/test/java/org/springframework/cloud/sleuth/stream/TracerIgnoringChannelInterceptorTest.java
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-stream/src/test/java/org/springframework/cloud/sleuth/stream/StreamSpanListenerTests.java
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-stream/src/test/java/org/springframework/cloud/sleuth/stream/StreamEnvironmentPostProcessorTests.java
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-stream/src/test/java/org/springframework/cloud/sleuth/stream/ServerPropertiesHostLocatorTests.java
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-stream/src/test/java/org/springframework/cloud/sleuth/stream/SleuthStreamAutoConfigurationTest.java

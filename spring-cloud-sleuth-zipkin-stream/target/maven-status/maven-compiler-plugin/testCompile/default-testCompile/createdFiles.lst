@@ -1,5 +1,0 @@
-org/springframework/cloud/sleuth/zipkin/stream/ZipkinServerApplicationTests$ZipkinStreamServerApplication.class
-org/springframework/cloud/sleuth/zipkin/stream/documentation/Consumer.class
-org/springframework/cloud/sleuth/zipkin/stream/ConvertToZipkinSpanListTests.class
-org/springframework/cloud/sleuth/zipkin/stream/ZipkinServerApplicationTests.class
-org/springframework/cloud/sleuth/zipkin/stream/ZipkinMessageListenerTests.class

@@ -1,6 +1,0 @@
-org/springframework/cloud/sleuth/trace/IntegrationTestSpanContextHolder.class
-tools/RequestSendingRunnable.class
-tools/AssertingRestTemplate$1.class
-tools/AbstractIntegrationTest.class
-tools/AssertingRestTemplate.class
-tools/AbstractIntegrationTest$RequestExchanger.class

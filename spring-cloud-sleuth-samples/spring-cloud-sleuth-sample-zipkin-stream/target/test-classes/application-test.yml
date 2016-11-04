@@ -1,3 +1,0 @@
-zipkin:
-  storage:
-    type: mem # default is inMemory

@@ -1,8 +1,0 @@
-#Thu Sep 22 13:19:54 UTC 2016
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-messaging/src/main/java/sample/SampleBackground.java=1474550343000
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-messaging/src/main/java/sample/SampleSink.java=1474550343000
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-messaging/src/main/java/sample/SampleService.java=1474550343000
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-messaging/src/main/java/sample/SampleRequestResponse.java=1474550343000
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-messaging/src/main/java/sample/SampleTransformer.java=1474550343000
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-messaging/src/main/java/sample/SampleMessagingApplication.java=1474550343000
-configuration*?=645B515EBEE8B06A26D2DB3884CE48E58F679DF7

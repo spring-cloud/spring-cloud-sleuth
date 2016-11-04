@@ -1,4 +1,0 @@
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/ZipkinMessageListenerTests.java
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/ZipkinServerApplicationTests.java
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/ConvertToZipkinSpanListTests.java
-/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/documentation/Consumer.java

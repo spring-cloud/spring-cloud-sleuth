@@ -1,5 +1,0 @@
-org/springframework/cloud/sleuth/zipkin/stream/ZipkinMessageListener.class
-org/springframework/cloud/sleuth/zipkin/stream/ConvertToZipkinSpanList.class
-org/springframework/cloud/sleuth/zipkin/stream/StreamEnvironmentPostProcessor.class
-org/springframework/cloud/sleuth/zipkin/stream/EnableZipkinStreamServer.class
-org/springframework/cloud/sleuth/zipkin/stream/ZipkinMessageListener$NotSleuthStreamClient.class
