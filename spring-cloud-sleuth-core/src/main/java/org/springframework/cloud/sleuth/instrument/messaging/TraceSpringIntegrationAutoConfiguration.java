@@ -23,16 +23,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.GlobalChannelInterceptor;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -56,8 +52,8 @@ public class TraceSpringIntegrationAutoConfiguration {
 	@Bean
 	@GlobalChannelInterceptor(patterns = "${spring.sleuth.integration.patterns:*}")
 	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
-			TraceKeys traceKeys, Random random, SpanExtractor<Message<?>> spanExtractor,
-			SpanInjector<MessageBuilder<?>> spanInjector) {
+			TraceKeys traceKeys, Random random, MessagingSpanTextMapExtractor spanExtractor,
+			MessagingSpanTextMapInjector spanInjector) {
 		return new IntegrationTraceChannelInterceptor(tracer, traceKeys, spanExtractor,
 				spanInjector);
 	}

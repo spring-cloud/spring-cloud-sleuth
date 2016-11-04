@@ -31,11 +31,13 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.ZipkinHttpSpanInjector;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -69,6 +71,8 @@ public class TraceFeignClientTests {
 		ExceptionUtils.setFail(true);
 		BDDMockito.given(this.beanFactory.getBean(HttpTraceKeysInjector.class))
 				.willReturn(new HttpTraceKeysInjector(this.tracer, new TraceKeys()));
+		BDDMockito.given(this.beanFactory.getBean(HttpSpanInjector.class))
+				.willReturn(new ZipkinHttpSpanInjector());
 		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
 	}
 

@@ -22,14 +22,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -54,7 +53,7 @@ public class TraceWebAsyncClientAutoConfiguration {
 
 	@Autowired Tracer tracer;
 	@Autowired private HttpTraceKeysInjector httpTraceKeysInjector;
-	@Autowired private SpanInjector<HttpRequest> spanInjector;
+	@Autowired private HttpSpanInjector spanInjector;
 	@Autowired(required = false) private ClientHttpRequestFactory clientHttpRequestFactory;
 	@Autowired(required = false) private AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
 

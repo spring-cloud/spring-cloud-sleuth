@@ -49,7 +49,7 @@ public class RestClientRibbonRequestCustomizerTests {
 	public void should_set_not_sampled_on_the_context_when_there_is_no_span() throws Exception {
 		HttpRequest.Builder requestBuilder = requestBuilder();
 
-		this.customizer.inject(null, requestBuilder);
+		this.customizer.inject(null, this.customizer.toSpanTextMap(requestBuilder));
 
 		HttpRequest request = requestBuilder.build();
 		then(request.getHttpHeaders().getFirstValue(Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_NOT_SAMPLED);
@@ -59,7 +59,7 @@ public class RestClientRibbonRequestCustomizerTests {
 	public void should_set_tracing_headers_on_the_context_when_there_is_a_span() throws Exception {
 		HttpRequest.Builder requestBuilder = requestBuilder();
 
-		this.customizer.inject(this.span, requestBuilder);
+		this.customizer.inject(this.span, this.customizer.toSpanTextMap(requestBuilder));
 
 		HttpRequest request = requestBuilder.build();
 		thenThereIsAHeaderWithNameAndValue(request, Span.SPAN_ID_NAME, "1");

@@ -16,6 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.assertj.core.api.BDDAssertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,16 +28,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.HttpSpanExtractor;
+import org.springframework.cloud.sleuth.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.SpanTextMap;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.TextMapUtil;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -43,15 +51,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletRequest;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -59,11 +60,11 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class TraceFilterCustomExtractorTests {
-	@Autowired Random random;
 	@Autowired RestTemplate restTemplate;
 	@Autowired Config config;
 	@Autowired CustomRestController customRestController;
 	@Autowired ArrayListSpanAccumulator accumulator;
+	@Autowired Tracer tracer;
 
 	@Before
 	public void setup() {
@@ -73,23 +74,23 @@ public class TraceFilterCustomExtractorTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void should_create_a_valid_span_from_custom_headers() {
-		long spanId = this.random.nextLong();
-		long traceId = this.random.nextLong();
-		RequestEntity<?> requestEntity = RequestEntity
-				.get(URI.create("http://localhost:" + this.config.port + "/headers"))
-				.header("correlationId", Span.idToHex(traceId))
-				.header("mySpanId", Span.idToHex(spanId)).build();
+		final Span newSpan = this.tracer.createSpan("new_span");
+		ResponseEntity<Map> responseEntity = null;
+		try {
+			RequestEntity<?> requestEntity = RequestEntity
+					.get(URI.create("http://localhost:" + this.config.port + "/headers"))
+					.build();
+			responseEntity = this.restTemplate.exchange(requestEntity, Map.class);
 
-		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity,
-				Map.class);
-
+ 		} finally {
+			this.tracer.close(newSpan);
+		}
 		await().atMost(5, SECONDS).until(() -> then(this.accumulator.getSpans().stream().filter(
-				span -> span.getSpanId() == spanId).findFirst().get())
-				.hasTraceIdEqualTo(traceId));
-		then(responseEntity.getBody())
-				.containsEntry("correlationid", Span.idToHex(traceId))
-				.containsEntry("myspanid", Span.idToHex(spanId))
+				span -> span.getSpanId() == newSpan.getSpanId()).findFirst().get())
+				.hasTraceIdEqualTo(newSpan.getTraceId()));
+		BDDAssertions.then(responseEntity.getBody())
+				.containsEntry("correlationid", Span.idToHex(newSpan.getTraceId()))
+				.containsKey("myspanid")
 				.as("input request headers");
 	}
 
@@ -101,9 +102,13 @@ public class TraceFilterCustomExtractorTests {
 
 		// tag::configuration[]
 		@Bean
-		@Primary
-		SpanExtractor<HttpServletRequest> customHttpServletRequestSpanExtractor() {
-			return new CustomHttpServletRequestSpanExtractor();
+		HttpSpanInjector customHttpSpanInjector() {
+			return new CustomHttpSpanInjector();
+		}
+
+		@Bean
+		HttpSpanExtractor customHttpSpanExtractor() {
+			return new CustomHttpSpanExtractor();
 		}
 		// end::configuration[]
 
@@ -134,23 +139,33 @@ public class TraceFilterCustomExtractorTests {
 	}
 
 	// tag::extractor[]
-	static class CustomHttpServletRequestSpanExtractor
-			implements SpanExtractor<HttpServletRequest> {
+	static class CustomHttpSpanExtractor implements HttpSpanExtractor {
 
-		@Override
-		public Span joinTrace(HttpServletRequest carrier) {
-			long traceId = Span.hexToId(carrier.getHeader("correlationId"));
-			long spanId = Span.hexToId(carrier.getHeader("mySpanId"));
+		@Override public Span joinTrace(SpanTextMap carrier) {
+			Map<String, String> map = TextMapUtil.asMap(carrier);
+			long traceId = Span.hexToId(map.get("correlationid"));
+			long spanId = Span.hexToId(map.get("myspanid"));
 			// extract all necessary headers
 			Span.SpanBuilder builder = Span.builder().traceId(traceId).spanId(spanId);
 			// build rest of the Span
 			return builder.build();
 		}
 	}
+
+	static class CustomHttpSpanInjector implements HttpSpanInjector {
+
+		@Override
+		public void inject(Span span, SpanTextMap carrier) {
+			carrier.put("correlationId", Span.idToHex(span.getTraceId()));
+			carrier.put("mySpanId", Span.idToHex(span.getSpanId()));
+		}
+	}
 	// end::extractor[]
 
 	@RestController
 	static class CustomRestController {
+
+		@Autowired Tracer tracer;
 
 		@RequestMapping("/headers")
 		public Map<String, String> headers(@RequestHeader HttpHeaders headers) {

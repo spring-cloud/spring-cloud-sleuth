@@ -15,23 +15,23 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.regex.Pattern;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.HttpSpanExtractor;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -88,20 +88,20 @@ public class TraceFilter extends GenericFilterBean {
 	private final TraceKeys traceKeys;
 	private final Pattern skipPattern;
 	private final SpanReporter spanReporter;
-	private final SpanExtractor<HttpServletRequest> spanExtractor;
+	private final HttpSpanExtractor spanExtractor;
 	private final HttpTraceKeysInjector httpTraceKeysInjector;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
-			SpanExtractor<HttpServletRequest> spanExtractor,
+			HttpSpanExtractor spanExtractor,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
 				spanExtractor, httpTraceKeysInjector);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
-			SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
+			SpanReporter spanReporter, HttpSpanExtractor spanExtractor,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
@@ -288,7 +288,7 @@ public class TraceFilter extends GenericFilterBean {
 			}
 			return spanFromRequest;
 		}
-		Span parent = this.spanExtractor.joinTrace(request);
+		Span parent = this.spanExtractor.joinTrace(new HttpServletRequestTextMap(request));
 		if (parent != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Found a parent span " + parent + " in the request");

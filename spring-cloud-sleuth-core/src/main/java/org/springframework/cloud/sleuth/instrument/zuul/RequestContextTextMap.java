@@ -19,39 +19,31 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.netflix.client.http.HttpRequest;
+import com.netflix.zuul.context.RequestContext;
 
 import org.springframework.cloud.sleuth.SpanTextMap;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * Customization of a Ribbon request for Netflix HttpClient
+ * A {@link SpanTextMap} abstraction over {@link RequestContext}
  *
  * @author Marcin Grzejszczak
- * @since 1.1.0
+ * @since 1.2.0
  */
-class RestClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCustomizer<HttpRequest.Builder> {
+class RequestContextTextMap implements SpanTextMap {
 
-	RestClientRibbonRequestCustomizer(Tracer tracer) {
-		super(tracer);
+	private final RequestContext carrier;
+
+	RequestContextTextMap(RequestContext carrier) {
+		this.carrier = carrier;
 	}
 
 	@Override
-	public boolean accepts(Class aClass) {
-		return aClass == HttpRequest.Builder.class;
+	public Iterator<Map.Entry<String, String>> iterator() {
+		return this.carrier.getZuulRequestHeaders().entrySet().iterator();
 	}
 
 	@Override
-	protected SpanTextMap toSpanTextMap(final HttpRequest.Builder context) {
-		context.build().getHttpHeaders();
-		return new SpanTextMap() {
-			@Override public Iterator<Map.Entry<String, String>> iterator() {
-				return context.build().getHttpHeaders().getAllHeaders().iterator();
-			}
-
-			@Override public void put(String key, String value) {
-				context.header(key, value);
-			}
-		};
+	public void put(String key, String value) {
+		this.carrier.getZuulRequestHeaders().put(key, value);
 	}
 }

@@ -50,7 +50,7 @@ public class ApacheHttpClientRibbonRequestCustomizerTests {
 	public void should_set_not_sampled_on_the_context_when_there_is_no_span() throws Exception {
 		RequestBuilder requestBuilder = RequestBuilder.create("GET");
 
-		this.customizer.inject(null, requestBuilder);
+		this.customizer.inject(null, this.customizer.toSpanTextMap(requestBuilder));
 
 		HttpUriRequest request = requestBuilder.build();
 		Header header = request.getFirstHeader(Span.SAMPLED_NAME);
@@ -62,7 +62,7 @@ public class ApacheHttpClientRibbonRequestCustomizerTests {
 	public void should_set_tracing_headers_on_the_context_when_there_is_a_span() throws Exception {
 		RequestBuilder requestBuilder = RequestBuilder.create("GET");
 
-		this.customizer.inject(this.span, requestBuilder);
+		this.customizer.inject(this.span, this.customizer.toSpanTextMap(requestBuilder));
 
 		HttpUriRequest request = requestBuilder.build();
 		thenThereIsAHeaderWithNameAndValue(request, Span.SPAN_ID_NAME, "1");

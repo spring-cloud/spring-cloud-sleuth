@@ -32,6 +32,7 @@ import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.ZipkinHttpSpanInjector;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -67,7 +68,7 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 				new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanAccumulator);
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				new TraceRestTemplateInterceptor(this.tracer, new HttpRequestInjector(),
+				new TraceRestTemplateInterceptor(this.tracer, new ZipkinHttpSpanInjector(),
 						new HttpTraceKeysInjector(this.tracer, new TraceKeys()))));
 		TestSpanContextHolder.removeCurrentSpan();
 	}

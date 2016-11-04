@@ -19,12 +19,11 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 import java.net.URI;
 
-import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequest;
@@ -56,7 +55,7 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	 * @see org.springframework.web.client.AsyncRestTemplate#AsyncRestTemplate(AsyncClientHttpRequestFactory)
 	 */
 	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer,
-			SpanInjector<HttpRequest> spanInjector,
+			HttpSpanInjector spanInjector,
 			AsyncClientHttpRequestFactory asyncDelegate,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		super(tracer, spanInjector, httpTraceKeysInjector);
@@ -70,7 +69,7 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	 * has a wrapped task executor via the {@link TraceAsyncListenableTaskExecutor}
 	 */
 	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer,
-			SpanInjector<HttpRequest> spanInjector, HttpTraceKeysInjector httpTraceKeysInjector) {
+			HttpSpanInjector spanInjector, HttpTraceKeysInjector httpTraceKeysInjector) {
 		super(tracer, spanInjector, httpTraceKeysInjector);
 		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = defaultClientHttpRequestFactory();
 		this.asyncDelegate = simpleClientHttpRequestFactory;
@@ -78,7 +77,7 @@ public class TraceAsyncClientHttpRequestFactoryWrapper extends AbstractTraceHttp
 	}
 
 	public TraceAsyncClientHttpRequestFactoryWrapper(Tracer tracer,
-			SpanInjector<HttpRequest> spanInjector,
+			HttpSpanInjector spanInjector,
 			AsyncClientHttpRequestFactory asyncDelegate,
 			ClientHttpRequestFactory syncDelegate,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
