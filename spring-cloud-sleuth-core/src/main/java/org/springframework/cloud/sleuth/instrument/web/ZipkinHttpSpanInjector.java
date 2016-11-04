@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.Map;
-
 import org.springframework.cloud.sleuth.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
@@ -30,7 +28,7 @@ public class ZipkinHttpSpanInjector implements HttpSpanInjector {
 	}
 
 	private void setHeader(SpanTextMap carrier, String name, String value) {
-		if (StringUtils.hasText(value) && !entryPresent(carrier, name)) {
+		if (StringUtils.hasText(value)) {
 			carrier.put(name, value);
 		}
 	}
@@ -39,15 +37,6 @@ public class ZipkinHttpSpanInjector implements HttpSpanInjector {
 		if (value != null) {
 			setHeader(carrier, name, Span.idToHex(value));
 		}
-	}
-
-	private boolean entryPresent(SpanTextMap carrier, String name) {
-		for (Map.Entry<String, String> entry : carrier) {
-			if (entry.getKey().equals(name)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 }

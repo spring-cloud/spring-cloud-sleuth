@@ -71,16 +71,14 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 		String parentName = carrier.get(Span.SPAN_NAME_NAME);
 		if (StringUtils.hasText(parentName)) {
 			span.name(parentName);
-		}
-		else {
+		}  else {
 			span.name(HTTP_COMPONENT + ":/parent" + uri);
 		}
 		if (StringUtils.hasText(processId)) {
 			span.processId(processId);
 		}
 		if (carrier.containsKey(Span.PARENT_ID_NAME)) {
-			span.parent(Span
-					.hexToId(carrier.get(Span.PARENT_ID_NAME)));
+			span.parent(Span.hexToId(carrier.get(Span.PARENT_ID_NAME)));
 		}
 		span.remote(true);
 		if (skip) {
