@@ -18,9 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Random;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -52,15 +49,13 @@ import org.springframework.integration.config.GlobalChannelInterceptor;
 @EnableConfigurationProperties(TraceKeys.class)
 public class TraceSpringIntegrationAutoConfiguration {
 
-	@Autowired(required = false) ObjectMapper objectMapper = new ObjectMapper();
-
 	@Bean
 	@GlobalChannelInterceptor(patterns = "${spring.sleuth.integration.patterns:*}")
 	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
 			TraceKeys traceKeys, Random random, MessagingSpanTextMapExtractor spanExtractor,
 			MessagingSpanTextMapInjector spanInjector) {
 		return new IntegrationTraceChannelInterceptor(tracer, traceKeys, spanExtractor,
-				spanInjector, this.objectMapper);
+				spanInjector);
 	}
 
 }

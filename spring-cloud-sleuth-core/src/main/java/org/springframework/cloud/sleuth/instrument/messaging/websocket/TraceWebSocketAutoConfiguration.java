@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.messaging.websocket;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -55,12 +53,12 @@ public class TraceWebSocketAutoConfiguration
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(new TraceChannelInterceptor(this.tracer,
-				this.traceKeys, this.spanExtractor, this.spanInjector, new ObjectMapper()));
+				this.traceKeys, this.spanExtractor, this.spanInjector));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(new TraceChannelInterceptor(this.tracer,
-				this.traceKeys, this.spanExtractor, this.spanInjector, new ObjectMapper()));
+				this.traceKeys, this.spanExtractor, this.spanInjector));
 	}
 }

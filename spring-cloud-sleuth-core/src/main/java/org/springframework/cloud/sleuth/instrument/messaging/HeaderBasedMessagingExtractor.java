@@ -25,7 +25,8 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 		return extractSpanFromHeaders(carrier, Span.builder());
 	}
 
-	private Span extractSpanFromHeaders(Map<String, String> carrier, Span.SpanBuilder spanBuilder) {
+	private Span extractSpanFromHeaders(Map<String, String> carrier, Span.SpanBuilder builder) {
+		Span.SpanBuilder spanBuilder = builder;
 		long traceId = Span
 				.hexToId(carrier.get(TraceMessageHeaders.TRACE_ID_NAME));
 		long spanId = Span.hexToId(carrier.get(TraceMessageHeaders.SPAN_ID_NAME));

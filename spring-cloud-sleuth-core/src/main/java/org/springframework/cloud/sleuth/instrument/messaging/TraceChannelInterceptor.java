@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -40,13 +38,10 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
-	private final ObjectMapper objectMapper;
-
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			MessagingSpanTextMapExtractor spanExtractor,
-			MessagingSpanTextMapInjector spanInjector, ObjectMapper objectMapper) {
+			MessagingSpanTextMapInjector spanInjector) {
 		super(tracer, traceKeys, spanExtractor, spanInjector);
-		this.objectMapper = objectMapper;
 	}
 
 	@Override

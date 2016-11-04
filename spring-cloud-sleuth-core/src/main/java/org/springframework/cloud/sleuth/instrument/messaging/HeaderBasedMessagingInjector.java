@@ -3,8 +3,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -20,11 +18,9 @@ import org.springframework.util.StringUtils;
 public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjector {
 
 	private final TraceKeys traceKeys;
-	private final ObjectMapper objectMapper;
 
-	public HeaderBasedMessagingInjector(TraceKeys traceKeys, ObjectMapper objectMapper) {
+	public HeaderBasedMessagingInjector(TraceKeys traceKeys) {
 		this.traceKeys = traceKeys;
-		this.objectMapper = objectMapper;
 	}
 
 	@Override

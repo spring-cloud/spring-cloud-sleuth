@@ -18,9 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Random;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -41,8 +38,6 @@ import org.springframework.messaging.Message;
 @ConditionalOnBean({ TraceKeys.class, Random.class })
 public class TraceSpanMessagingAutoConfiguration {
 
-	@Autowired(required = false) ObjectMapper objectMapper = new ObjectMapper();
-
 	@Bean
 	@ConditionalOnMissingBean
 	public MessagingSpanTextMapExtractor messagingSpanExtractor() {
@@ -52,6 +47,6 @@ public class TraceSpanMessagingAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public MessagingSpanTextMapInjector messagingSpanInjector(TraceKeys traceKeys) {
-		return new HeaderBasedMessagingInjector(traceKeys, this.objectMapper);
+		return new HeaderBasedMessagingInjector(traceKeys);
 	}
 }

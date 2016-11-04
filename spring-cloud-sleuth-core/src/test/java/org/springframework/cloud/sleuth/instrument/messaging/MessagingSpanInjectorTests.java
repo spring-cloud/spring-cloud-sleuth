@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -37,8 +35,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.asser
  */
 public class MessagingSpanInjectorTests {
 
-	private HeaderBasedMessagingInjector spanInjector = new HeaderBasedMessagingInjector(new TraceKeys(),
-			new ObjectMapper());
+	private HeaderBasedMessagingInjector spanInjector = new HeaderBasedMessagingInjector(new TraceKeys());
 
 	@Test
 	public void spanHeadersAdded() {
