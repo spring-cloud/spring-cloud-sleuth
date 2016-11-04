@@ -185,6 +185,38 @@ public class DefaultTracerTests {
 		then(span).isEqualTo(continuedSpan);
 	}
 
+	@Test
+	public void shouldPropagateBaggageFromParentToChild() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.spanNamer, this.spanLogger, this.spanReporter);
+		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
+				.baggage("foo", "bar").build();
+		Span child = tracer.createSpan("child", parent);
+
+		then(parent).hasABaggage("foo", "bar");
+		then(child).hasABaggage("foo", "bar");
+	}
+
+	@Test
+	public void shouldPropagateBaggageToContinuedSpan() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.spanNamer, this.spanLogger, this.spanReporter);
+		Span parent = Span.builder().name(IMPORTANT_WORK_1).traceId(1L).spanId(1L)
+				.baggage("foo", "bar").build();
+		Span continuedSpan = tracer.continueSpan(parent);
+
+		parent.setBaggageItem("baz1", "baz1");
+		continuedSpan.setBaggageItem("baz2", "baz2");
+
+		then(parent).hasABaggage("foo", "bar")
+				.hasABaggage("baz1", "baz1")
+				.hasABaggage("baz2", "baz2");
+		then(continuedSpan).hasABaggage("foo", "bar")
+				.hasABaggage("baz1", "baz1")
+				.hasABaggage("baz2", "baz2");
+		then(parent).isEqualTo(continuedSpan);
+	}
+
 	private Span assertSpan(List<Span> spans, Long parentId, String name) {
 		List<Span> found = findSpans(spans, parentId);
 		assertThat(found).as("More than one span with parentId %s", parentId).hasSize(1);

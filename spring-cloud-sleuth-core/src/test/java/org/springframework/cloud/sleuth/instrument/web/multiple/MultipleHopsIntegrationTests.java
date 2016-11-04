@@ -1,36 +1,43 @@
 package org.springframework.cloud.sleuth.instrument.web.multiple;
 
+import java.net.URI;
+import java.util.Collections;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
-import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.RequestEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.client.RestTemplate;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
+public class MultipleHopsIntegrationTests {
 
 	@Autowired Tracer tracer;
 	@Autowired TraceKeys traceKeys;
@@ -38,11 +45,16 @@ public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 	@Autowired ArrayListSpanAccumulator arrayListSpanAccumulator;
 	@Autowired SpanReporter spanReporter;
 	@Autowired RestTemplate restTemplate;
+	@Autowired Config config;
+
+	@Before
+	public void setup() {
+		this.arrayListSpanAccumulator.clear();
+	}
 
 	@Test
 	public void should_prepare_spans_for_export() throws Exception {
-		this.mockMvc.perform(get("/greeting")).andExpect(
-				MockMvcResultMatchers.status().isOk());
+		this.restTemplate.getForObject("http://localhost:" + this.config.port + "/greeting", String.class);
 
 		await().atMost(5, SECONDS).until(() -> {
 			then(this.arrayListSpanAccumulator.getSpans().stream().map(Span::getName)
@@ -51,23 +63,44 @@ public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 													"message:words", "message:counts"));
 		});
 	}
+
 	// issue #237 - baggage
 	@Test
 	public void should_propagate_the_baggage() throws Exception {
-		this.mockMvc.perform(get("/greeting")).andExpect(
-				MockMvcResultMatchers.status().isOk());
+		Span initialSpan = this.tracer.createSpan("span");
+		initialSpan.setBaggageItem("foo", "bar");
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.put("baggage-baz", Collections.singletonList("baz"));
+			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
+					URI.create("http://localhost:" + this.config.port + "/greeting"));
+			this.restTemplate.exchange(requestEntity, String.class);
 
-		await().atMost(5, SECONDS).until(() -> {
-			then(this.arrayListSpanAccumulator.getSpans().stream().map(Span::getName)
-					.collect(
-					toList())).containsAll(asList("http:/greeting", "message:greetings",
-													"message:words", "message:counts"));
-		});
+			await().atMost(5, SECONDS).until(() -> {
+				then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
+						.everySpanHasABaggage("foo", "bar")
+						.anySpanHasABaggage("baz", "baz");
+			});
+		} finally {
+			this.tracer.close(initialSpan);
+		}
 	}
 
 	@Configuration
 	@SpringBootApplication
-	public static class Config {
+	public static class Config implements
+			ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+		int port;
+
+		@Override
+		public void onApplicationEvent(EmbeddedServletContainerInitializedEvent event) {
+			this.port = event.getEmbeddedServletContainer().getPort();
+		}
+
+		@Bean
+		RestTemplate restTemplate() {
+			return new RestTemplate();
+		}
 
 		@Bean ArrayListSpanAccumulator arrayListSpanAccumulator() {
 			return new ArrayListSpanAccumulator();

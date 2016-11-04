@@ -14,6 +14,8 @@ import org.springframework.cloud.sleuth.util.TextMapUtil;
  */
 public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtractor {
 
+	private static final String HEADER_DELIMITER = "_";
+
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
 		Map<String, String> carrier = TextMapUtil.asMap(textMap);
@@ -43,6 +45,11 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 		}
 		setParentIdIfApplicable(carrier, spanBuilder, TraceMessageHeaders.PARENT_ID_NAME);
 		spanBuilder.remote(true);
+		for (Map.Entry<String, String> entry : carrier.entrySet()) {
+			if (entry.getKey().startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + HEADER_DELIMITER)) {
+				spanBuilder.baggage(unprefixedKey(entry.getKey()), entry.getValue());
+			}
+		}
 		return spanBuilder.build();
 	}
 
@@ -56,6 +63,10 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 		if (parentId != null) {
 			spanBuilder.parent(Span.hexToId(parentId));
 		}
+	}
+
+	private String unprefixedKey(String key) {
+		return key.substring(key.indexOf(HEADER_DELIMITER) + 1);
 	}
 
 }

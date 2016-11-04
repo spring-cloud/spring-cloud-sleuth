@@ -28,12 +28,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -73,7 +73,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-public class Span {
+public class Span implements SpanContext {
 
 	public static final String SAMPLED_NAME = "X-B3-Sampled";
 	public static final String PROCESS_ID_NAME = "X-Process-Id";
@@ -82,6 +82,7 @@ public class Span {
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
 	public static final String SPAN_ID_NAME = "X-B3-SpanId";
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
+	public static final String SPAN_BAGGAGE_HEADER_PREFIX = "baggage";
 	public static final Set<String> SPAN_HEADERS = new HashSet<>(
 			Arrays.asList(SAMPLED_NAME, PROCESS_ID_NAME, PARENT_ID_NAME, TRACE_ID_NAME,
 					SPAN_ID_NAME, SPAN_NAME_NAME, SPAN_EXPORT_NAME));
@@ -146,6 +147,8 @@ public class Span {
 	private final String processId;
 	private final Collection<Log> logs;
 	private final Span savedSpan;
+	@JsonIgnore
+	private final Map<String,String> baggage;
 
 	// Null means we don't know the start tick, so fallback to time
 	@JsonIgnore
@@ -176,6 +179,7 @@ public class Span {
 		this.logs = current.logs;
 		this.startNanos = current.startNanos;
 		this.durationMicros = current.durationMicros;
+		this.baggage = current.baggage;
 		this.savedSpan = savedSpan;
 	}
 
@@ -209,6 +213,7 @@ public class Span {
 		this.savedSpan = savedSpan;
 		this.tags = new ConcurrentHashMap<>();
 		this.logs = new ConcurrentLinkedQueue<>();
+		this.baggage = new ConcurrentHashMap<>();
 	}
 
 	public static SpanBuilder builder() {
@@ -302,6 +307,40 @@ public class Span {
 	 */
 	public void logEvent(String event) {
 		this.logs.add(new Log(System.currentTimeMillis(), event));
+	}
+
+	/**
+	 * Sets a baggage item in the Span (and its SpanContext) as a key/value pair.
+	 *
+	 * Baggage enables powerful distributed context propagation functionality where arbitrary application data can be
+	 * carried along the full path of request execution throughout the system.
+	 *
+	 * Note 1: Baggage is only propagated to the future (recursive) children of this SpanContext.
+	 *
+	 * Note 2: Baggage is sent in-band with every subsequent local and remote calls, so this feature must be used with
+	 * care.
+	 *
+	 * @return this Span instance, for chaining
+	 */
+	public Span setBaggageItem(String key, String value) {
+		this.baggage.put(key, value);
+		return this;
+	}
+
+	/**
+	 * @return the value of the baggage item identified by the given key, or null if no such item could be found
+	 */
+	public String getBaggageItem(String key) {
+		return this.baggage.get(key);
+	}
+
+	@Override
+	public final Iterable<Map.Entry<String,String>> baggageItems() {
+		return this.baggage.entrySet();
+	}
+
+	public final Map<String,String> getBaggage() {
+		return Collections.unmodifiableMap(this.baggage);
 	}
 
 	/**
@@ -493,6 +532,7 @@ public class Span {
 		private Span savedSpan;
 		private List<Log> logs = new ArrayList<>();
 		private Map<String, String> tags = new LinkedHashMap<>();
+		private Map<String, String> baggage = new LinkedHashMap<>();
 
 		SpanBuilder() {
 		}
@@ -554,6 +594,16 @@ public class Span {
 			return this;
 		}
 
+		public Span.SpanBuilder baggage(String baggageKey, String baggageValue) {
+			this.baggage.put(baggageKey, baggageValue);
+			return this;
+		}
+
+		public Span.SpanBuilder baggage(Map<String, String> baggage) {
+			this.baggage.putAll(baggage);
+			return this;
+		}
+
 		public Span.SpanBuilder spanId(long spanId) {
 			this.spanId = spanId;
 			return this;
@@ -585,6 +635,7 @@ public class Span {
 					this.processId, this.savedSpan);
 			span.logs.addAll(this.logs);
 			span.tags.putAll(this.tags);
+			span.baggage.putAll(this.baggage);
 			return span;
 		}
 

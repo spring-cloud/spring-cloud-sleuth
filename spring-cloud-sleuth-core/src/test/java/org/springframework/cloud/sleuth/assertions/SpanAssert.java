@@ -99,6 +99,19 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
+	public SpanAssert hasABaggage(String baggageKey, String baggageValue) {
+		isNotNull();
+		assertThatBaggageIsPresent(baggageKey);
+		String foundValue = this.actual.getBaggageItem(baggageKey);
+		if (!foundValue.equals(baggageValue)) {
+			String message = String.format("Expected span to have the baggage with key <%s> and value <%s>. "
+					+ "Found value for that baggage is <%s>", baggageKey, baggageValue, foundValue);
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
 	public SpanAssert hasATagWithKey(String tagKey) {
 		isNotNull();
 		assertThatTagIsPresent(tagKey);
@@ -129,6 +142,15 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		if (!this.actual.tags().containsKey(tagKey)) {
 			String message = String.format("Expected span to have the tag with key <%s>. "
 					+ "Found tags are <%s>", tagKey, this.actual.tags());
+			log.error(message);
+			failWithMessage(message);
+		}
+	}
+
+	private void assertThatBaggageIsPresent(String tagKey) {
+		if (!this.actual.getBaggage().containsKey(tagKey)) {
+			String message = String.format("Expected span to have the baggage with key <%s>. "
+					+ "Found baggage are <%s>", tagKey, this.actual.getBaggage());
 			log.error(message);
 			failWithMessage(message);
 		}
