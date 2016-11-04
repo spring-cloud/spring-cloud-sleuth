@@ -27,7 +27,7 @@ import org.springframework.cloud.sleuth.SpanTextMap;
  * A {@link SpanTextMap} abstraction over {@link RequestContext}
  *
  * @author Marcin Grzejszczak
- * @since 1.0.0
+ * @since 1.2.0
  */
 class RequestContextTextMap implements SpanTextMap {
 

@@ -29,8 +29,7 @@ import org.springframework.web.util.UrlPathHelper;
  * A {@link SpanTextMap} abstraction over {@link HttpServletRequest}
  *
  * @author Marcin Grzejszczak
- *
- * @since 1.0.0
+ * @since 1.2.0
  */
 class HttpServletRequestTextMap implements SpanTextMap {
 

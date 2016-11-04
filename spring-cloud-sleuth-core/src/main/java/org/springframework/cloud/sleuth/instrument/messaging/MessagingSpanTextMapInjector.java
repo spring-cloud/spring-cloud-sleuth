@@ -4,7 +4,7 @@ import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.SpanTextMap;
 
 /**
- * Contract for extracting tracing headers from a {@link SpanTextMap}
+ * Contract for injecting tracing headers from a {@link SpanTextMap}
  * via message headers
  *
  * @author Marcin Grzejszczak

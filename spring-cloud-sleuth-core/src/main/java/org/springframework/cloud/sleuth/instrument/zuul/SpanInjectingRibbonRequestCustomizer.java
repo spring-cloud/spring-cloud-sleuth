@@ -31,7 +31,7 @@ import org.springframework.cloud.sleuth.Tracer;
  * into their respective context. The only difference is how those contexts set the headers.
  * In order to add a new implementation of the {@link RibbonRequestCustomizer} it's
  * necessary only to provide the {@link RibbonRequestCustomizer#accepts(Class)} method
- * with the context class name and {@link SpanInjectingRibbonRequestCustomizer#setHeader(Object, String, String)}
+ * with the context class name and {@link SpanInjectingRibbonRequestCustomizer#toSpanTextMap(Object)}
  * to tell Sleuth how to set a header using the particular library.
  *
  * @author Marcin Grzejszczak

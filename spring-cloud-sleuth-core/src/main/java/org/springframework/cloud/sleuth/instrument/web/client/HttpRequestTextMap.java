@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.AbstractMap;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +30,7 @@ import org.springframework.util.StringUtils;
  * A {@link SpanTextMap} abstraction over {@link HttpRequest}
  *
  * @author Marcin Grzejszczak
- * @since 1.0.0
+ * @since 1.2.0
  */
 class HttpRequestTextMap implements SpanTextMap {
 
@@ -42,13 +42,19 @@ class HttpRequestTextMap implements SpanTextMap {
 
 	@Override
 	public Iterator<Map.Entry<String, String>> iterator() {
-		Map<String, String> map = new HashMap<>();
-		for (Map.Entry<String, List<String>> entry : this.delegate.getHeaders().entrySet()) {
-			if (!entry.getValue().isEmpty()) {
-				map.put(entry.getKey(), entry.getValue().get(0));
+		final Iterator<Map.Entry<String, List<String>>> iterator = this.delegate.getHeaders()
+				.entrySet().iterator();
+		return new Iterator<Map.Entry<String, String>>() {
+			@Override public boolean hasNext() {
+				return iterator.hasNext();
 			}
-		}
-		return map.entrySet().iterator();
+
+			@Override public Map.Entry<String, String> next() {
+				Map.Entry<String, List<String>> next = iterator.next();
+				List<String> value = next.getValue();
+				return new AbstractMap.SimpleEntry<>(next.getKey(), value.isEmpty() ? "" : value.get(0));
+			}
+		};
 	}
 
 	@Override

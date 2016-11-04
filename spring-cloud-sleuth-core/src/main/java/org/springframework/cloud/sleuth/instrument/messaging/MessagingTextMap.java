@@ -28,8 +28,10 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.StringUtils;
 
 /**
+ * A {@link SpanTextMap} abstraction over {@link MessageBuilder}
  *
  * @author Marcin Grzejszczak
+ * @since 1.2.0
  */
 class MessagingTextMap implements SpanTextMap {
 

@@ -34,7 +34,7 @@ import feign.Request;
  * A {@link SpanTextMap} abstraction over {@link AtomicReference<Request>}
  *
  * @author Marcin Grzejszczak
- * @since 1.0.0
+ * @since 1.2.0
  */
 class FeignRequestTextMap implements SpanTextMap {
 
