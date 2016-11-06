@@ -1767,46 +1767,54 @@ are created and propagated.</p>
 or HTTP headers), to start or join an existing trace. Trace information is
 injected into any outbound requests so the next hop can extract them.</p>
 </div>
+<div class="paragraph">
+<p>The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
+the Open Tracing&#8217;s <code>TextMap</code> notion. In Sleuth it&#8217;s called <code>SpanTextMap</code>. Basically the idea
+is that any means of communication (e.g. message, http request, etc.) can be abstracted via
+a <code>SpanTextMap</code>. This abstraction defines how one can insert data into the carrier and
+how to retrieve it from there. Thanks to this if you want to instrument a new HTTP library
+that uses a <code>FooRequest</code> as a mean of sending HTTP requests then you have to create an
+implementation of  a <code>SpanTextMap</code> that delegates calls to <code>FooRequest</code> in terms of retrieval
+and insertion of HTTP headers.</p>
+</div>
 <div class="sect2">
 <h3 id="_spring_integration">Spring Integration</h3>
 <div class="paragraph">
-<p>For Spring Integration these are the beans responsible for creation of a Span from a <code>Message</code>
- and filling in the <code>MessageBuilder</code> with tracing information.</p>
+<p>For Spring Integration there are 2 interfaces responsible for creation of a Span from a <code>Message</code>.
+These are:</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Bean
-public SpanExtractor&lt;Message&gt; messagingSpanExtractor() {
-    ...
-}
-
-@Bean
-public SpanInjector&lt;MessageBuilder&gt; messagingSpanInjector() {
-    ...
-}</code></pre>
-</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>MessagingSpanTextMapExtractor</code></p>
+</li>
+<li>
+<p><code>MessagingSpanTextMapInjector</code></p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>You can override them by providing your own implementation and by adding a <code>@Primary</code> annotation
-to your bean definition.</p>
+<p>You can override them by providing your own implementation.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_http">HTTP</h3>
 <div class="paragraph">
-<p>For HTTP these are the beans responsible for creation of a Span from a <code>HttpServletRequest</code>.</p>
+<p>For HTTP there are 2 interfaces responsible for creation of a Span from a <code>Message</code>.
+These are:</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Bean
-public SpanExtractor&lt;HttpServletRequest&gt; httpServletRequestSpanExtractor() {
-    ...
-}</code></pre>
-</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>HttpSpanExtractor</code></p>
+</li>
+<li>
+<p><code>HttpSpanInjector</code></p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>You can override them by providing your own implementation and by adding a <code>@Primary</code> annotation
-to your bean definition.</p>
+<p>You can override them by providing your own implementation.</p>
 </div>
 </div>
 <div class="sect2">
