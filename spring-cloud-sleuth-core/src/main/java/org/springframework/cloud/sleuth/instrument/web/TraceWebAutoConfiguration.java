@@ -38,6 +38,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import static javax.servlet.DispatcherType.ASYNC;
 import static javax.servlet.DispatcherType.ERROR;
@@ -61,7 +62,6 @@ import static javax.servlet.DispatcherType.REQUEST;
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(TraceKeys.class)
-@Import(TraceWebMvcConfigurer.class)
 public class TraceWebAutoConfiguration {
 
 	/**
@@ -69,6 +69,16 @@ public class TraceWebAutoConfiguration {
 	 */
 	@Value("${spring.sleuth.web.skipPattern:}")
 	private String skipPattern;
+
+	/**
+	 * Nested config that configures Web MVC if it's present
+	 * (without adding a runtime dependency to it)
+	 */
+	@Configuration
+	@ConditionalOnClass(WebMvcConfigurerAdapter.class)
+	@Import(TraceWebMvcConfigurer.class)
+	protected static class TraceWebMvcAutoConfiguration {
+	}
 
 	@Bean
 	public TraceWebAspect traceWebAspect(Tracer tracer, SpanNamer spanNamer) {
