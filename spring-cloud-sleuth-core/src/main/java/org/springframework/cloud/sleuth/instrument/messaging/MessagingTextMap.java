@@ -60,14 +60,10 @@ class MessagingTextMap implements SpanTextMap {
 		Message<?> initialMessage = this.delegate.build();
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(initialMessage);
-		Map<String, String> headers = new HashMap<>();
-		headers.put(key, value);
-		accessor.copyHeaders(headers);
+		accessor.setHeader(key, value);
 		if (accessor instanceof NativeMessageHeaderAccessor) {
 			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
-			for (String name : headers.keySet()) {
-				nativeAccessor.setNativeHeader(name, headers.get(name));
-			}
+			nativeAccessor.setNativeHeader(key, value);
 		}
 		this.delegate.copyHeaders(accessor.toMessageHeaders());
 	}
