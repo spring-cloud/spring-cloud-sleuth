@@ -155,7 +155,7 @@ public class ConvertToZipkinSpanListTests {
 	/** Zipkin's duration should only be set when the span is finished. */
 	@Test
 	public void doesntSetDurationWhenStillRunning() {
-		Span running = Span.builder().traceId(1L).name("http:parent").remote(true).build();
+		Span running = Span.builder().traceId(1L).name("http:child").build();
 		Spans spans = new Spans(this.host, Collections.singletonList(running));
 		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
 
@@ -165,9 +165,31 @@ public class ConvertToZipkinSpanListTests {
 				.isNull();
 	}
 
+	/**
+	 * In the RPC span model, the client owns the timestamp and duration of the span. If we
+	 * were propagated an id, we can assume that we shouldn't report timestamp or duration,
+	 * rather let the client do that. Worst case we were propagated an unreported ID and
+	 * Zipkin backfills timestamp and duration.
+	 */
+	@Test
+	public void doesntSetTimestampOrDurationWhenRemote() {
+		Span span = span("foo", true);
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
+
+		assertThat(result.timestamp)
+				.isNull();
+		assertThat(result.duration)
+				.isNull();
+	}
+
 	Span span(String name) {
+		return span(name, false);
+	}
+
+	Span span(String name, boolean remote) {
 		Long id = new Random().nextLong();
-		return new Span(1, 3, "message:" + name, id, Collections.<Long>emptyList(), id, true, true,
+		return new Span(1, 3, "message:" + name, id, Collections.<Long>emptyList(), id, remote, true,
 				"process");
 	}
 }
