@@ -1,4 +1,7 @@
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.instrument.web;
+
+import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.SpanTextMap;
 
 /**
  * Contract for injecting tracing headers from a {@link SpanTextMap}

@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 import java.net.URI;
 
-import org.springframework.cloud.sleuth.HttpSpanInjector;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.core.task.AsyncListenableTaskExecutor;

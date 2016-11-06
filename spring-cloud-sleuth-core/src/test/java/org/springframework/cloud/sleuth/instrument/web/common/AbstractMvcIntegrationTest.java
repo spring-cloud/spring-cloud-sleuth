@@ -2,7 +2,7 @@ package org.springframework.cloud.sleuth.instrument.web.common;
 
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.HttpSpanExtractor;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanExtractor;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;

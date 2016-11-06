@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.HttpSpanExtractor;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.util.TextMapUtil;

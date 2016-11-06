@@ -1,6 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import org.springframework.cloud.sleuth.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.util.StringUtils;
