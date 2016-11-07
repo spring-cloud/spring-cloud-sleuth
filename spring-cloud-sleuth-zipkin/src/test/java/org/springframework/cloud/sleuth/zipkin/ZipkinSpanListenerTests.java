@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.PostConstruct;
 
@@ -64,16 +65,17 @@ public class ZipkinSpanListenerTests {
 	/** Sleuth timestamps are millisecond granularity while zipkin is microsecond. */
 	@Test
 	public void convertsTimestampToMicrosecondsAndSetsDurationToAccumulatedMicros() {
+		Span span = Span.builder().traceId(1L).name("http:api").build();
 		long start = System.currentTimeMillis();
-		this.parent.logEvent("hystrix/retry"); // System.currentTimeMillis
-		this.parent.stop();
+		span.logEvent("hystrix/retry"); // System.currentTimeMillis
+		span.stop();
 
-		zipkin.Span result = this.spanReporter.convert(this.parent);
+		zipkin.Span result = this.spanReporter.convert(span);
 
 		assertThat(result.timestamp)
-				.isEqualTo(this.parent.getBegin() * 1000);
+				.isEqualTo(span.getBegin() * 1000);
 		assertThat(result.duration)
-				.isEqualTo(this.parent.getAccumulatedMicros());
+				.isEqualTo(span.getAccumulatedMicros());
 		assertThat(result.annotations.get(0).timestamp)
 				.isGreaterThanOrEqualTo(start * 1000)
 				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);
@@ -82,32 +84,51 @@ public class ZipkinSpanListenerTests {
 	@Test
 	public void setsTheDurationToTheDifferenceBetweenCRandCS()
 			throws InterruptedException {
-		this.parent.logEvent(Span.CLIENT_SEND);
+		Span span = Span.builder().traceId(1L).name("http:api").build();
+		span.logEvent(Span.CLIENT_SEND);
 		Thread.sleep(10);
-		this.parent.logEvent(Span.CLIENT_RECV);
+		span.logEvent(Span.CLIENT_RECV);
 		Thread.sleep(20);
-		this.parent.stop();
+		span.stop();
 
-		zipkin.Span result = this.spanReporter.convert(this.parent);
+		zipkin.Span result = this.spanReporter.convert(span);
 
 		assertThat(result.timestamp)
-				.isEqualTo(this.parent.getBegin() * 1000);
-		long clientSendTimestamp = this.parent.logs().stream().filter(log -> Span.CLIENT_SEND.equals(log.getEvent()))
+				.isEqualTo(span.getBegin() * 1000);
+		long clientSendTimestamp = span.logs().stream().filter(log -> Span.CLIENT_SEND.equals(log.getEvent()))
 				.findFirst().get().getTimestamp();
-		long clientRecvTimestamp = this.parent.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
+		long clientRecvTimestamp = span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
 				.findFirst().get().getTimestamp();
 		assertThat(result.duration)
-				.isNotEqualTo(this.parent.getAccumulatedMicros())
+				.isNotEqualTo(span.getAccumulatedMicros())
 				.isEqualTo((clientRecvTimestamp - clientSendTimestamp) * 1000);
 	}
 
 	/** Zipkin's duration should only be set when the span is finished. */
 	@Test
 	public void doesntSetDurationWhenStillRunning() {
-		zipkin.Span result = this.spanReporter.convert(this.parent);
+		Span span = Span.builder().traceId(1L).name("http:api").build();
+		zipkin.Span result = this.spanReporter.convert(span);
 
 		assertThat(result.timestamp)
 				.isGreaterThan(0); // sanity check it did start
+		assertThat(result.duration)
+				.isNull();
+	}
+
+	/**
+	 * In the RPC span model, the client owns the timestamp and duration of the span. If we
+	 * were propagated an id, we can assume that we shouldn't report timestamp or duration,
+	 * rather let the client do that. Worst case we were propagated an unreported ID and
+	 * Zipkin backfills timestamp and duration.
+	 */
+	@Test
+	public void doesntSetTimestampOrDurationWhenRemote() {
+		this.parent.stop();
+		zipkin.Span result = this.spanReporter.convert(this.parent);
+
+		assertThat(result.timestamp)
+				.isNull();
 		assertThat(result.duration)
 				.isNull();
 	}
