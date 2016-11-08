@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,8 +49,11 @@ class TraceExecutorBeanPostProcessor implements BeanPostProcessor {
 		if (bean instanceof ThreadPoolTaskExecutor && !(bean instanceof TaskScheduler) &&
 				!(bean instanceof LazyTraceThreadPoolTaskExecutor)) {
 			return new LazyTraceThreadPoolTaskExecutor(this.beanFactory, (ThreadPoolTaskExecutor) bean);
-		} else if (bean instanceof Executor && !(bean instanceof TaskScheduler) && !(bean instanceof LazyTraceExecutor)) {
+		} else if (bean instanceof Executor && !(bean instanceof ExecutorService) &&
+				!(bean instanceof TaskScheduler) && !(bean instanceof LazyTraceExecutor)) {
 			return new LazyTraceExecutor(this.beanFactory, (Executor) bean);
+		} else if (bean instanceof ExecutorService) {
+			return new TraceableExecutorService(this.beanFactory, (ExecutorService) bean);
 		}
 		return bean;
 	}
