@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.instrument.async.issues.issue410;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
@@ -36,6 +38,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.LazyTraceExecutor;
+import org.springframework.cloud.sleuth.instrument.async.TraceableExecutorService;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -67,6 +70,10 @@ public class Issue410Tests {
 	@Autowired Tracer tracer;
 	@Autowired AsyncTask asyncTask;
 	@Autowired RestTemplate restTemplate;
+	/**
+	 * Related to issue #445
+	 */
+	@Autowired ExecutorService executorService;
 
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_without_a_pool() {
@@ -138,6 +145,14 @@ public class Issue410Tests {
 		}
 	}
 
+	/**
+	 * Related to issue #445
+	 */
+	@Test
+	public void should_wrap_executor_service_in_trace_representation() {
+		then(this.executorService).isInstanceOf(TraceableExecutorService.class);
+	}
+
 	private int port() {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
@@ -148,11 +163,11 @@ public class Issue410Tests {
 @EnableAsync
 class AppConfig {
 
-	@Bean Sampler testSampler() {
+	@Bean public Sampler testSampler() {
 		return new AlwaysSampler();
 	}
 
-	@Bean RestTemplate restTemplate() {
+	@Bean public RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
 
@@ -279,6 +294,13 @@ class Application {
 	public String taskScheduler() throws ExecutionException, InterruptedException {
 		log.info("Executing completable via task scheduler");
 		return Span.idToHex(this.asyncTask.taskScheduler().getTraceId());
+	}
+
+	/**
+	 * Related to issue #445
+	 */
+	@Bean public ExecutorService executorService() {
+		return Executors.newSingleThreadExecutor();
 	}
 
 }
