@@ -25,6 +25,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -36,15 +37,22 @@ import org.springframework.cloud.sleuth.Tracer;
  * @since 1.0.0
  */
 public class TraceableExecutorService implements ExecutorService {
-	final ExecutorService delegate;
-	final Tracer tracer;
+	ExecutorService delegate;
+	Tracer tracer;
 	private final String spanName;
-	final TraceKeys traceKeys;
-	final SpanNamer spanNamer;
+	TraceKeys traceKeys;
+	SpanNamer spanNamer;
+	BeanFactory beanFactory;
 
 	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer,
 			TraceKeys traceKeys, SpanNamer spanNamer) {
 		this(delegate, tracer, traceKeys, spanNamer, null);
+	}
+
+	public TraceableExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
+		this.delegate = delegate;
+		this.beanFactory = beanFactory;
+		this.spanName = null;
 	}
 
 	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer,
@@ -58,8 +66,8 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys,
-				this.spanNamer, command, this.spanName);
+		final Runnable r = new LocalComponentTraceRunnable(tracer(), traceKeys(),
+				spanNamer(), command, this.spanName);
 		this.delegate.execute(r);
 	}
 
@@ -90,22 +98,22 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new LocalComponentTraceCallable<>(this.tracer, this.traceKeys,
-				this.spanNamer, this.spanName, task);
+		Callable<T> c = new LocalComponentTraceCallable<>(tracer(), traceKeys(),
+				spanNamer(), this.spanName, task);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys,
-				this.spanNamer, task, this.spanName);
+		Runnable r = new LocalComponentTraceRunnable(tracer(), traceKeys(),
+				spanNamer(), task, this.spanName);
 		return this.delegate.submit(r, result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys,
-				this.spanNamer, task, this.spanName);
+		Runnable r = new LocalComponentTraceRunnable(tracer(), traceKeys(),
+				spanNamer(), task, this.spanName);
 		return this.delegate.submit(r);
 	}
 
@@ -135,11 +143,32 @@ public class TraceableExecutorService implements ExecutorService {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
 			if (!(task instanceof LocalComponentTraceCallable)) {
-				ts.add(new LocalComponentTraceCallable<>(this.tracer, this.traceKeys,
-						this.spanNamer, this.spanName, task));
+				ts.add(new LocalComponentTraceCallable<>(tracer(), traceKeys(),
+						spanNamer(), this.spanName, task));
 			}
 		}
 		return ts;
+	}
+
+	Tracer tracer() {
+		if (this.tracer == null && this.beanFactory != null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
+		return this.tracer;
+	}
+
+	TraceKeys traceKeys() {
+		if (this.traceKeys == null && this.beanFactory != null) {
+			this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
+		}
+		return this.traceKeys;
+	}
+
+	SpanNamer spanNamer() {
+		if (this.spanNamer == null && this.beanFactory != null) {
+			this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
+		}
+		return this.spanNamer;
 	}
 
 }
