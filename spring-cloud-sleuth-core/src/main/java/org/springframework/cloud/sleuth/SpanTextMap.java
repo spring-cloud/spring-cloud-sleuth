@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Adopted from: https://github.com/opentracing/opentracing-java/blob/master/opentracing-api/src/main/java/io/opentracing/propagation/TextMap.java
+ * Adopted from: https://github.com/opentracing/opentracing-java/blob/0.16.0/opentracing-api/src/main/java/io/opentracing/propagation/TextMap.java
  *
  * TextMap is a built-in carrier for {@link SpanInjector} and {@link SpanExtractor}. TextMap implementations allows Tracers to
  * read and write key:value String pairs from arbitrary underlying sources of data.

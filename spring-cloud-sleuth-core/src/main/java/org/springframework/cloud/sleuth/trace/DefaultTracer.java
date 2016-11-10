@@ -138,7 +138,7 @@ public class DefaultTracer implements Tracer {
 		return savedSpan;
 	}
 
-	protected Span createChild(Span parent, String name) {
+	Span createChild(Span parent, String name) {
 		long id = createId();
 		if (parent == null) {
 			Span span = Span.builder().name(name)
@@ -154,7 +154,9 @@ public class DefaultTracer implements Tracer {
 			Span span = Span.builder().name(name)
 					.traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
 					.processId(parent.getProcessId()).savedSpan(parent)
-					.exportable(parent.isExportable()).build();
+					.exportable(parent.isExportable())
+					.baggage(parent.getBaggage())
+					.build();
 			this.spanLogger.logStartedSpan(parent, span);
 			return span;
 		}

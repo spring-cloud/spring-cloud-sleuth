@@ -56,6 +56,9 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 		else {
 			addHeader(textMap, TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 		}
+		for (Map.Entry<String, String> entry : span.baggageItems()) {
+			textMap.put(prefixedKey(entry.getKey()), entry.getValue());
+		}
 	}
 
 	private void addAnnotations(TraceKeys traceKeys, SpanTextMap spanTextMap, Span span) {
@@ -97,6 +100,13 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 
 	private Long getFirst(List<Long> parents) {
 		return parents.isEmpty() ? null : parents.get(0);
+	}
+
+	private String prefixedKey(String key) {
+		if (key.startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + TraceMessageHeaders.HEADER_DELIMITER )) {
+			return key;
+		}
+		return Span.SPAN_BAGGAGE_HEADER_PREFIX + TraceMessageHeaders.HEADER_DELIMITER + key;
 	}
 
 }

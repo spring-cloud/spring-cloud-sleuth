@@ -20,6 +20,7 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 
 	private static final org.apache.commons.logging.Log log = LogFactory.getLog(
 			MethodHandles.lookup().lookupClass());
+	private static final String HEADER_DELIMITER = "-";
 	static final String URI_HEADER = "X-Span-Uri";
 	private static final String HTTP_COMPONENT = "http";
 
@@ -83,7 +84,16 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 		if (skip) {
 			span.exportable(false);
 		}
+		for (Map.Entry<String, String> entry : carrier.entrySet()) {
+			if (entry.getKey().startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + HEADER_DELIMITER)) {
+				span.baggage(unprefixedKey(entry.getKey()), entry.getValue());
+			}
+		}
 		return span.build();
+	}
+
+	private String unprefixedKey(String key) {
+		return key.substring(key.indexOf(HEADER_DELIMITER) + 1);
 	}
 
 }

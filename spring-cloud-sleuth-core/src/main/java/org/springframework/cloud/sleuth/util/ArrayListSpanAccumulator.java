@@ -51,4 +51,10 @@ public class ArrayListSpanAccumulator implements SpanReporter {
 			this.spans.add(span);
 		}
 	}
+
+	public void clear() {
+		synchronized (this.spans) {
+			this.spans.clear();
+		}
+	}
 }
