@@ -167,14 +167,16 @@ NOTE: If you're using a custom `logback-spring.xml` then you have to pass the `s
 ===== Propagating Span Context
 
 The span context is the state that must get propagated to any child Spans across process boundaries.
-Part of the Span Context is the Baggage.
+Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
+Baggage is an optional part.
 
 Baggage is a set of key:value pairs stored in the span context. Baggage travels together with the trace
 and is attached to every span. Spring Cloud Sleuth will understand that a header is baggage related if the HTTP
  header is prefixed with `baggage-` and for messaging it starts with `baggage_`.
 
-IMPORTANT: Since you can attach as many baggage elements as you want and it's propagated through the network
-then if it's weighing too much or you have too many elements then you it may decrease system throughput or increase RPC latencies.
+IMPORTANT: There's currently no limitation of the count or size of baggage items. However, keep in mind that
+too many can decrease system throughput or increase RPC latency. In extreme cases, it could crash the app due
+to exceeding transport-level message or header capacity.
 
 Example of setting span:
 
@@ -188,8 +190,21 @@ include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework
 Baggage travels with the trace (i.e. every child span contains the baggage of its parent). Zipkin has no knowledge of
 baggage and will not even receive that information.
 
-Tags are not passed from a parent to a child, however they are sent to Zipkin and will get presented in the
-Zipkin UI for every span.
+Tags are attached to a specific span - they are presented for that particular span only. However you
+can search by tag to find the trace, where there exists a span having the searched tag value.
+
+If you want to be able to lookup a span based on baggage, you should add corresponding entry as a tag in the root span.
+
+[source,java]
+----
+@Autowired Tracer tracer;
+
+Span span = tracer.getCurrentSpan();
+String baggageKey = "key";
+String baggageValue = "foo";
+span.setBaggageItem(baggageKey, baggageValue);
+tracer.addTag(baggageKey, baggageValue);
+----
 
 
 === Adding to the project
@@ -207,7 +222,7 @@ the `spring-cloud-starter-sleuth` module to your project.
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Dalston.BUILD-SNAPSHOT</version>
+                  <version>Camden.RELEASE</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -228,7 +243,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.BUILD-SNAPSHOT"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
     }
 }
 
@@ -252,7 +267,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` de
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Dalston.BUILD-SNAPSHOT</version>
+                  <version>Camden.RELEASE</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -273,7 +288,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.BUILD-SNAPSHOT"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
     }
 }
 
@@ -297,7 +312,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dep
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Dalston.BUILD-SNAPSHOT</version>
+                  <version>Camden.RELEASE</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -329,7 +344,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.BUILD-SNAPSHOT"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
     }
 }
 
@@ -359,7 +374,7 @@ dependency
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Dalston.BUILD-SNAPSHOT</version>
+                  <version>Camden.RELEASE</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -391,7 +406,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.BUILD-SNAPSHOT"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
     }
 }
 

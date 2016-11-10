@@ -103,10 +103,10 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 	}
 
 	private String prefixedKey(String key) {
-		if (key.startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + "_" )) {
+		if (key.startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + TraceMessageHeaders.HEADER_DELIMITER )) {
 			return key;
 		}
-		return Span.SPAN_BAGGAGE_HEADER_PREFIX + "_" + key;
+		return Span.SPAN_BAGGAGE_HEADER_PREFIX + TraceMessageHeaders.HEADER_DELIMITER + key;
 	}
 
 }

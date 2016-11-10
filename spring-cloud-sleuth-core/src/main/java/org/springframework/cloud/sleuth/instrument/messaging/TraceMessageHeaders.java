@@ -34,6 +34,7 @@ public class TraceMessageHeaders {
 	public static final String SPAN_NAME_NAME = "spanName";
 
 	static final String MESSAGE_SENT_FROM_CLIENT = "messageSent";
+	static final String HEADER_DELIMITER = "_";
 
 	private TraceMessageHeaders() {}
 }

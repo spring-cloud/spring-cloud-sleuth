@@ -193,8 +193,8 @@ public class DefaultTracerTests {
 				.baggage("foo", "bar").build();
 		Span child = tracer.createSpan("child", parent);
 
-		then(parent).hasABaggage("foo", "bar");
-		then(child).hasABaggage("foo", "bar");
+		then(parent).hasBaggageItem("foo", "bar");
+		then(child).hasBaggageItem("foo", "bar");
 	}
 
 	@Test
@@ -208,12 +208,12 @@ public class DefaultTracerTests {
 		parent.setBaggageItem("baz1", "baz1");
 		continuedSpan.setBaggageItem("baz2", "baz2");
 
-		then(parent).hasABaggage("foo", "bar")
-				.hasABaggage("baz1", "baz1")
-				.hasABaggage("baz2", "baz2");
-		then(continuedSpan).hasABaggage("foo", "bar")
-				.hasABaggage("baz1", "baz1")
-				.hasABaggage("baz2", "baz2");
+		then(parent).hasBaggageItem("foo", "bar")
+				.hasBaggageItem("baz1", "baz1")
+				.hasBaggageItem("baz2", "baz2");
+		then(continuedSpan).hasBaggageItem("foo", "bar")
+				.hasBaggageItem("baz1", "baz1")
+				.hasBaggageItem("baz2", "baz2");
 		then(parent).isEqualTo(continuedSpan);
 	}
 

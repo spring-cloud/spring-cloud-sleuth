@@ -11,6 +11,8 @@ import java.util.Map;
  * boundaries and (2) any Tracer-implementation-specific fields that are needed to identify or otherwise contextualize
  * the associated Span instance (e.g., a <trace_id, span_id, sampled> tuple).
  *
+ * The {@link SpanContext#baggageItems()} returns the map of user-level "Baggage".
+ *
  * @see Span#setBaggageItem(String, String)
  * @see Span#getBaggageItem(String)
  *
@@ -18,6 +20,7 @@ import java.util.Map;
  * @since 1.2.0
  */
 public interface SpanContext {
+	
 	/**
 	 * @return all zero or more baggage items propagating along with the associated Span
 	 *

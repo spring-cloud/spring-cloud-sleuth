@@ -99,9 +99,9 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
-	public SpanAssert hasABaggage(String baggageKey, String baggageValue) {
+	public SpanAssert hasBaggageItem(String baggageKey, String baggageValue) {
 		isNotNull();
-		assertThatBaggageIsPresent(baggageKey);
+		assertThatBaggageContainsKey(baggageKey);
 		String foundValue = this.actual.getBaggageItem(baggageKey);
 		if (!foundValue.equals(baggageValue)) {
 			String message = String.format("Expected span to have the baggage with key <%s> and value <%s>. "
@@ -147,10 +147,10 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		}
 	}
 
-	private void assertThatBaggageIsPresent(String tagKey) {
-		if (!this.actual.getBaggage().containsKey(tagKey)) {
+	private void assertThatBaggageContainsKey(String baggageKey) {
+		if (!this.actual.getBaggage().containsKey(baggageKey)) {
 			String message = String.format("Expected span to have the baggage with key <%s>. "
-					+ "Found baggage are <%s>", tagKey, this.actual.getBaggage());
+					+ "Found baggage are <%s>", baggageKey, this.actual.getBaggage());
 			log.error(message);
 			failWithMessage(message);
 		}
