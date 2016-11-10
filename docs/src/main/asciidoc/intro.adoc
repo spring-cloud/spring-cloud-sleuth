@@ -164,7 +164,7 @@ include::https://raw.githubusercontent.com/spring-cloud-samples/sleuth-documenta
 NOTE: If you're using a custom `logback-spring.xml` then you have to pass the `spring.application.name` in
 `bootstrap` instead of `application` property file. Otherwise your custom logback file won't read the property properly.
 
-===== Propagating Span Context
+==== Propagating Span Context
 
 The span context is the state that must get propagated to any child Spans across process boundaries.
 Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
@@ -178,14 +178,14 @@ IMPORTANT: There's currently no limitation of the count or size of baggage items
 too many can decrease system throughput or increase RPC latency. In extreme cases, it could crash the app due
 to exceeding transport-level message or header capacity.
 
-Example of setting span:
+Example of setting baggage on a span:
 
 [source,java]
 ----
 include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
 ----
 
-====== Baggage vs. Span Tags
+===== Baggage vs. Span Tags
 
 Baggage travels with the trace (i.e. every child span contains the baggage of its parent). Zipkin has no knowledge of
 baggage and will not even receive that information.
