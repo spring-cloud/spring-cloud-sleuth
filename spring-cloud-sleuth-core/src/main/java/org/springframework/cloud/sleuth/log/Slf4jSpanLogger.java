@@ -23,8 +23,7 @@ import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
 
 /**
- * Span listener that logs to the console when a span got
- * started / stopped / continued.
+ * Span listener that logs to the console when a span got started / stopped / continued.
  *
  * @author Spencer Gibb
  * @since 1.0.0
@@ -36,8 +35,7 @@ public class Slf4jSpanLogger implements SpanLogger {
 
 	public Slf4jSpanLogger(String nameSkipPattern) {
 		this.nameSkipPattern = Pattern.compile(nameSkipPattern);
-		this.log = org.slf4j.LoggerFactory
-				.getLogger(Slf4jSpanLogger.class);
+		this.log = org.slf4j.LoggerFactory.getLogger(Slf4jSpanLogger.class);
 	}
 
 	Slf4jSpanLogger(String nameSkipPattern, Logger log) {
@@ -66,7 +64,9 @@ public class Slf4jSpanLogger implements SpanLogger {
 
 	@Override
 	public void logStoppedSpan(Span parent, Span span) {
-		log("Stopped span: {}", span);
+		if (span != null) {
+			log("Stopped span: {}", span);
+		}
 		if (span != null && parent != null) {
 			log("With parent: {}", parent);
 			MDC.put(Span.SPAN_ID_NAME, Span.idToHex(parent.getSpanId()));

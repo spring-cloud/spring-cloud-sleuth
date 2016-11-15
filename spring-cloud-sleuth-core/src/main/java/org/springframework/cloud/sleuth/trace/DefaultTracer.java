@@ -47,8 +47,8 @@ public class DefaultTracer implements Tracer {
 
 	private final SpanReporter spanReporter;
 
-	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
-			SpanLogger spanLogger, SpanReporter spanReporter) {
+	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer, SpanLogger spanLogger,
+			SpanReporter spanReporter) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.spanNamer = spanNamer;
@@ -77,9 +77,8 @@ public class DefaultTracer implements Tracer {
 		}
 		else {
 			long id = createId();
-			span = Span.builder().name(name).traceId(id)
-					.spanId(id).build();
-			if (sampler==null) {
+			span = Span.builder().name(name).traceId(id).spanId(id).build();
+			if (sampler == null) {
 				sampler = this.defaultSampler;
 			}
 			span = sampledSpan(name, id, span, sampler);
@@ -95,8 +94,7 @@ public class DefaultTracer implements Tracer {
 		}
 		Span cur = SpanContextHolder.getCurrentSpan();
 		if (!span.equals(cur)) {
-			ExceptionUtils.warn("Tried to detach trace span but "
-					+ "it is not the current span: " + span
+			ExceptionUtils.warn("Tried to detach trace span but " + "it is not the current span: " + span
 					+ ". You may have forgotten to close or detach " + cur);
 		}
 		else {
@@ -113,9 +111,8 @@ public class DefaultTracer implements Tracer {
 		Span cur = SpanContextHolder.getCurrentSpan();
 		final Span savedSpan = span.getSavedSpan();
 		if (!span.equals(cur)) {
-			ExceptionUtils.warn(
-					"Tried to close span but it is not the current span: " + span
-							+ ".  You may have forgotten to close or detach " + cur);
+			ExceptionUtils.warn("Tried to close span but it is not the current span: " + span
+					+ ".  You may have forgotten to close or detach " + cur);
 		}
 		else {
 			span.stop();
@@ -130,10 +127,9 @@ public class DefaultTracer implements Tracer {
 				}
 			}
 			SpanContextHolder.close(new SpanContextHolder.SpanFunction() {
-				@Override public void apply(Span span) {
-					if (span!=null) {
-						DefaultTracer.this.spanLogger.logStoppedSpan(savedSpan, span);
-					}
+				@Override
+				public void apply(Span span) {
+					DefaultTracer.this.spanLogger.logStoppedSpan(savedSpan, span);
 				}
 			});
 		}
@@ -143,8 +139,7 @@ public class DefaultTracer implements Tracer {
 	protected Span createChild(Span parent, String name) {
 		long id = createId();
 		if (parent == null) {
-			Span span = Span.builder().name(name)
-					.traceId(id).spanId(id).build();
+			Span span = Span.builder().name(name).traceId(id).spanId(id).build();
 			span = sampledSpan(name, id, span, this.defaultSampler);
 			this.spanLogger.logStartedSpan(null, span);
 			return span;
@@ -153,10 +148,8 @@ public class DefaultTracer implements Tracer {
 			if (!isTracing()) {
 				SpanContextHolder.push(parent, true);
 			}
-			Span span = Span.builder().name(name)
-					.traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
-					.processId(parent.getProcessId()).savedSpan(parent)
-					.exportable(parent.isExportable()).build();
+			Span span = Span.builder().name(name).traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
+					.processId(parent.getProcessId()).savedSpan(parent).exportable(parent.isExportable()).build();
 			this.spanLogger.logStartedSpan(parent, span);
 			return span;
 		}
@@ -165,8 +158,7 @@ public class DefaultTracer implements Tracer {
 	private Span sampledSpan(String name, long id, Span span, Sampler sampler) {
 		if (!sampler.isSampled(span)) {
 			// Non-exportable so we keep the trace but not other data
-			return Span.builder().begin(span.getBegin()).name(name).traceId(id)
-					.spanId(id).exportable(false).build();
+			return Span.builder().begin(span.getBegin()).name(name).traceId(id).spanId(id).exportable(false).build();
 		}
 		return span;
 	}
@@ -179,7 +171,8 @@ public class DefaultTracer implements Tracer {
 	public Span continueSpan(Span span) {
 		if (span != null) {
 			this.spanLogger.logContinuedSpan(span);
-		} else {
+		}
+		else {
 			return null;
 		}
 		Span newSpan = createContinuedSpan(span, SpanContextHolder.getCurrentSpan());
