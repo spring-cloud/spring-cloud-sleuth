@@ -251,7 +251,7 @@ public class TraceFilter extends GenericFilterBean {
 			return false;
 		}
 		HttpStatus httpStatus = HttpStatus.valueOf(response.getStatus());
-		return httpStatus.is2xxSuccessful() || httpStatus.is3xxRedirection();
+		return httpStatus.is1xxInformational() || httpStatus.is2xxSuccessful() || httpStatus.is3xxRedirection();
 	}
 
 	private Span getSpanFromAttribute(HttpServletRequest request) {
