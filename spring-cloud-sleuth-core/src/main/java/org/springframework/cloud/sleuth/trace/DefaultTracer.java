@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.trace;
 
 import java.util.Random;
 import java.util.concurrent.Callable;
+
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
@@ -104,8 +105,7 @@ public class DefaultTracer implements Tracer {
 		}
 		Span cur = SpanContextHolder.getCurrentSpan();
 		if (!span.equals(cur)) {
-			ExceptionUtils.warn("Tried to detach trace span but "
-					+ "it is not the current span: " + span
+			ExceptionUtils.warn("Tried to detach trace span but " + "it is not the current span: " + span
 					+ ". You may have forgotten to close or detach " + cur);
 		}
 		else {
@@ -122,9 +122,8 @@ public class DefaultTracer implements Tracer {
 		Span cur = SpanContextHolder.getCurrentSpan();
 		final Span savedSpan = span.getSavedSpan();
 		if (!span.equals(cur)) {
-			ExceptionUtils.warn(
-					"Tried to close span but it is not the current span: " + span
-							+ ".  You may have forgotten to close or detach " + cur);
+			ExceptionUtils.warn("Tried to close span but it is not the current span: " + span
+					+ ".  You may have forgotten to close or detach " + cur);
 		}
 		else {
 			span.stop();
@@ -139,10 +138,9 @@ public class DefaultTracer implements Tracer {
 				}
 			}
 			SpanContextHolder.close(new SpanContextHolder.SpanFunction() {
-				@Override public void apply(Span span) {
-					if (span!=null) {
-						DefaultTracer.this.spanLogger.logStoppedSpan(savedSpan, span);
-					}
+				@Override
+				public void apply(Span span) {
+					DefaultTracer.this.spanLogger.logStoppedSpan(savedSpan, span);
 				}
 			});
 		}
@@ -196,7 +194,8 @@ public class DefaultTracer implements Tracer {
 	public Span continueSpan(Span span) {
 		if (span != null) {
 			this.spanLogger.logContinuedSpan(span);
-		} else {
+		}
+		else {
 			return null;
 		}
 		Span newSpan = createContinuedSpan(span, SpanContextHolder.getCurrentSpan());
