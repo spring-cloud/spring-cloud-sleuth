@@ -131,7 +131,9 @@ public class DefaultTracer implements Tracer {
 			}
 			SpanContextHolder.close(new SpanContextHolder.SpanFunction() {
 				@Override public void apply(Span span) {
-					DefaultTracer.this.spanLogger.logStoppedSpan(savedSpan, span);
+					if (span!=null) {
+						DefaultTracer.this.spanLogger.logStoppedSpan(savedSpan, span);
+					}
 				}
 			});
 		}
