@@ -93,13 +93,13 @@ public class TraceRestClientRibbonCommandFactoryTest {
 
 		HttpRequest httpRequest = builder.build();
 		then(httpRequest.getHttpHeaders().getFirstValue(Span.SPAN_ID_NAME))
-				.isEqualTo("1");
+				.isEqualTo("0000000000000001");
 		then(httpRequest.getHttpHeaders().getFirstValue(Span.TRACE_ID_NAME))
-				.isEqualTo("2");
+				.isEqualTo("0000000000000002");
 		then(httpRequest.getHttpHeaders().getFirstValue(Span.SPAN_NAME_NAME))
 				.isEqualTo("name");
 		then(httpRequest.getHttpHeaders().getFirstValue(Span.PARENT_ID_NAME))
-				.isEqualTo("3");
+				.isEqualTo("0000000000000003");
 		then(httpRequest.getHttpHeaders().getFirstValue(Span.PROCESS_ID_NAME))
 				.isEqualTo("processId");
 	}
