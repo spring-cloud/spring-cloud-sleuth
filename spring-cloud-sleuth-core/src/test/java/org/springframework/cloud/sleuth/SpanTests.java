@@ -36,12 +36,12 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class SpanTests {
 
 	@Test
-	public void should_convert_long_to_hex_string() throws Exception {
+	public void should_convert_long_to_16_character_hex_string() throws Exception {
 		long someLong = 123123L;
 
 		String hexString = Span.idToHex(someLong);
 
-		then(hexString).isEqualTo("1e0f3");
+		then(hexString).isEqualTo("000000000001e0f3");
 	}
 
 	@Test
