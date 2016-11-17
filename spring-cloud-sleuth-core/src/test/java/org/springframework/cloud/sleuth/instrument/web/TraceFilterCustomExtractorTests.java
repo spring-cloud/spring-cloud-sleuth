@@ -154,7 +154,7 @@ public class TraceFilterCustomExtractorTests {
 
 		@Override
 		public void inject(Span span, SpanTextMap carrier) {
-			carrier.put("correlationId", Span.idToHex(span.getTraceId()));
+			carrier.put("correlationId", span.traceIdString());
 			carrier.put("mySpanId", Span.idToHex(span.getSpanId()));
 		}
 	}

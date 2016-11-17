@@ -41,7 +41,7 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 	}
 
 	private void addHeaders(Span span, SpanTextMap textMap) {
-		addHeader(textMap, TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		addHeader(textMap, TraceMessageHeaders.TRACE_ID_NAME, span.traceIdString());
 		addHeader(textMap, TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		if (span.isExportable()) {
 			addAnnotations(this.traceKeys, textMap, span);
