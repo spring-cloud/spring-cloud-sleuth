@@ -49,7 +49,7 @@ public class Slf4jSpanLogger implements SpanLogger {
 	public void logStartedSpan(Span parent, Span span) {
 		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
-		MDC.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		MDC.put(Span.TRACE_ID_NAME, span.traceIdString());
 		log("Starting span: {}", span);
 		if (parent != null) {
 			log("With parent: {}", parent);
@@ -59,7 +59,7 @@ public class Slf4jSpanLogger implements SpanLogger {
 	@Override
 	public void logContinuedSpan(Span span) {
 		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		MDC.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		MDC.put(Span.TRACE_ID_NAME, span.traceIdString());
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
 		log("Continued span: {}", span);
 	}

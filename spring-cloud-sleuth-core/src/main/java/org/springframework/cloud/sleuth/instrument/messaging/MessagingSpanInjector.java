@@ -95,7 +95,7 @@ class MessagingSpanInjector implements SpanInjector<MessageBuilder<?>> {
 			MessageHeaderAccessor accessor, Map<String, String> headers, String traceIdHeader,
 			String spanIdHeader, String parentIdHeader, String spanNameHeader, String processIdHeader,
 			String spanSampledHeader, String spanHeader) {
-		addHeader(headers, traceIdHeader, Span.idToHex(span.getTraceId()));
+		addHeader(headers, traceIdHeader, span.traceIdString());
 		addHeader(headers, spanIdHeader, Span.idToHex(span.getSpanId()));
 		if (span.isExportable()) {
 			addAnnotations(this.traceKeys, initialMessage, span);

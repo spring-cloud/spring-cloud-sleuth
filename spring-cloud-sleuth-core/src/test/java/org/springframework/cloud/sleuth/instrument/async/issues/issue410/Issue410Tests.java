@@ -81,7 +81,7 @@ public class Issue410Tests {
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/without_pool", String.class);
 
-			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
@@ -97,7 +97,7 @@ public class Issue410Tests {
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
 
-			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
@@ -116,7 +116,7 @@ public class Issue410Tests {
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/completable", String.class);
 
-			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
@@ -135,7 +135,7 @@ public class Issue410Tests {
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler", String.class);
 
-			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
@@ -273,7 +273,7 @@ class Application {
 	public String withPool() {
 		log.info("Executing with pool.");
 		this.asyncTask.runWithPool();
-		return Span.idToHex(this.tracer.getCurrentSpan().getTraceId());
+		return this.tracer.getCurrentSpan().traceIdString();
 
 	}
 
@@ -281,19 +281,19 @@ class Application {
 	public String withoutPool() {
 		log.info("Executing without pool.");
 		this.asyncTask.runWithoutPool();
-		return Span.idToHex(this.tracer.getCurrentSpan().getTraceId());
+		return this.tracer.getCurrentSpan().traceIdString();
 	}
 
 	@RequestMapping("/completable")
 	public String completable() throws ExecutionException, InterruptedException {
 		log.info("Executing completable");
-		return Span.idToHex(this.asyncTask.completableFutures().getTraceId());
+		return this.asyncTask.completableFutures().traceIdString();
 	}
 
 	@RequestMapping("/taskScheduler")
 	public String taskScheduler() throws ExecutionException, InterruptedException {
 		log.info("Executing completable via task scheduler");
-		return Span.idToHex(this.asyncTask.taskScheduler().getTraceId());
+		return this.asyncTask.taskScheduler().traceIdString();
 	}
 
 	/**

@@ -41,7 +41,7 @@ class RequestContextInjector implements SpanInjector<RequestContext> {
 			return;
 		}
 		setHeader(requestHeaders, Span.SPAN_ID_NAME, span.getSpanId());
-		setHeader(requestHeaders, Span.TRACE_ID_NAME, span.getTraceId());
+		setHeader(requestHeaders, Span.TRACE_ID_NAME, span.traceIdString());
 		setHeader(requestHeaders, Span.SPAN_NAME_NAME, span.getName());
 		setHeader(requestHeaders, Span.SAMPLED_NAME, span.isExportable() ?
 				Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
