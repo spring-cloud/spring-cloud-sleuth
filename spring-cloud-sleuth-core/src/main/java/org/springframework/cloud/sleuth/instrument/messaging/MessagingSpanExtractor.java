@@ -76,12 +76,14 @@ class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 	private Span extractSpanFromHeaders(Message<?> carrier, SpanBuilder spanBuilder,
 			String traceIdHeader, String spanIdHeader, String spanSampledHeader,
 			String spanProcessIdHeader, String spanNameHeader, String spanParentIdHeader) {
-		long traceId = Span
-				.hexToId(getHeader(carrier, traceIdHeader));
+		String traceId = getHeader(carrier, traceIdHeader);
+		spanBuilder.traceIdHigh(traceId.length() == 32 ? Span.hexToId(traceId, 0) : 0);
+		spanBuilder.traceId(Span.hexToId(traceId));
+
 		long spanId = hasHeader(carrier, spanIdHeader)
 				? Span.hexToId(getHeader(carrier, spanIdHeader))
 				: this.random.nextLong();
-		spanBuilder = spanBuilder.traceId(traceId).spanId(spanId);
+		spanBuilder = spanBuilder.spanId(spanId);
 		spanBuilder.exportable(
 				Span.SPAN_SAMPLED.equals(getHeader(carrier, spanSampledHeader)));
 		String processId = getHeader(carrier, spanProcessIdHeader);

@@ -19,10 +19,10 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.messaging.Message;
+
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StringUtils;
@@ -54,6 +54,17 @@ public class MessagingSpanExtractorTests {
 		} catch (IllegalArgumentException e) {
 			then(e).hasMessageContaining("Malformed id");
 		}
+	}
+
+	@Test
+	public void should_parse_128bit_trace_id() {
+		String traceId128 = "463ac35c9f6413ad48485a3953bb6124";
+
+		Span span = this.extractor.joinTrace(
+				MessageBuilder.createMessage("",
+            headers(traceId128, randomId())));
+
+		then(span.traceIdString()).isEqualTo(traceId128);
 	}
 
 	@Test

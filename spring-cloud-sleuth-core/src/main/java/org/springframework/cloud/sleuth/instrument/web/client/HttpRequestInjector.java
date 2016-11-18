@@ -32,7 +32,7 @@ class HttpRequestInjector implements SpanInjector<HttpRequest> {
 
 	@Override
 	public void inject(Span span, HttpRequest carrier) {
-		setIdHeader(carrier, Span.TRACE_ID_NAME, span.getTraceId());
+		setHeader(carrier, Span.TRACE_ID_NAME, span.traceIdString());
 		setIdHeader(carrier, Span.SPAN_ID_NAME, span.getSpanId());
 		setHeader(carrier, Span.SAMPLED_NAME, span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 		setHeader(carrier, Span.SPAN_NAME_NAME, span.getName());
