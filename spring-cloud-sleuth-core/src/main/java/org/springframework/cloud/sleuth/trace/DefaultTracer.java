@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.trace;
 
 import java.util.Random;
 import java.util.concurrent.Callable;
-
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
@@ -47,13 +46,21 @@ public class DefaultTracer implements Tracer {
 
 	private final SpanReporter spanReporter;
 
-	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer, SpanLogger spanLogger,
-			SpanReporter spanReporter) {
+	private final boolean traceId128;
+
+	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
+			SpanLogger spanLogger, SpanReporter spanReporter) {
+		this(defaultSampler, random, spanNamer, spanLogger, spanReporter, false);
+	}
+
+	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
+				SpanLogger spanLogger, SpanReporter spanReporter, boolean traceId128) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.spanNamer = spanNamer;
 		this.spanLogger = spanLogger;
 		this.spanReporter = spanReporter;
+		this.traceId128 = traceId128;
 	}
 
 	@Override
@@ -77,11 +84,14 @@ public class DefaultTracer implements Tracer {
 		}
 		else {
 			long id = createId();
-			span = Span.builder().name(name).traceId(id).spanId(id).build();
+			span = Span.builder().name(name)
+					.traceIdHigh(this.traceId128 ? createId() : 0L)
+					.traceId(id)
+					.spanId(id).build();
 			if (sampler == null) {
 				sampler = this.defaultSampler;
 			}
-			span = sampledSpan(name, id, span, sampler);
+			span = sampledSpan(span, sampler);
 			this.spanLogger.logStartedSpan(null, span);
 		}
 		return continueSpan(span);
@@ -139,8 +149,11 @@ public class DefaultTracer implements Tracer {
 	protected Span createChild(Span parent, String name) {
 		long id = createId();
 		if (parent == null) {
-			Span span = Span.builder().name(name).traceId(id).spanId(id).build();
-			span = sampledSpan(name, id, span, this.defaultSampler);
+			Span span = Span.builder().name(name)
+					.traceIdHigh(this.traceId128 ? createId() : 0L)
+					.traceId(id)
+					.spanId(id).build();
+			span = sampledSpan(span, this.defaultSampler);
 			this.spanLogger.logStartedSpan(null, span);
 			return span;
 		}
@@ -148,17 +161,27 @@ public class DefaultTracer implements Tracer {
 			if (!isTracing()) {
 				SpanContextHolder.push(parent, true);
 			}
-			Span span = Span.builder().name(name).traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
-					.processId(parent.getProcessId()).savedSpan(parent).exportable(parent.isExportable()).build();
+			Span span = Span.builder().name(name)
+					.traceIdHigh(parent.getTraceIdHigh())
+					.traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
+					.processId(parent.getProcessId()).savedSpan(parent)
+					.exportable(parent.isExportable())
+					.build();
 			this.spanLogger.logStartedSpan(parent, span);
 			return span;
 		}
 	}
 
-	private Span sampledSpan(String name, long id, Span span, Sampler sampler) {
+	private Span sampledSpan(Span span, Sampler sampler) {
 		if (!sampler.isSampled(span)) {
-			// Non-exportable so we keep the trace but not other data
-			return Span.builder().begin(span.getBegin()).name(name).traceId(id).spanId(id).exportable(false).build();
+			// Copy everything, except set exportable to false
+			return Span.builder()
+					.begin(span.getBegin())
+					.traceIdHigh(span.getTraceIdHigh())
+					.traceId(span.getTraceId())
+					.spanId(span.getSpanId())
+					.name(span.getName())
+					.exportable(false).build();
 		}
 		return span;
 	}
