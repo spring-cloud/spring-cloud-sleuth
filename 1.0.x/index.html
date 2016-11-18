@@ -1851,7 +1851,7 @@ that injects the headers into the Http Response and a Servlet filter which makes
 
 	@Override
 	public void inject(Span span, HttpServletResponse carrier) {
-		carrier.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		carrier.addHeader(Span.TRACE_ID_NAME, span.traceIdString());
 		carrier.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 	}
 }
