@@ -119,7 +119,7 @@ public class TraceCustomFilterResponseInjectorTests {
 
 		@Override
 		public void inject(Span span, HttpServletResponse carrier) {
-			carrier.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+			carrier.addHeader(Span.TRACE_ID_NAME, span.traceIdString());
 			carrier.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		}
 	}

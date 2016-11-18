@@ -95,6 +95,7 @@ public class ZipkinSpanListener implements SpanReporter {
 				zipkinSpan.duration(calculateDurationInMicros(span));
 			}
 		}
+		zipkinSpan.traceIdHigh(span.getTraceIdHigh());
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
