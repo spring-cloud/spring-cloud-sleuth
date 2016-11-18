@@ -68,7 +68,7 @@ abstract class SpanInjectingRibbonRequestCustomizer<T> implements RibbonRequestC
 		}
 		carrier.put(Span.SAMPLED_NAME, span.isExportable() ?
 				Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
-		carrier.put(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
+		carrier.put(Span.TRACE_ID_NAME, span.traceIdString());
 		carrier.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		carrier.put(Span.SPAN_NAME_NAME, span.getName());
 		if (getParentId(span) != null) {

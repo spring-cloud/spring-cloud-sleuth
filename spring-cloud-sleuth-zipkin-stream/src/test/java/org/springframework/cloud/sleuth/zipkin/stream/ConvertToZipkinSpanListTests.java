@@ -19,12 +19,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.Spans;
-
 import zipkin.Constants;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -183,13 +181,24 @@ public class ConvertToZipkinSpanListTests {
 				.isNull();
 	}
 
+	@Test
+	public void converts128BitTraceId() {
+		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).name("foo").build();
+
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
+
+		assertThat(result.traceIdHigh).isEqualTo(span.getTraceIdHigh());
+		assertThat(result.traceId).isEqualTo(span.getTraceId());
+	}
+
 	Span span(String name) {
 		return span(name, false);
 	}
 
 	Span span(String name, boolean remote) {
 		Long id = new Random().nextLong();
-		return new Span(1, 3, "message:" + name, id, Collections.<Long>emptyList(), id, remote, true,
-				"process");
+		return Span.builder().begin(1).end(3).name("message:" + name).traceId(id).spanId(id)
+				.remote(remote).processId("process").build();
 	}
 }

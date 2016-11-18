@@ -81,7 +81,7 @@ public class HttpServletRequestExtractorTests {
 	}
 
 	@Test
-	public void should_downgrade_128bit_trace_id_by_dropping_high_bits() {
+	public void should_accept_128bit_trace_id() {
 		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
 		String lower64Bits = "48485a3953bb6124";
 
@@ -94,6 +94,6 @@ public class HttpServletRequestExtractorTests {
 
 		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
 
-		then(span.getTraceId()).isEqualTo(Span.hexToId(lower64Bits));
+		then(span.traceIdString()).isEqualTo(hex128Bits);
 	}
 }

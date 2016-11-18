@@ -41,32 +41,33 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 			String uri = carrier.get(URI_HEADER);
 			boolean skip = this.skipPattern.matcher(uri).matches()
 					|| Span.SPAN_NOT_SAMPLED.equals(carrier.get(Span.SAMPLED_NAME));
-			long traceId = Span
-					.hexToId(carrier.get(Span.TRACE_ID_NAME));
-			long spanId = spanId(carrier, traceId);
-			return buildParentSpan(carrier, uri, skip, traceId, spanId);
+			long spanId = spanId(carrier);
+			return buildParentSpan(carrier, uri, skip, spanId);
 		} catch (Exception e) {
 			log.error("Exception occurred while trying to extract span from carrier", e);
 			return null;
 		}
 	}
 
-	private long spanId(Map<String, String> carrier, long traceId) {
+	private long spanId(Map<String, String> carrier) {
 		String spanId = carrier.get(Span.SPAN_ID_NAME);
 		if (spanId == null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Request is missing a span id but it has a trace id. We'll assume that this is "
-						+ "a root span with span id equal to trace id");
+						+ "a root span with span id equal to the lower 64-bits of the trace id");
 			}
-			return traceId;
+			return Span.hexToId(carrier.get(Span.TRACE_ID_NAME));
 		} else {
 			return Span.hexToId(spanId);
 		}
 	}
 
-	private Span buildParentSpan(Map<String, String> carrier, String uri, boolean skip,
-			long traceId, long spanId) {
-		Span.SpanBuilder span = Span.builder().traceId(traceId).spanId(spanId);
+	private Span buildParentSpan(Map<String, String> carrier, String uri, boolean skip, long spanId) {
+		String traceId = carrier.get(Span.TRACE_ID_NAME);
+		Span.SpanBuilder span = Span.builder()
+				.traceIdHigh(traceId.length() == 32 ? Span.hexToId(traceId, 0) : 0)
+				.traceId(Span.hexToId(traceId))
+				.spanId(spanId);
 		String processId = carrier.get(Span.PROCESS_ID_NAME);
 		String parentName = carrier.get(Span.SPAN_NAME_NAME);
 		if (StringUtils.hasText(parentName)) {

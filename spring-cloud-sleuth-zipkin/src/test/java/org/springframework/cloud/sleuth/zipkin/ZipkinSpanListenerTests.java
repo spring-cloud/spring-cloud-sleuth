@@ -216,6 +216,16 @@ public class ZipkinSpanListenerTests {
 	}
 
 	@Test
+	public void converts128BitTraceId() {
+		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).name("foo").build();
+
+		zipkin.Span result = this.spanReporter.convert(span);
+
+		assertThat(result.traceIdHigh).isEqualTo(span.getTraceIdHigh());
+		assertThat(result.traceId).isEqualTo(span.getTraceId());
+	}
+
+	@Test
 	public void shouldReuseServerAddressTag() {
 		this.parent.logEvent(Constants.CLIENT_SEND);
 		this.parent.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "fooservice");
