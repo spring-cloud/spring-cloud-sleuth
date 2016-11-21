@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -82,6 +83,11 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
 		return this.delegate.submitListenable(new SpanContinuingTraceCallable<>(tracer(), traceKeys(), spanNamer(), task));
+	}
+
+	@Override
+	public ThreadPoolExecutor getThreadPoolExecutor() throws IllegalStateException {
+		return this.delegate.getThreadPoolExecutor();
 	}
 
 	public void destroy() {
