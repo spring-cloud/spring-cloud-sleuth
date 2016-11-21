@@ -51,6 +51,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @AutoConfigureAfter(AsyncCustomAutoConfiguration.class)
 public class AsyncDefaultAutoConfiguration {
 
+	@Autowired private BeanFactory beanFactory;
+
 	@Configuration
 	@ConditionalOnMissingBean(AsyncConfigurer.class)
 	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled", matchIfMissing = true)
@@ -66,12 +68,7 @@ public class AsyncDefaultAutoConfiguration {
 
 	@Bean
 	public TraceAsyncAspect traceAsyncAspect(Tracer tracer, TraceKeys traceKeys) {
-		return new TraceAsyncAspect(tracer, traceKeys);
-	}
-
-	@Bean
-	public TraceExecutorBeanPostProcessor traceExecutorBeanPostProcessor(BeanFactory beanFactory) {
-		return new TraceExecutorBeanPostProcessor(beanFactory);
+		return new TraceAsyncAspect(tracer, traceKeys, this.beanFactory);
 	}
 
 }
