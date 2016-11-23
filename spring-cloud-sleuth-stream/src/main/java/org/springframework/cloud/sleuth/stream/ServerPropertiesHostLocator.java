@@ -19,20 +19,18 @@ package org.springframework.cloud.sleuth.stream;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
-
-import java.net.InetAddress;
 
 /**
  * A {@link HostLocator} that retrieves:
  *
  * <ul>
- * <li><b>service name</b> - either from {@link Span#getProcessId()} or current
- * application name</li>
- * <li><b>address</b> - from {@link ServerProperties}</li>
- * <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
+ *     <li><b>service name</b> - either from {@link Span#getProcessId()} or current application name</li>
+ *     <li><b>address</b> - from {@link ServerProperties}</li>
+ *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
  * @author Dave Syer
@@ -44,6 +42,11 @@ public class ServerPropertiesHostLocator implements HostLocator {
 	private final String appName;
 	private final InetUtils inetUtils;
 	private Integer port; // Lazy assigned
+
+	public ServerPropertiesHostLocator(ServerProperties serverProperties,
+			String appName) {
+		this(serverProperties, appName, new InetUtils(new InetUtilsProperties()));
+	}
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties, String appName,
 			InetUtils inetUtils) {
@@ -86,13 +89,9 @@ public class ServerPropertiesHostLocator implements HostLocator {
 			address = this.serverProperties.getAddress().getHostAddress();
 		}
 		else {
-			address = getFirstNonLoopbackAddress().getHostAddress();
+			address = this.inetUtils.findFirstNonLoopbackAddress().getHostAddress();
 		}
 		return address;
-	}
-
-	private InetAddress getFirstNonLoopbackAddress() {
-		return this.inetUtils.findFirstNonLoopbackAddress();
 	}
 
 	private String getServiceName(Span span) {

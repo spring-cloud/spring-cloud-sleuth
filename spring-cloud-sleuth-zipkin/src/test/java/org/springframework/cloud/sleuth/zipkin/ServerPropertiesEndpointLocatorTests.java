@@ -16,16 +16,16 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ServerPropertiesEndpointLocatorTests {
 

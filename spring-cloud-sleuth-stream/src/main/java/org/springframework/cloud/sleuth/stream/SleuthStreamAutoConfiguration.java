@@ -44,10 +44,11 @@ import org.springframework.scheduling.support.PeriodicTrigger;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for sending spans over Spring Cloud Stream. This is for the
- * producer (via {@link SleuthSource}). A consumer can enable binding to
- * {@link SleuthSink} and receive the messages coming from the source (they have the same
- * channel name so there is no additional configuration to do by default).
+ * Auto-configuration} for sending spans over Spring Cloud Stream. This is for
+ * the producer (via {@link SleuthSource}). A consumer can enable binding to
+ * {@link SleuthSink} and receive the messages coming from the source (they have
+ * the same channel name so there is no additional configuration to do by
+ * default).
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -68,8 +69,7 @@ public class SleuthStreamAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = SleuthSource.OUTPUT, order = Ordered.HIGHEST_PRECEDENCE)
-	public ChannelInterceptor zipkinChannelInterceptor(
-			SpanMetricReporter spanMetricReporter) {
+	public ChannelInterceptor zipkinChannelInterceptor(SpanMetricReporter spanMetricReporter) {
 		return new TracerIgnoringChannelInterceptor(spanMetricReporter);
 	}
 
