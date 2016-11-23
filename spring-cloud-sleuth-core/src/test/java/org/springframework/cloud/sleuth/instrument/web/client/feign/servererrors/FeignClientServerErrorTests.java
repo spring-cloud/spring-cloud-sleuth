@@ -38,6 +38,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
@@ -53,6 +54,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.jayway.awaitility.Awaitility;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
@@ -61,7 +63,7 @@ import com.netflix.loadbalancer.Server;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * Related to https://github.com/spring-cloud/spring-cloud-sleuth/issues/257
@@ -76,10 +78,12 @@ public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;
 	@Autowired TestFeignWithCustomConfInterface customConfFeignInterface;
+	@Autowired Listener listener;
 	@Rule public OutputCapture capture = new OutputCapture();
 
 	@Before
 	public void setup() {
+		this.listener.clear();
 		ExceptionUtils.setFail(true);
 	}
 
@@ -90,11 +94,17 @@ public class FeignClientServerErrorTests {
 		} catch (HystrixRuntimeException e) {
 		}
 
-		// ugly :/ waiting for rx thread to complete
-		Thread.sleep(100);
-		then(this.capture.toString())
-				.doesNotContain("Tried to close span but it is not the current span");
-		then(ExceptionUtils.getLastException()).isNull();
+		Awaitility.await().until(() -> {
+			then(this.capture.toString())
+					.doesNotContain("Tried to close span but it is not the current span");
+			then(ExceptionUtils.getLastException()).isNull();
+			then(new ListOfSpans(this.listener.getEvents()))
+					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
+							"Request processing failed; nested exception is java.lang.RuntimeException: Internal Error");
+			then(new ListOfSpans(this.listener.getEvents()))
+					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
+							"Internal Error");
+		});
 	}
 
 	@Test
@@ -104,11 +114,11 @@ public class FeignClientServerErrorTests {
 		} catch (HystrixRuntimeException e) {
 		}
 
-		// ugly :/ waiting for rx thread to complete
-		Thread.sleep(100);
-		then(this.capture.toString())
-				.doesNotContain("Tried to close span but it is not the current span");
-		then(ExceptionUtils.getLastException()).isNull();
+		Awaitility.await().until(() -> {
+			then(this.capture.toString())
+					.doesNotContain("Tried to close span but it is not the current span");
+			then(ExceptionUtils.getLastException()).isNull();
+		});
 	}
 
 	@Test
@@ -118,11 +128,10 @@ public class FeignClientServerErrorTests {
 		} catch (HystrixRuntimeException e) {
 		}
 
-		// ugly :/ waiting for rx thread to complete
-		Thread.sleep(100);
-		then(this.capture.toString())
-				.doesNotContain("Tried to close span but it is not the current span");
-		then(ExceptionUtils.getLastException()).isNull();
+		Awaitility.await().until(() -> {
+			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
+			then(ExceptionUtils.getLastException()).isNull();
+		});
 	}
 
 	@Test
@@ -132,11 +141,10 @@ public class FeignClientServerErrorTests {
 		} catch (HystrixRuntimeException e) {
 		}
 
-		// ugly :/ waiting for rx thread to complete
-		Thread.sleep(100);
-		then(this.capture.toString())
-				.doesNotContain("Tried to close span but it is not the current span");
-		then(ExceptionUtils.getLastException()).isNull();
+		Awaitility.await().until(() -> {
+			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
+			then(ExceptionUtils.getLastException()).isNull();
+		});
 	}
 
 	@Test
@@ -146,11 +154,10 @@ public class FeignClientServerErrorTests {
 		} catch (HystrixRuntimeException e) {
 		}
 
-		// ugly :/ waiting for rx thread to complete
-		Thread.sleep(100);
-		then(this.capture.toString())
-				.doesNotContain("Tried to close span but it is not the current span");
-		then(ExceptionUtils.getLastException()).isNull();
+		Awaitility.await().until(() -> {
+			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
+			then(ExceptionUtils.getLastException()).isNull();
+		});
 	}
 
 	@Configuration
@@ -226,7 +233,11 @@ public class FeignClientServerErrorTests {
 		private List<Span> events = new ArrayList<>();
 
 		public List<Span> getEvents() {
-			return this.events;
+			return new ArrayList<>(this.events);
+		}
+
+		public void clear() {
+			this.events.clear();
 		}
 
 		@Override
@@ -246,8 +257,7 @@ public class FeignClientServerErrorTests {
 				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
 				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
 				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
-			return new ResponseEntity<>("internal error",
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			throw new RuntimeException("Internal Error");
 		}
 
 		@RequestMapping("/notfound")

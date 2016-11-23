@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-sleuth</artifactId>
-		<version>1.1.0.BUILD-SNAPSHOT</version>
+		<version>1.2.0.BUILD-SNAPSHOT</version>
 	</parent>
 	<artifactId>spring-cloud-sleuth-docs</artifactId>
 	<packaging>pom</packaging>
@@ -14,7 +14,7 @@
 	<properties>
 		<docs.main>spring-cloud-sleuth</docs.main>
 		<!-- Comma separated list of whitelisted branches -->
-		<docs.whitelisted.branches>1.0.x</docs.whitelisted.branches>
+		<docs.whitelisted.branches>1.0.x,1.1.x</docs.whitelisted.branches>
 		<main.basedir>${basedir}/..</main.basedir>
 	</properties>
 	<profiles>

@@ -57,9 +57,11 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	@Override
 	public Endpoint local() {
-		int address = getAddress();
-		Integer port = getPort();
-		return Endpoint.create(this.appName, address, port);
+		return Endpoint.builder()
+				.serviceName(this.appName)
+				.ipv4(getAddress())
+				.port(getPort())
+				.build();
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)

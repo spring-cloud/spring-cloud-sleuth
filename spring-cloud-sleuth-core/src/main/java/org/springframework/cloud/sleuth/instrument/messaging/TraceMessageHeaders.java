@@ -33,10 +33,8 @@ public class TraceMessageHeaders {
 	public static final String TRACE_ID_NAME = "spanTraceId";
 	public static final String SPAN_NAME_NAME = "spanName";
 
-	static final String OLD_SPAN_HEADER = "X-Current-Span";
-	static final String OLD_MESSAGE_SENT_FROM_CLIENT = "X-Message-Sent";
-	static final String SPAN_HEADER = "currentSpan";
 	static final String MESSAGE_SENT_FROM_CLIENT = "messageSent";
+	static final String HEADER_DELIMITER = "_";
 
 	private TraceMessageHeaders() {}
 }

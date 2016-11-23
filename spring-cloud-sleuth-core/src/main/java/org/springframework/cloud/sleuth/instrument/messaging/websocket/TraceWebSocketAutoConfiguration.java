@@ -5,16 +5,14 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.messaging.MessagingSpanTextMapExtractor;
+import org.springframework.cloud.sleuth.instrument.messaging.MessagingSpanTextMapInjector;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptor;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceSpanMessagingAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.config.ChannelRegistration;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
@@ -43,9 +41,9 @@ public class TraceWebSocketAutoConfiguration
 	@Autowired
 	TraceKeys traceKeys;
 	@Autowired
-	SpanExtractor<Message<?>> spanExtractor;
+	MessagingSpanTextMapExtractor spanExtractor;
 	@Autowired
-	SpanInjector<MessageBuilder<?>> spanInjector;
+	MessagingSpanTextMapInjector spanInjector;
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {

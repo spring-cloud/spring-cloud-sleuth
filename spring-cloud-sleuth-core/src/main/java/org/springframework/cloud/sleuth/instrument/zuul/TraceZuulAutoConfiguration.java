@@ -15,6 +15,9 @@
  */
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import com.netflix.client.http.HttpRequest;
+import com.netflix.zuul.ZuulFilter;
+
 import org.apache.http.client.methods.RequestBuilder;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -24,18 +27,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
-import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import okhttp3.Request;
-import com.netflix.client.http.HttpRequest;
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.context.RequestContext;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -49,13 +49,13 @@ import com.netflix.zuul.context.RequestContext;
 @ConditionalOnWebApplication
 @ConditionalOnClass(ZuulFilter.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
+@AutoConfigureAfter(TraceWebAutoConfiguration.class)
 public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
 	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer,
-			SpanInjector<RequestContext> spanInjector, HttpTraceKeysInjector httpTraceKeysInjector) {
+			HttpSpanInjector spanInjector, HttpTraceKeysInjector httpTraceKeysInjector) {
 		return new TracePreZuulFilter(tracer, spanInjector, httpTraceKeysInjector);
 	}
 
@@ -63,11 +63,6 @@ public class TraceZuulAutoConfiguration {
 	@ConditionalOnMissingBean
 	public TracePostZuulFilter tracePostZuulFilter(Tracer tracer, TraceKeys traceKeys) {
 		return new TracePostZuulFilter(tracer, traceKeys);
-	}
-
-	@Bean
-	public SpanInjector<RequestContext> requestContextSpanInjector() {
-		return new RequestContextInjector();
 	}
 
 	@Bean

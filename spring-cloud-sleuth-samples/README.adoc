@@ -27,7 +27,7 @@ The Ribbon sample makes an interesting demo or playground for learning about zip
 
 NOTE: You can see the zipkin spans without the UI (in logs) if you run the sample with `sample.zipkin.enabled=false`.
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Sample Zipkin Screenshot]
+image::{github-raw}/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Sample Zipkin Screenshot]
 
 > The fact that the first trace in says "testSleuthMessaging" seems to be a bug in the UI (it has some annotations from that service, but it originates in the "testSleuthRibbon" service).
 
@@ -42,4 +42,4 @@ Instead of POSTing trace data directly to a Zipkin server, you can export them o
 
 The UI should look more or less like this:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-traces.png[Zipkin Web Screenshot]
+image::{github-raw}/docs/src/main/asciidoc/images/zipkin-traces.png[Zipkin Web Screenshot]

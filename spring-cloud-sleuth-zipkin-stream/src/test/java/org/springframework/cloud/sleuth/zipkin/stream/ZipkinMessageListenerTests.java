@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.zipkin.stream;
 
 import java.util.Collections;
-
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
@@ -30,20 +29,42 @@ public class ZipkinMessageListenerTests {
 	Span span = new Span(1, 3, "http:name", 1L, Collections.<Long>emptyList(), 2L, true, true,
 			"process");
 	Host host = new Host("myservice", "1.2.3.4", 8080);
-	Endpoint endpoint = Endpoint.create("myservice", 1 << 24 | 2 << 16 | 3 << 8 | 4, 8080);
+	Endpoint endpoint = Endpoint.builder()
+			.serviceName("myservice")
+			.ipv4(1 << 24 | 2 << 16 | 3 << 8 | 4)
+			.port(8080).build();
+
+	/**
+	 * In the RPC span model, the client owns the timestamp and duration of the span. If we
+	 * were propagated an id, we can assume that we shouldn't report timestamp or duration,
+	 * rather let the client do that. Worst case we were propagated an unreported ID and
+	 * Zipkin backfills timestamp and duration.
+	 */
+	@Test
+	public void doesntSetTimestampOrDurationWhenRemote() {
+		this.span.stop();
+		zipkin.Span result = ConvertToZipkinSpanList.convert(this.span, this.host);
+
+		assertThat(result.timestamp)
+				.isNull();
+		assertThat(result.duration)
+				.isNull();
+	}
 
 	/** Sleuth timestamps are millisecond granularity while zipkin is microsecond. */
 	@Test
 	public void convertsTimestampAndDurationToMicroseconds() {
+		Span span = new Span(1, 3, "http:name", 1L, Collections.<Long>emptyList(), 2L, false, true,
+				"process");
 		long start = System.currentTimeMillis();
-		this.span.logEvent("hystrix/retry"); // System.currentTimeMillis
+		span.logEvent("hystrix/retry"); // System.currentTimeMillis
 
-		zipkin.Span result = ConvertToZipkinSpanList.convert(this.span, this.host);
+		zipkin.Span result = ConvertToZipkinSpanList.convert(span, this.host);
 
 		assertThat(result.timestamp)
-				.isEqualTo(this.span.getBegin() * 1000);
+				.isEqualTo(span.getBegin() * 1000);
 		assertThat(result.duration)
-				.isEqualTo((this.span.getEnd() - this.span.getBegin()) * 1000);
+				.isEqualTo((span.getEnd() - span.getBegin()) * 1000);
 		assertThat(result.annotations.get(0).timestamp)
 				.isGreaterThanOrEqualTo(start * 1000)
 				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);

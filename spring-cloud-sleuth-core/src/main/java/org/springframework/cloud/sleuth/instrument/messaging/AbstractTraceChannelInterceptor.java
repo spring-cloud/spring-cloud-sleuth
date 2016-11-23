@@ -1,17 +1,18 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.lang.invoke.MethodHandles;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanExtractor;
-import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -21,6 +22,8 @@ import org.springframework.util.ClassUtils;
  */
 abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		implements ExecutorChannelInterceptor {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	/**
 	 * If a span comes from messaging components then it will have this value as a prefix
@@ -34,12 +37,12 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
-	private final SpanExtractor<Message<?>> spanExtractor;
-	private final SpanInjector<MessageBuilder<?>> spanInjector;
+	private final MessagingSpanTextMapExtractor spanExtractor;
+	private final MessagingSpanTextMapInjector spanInjector;
 
 	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			SpanExtractor<Message<?>> spanExtractor,
-			SpanInjector<MessageBuilder<?>> spanInjector) {
+			MessagingSpanTextMapExtractor spanExtractor,
+			MessagingSpanTextMapInjector spanInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.spanExtractor = spanExtractor;
@@ -54,7 +57,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		return this.traceKeys;
 	}
 
-	protected SpanInjector<MessageBuilder<?>> getSpanInjector() {
+	protected MessagingSpanTextMapInjector getSpanInjector() {
 		return this.spanInjector;
 	}
 
@@ -62,8 +65,13 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 * Returns a span given the message and a channel. Returns {@code null} if ids are
 	 * missing.
 	 */
-	protected Span buildSpan(Message<?> message) {
-		return this.spanExtractor.joinTrace(message);
+	protected Span buildSpan(SpanTextMap carrier) {
+		try {
+			return this.spanExtractor.joinTrace(carrier);
+		} catch (Exception e) {
+			log.error("Exception occurred while trying to extract span from carrier", e);
+			return null;
+		}
 	}
 
 	String getChannelName(MessageChannel channel) {

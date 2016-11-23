@@ -1,8 +1,9 @@
 :github-tag: master
 :github-repo: spring-cloud/spring-cloud-sleuth
-:github-raw: http://raw.github.com/{github-repo}/{github-tag}
-:github-code: http://github.com/{github-repo}/tree/{github-tag}
+:github-raw: https://raw.githubusercontent.com/{github-repo}/{github-tag}
+:github-code: https://github.com/{github-repo}/tree/{github-tag}
 :toc: left
+:toclevels: 8
 :nofooter:
 
 Spring Cloud Sleuth
@@ -37,7 +38,9 @@ fixed fraction of spans.
 
 NOTE: the `PercentageBasedSampler` is the default if you are using
 `spring-cloud-sleuth-zipkin` or `spring-cloud-sleuth-stream`. You can
-configure the exports using `spring.sleuth.sampler.percentage`.
+configure the exports using `spring.sleuth.sampler.percentage`. The passed
+value needs to be a double from `0.0` to `1.0` so it's not a percentage.
+For backwards compatibility reasons we're not changing the property name.
 
 A sampler can be installed just by creating a bean definition, e.g:
 
@@ -159,7 +162,7 @@ Fortunately, for the asynchronous processing you can provide explicit naming.
 
 === @SpanName annotation
 
-You can do name the span explicitly via the `@SpanName` annotation.
+You can name the span explicitly via the `@SpanName` annotation.
 
 [source,java]
 ----
@@ -204,47 +207,34 @@ Span ids are extracted from Zipkin-compatible (B3) headers (either `Message`
 or HTTP headers), to start or join an existing trace. Trace information is
 injected into any outbound requests so the next hop can extract them.
 
+The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
+the Open Tracing's `TextMap` notion. In Sleuth it's called `SpanTextMap`. Basically the idea
+is that any means of communication (e.g. message, http request, etc.) can be abstracted via
+a `SpanTextMap`. This abstraction defines how one can insert data into the carrier and
+how to retrieve it from there. Thanks to this if you want to instrument a new HTTP library
+that uses a `FooRequest` as a mean of sending HTTP requests then you have to create an
+implementation of  a `SpanTextMap` that delegates calls to `FooRequest` in terms of retrieval
+and insertion of HTTP headers.
+
 === Spring Integration
 
-For Spring Integration these are the beans responsible for creation of a Span from a `Message`
- and filling in the `MessageBuilder` with tracing information.
+For Spring Integration there are 2 interfaces responsible for creation of a Span from a `Message`.
+These are:
 
-[source,java]
-----
-@Bean
-public SpanExtractor<Message> messagingSpanExtractor() {
-    ...
-}
+- `MessagingSpanTextMapExtractor`
+- `MessagingSpanTextMapInjector`
 
-@Bean
-public SpanInjector<MessageBuilder> messagingSpanInjector() {
-    ...
-}
-----
-
-You can override them by providing your own implementation and by adding a `@Primary` annotation
-to your bean definition.
+You can override them by providing your own implementation.
 
 === HTTP
 
-For HTTP these are the beans responsible for creation of a Span from a `HttpServletRequest`
-  and filling in the `HttpServletResponse` with tracing information.
+For HTTP there are 2 interfaces responsible for creation of a Span from a `Message`.
+These are:
 
-[source,java]
-----
-@Bean
-public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor() {
-    ...
-}
+- `HttpSpanExtractor`
+- `HttpSpanInjector`
 
-@Bean
-public SpanInjector<HttpServletResponse> httpServletResponseSpanInjector() {
-    ...
-}
-----
-
-You can override them by providing your own implementation and by adding a `@Primary` annotation
-to your bean definition.
+You can override them by providing your own implementation.
 
 === Example
 
@@ -261,18 +251,25 @@ This is a an example of a `SpanExtractor`
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=extractor,indent=0]
 ----
 
-The following `SpanInjector` could be created
-
-[source,java]
-----
-include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=injector,indent=0]
-----
-
-And you could register them like this:
+And you could register it like this:
 
 [source,java]
 ----
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=configuration,indent=0]
+----
+
+Spring Cloud Sleuth does not add trace/span related headers to the Http Response for security reasons. If you need the headers then a custom `SpanInjector`
+that injects the headers into the Http Response and a Servlet filter which makes use of this can be added the following way:
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceCustomFilterResponseInjectorTests.java[tags=injector,indent=0]
+----
+
+And you could register them like this:
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceCustomFilterResponseInjectorTests.java[tags=configuration,indent=0]
 ----
 
 === Custom SA tag in Zipkin

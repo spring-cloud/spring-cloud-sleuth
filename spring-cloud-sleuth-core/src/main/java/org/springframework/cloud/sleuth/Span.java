@@ -28,12 +28,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -73,7 +73,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-public class Span {
+public class Span implements SpanContext {
 
 	public static final String SAMPLED_NAME = "X-B3-Sampled";
 	public static final String PROCESS_ID_NAME = "X-Process-Id";
@@ -82,6 +82,7 @@ public class Span {
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
 	public static final String SPAN_ID_NAME = "X-B3-SpanId";
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
+	public static final String SPAN_BAGGAGE_HEADER_PREFIX = "baggage";
 	public static final Set<String> SPAN_HEADERS = new HashSet<>(
 			Arrays.asList(SAMPLED_NAME, PROCESS_ID_NAME, PARENT_ID_NAME, TRACE_ID_NAME,
 					SPAN_ID_NAME, SPAN_NAME_NAME, SPAN_EXPORT_NAME));
@@ -90,6 +91,7 @@ public class Span {
 	public static final String SPAN_NOT_SAMPLED = "0";
 
 	public static final String SPAN_LOCAL_COMPONENT_TAG_NAME = "lc";
+	public static final String SPAN_ERROR_TAG_NAME = "error";
 
 	/**
 	 * <b>cr</b> - Client Receive. Signifies the end of the span. The client has
@@ -136,6 +138,7 @@ public class Span {
 	private final long begin;
 	private long end = 0;
 	private final String name;
+	private final long traceIdHigh;
 	private final long traceId;
 	private List<Long> parents = new ArrayList<>();
 	private final long spanId;
@@ -145,6 +148,8 @@ public class Span {
 	private final String processId;
 	private final Collection<Log> logs;
 	private final Span savedSpan;
+	@JsonIgnore
+	private final Map<String,String> baggage;
 
 	// Null means we don't know the start tick, so fallback to time
 	@JsonIgnore
@@ -165,6 +170,7 @@ public class Span {
 		this.begin = current.getBegin();
 		this.end = current.getEnd();
 		this.name = current.getName();
+		this.traceIdHigh = current.getTraceIdHigh();
 		this.traceId = current.getTraceId();
 		this.parents = current.getParents();
 		this.spanId = current.getSpanId();
@@ -175,39 +181,67 @@ public class Span {
 		this.logs = current.logs;
 		this.startNanos = current.startNanos;
 		this.durationMicros = current.durationMicros;
+		this.baggage = current.baggage;
 		this.savedSpan = savedSpan;
 	}
 
+	/**
+	 * @deprecated please use {@link SpanBuilder}
+	 */
+	@Deprecated
 	public Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId) {
 		this(begin, end, name, traceId, parents, spanId, remote, exportable, processId,
 				null);
 	}
 
+	/**
+	 * @deprecated please use {@link SpanBuilder}
+	 */
+	@Deprecated
 	public Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId,
 			Span savedSpan) {
-		if (begin > 0) { // conventionally, 0 indicates unset
+		this(new SpanBuilder()
+				.begin(begin)
+				.end(end)
+				.name(name)
+				.traceId(traceId)
+				.parents(parents)
+				.spanId(spanId)
+				.remote(remote)
+				.exportable(exportable)
+				.processId(processId)
+				.savedSpan(savedSpan));
+	}
+
+	Span(SpanBuilder builder) {
+		if (builder.begin > 0) { // conventionally, 0 indicates unset
 			this.startNanos = null; // don't know the start tick
-			this.begin = begin;
+			this.begin = builder.begin;
 		} else {
 			this.startNanos = nanoTime();
 			this.begin = System.currentTimeMillis();
 		}
-		if (end > 0) {
-			this.end = end;
-			this.durationMicros = (end - begin) * 1000;
+		if (builder.end > 0) {
+			this.end = builder.end;
+			this.durationMicros = (this.end - this.begin) * 1000;
 		}
-		this.name = name != null ? name : "";
-		this.traceId = traceId;
-		this.parents = parents;
-		this.spanId = spanId;
-		this.remote = remote;
-		this.exportable = exportable;
-		this.processId = processId;
-		this.savedSpan = savedSpan;
+		this.name = builder.name != null ? builder.name : "";
+		this.traceIdHigh = builder.traceIdHigh;
+		this.traceId = builder.traceId;
+		this.parents.addAll(builder.parents);
+		this.spanId = builder.spanId;
+		this.remote = builder.remote;
+		this.exportable = builder.exportable;
+		this.processId = builder.processId;
+		this.savedSpan = builder.savedSpan;
 		this.tags = new ConcurrentHashMap<>();
+		this.tags.putAll(builder.tags);
 		this.logs = new ConcurrentLinkedQueue<>();
+		this.logs.addAll(builder.logs);
+		this.baggage = new ConcurrentHashMap<>();
+		this.baggage.putAll(builder.baggage);
 	}
 
 	public static SpanBuilder builder() {
@@ -304,6 +338,40 @@ public class Span {
 	}
 
 	/**
+	 * Sets a baggage item in the Span (and its SpanContext) as a key/value pair.
+	 *
+	 * Baggage enables powerful distributed context propagation functionality where arbitrary application data can be
+	 * carried along the full path of request execution throughout the system.
+	 *
+	 * Note 1: Baggage is only propagated to the future (recursive) children of this SpanContext.
+	 *
+	 * Note 2: Baggage is sent in-band with every subsequent local and remote calls, so this feature must be used with
+	 * care.
+	 *
+	 * @return this Span instance, for chaining
+	 */
+	public Span setBaggageItem(String key, String value) {
+		this.baggage.put(key, value);
+		return this;
+	}
+
+	/**
+	 * @return the value of the baggage item identified by the given key, or null if no such item could be found
+	 */
+	public String getBaggageItem(String key) {
+		return this.baggage.get(key);
+	}
+
+	@Override
+	public final Iterable<Map.Entry<String,String>> baggageItems() {
+		return this.baggage.entrySet();
+	}
+
+	public final Map<String,String> getBaggage() {
+		return Collections.unmodifiableMap(this.baggage);
+	}
+
+	/**
 	 * Get tag data associated with this span (read only)
 	 * <p/>
 	 * <p/>
@@ -357,7 +425,30 @@ public class Span {
 	}
 
 	/**
-	 * A pseudo-unique (random) number assigned to the trace associated with this span
+	 * When non-zero, the trace containing this span uses 128-bit trace identifiers.
+	 *
+	 * <p>{@code traceIdHigh} corresponds to the high bits in big-endian format and
+	 * {@link #getTraceId()} corresponds to the low bits.
+	 *
+	 * <p>Ex. to convert the two fields to a 128bit opaque id array, you'd use code like below.
+	 * <pre>{@code
+	 * ByteBuffer traceId128 = ByteBuffer.allocate(16);
+	 * traceId128.putLong(span.getTraceIdHigh());
+	 * traceId128.putLong(span.getTraceId());
+	 * traceBytes = traceId128.array();
+	 * }</pre>
+	 *
+	 * @see #traceIdString()
+	 * @since 1.0.11
+	 */
+	public long getTraceIdHigh() {
+		return this.traceIdHigh;
+	}
+
+	/**
+	 * Unique 8-byte identifier for a trace, set on all spans within it.
+	 *
+	 * @see #getTraceIdHigh() for notes about 128-bit trace identifiers
 	 */
 	public long getTraceId() {
 		return this.traceId;
@@ -413,11 +504,52 @@ public class Span {
 	}
 
 	/**
-	 * Represents given long id as hex string
+	 * Returns the 16 or 32 character hex representation of the span's trace ID
+	 *
+	 * @since 1.0.11
+	 */
+	public String traceIdString() {
+		if (this.traceIdHigh != 0) {
+			char[] result = new char[32];
+			writeHexLong(result, 0, this.traceIdHigh);
+			writeHexLong(result, 16, this.traceId);
+			return new String(result);
+		}
+		char[] result = new char[16];
+		writeHexLong(result, 0, this.traceId);
+		return new String(result);
+	}
+
+	/**
+	 * Represents given long id as 16-character lower-hex string
+	 *
+	 * @see #traceIdString()
 	 */
 	public static String idToHex(long id) {
-		return Long.toHexString(id);
+		char[] data = new char[16];
+		writeHexLong(data, 0, id);
+		return new String(data);
 	}
+
+	/** Inspired by {@code okio.Buffer.writeLong} */
+	static void writeHexLong(char[] data, int pos, long v) {
+		writeHexByte(data, pos + 0,  (byte) ((v >>> 56L) & 0xff));
+		writeHexByte(data, pos + 2,  (byte) ((v >>> 48L) & 0xff));
+		writeHexByte(data, pos + 4,  (byte) ((v >>> 40L) & 0xff));
+		writeHexByte(data, pos + 6,  (byte) ((v >>> 32L) & 0xff));
+		writeHexByte(data, pos + 8,  (byte) ((v >>> 24L) & 0xff));
+		writeHexByte(data, pos + 10, (byte) ((v >>> 16L) & 0xff));
+		writeHexByte(data, pos + 12, (byte) ((v >>> 8L) & 0xff));
+		writeHexByte(data, pos + 14, (byte)  (v & 0xff));
+	}
+
+	static void writeHexByte(char[] data, int pos, byte b) {
+		data[pos + 0] = HEX_DIGITS[(b >> 4) & 0xf];
+		data[pos + 1] = HEX_DIGITS[b & 0xf];
+	}
+
+	static final char[] HEX_DIGITS =
+			{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
 	/**
 	 * Parses a 1 to 32 character lower-hex string with no prefix into an unsigned long, tossing any
@@ -426,21 +558,32 @@ public class Span {
 	public static long hexToId(String hexString) {
 		Assert.hasText(hexString, "Can't convert empty hex string to long");
 		int length = hexString.length();
-		if (length < 1 || length > 32) throw new IllegalArgumentException("Malformed id");
+		if (length < 1 || length > 32) throw new IllegalArgumentException("Malformed id: " + hexString);
 
 		// trim off any high bits
-		int i = length > 16 ? length - 16 : 0;
+		int beginIndex = length > 16 ? length - 16 : 0;
 
+		return hexToId(hexString, beginIndex);
+	}
+
+	/**
+	 * Parses a 16 character lower-hex string with no prefix into an unsigned long, starting at the
+	 * specified index.
+	 *
+	 * @since 1.0.11
+	 */
+	public static long hexToId(String lowerHex, int index) {
+		Assert.hasText(lowerHex, "Can't convert empty hex string to long");
 		long result = 0;
-		for (; i < length; i++) {
-			char c = hexString.charAt(i);
+		for (int endIndex = Math.min(index + 16, lowerHex.length()); index < endIndex; index++) {
+			char c = lowerHex.charAt(index);
 			result <<= 4;
 			if (c >= '0' && c <= '9') {
 				result |= c - '0';
 			} else if (c >= 'a' && c <= 'f') {
 				result |= c - 'a' + 10;
 			} else {
-				throw new IllegalArgumentException("Malformed id");
+				throw new IllegalArgumentException("Malformed id: " + lowerHex);
 			}
 		}
 		return result;
@@ -448,7 +591,7 @@ public class Span {
 
 	@Override
 	public String toString() {
-		return "[Trace: " + idToHex(this.traceId) + ", Span: " + idToHex(this.spanId)
+		return "[Trace: " + traceIdString() + ", Span: " + idToHex(this.spanId)
 				+ ", Parent: " + getParentIdIfPresent() + ", exportable:" + this.exportable + "]";
 	}
 
@@ -458,31 +601,36 @@ public class Span {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (this.spanId ^ (this.spanId >>> 32));
-		result = prime * result + (int) (this.traceId ^ (this.traceId >>> 32));
-		return result;
+		int h = 1;
+		h *= 1000003;
+		h ^= (this.traceIdHigh >>> 32) ^ this.traceIdHigh;
+		h *= 1000003;
+		h ^= (this.traceId >>> 32) ^ this.traceId;
+		h *= 1000003;
+		h ^= (this.spanId >>> 32) ^ this.spanId;
+		h *= 1000003;
+		return h;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(Object o) {
+		if (o == this) {
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Span other = (Span) obj;
-		if (this.spanId != other.spanId)
-			return false;
-		return this.traceId == other.traceId;
+		}
+		if (o instanceof Span) {
+			Span that = (Span) o;
+			return (this.traceIdHigh == that.traceIdHigh)
+					&& (this.traceId == that.traceId)
+					&& (this.spanId == that.spanId);
+		}
+		return false;
 	}
 
 	public static class SpanBuilder {
 		private long begin;
 		private long end;
 		private String name;
+		private long traceIdHigh;
 		private long traceId;
 		private ArrayList<Long> parents = new ArrayList<>();
 		private long spanId;
@@ -492,6 +640,7 @@ public class Span {
 		private Span savedSpan;
 		private List<Log> logs = new ArrayList<>();
 		private Map<String, String> tags = new LinkedHashMap<>();
+		private Map<String, String> baggage = new LinkedHashMap<>();
 
 		SpanBuilder() {
 		}
@@ -515,6 +664,11 @@ public class Span {
 
 		public Span.SpanBuilder name(String name) {
 			this.name = name;
+			return this;
+		}
+
+		public Span.SpanBuilder traceIdHigh(long traceIdHigh) {
+			this.traceIdHigh = traceIdHigh;
 			return this;
 		}
 
@@ -553,6 +707,16 @@ public class Span {
 			return this;
 		}
 
+		public Span.SpanBuilder baggage(String baggageKey, String baggageValue) {
+			this.baggage.put(baggageKey, baggageValue);
+			return this;
+		}
+
+		public Span.SpanBuilder baggage(Map<String, String> baggage) {
+			this.baggage.putAll(baggage);
+			return this;
+		}
+
 		public Span.SpanBuilder spanId(long spanId) {
 			this.spanId = spanId;
 			return this;
@@ -579,22 +743,12 @@ public class Span {
 		}
 
 		public Span build() {
-			Span span = new Span(this.begin, this.end, this.name, this.traceId,
-					this.parents, this.spanId, this.remote, this.exportable,
-					this.processId, this.savedSpan);
-			span.logs.addAll(this.logs);
-			span.tags.putAll(this.tags);
-			return span;
+			return new Span(this);
 		}
 
 		@Override
 		public String toString() {
-			return "SpanBuilder{" + "begin=" + this.begin + ", end=" + this.end
-					+ ", name=" + this.name + ", traceId=" + this.traceId + ", parents="
-					+ this.parents + ", spanId=" + this.spanId + ", remote=" + this.remote
-					+ ", exportable=" + this.exportable + ", processId='" + this.processId
-					+ '\'' + ", savedSpan=" + this.savedSpan + ", logs=" + this.logs
-					+ ", tags=" + this.tags + '}';
+			return new Span(this).toString();
 		}
 	}
 }

@@ -31,11 +31,11 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -87,20 +87,20 @@ public class TraceFilter extends GenericFilterBean {
 	private final TraceKeys traceKeys;
 	private final Pattern skipPattern;
 	private final SpanReporter spanReporter;
-	private final SpanExtractor<HttpServletRequest> spanExtractor;
+	private final HttpSpanExtractor spanExtractor;
 	private final HttpTraceKeysInjector httpTraceKeysInjector;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
-			SpanExtractor<HttpServletRequest> spanExtractor,
+			HttpSpanExtractor spanExtractor,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
 				spanExtractor, httpTraceKeysInjector);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
-			SpanReporter spanReporter, SpanExtractor<HttpServletRequest> spanExtractor,
+			SpanReporter spanReporter, HttpSpanExtractor spanExtractor,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
@@ -134,19 +134,13 @@ public class TraceFilter extends GenericFilterBean {
 			return;
 		}
 		String name = HTTP_COMPONENT + ":" + uri;
-		try {
-			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
-		} catch (IllegalArgumentException e) {
-			filterChain.doFilter(request, response);
-			response.sendError(HttpStatus.BAD_REQUEST.value(),
-					"Exception tracing request [" + e.getMessage() + "]");
-			return;
-		}
 		Throwable exception = null;
 		try {
+			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
 			filterChain.doFilter(request, response);
 		} catch (Throwable e) {
 			exception = e;
+			this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(e));
 			throw e;
 		} finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
@@ -293,7 +287,7 @@ public class TraceFilter extends GenericFilterBean {
 			}
 			return spanFromRequest;
 		}
-		Span parent = this.spanExtractor.joinTrace(request);
+		Span parent = this.spanExtractor.joinTrace(new HttpServletRequestTextMap(request));
 		if (parent != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Found a parent span " + parent + " in the request");

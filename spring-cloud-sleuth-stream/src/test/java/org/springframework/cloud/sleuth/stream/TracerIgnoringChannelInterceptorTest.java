@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.verifyZeroInteractions;
-
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -28,10 +25,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 /**
  * @author Marcin Grzejszczak
@@ -50,7 +51,7 @@ public class TracerIgnoringChannelInterceptorTest {
 		Message<?> interceptedMessage = this.tracerIgnoringChannelInterceptor.preSend(message, this.messageChannel);
 
 		then(interceptedMessage.getHeaders().get(
-				Span.SAMPLED_NAME)).isEqualTo(Span.SPAN_NOT_SAMPLED);
+				TraceMessageHeaders.SAMPLED_NAME)).isEqualTo(Span.SPAN_NOT_SAMPLED);
 	}
 
 	@Test

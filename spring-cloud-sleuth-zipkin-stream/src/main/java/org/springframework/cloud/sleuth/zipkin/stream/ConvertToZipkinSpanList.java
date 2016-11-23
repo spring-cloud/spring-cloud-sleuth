@@ -18,14 +18,12 @@ package org.springframework.cloud.sleuth.zipkin.stream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.sleuth.stream.Spans;
 import org.springframework.util.StringUtils;
-
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
 import zipkin.Endpoint;
@@ -76,8 +74,10 @@ final class ConvertToZipkinSpanList {
 	static zipkin.Span convert(Span span, Host host) {
 		Builder zipkinSpan = zipkin.Span.builder();
 
-		Endpoint ep = Endpoint.create(host.getServiceName(), host.getIpv4(),
-				host.getPort().shortValue());
+		Endpoint ep = Endpoint.builder()
+				.serviceName(host.getServiceName())
+				.ipv4(host.getIpv4())
+				.port(host.getPort() != null ? host.getPort() : 0).build();
 
 		// A zipkin span without any annotations cannot be queried, add special "lc" to
 		// avoid that.
@@ -89,10 +89,17 @@ final class ConvertToZipkinSpanList {
 		if (hasClientSend(span)) {
 			ensureServerAddr(span, zipkinSpan, ep);
 		}
-		zipkinSpan.timestamp(span.getBegin() * 1000);
-		if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
-			zipkinSpan.duration(calculateDurationInMicros(span));
+		// In the RPC span model, the client owns the timestamp and duration of the span. If we
+		// were propagated an id, we can assume that we shouldn't report timestamp or duration,
+		// rather let the client do that. Worst case we were propagated an unreported ID and
+		// Zipkin backfills timestamp and duration.
+		if (!span.isRemote()) {
+			zipkinSpan.timestamp(span.getBegin() * 1000);
+			if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
+				zipkinSpan.duration(calculateDurationInMicros(span));
+			}
 		}
+		zipkinSpan.traceIdHigh(span.getTraceIdHigh());
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {
@@ -125,8 +132,7 @@ final class ConvertToZipkinSpanList {
 			Endpoint ep) {
 		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME)
 				? span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : ep.serviceName;
-		Endpoint endpoint = ep.port == null ? Endpoint.create(serviceName, ep.ipv4)
-				: Endpoint.create(serviceName, ep.ipv4, ep.port);
+		Endpoint endpoint = ep.toBuilder().serviceName(serviceName).build();
 		zipkinSpan.addBinaryAnnotation(
 				BinaryAnnotation.address(Constants.SERVER_ADDR, endpoint));
 	}

@@ -20,8 +20,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.anyList;
@@ -42,7 +44,44 @@ public class Slf4JSpanLoggerTest {
 
 	@Before
 	public void setup() {
+		MDC.clear();
 		given(log.isTraceEnabled()).willReturn(true);
+	}
+
+	@Test
+	public void when_start_event_arrived_should_add_64bit_trace_id_to_MDC() throws Exception {
+		Span span = Span.builder().traceId(1L).spanId(2L).build();
+
+		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameNotToBeExcluded, span);
+
+		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("0000000000000001");
+	}
+
+	@Test
+	public void when_start_event_arrived_should_add_128bit_trace_id_to_MDC() throws Exception {
+		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).build();
+
+		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameNotToBeExcluded, span);
+
+		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("00000000000000010000000000000002");
+	}
+
+	@Test
+	public void when_continued_event_arrived_should_add_64bit_trace_id_to_MDC() throws Exception {
+		Span span = Span.builder().traceId(1L).spanId(2L).build();
+
+		this.slf4JSpanLogger.logContinuedSpan(span);
+
+		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("0000000000000001");
+	}
+
+	@Test
+	public void when_continued_event_arrived_should_add_128bit_trace_id_to_MDC() throws Exception {
+		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).build();
+
+		this.slf4JSpanLogger.logContinuedSpan(span);
+
+		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("00000000000000010000000000000002");
 	}
 
 	@Test

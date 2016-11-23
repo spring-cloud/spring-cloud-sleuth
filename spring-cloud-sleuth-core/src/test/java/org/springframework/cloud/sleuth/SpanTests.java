@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,14 +33,53 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Spencer Gibb
  */
 public class SpanTests {
+	Span span = Span.builder().begin(1).end(2).name("http:name").traceId(1L).spanId(2L)
+			.remote(true).exportable(true).processId("process").build();
 
 	@Test
-	public void should_convert_long_to_hex_string() throws Exception {
+	public void should_consider_trace_and_span_id_on_equals_and_hashCode() throws Exception {
+		Span span = Span.builder().traceId(1L).spanId(2L).build();
+		Span differentSpan = Span.builder().traceId(1L).spanId(3L).build();
+		Span withParent =Span.builder().traceId(1L).spanId(2L).parent(3L).build();
+
+		then(span).isEqualTo(withParent);
+		then(span).isNotEqualTo(differentSpan);
+		then(span.hashCode()).isNotEqualTo(differentSpan.hashCode());
+	}
+
+	@Test
+	public void should_have_toString_with_identifiers_and_export() throws Exception {
+		span = Span.builder().traceId(1L).spanId(2L).parent(3L).name("foo").build();
+
+		then(span).hasToString(
+				"[Trace: 0000000000000001, Span: 0000000000000002, Parent: 0000000000000003, exportable:true]");
+	}
+
+	@Test
+	public void should_have_toString_with_128bit_trace_id() throws Exception {
+		span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).parent(4L).build();
+
+		then(span.toString()).startsWith("[Trace: 00000000000000010000000000000002,");
+	}
+
+	@Test
+	public void should_consider_128bit_trace_and_span_id_on_equals_and_hashCode() throws Exception {
+		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).build();
+		Span differentSpan = Span.builder().traceIdHigh(2L).traceId(2L).spanId(3L).build();
+		Span withParent = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).parent(4L).build();
+
+		then(span).isEqualTo(withParent);
+		then(span).isNotEqualTo(differentSpan);
+		then(span.hashCode()).isNotEqualTo(differentSpan.hashCode());
+	}
+
+	@Test
+	public void should_convert_long_to_16_character_hex_string() throws Exception {
 		long someLong = 123123L;
 
 		String hexString = Span.idToHex(someLong);
 
-		then(hexString).isEqualTo("1e0f3");
+		then(hexString).isEqualTo("000000000001e0f3");
 	}
 
 	@Test
@@ -63,6 +101,36 @@ public class SpanTests {
 		then(someLong).isEqualTo(Span.hexToId(lower64Bits));
 	}
 
+	@Test
+	public void should_convert_offset_64bits_of_hex_string_to_long() throws Exception {
+		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
+		String high64Bits = "463ac35c9f6413ad";
+
+		long someLong = Span.hexToId(hex128Bits, 0);
+
+		then(someLong).isEqualTo(Span.hexToId(high64Bits));
+	}
+
+	@Test
+	public void should_writeFixedLength64BitTraceId() throws Exception {
+		String traceId = span.traceIdString();
+
+		then(traceId).isEqualTo("0000000000000001");
+	}
+
+	@Test
+	public void should_writeFixedLength128BitTraceId() throws Exception {
+		String high128Bits = "463ac35c9f6413ad";
+		String low64Bits = "48485a3953bb6124";
+
+		span = Span.builder().traceIdHigh(Span.hexToId(high128Bits)).traceId(Span.hexToId(low64Bits))
+				.spanId(1L).name("foo").build();
+
+		String traceId = span.traceIdString();
+
+		then(traceId).isEqualTo(high128Bits + low64Bits);
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void should_throw_exception_when_null_string_is_to_be_converted_to_long() throws Exception {
 		Span.hexToId(null);
@@ -70,23 +138,15 @@ public class SpanTests {
 
 	@Test(expected = UnsupportedOperationException.class)
 	public void getAnnotationsReadOnly() {
-		Span span = new Span(1, 2, "http:name", 1L, Collections.<Long>emptyList(), 2L, true,
-				true, "process");
-
 		span.tags().put("a", "b");
 	}
 
 	@Test(expected = UnsupportedOperationException.class)
 	public void getTimelineAnnotationsReadOnly() {
-		Span span = new Span(1, 2, "http:name", 1L, Collections.<Long>emptyList(), 2L, true,
-				true, "process");
-
 		span.logs().add(new Log(1, "1"));
 	}
 
 	@Test public void should_properly_serialize_object() throws JsonProcessingException {
-		Span span = new Span(1, 2, "http:name", 1L,
-				Collections.<Long>emptyList(), 2L, true, true, "process");
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		String serializedName = objectMapper.writeValueAsString(span);
@@ -95,8 +155,6 @@ public class SpanTests {
 	}
 
 	@Test public void should_properly_serialize_logs() throws IOException {
-		Span span = new Span(1, 2, "http:name", 1L,
-				Collections.<Long>emptyList(), 2L, true, true, "process");
 		span.logEvent("cs");
 
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -109,8 +167,6 @@ public class SpanTests {
 	}
 
 	@Test public void should_properly_serialize_tags() throws IOException {
-		Span span = new Span(1, 2, "http:name", 1L,
-				Collections.<Long>emptyList(), 2L, true, true, "process");
 		span.tag("calculatedTax", "100");
 
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -129,7 +185,7 @@ public class SpanTests {
 
 	/** When going over a transport like spring-cloud-stream, we must retain the precise duration. */
 	@Test public void shouldSerializeDurationMicros() throws IOException {
-		Span span = Span.builder().traceId(1L).name("http:parent").remote(true).build();
+		Span span = Span.builder().traceId(1L).name("http:parent").build();
 		span.stop();
 
 		assertThat(span.getAccumulatedMicros())
@@ -152,8 +208,7 @@ public class SpanTests {
 		AtomicLong nanoTime = new AtomicLong();
 
 		// starts the span, recording its initial tick as zero
-		Span span = new Span(0, 0, "http:name", 1L, Collections.<Long>emptyList(), 2L, true,
-				true, "process", null) {
+		Span span = new Span(Span.builder().name("http:name").traceId(1L).spanId(2L)) {
 			@Override long nanoTime() {
 				return nanoTime.get();
 			}
@@ -171,8 +226,7 @@ public class SpanTests {
 		AtomicLong nanoTime = new AtomicLong();
 
 		// starts the span, recording its initial tick as zero
-		Span span = new Span(0, 0, "http:name", 1L, Collections.<Long>emptyList(), 2L, true,
-				true, "process", null) {
+		Span span = new Span(Span.builder().name("http:name").traceId(1L).spanId(2L)) {
 			@Override long nanoTime() {
 				return nanoTime.get();
 			}

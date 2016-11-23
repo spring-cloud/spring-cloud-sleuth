@@ -21,13 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.Span;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -89,10 +88,61 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return this;
 	}
 
+	public ListOfSpansAssert everySpanHasABaggage(String baggageKey, String baggageValue) {
+		isNotNull();
+		printSpans();
+		if (!everySpanHasBaggage(baggageKey, baggageValue)) {
+			failWithMessage("Expected spans \n <%s> \nto ALL contain baggage with key "
+					+ "equal to <%s>, and value equal to <%s>", spansToString(), baggageKey, baggageValue);
+		}
+		return this;
+	}
+
+	public ListOfSpansAssert anySpanHasABaggage(String baggageKey, String baggageValue) {
+		isNotNull();
+		printSpans();
+		if (!hasBaggage(baggageKey, baggageValue)) {
+			failWithMessage("Expected spans \n <%s> \nto contain at least one span with baggage key "
+					+ "equal to <%s>, and value equal to <%s>", spansToString(), baggageKey, baggageValue);
+		}
+		return this;
+	}
+
 	private boolean spanWithKeyTagExists(String tagKey) {
 		for (Span span : this.actual.spans) {
 			if (span.tags().containsKey(tagKey)) {
 				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean everySpanHasBaggage(String baggageKey, String baggageValue) {
+		boolean exists = false;
+		for (Span span : this.actual.spans) {
+			for (Map.Entry<String, String> baggage : span.baggageItems()) {
+				if (baggage.getKey().equals(baggageKey)) {
+					if (baggage.getValue().equals(baggageValue)) {
+						exists = true;
+						break;
+					}
+				}
+			}
+			if (!exists) {
+				return false;
+			}
+		}
+		return exists;
+	}
+
+	private boolean hasBaggage(String baggageKey, String baggageValue) {
+		for (Span span : this.actual.spans) {
+			for (Map.Entry<String, String> baggage : span.baggageItems()) {
+				if (baggage.getKey().equals(baggageKey)) {
+					if (baggage.getValue().equals(baggageValue)) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;
@@ -113,7 +163,8 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 
 	private String spansToString() {
 		return this.actual.spans.stream().map(span ->  "\nSPAN: " + span.toString() + " with name [" + span.getName() + "] " +
-				"\nwith tags " + span.tags() + "\nwith logs " + span.logs()).collect(joining("\n"));
+				"\nwith tags " + span.tags() + "\nwith logs " + span.logs() +
+				"\nwith baggage " + span.getBaggage()).collect(joining("\n"));
 	}
 
 	public ListOfSpansAssert doesNotHaveASpanWithName(String name) {
@@ -143,16 +194,12 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 	}
 
 	private void printSpans() {
-		try {
-			log.info("Stored spans " + this.objectMapper.writeValueAsString(new ArrayList<>(this.actual.spans)));
-		}
-		catch (JsonProcessingException e) {
-		}
+		log.info("Stored spans " + spansToString());
 	}
 
 	@Override
 	protected void failWithMessage(String errorMessage, Object... arguments) {
-		log.error(errorMessage);
+		log.error(String.format(errorMessage, arguments));
 		super.failWithMessage(errorMessage, arguments);
 	}
 }
