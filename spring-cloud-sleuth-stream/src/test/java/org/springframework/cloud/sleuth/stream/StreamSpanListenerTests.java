@@ -94,7 +94,8 @@ public class StreamSpanListenerTests {
 
 	@Test
 	public void rpcAnnotations() {
-		Span parent = Span.builder().traceId(1L).name("http:parent").remote(true).build();
+		Span parent = Span.builder().traceId(1L).name("http:parent").remote(true)
+				.build();
 		Span context = this.tracer.createSpan("http:child", parent);
 		context.logEvent(Span.CLIENT_SEND);
 		logServerReceived(parent);

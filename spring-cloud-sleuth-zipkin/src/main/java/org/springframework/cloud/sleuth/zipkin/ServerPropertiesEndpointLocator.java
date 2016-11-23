@@ -16,12 +16,12 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.event.EventListener;
 
 import zipkin.Endpoint;
@@ -30,8 +30,8 @@ import zipkin.Endpoint;
  * {@link EndpointLocator} implementation that:
  *
  * <ul>
- * <li><b>address</b> - from {@link ServerProperties}</li>
- * <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
+ *     <li><b>address</b> - from {@link ServerProperties}</li>
+ *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
  * @author Dave Syer
@@ -43,6 +43,10 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	private final String appName;
 	private final InetUtils inetUtils;
 	private Integer port;
+
+	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,String appName) {
+		this(serverProperties,appName,new InetUtils(new InetUtilsProperties()));
+	}
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
 			String appName, InetUtils inetUtils) {
@@ -83,11 +87,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 					.getInt();
 		}
 		else {
-			return ByteBuffer.wrap(getFirstNonLoopbackAddress().getAddress()).getInt();
+			return ByteBuffer.wrap(this.inetUtils.findFirstNonLoopbackAddress().getAddress()).getInt();
 		}
-	}
-
-	private InetAddress getFirstNonLoopbackAddress() {
-		return this.inetUtils.findFirstNonLoopbackAddress();
 	}
 }
