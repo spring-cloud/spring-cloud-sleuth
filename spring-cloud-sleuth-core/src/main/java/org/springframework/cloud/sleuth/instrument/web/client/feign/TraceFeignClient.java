@@ -24,14 +24,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 
 import feign.Client;
 import feign.Request;
 import feign.Response;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 
 /**
  * A Feign Client that closes a Span if there is no response body. In other cases Span
@@ -49,7 +50,7 @@ class TraceFeignClient implements Client {
 	private HttpTraceKeysInjector keysInjector;
 	private final BeanFactory beanFactory;
 	private Tracer tracer;
-	private final FeignRequestInjector spanInjector = new FeignRequestInjector();
+	private HttpSpanInjector spanInjector;
 
 	TraceFeignClient(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -70,7 +71,7 @@ class TraceFeignClient implements Client {
 		}
 		try {
 			AtomicReference<Request> feignRequest = new AtomicReference<>(request);
-			this.spanInjector.inject(span, feignRequest);
+			spanInjector().inject(span, new FeignRequestTextMap(feignRequest));
 			span.logEvent(Span.CLIENT_SEND);
 			addRequestTags(request);
 			Request modifiedRequest = feignRequest.get();
@@ -102,15 +103,22 @@ class TraceFeignClient implements Client {
 	 */
 	private void addRequestTags(Request request) {
 		URI uri = URI.create(request.url());
-		getKeysInjector().addRequestTags(uri.toString(), uri.getHost(), uri.getPath(),
+		keysInjector().addRequestTags(uri.toString(), uri.getHost(), uri.getPath(),
 				request.method(), request.headers());
 	}
 
-	private HttpTraceKeysInjector getKeysInjector() {
+	private HttpTraceKeysInjector keysInjector() {
 		if (this.keysInjector == null) {
 			this.keysInjector = this.beanFactory.getBean(HttpTraceKeysInjector.class);
 		}
 		return this.keysInjector;
+	}
+
+	private HttpSpanInjector spanInjector() {
+		if (this.spanInjector == null) {
+			this.spanInjector = this.beanFactory.getBean(HttpSpanInjector.class);
+		}
+		return this.spanInjector;
 	}
 
 	private void closeSpan(Span span) {

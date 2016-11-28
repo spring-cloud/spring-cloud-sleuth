@@ -1,7 +1,7 @@
 :github-tag: master
 :github-repo: spring-cloud/spring-cloud-sleuth
-:github-raw: http://raw.github.com/{github-repo}/{github-tag}
-:github-code: http://github.com/{github-repo}/tree/{github-tag}
+:github-raw: https://raw.githubusercontent.com/{github-repo}/{github-tag}
+:github-code: https://github.com/{github-repo}/tree/{github-tag}
 :toc: left
 :toclevels: 8
 :nofooter:
@@ -207,41 +207,34 @@ Span ids are extracted from Zipkin-compatible (B3) headers (either `Message`
 or HTTP headers), to start or join an existing trace. Trace information is
 injected into any outbound requests so the next hop can extract them.
 
+The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
+the Open Tracing's `TextMap` notion. In Sleuth it's called `SpanTextMap`. Basically the idea
+is that any means of communication (e.g. message, http request, etc.) can be abstracted via
+a `SpanTextMap`. This abstraction defines how one can insert data into the carrier and
+how to retrieve it from there. Thanks to this if you want to instrument a new HTTP library
+that uses a `FooRequest` as a mean of sending HTTP requests then you have to create an
+implementation of  a `SpanTextMap` that delegates calls to `FooRequest` in terms of retrieval
+and insertion of HTTP headers.
+
 === Spring Integration
 
-For Spring Integration these are the beans responsible for creation of a Span from a `Message`
- and filling in the `MessageBuilder` with tracing information.
+For Spring Integration there are 2 interfaces responsible for creation of a Span from a `Message`.
+These are:
 
-[source,java]
-----
-@Bean
-public SpanExtractor<Message> messagingSpanExtractor() {
-    ...
-}
+- `MessagingSpanTextMapExtractor`
+- `MessagingSpanTextMapInjector`
 
-@Bean
-public SpanInjector<MessageBuilder> messagingSpanInjector() {
-    ...
-}
-----
-
-You can override them by providing your own implementation and by adding a `@Primary` annotation
-to your bean definition.
+You can override them by providing your own implementation.
 
 === HTTP
 
-For HTTP these are the beans responsible for creation of a Span from a `HttpServletRequest`.
+For HTTP there are 2 interfaces responsible for creation of a Span from a `Message`.
+These are:
 
-[source,java]
-----
-@Bean
-public SpanExtractor<HttpServletRequest> httpServletRequestSpanExtractor() {
-    ...
-}
-----
+- `HttpSpanExtractor`
+- `HttpSpanInjector`
 
-You can override them by providing your own implementation and by adding a `@Primary` annotation
-to your bean definition.
+You can override them by providing your own implementation.
 
 === Example
 

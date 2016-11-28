@@ -77,15 +77,15 @@ public class TraceContextPropagationChannelInterceptorTests {
 		assertNotNull("message was null", message);
 
 		Long spanId = Span
-				.hexToId(message.getHeaders().get(Span.SPAN_ID_NAME, String.class));
+				.hexToId(message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class));
 		assertNotEquals("spanId was equal to parent's id", expectedSpanId,  spanId);
 
 		long traceId = Span
-				.hexToId(message.getHeaders().get(Span.TRACE_ID_NAME, String.class));
+				.hexToId(message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		assertNotNull("traceId was null", traceId);
 
 		Long parentId = Span
-				.hexToId(message.getHeaders().get(Span.PARENT_ID_NAME, String.class));
+				.hexToId(message.getHeaders().get(TraceMessageHeaders.PARENT_ID_NAME, String.class));
 		assertEquals("parentId was not equal to parent's id", expectedSpanId,  parentId);
 
 	}

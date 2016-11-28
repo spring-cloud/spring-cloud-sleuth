@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async.issues.issue410;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -63,18 +64,25 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @TestPropertySource(properties = {"ribbon.eureka.enabled=false", "feign.hystrix.enabled=false", "server.port=0"})
 public class Issue410Tests {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	@Autowired Environment environment;
 	@Autowired Tracer tracer;
 	@Autowired AsyncTask asyncTask;
 	@Autowired RestTemplate restTemplate;
+	/**
+	 * Related to issue #445
+	 */
+	@Autowired Application.MyService executorService;
 
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_without_a_pool() {
 		Span span = this.tracer.createSpan("foo");
+		log.info("Starting test");
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/without_pool", String.class);
 
-			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
@@ -87,10 +95,11 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_with_a_pool() {
 		Span span = this.tracer.createSpan("foo");
+		log.info("Starting test");
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
 
-			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
@@ -106,10 +115,11 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_executor() {
 		Span span = this.tracer.createSpan("foo");
+		log.info("Starting test");
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/completable", String.class);
 
-			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
@@ -125,10 +135,11 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_task_scheduler() {
 		Span span = this.tracer.createSpan("foo");
+		log.info("Starting test");
 		try {
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler", String.class);
 
-			then(response).isEqualTo(Span.idToHex(span.getTraceId()));
+			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
@@ -148,11 +159,11 @@ public class Issue410Tests {
 @EnableAsync
 class AppConfig {
 
-	@Bean Sampler testSampler() {
+	@Bean public Sampler testSampler() {
 		return new AlwaysSampler();
 	}
 
-	@Bean RestTemplate restTemplate() {
+	@Bean public RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
 
@@ -258,7 +269,7 @@ class Application {
 	public String withPool() {
 		log.info("Executing with pool.");
 		this.asyncTask.runWithPool();
-		return Span.idToHex(this.tracer.getCurrentSpan().getTraceId());
+		return this.tracer.getCurrentSpan().traceIdString();
 
 	}
 
@@ -266,19 +277,34 @@ class Application {
 	public String withoutPool() {
 		log.info("Executing without pool.");
 		this.asyncTask.runWithoutPool();
-		return Span.idToHex(this.tracer.getCurrentSpan().getTraceId());
+		return this.tracer.getCurrentSpan().traceIdString();
 	}
 
 	@RequestMapping("/completable")
 	public String completable() throws ExecutionException, InterruptedException {
 		log.info("Executing completable");
-		return Span.idToHex(this.asyncTask.completableFutures().getTraceId());
+		return this.asyncTask.completableFutures().traceIdString();
 	}
 
 	@RequestMapping("/taskScheduler")
 	public String taskScheduler() throws ExecutionException, InterruptedException {
 		log.info("Executing completable via task scheduler");
-		return Span.idToHex(this.asyncTask.taskScheduler().getTraceId());
+		return this.asyncTask.taskScheduler().traceIdString();
+	}
+
+	/**
+	 * Related to issue #445
+	 */
+	@Bean public MyService executorService() {
+		return new MyService() {
+			@Override public void execute(Runnable command) {
+
+			}
+		};
+	}
+
+	interface MyService extends Executor {
+
 	}
 
 }

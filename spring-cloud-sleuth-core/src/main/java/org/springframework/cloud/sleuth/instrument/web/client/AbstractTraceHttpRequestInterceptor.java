@@ -21,8 +21,8 @@ import java.net.URI;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.http.HttpRequest;
@@ -38,11 +38,11 @@ abstract class AbstractTraceHttpRequestInterceptor {
 	protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	protected final Tracer tracer;
-	protected final SpanInjector<HttpRequest> spanInjector;
+	protected final HttpSpanInjector spanInjector;
 	protected final HttpTraceKeysInjector keysInjector;
 
 	protected AbstractTraceHttpRequestInterceptor(Tracer tracer,
-			SpanInjector<HttpRequest> spanInjector, HttpTraceKeysInjector keysInjector) {
+			HttpSpanInjector spanInjector, HttpTraceKeysInjector keysInjector) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
 		this.keysInjector = keysInjector;
@@ -56,7 +56,7 @@ abstract class AbstractTraceHttpRequestInterceptor {
 		URI uri = request.getURI();
 		String spanName = uriScheme(uri) + ":" + uri.getPath();
 		Span newSpan = this.tracer.createSpan(spanName);
-		this.spanInjector.inject(newSpan, request);
+		this.spanInjector.inject(newSpan, new HttpRequestTextMap(request));
 		addRequestTags(request);
 		newSpan.logEvent(Span.CLIENT_SEND);
 		if (log.isDebugEnabled()) {

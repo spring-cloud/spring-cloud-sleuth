@@ -16,8 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import com.netflix.client.http.HttpRequest;
 
+import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -38,9 +42,16 @@ class RestClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCustom
 	}
 
 	@Override
-	void setHeader(HttpRequest.Builder builder, String name, String value) {
-		if (value != null) {
-			builder.header(name, value);
-		}
+	protected SpanTextMap toSpanTextMap(final HttpRequest.Builder context) {
+		context.build().getHttpHeaders();
+		return new SpanTextMap() {
+			@Override public Iterator<Map.Entry<String, String>> iterator() {
+				return context.build().getHttpHeaders().getAllHeaders().iterator();
+			}
+
+			@Override public void put(String key, String value) {
+				context.header(key, value);
+			}
+		};
 	}
 }

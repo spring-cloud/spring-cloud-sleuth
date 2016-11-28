@@ -89,10 +89,17 @@ final class ConvertToZipkinSpanList {
 		if (hasClientSend(span)) {
 			ensureServerAddr(span, zipkinSpan, ep);
 		}
-		zipkinSpan.timestamp(span.getBegin() * 1000);
-		if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
-			zipkinSpan.duration(calculateDurationInMicros(span));
+		// In the RPC span model, the client owns the timestamp and duration of the span. If we
+		// were propagated an id, we can assume that we shouldn't report timestamp or duration,
+		// rather let the client do that. Worst case we were propagated an unreported ID and
+		// Zipkin backfills timestamp and duration.
+		if (!span.isRemote()) {
+			zipkinSpan.timestamp(span.getBegin() * 1000);
+			if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
+				zipkinSpan.duration(calculateDurationInMicros(span));
+			}
 		}
+		zipkinSpan.traceIdHigh(span.getTraceIdHigh());
 		zipkinSpan.traceId(span.getTraceId());
 		if (span.getParents().size() > 0) {
 			if (span.getParents().size() > 1) {

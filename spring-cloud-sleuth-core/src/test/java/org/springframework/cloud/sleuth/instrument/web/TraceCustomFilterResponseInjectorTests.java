@@ -23,7 +23,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanInjector;
+import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -47,6 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -83,8 +84,7 @@ public class TraceCustomFilterResponseInjectorTests {
 		int port;
 
 		// tag::configuration[]
-		@Bean
-		SpanInjector<HttpServletResponse> customHttpServletResponseSpanInjector() {
+		@Bean HttpSpanInjector customHttpServletResponseSpanInjector() {
 			return new CustomHttpServletResponseSpanInjector();
 		}
 
@@ -113,22 +113,22 @@ public class TraceCustomFilterResponseInjectorTests {
 	}
 
 	// tag::injector[]
-	static class CustomHttpServletResponseSpanInjector
-			implements SpanInjector<HttpServletResponse> {
+	static class CustomHttpServletResponseSpanInjector extends ZipkinHttpSpanInjector {
 
 		@Override
-		public void inject(Span span, HttpServletResponse carrier) {
-			carrier.addHeader(Span.TRACE_ID_NAME, Span.idToHex(span.getTraceId()));
-			carrier.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+		public void inject(Span span, SpanTextMap carrier) {
+			super.inject(span, carrier);
+			carrier.put(Span.TRACE_ID_NAME, span.traceIdString());
+			carrier.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		}
 	}
 
 	static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
 
 		private final Tracer tracer;
-		private final SpanInjector<HttpServletResponse> spanInjector;
+		private final HttpSpanInjector spanInjector;
 
-		public HttpResponseInjectingTraceFilter(Tracer tracer, SpanInjector<HttpServletResponse> spanInjector) {
+		public HttpResponseInjectingTraceFilter(Tracer tracer, HttpSpanInjector spanInjector) {
 			this.tracer = tracer;
 			this.spanInjector = spanInjector;
 		}
@@ -137,9 +137,32 @@ public class TraceCustomFilterResponseInjectorTests {
 		public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 			HttpServletResponse response = (HttpServletResponse) servletResponse;
 			Span currentSpan = this.tracer.getCurrentSpan();
-			this.spanInjector.inject(currentSpan, response);
+			this.spanInjector.inject(currentSpan, new HttpServletResponseTextMap(response));
 			filterChain.doFilter(request, response);
 		}
+
+		 class HttpServletResponseTextMap implements SpanTextMap {
+
+			 private final HttpServletResponse delegate;
+
+			 HttpServletResponseTextMap(HttpServletResponse delegate) {
+				 this.delegate = delegate;
+			 }
+
+			 @Override
+			 public Iterator<Map.Entry<String, String>> iterator() {
+				 Map<String, String> map = new HashMap<>();
+				 for (String header : this.delegate.getHeaderNames()) {
+					map.put(header, this.delegate.getHeader(header));
+				 }
+				 return map.entrySet().iterator();
+			 }
+
+			 @Override
+			 public void put(String key, String value) {
+				this.delegate.addHeader(key, value);
+			 }
+		 }
 	}
 	// end::injector[]
 

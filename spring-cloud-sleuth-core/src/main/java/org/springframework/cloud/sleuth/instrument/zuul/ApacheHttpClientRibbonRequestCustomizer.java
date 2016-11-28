@@ -16,7 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.http.Header;
 import org.apache.http.client.methods.RequestBuilder;
+import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -37,9 +43,20 @@ class ApacheHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequest
 	}
 
 	@Override
-	void setHeader(RequestBuilder builder, String name, String value) {
-		if (value != null) {
-			builder.setHeader(name, value);
-		}
+	protected SpanTextMap toSpanTextMap(final RequestBuilder context) {
+		return new SpanTextMap() {
+			@Override public Iterator<Map.Entry<String, String>> iterator() {
+				Map<String, String> map = new HashMap<>();
+				for (Header header : context.build().getAllHeaders()) {
+					map.put(header.getName(), header.getValue());
+				}
+				return map.entrySet().iterator();
+			}
+
+			@Override public void put(String key, String value) {
+				context.addHeader(key, value);
+			}
+		};
 	}
+
 }

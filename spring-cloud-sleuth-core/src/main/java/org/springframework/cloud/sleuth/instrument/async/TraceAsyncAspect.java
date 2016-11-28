@@ -16,13 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.lang.reflect.Method;
+import java.util.concurrent.Executor;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
@@ -40,10 +47,12 @@ public class TraceAsyncAspect {
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
+	private final BeanFactory beanFactory;
 
-	public TraceAsyncAspect(Tracer tracer, TraceKeys traceKeys) {
+	public TraceAsyncAspect(Tracer tracer, TraceKeys traceKeys, BeanFactory beanFactory) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
+		this.beanFactory = beanFactory;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
@@ -60,6 +69,35 @@ public class TraceAsyncAspect {
 		} finally {
 			this.tracer.close(span);
 		}
+	}
+
+	@Around("execution (* org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.*(..))")
+	public Object traceThreadPoolTaskExecutor(final ProceedingJoinPoint pjp) throws Throwable {
+		LazyTraceThreadPoolTaskExecutor executor = new LazyTraceThreadPoolTaskExecutor(this.beanFactory,
+				(ThreadPoolTaskExecutor) pjp.getTarget());
+		Method methodOnTracedBean = getMethod(pjp, executor);
+		if (methodOnTracedBean != null) {
+			return methodOnTracedBean.invoke(executor, pjp.getArgs());
+		}
+		return pjp.proceed();
+	}
+
+	@Around("execution (* java.util.concurrent.Executor.*(..))")
+	public Object traceExecutor(final ProceedingJoinPoint pjp) throws Throwable {
+		LazyTraceExecutor executor = new LazyTraceExecutor(this.beanFactory,
+				(Executor) pjp.getTarget());
+		Method methodOnTracedBean = getMethod(pjp, executor);
+		if (methodOnTracedBean != null) {
+			return methodOnTracedBean.invoke(executor, pjp.getArgs());
+		}
+		return pjp.proceed();
+	}
+
+	private Method getMethod(ProceedingJoinPoint pjp, Object object) {
+		MethodSignature signature = (MethodSignature) pjp.getSignature();
+		Method method = signature.getMethod();
+		return ReflectionUtils
+				.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
 	}
 
 }

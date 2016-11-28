@@ -114,7 +114,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		Optional<Span> eventReceivedSpan = findSpanWithAnnotation(Constants.CLIENT_RECV);
 		Optional<Span> lastHttpSpansParent = findLastHttpSpansParent();
 		// "http:/parent/" -> "home" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo" (SS) -> "foo"
-		Collections.sort(this.integrationTestSpanCollector.hashedSpans, (s1, s2) -> s1.timestamp.compareTo(s2.timestamp));
+		Collections.sort(this.integrationTestSpanCollector.hashedSpans);
 		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, eventReceivedSpan);
 		then(this.integrationTestSpanCollector.hashedSpans).as("There were 6 spans").hasSize(6);
 		log.info("Checking the parent child structure");

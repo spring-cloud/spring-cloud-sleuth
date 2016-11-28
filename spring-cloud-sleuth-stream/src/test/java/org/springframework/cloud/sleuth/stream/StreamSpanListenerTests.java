@@ -85,8 +85,10 @@ public class StreamSpanListenerTests {
 	@Test
 	public void acquireAndRelease() {
 		Span context = this.tracer.createSpan("http:foo");
+
 		this.tracer.close(context);
-		assertEquals(1, this.test.spans.size());
+
+		assertThat(this.test.spans).hasSize(1);
 	}
 
 	@Test
@@ -97,8 +99,10 @@ public class StreamSpanListenerTests {
 		context.logEvent(Span.CLIENT_SEND);
 		logServerReceived(parent);
 		logServerSent(this.spanReporter, parent);
+
 		this.tracer.close(context);
-		assertEquals(2, this.test.spans.size());
+
+		assertThat(this.test.spans).hasSize(2);
 	}
 
 	void logServerReceived(Span parent) {
