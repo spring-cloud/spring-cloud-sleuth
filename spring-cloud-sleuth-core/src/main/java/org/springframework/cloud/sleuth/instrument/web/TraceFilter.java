@@ -249,8 +249,8 @@ public class TraceFilter extends GenericFilterBean {
 		if (response.getStatus() == 0) {
 			return false;
 		}
-		HttpStatus httpStatus = HttpStatus.valueOf(response.getStatus());
-		return httpStatus.is2xxSuccessful() || httpStatus.is3xxRedirection();
+		HttpStatus.Series httpStatusSeries = HttpStatus.Series.valueOf(response.getStatus());
+		return httpStatusSeries == HttpStatus.Series.SUCCESSFUL || httpStatusSeries == HttpStatus.Series.REDIRECTION;
 	}
 
 	private Span getSpanFromAttribute(HttpServletRequest request) {
