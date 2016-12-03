@@ -42,7 +42,7 @@ public class SpanContinuingTraceCallable<V> extends TraceCallable<V> {
 	}
 
 	public SpanContinuingTraceCallable(Tracer tracer, TraceKeys traceKeys,
-			SpanNamer spanNamer, Callable<V> delegate, String name) {
+			SpanNamer spanNamer, String name, Callable<V> delegate) {
 		super(tracer, spanNamer, delegate, name);
 		this.traceCallable = new LocalComponentTraceCallable<>(tracer, traceKeys, spanNamer, name, delegate);
 	}

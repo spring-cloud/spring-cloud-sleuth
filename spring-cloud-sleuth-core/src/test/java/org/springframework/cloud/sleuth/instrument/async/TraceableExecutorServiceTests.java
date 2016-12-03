@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
@@ -51,7 +52,7 @@ public class TraceableExecutorServiceTests {
 	@Before
 	public void setup() {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, new NoOpSpanLogger(), new NoOpSpanReporter());
+				this.spanNamer, new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
 		this.traceManagerableExecutorService = new TraceableExecutorService(this.executorService,
 				this.tracer, new TraceKeys(), this.spanNamer);
 		TestSpanContextHolder.removeCurrentSpan();
@@ -80,32 +81,36 @@ public class TraceableExecutorServiceTests {
 	@SuppressWarnings("unchecked")
 	public void should_wrap_methods_in_trace_representation_only_for_non_tracing_callables() throws Exception {
 		ExecutorService executorService = Mockito.mock(ExecutorService.class);
-		TraceableExecutorService traceManagerableExecutorService = new TraceableExecutorService(
+		TraceableExecutorService traceExecutorService = new TraceableExecutorService(
 				executorService, this.tracer, new TraceKeys(), this.spanNamer);
 
-		traceManagerableExecutorService.invokeAll(callables());
-		BDDMockito.then(executorService).should().invokeAll(BDDMockito.argThat(withOneLocalComponentTraceCallable()));
+		traceExecutorService.invokeAll(callables());
+		BDDMockito.then(executorService).should().invokeAll(BDDMockito.argThat(
+				withSpanContinuingTraceCallablesOnly()));
 
-		traceManagerableExecutorService.invokeAll(callables(), 1L, TimeUnit.DAYS);
-		BDDMockito.then(executorService).should().invokeAll(BDDMockito.argThat(withOneLocalComponentTraceCallable()),
+		traceExecutorService.invokeAll(callables(), 1L, TimeUnit.DAYS);
+		BDDMockito.then(executorService).should().invokeAll(BDDMockito.argThat(
+				withSpanContinuingTraceCallablesOnly()),
 				BDDMockito.eq(1L) , BDDMockito.eq(TimeUnit.DAYS));
 
-		traceManagerableExecutorService.invokeAny(callables());
-		BDDMockito.then(executorService).should().invokeAny(BDDMockito.argThat(withOneLocalComponentTraceCallable()));
+		traceExecutorService.invokeAny(callables());
+		BDDMockito.then(executorService).should().invokeAny(BDDMockito.argThat(
+				withSpanContinuingTraceCallablesOnly()));
 
-		traceManagerableExecutorService.invokeAny(callables(), 1L, TimeUnit.DAYS);
-		BDDMockito.then(executorService).should().invokeAny(BDDMockito.argThat(withOneLocalComponentTraceCallable()),
+		traceExecutorService.invokeAny(callables(), 1L, TimeUnit.DAYS);
+		BDDMockito.then(executorService).should().invokeAny(BDDMockito.argThat(
+				withSpanContinuingTraceCallablesOnly()),
 				BDDMockito.eq(1L) , BDDMockito.eq(TimeUnit.DAYS));
 	}
 
-	private Matcher<Collection<? extends Callable<Object>>> withOneLocalComponentTraceCallable() {
+	private Matcher<Collection<? extends Callable<Object>>> withSpanContinuingTraceCallablesOnly() {
 		return new TypeSafeMatcher<Collection<? extends Callable<Object>>>() {
 			@Override
 			protected boolean matchesSafely(Collection<? extends Callable<Object>> item) {
 				try {
 					SleuthAssertions.then(item)
 							.flatExtracting(Object::getClass)
-							.containsExactly(LocalComponentTraceCallable.class);
+							.containsOnlyElementsOf(Collections.singletonList(SpanContinuingTraceCallable.class));
 				} catch (AssertionError e) {
 					return false;
 				}
