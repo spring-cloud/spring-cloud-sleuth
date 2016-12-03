@@ -7,6 +7,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.metric.CounterServiceBasedSpanMetricReporter;
@@ -127,7 +128,7 @@ public class HttpZipkinSpanReporterTest {
 		AtomicReference<Span> receivedSpan = new AtomicReference<>();
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
 				new NoOpSpanLogger(), new ZipkinSpanListener(receivedSpan::set,
-				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo")));
+				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo")), new TraceKeys());
 		// tag::service_name[]
 		org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
 		try {

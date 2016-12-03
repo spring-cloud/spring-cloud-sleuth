@@ -66,7 +66,7 @@ public class DefaultTracer implements Tracer {
 
 	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
 				SpanLogger spanLogger, SpanReporter spanReporter, TraceKeys traceKeys) {
-		this(defaultSampler, random, spanNamer, spanLogger, spanReporter, false, null);
+		this(defaultSampler, random, spanNamer, spanLogger, spanReporter, false, traceKeys);
 	}
 
 	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,

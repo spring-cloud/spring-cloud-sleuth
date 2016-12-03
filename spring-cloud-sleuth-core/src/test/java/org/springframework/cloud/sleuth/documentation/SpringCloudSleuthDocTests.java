@@ -258,7 +258,7 @@ public class SpringCloudSleuthDocTests {
 	public void should_wrap_callable_in_its_sleuth_representative() {
 		SpanNamer spanNamer = new DefaultSpanNamer();
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), spanNamer,
-				new NoOpSpanLogger(), new NoOpSpanReporter());
+				new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
 		Span initialSpan = tracer.createSpan("initialSpan");
 		// tag::trace_callable[]
 		Callable<String> callable = new Callable<String>() {

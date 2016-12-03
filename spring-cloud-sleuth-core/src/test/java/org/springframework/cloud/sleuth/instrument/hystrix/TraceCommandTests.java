@@ -46,7 +46,7 @@ public class TraceCommandTests {
 
 	static final long EXPECTED_TRACE_ID = 1L;
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
 
 	@Before
 	public void setup() {

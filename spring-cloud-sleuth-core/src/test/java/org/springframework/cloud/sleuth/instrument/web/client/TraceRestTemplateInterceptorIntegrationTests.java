@@ -66,7 +66,7 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 	@Before
 	public void setup() {
 		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanAccumulator);
+				new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanAccumulator, new TraceKeys());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.tracer, new ZipkinHttpSpanInjector(),
 						new HttpTraceKeysInjector(this.tracer, new TraceKeys()))));
