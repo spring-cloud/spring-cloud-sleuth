@@ -29,7 +29,9 @@ import org.springframework.cloud.sleuth.Tracer;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
+ * @deprecated as of 1.2 in favor of {@link SpanContinuingTraceCallable}
  */
+@Deprecated
 public class TraceContinuingCallable<V> extends TraceCallable<V> implements Callable<V> {
 
 	public TraceContinuingCallable(Tracer tracer, SpanNamer spanNamer, Callable<V> delegate) {

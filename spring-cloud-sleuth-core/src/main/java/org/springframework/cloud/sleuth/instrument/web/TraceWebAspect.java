@@ -25,8 +25,9 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable;
+import org.springframework.cloud.sleuth.instrument.async.SpanContinuingTraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 /**
@@ -71,10 +72,12 @@ public class TraceWebAspect {
 
 	private final Tracer tracer;
 	private final SpanNamer spanNamer;
+	private final TraceKeys traceKeys;
 
-	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer) {
+	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer, TraceKeys traceKeys) {
 		this.tracer = tracer;
 		this.spanNamer = spanNamer;
+		this.traceKeys = traceKeys;
 	}
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
@@ -103,7 +106,7 @@ public class TraceWebAspect {
 			if (log.isDebugEnabled()) {
 				log.debug("Wrapping callable with span [" + this.tracer.getCurrentSpan() + "]");
 			}
-			return new TraceContinuingCallable<>(this.tracer, this.spanNamer, callable);
+			return new SpanContinuingTraceCallable<>(this.tracer, this.traceKeys, this.spanNamer, callable);
 		}
 		else {
 			return callable;
@@ -121,8 +124,8 @@ public class TraceWebAspect {
 				}
 				Field callableField = WebAsyncTask.class.getDeclaredField("callable");
 				callableField.setAccessible(true);
-				callableField.set(webAsyncTask, new TraceContinuingCallable<>(this.tracer,
-						this.spanNamer, webAsyncTask.getCallable()));
+				callableField.set(webAsyncTask, new SpanContinuingTraceCallable<>(this.tracer,
+						this.traceKeys, this.spanNamer, webAsyncTask.getCallable()));
 			} catch (NoSuchFieldException ex) {
 				log.warn("Cannot wrap webAsyncTask's callable with TraceCallable", ex);
 			}
