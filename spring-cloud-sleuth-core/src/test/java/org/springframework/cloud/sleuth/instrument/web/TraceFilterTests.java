@@ -326,6 +326,32 @@ public class TraceFilterTests {
 	}
 
 	@Test
+	public void closesSpanWhenResponseStatusIs2xx() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.httpTraceKeysInjector);
+		this.response.setStatus(200);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
+	public void closesSpanWhenResponseStatusIs3xx() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.httpTraceKeysInjector);
+		this.response.setStatus(302);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
 	public void returns400IfSpanIsMalformedAndCreatesANewSpan() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, "asd")
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
