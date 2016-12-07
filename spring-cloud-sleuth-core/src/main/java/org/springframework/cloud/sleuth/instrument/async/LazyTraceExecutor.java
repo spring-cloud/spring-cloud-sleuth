@@ -62,7 +62,7 @@ public class LazyTraceExecutor implements Executor {
 				return;
 			}
 		}
-		this.delegate.execute(new LocalComponentTraceRunnable(this.tracer, traceKeys(), spanNamer(), command));
+		this.delegate.execute(new SpanContinuingTraceRunnable(this.tracer, traceKeys(), spanNamer(), command));
 	}
 
 	// due to some race conditions trace keys might not be ready yet

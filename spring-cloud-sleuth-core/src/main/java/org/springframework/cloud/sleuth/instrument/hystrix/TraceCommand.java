@@ -51,7 +51,7 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 	@Override
 	protected R run() throws Exception {
 		String commandKeyName = getCommandKey().name();
-		Span span = this.tracer.createSpan(commandKeyName, this.parentSpan);
+		Span span = startSpan(commandKeyName);
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
 		this.tracer.addTag(this.traceKeys.getHystrix().getPrefix() +
 				this.traceKeys.getHystrix().getCommandKey(), commandKeyName);
@@ -63,7 +63,23 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 			return doRun();
 		}
 		finally {
+			close(span);
+		}
+	}
+
+	private Span startSpan(String commandKeyName) {
+		Span span = this.parentSpan;
+		if (span == null) {
+			return this.tracer.createSpan(commandKeyName, this.parentSpan);
+		}
+		return this.tracer.continueSpan(span);
+	}
+
+	private void close(Span span) {
+		if (this.parentSpan == null) {
 			this.tracer.close(span);
+		} else {
+			this.tracer.detach(span);
 		}
 	}
 

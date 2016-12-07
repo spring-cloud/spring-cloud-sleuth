@@ -16,12 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
-
-import com.netflix.zuul.context.RequestContext;
-import com.netflix.zuul.monitoring.MonitoringHelper;
+import javax.servlet.http.HttpServletRequest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -42,6 +39,9 @@ import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.monitoring.MonitoringHelper;
+
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
@@ -54,7 +54,7 @@ public class TracePreZuulFilterTests {
 	@Mock HttpServletRequest httpServletRequest;
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
 
 	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new ZipkinHttpSpanInjector(),
 			new HttpTraceKeysInjector(this.tracer, new TraceKeys()));

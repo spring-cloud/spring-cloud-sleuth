@@ -98,14 +98,14 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new LocalComponentTraceCallable<>(tracer(), traceKeys(),
+		Callable<T> c = new SpanContinuingTraceCallable<>(tracer(), traceKeys(),
 				spanNamer(), this.spanName, task);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new LocalComponentTraceRunnable(tracer(), traceKeys(),
+		Runnable r = new SpanContinuingTraceRunnable(tracer(), traceKeys(),
 				spanNamer(), task, this.spanName);
 		return this.delegate.submit(r, result);
 	}
@@ -142,8 +142,8 @@ public class TraceableExecutorService implements ExecutorService {
 	private <T> Collection<? extends Callable<T>> wrapCallableCollection(Collection<? extends Callable<T>> tasks) {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
-			if (!(task instanceof LocalComponentTraceCallable)) {
-				ts.add(new LocalComponentTraceCallable<>(tracer(), traceKeys(),
+			if (!(task instanceof SpanContinuingTraceCallable)) {
+				ts.add(new SpanContinuingTraceCallable<>(tracer(), traceKeys(),
 						spanNamer(), this.spanName, task));
 			}
 		}

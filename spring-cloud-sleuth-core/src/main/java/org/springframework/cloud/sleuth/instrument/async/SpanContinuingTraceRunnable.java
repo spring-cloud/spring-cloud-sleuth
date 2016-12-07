@@ -29,7 +29,7 @@ import org.springframework.cloud.sleuth.Tracer;
  * @author Marcin Grzejszczak
  * @since 1.0.10
  */
-class SpanContinuingTraceRunnable extends TraceRunnable {
+public class SpanContinuingTraceRunnable extends TraceRunnable {
 
 	private final LocalComponentTraceRunnable traceRunnable;
 

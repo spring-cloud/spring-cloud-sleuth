@@ -31,7 +31,7 @@ import org.springframework.cloud.sleuth.Tracer;
  * @author Marcin Grzejszczak
  * @since 1.0.10
  */
-class SpanContinuingTraceCallable<V> extends TraceCallable<V> {
+public class SpanContinuingTraceCallable<V> extends TraceCallable<V> {
 
 	private final LocalComponentTraceCallable<V> traceCallable;
 
@@ -42,7 +42,7 @@ class SpanContinuingTraceCallable<V> extends TraceCallable<V> {
 	}
 
 	public SpanContinuingTraceCallable(Tracer tracer, TraceKeys traceKeys,
-			SpanNamer spanNamer, Callable<V> delegate, String name) {
+			SpanNamer spanNamer, String name, Callable<V> delegate) {
 		super(tracer, spanNamer, delegate, name);
 		this.traceCallable = new LocalComponentTraceCallable<>(tracer, traceKeys, spanNamer, name, delegate);
 	}

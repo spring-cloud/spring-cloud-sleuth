@@ -18,13 +18,15 @@ package org.springframework.cloud.sleuth.trace;
 
 import java.util.Random;
 import java.util.concurrent.Callable;
+
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.TraceCallable;
-import org.springframework.cloud.sleuth.TraceRunnable;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.async.SpanContinuingTraceCallable;
+import org.springframework.cloud.sleuth.instrument.async.SpanContinuingTraceRunnable;
 import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 
@@ -46,21 +48,37 @@ public class DefaultTracer implements Tracer {
 
 	private final SpanReporter spanReporter;
 
+	private final TraceKeys traceKeys;
+
 	private final boolean traceId128;
 
+	@Deprecated
 	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
 			SpanLogger spanLogger, SpanReporter spanReporter) {
 		this(defaultSampler, random, spanNamer, spanLogger, spanReporter, false);
 	}
 
+	@Deprecated
 	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
 				SpanLogger spanLogger, SpanReporter spanReporter, boolean traceId128) {
+		this(defaultSampler, random, spanNamer, spanLogger, spanReporter, traceId128, null);
+	}
+
+	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
+				SpanLogger spanLogger, SpanReporter spanReporter, TraceKeys traceKeys) {
+		this(defaultSampler, random, spanNamer, spanLogger, spanReporter, false, traceKeys);
+	}
+
+	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
+				SpanLogger spanLogger, SpanReporter spanReporter, boolean traceId128,
+			TraceKeys traceKeys) {
 		this.defaultSampler = defaultSampler;
 		this.random = random;
 		this.spanNamer = spanNamer;
 		this.spanLogger = spanLogger;
 		this.spanReporter = spanReporter;
 		this.traceId128 = traceId128;
+		this.traceKeys = traceKeys != null ? traceKeys : new TraceKeys();
 	}
 
 	@Override
@@ -237,7 +255,7 @@ public class DefaultTracer implements Tracer {
 	@Override
 	public <V> Callable<V> wrap(Callable<V> callable) {
 		if (isTracing()) {
-			return new TraceCallable<>(this, this.spanNamer, callable);
+			return new SpanContinuingTraceCallable<>(this, this.traceKeys, this.spanNamer, callable);
 		}
 		return callable;
 	}
@@ -250,7 +268,7 @@ public class DefaultTracer implements Tracer {
 	@Override
 	public Runnable wrap(Runnable runnable) {
 		if (isTracing()) {
-			return new TraceRunnable(this, this.spanNamer, runnable);
+			return new SpanContinuingTraceRunnable(this, this.traceKeys, this.spanNamer, runnable);
 		}
 		return runnable;
 	}

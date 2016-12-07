@@ -33,11 +33,12 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
+@SuppressWarnings("unchecked")
 public class LocalComponentTraceCallableTest {
 
 	Span closedSpan;
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter()) {
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys()) {
 		@Override public Span close(Span span) {
 			LocalComponentTraceCallableTest.this.closedSpan = span;
 			return super.close(span);
@@ -46,7 +47,7 @@ public class LocalComponentTraceCallableTest {
 
 	@Test
 	public void should_delegate_to_callable_wrapped_in_a_local_component() throws Exception {
-		LocalComponentTraceCallable<String> callable = new LocalComponentTraceCallable<>(this.tracer, new TraceKeys(), new DefaultSpanNamer(),
+		SpanContinuingTraceCallable<String> callable = new SpanContinuingTraceCallable<>(this.tracer, new TraceKeys(), new DefaultSpanNamer(),
 				() -> "hello");
 
 		String response = callable.call();

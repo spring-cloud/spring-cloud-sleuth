@@ -69,7 +69,7 @@ public class FeignRetriesTests {
 
 	ArrayListSpanAccumulator spanAccumulator = new ArrayListSpanAccumulator();
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), this.spanAccumulator);
+			new NoOpSpanLogger(), this.spanAccumulator, new TraceKeys());
 
 	@Before
 	@After

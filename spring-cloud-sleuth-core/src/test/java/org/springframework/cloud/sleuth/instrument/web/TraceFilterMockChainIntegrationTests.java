@@ -48,7 +48,7 @@ public class TraceFilterMockChainIntegrationTests {
 
 	private Tracer tracer = new DefaultTracer(new AlwaysSampler(),
 			new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), new NoOpSpanReporter());
+			new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
 	private TraceKeys traceKeys = new TraceKeys();
 	private HttpTraceKeysInjector keysInjector = new HttpTraceKeysInjector(this.tracer, this.traceKeys);
 

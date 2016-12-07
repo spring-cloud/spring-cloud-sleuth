@@ -44,25 +44,25 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys, this.spanNamer, command);
+		Runnable r = new SpanContinuingTraceRunnable(this.tracer, this.traceKeys, this.spanNamer, command);
 		return getScheduledExecutorService().schedule(r, delay, unit);
 	}
 
 	@Override
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-		Callable<V> c = new LocalComponentTraceCallable<>(this.tracer, this.traceKeys, this.spanNamer,  callable);
+		Callable<V> c = new SpanContinuingTraceCallable<>(this.tracer, this.traceKeys, this.spanNamer,  callable);
 		return getScheduledExecutorService().schedule(c, delay, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys, this.spanNamer,  command);
+		Runnable r = new SpanContinuingTraceRunnable(this.tracer, this.traceKeys, this.spanNamer,  command);
 		return getScheduledExecutorService().scheduleAtFixedRate(r, initialDelay, period, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-		Runnable r = new LocalComponentTraceRunnable(this.tracer, this.traceKeys, this.spanNamer,  command);
+		Runnable r = new SpanContinuingTraceRunnable(this.tracer, this.traceKeys, this.spanNamer,  command);
 		return getScheduledExecutorService().scheduleWithFixedDelay(r, initialDelay, delay, unit);
 	}
 

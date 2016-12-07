@@ -16,10 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.Random;
-
-import com.netflix.zuul.context.RequestContext;
+import javax.servlet.http.HttpServletResponse;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,6 +35,8 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 
+import com.netflix.zuul.context.RequestContext;
+
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
@@ -49,7 +49,7 @@ public class TracePostZuulFilterTests {
 	@Mock HttpServletResponse httpServletResponse;
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter());
+			new Random(), new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
 
 	private TracePostZuulFilter filter = new TracePostZuulFilter(this.tracer, new TraceKeys());
 

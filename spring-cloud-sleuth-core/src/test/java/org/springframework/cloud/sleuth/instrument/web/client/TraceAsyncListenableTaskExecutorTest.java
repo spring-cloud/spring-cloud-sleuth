@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import static org.hamcrest.Matchers.instanceOf;
-import static org.mockito.Mockito.mock;
-
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -27,12 +24,16 @@ import org.mockito.BDDMockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.TraceCallable;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.TraceRunnable;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
+
+import static org.hamcrest.Matchers.instanceOf;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Marcin Grzejszczak
@@ -41,7 +42,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 
 	AsyncListenableTaskExecutor delegate = mock(AsyncListenableTaskExecutor.class);
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter()) {
+			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys()) {
 		@Override
 		public boolean isTracing() {
 			return true;

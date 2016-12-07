@@ -60,7 +60,7 @@ public class TraceFeignClientTests {
 	ArrayListSpanAccumulator spanAccumulator = new ArrayListSpanAccumulator();
 	@Mock BeanFactory beanFactory;
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), this.spanAccumulator);
+			new NoOpSpanLogger(), this.spanAccumulator, new TraceKeys());
 	@Mock Client client;
 	@InjectMocks TraceFeignClient traceFeignClient;
 

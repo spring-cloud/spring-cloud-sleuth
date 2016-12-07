@@ -82,7 +82,7 @@ public class TraceFilterTests {
 	public void init() {
 		initMocks(this);
 		this.tracer = new DefaultTracer(new DelegateSampler(), new Random(),
-				new DefaultSpanNamer(), this.spanLogger, this.spanReporter) {
+				new DefaultSpanNamer(), this.spanLogger, this.spanReporter, new TraceKeys()) {
 			@Override
 			public Span continueSpan(Span span) {
 				TraceFilterTests.this.span = super.continueSpan(span);

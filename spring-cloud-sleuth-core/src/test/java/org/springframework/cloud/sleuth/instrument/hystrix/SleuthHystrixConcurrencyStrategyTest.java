@@ -48,7 +48,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 
 	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
 	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanReporter);
+			new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanReporter, new TraceKeys());
 	TraceKeys traceKeys = new TraceKeys();
 
 	@Before
