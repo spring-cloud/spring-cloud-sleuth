@@ -16,21 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Random;
-import java.util.regex.Pattern;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.*;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -47,11 +37,14 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Random;
+import java.util.regex.Pattern;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.entry;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
@@ -345,6 +338,20 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
 				this.spanExtractor, this.httpTraceKeysInjector);
 		this.response.setStatus(302);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+
+	@Test
+	public void closesSpanWhenResponseStatusIsCustom() throws Exception{
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.httpTraceKeysInjector);
+		this.response.setStatus(560);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
