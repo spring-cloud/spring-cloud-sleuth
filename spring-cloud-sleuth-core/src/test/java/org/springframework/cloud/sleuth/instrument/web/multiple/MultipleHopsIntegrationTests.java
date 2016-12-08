@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,6 +37,7 @@ import static java.util.stream.Collectors.toList;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+@TestPropertySource(properties = "spring.application.name=multiplehopsintegrationtests")
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class MultipleHopsIntegrationTests {
@@ -90,7 +93,7 @@ public class MultipleHopsIntegrationTests {
 	}
 
 	@Configuration
-	@SpringBootApplication
+	@SpringBootApplication(exclude = JmxAutoConfiguration.class)
 	public static class Config implements
 			ApplicationListener<EmbeddedServletContainerInitializedEvent> {
 		int port;

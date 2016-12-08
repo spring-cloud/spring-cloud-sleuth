@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.Random;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -35,7 +34,7 @@ import org.springframework.messaging.Message;
  */
 @Configuration
 @ConditionalOnClass(Message.class)
-@ConditionalOnBean({ TraceKeys.class, Random.class })
+@ConditionalOnBean(Tracer.class)
 public class TraceSpanMessagingAutoConfiguration {
 
 	@Bean
