@@ -4,18 +4,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
@@ -28,6 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = MultipleHopsIntegrationTests.Config.class)
+@TestPropertySource(properties = "spring.application.name=multiplehopsintegrationtests")
 public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Autowired Tracer tracer;
@@ -55,7 +58,7 @@ public class MultipleHopsIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@Configuration
-	@SpringBootApplication
+	@SpringBootApplication(exclude = JmxAutoConfiguration.class)
 	public static class Config {
 
 		@Bean ArrayListSpanAccumulator arrayListSpanAccumulator() {

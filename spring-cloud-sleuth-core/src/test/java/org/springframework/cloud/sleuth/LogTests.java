@@ -30,7 +30,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Adrian Cole
  */
-public class LogTest {
+public class LogTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

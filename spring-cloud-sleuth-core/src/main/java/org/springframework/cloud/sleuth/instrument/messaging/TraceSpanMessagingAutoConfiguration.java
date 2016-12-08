@@ -23,6 +23,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.cloud.sleuth.SpanExtractor;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -37,7 +38,7 @@ import org.springframework.messaging.support.MessageBuilder;
  */
 @Configuration
 @ConditionalOnClass(Message.class)
-@ConditionalOnBean({ TraceKeys.class, Random.class })
+@ConditionalOnBean(Tracer.class)
 public class TraceSpanMessagingAutoConfiguration {
 
 	@Bean

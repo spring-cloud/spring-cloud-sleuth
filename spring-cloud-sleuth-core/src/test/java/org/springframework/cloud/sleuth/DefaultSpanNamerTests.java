@@ -23,7 +23,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-public class DefaultSpanNamerTest {
+public class DefaultSpanNamerTests {
 
 	DefaultSpanNamer defaultSpanNamer = new DefaultSpanNamer();
 
