@@ -93,15 +93,15 @@ public class TraceFilter extends GenericFilterBean {
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
-	                   HttpSpanExtractor spanExtractor,
-	                   HttpTraceKeysInjector httpTraceKeysInjector) {
+					HttpSpanExtractor spanExtractor,
+					HttpTraceKeysInjector httpTraceKeysInjector) {
 		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
 				spanExtractor, httpTraceKeysInjector);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
-	                   SpanReporter spanReporter, HttpSpanExtractor spanExtractor,
-	                   HttpTraceKeysInjector httpTraceKeysInjector) {
+					SpanReporter spanReporter, HttpSpanExtractor spanExtractor,
+					HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
@@ -112,7 +112,7 @@ public class TraceFilter extends GenericFilterBean {
 
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-	                     FilterChain filterChain) throws IOException, ServletException {
+					FilterChain filterChain) throws IOException, ServletException {
 		if (!(servletRequest instanceof HttpServletRequest) || !(servletResponse instanceof HttpServletResponse)) {
 			throw new ServletException("Filter just supports HTTP requests");
 		}
@@ -156,7 +156,7 @@ public class TraceFilter extends GenericFilterBean {
 	}
 
 	private void processErrorRequest(FilterChain filterChain, HttpServletRequest request,
-	                                 HttpServletResponse response, Span spanFromRequest)
+			HttpServletResponse response, Span spanFromRequest)
 			throws IOException, ServletException {
 		if (log.isDebugEnabled()) {
 			log.debug("The span [" + spanFromRequest + "] was already detached once and we're processing an error");
@@ -181,7 +181,7 @@ public class TraceFilter extends GenericFilterBean {
 	// This method is a fallback in case if handler interceptors didn't catch the request.
 	// In that case we are creating an artificial span so that it can be visible in Zipkin.
 	private Span createSpanIfRequestNotHandled(HttpServletRequest request,
-	                                           Span spanFromRequest, String name, boolean skip) {
+			Span spanFromRequest, String name, boolean skip) {
 		if (!requestHasAlreadyBeenHandled(request)) {
 			spanFromRequest = this.tracer.createSpan(name);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
@@ -199,7 +199,7 @@ public class TraceFilter extends GenericFilterBean {
 	}
 
 	private void detachOrCloseSpans(HttpServletRequest request,
-	                                HttpServletResponse response, Span spanFromRequest, Throwable exception) {
+			HttpServletResponse response, Span spanFromRequest, Throwable exception) {
 		Span span = spanFromRequest;
 		if (span != null) {
 			addResponseTags(response, exception);
@@ -292,7 +292,7 @@ public class TraceFilter extends GenericFilterBean {
 	 * Creates a span and appends it as the current request's attribute
 	 */
 	private Span createSpan(HttpServletRequest request,
-	                        boolean skip, Span spanFromRequest, String name) {
+			boolean skip, Span spanFromRequest, String name) {
 		if (spanFromRequest != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Span has already been created - continuing with the previous one");
