@@ -16,16 +16,19 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
 import javax.annotation.PostConstruct;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -35,25 +38,26 @@ import org.springframework.cloud.sleuth.zipkin.ZipkinSpanListenerTests.TestConfi
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import zipkin.Constants;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Dave Syer
  *
  */
-@SpringApplicationConfiguration(classes = TestConfiguration.class)
-@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = TestConfiguration.class)
+@RunWith(SpringRunner.class)
 public class ZipkinSpanListenerTests {
 
-	@Autowired Tracer tracer;
-	@Autowired ApplicationContext application;
-	@Autowired TestConfiguration test;
-	@Autowired ZipkinSpanListener spanReporter;
+	@Autowired
+	Tracer tracer;
+	@Autowired
+	ApplicationContext application;
+	@Autowired
+	TestConfiguration test;
+	@Autowired
+	ZipkinSpanListener spanReporter;
 
 	@PostConstruct
 	public void init() {
@@ -72,10 +76,8 @@ public class ZipkinSpanListenerTests {
 
 		zipkin.Span result = this.spanReporter.convert(span);
 
-		assertThat(result.timestamp)
-				.isEqualTo(span.getBegin() * 1000);
-		assertThat(result.duration)
-				.isEqualTo(span.getAccumulatedMicros());
+		assertThat(result.timestamp).isEqualTo(span.getBegin() * 1000);
+		assertThat(result.duration).isEqualTo(span.getAccumulatedMicros());
 		assertThat(result.annotations.get(0).timestamp)
 				.isGreaterThanOrEqualTo(start * 1000)
 				.isLessThanOrEqualTo(System.currentTimeMillis() * 1000);
@@ -93,14 +95,14 @@ public class ZipkinSpanListenerTests {
 
 		zipkin.Span result = this.spanReporter.convert(span);
 
-		assertThat(result.timestamp)
-				.isEqualTo(span.getBegin() * 1000);
-		long clientSendTimestamp = span.logs().stream().filter(log -> Span.CLIENT_SEND.equals(log.getEvent()))
-				.findFirst().get().getTimestamp();
-		long clientRecvTimestamp = span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
-				.findFirst().get().getTimestamp();
-		assertThat(result.duration)
-				.isNotEqualTo(span.getAccumulatedMicros())
+		assertThat(result.timestamp).isEqualTo(span.getBegin() * 1000);
+		long clientSendTimestamp = span.logs().stream()
+				.filter(log -> Span.CLIENT_SEND.equals(log.getEvent())).findFirst().get()
+				.getTimestamp();
+		long clientRecvTimestamp = span.logs().stream()
+				.filter(log -> Span.CLIENT_RECV.equals(log.getEvent())).findFirst().get()
+				.getTimestamp();
+		assertThat(result.duration).isNotEqualTo(span.getAccumulatedMicros())
 				.isEqualTo((clientRecvTimestamp - clientSendTimestamp) * 1000);
 	}
 
@@ -110,27 +112,23 @@ public class ZipkinSpanListenerTests {
 		Span span = Span.builder().traceId(1L).name("http:api").build();
 		zipkin.Span result = this.spanReporter.convert(span);
 
-		assertThat(result.timestamp)
-				.isGreaterThan(0); // sanity check it did start
-		assertThat(result.duration)
-				.isNull();
+		assertThat(result.timestamp).isGreaterThan(0); // sanity check it did start
+		assertThat(result.duration).isNull();
 	}
 
 	/**
-	 * In the RPC span model, the client owns the timestamp and duration of the span. If we
-	 * were propagated an id, we can assume that we shouldn't report timestamp or duration,
-	 * rather let the client do that. Worst case we were propagated an unreported ID and
-	 * Zipkin backfills timestamp and duration.
+	 * In the RPC span model, the client owns the timestamp and duration of the span. If
+	 * we were propagated an id, we can assume that we shouldn't report timestamp or
+	 * duration, rather let the client do that. Worst case we were propagated an
+	 * unreported ID and Zipkin backfills timestamp and duration.
 	 */
 	@Test
 	public void doesntSetTimestampOrDurationWhenRemote() {
 		this.parent.stop();
 		zipkin.Span result = this.spanReporter.convert(this.parent);
 
-		assertThat(result.timestamp)
-				.isNull();
-		assertThat(result.duration)
-				.isNull();
+		assertThat(result.timestamp).isNull();
+		assertThat(result.duration).isNull();
 	}
 
 	/** Sleuth host corresponds to annotation/binaryAnnotation.host in zipkin. */
@@ -150,14 +148,13 @@ public class ZipkinSpanListenerTests {
 	/** zipkin's Endpoint.serviceName should never be null. */
 	@Test
 	public void localEndpointIncludesServiceName() {
-		assertThat(this.spanReporter.endpointLocator.local().serviceName)
-				.isNotEmpty();
+		assertThat(this.spanReporter.endpointLocator.local().serviceName).isNotEmpty();
 	}
 
 	/**
-	 * In zipkin, the service context is attached to annotations. Sleuth spans
-	 * that have no annotations will get an "lc" one, which allows them to be
-	 * queryable in zipkin by service name.
+	 * In zipkin, the service context is attached to annotations. Sleuth spans that have
+	 * no annotations will get an "lc" one, which allows them to be queryable in zipkin by
+	 * service name.
 	 */
 	@Test
 	public void spanWithoutAnnotationsLogsComponent() {
@@ -165,7 +162,9 @@ public class ZipkinSpanListenerTests {
 		this.tracer.close(context);
 		assertEquals(1, this.test.zipkinSpans.size());
 		assertThat(this.test.zipkinSpans.get(0).binaryAnnotations.get(0).value)
-				.isEqualTo("unknown".getBytes()); // TODO: "unknown" bc process id, documented as not nullable, is null.
+				.isEqualTo("unknown".getBytes()); // TODO: "unknown" bc process id,
+													// documented as not nullable, is
+													// null.
 	}
 
 	@Test
@@ -198,8 +197,7 @@ public class ZipkinSpanListenerTests {
 
 		zipkin.Span result = this.spanReporter.convert(this.parent);
 
-		assertThat(result.binaryAnnotations)
-				.extracting(input -> input.key)
+		assertThat(result.binaryAnnotations).extracting(input -> input.key)
 				.contains(Constants.LOCAL_COMPONENT);
 	}
 
@@ -210,14 +208,14 @@ public class ZipkinSpanListenerTests {
 
 		zipkin.Span result = this.spanReporter.convert(this.parent);
 
-		assertThat(result.binaryAnnotations)
-				.filteredOn("key", Constants.SERVER_ADDR)
+		assertThat(result.binaryAnnotations).filteredOn("key", Constants.SERVER_ADDR)
 				.isNotEmpty();
 	}
 
 	@Test
 	public void converts128BitTraceId() {
-		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).name("foo").build();
+		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).name("foo")
+				.build();
 
 		zipkin.Span result = this.spanReporter.convert(span);
 
@@ -233,8 +231,7 @@ public class ZipkinSpanListenerTests {
 
 		zipkin.Span result = this.spanReporter.convert(this.parent);
 
-		assertThat(result.binaryAnnotations)
-				.filteredOn("key", Constants.SERVER_ADDR)
+		assertThat(result.binaryAnnotations).filteredOn("key", Constants.SERVER_ADDR)
 				.extracting(input -> input.endpoint.serviceName)
 				.containsOnly("fooservice");
 	}

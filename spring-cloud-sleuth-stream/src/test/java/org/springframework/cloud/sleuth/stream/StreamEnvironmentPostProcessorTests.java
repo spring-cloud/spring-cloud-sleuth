@@ -16,18 +16,18 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.test.EnvironmentTestUtils;
+import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -41,17 +41,20 @@ public class StreamEnvironmentPostProcessorTests {
 	@Test
 	public void should_append_tracing_headers() {
 		postProcess();
-		assertThat(this.environment.getProperty("spring.cloud.stream.test.binder.headers[0]"))
-				.isEqualTo(Span.SPAN_ID_NAME);
+		assertThat(this.environment
+				.getProperty("spring.cloud.stream.test.binder.headers[0]"))
+						.isEqualTo(Span.SPAN_ID_NAME);
 	}
 
 	@Test
 	public void should_append_tracing_headers_to_existing_ones() {
-		EnvironmentTestUtils.addEnvironment(this.environment, "spring.cloud.stream.test.binder.headers[0]=X-Custom",
+		EnvironmentTestUtils.addEnvironment(this.environment,
+				"spring.cloud.stream.test.binder.headers[0]=X-Custom",
 				"spring.cloud.stream.test.binder.headers[1]=X-Mine");
 		postProcess();
-		assertThat(this.environment.getProperty("spring.cloud.stream.test.binder.headers[2]"))
-				.isEqualTo(Span.SPAN_ID_NAME);
+		assertThat(this.environment
+				.getProperty("spring.cloud.stream.test.binder.headers[2]"))
+						.isEqualTo(Span.SPAN_ID_NAME);
 	}
 
 	@Test
@@ -63,11 +66,14 @@ public class StreamEnvironmentPostProcessorTests {
 		Collection<String> headerValues = defaultPropertiesSource().values();
 
 		Collection<String> traceIds = headerValues.stream()
-				.filter(input -> input.contains(Span.TRACE_ID_NAME)).collect(Collectors.toList());
+				.filter(input -> input.contains(Span.TRACE_ID_NAME))
+				.collect(Collectors.toList());
 		assertThat(traceIds).hasSize(1);
 		assertThat(defaultPropertiesSource().keySet().stream()
-				.filter(input -> input.startsWith("spring.cloud.stream.test.binder.headers"))
-				.collect(Collectors.toList())).hasSize(StreamEnvironmentPostProcessor.headers.length);
+				.filter(input -> input
+						.startsWith("spring.cloud.stream.test.binder.headers"))
+				.collect(Collectors.toList()))
+						.hasSize(StreamEnvironmentPostProcessor.headers.length);
 	}
 
 	private void postProcess() {
@@ -76,7 +82,8 @@ public class StreamEnvironmentPostProcessorTests {
 	}
 
 	private Map<String, String> defaultPropertiesSource() {
-		return (Map<String, String>) this.environment.getPropertySources().get("defaultProperties").getSource();
+		return (Map<String, String>) this.environment.getPropertySources()
+				.get("defaultProperties").getSource();
 	}
 
 }

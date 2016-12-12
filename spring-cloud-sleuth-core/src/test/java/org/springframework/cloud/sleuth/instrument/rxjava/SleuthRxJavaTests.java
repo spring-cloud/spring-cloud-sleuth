@@ -1,5 +1,10 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -21,24 +26,22 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import rx.Observable;
 import rx.functions.Action0;
 import rx.plugins.RxJavaPlugins;
 import rx.schedulers.Schedulers;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {SleuthRxJavaTests.TestConfig.class})
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = { SleuthRxJavaTests.TestConfig.class })
 @DirtiesContext
 public class SleuthRxJavaTests {
 
-	@Autowired Listener listener;
-	@Autowired Tracer tracer;
+	@Autowired
+	Listener listener;
+	@Autowired
+	Tracer tracer;
 	StringBuffer caller = new StringBuffer();
 
 	@Before
@@ -59,17 +62,20 @@ public class SleuthRxJavaTests {
 
 	@Test
 	public void should_create_new_span_when_rx_java_action_is_executed_and_there_was_no_span() {
-		Observable.defer(() -> Observable.just(
-			(Action0) () -> this.caller = new StringBuffer("actual_action")
-		)).subscribeOn(Schedulers.newThread()).toBlocking()
-			.subscribe(Action0::call);
+		Observable
+				.defer(() -> Observable.just(
+						(Action0) () -> this.caller = new StringBuffer("actual_action")))
+				.subscribeOn(Schedulers.newThread()).toBlocking()
+				.subscribe(Action0::call);
 
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.getCurrentSpan()).isNull();
-		await().atMost(5, SECONDS).until(() -> then(this.listener.getEvents()).hasSize(1));
+		await().atMost(5, SECONDS)
+				.until(() -> then(this.listener.getEvents()).hasSize(1));
 		then(this.listener.getEvents().get(0)).hasNameEqualTo("rxjava");
 		then(this.listener.getEvents().get(0)).isExportable();
-		then(this.listener.getEvents().get(0)).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "rxjava");
+		then(this.listener.getEvents().get(0)).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME,
+				"rxjava");
 		then(this.listener.getEvents().get(0)).isALocalComponentSpan();
 	}
 
@@ -78,18 +84,20 @@ public class SleuthRxJavaTests {
 		Span spanInCurrentThread = this.tracer.createSpan("current_span");
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "current_span");
 
-		Observable.defer(() -> Observable.just(
-			(Action0) () -> this.caller = new StringBuffer("actual_action")
-		)).subscribeOn(Schedulers.newThread()).toBlocking()
-			.subscribe(Action0::call);
+		Observable
+				.defer(() -> Observable.just(
+						(Action0) () -> this.caller = new StringBuffer("actual_action")))
+				.subscribeOn(Schedulers.newThread()).toBlocking()
+				.subscribe(Action0::call);
 
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.getCurrentSpan()).isNotNull();
-		//making sure here that no new spans were created or reported as closed
+		// making sure here that no new spans were created or reported as closed
 		then(this.listener.getEvents()).isEmpty();
 		then(spanInCurrentThread).hasNameEqualTo(spanInCurrentThread.getName());
 		then(spanInCurrentThread).isExportable();
-		then(spanInCurrentThread).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "current_span");
+		then(spanInCurrentThread).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME,
+				"current_span");
 		then(spanInCurrentThread).isALocalComponentSpan();
 	}
 

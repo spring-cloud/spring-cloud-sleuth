@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import java.util.concurrent.atomic.AtomicReference;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
-import com.jayway.awaitility.Awaitility;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import com.netflix.hystrix.strategy.HystrixPlugins;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
@@ -39,20 +39,21 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import com.jayway.awaitility.Awaitility;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.strategy.HystrixPlugins;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {
-		HystrixAnnotationsIntegrationTests.TestConfig.class })
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = { HystrixAnnotationsIntegrationTests.TestConfig.class })
 @DirtiesContext
 public class HystrixAnnotationsIntegrationTests {
 
-	@Autowired HystrixCommandInvocationSpanCatcher catcher;
-	@Autowired Tracer tracer;
+	@Autowired
+	HystrixCommandInvocationSpanCatcher catcher;
+	@Autowired
+	Tracer tracer;
 
 	@BeforeClass
 	@AfterClass
@@ -109,8 +110,7 @@ public class HystrixAnnotationsIntegrationTests {
 			@Override
 			public void run() {
 				then(HystrixAnnotationsIntegrationTests.this.catcher.getSpan())
-						.nameStartsWith("hystrix")
-						.isALocalComponentSpan();
+						.nameStartsWith("hystrix").isALocalComponentSpan();
 			}
 		});
 	}
@@ -153,8 +153,8 @@ public class HystrixAnnotationsIntegrationTests {
 		public String getSpanName() {
 			if (this.spanCaughtFromHystrixThread == null
 					|| (this.spanCaughtFromHystrixThread.get() != null
-					&& this.spanCaughtFromHystrixThread.get()
-					.getName() == null)) {
+							&& this.spanCaughtFromHystrixThread.get()
+									.getName() == null)) {
 				return null;
 			}
 			return this.spanCaughtFromHystrixThread.get().getName();

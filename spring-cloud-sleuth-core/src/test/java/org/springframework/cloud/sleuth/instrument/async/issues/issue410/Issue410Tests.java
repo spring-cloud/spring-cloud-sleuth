@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.async.issues.issue410;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -31,8 +34,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -45,49 +48,54 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.jayway.awaitility.Awaitility;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = Application.class)
-@WebIntegrationTest
-@TestPropertySource(properties = {"ribbon.eureka.enabled=false", "feign.hystrix.enabled=false", "server.port=0"})
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = Application.class, webEnvironment = WebEnvironment.RANDOM_PORT, properties = {
+		"ribbon.eureka.enabled=false", "feign.hystrix.enabled=false" })
 public class Issue410Tests {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 
-	@Autowired Environment environment;
-	@Autowired Tracer tracer;
-	@Autowired AsyncTask asyncTask;
-	@Autowired RestTemplate restTemplate;
+	@Autowired
+	Environment environment;
+	@Autowired
+	Tracer tracer;
+	@Autowired
+	AsyncTask asyncTask;
+	@Autowired
+	RestTemplate restTemplate;
 	/**
 	 * Related to issue #445
 	 */
-	@Autowired Application.MyService executorService;
+	@Autowired
+	Application.MyService executorService;
 
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_without_a_pool() {
 		Span span = this.tracer.createSpan("foo");
 		log.info("Starting test");
 		try {
-			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/without_pool", String.class);
+			String response = this.restTemplate.getForObject(
+					"http://localhost:" + port() + "/without_pool", String.class);
 
 			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+				then(this.asyncTask.getSpan().get().getTraceId())
+						.isEqualTo(span.getTraceId());
 			});
-		} finally {
+		}
+		finally {
 			this.tracer.close(span);
 		}
 	}
@@ -97,14 +105,17 @@ public class Issue410Tests {
 		Span span = this.tracer.createSpan("foo");
 		log.info("Starting test");
 		try {
-			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
+			String response = this.restTemplate.getForObject(
+					"http://localhost:" + port() + "/with_pool", String.class);
 
 			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+				then(this.asyncTask.getSpan().get().getTraceId())
+						.isEqualTo(span.getTraceId());
 			});
-		} finally {
+		}
+		finally {
 			this.tracer.close(span);
 		}
 	}
@@ -117,14 +128,17 @@ public class Issue410Tests {
 		Span span = this.tracer.createSpan("foo");
 		log.info("Starting test");
 		try {
-			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/completable", String.class);
+			String response = this.restTemplate.getForObject(
+					"http://localhost:" + port() + "/completable", String.class);
 
 			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+				then(this.asyncTask.getSpan().get().getTraceId())
+						.isEqualTo(span.getTraceId());
 			});
-		} finally {
+		}
+		finally {
 			this.tracer.close(span);
 		}
 	}
@@ -137,14 +151,17 @@ public class Issue410Tests {
 		Span span = this.tracer.createSpan("foo");
 		log.info("Starting test");
 		try {
-			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler", String.class);
+			String response = this.restTemplate.getForObject(
+					"http://localhost:" + port() + "/taskScheduler", String.class);
 
 			then(response).isEqualTo(span.traceIdString());
 			Awaitility.await().until(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().getTraceId()).isEqualTo(span.getTraceId());
+				then(this.asyncTask.getSpan().get().getTraceId())
+						.isEqualTo(span.getTraceId());
 			});
-		} finally {
+		}
+		finally {
 			this.tracer.close(span);
 		}
 	}
@@ -154,20 +171,22 @@ public class Issue410Tests {
 	}
 }
 
-
 @Configuration
 @EnableAsync
 class AppConfig {
 
-	@Bean public Sampler testSampler() {
+	@Bean
+	public Sampler testSampler() {
 		return new AlwaysSampler();
 	}
 
-	@Bean public RestTemplate restTemplate() {
+	@Bean
+	public RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
 
-	@Bean public Executor poolTaskExecutor() {
+	@Bean
+	public Executor poolTaskExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.initialize();
 		return executor;
@@ -182,10 +201,16 @@ class AsyncTask {
 
 	private AtomicReference<Span> span = new AtomicReference<>();
 
-	@Autowired Tracer tracer;
-	@Autowired @Qualifier("poolTaskExecutor") Executor executor;
-	@Autowired @Qualifier("taskScheduler") Executor taskScheduler;
-	@Autowired BeanFactory beanFactory;
+	@Autowired
+	Tracer tracer;
+	@Autowired
+	@Qualifier("poolTaskExecutor")
+	Executor executor;
+	@Autowired
+	@Qualifier("taskScheduler")
+	Executor taskScheduler;
+	@Autowired
+	BeanFactory beanFactory;
 
 	@Async("poolTaskExecutor")
 	public void runWithPool() {
@@ -201,16 +226,14 @@ class AsyncTask {
 
 	public Span completableFutures() throws ExecutionException, InterruptedException {
 		log.info("This task is running with completable future");
-		CompletableFuture<Span> span1 = CompletableFuture
-				.supplyAsync(() -> {
-					AsyncTask.log.info("First completable future");
-					return AsyncTask.this.tracer.getCurrentSpan();
-				}, AsyncTask.this.executor);
-		CompletableFuture<Span> span2 = CompletableFuture
-				.supplyAsync(() -> {
-					AsyncTask.log.info("Second completable future");
-					return AsyncTask.this.tracer.getCurrentSpan();
-				}, AsyncTask.this.executor);
+		CompletableFuture<Span> span1 = CompletableFuture.supplyAsync(() -> {
+			AsyncTask.log.info("First completable future");
+			return AsyncTask.this.tracer.getCurrentSpan();
+		}, AsyncTask.this.executor);
+		CompletableFuture<Span> span2 = CompletableFuture.supplyAsync(() -> {
+			AsyncTask.log.info("Second completable future");
+			return AsyncTask.this.tracer.getCurrentSpan();
+		}, AsyncTask.this.executor);
 		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2)
 				.thenApply(ignoredVoid -> {
 					AsyncTask.log.info("Third completable future");
@@ -227,16 +250,16 @@ class AsyncTask {
 
 	public Span taskScheduler() throws ExecutionException, InterruptedException {
 		log.info("This task is running with completable future");
-		CompletableFuture<Span> span1 = CompletableFuture
-				.supplyAsync(() -> {
-					AsyncTask.log.info("First completable future");
-					return AsyncTask.this.tracer.getCurrentSpan();
-				}, new LazyTraceExecutor(AsyncTask.this.beanFactory, AsyncTask.this.taskScheduler));
-		CompletableFuture<Span> span2 = CompletableFuture
-				.supplyAsync(() -> {
-					AsyncTask.log.info("Second completable future");
-					return AsyncTask.this.tracer.getCurrentSpan();
-				}, new LazyTraceExecutor(AsyncTask.this.beanFactory, AsyncTask.this.taskScheduler));
+		CompletableFuture<Span> span1 = CompletableFuture.supplyAsync(() -> {
+			AsyncTask.log.info("First completable future");
+			return AsyncTask.this.tracer.getCurrentSpan();
+		}, new LazyTraceExecutor(AsyncTask.this.beanFactory,
+				AsyncTask.this.taskScheduler));
+		CompletableFuture<Span> span2 = CompletableFuture.supplyAsync(() -> {
+			AsyncTask.log.info("Second completable future");
+			return AsyncTask.this.tracer.getCurrentSpan();
+		}, new LazyTraceExecutor(AsyncTask.this.beanFactory,
+				AsyncTask.this.taskScheduler));
 		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2)
 				.thenApply(ignoredVoid -> {
 					AsyncTask.log.info("Third completable future");
@@ -262,8 +285,10 @@ class Application {
 
 	private static final Log log = LogFactory.getLog(Application.class);
 
-	@Autowired AsyncTask asyncTask;
-	@Autowired Tracer tracer;
+	@Autowired
+	AsyncTask asyncTask;
+	@Autowired
+	Tracer tracer;
 
 	@RequestMapping("/with_pool")
 	public String withPool() {
@@ -295,9 +320,11 @@ class Application {
 	/**
 	 * Related to issue #445
 	 */
-	@Bean public MyService executorService() {
+	@Bean
+	public MyService executorService() {
 		return new MyService() {
-			@Override public void execute(Runnable command) {
+			@Override
+			public void execute(Runnable command) {
 
 			}
 		};

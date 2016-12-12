@@ -13,27 +13,29 @@
  */
 package org.springframework.cloud.sleuth.autoconfig;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.boot.test.EnvironmentTestUtils.addEnvironment;
-
 public class TraceAutoConfigurationTests {
 
 	AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 
-	@After public void close() {
+	@After
+	public void close() {
 		context.close();
 	}
 
-	@Test public void defaultsTo64BitTraceId() {
+	@Test
+	public void defaultsTo64BitTraceId() {
 		context = new AnnotationConfigApplicationContext();
 		context.register(PropertyPlaceholderAutoConfiguration.class,
 				SleuthLogAutoConfiguration.class, TraceAutoConfiguration.class);
@@ -53,8 +55,9 @@ public class TraceAutoConfigurationTests {
 		}
 	}
 
-	@Test public void optInto128BitTraceId() {
-		addEnvironment(context, "spring.sleuth.traceId128:true");
+	@Test
+	public void optInto128BitTraceId() {
+		EnvironmentTestUtils.addEnvironment(context, "spring.sleuth.traceId128:true");
 		context.register(PropertyPlaceholderAutoConfiguration.class,
 				SleuthLogAutoConfiguration.class, TraceAutoConfiguration.class);
 		context.refresh();

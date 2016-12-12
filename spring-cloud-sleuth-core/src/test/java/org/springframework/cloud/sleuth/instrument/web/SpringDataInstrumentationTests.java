@@ -16,22 +16,24 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.annotation.PostConstruct;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.jayway.awaitility.Awaitility;
+import javax.annotation.PostConstruct;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.orm.jpa.EntityScan;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Tracer;
@@ -50,24 +52,27 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import com.jayway.awaitility.Awaitility;
 
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = ReservationServiceApplication.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = ReservationServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class SpringDataInstrumentationTests {
 
-	@Autowired RestTemplate restTemplate;
-	@Autowired Environment environment;
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanAccumulator arrayListSpanAccumulator;
+	@Autowired
+	RestTemplate restTemplate;
+	@Autowired
+	Environment environment;
+	@Autowired
+	Tracer tracer;
+	@Autowired
+	ArrayListSpanAccumulator arrayListSpanAccumulator;
 
 	@Before
 	public void setup() {
@@ -80,30 +85,23 @@ public class SpringDataInstrumentationTests {
 
 		then(names).isNotEmpty();
 		then(this.arrayListSpanAccumulator.getSpans()).isNotEmpty();
-		Awaitility.await().until( () -> {
-					then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasASpanWithName("http:/reservations")
-							.hasASpanWithTagKeyEqualTo("mvc.controller.class");
-				});
+		Awaitility.await().until(() -> {
+			then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
+					.hasASpanWithName("http:/reservations")
+					.hasASpanWithTagKeyEqualTo("mvc.controller.class");
+		});
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	Collection<String> names() {
-		ParameterizedTypeReference<Resources<Reservation>> ptr =
-				new ParameterizedTypeReference<Resources<Reservation>>() {
-				};
-		ResponseEntity<Resources<Reservation>> responseEntity =
-				this.restTemplate.exchange("http://localhost:" + port() + "/reservations",
-						HttpMethod.GET,
-						null,
-						ptr
-				);
-		return responseEntity
-				.getBody()
-				.getContent()
-				.stream()
-				.map(Reservation::getReservationName)
-				.collect(Collectors.toList());
+		ParameterizedTypeReference<Resources<Reservation>> ptr = new ParameterizedTypeReference<Resources<Reservation>>() {
+		};
+		ResponseEntity<Resources<Reservation>> responseEntity = this.restTemplate
+				.exchange("http://localhost:" + port() + "/reservations", HttpMethod.GET,
+						null, ptr);
+		return responseEntity.getBody().getContent().stream()
+				.map(Reservation::getReservationName).collect(Collectors.toList());
 	}
 
 	private int port() {
@@ -116,19 +114,23 @@ public class SpringDataInstrumentationTests {
 @EntityScan(basePackageClasses = Reservation.class)
 class ReservationServiceApplication {
 
-	@Bean RestTemplate restTemplate() {
+	@Bean
+	RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
 
-	@Bean SampleRecords sampleRecords(ReservationRepository reservationRepository) {
+	@Bean
+	SampleRecords sampleRecords(ReservationRepository reservationRepository) {
 		return new SampleRecords(reservationRepository);
 	}
 
-	@Bean ArrayListSpanAccumulator arrayListSpanAccumulator() {
+	@Bean
+	ArrayListSpanAccumulator arrayListSpanAccumulator() {
 		return new ArrayListSpanAccumulator();
 	}
 
-	@Bean Sampler alwaysSampler() {
+	@Bean
+	Sampler alwaysSampler() {
 		return new AlwaysSampler();
 	}
 }
@@ -144,8 +146,8 @@ class SampleRecords {
 
 	@PostConstruct
 	public void create() throws Exception {
-		Stream.of("Josh", "Jungryeol", "Nosung", "Hyobeom",
-				"Soeun", "Seunghue", "Peter", "Jooyong")
+		Stream.of("Josh", "Jungryeol", "Nosung", "Hyobeom", "Soeun", "Seunghue", "Peter",
+				"Jooyong")
 				.forEach(name -> reservationRepository.save(new Reservation(name)));
 		reservationRepository.findAll().forEach(System.out::println);
 	}
@@ -160,9 +162,9 @@ class Reservation {
 
 	@Id
 	@GeneratedValue
-	private Long id;  // id
+	private Long id; // id
 
-	private String reservationName;  // reservation_name
+	private String reservationName; // reservation_name
 
 	public Long getId() {
 		return id;
@@ -174,10 +176,8 @@ class Reservation {
 
 	@Override
 	public String toString() {
-		return "Reservation{" +
-				"id=" + id +
-				", reservationName='" + reservationName + '\'' +
-				'}';
+		return "Reservation{" + "id=" + id + ", reservationName='" + reservationName
+				+ '\'' + '}';
 	}
 
 	Reservation() {// why JPA why???
@@ -188,5 +188,3 @@ class Reservation {
 		this.reservationName = reservationName;
 	}
 }
-
-

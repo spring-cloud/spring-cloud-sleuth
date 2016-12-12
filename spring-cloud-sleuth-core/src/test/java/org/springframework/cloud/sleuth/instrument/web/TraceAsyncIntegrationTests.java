@@ -1,14 +1,16 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.jayway.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -19,18 +21,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import com.jayway.awaitility.Awaitility;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {
 		TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
 public class TraceAsyncIntegrationTests {
 
-	@Autowired ClassPerformingAsyncLogic classPerformingAsyncLogic;
-	@Autowired Tracer tracer;
+	@Autowired
+	ClassPerformingAsyncLogic classPerformingAsyncLogic;
+	@Autowired
+	Tracer tracer;
 
 	@Test
 	public void should_set_span_on_an_async_annotated_method() {

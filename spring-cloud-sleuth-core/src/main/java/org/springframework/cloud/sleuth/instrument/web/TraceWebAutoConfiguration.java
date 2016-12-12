@@ -15,6 +15,12 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static javax.servlet.DispatcherType.ASYNC;
+import static javax.servlet.DispatcherType.ERROR;
+import static javax.servlet.DispatcherType.FORWARD;
+import static javax.servlet.DispatcherType.INCLUDE;
+import static javax.servlet.DispatcherType.REQUEST;
+
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -27,8 +33,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -40,15 +46,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import static javax.servlet.DispatcherType.ASYNC;
-import static javax.servlet.DispatcherType.ERROR;
-import static javax.servlet.DispatcherType.FORWARD;
-import static javax.servlet.DispatcherType.INCLUDE;
-import static javax.servlet.DispatcherType.REQUEST;
-
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables tracing to HTTP requests.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} enables tracing to HTTP requests.
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Michal Chmielarz, 4financeIT
@@ -71,8 +71,8 @@ public class TraceWebAutoConfiguration {
 	private String skipPattern;
 
 	/**
-	 * Nested config that configures Web MVC if it's present
-	 * (without adding a runtime dependency to it)
+	 * Nested config that configures Web MVC if it's present (without adding a runtime
+	 * dependency to it)
 	 */
 	@Configuration
 	@ConditionalOnClass(WebMvcConfigurerAdapter.class)
@@ -81,26 +81,31 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public TraceWebAspect traceWebAspect(Tracer tracer, TraceKeys traceKeys, SpanNamer spanNamer) {
+	public TraceWebAspect traceWebAspect(Tracer tracer, TraceKeys traceKeys,
+			SpanNamer spanNamer) {
 		return new TraceWebAspect(tracer, spanNamer, traceKeys);
 	}
 
 	@Bean
 	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
-	public TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(BeanFactory beanFactory) {
+	public TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
+			BeanFactory beanFactory) {
 		return new TraceSpringDataBeanPostProcessor(beanFactory);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer, TraceKeys traceKeys) {
+	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer,
+			TraceKeys traceKeys) {
 		return new HttpTraceKeysInjector(tracer, traceKeys);
 	}
 
 	@Bean
 	public FilterRegistrationBean traceWebFilter(TraceFilter traceFilter) {
-		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(traceFilter);
-		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
+				traceFilter);
+		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE,
+				REQUEST);
 		filterRegistrationBean.setOrder(TraceFilter.ORDER);
 		return filterRegistrationBean;
 	}
@@ -116,7 +121,8 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public HttpSpanExtractor httpSpanExtractor(@Value("${spring.sleuth.web.skipPattern:}") String skipPattern) {
+	public HttpSpanExtractor httpSpanExtractor(
+			@Value("${spring.sleuth.web.skipPattern:}") String skipPattern) {
 		return new ZipkinHttpSpanExtractor(Pattern.compile(skipPattern));
 	}
 
@@ -145,23 +151,27 @@ public class TraceWebAutoConfiguration {
 				@Override
 				public Pattern skipPattern() {
 					return getPatternForManagementServerProperties(
-							managementServerProperties, SkipPatternProviderConfig.this.skipPattern);
+							managementServerProperties,
+							SkipPatternProviderConfig.this.skipPattern);
 				}
 			};
 		}
 
 		/**
-		 * Sets or appends {@link ManagementServerProperties#getContextPath()} to the
-		 * skip pattern. If neither is available then sets the default one
+		 * Sets or appends {@link ManagementServerProperties#getContextPath()} to the skip
+		 * pattern. If neither is available then sets the default one
 		 */
 		static Pattern getPatternForManagementServerProperties(
-				ManagementServerProperties managementServerProperties, String skipPattern) {
-			if (StringUtils.hasText(skipPattern) &&
-					StringUtils.hasText(managementServerProperties.getContextPath())) {
-				return Pattern.compile(skipPattern + "|" +
-						managementServerProperties.getContextPath() + ".*");
-			} else if (StringUtils.hasText(managementServerProperties.getContextPath())) {
-				return Pattern.compile(managementServerProperties.getContextPath() + ".*");
+				ManagementServerProperties managementServerProperties,
+				String skipPattern) {
+			if (StringUtils.hasText(skipPattern)
+					&& StringUtils.hasText(managementServerProperties.getContextPath())) {
+				return Pattern.compile(skipPattern + "|"
+						+ managementServerProperties.getContextPath() + ".*");
+			}
+			else if (StringUtils.hasText(managementServerProperties.getContextPath())) {
+				return Pattern
+						.compile(managementServerProperties.getContextPath() + ".*");
 			}
 			return defaultSkipPattern(skipPattern);
 		}
@@ -180,7 +190,8 @@ public class TraceWebAutoConfiguration {
 		return defaultSkipPatternProvider(this.skipPattern);
 	}
 
-	private static SkipPatternProvider defaultSkipPatternProvider(final String skipPattern) {
+	private static SkipPatternProvider defaultSkipPatternProvider(
+			final String skipPattern) {
 		return new SkipPatternProvider() {
 			@Override
 			public Pattern skipPattern() {
@@ -190,8 +201,7 @@ public class TraceWebAutoConfiguration {
 	}
 
 	private static Pattern defaultSkipPattern(String skipPattern) {
-		return StringUtils.hasText(skipPattern) ?
-				Pattern.compile(skipPattern)
+		return StringUtils.hasText(skipPattern) ? Pattern.compile(skipPattern)
 				: Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN);
 	}
 

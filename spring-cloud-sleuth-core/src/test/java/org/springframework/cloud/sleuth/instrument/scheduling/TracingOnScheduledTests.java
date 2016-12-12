@@ -16,13 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.scheduling;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -30,18 +35,16 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {ScheduledTestConfiguration.class})
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = { ScheduledTestConfiguration.class })
 public class TracingOnScheduledTests {
 
-	@Autowired TestBeanWithScheduledMethod beanWithScheduledMethod;
-	@Autowired TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
+	@Autowired
+	TestBeanWithScheduledMethod beanWithScheduledMethod;
+	@Autowired
+	TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
 
 	@Test
 	public void should_have_span_set_after_scheduled_method_has_been_executed() {
@@ -55,8 +58,10 @@ public class TracingOnScheduledTests {
 	}
 
 	@Test
-	public void should_not_span_in_the_scheduled_class_that_matches_skip_pattern() throws Exception {
-		await().atMost(5, SECONDS).untilAtomic(this.beanWithScheduledMethodToBeIgnored.isExecuted(), Matchers.is(true));
+	public void should_not_span_in_the_scheduled_class_that_matches_skip_pattern()
+			throws Exception {
+		await().atMost(5, SECONDS).untilAtomic(
+				this.beanWithScheduledMethodToBeIgnored.isExecuted(), Matchers.is(true));
 		then(this.beanWithScheduledMethodToBeIgnored.getSpan()).isNull();
 	}
 
@@ -64,7 +69,8 @@ public class TracingOnScheduledTests {
 		return new Runnable() {
 			@Override
 			public void run() {
-				Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
+				Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod
+						.getSpan();
 				then(storedSpan).isNotNull();
 				then(storedSpan.getTraceId()).isNotNull();
 				then(storedSpan).hasATag("class", "TestBeanWithScheduledMethod");
@@ -77,7 +83,8 @@ public class TracingOnScheduledTests {
 		return new Runnable() {
 			@Override
 			public void run() {
-				then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan()).isNotEqualTo(spanToCompare);
+				then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan())
+						.isNotEqualTo(spanToCompare);
 			}
 		};
 	}
@@ -88,11 +95,13 @@ public class TracingOnScheduledTests {
 @DefaultTestAutoConfiguration
 class ScheduledTestConfiguration {
 
-	@Bean TestBeanWithScheduledMethod testBeanWithScheduledMethod() {
+	@Bean
+	TestBeanWithScheduledMethod testBeanWithScheduledMethod() {
 		return new TestBeanWithScheduledMethod();
 	}
 
-	@Bean TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored() {
+	@Bean
+	TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored() {
 		return new TestBeanWithScheduledMethodToBeIgnored();
 	}
 

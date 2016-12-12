@@ -16,14 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -39,16 +42,11 @@ import org.springframework.messaging.PollableChannel;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-
 /**
  * @author Spencer Gibb
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes=App.class)
-@IntegrationTest
+@SpringBootTest(classes = App.class)
 @DirtiesContext
 public class TraceContextPropagationChannelInterceptorTests {
 
@@ -76,17 +74,17 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 		assertNotNull("message was null", message);
 
-		Long spanId = Span
-				.hexToId(message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class));
-		assertNotEquals("spanId was equal to parent's id", expectedSpanId,  spanId);
+		Long spanId = Span.hexToId(
+				message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class));
+		assertNotEquals("spanId was equal to parent's id", expectedSpanId, spanId);
 
-		long traceId = Span
-				.hexToId(message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
+		long traceId = Span.hexToId(message.getHeaders()
+				.get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		assertNotNull("traceId was null", traceId);
 
-		Long parentId = Span
-				.hexToId(message.getHeaders().get(TraceMessageHeaders.PARENT_ID_NAME, String.class));
-		assertEquals("parentId was not equal to parent's id", expectedSpanId,  parentId);
+		Long parentId = Span.hexToId(message.getHeaders()
+				.get(TraceMessageHeaders.PARENT_ID_NAME, String.class));
+		assertEquals("parentId was not equal to parent's id", expectedSpanId, parentId);
 
 	}
 

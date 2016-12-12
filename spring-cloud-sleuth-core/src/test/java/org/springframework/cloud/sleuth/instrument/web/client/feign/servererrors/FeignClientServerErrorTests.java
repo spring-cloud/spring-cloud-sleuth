@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign.servererrors;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,8 +30,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.OutputCapture;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -47,7 +50,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -63,23 +66,24 @@ import com.netflix.loadbalancer.Server;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 /**
  * Related to https://github.com/spring-cloud/spring-cloud-sleuth/issues/257
  *
  * @author ryarabori
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=fooservice" })
 public class FeignClientServerErrorTests {
 
-	@Autowired TestFeignInterface feignInterface;
-	@Autowired TestFeignWithCustomConfInterface customConfFeignInterface;
-	@Autowired Listener listener;
-	@Rule public OutputCapture capture = new OutputCapture();
+	@Autowired
+	TestFeignInterface feignInterface;
+	@Autowired
+	TestFeignWithCustomConfInterface customConfFeignInterface;
+	@Autowired
+	Listener listener;
+	@Rule
+	public OutputCapture capture = new OutputCapture();
 
 	@Before
 	public void setup() {
@@ -91,19 +95,19 @@ public class FeignClientServerErrorTests {
 	public void shouldCloseSpanOnInternalServerError() throws InterruptedException {
 		try {
 			this.feignInterface.internalError();
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().until(() -> {
 			then(this.capture.toString())
 					.doesNotContain("Tried to close span but it is not the current span");
 			then(ExceptionUtils.getLastException()).isNull();
+			then(new ListOfSpans(this.listener.getEvents())).hasASpanWithTagEqualTo(
+					Span.SPAN_ERROR_TAG_NAME,
+					"Request processing failed; nested exception is java.lang.RuntimeException: Internal Error");
 			then(new ListOfSpans(this.listener.getEvents()))
-					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-							"Request processing failed; nested exception is java.lang.RuntimeException: Internal Error");
-			then(new ListOfSpans(this.listener.getEvents()))
-					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-							"Internal Error");
+					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME, "Internal Error");
 		});
 	}
 
@@ -111,7 +115,8 @@ public class FeignClientServerErrorTests {
 	public void shouldCloseSpanOnNotFound() throws InterruptedException {
 		try {
 			this.feignInterface.notFound();
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().until(() -> {
@@ -125,37 +130,45 @@ public class FeignClientServerErrorTests {
 	public void shouldCloseSpanOnOk() throws InterruptedException {
 		try {
 			this.feignInterface.ok();
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().until(() -> {
-			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
+			then(this.capture.toString())
+					.doesNotContain("Tried to close span but it is not the current span");
 			then(ExceptionUtils.getLastException()).isNull();
 		});
 	}
 
 	@Test
-	public void shouldCloseSpanOnOkWithCustomFeignConfiguration() throws InterruptedException {
+	public void shouldCloseSpanOnOkWithCustomFeignConfiguration()
+			throws InterruptedException {
 		try {
 			this.customConfFeignInterface.ok();
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().until(() -> {
-			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
+			then(this.capture.toString())
+					.doesNotContain("Tried to close span but it is not the current span");
 			then(ExceptionUtils.getLastException()).isNull();
 		});
 	}
 
 	@Test
-	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() throws InterruptedException {
+	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration()
+			throws InterruptedException {
 		try {
 			this.customConfFeignInterface.notFound();
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().until(() -> {
-			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
+			then(this.capture.toString())
+					.doesNotContain("Tried to close span but it is not the current span");
 			then(ExceptionUtils.getLastException()).isNull();
 		});
 	}
@@ -163,10 +176,9 @@ public class FeignClientServerErrorTests {
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableFeignClients
-	@RibbonClients({@RibbonClient(value = "fooservice",
-			configuration = SimpleRibbonClientConfiguration.class),
-			@RibbonClient(value = "customConfFooService",
-			configuration = SimpleRibbonClientConfiguration.class)})
+	@RibbonClients({
+			@RibbonClient(value = "fooservice", configuration = SimpleRibbonClientConfiguration.class),
+			@RibbonClient(value = "customConfFooService", configuration = SimpleRibbonClientConfiguration.class) })
 	public static class TestConfiguration {
 
 		@Bean
@@ -185,7 +197,8 @@ public class FeignClientServerErrorTests {
 			return new RestTemplate();
 		}
 
-		@Bean Sampler testSampler() {
+		@Bean
+		Sampler testSampler() {
 			return new AlwaysSampler();
 		}
 
@@ -213,7 +226,6 @@ public class FeignClientServerErrorTests {
 		@RequestMapping(method = RequestMethod.GET, value = "/ok")
 		ResponseEntity<String> ok();
 	}
-
 
 	@Configuration
 	public static class CustomFeignClientConfiguration {
