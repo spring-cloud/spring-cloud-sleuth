@@ -459,6 +459,19 @@ public class TraceKeys {
 	public static class Mvc {
 
 		/**
+		 * The timestamp used to provide a concrete moment in time when request processing
+		 * reached the controller.
+		 */
+		private String controllerStart = "mvc.controller.start";
+
+
+		/**
+		 * The timestamp used to provide a concrete moment in time when request processing
+		 * ended on the controller side.
+		 */
+		private String controllerFinish = "mvc.controller.finish";
+
+		/**
 		 * The lower case, hyphen delimited name of the class that processes the request.
 		 * Ex. class named "BookController" will result in "book-controller" tag value.
 		 */
@@ -469,6 +482,22 @@ public class TraceKeys {
 		 * Ex. method named "listOfBooks" will result in "list-of-books" tag value.
 		 */
 		private String controllerMethod = "mvc.controller.method";
+
+		public String getControllerStart() {
+			return this.controllerStart;
+		}
+
+		public void setControllerStart(String controllerStart) {
+			this.controllerStart = controllerStart;
+		}
+
+		public String getControllerFinish() {
+			return this.controllerFinish;
+		}
+
+		public void setControllerFinish(String controllerFinish) {
+			this.controllerFinish = controllerFinish;
+		}
 
 		public String getControllerClass() {
 			return this.controllerClass;

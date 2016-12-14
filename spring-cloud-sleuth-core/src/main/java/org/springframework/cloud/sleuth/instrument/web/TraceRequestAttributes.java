@@ -32,6 +32,12 @@ public final class TraceRequestAttributes {
 			+ ".TRACE_HANDLED";
 
 	/**
+	 * Set if Handler interceptor has executed some logic
+	 */
+	public static final String NEW_SPAN_REQUEST_ATTR = TraceRequestAttributes.class.getName()
+			+ ".TRACE_HANDLED_NEW_SPAN";
+
+	/**
 	 * Attribute set when the {@link org.springframework.cloud.sleuth.Span} got continued in the {@link TraceFilter}.
 	 * The Sleuth tracing components will most likely continue the current Span instead of creating a new one.
 	 */
