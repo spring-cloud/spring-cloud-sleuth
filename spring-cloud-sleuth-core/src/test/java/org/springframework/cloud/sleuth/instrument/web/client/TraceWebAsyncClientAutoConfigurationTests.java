@@ -18,7 +18,10 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
@@ -26,18 +29,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.AsyncClientHttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -145,6 +158,95 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 				throws IOException {
 			return null;
 		}
+	}
+
+	@RunWith(SpringJUnit4ClassRunner.class)
+	@SpringApplicationConfiguration(classes = { DurationChecking.TestConfiguration.class })
+	@WebIntegrationTest(randomPort = true)
+	public static class DurationChecking {
+		@Autowired AsyncRestTemplate asyncRestTemplate;
+		@Autowired Environment environment;
+		@Autowired ArrayListSpanAccumulator accumulator;
+		@Autowired Tracer tracer;
+
+		@Before
+		public void setup() {
+			ExceptionUtils.setFail(true);
+		}
+
+		@Test
+		public void should_close_span_upon_success_callback()
+				throws ExecutionException, InterruptedException {
+			ListenableFuture<ResponseEntity<String>> future = this.asyncRestTemplate
+					.getForEntity("http://localhost:" + port() + "/foo", String.class);
+			String result = future.get().getBody();
+
+			then(result).isEqualTo("foo");
+			then(this.accumulator.getSpans().stream().filter(
+					span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent())).findFirst().isPresent()
+			).findFirst().get()).matches(span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100));
+			then(this.tracer.getCurrentSpan()).isNull();
+			then(ExceptionUtils.getLastException()).isNull();
+		}
+
+		@Test
+		public void should_close_span_upon_failure_callback()
+				throws ExecutionException, InterruptedException {
+			ListenableFuture<ResponseEntity<String>> future;
+			try {
+				future = this.asyncRestTemplate
+						.getForEntity("http://localhost:" + port() + "/blowsup", String.class);
+				future.get();
+			} catch (Exception e) {
+				then(e.getMessage()).contains("Internal Server Error");
+			}
+
+			then(this.accumulator.getSpans().stream().filter(
+					span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent())).findFirst().isPresent()
+			).findFirst().get()).matches(span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100))
+					.hasATag(Span.SPAN_ERROR_TAG_NAME, "500 Internal Server Error");
+			then(this.tracer.getCurrentSpan()).isNull();
+			then(ExceptionUtils.getLastException()).isNull();
+		}
+
+		int port() {
+			return this.environment.getProperty("local.server.port", Integer.class);
+		}
+
+		@EnableAutoConfiguration
+		@Configuration
+		public static class TestConfiguration {
+
+			@Bean ArrayListSpanAccumulator accumulator() {
+				return new ArrayListSpanAccumulator();
+			}
+
+			@Bean
+			MyController myController() {
+				return new MyController();
+			}
+
+			@Bean AlwaysSampler sampler() {
+				return new AlwaysSampler();
+			}
+		}
+
+		@RestController
+		public static class MyController {
+
+			@RequestMapping("/foo")
+			String foo() throws Exception {
+				Thread.sleep(100);
+				return "foo";
+			}
+
+			@RequestMapping("/blowsup")
+			String blowsup() throws Exception {
+				Thread.sleep(100);
+				throw new RuntimeException("boom");
+			}
+		}
+
 	}
 
 }
