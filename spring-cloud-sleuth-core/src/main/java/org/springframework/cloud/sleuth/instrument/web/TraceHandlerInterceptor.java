@@ -149,6 +149,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 				log.debug("Closing span " + span);
 			}
 			Span newSpan = getNewSpanFromAttribute(request);
+			getTracer().continueSpan(newSpan);
 			newSpan.logEvent(getTraceKeys().getMvc().getControllerFinish());
 			getTracer().close(newSpan);
 			clearNewSpanCreatedAttribute(request);
