@@ -80,7 +80,10 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 		ListenableFuture<T> future = super.doExecute(url, method, requestCallback, responseExtractor);
 		Span span = this.tracer.getCurrentSpan();
 		future.addCallback(new TraceListenableFutureCallback<>(this.tracer, span));
-		this.tracer.detach(span);
+		// potential race can happen here
+		if (span != null && span.equals(this.tracer.getCurrentSpan())) {
+			this.tracer.detach(span);
+		}
 		return future;
 	}
 
