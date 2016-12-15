@@ -63,8 +63,8 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
 			Object handler) throws Exception {
 		String spanName = spanName(handler);
-		boolean reuseSpan = getTracer().isTracing();
-		Span span = reuseSpan ? getTracer().getCurrentSpan() : getTracer().createSpan(spanName);
+		boolean continueSpan = getRootSpanFromAttribute(request) != null;
+		Span span = continueSpan ? getRootSpanFromAttribute(request) : getTracer().createSpan(spanName);
 		span.logEvent(getTraceKeys().getMvc().getControllerStart());
 		if (log.isDebugEnabled()) {
 			log.debug("Created new span " + span + " with name [" + spanName + "]");
@@ -72,7 +72,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		addClassMethodTag(handler, span);
 		addClassNameTag(handler, span);
 		setSpanInAttribute(request, span);
-		if (!reuseSpan) {
+		if (!continueSpan) {
 			setNewSpanCreatedAttribute(request, span);
 		}
 		return true;
@@ -136,7 +136,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			}
 			return;
 		}
-		Span span = getSpanFromAttribute(request);
+		Span span = getRootSpanFromAttribute(request);
 		if (ex != null) {
 			String errorMsg = ExceptionUtils.getExceptionMessage(ex);
 			if (log.isDebugEnabled()) {
