@@ -113,10 +113,10 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		Optional<Span> eventSentSpan = findSpanWithAnnotation(Constants.SERVER_SEND);
 		Optional<Span> eventReceivedSpan = findSpanWithAnnotation(Constants.CLIENT_RECV);
 		Optional<Span> lastHttpSpansParent = findLastHttpSpansParent();
-		// "http:/parent/" -> "home" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo" (SS) -> "foo"
+		// "http:/parent/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo" (SS)
 		Collections.sort(this.integrationTestSpanCollector.hashedSpans);
 		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, eventReceivedSpan);
-		then(this.integrationTestSpanCollector.hashedSpans).as("There were 6 spans").hasSize(6);
+		then(this.integrationTestSpanCollector.hashedSpans).as("There were 4 spans").hasSize(4);
 		log.info("Checking the parent child structure");
 		List<Optional<Span>> parentChild = this.integrationTestSpanCollector.hashedSpans.stream()
 				.filter(span -> span.parentId != null)
@@ -147,7 +147,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	private Optional<Span> findFirstHttpRequestSpan() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
 				// home is the name of the method
-				.filter(span -> "home".equals(span.name)).findFirst();
+				.filter(span -> span.binaryAnnotations.stream()
+						.anyMatch(binaryAnnotation -> new String(binaryAnnotation.value).equals("home"))).findFirst();
 	}
 
 	private void thenAllSpansArePresent(Optional<Span> firstHttpSpan,

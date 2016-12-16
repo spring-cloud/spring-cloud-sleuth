@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.assertions;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -156,7 +159,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 				.collect(toList());
 		if (matchingSpans.isEmpty()) {
 			failWithMessage("Expected spans \n <%s> \nto contain at least one span with tag key "
-					+ "equal to <%s> and value equal to <%s>", spansToString(), tagKey, tagValue);
+					+ "equal to <%s> and value equal to <%s>.\n\n", spansToString(), tagKey, tagValue);
 		}
 		return this;
 	}
