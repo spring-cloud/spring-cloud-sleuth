@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,11 +50,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext
 public class RestTemplateTraceAspectIntegrationTests {
 
-	@Autowired
-	private WebApplicationContext context;
-
-	@Autowired
-	private AspectTestingController controller;
+	@Autowired WebApplicationContext context;
+	@Autowired AspectTestingController controller;
+	@Autowired Tracer tracer;
 
 	private MockMvc mockMvc;
 
@@ -61,6 +60,14 @@ public class RestTemplateTraceAspectIntegrationTests {
 	public void init() {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 		this.controller.reset();
+		ExceptionUtils.setFail(true);
+	}
+
+	@Before
+	@After
+	public void verify() {
+		then(this.tracer.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
