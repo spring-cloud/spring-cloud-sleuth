@@ -210,7 +210,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 						.filter(span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
 								.findFirst().isPresent()).findFirst().get()).matches(
 						span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100))
-						.hasATag(Span.SPAN_ERROR_TAG_NAME, "500 Internal Server Error");
+						.hasATagWithKey(Span.SPAN_ERROR_TAG_NAME);
 				then(this.tracer.getCurrentSpan()).isNull();
 				then(ExceptionUtils.getLastException()).isNull();
 			});
