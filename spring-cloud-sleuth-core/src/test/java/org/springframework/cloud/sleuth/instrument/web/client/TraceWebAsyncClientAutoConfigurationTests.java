@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.assertj.core.api.BDDAssertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -49,6 +50,8 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
+
+import com.jayway.awaitility.Awaitility;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -197,16 +200,20 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 				future = this.asyncRestTemplate
 						.getForEntity("http://localhost:" + port() + "/blowsup", String.class);
 				future.get();
+				BDDAssertions.fail("should throw an exception from the controller");
 			} catch (Exception e) {
-				then(e.getMessage()).contains("Internal Server Error");
+
 			}
 
-			then(this.accumulator.getSpans().stream().filter(
-					span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent())).findFirst().isPresent()
-			).findFirst().get()).matches(span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100))
-					.hasATag(Span.SPAN_ERROR_TAG_NAME, "500 Internal Server Error");
-			then(this.tracer.getCurrentSpan()).isNull();
-			then(ExceptionUtils.getLastException()).isNull();
+			Awaitility.await().until(() -> {
+				then(this.accumulator.getSpans().stream()
+						.filter(span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
+								.findFirst().isPresent()).findFirst().get()).matches(
+						span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100))
+						.hasATag(Span.SPAN_ERROR_TAG_NAME, "500 Internal Server Error");
+				then(this.tracer.getCurrentSpan()).isNull();
+				then(ExceptionUtils.getLastException()).isNull();
+			});
 		}
 
 		int port() {
