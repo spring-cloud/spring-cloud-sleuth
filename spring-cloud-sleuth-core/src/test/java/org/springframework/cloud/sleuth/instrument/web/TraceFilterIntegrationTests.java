@@ -65,8 +65,6 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(this.spanAccumulator.getSpans()).hasSize(1);
 		Span span = this.spanAccumulator.getSpans().get(0);
 		then(span).hasLoggedAnEvent(Span.SERVER_RECV)
-				.hasLoggedAnEvent(new TraceKeys().getMvc().getControllerStart())
-				.hasLoggedAnEvent(new TraceKeys().getMvc().getControllerFinish())
 				.hasATagWithKey(new TraceKeys().getMvc().getControllerClass())
 				.hasATagWithKey(new TraceKeys().getMvc().getControllerMethod())
 				.hasLoggedAnEvent(Span.SERVER_SEND);

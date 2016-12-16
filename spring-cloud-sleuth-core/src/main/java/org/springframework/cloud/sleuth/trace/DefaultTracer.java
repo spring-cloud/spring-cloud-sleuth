@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.trace;
 
 import java.util.Random;
 import java.util.concurrent.Callable;
+
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;

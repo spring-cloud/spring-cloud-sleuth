@@ -65,7 +65,6 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		String spanName = spanName(handler);
 		boolean continueSpan = getRootSpanFromAttribute(request) != null;
 		Span span = continueSpan ? getRootSpanFromAttribute(request) : getTracer().createSpan(spanName);
-		span.logEvent(getTraceKeys().getMvc().getControllerStart());
 		if (log.isDebugEnabled()) {
 			log.debug("Created new span " + span + " with name [" + spanName + "]");
 		}
@@ -121,8 +120,6 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		if (log.isDebugEnabled()) {
 			log.debug("Closing the span " + spanFromRequest + " and detaching its parent " + rootSpanFromRequest + " since the request is asynchronous");
 		}
-		Span spanToLogEventOn = spanFromRequest != null ? spanFromRequest : rootSpanFromRequest;
-		spanToLogEventOn.logEvent(getTraceKeys().getMvc().getControllerFinish());
 		getTracer().close(spanFromRequest);
 		getTracer().detach(rootSpanFromRequest);
 	}
@@ -150,16 +147,9 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			}
 			Span newSpan = getNewSpanFromAttribute(request);
 			getTracer().continueSpan(newSpan);
-			newSpan.logEvent(getTraceKeys().getMvc().getControllerFinish());
 			getTracer().close(newSpan);
 			clearNewSpanCreatedAttribute(request);
-		} else {
-			span.logEvent(getTraceKeys().getMvc().getControllerFinish());
 		}
-	}
-
-	private Span getSpanFromAttribute(HttpServletRequest request) {
-		return (Span) request.getAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR);
 	}
 
 	private Span getNewSpanFromAttribute(HttpServletRequest request) {
