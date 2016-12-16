@@ -49,11 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext
 public class RestTemplateTraceAspectIntegrationTests {
 
-	@Autowired
-	private WebApplicationContext context;
-
-	@Autowired
-	private AspectTestingController controller;
+	@Autowired WebApplicationContext context;
+	@Autowired AspectTestingController controller;
+	@Autowired Tracer tracer;
 
 	private MockMvc mockMvc;
 
@@ -61,12 +59,14 @@ public class RestTemplateTraceAspectIntegrationTests {
 	public void init() {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 		this.controller.reset();
-		TestSpanContextHolder.removeCurrentSpan();
+		ExceptionUtils.setFail(true);
 	}
 
+	@Before
 	@After
-	public void cleanup() {
-		TestSpanContextHolder.removeCurrentSpan();
+	public void verify() {
+		then(this.tracer.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
