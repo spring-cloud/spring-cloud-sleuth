@@ -17,6 +17,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
@@ -61,10 +62,11 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
 		whenSentPingWithoutTracingData();
 
-		Span parentSpan = this.spanAccumulator.getSpans().stream().filter(
-				span -> span.getSpanId() == TraceFilterIntegrationTests.span.getParents().get(0))
-				.findFirst().get();
-		then(parentSpan).hasLoggedAnEvent(Span.SERVER_RECV)
+		then(this.spanAccumulator.getSpans()).hasSize(1);
+		Span span = this.spanAccumulator.getSpans().get(0);
+		then(span).hasLoggedAnEvent(Span.SERVER_RECV)
+				.hasATagWithKey(new TraceKeys().getMvc().getControllerClass())
+				.hasATagWithKey(new TraceKeys().getMvc().getControllerMethod())
 				.hasLoggedAnEvent(Span.SERVER_SEND);
 		then(ExceptionUtils.getLastException()).isNull();
 	}

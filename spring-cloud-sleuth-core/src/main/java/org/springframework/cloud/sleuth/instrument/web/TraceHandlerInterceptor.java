@@ -62,26 +62,18 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
 			Object handler) throws Exception {
-		if (isErrorControllerRelated(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Skipping creation of a span for error controller processing");
-			}
-			return true;
-		}
-		if (isSpanContinued(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Skipping creation of a span since the span is continued");
-			}
-			return true;
-		}
 		String spanName = spanName(handler);
-		Span span = getTracer().createSpan(spanName);
+		boolean continueSpan = getRootSpanFromAttribute(request) != null;
+		Span span = continueSpan ? getRootSpanFromAttribute(request) : getTracer().createSpan(spanName);
 		if (log.isDebugEnabled()) {
 			log.debug("Created new span " + span + " with name [" + spanName + "]");
 		}
 		addClassMethodTag(handler, span);
 		addClassNameTag(handler, span);
 		setSpanInAttribute(request, span);
+		if (!continueSpan) {
+			setNewSpanCreatedAttribute(request, span);
+		}
 		return true;
 	}
 
@@ -123,7 +115,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	@Override
 	public void afterConcurrentHandlingStarted(HttpServletRequest request,
 			HttpServletResponse response, Object handler) throws Exception {
-		Span spanFromRequest = getSpanFromAttribute(request);
+		Span spanFromRequest = getNewSpanFromAttribute(request);
 		Span rootSpanFromRequest = getRootSpanFromAttribute(request);
 		if (log.isDebugEnabled()) {
 			log.debug("Closing the span " + spanFromRequest + " and detaching its parent " + rootSpanFromRequest + " since the request is asynchronous");
@@ -141,28 +133,27 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			}
 			return;
 		}
-		if (isSpanContinued(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Skipping closing of a span since it's been continued");
-			}
-			return;
-		}
-		Span span = getSpanFromAttribute(request);
-		if (log.isDebugEnabled()) {
-			log.debug("Closing span " + span);
-		}
+		Span span = getRootSpanFromAttribute(request);
 		if (ex != null) {
-			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
+			String errorMsg = ExceptionUtils.getExceptionMessage(ex);
+			if (log.isDebugEnabled()) {
+				log.debug("Adding an error tag [" + errorMsg + "] to span " + span + "");
+			}
+			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, errorMsg);
 		}
-		getTracer().close(span);
+		if (getNewSpanFromAttribute(request) != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Closing span " + span);
+			}
+			Span newSpan = getNewSpanFromAttribute(request);
+			getTracer().continueSpan(newSpan);
+			getTracer().close(newSpan);
+			clearNewSpanCreatedAttribute(request);
+		}
 	}
 
-	private boolean isSpanContinued(HttpServletRequest request) {
-		return request.getAttribute(TraceRequestAttributes.SPAN_CONTINUED_REQUEST_ATTR) != null;
-	}
-
-	private Span getSpanFromAttribute(HttpServletRequest request) {
-		return (Span) request.getAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR);
+	private Span getNewSpanFromAttribute(HttpServletRequest request) {
+		return (Span) request.getAttribute(TraceRequestAttributes.NEW_SPAN_REQUEST_ATTR);
 	}
 
 	private Span getRootSpanFromAttribute(HttpServletRequest request) {
@@ -171,6 +162,14 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 
 	private void setSpanInAttribute(HttpServletRequest request, Span span) {
 		request.setAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR, span);
+	}
+
+	private void setNewSpanCreatedAttribute(HttpServletRequest request, Span span) {
+		request.setAttribute(TraceRequestAttributes.NEW_SPAN_REQUEST_ATTR, span);
+	}
+
+	private void clearNewSpanCreatedAttribute(HttpServletRequest request) {
+		request.removeAttribute(TraceRequestAttributes.NEW_SPAN_REQUEST_ATTR);
 	}
 
 	private Tracer getTracer() {
