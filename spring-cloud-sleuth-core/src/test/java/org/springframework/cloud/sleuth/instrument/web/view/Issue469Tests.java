@@ -54,7 +54,7 @@ public class Issue469Tests {
 					.getForObject("http://localhost:" + port() + "/welcome", String.class);
 		} catch (Exception e) {
 			// JSPs are not rendered
-			then(e).hasMessage("404");
+			then(e).hasMessageContaining("404");
 		}
 
 		then(ExceptionUtils.getLastException()).isNull();
