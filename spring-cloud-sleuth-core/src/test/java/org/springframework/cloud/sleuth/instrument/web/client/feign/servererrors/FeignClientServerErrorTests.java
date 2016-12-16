@@ -101,9 +101,6 @@ public class FeignClientServerErrorTests {
 			then(new ListOfSpans(this.listener.getEvents()))
 					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
 							"Request processing failed; nested exception is java.lang.RuntimeException: Internal Error");
-			then(new ListOfSpans(this.listener.getEvents()))
-					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-							"Internal Error");
 		});
 	}
 
