@@ -45,6 +45,8 @@ public class TraceContinuingCallable<V> extends TraceCallable<V> implements Call
 
 	@Override
 	protected void close(Span span) {
-		getTracer().detach(span);
+		if (getTracer().isTracing()) {
+			getTracer().detach(span);
+		}
 	}
 }
