@@ -129,7 +129,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			} finally {
 				if (created) {
 					this.tracer.close(span);
-				} else {
+				} else if (this.tracer.isTracing()) {
 					this.tracer.detach(span);
 				}
 			}
