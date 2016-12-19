@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.PostConstruct;
 
@@ -204,8 +203,9 @@ public class ZipkinSpanListenerTests {
 	}
 
 	@Test
-	public void appendsServerAddressTagIfClientLogIsPresent() {
+	public void appendServerAddressTagIfClientLogIsPresentWhenPeerServiceIsPresent() {
 		this.parent.logEvent(Constants.CLIENT_SEND);
+		this.parent.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "fooservice");
 		this.parent.stop();
 
 		zipkin.Span result = this.spanReporter.convert(this.parent);
@@ -213,6 +213,18 @@ public class ZipkinSpanListenerTests {
 		assertThat(result.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
 				.isNotEmpty();
+	}
+
+	@Test
+	public void doesNotAppendServerAddressTagIfClientLogIsPresent() {
+		this.parent.logEvent(Constants.CLIENT_SEND);
+		this.parent.stop();
+
+		zipkin.Span result = this.spanReporter.convert(this.parent);
+
+		assertThat(result.binaryAnnotations)
+				.filteredOn("key", Constants.SERVER_ADDR)
+				.isEmpty();
 	}
 
 	@Test
