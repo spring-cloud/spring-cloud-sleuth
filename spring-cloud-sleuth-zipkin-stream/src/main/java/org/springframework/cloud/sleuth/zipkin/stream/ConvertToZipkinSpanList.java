@@ -130,11 +130,12 @@ final class ConvertToZipkinSpanList {
 
 	private static void ensureServerAddr(Span span, Builder zipkinSpan,
 			Endpoint ep) {
-		String serviceName = span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME)
-				? span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME) : ep.serviceName;
-		Endpoint endpoint = ep.toBuilder().serviceName(serviceName).build();
-		zipkinSpan.addBinaryAnnotation(
-				BinaryAnnotation.address(Constants.SERVER_ADDR, endpoint));
+		if (span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME)) {
+			Endpoint endpoint = ep.toBuilder().serviceName(span.tags().get(
+					Span.SPAN_PEER_SERVICE_TAG_NAME)).build();
+			zipkinSpan.addBinaryAnnotation(
+					BinaryAnnotation.address(Constants.SERVER_ADDR, endpoint));
+		}
 	}
 
 	private static boolean notClientOrServer(Span span) {

@@ -74,9 +74,10 @@ public class ConvertToZipkinSpanListTests {
 	}
 
 	@Test
-	public void appendsServerAddressTagIfClientLogIsPresent() {
+	public void appendServerAddressTagIfClientLogIsPresentWhenPeerServiceIsPresent() {
 		Span span = span("foo");
 		span.logEvent(Constants.CLIENT_SEND);
+		span.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "myservice");
 		Spans spans = new Spans(this.host, Collections.singletonList(span));
 
 		List<zipkin.Span> result = ConvertToZipkinSpanList.convert(spans);
@@ -87,6 +88,21 @@ public class ConvertToZipkinSpanListTests {
 				.filteredOn("key", Constants.SERVER_ADDR)
 				.extracting(input -> input.endpoint.serviceName)
 				.contains("myservice");
+	}
+
+	@Test
+	public void doesNotAppendServerAddressTagIfClientLogIsPresent() {
+		Span span = span("foo");
+		span.logEvent(Constants.CLIENT_SEND);
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+
+		List<zipkin.Span> result = ConvertToZipkinSpanList.convert(spans);
+
+		assertThat(result)
+				.hasSize(1)
+				.flatExtracting(input1 -> input1.binaryAnnotations)
+				.filteredOn("key", Constants.SERVER_ADDR)
+				.isEmpty();
 	}
 
 	@Test
