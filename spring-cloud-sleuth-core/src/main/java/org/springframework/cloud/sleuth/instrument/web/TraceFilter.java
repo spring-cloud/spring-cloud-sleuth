@@ -15,6 +15,23 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.sampler.NeverSampler;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.HttpStatusUtil;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.async.WebAsyncUtils;
+import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.util.UrlPathHelper;
+
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -28,27 +45,11 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.sampler.NeverSampler;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
-import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.async.WebAsyncUtils;
-import org.springframework.web.filter.GenericFilterBean;
-import org.springframework.web.util.UrlPathHelper;
-
 /**
  * Filter that takes the value of the {@link Span#SPAN_ID_NAME} and
  * {@link Span#TRACE_ID_NAME} header from either request or response and uses them to
  * create a new span.
- *
+ * <p>
  * <p>
  * In order to keep the size of spans manageable, this only add tags defined in
  * {@link TraceKeys}. If you need to add additional tags, such as headers subtype this and
@@ -59,11 +60,10 @@ import org.springframework.web.util.UrlPathHelper;
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  * @author Dave Syer
- * @since 1.0.0
- *
  * @see Tracer
  * @see TraceKeys
  * @see TraceWebAutoConfiguration#traceFilter
+ * @since 1.0.0
  */
 @Order(TraceFilter.ORDER)
 public class TraceFilter extends GenericFilterBean {
@@ -93,15 +93,15 @@ public class TraceFilter extends GenericFilterBean {
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
-			HttpSpanExtractor spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
+					HttpSpanExtractor spanExtractor,
+					HttpTraceKeysInjector httpTraceKeysInjector) {
 		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
 				spanExtractor, httpTraceKeysInjector);
 	}
 
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
-			SpanReporter spanReporter, HttpSpanExtractor spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
+					SpanReporter spanReporter, HttpSpanExtractor spanExtractor,
+					HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.skipPattern = skipPattern;
@@ -112,7 +112,7 @@ public class TraceFilter extends GenericFilterBean {
 
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-			FilterChain filterChain) throws IOException, ServletException {
+					FilterChain filterChain) throws IOException, ServletException {
 		if (!(servletRequest instanceof HttpServletRequest) || !(servletResponse instanceof HttpServletResponse)) {
 			throw new ServletException("Filter just supports HTTP requests");
 		}
@@ -246,11 +246,23 @@ public class TraceFilter extends GenericFilterBean {
 	}
 
 	private boolean httpStatusSuccessful(HttpServletResponse response) {
-		if (response.getStatus() == 0) {
+		int status = response.getStatus();
+		if (status == 0) {
 			return false;
 		}
-		HttpStatus.Series httpStatusSeries = HttpStatus.Series.valueOf(response.getStatus());
+
+		//TODO: We can not decide if a status is successful or not, as they are not regular codes.
+		//Per default we handle custom codes as successful.
+		if (customHttpCode(status)) {
+			return true;
+		}
+
+		HttpStatus.Series httpStatusSeries = HttpStatus.Series.valueOf(status);
 		return httpStatusSeries == HttpStatus.Series.SUCCESSFUL || httpStatusSeries == HttpStatus.Series.REDIRECTION;
+	}
+
+	private boolean customHttpCode(int status) {
+		return !HttpStatusUtil.isRegularStatus(status);
 	}
 
 	private Span getSpanFromAttribute(HttpServletRequest request) {
@@ -305,8 +317,7 @@ public class TraceFilter extends GenericFilterBean {
 		} else {
 			if (skip) {
 				spanFromRequest = this.tracer.createSpan(name, NeverSampler.INSTANCE);
-			}
-			else {
+			} else {
 				spanFromRequest = this.tracer.createSpan(name);
 			}
 			spanFromRequest.logEvent(Span.SERVER_RECV);
@@ -318,7 +329,9 @@ public class TraceFilter extends GenericFilterBean {
 		return spanFromRequest;
 	}
 
-	/** Override to add annotations not defined in {@link TraceKeys}. */
+	/**
+	 * Override to add annotations not defined in {@link TraceKeys}.
+	 */
 	protected void addRequestTags(Span span, HttpServletRequest request) {
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		this.httpTraceKeysInjector.addRequestTags(span, getFullUrl(request),
@@ -335,7 +348,9 @@ public class TraceFilter extends GenericFilterBean {
 		}
 	}
 
-	/** Override to add annotations not defined in {@link TraceKeys}. */
+	/**
+	 * Override to add annotations not defined in {@link TraceKeys}.
+	 */
 	protected void addResponseTags(HttpServletResponse response, Throwable e) {
 		int httpStatus = response.getStatus();
 		if (httpStatus == HttpServletResponse.SC_OK && e != null) {
