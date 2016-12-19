@@ -16,15 +16,23 @@
 
 package org.springframework.cloud.sleuth.metric;
 
+import java.lang.invoke.MethodHandles;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.actuate.metrics.CounterService;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -34,7 +42,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.0.0
  */
 @Configuration
-@ConditionalOnProperty(value="spring.sleuth.metrics.enabled", matchIfMissing=true)
+@Conditional(TraceMetricsAutoConfiguration.PickMetricIfMetricsIsMissing.class)
 @EnableConfigurationProperties
 public class TraceMetricsAutoConfiguration {
 
@@ -68,5 +76,35 @@ public class TraceMetricsAutoConfiguration {
 	@ConditionalOnMissingBean(SpanMetricReporter.class)
 	public SpanMetricReporter noOpSpanReporterCounterService() {
 		return new NoOpSpanMetricReporter();
+	}
+
+	static class PickMetricIfMetricsIsMissing extends SpringBootCondition {
+
+		private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
+		static final String DEPRECATED_SPRING_SLEUTH_METRICS_ENABLED = "spring.sleuth.metrics.enabled";
+		static final String SPRING_SLEUTH_METRIC_ENABLED = "spring.sleuth.metric.enabled";
+
+		@Override
+		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			Boolean oldValue = context.getEnvironment().getProperty(DEPRECATED_SPRING_SLEUTH_METRICS_ENABLED, Boolean.class);
+			Boolean newValue = context.getEnvironment().getProperty(SPRING_SLEUTH_METRIC_ENABLED, Boolean.class);
+			if (oldValue != null) {
+				log.warn("You're using an old version of the metrics property. Instead of using [" +
+						DEPRECATED_SPRING_SLEUTH_METRICS_ENABLED + "] please use [" + SPRING_SLEUTH_METRIC_ENABLED + "]");
+				return matchCondition(oldValue, DEPRECATED_SPRING_SLEUTH_METRICS_ENABLED);
+			}
+			if (newValue != null) {
+				return matchCondition(newValue, SPRING_SLEUTH_METRIC_ENABLED);
+			}
+			return ConditionOutcome.match("No property was passed - assuming that metrics are enabled.");
+		}
+
+		private ConditionOutcome matchCondition(Boolean value, String property) {
+			if (Boolean.TRUE.equals(value)) {
+				return ConditionOutcome.match();
+			}
+			return ConditionOutcome.noMatch("Property [" + property + "] is set to false.");
+		}
 	}
 }
