@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -185,7 +186,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 			String result = future.get().getBody();
 
 			then(result).isEqualTo("foo");
-			then(this.accumulator.getSpans().stream().filter(
+			then(new ArrayList<>(this.accumulator.getSpans()).stream().filter(
 					span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent())).findFirst().isPresent()
 			).findFirst().get()).matches(span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100));
 			then(this.tracer.getCurrentSpan()).isNull();
@@ -206,7 +207,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 			}
 
 			Awaitility.await().until(() -> {
-				then(this.accumulator.getSpans().stream()
+				then(new ArrayList<>(this.accumulator.getSpans()).stream()
 						.filter(span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
 								.findFirst().isPresent()).findFirst().get()).matches(
 						span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100))
