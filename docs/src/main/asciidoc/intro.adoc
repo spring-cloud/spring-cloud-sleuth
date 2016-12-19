@@ -1,3 +1,5 @@
+:branch: 1.0.x
+
 Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.spring.io[Spring Cloud].
 
 === Terminology
@@ -33,7 +35,7 @@ the start and stop of a request are:
 
 Visualization of what *Span* and *Trace* will look in a system together with the Zipkin annotations:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
 
 Each color of a note signifies a span (7 spans - from *A* to *G*). If you have such information in the note:
 
@@ -47,7 +49,7 @@ That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*
 
 This is how the visualization of the parent / child relationship of spans would look like:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/parents.png[Parent child relationship]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/parents.png[Parent child relationship]
 
 === Purpose
 
@@ -55,49 +57,66 @@ In the following sections the example from the image above will be taken into co
 
 ==== Distributed tracing with Zipkin
 
-Altogether there are *10 spans* . If you go to traces in Zipkin you will see this number:
+Altogether there are *7 spans* . If you go to traces in Zipkin you will see this number in the second trace:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-traces.png[Traces]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-traces.png[Traces]
 
-However if you pick a particular trace then you will see *7 spans*:
+However if you pick a particular trace then you will see *4 spans*:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-ui.png[Traces Info propagation]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-ui.png[Traces Info propagation]
 
 NOTE: When picking a particular trace you will see merged spans. That means that if there were 2 spans sent to
 Zipkin with Server Received and Server Sent / Client Received and Client Sent
 annotations then they will presented as a single span.
 
-In the image depicting the visualization of what *Span* and *Trace* is you can see 20
-colorful labels. How does it happen that in Zipkin 10 spans are received?
+Why is there a difference between the 7 and 4 spans in this case?
 
-    - 2 span *A* labels signify span started and closed. Upon closing a single span is sent to Zipkin.
-    - 4 span *B* labels are in fact are single span with 4 annotations. However this span is composed of
-        two separate instances. One sent from service 1 and one from service 2. So in fact two span instances will be sent
-        to Zipkin and merged there.
-    - 2 span *C* labels signify span started and closed. Upon closing a single span is sent to Zipkin.
-    - 4 span *B* labels are in fact are single span with 4 annotations. However this span is composed of
-        two separate instances. One sent from service 2 and one from service 3. So in fact two span instances will be sent
-        to Zipkin and merged there.
-    - 2 span *E* labels signify span started and closed. Upon closing a single span is sent to Zipkin.
-    - 4 span *B* labels are in fact are single span with 4 annotations. However this span is composed of
-        two separate instances. One sent from service 2 and one from service 4. So in fact two span instances will be sent
-        to Zipkin and merged there.
-    - 2 span *G* labels signify span started and closed. Upon closing a single span is sent to Zipkin.
+    - 2 spans come from `http:/start` span. It has the Server Received (SR) and Server Sent (SS) annotations.
+    - 2 spans come from the RPC call from `service1` to `service2` to the `http:/foo` endpoint. It has the Client Sent (CS)
+     and Client Received (CR) annotations on `service1` side. It also has Server Received (SR) and Server Sent (SS) annotations
+     on the `service2` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
+    - 2 spans come from the RPC call from `service2` to `service3` to the `http:/bar` endpoint. It has the Client Sent (CS)
+     and Client Received (CR) annotations on `service2` side. It also has Server Received (SR) and Server Sent (SS) annotations
+     on the `service3` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
+    - 2 spans come from the RPC call from `service2` to `service4` to the `http:/baz` endpoint. It has the Client Sent (CS)
+     and Client Received (CR) annotations on `service2` side. It also has Server Received (SR) and Server Sent (SS) annotations
+     on the `service4` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
 
-So 1 span from *A*, 2 spans from *B*, 1 span from *C*, 2 spans from *D*, 1 span from *E*, 2 spans from *F* and 1 from *G*.
-Altogether *10* spans.
+So if we count the physical spans we have *1* from `http:/start`, *2* from `service1` calling `service2`, *2* form `service2`
+calling `service3` and *2* from `service2` calling `service4`. Altogether *7* spans.
+
+Logically we see the information of *Total Spans: 4* because we have *1* span related to the incoming request
+to `service1` and *3* spans related to RPC calls.
+
+==== Visualizing errors
+
+Zipkin allows you to visualize errors in your trace. When an exception was thrown and wasn't caught then we're
+setting proper tags on the span which Zipkin can properly colorize. You could see in the list of traces one
+  trace that was in red color. That's because there was an exception thrown.
+
+If you click that trace then you'll see a similar picture
+
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-traces.png[Error Traces]
+
+Then if you click on one of the spans you'll see the following
+
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png[Error Traces Info propagation]
+
+As you can see you can easily see the reason for an error and the whole stacktrace related to it.
+
+==== Live examples
 
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
 
 The dependency graph in Zipkin would look like this:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/dependencies.png[Dependencies]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/dependencies.png[Dependencies]
 
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
 
 
 ==== Log correlation
@@ -117,7 +136,7 @@ If you're using a log aggregating tool like https://www.elastic.co/products/kiba
 http://www.splunk.com/[Splunk] etc. you can order the events that took place. An example of
 Kibana would look like this:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png[Log correlation with Kibana]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/kibana.png[Log correlation with Kibana]
 
 If you want to use https://www.elastic.co/guide/en/logstash/current/index.html[Logstash] here is the Grok pattern for Logstash:
 
@@ -150,7 +169,7 @@ we're passing the dependencies in the `groupId:artifactId:version` notation.
 
 *Logback setup*
 
-Below you can find an example of a Logback configuration (file named `https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]`) that:
+Below you can find an example of a Logback configuration (file named https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]) that:
 
 - logs information from the application in a JSON format to a `build/${spring.application.name}.json` file
 - has commented out two additional appenders - console and standard log file
