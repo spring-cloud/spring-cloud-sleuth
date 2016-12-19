@@ -431,6 +431,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_purpose">Purpose</a>
 <ul class="sectlevel3">
 <li><a href="#_distributed_tracing_with_zipkin">Distributed tracing with Zipkin</a></li>
+<li><a href="#_visualizing_errors">Visualizing errors</a></li>
+<li><a href="#_live_examples">Live examples</a></li>
 <li><a href="#_log_correlation">Log correlation</a>
 <ul class="sectlevel4">
 <li><a href="#_json_logback_with_logstash">JSON Logback with Logstash</a></li>
@@ -589,7 +591,7 @@ will receive the whole time needed by the client to receive the response from th
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/trace-id.png" alt="Trace Info propagation">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/trace-id.png" alt="Trace Info propagation">
 </div>
 </div>
 <div class="paragraph">
@@ -611,7 +613,7 @@ Client Sent</code></pre>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/parents.png" alt="Parent child relationship">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/parents.png" alt="Parent child relationship">
 </div>
 </div>
 </div>
@@ -623,19 +625,19 @@ Client Sent</code></pre>
 <div class="sect3">
 <h4 id="_distributed_tracing_with_zipkin">Distributed tracing with Zipkin</h4>
 <div class="paragraph">
-<p>Altogether there are <strong>10 spans</strong> . If you go to traces in Zipkin you will see this number:</p>
+<p>Altogether there are <strong>7 spans</strong> . If you go to traces in Zipkin you will see this number in the second trace:</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-traces.png" alt="Traces">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/zipkin-traces.png" alt="Traces">
 </div>
 </div>
 <div class="paragraph">
-<p>However if you pick a particular trace then you will see <strong>7 spans</strong>:</p>
+<p>However if you pick a particular trace then you will see <strong>4 spans</strong>:</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-ui.png" alt="Traces Info propagation">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/zipkin-ui.png" alt="Traces Info propagation">
 </div>
 </div>
 <div class="admonitionblock note">
@@ -653,47 +655,71 @@ annotations then they will presented as a single span.
 </table>
 </div>
 <div class="paragraph">
-<p>In the image depicting the visualization of what <strong>Span</strong> and <strong>Trace</strong> is you can see 20
-colorful labels. How does it happen that in Zipkin 10 spans are received?</p>
+<p>Why is there a difference between the 7 and 4 spans in this case?</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>2 span <strong>A</strong> labels signify span started and closed. Upon closing a single span is sent to Zipkin.</p>
+<p>2 spans come from <code>http:/start</code> span. It has the Server Received (SR) and Server Sent (SS) annotations.</p>
 </li>
 <li>
-<p>4 span <strong>B</strong> labels are in fact are single span with 4 annotations. However this span is composed of
-two separate instances. One sent from service 1 and one from service 2. So in fact two span instances will be sent
-to Zipkin and merged there.</p>
+<p>2 spans come from the RPC call from <code>service1</code> to <code>service2</code> to the <code>http:/foo</code> endpoint. It has the Client Sent (CS)
+and Client Received (CR) annotations on <code>service1</code> side. It also has Server Received (SR) and Server Sent (SS) annotations
+on the <code>service2</code> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</p>
 </li>
 <li>
-<p>2 span <strong>C</strong> labels signify span started and closed. Upon closing a single span is sent to Zipkin.</p>
+<p>2 spans come from the RPC call from <code>service2</code> to <code>service3</code> to the <code>http:/bar</code> endpoint. It has the Client Sent (CS)
+and Client Received (CR) annotations on <code>service2</code> side. It also has Server Received (SR) and Server Sent (SS) annotations
+on the <code>service3</code> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</p>
 </li>
 <li>
-<p>4 span <strong>B</strong> labels are in fact are single span with 4 annotations. However this span is composed of
-two separate instances. One sent from service 2 and one from service 3. So in fact two span instances will be sent
-to Zipkin and merged there.</p>
-</li>
-<li>
-<p>2 span <strong>E</strong> labels signify span started and closed. Upon closing a single span is sent to Zipkin.</p>
-</li>
-<li>
-<p>4 span <strong>B</strong> labels are in fact are single span with 4 annotations. However this span is composed of
-two separate instances. One sent from service 2 and one from service 4. So in fact two span instances will be sent
-to Zipkin and merged there.</p>
-</li>
-<li>
-<p>2 span <strong>G</strong> labels signify span started and closed. Upon closing a single span is sent to Zipkin.</p>
+<p>2 spans come from the RPC call from <code>service2</code> to <code>service4</code> to the <code>http:/baz</code> endpoint. It has the Client Sent (CS)
+and Client Received (CR) annotations on <code>service2</code> side. It also has Server Received (SR) and Server Sent (SS) annotations
+on the <code>service4</code> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>So 1 span from <strong>A</strong>, 2 spans from <strong>B</strong>, 1 span from <strong>C</strong>, 2 spans from <strong>D</strong>, 1 span from <strong>E</strong>, 2 spans from <strong>F</strong> and 1 from <strong>G</strong>.
-Altogether <strong>10</strong> spans.</p>
+<p>So if we count the physical spans we have <strong>1</strong> from <code>http:/start</code>, <strong>2</strong> from <code>service1</code> calling <code>service2</code>, <strong>2</strong> form <code>service2</code>
+calling <code>service3</code> and <strong>2</strong> from <code>service2</code> calling <code>service4</code>. Altogether <strong>7</strong> spans.</p>
+</div>
+<div class="paragraph">
+<p>Logically we see the information of <strong>Total Spans: 4</strong> because we have <strong>1</strong> span related to the incoming request
+to <code>service1</code> and <strong>3</strong> spans related to RPC calls.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_visualizing_errors">Visualizing errors</h4>
+<div class="paragraph">
+<p>Zipkin allows you to visualize errors in your trace. When an exception was thrown and wasn&#8217;t caught then we&#8217;re
+setting proper tags on the span which Zipkin can properly colorize. You could see in the list of traces one
+  trace that was in red color. That&#8217;s because there was an exception thrown.</p>
+</div>
+<div class="paragraph">
+<p>If you click that trace then you&#8217;ll see a similar picture</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/zipkin-error-traces.png" alt="Error Traces">
+</div>
+</div>
+<div class="paragraph">
+<p>Then if you click on one of the spans you&#8217;ll see the following</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png" alt="Error Traces Info propagation">
+</div>
+</div>
+<div class="paragraph">
+<p>As you can see you can easily see the reason for an error and the whole stacktrace related to it.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_live_examples">Live examples</h4>
+<div class="imageblock">
+<div class="content">
+<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
 </div>
 <div class="title">Click Pivotal Web Services icon to see it live!Click Pivotal Web Services icon to see it live!</div>
 </div>
@@ -702,12 +728,12 @@ Altogether <strong>10</strong> spans.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/dependencies.png" alt="Dependencies">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/dependencies.png" alt="Dependencies">
 </div>
 </div>
 <div class="imageblock">
 <div class="content">
-<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/dependency"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/dependency"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
 </div>
 <div class="title">Click Pivotal Web Services icon to see it live!Click Pivotal Web Services icon to see it live!</div>
 </div>
@@ -735,7 +761,7 @@ Kibana would look like this:</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.0.x/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
 </div>
 </div>
 <div class="paragraph">
@@ -796,7 +822,7 @@ we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</co
 <p><strong>Logback setup</strong></p>
 </div>
 <div class="paragraph">
-<p>Below you can find an example of a Logback configuration (file named <code>https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]</code>) that:</p>
+<p>Below you can find an example of a Logback configuration (file named <a href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml">logback-spring.xml</a>) that:</p>
 </div>
 <div class="ulist">
 <ul>
