@@ -19,18 +19,18 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.Tracer;
+
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy;
 import com.netflix.hystrix.strategy.eventnotifier.HystrixEventNotifier;
 import com.netflix.hystrix.strategy.executionhook.HystrixCommandExecutionHook;
 import com.netflix.hystrix.strategy.metrics.HystrixMetricsPublisher;
 import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A {@link HystrixConcurrencyStrategy} that wraps a {@link Callable} in a
@@ -160,7 +160,7 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 					}
 					this.tracer.close(span);
 				}
-				else {
+				else if(this.tracer.isTracing()) {
 					if (log.isDebugEnabled()) {
 						log.debug("Detaching span since it was continued " + span);
 					}
