@@ -431,14 +431,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_purpose">Purpose</a>
 <ul class="sectlevel3">
 <li><a href="#_distributed_tracing_with_zipkin">Distributed tracing with Zipkin</a></li>
+<li><a href="#_visualizing_errors">Visualizing errors</a></li>
+<li><a href="#_live_examples">Live examples</a></li>
 <li><a href="#_log_correlation">Log correlation</a>
 <ul class="sectlevel4">
 <li><a href="#_json_logback_with_logstash">JSON Logback with Logstash</a></li>
-</ul>
-</li>
-<li><a href="#_propagating_span_context">Propagating Span Context</a>
-<ul class="sectlevel4">
-<li><a href="#_baggage_vs_span_tags">Baggage vs. Span Tags</a></li>
 </ul>
 </li>
 </ul>
@@ -451,7 +448,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_spring_cloud_sleuth_stream_zipkin_collector">Spring Cloud Sleuth Stream Zipkin Collector</a></li>
 </ul>
 </li>
-<li><a href="#_additional_resources">Additional resources</a></li>
 <li><a href="#_features">Features</a></li>
 <li><a href="#_sampling">Sampling</a></li>
 <li><a href="#_instrumentation">Instrumentation</a></li>
@@ -526,7 +522,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p><strong>1.2.0.BUILD-SNAPSHOT</strong></p>
+<p><strong>1.1.1.BUILD-SNAPSHOT</strong></p>
 </div>
 <div class="paragraph">
 <p>Spring Cloud Sleuth implements a distributed tracing solution for <a href="http://cloud.spring.io">Spring Cloud</a>.</p>
@@ -595,7 +591,7 @@ will receive the whole time needed by the client to receive the response from th
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/trace-id.png" alt="Trace Info propagation">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/trace-id.png" alt="Trace Info propagation">
 </div>
 </div>
 <div class="paragraph">
@@ -617,7 +613,7 @@ Client Sent</code></pre>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/parents.png" alt="Parent child relationship">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/parents.png" alt="Parent child relationship">
 </div>
 </div>
 </div>
@@ -629,19 +625,19 @@ Client Sent</code></pre>
 <div class="sect3">
 <h4 id="_distributed_tracing_with_zipkin">Distributed tracing with Zipkin</h4>
 <div class="paragraph">
-<p>Altogether there are <strong>10 spans</strong> . If you go to traces in Zipkin you will see this number:</p>
+<p>Altogether there are <strong>7 spans</strong> . If you go to traces in Zipkin you will see this number in the second trace:</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-traces.png" alt="Traces">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/zipkin-traces.png" alt="Traces">
 </div>
 </div>
 <div class="paragraph">
-<p>However if you pick a particular trace then you will see <strong>7 spans</strong>:</p>
+<p>However if you pick a particular trace then you will see <strong>4 spans</strong>:</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-ui.png" alt="Traces Info propagation">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/zipkin-ui.png" alt="Traces Info propagation">
 </div>
 </div>
 <div class="admonitionblock note">
@@ -659,47 +655,71 @@ annotations then they will presented as a single span.
 </table>
 </div>
 <div class="paragraph">
-<p>In the image depicting the visualization of what <strong>Span</strong> and <strong>Trace</strong> is you can see 20
-colorful labels. How does it happen that in Zipkin 10 spans are received?</p>
+<p>Why is there a difference between the 7 and 4 spans in this case?</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>2 span <strong>A</strong> labels signify span started and closed. Upon closing a single span is sent to Zipkin.</p>
+<p>2 spans come from <code>http:/start</code> span. It has the Server Received (SR) and Server Sent (SS) annotations.</p>
 </li>
 <li>
-<p>4 span <strong>B</strong> labels are in fact are single span with 4 annotations. However this span is composed of
-two separate instances. One sent from service 1 and one from service 2. So in fact two span instances will be sent
-to Zipkin and merged there.</p>
+<p>2 spans come from the RPC call from <code>service1</code> to <code>service2</code> to the <code>http:/foo</code> endpoint. It has the Client Sent (CS)
+and Client Received (CR) annotations on <code>service1</code> side. It also has Server Received (SR) and Server Sent (SS) annotations
+on the <code>service2</code> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</p>
 </li>
 <li>
-<p>2 span <strong>C</strong> labels signify span started and closed. Upon closing a single span is sent to Zipkin.</p>
+<p>2 spans come from the RPC call from <code>service2</code> to <code>service3</code> to the <code>http:/bar</code> endpoint. It has the Client Sent (CS)
+and Client Received (CR) annotations on <code>service2</code> side. It also has Server Received (SR) and Server Sent (SS) annotations
+on the <code>service3</code> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</p>
 </li>
 <li>
-<p>4 span <strong>B</strong> labels are in fact are single span with 4 annotations. However this span is composed of
-two separate instances. One sent from service 2 and one from service 3. So in fact two span instances will be sent
-to Zipkin and merged there.</p>
-</li>
-<li>
-<p>2 span <strong>E</strong> labels signify span started and closed. Upon closing a single span is sent to Zipkin.</p>
-</li>
-<li>
-<p>4 span <strong>B</strong> labels are in fact are single span with 4 annotations. However this span is composed of
-two separate instances. One sent from service 2 and one from service 4. So in fact two span instances will be sent
-to Zipkin and merged there.</p>
-</li>
-<li>
-<p>2 span <strong>G</strong> labels signify span started and closed. Upon closing a single span is sent to Zipkin.</p>
+<p>2 spans come from the RPC call from <code>service2</code> to <code>service4</code> to the <code>http:/baz</code> endpoint. It has the Client Sent (CS)
+and Client Received (CR) annotations on <code>service2</code> side. It also has Server Received (SR) and Server Sent (SS) annotations
+on the <code>service4</code> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>So 1 span from <strong>A</strong>, 2 spans from <strong>B</strong>, 1 span from <strong>C</strong>, 2 spans from <strong>D</strong>, 1 span from <strong>E</strong>, 2 spans from <strong>F</strong> and 1 from <strong>G</strong>.
-Altogether <strong>10</strong> spans.</p>
+<p>So if we count the physical spans we have <strong>1</strong> from <code>http:/start</code>, <strong>2</strong> from <code>service1</code> calling <code>service2</code>, <strong>2</strong> form <code>service2</code>
+calling <code>service3</code> and <strong>2</strong> from <code>service2</code> calling <code>service4</code>. Altogether <strong>7</strong> spans.</p>
+</div>
+<div class="paragraph">
+<p>Logically we see the information of <strong>Total Spans: 4</strong> because we have <strong>1</strong> span related to the incoming request
+to <code>service1</code> and <strong>3</strong> spans related to RPC calls.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_visualizing_errors">Visualizing errors</h4>
+<div class="paragraph">
+<p>Zipkin allows you to visualize errors in your trace. When an exception was thrown and wasn&#8217;t caught then we&#8217;re
+setting proper tags on the span which Zipkin can properly colorize. You could see in the list of traces one
+  trace that was in red color. That&#8217;s because there was an exception thrown.</p>
+</div>
+<div class="paragraph">
+<p>If you click that trace then you&#8217;ll see a similar picture</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/zipkin-error-traces.png" alt="Error Traces">
+</div>
+</div>
+<div class="paragraph">
+<p>Then if you click on one of the spans you&#8217;ll see the following</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png" alt="Error Traces Info propagation">
+</div>
+</div>
+<div class="paragraph">
+<p>As you can see you can easily see the reason for an error and the whole stacktrace related to it.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_live_examples">Live examples</h4>
+<div class="imageblock">
+<div class="content">
+<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
 </div>
 <div class="title">Click Pivotal Web Services icon to see it live!Click Pivotal Web Services icon to see it live!</div>
 </div>
@@ -708,12 +728,12 @@ Altogether <strong>10</strong> spans.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/dependencies.png" alt="Dependencies">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/dependencies.png" alt="Dependencies">
 </div>
 </div>
 <div class="imageblock">
 <div class="content">
-<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/dependency"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/dependency"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
 </div>
 <div class="title">Click Pivotal Web Services icon to see it live!Click Pivotal Web Services icon to see it live!</div>
 </div>
@@ -741,7 +761,7 @@ Kibana would look like this:</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
 </div>
 </div>
 <div class="paragraph">
@@ -802,7 +822,7 @@ we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</co
 <p><strong>Logback setup</strong></p>
 </div>
 <div class="paragraph">
-<p>Below you can find an example of a Logback configuration (file named <code>https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]</code>) that:</p>
+<p>Below you can find an example of a Logback configuration (file named <a href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml">logback-spring.xml</a>) that:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -909,67 +929,6 @@ If you&#8217;re using a custom <code>logback-spring.xml</code> then you have to 
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_propagating_span_context">Propagating Span Context</h4>
-<div class="paragraph">
-<p>The span context is the state that must get propagated to any child Spans across process boundaries.
-Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
-Baggage is an optional part.</p>
-</div>
-<div class="paragraph">
-<p>Baggage is a set of key:value pairs stored in the span context. Baggage travels together with the trace
-and is attached to every span. Spring Cloud Sleuth will understand that a header is baggage related if the HTTP
- header is prefixed with <code>baggage-</code> and for messaging it starts with <code>baggage_</code>.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Important</div>
-</td>
-<td class="content">
-There&#8217;s currently no limitation of the count or size of baggage items. However, keep in mind that
-too many can decrease system throughput or increase RPC latency. In extreme cases, it could crash the app due
-to exceeding transport-level message or header capacity.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Example of setting baggage on a span:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Span initialSpan = this.tracer.createSpan("span");
-initialSpan.setBaggageItem("foo", "bar");</code></pre>
-</div>
-</div>
-<div class="sect4">
-<h5 id="_baggage_vs_span_tags">Baggage vs. Span Tags</h5>
-<div class="paragraph">
-<p>Baggage travels with the trace (i.e. every child span contains the baggage of its parent). Zipkin has no knowledge of
-baggage and will not even receive that information.</p>
-</div>
-<div class="paragraph">
-<p>Tags are attached to a specific span - they are presented for that particular span only. However you
-can search by tag to find the trace, where there exists a span having the searched tag value.</p>
-</div>
-<div class="paragraph">
-<p>If you want to be able to lookup a span based on baggage, you should add corresponding entry as a tag in the root span.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Autowired Tracer tracer;
-
-Span span = tracer.getCurrentSpan();
-String baggageKey = "key";
-String baggageValue = "foo";
-span.setBaggageItem(baggageKey, baggageValue);
-tracer.addTag(baggageKey, baggageValue);</code></pre>
-</div>
-</div>
-</div>
-</div>
 </div>
 <div class="sect2">
 <h3 id="_adding_to_the_project">Adding to the project</h3>
@@ -987,7 +946,7 @@ the <code>spring-cloud-starter-sleuth</code> module to your project.</p>
              &lt;dependency&gt;
                  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
                  &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
-                 &lt;version&gt;Camden.RELEASE&lt;/version&gt;
+                 &lt;version&gt;Brixton.RELEASE&lt;/version&gt;
                  &lt;type&gt;pom&lt;/type&gt;
                  &lt;scope&gt;import&lt;/scope&gt;
              &lt;/dependency&gt;
@@ -1016,7 +975,7 @@ the Spring BOM</p>
 <div class="content">
 <pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
     }
 }
 
@@ -1050,7 +1009,7 @@ the Spring BOM</p>
              &lt;dependency&gt;
                  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
                  &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
-                 &lt;version&gt;Camden.RELEASE&lt;/version&gt;
+                 &lt;version&gt;Brixton.RELEASE&lt;/version&gt;
                  &lt;type&gt;pom&lt;/type&gt;
                  &lt;scope&gt;import&lt;/scope&gt;
              &lt;/dependency&gt;
@@ -1079,7 +1038,7 @@ the Spring BOM</p>
 <div class="content">
 <pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
     }
 }
 
@@ -1113,7 +1072,7 @@ the Spring BOM</p>
              &lt;dependency&gt;
                  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
                  &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
-                 &lt;version&gt;Camden.RELEASE&lt;/version&gt;
+                 &lt;version&gt;Brixton.RELEASE&lt;/version&gt;
                  &lt;type&gt;pom&lt;/type&gt;
                  &lt;scope&gt;import&lt;/scope&gt;
              &lt;/dependency&gt;
@@ -1157,7 +1116,7 @@ the Spring BOM</p>
 <div class="content">
 <pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
     }
 }
 
@@ -1201,7 +1160,7 @@ dependency</p>
              &lt;dependency&gt;
                  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
                  &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
-                 &lt;version&gt;Camden.RELEASE&lt;/version&gt;
+                 &lt;version&gt;Brixton.RELEASE&lt;/version&gt;
                  &lt;type&gt;pom&lt;/type&gt;
                  &lt;scope&gt;import&lt;/scope&gt;
              &lt;/dependency&gt;
@@ -1245,7 +1204,7 @@ the Spring BOM</p>
 <div class="content">
 <pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
     }
 }
 
@@ -1295,22 +1254,6 @@ public class ZipkinStreamServerApplication {
 
 }</code></pre>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_additional_resources">Additional resources</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p><strong>Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin</strong></p>
-</div>
-<div class="videoblock">
-<div class="content">
-<iframe src="https://www.youtube.com/embed/eQV71Mw1u1c?rel=0" frameborder="0" allowfullscreen></iframe>
-</div>
-</div>
-<div class="paragraph">
-<p><a href="https://www.youtube.com/watch?v=eQV71Mw1u1c">click here to see the video</a></p>
 </div>
 </div>
 </div>
@@ -1382,10 +1325,6 @@ rest template, scheduled actions, message channels, zuul filters, feign client).
 <p>Sleuth includes default logic to join a trace across http or messaging boundaries. For example, http propagation
 works via Zipkin-compatible request headers. This propagation logic is defined and customized via
 <code>SpanInjector</code> and <code>SpanExtractor</code> implementations.</p>
-</li>
-<li>
-<p>Sleuth gives you the possibility to propagate context (also known as baggage) between processes. That means that if you set on a Span
-a baggage element then it will be sent downstream either via HTTP or messaging to other processes.</p>
 </li>
 <li>
 <p>Provides simple metrics of accepted / dropped spans.</p>
@@ -1752,7 +1691,7 @@ artificial like:</p>
 <div class="sect2">
 <h3 id="__spanname_annotation">@SpanName annotation</h3>
 <div class="paragraph">
-<p>You can name the span explicitly via the <code>@SpanName</code> annotation.</p>
+<p>You can do name the span explicitly via the <code>@SpanName</code> annotation.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1837,54 +1776,46 @@ are created and propagated.</p>
 or HTTP headers), to start or join an existing trace. Trace information is
 injected into any outbound requests so the next hop can extract them.</p>
 </div>
-<div class="paragraph">
-<p>The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
-the Open Tracing&#8217;s <code>TextMap</code> notion. In Sleuth it&#8217;s called <code>SpanTextMap</code>. Basically the idea
-is that any means of communication (e.g. message, http request, etc.) can be abstracted via
-a <code>SpanTextMap</code>. This abstraction defines how one can insert data into the carrier and
-how to retrieve it from there. Thanks to this if you want to instrument a new HTTP library
-that uses a <code>FooRequest</code> as a mean of sending HTTP requests then you have to create an
-implementation of  a <code>SpanTextMap</code> that delegates calls to <code>FooRequest</code> in terms of retrieval
-and insertion of HTTP headers.</p>
-</div>
 <div class="sect2">
 <h3 id="_spring_integration">Spring Integration</h3>
 <div class="paragraph">
-<p>For Spring Integration there are 2 interfaces responsible for creation of a Span from a <code>Message</code>.
-These are:</p>
+<p>For Spring Integration these are the beans responsible for creation of a Span from a <code>Message</code>
+ and filling in the <code>MessageBuilder</code> with tracing information.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>MessagingSpanTextMapExtractor</code></p>
-</li>
-<li>
-<p><code>MessagingSpanTextMapInjector</code></p>
-</li>
-</ul>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+public SpanExtractor&lt;Message&gt; messagingSpanExtractor() {
+    ...
+}
+
+@Bean
+public SpanInjector&lt;MessageBuilder&gt; messagingSpanInjector() {
+    ...
+}</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>You can override them by providing your own implementation.</p>
+<p>You can override them by providing your own implementation and by adding a <code>@Primary</code> annotation
+to your bean definition.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_http">HTTP</h3>
 <div class="paragraph">
-<p>For HTTP there are 2 interfaces responsible for creation of a Span from a <code>Message</code>.
-These are:</p>
+<p>For HTTP these are the beans responsible for creation of a Span from a <code>HttpServletRequest</code>.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>HttpSpanExtractor</code></p>
-</li>
-<li>
-<p><code>HttpSpanInjector</code></p>
-</li>
-</ul>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+public SpanExtractor&lt;HttpServletRequest&gt; httpServletRequestSpanExtractor() {
+    ...
+}</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>You can override them by providing your own implementation.</p>
+<p>You can override them by providing your own implementation and by adding a <code>@Primary</code> annotation
+to your bean definition.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1908,25 +1839,17 @@ you have</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpSpanExtractor implements HttpSpanExtractor {
+<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletRequestSpanExtractor
+		implements SpanExtractor&lt;HttpServletRequest&gt; {
 
-	@Override public Span joinTrace(SpanTextMap carrier) {
-		Map&lt;String, String&gt; map = TextMapUtil.asMap(carrier);
-		long traceId = Span.hexToId(map.get("correlationid"));
-		long spanId = Span.hexToId(map.get("myspanid"));
+	@Override
+	public Span joinTrace(HttpServletRequest carrier) {
+		long traceId = Span.hexToId(carrier.getHeader("correlationId"));
+		long spanId = Span.hexToId(carrier.getHeader("mySpanId"));
 		// extract all necessary headers
 		Span.SpanBuilder builder = Span.builder().traceId(traceId).spanId(spanId);
 		// build rest of the Span
 		return builder.build();
-	}
-}
-
-static class CustomHttpSpanInjector implements HttpSpanInjector {
-
-	@Override
-	public void inject(Span span, SpanTextMap carrier) {
-		carrier.put("correlationId", span.traceIdString());
-		carrier.put("mySpanId", Span.idToHex(span.getSpanId()));
 	}
 }</code></pre>
 </div>
@@ -1937,13 +1860,9 @@ static class CustomHttpSpanInjector implements HttpSpanInjector {
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Bean
-HttpSpanInjector customHttpSpanInjector() {
-	return new CustomHttpSpanInjector();
-}
-
-@Bean
-HttpSpanExtractor customHttpSpanExtractor() {
-	return new CustomHttpSpanExtractor();
+@Primary
+SpanExtractor&lt;HttpServletRequest&gt; customHttpServletRequestSpanExtractor() {
+	return new CustomHttpServletRequestSpanExtractor();
 }</code></pre>
 </div>
 </div>
@@ -1953,22 +1872,22 @@ that injects the headers into the Http Response and a Servlet filter which makes
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletResponseSpanInjector extends ZipkinHttpSpanInjector {
+<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletResponseSpanInjector
+		implements SpanInjector&lt;HttpServletResponse&gt; {
 
 	@Override
-	public void inject(Span span, SpanTextMap carrier) {
-		super.inject(span, carrier);
-		carrier.put(Span.TRACE_ID_NAME, span.traceIdString());
-		carrier.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+	public void inject(Span span, HttpServletResponse carrier) {
+		carrier.addHeader(Span.TRACE_ID_NAME, span.traceIdString());
+		carrier.addHeader(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 	}
 }
 
 static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
 
 	private final Tracer tracer;
-	private final HttpSpanInjector spanInjector;
+	private final SpanInjector&lt;HttpServletResponse&gt; spanInjector;
 
-	public HttpResponseInjectingTraceFilter(Tracer tracer, HttpSpanInjector spanInjector) {
+	public HttpResponseInjectingTraceFilter(Tracer tracer, SpanInjector&lt;HttpServletResponse&gt; spanInjector) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
 	}
@@ -1977,32 +1896,9 @@ static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
 	public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 		HttpServletResponse response = (HttpServletResponse) servletResponse;
 		Span currentSpan = this.tracer.getCurrentSpan();
-		this.spanInjector.inject(currentSpan, new HttpServletResponseTextMap(response));
+		this.spanInjector.inject(currentSpan, response);
 		filterChain.doFilter(request, response);
 	}
-
-	 class HttpServletResponseTextMap implements SpanTextMap {
-
-		 private final HttpServletResponse delegate;
-
-		 HttpServletResponseTextMap(HttpServletResponse delegate) {
-			 this.delegate = delegate;
-		 }
-
-		 @Override
-		 public Iterator&lt;Map.Entry&lt;String, String&gt;&gt; iterator() {
-			 Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
-			 for (String header : this.delegate.getHeaderNames()) {
-				map.put(header, this.delegate.getHeader(header));
-			 }
-			 return map.entrySet().iterator();
-		 }
-
-		 @Override
-		 public void put(String key, String value) {
-			this.delegate.addHeader(key, value);
-		 }
-	 }
 }</code></pre>
 </div>
 </div>
@@ -2011,7 +1907,8 @@ static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Bean HttpSpanInjector customHttpServletResponseSpanInjector() {
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+SpanInjector&lt;HttpServletResponse&gt; customHttpServletResponseSpanInjector() {
 	return new CustomHttpServletResponseSpanInjector();
 }
 
@@ -2185,25 +2082,6 @@ the consumer app).
 </td>
 </tr>
 </table>
-</div>
-<div class="paragraph">
-<p>In order to customize the polling mechanism you can create a bean of <code>PollerMetadata</code> type
-with name equal to <code>StreamSpanReporter.POLLER</code>. Here you can find an example of such a configuration.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-public static class CustomPollerConfiguration {
-
-	@Bean(name = StreamSpanReporter.POLLER)
-	PollerMetadata customPoller() {
-		PollerMetadata poller = new PollerMetadata();
-		poller.setMaxMessagesPerPoll(500);
-		poller.setTrigger(new PeriodicTrigger(5000L));
-		return poller;
-	}
-}</code></pre>
-</div>
 </div>
 </div>
 </div>
@@ -2513,22 +2391,9 @@ backwards compatibility in 1.0.4 we&#8217;ve started sending both valid and inva
 in Spring Cloud Sleuth 1.1 we will remove the support for the deprecated headers.</p>
 </div>
 <div class="paragraph">
-<p>You can provide the <code>spring.sleuth.integration.patterns</code> pattern to explicitly
+<p>Since 1.0.4 you can provide the <code>spring.sleuth.integration.patterns</code> pattern to explicitly
 provide the names of channels that you want to include for tracing. By default all channels
 are included.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Important</div>
-</td>
-<td class="content">
-When using the <code>Executor</code> to build a Spring Integration <code>IntegrationFlow</code> remember to use the <strong>untraced</strong> version of the <code>Executor</code>.
-Decorating Spring Integration Executor Channel with <code>TraceableExecutorService</code> will cause the spans to be improperly closed.
-</td>
-</tr>
-</table>
 </div>
 </div>
 <div class="sect2">
