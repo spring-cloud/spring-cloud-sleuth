@@ -855,7 +855,7 @@ we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</co
 	&lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
 		&lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
 			&lt;!-- Minimum logging level to be presented in the console logs--&gt;
-			&lt;level&gt;INFO&lt;/level&gt;
+			&lt;level&gt;DEBUG&lt;/level&gt;
 		&lt;/filter&gt;
 		&lt;encoder&gt;
 			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
@@ -908,7 +908,7 @@ we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</co
 	&lt;/appender&gt;
 	​
 	&lt;root level="INFO"&gt;
-		&lt;!--&lt;appender-ref ref="console"/&gt;--&gt;
+		&lt;appender-ref ref="console"/&gt;
 		&lt;appender-ref ref="logstash"/&gt;
 		&lt;!--&lt;appender-ref ref="flatfile"/&gt;--&gt;
 	&lt;/root&gt;
