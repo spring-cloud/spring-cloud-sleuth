@@ -849,7 +849,7 @@ we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</co
 	&lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;​
 
 	&lt;property name="CONSOLE_LOG_PATTERN"
-			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${springAppName:-},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
+			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${springAppName:-},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-B3-ParentSpanId:-},%X{X-Span-Export:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
 
 	&lt;!-- Appender to log to console --&gt;
 	&lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
@@ -895,6 +895,7 @@ we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</co
 						"service": "${springAppName:-}",
 						"trace": "%X{X-B3-TraceId:-}",
 						"span": "%X{X-B3-SpanId:-}",
+						"parent": "%X{X-B3-ParentSpanId:-}",
 						"exportable": "%X{X-Span-Export:-}",
 						"pid": "${PID:-}",
 						"thread": "%thread",
