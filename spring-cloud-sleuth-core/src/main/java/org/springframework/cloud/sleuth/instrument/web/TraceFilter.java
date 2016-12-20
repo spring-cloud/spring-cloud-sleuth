@@ -210,12 +210,13 @@ public class TraceFilter extends GenericFilterBean {
 			}
 			recordParentSpan(span);
 			// in case of a response with exception status will close the span when exception dispatch is handled
-			if (httpStatusSuccessful(response)) {
+			// checking if tracing is in progress due to async / different order of view controller processing
+			if (httpStatusSuccessful(response) && this.tracer.isTracing()) {
 				if (log.isDebugEnabled()) {
 					log.debug("Closing the span " + span + " since the response was successful");
 				}
 				this.tracer.close(span);
-			} else if (errorAlreadyHandled(request)) {
+			} else if (errorAlreadyHandled(request) && this.tracer.isTracing()) {
 				if (log.isDebugEnabled()) {
 					log.debug(
 							"Won't detach the span " + span + " since error has already been handled");
