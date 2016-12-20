@@ -51,6 +51,7 @@ public class Slf4jSpanLogger implements SpanLogger {
 		log("Starting span: {}", span);
 		if (parent != null) {
 			log("With parent: {}", parent);
+			MDC.put(Span.PARENT_ID_NAME, Span.idToHex(parent.getSpanId()));
 		}
 	}
 
@@ -59,7 +60,14 @@ public class Slf4jSpanLogger implements SpanLogger {
 		MDC.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		MDC.put(Span.TRACE_ID_NAME, span.traceIdString());
 		MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(span.isExportable()));
+		setParentIdIfPresent(span);
 		log("Continued span: {}", span);
+	}
+
+	private void setParentIdIfPresent(Span span) {
+		if (!span.getParents().isEmpty()) {
+			MDC.put(Span.PARENT_ID_NAME, Span.idToHex(span.getParents().get(0)));
+		}
 	}
 
 	@Override
@@ -71,11 +79,13 @@ public class Slf4jSpanLogger implements SpanLogger {
 			log("With parent: {}", parent);
 			MDC.put(Span.SPAN_ID_NAME, Span.idToHex(parent.getSpanId()));
 			MDC.put(Span.SPAN_EXPORT_NAME, String.valueOf(parent.isExportable()));
+			setParentIdIfPresent(parent);
 		}
 		else {
 			MDC.remove(Span.SPAN_ID_NAME);
 			MDC.remove(Span.SPAN_EXPORT_NAME);
 			MDC.remove(Span.TRACE_ID_NAME);
+			MDC.remove(Span.PARENT_ID_NAME);
 		}
 	}
 

@@ -37,7 +37,7 @@ import static org.mockito.Mockito.times;
 public class Slf4JSpanLoggerTest {
 
 	Span spanWithNameToBeExcluded = Span.builder().name("Hystrix").build();
-	Span spanWithNameNotToBeExcluded = Span.builder().name("Aspect").build();
+	Span spanWithNameNotToBeExcluded = Span.builder().name("Aspect").parent(3L).build();
 	String nameExcludingPattern = "^.*Hystrix.*$";
 	Logger log = Mockito.mock(Logger.class);
 	Slf4jSpanLogger slf4JSpanLogger = new Slf4jSpanLogger(this.nameExcludingPattern, this.log);
@@ -151,5 +151,29 @@ public class Slf4JSpanLoggerTest {
 		this.slf4JSpanLogger.logStoppedSpan(null, this.spanWithNameNotToBeExcluded);
 
 		then(this.log).should().trace(anyString(), anyList());
+	}
+
+	@Test
+	public void should_set_mdc_entry_for_parent_when_starting() throws Exception {
+		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameNotToBeExcluded,
+				this.spanWithNameNotToBeExcluded);
+
+		assertThat(MDC.get(Span.PARENT_ID_NAME)).isEqualTo(
+				Span.idToHex(this.spanWithNameNotToBeExcluded.getSpanId()));
+	}
+
+	@Test
+	public void should_set_mdc_entry_for_parent_when_continuing() throws Exception {
+  		this.slf4JSpanLogger.logContinuedSpan(this.spanWithNameNotToBeExcluded);
+
+		assertThat(MDC.get(Span.PARENT_ID_NAME)).isEqualTo(Span.idToHex(3L));
+	}
+
+	@Test
+	public void should_set_mdc_entry_for_parent_when_stopping() throws Exception {
+		this.slf4JSpanLogger.logStoppedSpan(this.spanWithNameNotToBeExcluded,
+				this.spanWithNameNotToBeExcluded);
+
+		assertThat(MDC.get(Span.PARENT_ID_NAME)).isEqualTo(Span.idToHex(3L));
 	}
 }
