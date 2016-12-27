@@ -15,6 +15,8 @@
  */
 package integration;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.Collections;
 import java.util.Random;
 
@@ -40,8 +42,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import example.ZipkinStreamServerApplication;
 import tools.AbstractIntegrationTest;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = { TestSupportBinderAutoConfiguration.class, ZipkinStreamServerApplication.class },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -60,7 +60,7 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 	@Before
 	public void setup() {
-		await().atMost(5, SECONDS).until(zipkinServerIsUp());
+		await().atMost(10, SECONDS).until(zipkinServerIsUp());
 	}
 
 	@Test
