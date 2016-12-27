@@ -2374,6 +2374,18 @@ by setting the value of <code>spring.sleuth.scheduled.enabled</code> to <code>fa
 <code>spring.sleuth.scheduled.skipPattern</code> with a regular expression that will match the fully qualified name of the
 <code>@Scheduled</code> annotated class.</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+If you are using <code>spring-cloud-sleuth-stream</code> and <code>spring-cloud-netflix-hystrix-stream</code> together, Span will be created for each Hystrix metrics and sent to Zipkin. This may be annoying. You can prevent this by setting <code>spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask</code>
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_executor_executorservice_and_scheduledexecutorservice">Executor, ExecutorService and ScheduledExecutorService</h4>
