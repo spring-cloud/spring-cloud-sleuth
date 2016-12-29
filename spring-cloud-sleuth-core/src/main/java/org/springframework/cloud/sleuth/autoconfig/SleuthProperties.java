@@ -25,8 +25,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("spring.sleuth")
 public class SleuthProperties {
+
+	private boolean enabled = true;
 	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
 	private boolean traceId128 = false;
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
 	public boolean isTraceId128() {
 		return this.traceId128;
