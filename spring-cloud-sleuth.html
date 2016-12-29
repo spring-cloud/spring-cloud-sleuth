@@ -2351,6 +2351,21 @@ If you create a <code>RestTemplate</code> instance with a <code>new</code> keywo
 </div>
 <div class="sect3">
 <h4 id="_asynchronous_rest_template">Asynchronous Rest Template</h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+A traced version of an <code>AsyncRestTemplate</code> bean is registered for you out of the box. If you
+have your own bean you have to wrap it in a <code>TraceAsyncRestTemplate</code> representation. The best solution
+is to only customize the <code>ClientHttpRequestFactory</code> and / or <code>AsyncClientHttpRequestFactory</code>.
+<strong>If you have your own <code>AsyncRestTemplate</code> and you don&#8217;t wrap it your calls WILL NOT GET TRACED</strong>.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>Custom instrumentation is set to create and close Spans upon sending and receiving requests. You can customize the <code>ClientHttpRequestFactory</code>
 and the <code>AsyncClientHttpRequestFactory</code> by registering your beans. Remember to use tracing compatible implementations (e.g. don&#8217;t forget to
