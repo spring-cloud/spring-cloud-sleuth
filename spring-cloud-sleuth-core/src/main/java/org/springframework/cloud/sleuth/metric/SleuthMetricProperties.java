@@ -14,7 +14,7 @@ public class SleuthMetricProperties {
 	/**
 	 * Enable calculation of accepted and dropped spans through {@link org.springframework.boot.actuate.metrics.CounterService}
 	 */
-	private boolean enabled;
+	private boolean enabled = true;
 
 	private Span span = new Span();
 
