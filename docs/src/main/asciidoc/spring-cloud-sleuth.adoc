@@ -487,6 +487,11 @@ If you create a `RestTemplate` instance with a `new` keyword then the instrument
 
 ==== Asynchronous Rest Template
 
+IMPORTANT: A traced version of an `AsyncRestTemplate` bean is registered for you out of the box. If you
+have your own bean you have to wrap it in a `TraceAsyncRestTemplate` representation. The best solution
+is to only customize the `ClientHttpRequestFactory` and / or `AsyncClientHttpRequestFactory`.
+*If you have your own `AsyncRestTemplate` and you don't wrap it your calls WILL NOT GET TRACED*.
+
 Custom instrumentation is set to create and close Spans upon sending and receiving requests. You can customize the `ClientHttpRequestFactory`
 and the `AsyncClientHttpRequestFactory` by registering your beans. Remember to use tracing compatible implementations (e.g. don't forget to
 wrap `ThreadPoolTaskScheduler` in a `TraceAsyncListenableTaskExecutor`). Example of custom request factories:
