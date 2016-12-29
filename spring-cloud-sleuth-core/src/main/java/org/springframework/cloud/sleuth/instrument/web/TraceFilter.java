@@ -81,6 +81,12 @@ public class TraceFilter extends GenericFilterBean {
 	protected static final String TRACE_ERROR_HANDLED_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".ERROR_HANDLED";
 
+	/**
+	 * @deprecated please use {@link SleuthWebProperties#DEFAULT_SKIP_PATTERN}
+	 */
+	@Deprecated
+	public static final String DEFAULT_SKIP_PATTERN = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
+
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
 	private final Pattern skipPattern;
