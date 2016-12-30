@@ -34,11 +34,11 @@ import static org.mockito.BDDMockito.given;
 public class DiscoveryClientHostLocatorTest {
 	DiscoveryClient discoveryClient = Mockito.mock(DiscoveryClient.class);
 	DiscoveryClientHostLocator discoveryClientHostLocator =
-			new DiscoveryClientHostLocator(this.discoveryClient);
+			new DiscoveryClientHostLocator(this.discoveryClient, new ZipkinProperties());
 
 	@Test(expected = IllegalArgumentException.class)
 	public void should_throw_exception_when_no_discovery_client_is_present() throws Exception {
-		new DiscoveryClientHostLocator(null);
+		new DiscoveryClientHostLocator(null, new ZipkinProperties());
 	}
 
 	@Test
@@ -59,6 +59,20 @@ public class DiscoveryClientHostLocatorTest {
 		Host host = this.discoveryClientHostLocator.locate(null);
 
 		then(host.getServiceName()).isEqualTo("serviceId");
+		then(host.getPort()).isEqualTo((short)8_000);
+		then(host.getIpv4()).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
+	}
+
+	@Test
+	public void should_override_the_service_name_from_properties() throws Exception {
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost());
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		zipkinProperties.setName("foo");
+		this.discoveryClientHostLocator = new DiscoveryClientHostLocator(this.discoveryClient, zipkinProperties);
+
+		Host host = this.discoveryClientHostLocator.locate(null);
+
+		then(host.getServiceName()).isEqualTo("foo");
 		then(host.getPort()).isEqualTo((short)8_000);
 		then(host.getIpv4()).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
 	}

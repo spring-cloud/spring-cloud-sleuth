@@ -75,12 +75,16 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
 
+		@Autowired
+		private ZipkinProperties zipkinProperties;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName);
+			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
+					this.zipkinProperties);
 		}
 
 	}
@@ -92,6 +96,9 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
 
+		@Autowired
+		private ZipkinProperties zipkinProperties;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
@@ -101,12 +108,13 @@ public class ZipkinAutoConfiguration {
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName));
+					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
+							this.zipkinProperties));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
 			if (this.client!=null) {
-				return new DiscoveryClientEndpointLocator(this.client);
+				return new DiscoveryClientEndpointLocator(this.client, this.zipkinProperties);
 			}
 			return null;
 		}
