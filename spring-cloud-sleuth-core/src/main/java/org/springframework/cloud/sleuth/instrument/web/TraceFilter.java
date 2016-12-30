@@ -80,8 +80,11 @@ public class TraceFilter extends GenericFilterBean {
 	protected static final String TRACE_ERROR_HANDLED_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".ERROR_HANDLED";
 
-	public static final String DEFAULT_SKIP_PATTERN =
-			"/api-docs.*|/autoconfig|/configprops|/dump|/health|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream";
+	/**
+	 * @deprecated please use {@link SleuthWebProperties#DEFAULT_SKIP_PATTERN}
+	 */
+	@Deprecated
+	public static final String DEFAULT_SKIP_PATTERN = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
 
 	private final Tracer tracer;
 	private final TraceKeys traceKeys;
@@ -95,7 +98,7 @@ public class TraceFilter extends GenericFilterBean {
 	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
 			HttpSpanExtractor spanExtractor,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
-		this(tracer, traceKeys, Pattern.compile(DEFAULT_SKIP_PATTERN), spanReporter,
+		this(tracer, traceKeys, Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN), spanReporter,
 				spanExtractor, httpTraceKeysInjector);
 	}
 

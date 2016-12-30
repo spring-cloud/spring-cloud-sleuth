@@ -24,7 +24,6 @@ import static javax.servlet.DispatcherType.REQUEST;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -61,14 +60,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @ConditionalOnWebApplication
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
-@EnableConfigurationProperties(TraceKeys.class)
+@EnableConfigurationProperties({TraceKeys.class, SleuthWebProperties.class})
 public class TraceWebAutoConfiguration {
-
-	/**
-	 * Pattern for URLs that should be skipped in tracing
-	 */
-	@Value("${spring.sleuth.web.skipPattern:}")
-	private String skipPattern;
 
 	/**
 	 * Nested config that configures Web MVC if it's present (without adding a runtime
@@ -121,9 +114,8 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public HttpSpanExtractor httpSpanExtractor(
-			@Value("${spring.sleuth.web.skipPattern:}") String skipPattern) {
-		return new ZipkinHttpSpanExtractor(Pattern.compile(skipPattern));
+	public HttpSpanExtractor httpSpanExtractor(SleuthWebProperties sleuthWebProperties) {
+		return new ZipkinHttpSpanExtractor(Pattern.compile(sleuthWebProperties.getSkipPattern()));
 	}
 
 	@Bean
@@ -135,24 +127,20 @@ public class TraceWebAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass(ManagementServerProperties.class)
 	@ConditionalOnMissingBean(SkipPatternProvider.class)
+	@EnableConfigurationProperties(SleuthWebProperties.class)
 	protected static class SkipPatternProviderConfig {
-
-		/**
-		 * Pattern for URLs that should be skipped in tracing
-		 */
-		@Value("${spring.sleuth.web.skipPattern:}")
-		private String skipPattern;
 
 		@Bean
 		@ConditionalOnBean(ManagementServerProperties.class)
 		public SkipPatternProvider skipPatternForManagementServerProperties(
-				final ManagementServerProperties managementServerProperties) {
+				final ManagementServerProperties managementServerProperties,
+				final SleuthWebProperties sleuthWebProperties) {
 			return new SkipPatternProvider() {
 				@Override
 				public Pattern skipPattern() {
 					return getPatternForManagementServerProperties(
 							managementServerProperties,
-							SkipPatternProviderConfig.this.skipPattern);
+							sleuthWebProperties);
 				}
 			};
 		}
@@ -163,7 +151,8 @@ public class TraceWebAutoConfiguration {
 		 */
 		static Pattern getPatternForManagementServerProperties(
 				ManagementServerProperties managementServerProperties,
-				String skipPattern) {
+				SleuthWebProperties sleuthWebProperties) {
+			String skipPattern = sleuthWebProperties.getSkipPattern();
 			if (StringUtils.hasText(skipPattern)
 					&& StringUtils.hasText(managementServerProperties.getContextPath())) {
 				return Pattern.compile(skipPattern + "|"
@@ -178,16 +167,16 @@ public class TraceWebAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(ManagementServerProperties.class)
-		public SkipPatternProvider defaultSkipPatternBeanIfManagementServerPropsArePresent() {
-			return defaultSkipPatternProvider(this.skipPattern);
+		public SkipPatternProvider defaultSkipPatternBeanIfManagementServerPropsArePresent(SleuthWebProperties sleuthWebProperties) {
+			return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern());
 		}
 	}
 
 	@Bean
 	@ConditionalOnMissingClass("org.springframework.boot.actuate.autoconfigure.ManagementServerProperties")
 	@ConditionalOnMissingBean(SkipPatternProvider.class)
-	public SkipPatternProvider defaultSkipPatternBean() {
-		return defaultSkipPatternProvider(this.skipPattern);
+	public SkipPatternProvider defaultSkipPatternBean(SleuthWebProperties sleuthWebProperties) {
+		return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern());
 	}
 
 	private static SkipPatternProvider defaultSkipPatternProvider(
@@ -202,7 +191,7 @@ public class TraceWebAutoConfiguration {
 
 	private static Pattern defaultSkipPattern(String skipPattern) {
 		return StringUtils.hasText(skipPattern) ? Pattern.compile(skipPattern)
-				: Pattern.compile(TraceFilter.DEFAULT_SKIP_PATTERN);
+				: Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 	}
 
 	interface SkipPatternProvider {

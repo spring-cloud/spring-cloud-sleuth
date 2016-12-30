@@ -11,7 +11,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth.metric")
 public class SleuthMetricProperties {
 
-	private boolean enabled;
+	/**
+	 * Enable calculation of accepted and dropped spans through {@link org.springframework.boot.actuate.metrics.CounterService}
+	 */
+	private boolean enabled = true;
+
+	private Span span = new Span();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -20,8 +25,6 @@ public class SleuthMetricProperties {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
-
-	private Span span = new Span();
 
 	public Span getSpan() {
 		return this.span;

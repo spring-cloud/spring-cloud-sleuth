@@ -31,40 +31,43 @@ public class SkipPatternProviderConfigTest {
 
 	@Test
 	public void should_combine_skip_pattern_and_management_context_when_they_are_both_not_empty() throws Exception {
-		String skipPattern = "foo.*|bar.*";
-
+		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
+		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
 		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				managementServerPropertiesWithContextPath(), skipPattern);
+				managementServerPropertiesWithContextPath(), sleuthWebProperties);
 
 		then(pattern.pattern()).isEqualTo("foo.*|bar.*|/management/context.*");
 	}
 
 	@Test
 	public void should_pick_skip_pattern_when_its_not_empty_and_management_context_is_empty() throws Exception {
-		String skipPattern = "foo.*|bar.*";
+		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
+		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
 
-		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), skipPattern);
+		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), sleuthWebProperties);
 
 		then(pattern.pattern()).isEqualTo("foo.*|bar.*");
 	}
 
 	@Test
 	public void should_pick_management_context_when_skip_patterns_is_empty_and_context_path_is_not() throws Exception {
-		String skipPattern = "";
+		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
+		sleuthWebProperties.setSkipPattern("");
 
 		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				managementServerPropertiesWithContextPath(), skipPattern);
+				managementServerPropertiesWithContextPath(), sleuthWebProperties);
 
 		then(pattern.pattern()).isEqualTo("/management/context.*");
 	}
 
 	@Test
 	public void should_pick_default_pattern_when_both_management_context_and_skip_patterns_are_empty() throws Exception {
-		String skipPattern = "";
+		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
+		sleuthWebProperties.setSkipPattern("");
 
-		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), skipPattern);
+		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), sleuthWebProperties);
 
-		then(pattern.pattern()).isEqualTo(TraceFilter.DEFAULT_SKIP_PATTERN);
+		then(pattern.pattern()).isEqualTo(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 	}
 
 	private ManagementServerProperties managementServerPropertiesWithContextPath() {
