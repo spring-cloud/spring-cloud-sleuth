@@ -116,7 +116,10 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			spanFromHeader.logEvent(Span.SERVER_SEND);
 			addErrorTag(ex);
 		}
-		getTracer().detach(spanFromHeader);
+		// related to #447
+		if (getTracer().isTracing()) {
+			getTracer().detach(spanFromHeader);
+		}
 	}
 
 	private void addErrorTag(Exception ex) {

@@ -74,6 +74,10 @@ public class TraceRunnable implements Runnable {
 	}
 
 	protected void close(Span span) {
+		// race conditions - check #447
+		if (!this.tracer.isTracing()) {
+			this.tracer.continueSpan(span);
+		}
 		this.tracer.close(span);
 	}
 
@@ -82,7 +86,10 @@ public class TraceRunnable implements Runnable {
 	}
 
 	protected Span detachSpan(Span span) {
-		return this.tracer.detach(span);
+		if (this.tracer.isTracing()) {
+			return this.tracer.detach(span);
+		}
+		return span;
 	}
 
 	public Tracer getTracer() {
