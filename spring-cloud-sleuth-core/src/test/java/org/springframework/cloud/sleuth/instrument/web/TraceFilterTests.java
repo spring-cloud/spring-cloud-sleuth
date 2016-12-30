@@ -67,7 +67,7 @@ public class TraceFilterTests {
 	@Mock SpanLogger spanLogger;
 	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
 	SpanExtractor<HttpServletRequest> spanExtractor = new HttpServletRequestExtractor(Pattern
-			.compile(TraceFilter.DEFAULT_SKIP_PATTERN));
+			.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN));
 
 	private Tracer tracer;
 	private TraceKeys traceKeys = new TraceKeys();

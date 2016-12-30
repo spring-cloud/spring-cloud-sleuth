@@ -17,11 +17,11 @@
 package org.springframework.cloud.sleuth.log;
 
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,19 +40,15 @@ public class SleuthLogAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(MDC.class)
+	@EnableConfigurationProperties(SleuthSlf4jProperties.class)
 	protected static class Slf4jConfiguration {
-		/**
-		 * Name pattern for which span should not be printed in the logs
-		 */
-		@Value("${spring.sleuth.log.slf4j.nameSkipPattern:}")
-		private String nameSkipPattern;
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
 		@ConditionalOnMissingBean
-		public SpanLogger slf4jSpanLogger() {
+		public SpanLogger slf4jSpanLogger(SleuthSlf4jProperties sleuthSlf4jProperties) {
 			// Sets up MDC entries X-B3-TraceId and X-B3-SpanId
-			return new Slf4jSpanLogger(this.nameSkipPattern);
+			return new Slf4jSpanLogger(sleuthSlf4jProperties.getNameSkipPattern());
 		}
 
 		@Bean
