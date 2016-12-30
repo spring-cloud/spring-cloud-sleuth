@@ -109,7 +109,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
 			MessageHandler handler) {
 		Span spanFromHeader = getSpanFromHeader(message);
-		if (spanFromHeader!= null) {
+		if (spanFromHeader != null) {
 			spanFromHeader.logEvent(Span.SERVER_RECV);
 		}
 		getTracer().continueSpan(spanFromHeader);
@@ -124,7 +124,10 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			spanFromHeader.logEvent(Span.SERVER_SEND);
 			addErrorTag(ex);
 		}
-		getTracer().detach(spanFromHeader);
+		// related to #447
+		if (getTracer().isTracing()) {
+			getTracer().detach(spanFromHeader);
+		}
 	}
 
 	private void addErrorTag(Exception ex) {
