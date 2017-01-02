@@ -129,7 +129,8 @@ public class HttpZipkinSpanReporterTest {
 		AtomicReference<Span> receivedSpan = new AtomicReference<>();
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
 				new NoOpSpanLogger(), new ZipkinSpanListener(receivedSpan::set,
-				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo")));
+				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo",
+						new ZipkinProperties())));
 		// tag::service_name[]
 		org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
 		try {

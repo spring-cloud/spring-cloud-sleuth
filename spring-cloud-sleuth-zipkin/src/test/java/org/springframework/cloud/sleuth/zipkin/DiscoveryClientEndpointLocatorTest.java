@@ -19,9 +19,9 @@ package org.springframework.cloud.sleuth.zipkin;
 import java.net.URI;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.client.ServiceInstance;
@@ -41,7 +41,12 @@ import static org.mockito.BDDMockito.given;
 public class DiscoveryClientEndpointLocatorTest {
 
 	@Mock DiscoveryClient discoveryClient;
-	@InjectMocks DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
+	DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
+
+	@Before
+	public void setup() {
+		this.discoveryClientEndpointLocator = new DiscoveryClientEndpointLocator(this.discoveryClient, new ZipkinProperties());
+	}
 
 	@Test(expected = NoServiceInstanceAvailableException.class)
 	public void should_throw_exception_when_no_instances_are_available() throws Exception {
@@ -66,6 +71,20 @@ public class DiscoveryClientEndpointLocatorTest {
 		Endpoint local = this.discoveryClientEndpointLocator.local();
 
 		then(local.serviceName).isEqualTo("serviceid");
+		then(local.port).isEqualTo((short)8_000);
+		then(local.ipv4).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
+	}
+
+	@Test
+	public void should_create_endpoint_with_overridden_name() throws Exception {
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		zipkinProperties.getService().setName("foo");
+		DiscoveryClientEndpointLocator locator = new DiscoveryClientEndpointLocator(this.discoveryClient, zipkinProperties);
+		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost());
+
+		Endpoint local = locator.local();
+
+		then(local.serviceName).isEqualTo("foo");
 		then(local.port).isEqualTo((short)8_000);
 		then(local.ipv4).isEqualTo(InetUtils.getIpAddressAsInt("localhost"));
 	}
