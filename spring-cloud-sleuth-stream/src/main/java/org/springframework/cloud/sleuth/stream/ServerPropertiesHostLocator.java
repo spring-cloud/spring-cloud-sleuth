@@ -21,6 +21,7 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerInitial
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * A {@link HostLocator} that retrieves:
@@ -31,6 +32,8 @@ import org.springframework.util.Assert;
  *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
+ * You can override the value of service id by {@link ZipkinProperties#setName(String)}
+ *
  * @author Dave Syer
  * @since 1.0.0
  */
@@ -38,13 +41,15 @@ public class ServerPropertiesHostLocator implements HostLocator {
 
 	private final ServerProperties serverProperties; // Nullable
 	private final String appName;
+	private final ZipkinProperties zipkinProperties;
 	private Integer port; // Lazy assigned
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
-			String appName) {
+			String appName, ZipkinProperties zipkinProperties) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
 		Assert.notNull(this.appName, "appName");
+		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
@@ -87,7 +92,9 @@ public class ServerPropertiesHostLocator implements HostLocator {
 
 	private String getServiceName(Span span) {
 		String serviceName;
-		if (span.getProcessId() != null) {
+		if (StringUtils.hasText(this.zipkinProperties.getName())) {
+			serviceName = this.zipkinProperties.getName();
+		} else if (span.getProcessId() != null) {
 			serviceName = span.getProcessId();
 		}
 		else {

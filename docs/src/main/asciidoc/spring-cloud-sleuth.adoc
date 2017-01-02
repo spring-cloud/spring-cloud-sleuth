@@ -285,6 +285,19 @@ include::../../../..//spring-cloud-sleuth-zipkin/src/test/java/org/springframewo
 
 IMPORTANT: Remember not to add both `peer.service` tag and the `SA` tag! You have to add only `peer.service`.
 
+=== Custom service name
+
+By default Sleuth assumes that when you send a span to Zipkin, you want the span's service name
+ to be equal to `spring.application.name` value. That's not always the case though. There
+ are situations in which you want to explicitly provide a different service name for all spans coming
+ from your application. To achieve that it's enough to just pass the following property
+ to your application to override that value (example for `foo` service name):
+
+[source,yaml]
+----
+spring.zipkin.service.name: foo
+----
+
 == Span Data as Messages
 
 You can accumulate and send span data over

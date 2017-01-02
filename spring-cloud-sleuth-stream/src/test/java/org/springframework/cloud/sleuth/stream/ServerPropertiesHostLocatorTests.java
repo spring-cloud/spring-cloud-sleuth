@@ -33,7 +33,7 @@ public class ServerPropertiesHostLocatorTests {
 	@Test
 	public void portDefaultsTo8080() {
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(
-				new ServerProperties(), "unknown");
+				new ServerProperties(), "unknown", new ZipkinProperties());
 
 		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 8080);
 	}
@@ -44,7 +44,7 @@ public class ServerPropertiesHostLocatorTests {
 		properties.setPort(1234);
 
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
-				"unknown");
+				"unknown", new ZipkinProperties());
 
 		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 1234);
 	}
@@ -52,7 +52,7 @@ public class ServerPropertiesHostLocatorTests {
 	@Test
 	public void portDefaultsToLocalhost() {
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(
-				new ServerProperties(), "unknown");
+				new ServerProperties(), "unknown", new ZipkinProperties());
 
 		assertThat(locator.locate(this.span).getAddress()).isEqualTo("127.0.0.1");
 	}
@@ -63,8 +63,21 @@ public class ServerPropertiesHostLocatorTests {
 		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
 
 		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
-				"unknown");
+				"unknown", new ZipkinProperties());
 
 		assertThat(locator.locate(this.span).getAddress()).isEqualTo("1.2.3.4");
+	}
+
+	@Test
+	public void nameTakenFromProperties() throws UnknownHostException {
+		ServerProperties properties = new ServerProperties();
+		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		zipkinProperties.setName("foo");
+
+		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
+				"unknown", zipkinProperties);
+
+		assertThat(locator.locate(this.span).getServiceName()).isEqualTo("foo");
 	}
 }

@@ -22,27 +22,39 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * An {@link HostLocator} that tries to find local service information from a
  * {@link DiscoveryClient}.
+ *
+ * You can override the value of service id by {@link ZipkinProperties#setName(String)}
  *
  * @author Dave Syer
  * @since 1.0.0
  */
 public class DiscoveryClientHostLocator implements HostLocator {
 
-	private DiscoveryClient client;
+	private final DiscoveryClient client;
+	private final ZipkinProperties zipkinProperties;
 
+	@Deprecated
 	public DiscoveryClientHostLocator(DiscoveryClient client) {
+		this(client, new ZipkinProperties());
+	}
+
+	public DiscoveryClientHostLocator(DiscoveryClient client, ZipkinProperties zipkinProperties) {
 		this.client = client;
 		Assert.notNull(this.client, "client");
+		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
 	public Host locate(Span span) {
 		ServiceInstance instance = this.client.getLocalServiceInstance();
-		return new Host(instance.getServiceId(), getIpAddress(instance),
+		String serviceId = StringUtils.hasText(this.zipkinProperties.getName()) ?
+				this.zipkinProperties.getName() : instance.getServiceId();
+		return new Host(serviceId, getIpAddress(instance),
 				instance.getPort());
 	}
 

@@ -16,12 +16,17 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import zipkin.Endpoint;
+
+import java.lang.invoke.MethodHandles;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.context.event.EventListener;
-
-import zipkin.Endpoint;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link EndpointLocator} implementation that:
@@ -31,25 +36,36 @@ import zipkin.Endpoint;
  *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
+ * You can override the name using {@link ZipkinProperties.Service#setName(String)}
+ *
  * @author Dave Syer
  * @since 1.0.0
  */
 public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	private final ServerProperties serverProperties;
 	private final String appName;
+	private final ZipkinProperties zipkinProperties;
 	private Integer port;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-																				String appName) {
+			String appName, ZipkinProperties zipkinProperties) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
+		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
 	public Endpoint local() {
+		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
+				this.zipkinProperties.getService().getName() : this.appName;
+		if (log.isDebugEnabled()) {
+			log.debug("Span will contain serviceName [" + serviceName + "]");
+		}
 		return Endpoint.builder()
-				.serviceName(this.appName)
+				.serviceName(serviceName)
 				.ipv4(getAddress())
 				.port(getPort())
 				.build();

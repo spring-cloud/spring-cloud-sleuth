@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import org.junit.Test;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
+import org.junit.Test;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,7 +29,7 @@ public class ServerPropertiesEndpointLocatorTests {
 	@Test
 	public void portDefaultsTo8080() {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown");
+				new ServerProperties(), "unknown", new ZipkinProperties());
 
 		assertThat(locator.local().port).isEqualTo((short) 8080);
 	}
@@ -40,7 +40,7 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setPort(1234);
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown");
+				properties, "unknown", new ZipkinProperties());
 
 		assertThat(locator.local().port).isEqualTo((short) 1234);
 	}
@@ -48,7 +48,7 @@ public class ServerPropertiesEndpointLocatorTests {
 	@Test
 	public void portDefaultsToLocalhost() {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown");
+				new ServerProperties(), "unknown", new ZipkinProperties());
 
 		assertThat(locator.local().ipv4).isEqualTo(127 << 24 | 1);
 	}
@@ -59,8 +59,20 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setAddress(InetAddress.getByAddress(new byte[] { 1, 2, 3, 4 }));
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown");
+				properties, "unknown", new ZipkinProperties());
 
 		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
+	}
+
+	@Test
+	public void appNameFromProperties() throws UnknownHostException {
+		ServerProperties properties = new ServerProperties();
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		zipkinProperties.getService().setName("foo");
+
+		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
+				properties, "unknown", zipkinProperties);
+
+		assertThat(locator.local().serviceName).isEqualTo("foo");
 	}
 }
