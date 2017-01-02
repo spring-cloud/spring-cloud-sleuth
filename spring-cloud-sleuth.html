@@ -471,6 +471,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_http">HTTP</a></li>
 <li><a href="#_example">Example</a></li>
 <li><a href="#_custom_sa_tag_in_zipkin">Custom SA tag in Zipkin</a></li>
+<li><a href="#_custom_service_name">Custom service name</a></li>
 </ul>
 </li>
 <li><a href="#_span_data_as_messages">Span Data as Messages</a>
@@ -2019,6 +2020,21 @@ Remember not to add both <code>peer.service</code> tag and the <code>SA</code> t
 </td>
 </tr>
 </table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_custom_service_name">Custom service name</h3>
+<div class="paragraph">
+<p>By default Sleuth assumes that when you send a span to Zipkin, you want the span&#8217;s service name
+ to be equal to <code>spring.application.name</code> value. That&#8217;s not always the case though. There
+ are situations in which you want to explicitly provide a different service name for all spans coming
+ from your application. To achieve that it&#8217;s enough to just pass the following property
+ to your application to override that value (example for <code>foo</code> service name):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.service.name: foo</code></pre>
+</div>
 </div>
 </div>
 </div>
