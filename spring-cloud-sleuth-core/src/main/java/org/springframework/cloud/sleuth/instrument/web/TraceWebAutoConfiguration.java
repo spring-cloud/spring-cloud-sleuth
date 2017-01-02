@@ -15,12 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static javax.servlet.DispatcherType.ASYNC;
-import static javax.servlet.DispatcherType.ERROR;
-import static javax.servlet.DispatcherType.FORWARD;
-import static javax.servlet.DispatcherType.INCLUDE;
-import static javax.servlet.DispatcherType.REQUEST;
-
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -38,12 +32,17 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import static javax.servlet.DispatcherType.ASYNC;
+import static javax.servlet.DispatcherType.ERROR;
+import static javax.servlet.DispatcherType.FORWARD;
+import static javax.servlet.DispatcherType.INCLUDE;
+import static javax.servlet.DispatcherType.REQUEST;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -59,8 +58,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
-@EnableConfigurationProperties({TraceKeys.class, SleuthWebProperties.class})
+@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
 public class TraceWebAutoConfiguration {
 
 	/**
@@ -87,13 +85,6 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
-	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer,
-			TraceKeys traceKeys) {
-		return new HttpTraceKeysInjector(tracer, traceKeys);
-	}
-
-	@Bean
 	public FilterRegistrationBean traceWebFilter(TraceFilter traceFilter) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
 				traceFilter);
@@ -110,18 +101,6 @@ public class TraceWebAutoConfiguration {
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
 				spanReporter, spanExtractor, httpTraceKeysInjector);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public HttpSpanExtractor httpSpanExtractor(SleuthWebProperties sleuthWebProperties) {
-		return new ZipkinHttpSpanExtractor(Pattern.compile(sleuthWebProperties.getSkipPattern()));
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public HttpSpanInjector httpSpanInjector() {
-		return new ZipkinHttpSpanInjector();
 	}
 
 	@Configuration
