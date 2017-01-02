@@ -54,7 +54,7 @@ import org.springframework.scheduling.support.PeriodicTrigger;
  * @since 1.0.0
  */
 @Configuration
-@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class })
+@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class, ZipkinProperties.class })
 @AutoConfigureAfter(TraceMetricsAutoConfiguration.class)
 @AutoConfigureBefore(ChannelBindingAutoConfiguration.class)
 @EnableBinding(SleuthSource.class)
@@ -96,12 +96,15 @@ public class SleuthStreamAutoConfiguration {
 		@Autowired(required = false)
 		private ServerProperties serverProperties;
 
+		@Autowired
+		private ZipkinProperties zipkinProperties;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Bean
 		public HostLocator zipkinEndpointLocator() {
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName, this.zipkinProperties);
 		}
 
 	}
@@ -113,6 +116,9 @@ public class SleuthStreamAutoConfiguration {
 		@Autowired(required = false)
 		private ServerProperties serverProperties;
 
+		@Autowired
+		private ZipkinProperties zipkinProperties;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
@@ -122,9 +128,9 @@ public class SleuthStreamAutoConfiguration {
 		@Bean
 		public HostLocator zipkinEndpointLocator() {
 			if (this.client != null) {
-				return new DiscoveryClientHostLocator(this.client);
+				return new DiscoveryClientHostLocator(this.client, this.zipkinProperties);
 			}
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName, this.zipkinProperties);
 		}
 
 	}
