@@ -37,6 +37,7 @@ import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.integration.config.GlobalChannelInterceptor;
 import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -76,8 +77,8 @@ public class SleuthStreamAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter) {
-		return new StreamSpanReporter(endpointLocator, spanMetricReporter);
+			SpanMetricReporter spanMetricReporter, Environment environment) {
+		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment);
 	}
 
 	@Bean(name = StreamSpanReporter.POLLER)
