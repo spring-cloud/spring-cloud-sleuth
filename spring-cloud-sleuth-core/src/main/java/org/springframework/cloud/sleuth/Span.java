@@ -134,6 +134,18 @@ public class Span {
 	 */
 	public static final String SPAN_PEER_SERVICE_TAG_NAME = "peer.service";
 
+	/**
+	 * ID of the instance from which the span was originated. This tag is related to the
+	 * client side communication of an RPC call.
+	 */
+	public static final String SPAN_CLIENT_INSTANCEID = "client.instanceid";
+
+	/**
+	 * ID of the instance from which the span was originated. This tag is related to the
+	 * server side communication of an RPC call.
+	 */
+	public static final String SPAN_SERVER_INSTANCEID = "server.instanceid";
+
 	private final long begin;
 	private long end = 0;
 	private final String name;
