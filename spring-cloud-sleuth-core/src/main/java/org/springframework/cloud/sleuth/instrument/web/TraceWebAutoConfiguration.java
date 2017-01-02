@@ -15,8 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
@@ -34,7 +34,6 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -49,7 +48,7 @@ import static javax.servlet.DispatcherType.REQUEST;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables tracing to HTTP requests.
+ * enables tracing to HTTP requests for Web based applications.
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Michal Chmielarz, 4financeIT
@@ -61,8 +60,8 @@ import static javax.servlet.DispatcherType.REQUEST;
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
-@EnableConfigurationProperties({TraceKeys.class, SleuthWebProperties.class})
+@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
+@EnableConfigurationProperties({ SleuthWebProperties.class })
 public class TraceWebAutoConfiguration {
 
 	/**
@@ -84,12 +83,6 @@ public class TraceWebAutoConfiguration {
 	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
 	public TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(BeanFactory beanFactory) {
 		return new TraceSpringDataBeanPostProcessor(beanFactory);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public HttpTraceKeysInjector httpTraceKeysInjector(Tracer tracer, TraceKeys traceKeys) {
-		return new HttpTraceKeysInjector(tracer, traceKeys);
 	}
 
 	@Bean
