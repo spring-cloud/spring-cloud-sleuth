@@ -17,17 +17,20 @@
 package org.springframework.cloud.sleuth.stream;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.commons.util.IdUtils;
+import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
+import org.springframework.core.env.Environment;
 import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.Poller;
@@ -41,7 +44,11 @@ import org.springframework.integration.annotation.Poller;
 @MessageEndpoint
 public class StreamSpanReporter implements SpanReporter {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final org.apache.commons.logging.Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
+	private static final List<String> RPC_EVENTS = Arrays.asList(
+			Span.CLIENT_RECV, Span.CLIENT_SEND, Span.SERVER_RECV, Span.SERVER_SEND
+	);
 
 	/**
 	 * Bean name for the
@@ -53,10 +60,19 @@ public class StreamSpanReporter implements SpanReporter {
 	private BlockingQueue<Span> queue = new LinkedBlockingQueue<>(1000);
 	private final HostLocator endpointLocator;
 	private final SpanMetricReporter spanMetricReporter;
+	private final Environment environment;
 
-	public StreamSpanReporter(HostLocator endpointLocator, SpanMetricReporter spanMetricReporter) {
+	@Deprecated
+	public StreamSpanReporter(HostLocator endpointLocator,
+			SpanMetricReporter spanMetricReporter) {
+		this(endpointLocator, spanMetricReporter, null);
+	}
+
+	public StreamSpanReporter(HostLocator endpointLocator,
+			SpanMetricReporter spanMetricReporter, Environment environment) {
 		this.endpointLocator = endpointLocator;
 		this.spanMetricReporter = spanMetricReporter;
+		this.environment = environment;
 	}
 
 	public void setQueue(BlockingQueue<Span> queue) {
@@ -84,6 +100,9 @@ public class StreamSpanReporter implements SpanReporter {
 	public void report(Span span) {
 		if (span.isExportable()) {
 			try {
+				if (this.environment != null) {
+					processLogs(span);
+				}
 				this.queue.add(span);
 			} catch (Exception e) {
 				this.spanMetricReporter.incrementDroppedSpans(1);
@@ -97,4 +116,13 @@ public class StreamSpanReporter implements SpanReporter {
 			}
 		}
 	}
+
+	private void processLogs(Span span) {
+		for (Log spanLog : span.logs()) {
+			if (RPC_EVENTS.contains(spanLog.getEvent())) {
+				span.tag(Span.INSTANCEID, IdUtils.getDefaultInstanceId(this.environment));
+			}
+		}
+	}
+
 }

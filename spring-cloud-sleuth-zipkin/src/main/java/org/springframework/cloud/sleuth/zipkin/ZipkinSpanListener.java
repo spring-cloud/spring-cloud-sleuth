@@ -21,9 +21,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.cloud.commons.util.IdUtils;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 import zipkin.Annotation;
@@ -41,13 +43,17 @@ public class ZipkinSpanListener implements SpanReporter {
 	private static final List<String> ZIPKIN_START_EVENTS = Arrays.asList(
 			Constants.CLIENT_RECV, Constants.SERVER_RECV
 	);
+	private static final List<String> RPC_EVENTS = Arrays.asList(
+			Constants.CLIENT_RECV, Constants.CLIENT_SEND, Constants.SERVER_RECV, Constants.SERVER_SEND
+	);
 
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
 			.getLog(ZipkinSpanListener.class);
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 	private static final byte[] UNKNOWN_BYTES = "unknown".getBytes(UTF_8);
 
-	private ZipkinSpanReporter reporter;
+	private final ZipkinSpanReporter reporter;
+	private final Environment environment;
 	/**
 	 * Endpoint is the visible IP address of this service, the port it is listening on and
 	 * the service name from discovery.
@@ -55,9 +61,16 @@ public class ZipkinSpanListener implements SpanReporter {
 	// Visible for testing
 	EndpointLocator endpointLocator;
 
+	@Deprecated
 	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
+		this(reporter, endpointLocator, null);
+	}
+
+	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
+			Environment environment) {
 		this.reporter = reporter;
 		this.endpointLocator = endpointLocator;
+		this.environment = environment;
 	}
 
 	/**
@@ -76,15 +89,10 @@ public class ZipkinSpanListener implements SpanReporter {
 	zipkin.Span convert(Span span) {
 		zipkin.Span.Builder zipkinSpan = zipkin.Span.builder();
 
-		// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
-		if (notClientOrServer(span)) {
-			ensureLocalComponent(span, zipkinSpan);
-		}
-		addZipkinAnnotations(zipkinSpan, span, this.endpointLocator.local());
-		addZipkinBinaryAnnotations(zipkinSpan, span, this.endpointLocator.local());
-		if (hasClientSend(span)) {
-			ensureServerAddr(span, zipkinSpan);
-		}
+		Endpoint endpoint = this.endpointLocator.local();
+		processLogs(span, zipkinSpan, endpoint);
+		addZipkinAnnotations(zipkinSpan, span, endpoint);
+		addZipkinBinaryAnnotations(zipkinSpan, span, endpoint);
 		// In the RPC span model, the client owns the timestamp and duration of the span. If we
 		// were propagated an id, we can assume that we shouldn't report timestamp or duration,
 		// rather let the client do that. Worst case we were propagated an unreported ID and
@@ -134,22 +142,40 @@ public class ZipkinSpanListener implements SpanReporter {
 		}
 	}
 
-	private boolean notClientOrServer(Span span) {
+	// Instead of going through the list of logs multiple times we're doing it only once
+	private void processLogs(Span span, zipkin.Span.Builder zipkinSpan, Endpoint endpoint) {
+		boolean notClientOrServer = true;
+		boolean hasClientSend = false;
+		boolean instanceIdToTag = false;
 		for (Log log : span.logs()) {
+			if (RPC_EVENTS.contains(log.getEvent())) {
+				instanceIdToTag = true;
+			}
 			if (ZIPKIN_START_EVENTS.contains(log.getEvent())) {
-				return false;
+				notClientOrServer = false;
+			}
+			if (Constants.CLIENT_SEND.equals(log.getEvent())) {
+				hasClientSend = !span.tags().containsKey(Constants.SERVER_ADDR);
 			}
 		}
-		return true;
+		if (notClientOrServer) {
+			// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
+			ensureLocalComponent(span, zipkinSpan);
+		}
+		if (hasClientSend) {
+			ensureServerAddr(span, zipkinSpan);
+		}
+		if (instanceIdToTag && this.environment != null) {
+			setInstanceIdIfPresent(zipkinSpan, endpoint, Span.INSTANCEID);
+		}
 	}
 
-	private boolean hasClientSend(Span span) {
-		for (Log log : span.logs()) {
-			if (Constants.CLIENT_SEND.equals(log.getEvent())) {
-				return !span.tags().containsKey(Constants.SERVER_ADDR);
-			}
+	private void setInstanceIdIfPresent(zipkin.Span.Builder zipkinSpan,
+			Endpoint endpoint, String key) {
+		String property = IdUtils.getDefaultInstanceId(this.environment);
+		if (StringUtils.hasText(property)) {
+			addZipkinBinaryAnnotation(key, property, endpoint, zipkinSpan);
 		}
-		return false;
 	}
 
 	/**
@@ -172,13 +198,18 @@ public class ZipkinSpanListener implements SpanReporter {
 	private void addZipkinBinaryAnnotations(zipkin.Span.Builder zipkinSpan,
 			Span span, Endpoint ep) {
 		for (Map.Entry<String, String> e : span.tags().entrySet()) {
-			BinaryAnnotation binaryAnn = BinaryAnnotation.builder()
-					.type(BinaryAnnotation.Type.STRING)
-					.key(e.getKey())
-					.value(e.getValue().getBytes(UTF_8))
-					.endpoint(ep).build();
-			zipkinSpan.addBinaryAnnotation(binaryAnn);
+			addZipkinBinaryAnnotation(e.getKey(), e.getValue(), ep, zipkinSpan);
 		}
+	}
+
+	private void addZipkinBinaryAnnotation(String key, String value, Endpoint ep,
+			zipkin.Span.Builder zipkinSpan) {
+		BinaryAnnotation binaryAnn = BinaryAnnotation.builder()
+				.type(BinaryAnnotation.Type.STRING)
+				.key(key)
+				.value(value.getBytes(UTF_8))
+				.endpoint(ep).build();
+		zipkinSpan.addBinaryAnnotation(binaryAnn);
 	}
 
 	/**
