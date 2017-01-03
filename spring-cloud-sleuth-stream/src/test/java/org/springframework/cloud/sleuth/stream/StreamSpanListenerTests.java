@@ -35,6 +35,7 @@ import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -159,7 +160,7 @@ public class StreamSpanListenerTests {
 	@Import({ ZipkinTestConfiguration.class, SleuthStreamAutoConfiguration.class,
 			TraceMetricsAutoConfiguration.class, TestSupportBinderAutoConfiguration.class,
 			ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class,
-			PropertyPlaceholderAutoConfiguration.class })
+			PropertyPlaceholderAutoConfiguration.class, UtilAutoConfiguration.class })
 	protected static class TestConfiguration {
 	}
 

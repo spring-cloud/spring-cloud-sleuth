@@ -10,6 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
+import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.log.SpanLogger;
@@ -96,7 +97,7 @@ public class SleuthStreamAutoConfigurationTest {
 	}
 
 	private void assertPollerConfiguration(PollerMetadata poller,
-			long expectedMaxMessages, long expectedFixedDelay) {
+										   long expectedMaxMessages, long expectedFixedDelay) {
 		assertThat(poller.getMaxMessagesPerPoll()).isEqualTo(expectedMaxMessages);
 		Trigger trigger = poller.getTrigger();
 		assertThat(trigger).isInstanceOf(PeriodicTrigger.class);
@@ -120,7 +121,7 @@ public class SleuthStreamAutoConfigurationTest {
 	@Import({ SleuthStreamAutoConfiguration.class, TraceMetricsAutoConfiguration.class,
 			TestSupportBinderAutoConfiguration.class,
 			ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class,
-			PropertyPlaceholderAutoConfiguration.class })
+			PropertyPlaceholderAutoConfiguration.class, UtilAutoConfiguration.class })
 	public static class BaseConfiguration {
 		@Bean
 		SpanLogger spanLogger() {
