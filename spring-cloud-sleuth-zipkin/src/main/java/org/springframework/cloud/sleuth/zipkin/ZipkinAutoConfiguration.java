@@ -35,6 +35,7 @@ import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.env.Environment;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -81,8 +82,9 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
-		return new ZipkinSpanListener(reporter, endpointLocator);
+	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
+			Environment environment) {
+		return new ZipkinSpanListener(reporter, endpointLocator, environment);
 	}
 
 	@Configuration

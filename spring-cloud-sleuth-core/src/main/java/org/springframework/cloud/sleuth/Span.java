@@ -135,6 +135,11 @@ public class Span implements SpanContext {
 	 */
 	public static final String SPAN_PEER_SERVICE_TAG_NAME = "peer.service";
 
+	/**
+	 * ID of the instance from which the span was originated.
+	 */
+	public static final String INSTANCEID = "spring.instance_id";
+
 	private final long begin;
 	private long end = 0;
 	private final String name;
