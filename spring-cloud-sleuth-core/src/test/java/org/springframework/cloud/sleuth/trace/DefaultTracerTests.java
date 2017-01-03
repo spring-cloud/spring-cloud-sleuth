@@ -183,6 +183,7 @@ public class DefaultTracerTests {
 		then(span).hasATag("key", "value").hasLoggedAnEvent("event");
 		then(continuedSpan).hasATag("key", "value").hasLoggedAnEvent("event");
 		then(span).isEqualTo(continuedSpan);
+		tracer.close(span);
 	}
 
 	private Span assertSpan(List<Span> spans, Long parentId, String name) {
