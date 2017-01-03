@@ -97,7 +97,7 @@ public class SleuthStreamAutoConfigurationTest {
 	}
 
 	private void assertPollerConfiguration(PollerMetadata poller,
-			long expectedMaxMessages, long expectedFixedDelay) {
+										   long expectedMaxMessages, long expectedFixedDelay) {
 		assertThat(poller.getMaxMessagesPerPoll()).isEqualTo(expectedMaxMessages);
 		Trigger trigger = poller.getTrigger();
 		assertThat(trigger).isInstanceOf(PeriodicTrigger.class);

@@ -16,15 +16,19 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import zipkin.Endpoint;
+
+import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
+import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.context.event.EventListener;
-
-import zipkin.Endpoint;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link EndpointLocator} implementation that:
@@ -34,32 +38,51 @@ import zipkin.Endpoint;
  *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
+ * You can override the name using {@link ZipkinProperties.Service#setName(String)}
+ *
  * @author Dave Syer
  * @since 1.0.0
  */
 public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	private final ServerProperties serverProperties;
 	private final String appName;
 	private final InetUtils inetUtils;
+	private final ZipkinProperties zipkinProperties;
 	private Integer port;
 
-	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,String appName) {
-		this(serverProperties,appName,new InetUtils(new InetUtilsProperties()));
+	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,String appName,
+											ZipkinProperties zipkinProperties) {
+		this(serverProperties,appName,zipkinProperties, null);
 	}
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-			String appName, InetUtils inetUtils) {
+											String appName, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
-		this.inetUtils = inetUtils;
+		this.zipkinProperties = zipkinProperties;
+		if (inetUtils == null){
+			this.inetUtils = new InetUtils(new InetUtilsProperties());
+		}
+		else {
+			this.inetUtils = inetUtils;
+		}
 	}
 
 	@Override
 	public Endpoint local() {
-		int address = getAddress();
-		Integer port = getPort();
-		return Endpoint.create(this.appName, address, port);
+		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
+				this.zipkinProperties.getService().getName() : this.appName;
+		if (log.isDebugEnabled()) {
+			log.debug("Span will contain serviceName [" + serviceName + "]");
+		}
+		return Endpoint.builder()
+				.serviceName(serviceName)
+				.ipv4(getAddress())
+				.port(getPort())
+				.build();
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)
@@ -68,11 +91,11 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	}
 
 	private Integer getPort() {
-		if (this.port != null) {
+		if (this.port!=null) {
 			return this.port;
 		}
 		Integer port;
-		if (this.serverProperties != null && this.serverProperties.getPort() != null) {
+		if (this.serverProperties!=null && this.serverProperties.getPort() != null) {
 			port = this.serverProperties.getPort();
 		}
 		else {

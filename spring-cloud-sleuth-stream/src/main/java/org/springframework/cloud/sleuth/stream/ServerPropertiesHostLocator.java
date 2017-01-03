@@ -23,6 +23,7 @@ import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * A {@link HostLocator} that retrieves:
@@ -33,6 +34,8 @@ import org.springframework.util.Assert;
  *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
+ * You can override the value of service id by {@link ZipkinProperties#setName(String)}
+ *
  * @author Dave Syer
  * @since 1.0.0
  */
@@ -41,19 +44,28 @@ public class ServerPropertiesHostLocator implements HostLocator {
 	private final ServerProperties serverProperties; // Nullable
 	private final String appName;
 	private final InetUtils inetUtils;
+	private final ZipkinProperties zipkinProperties;
 	private Integer port; // Lazy assigned
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
-			String appName) {
-		this(serverProperties, appName, new InetUtils(new InetUtilsProperties()));
+										String appName, ZipkinProperties zipkinProperties) {
+		this(serverProperties, appName, zipkinProperties,
+				null);
 	}
 
-	public ServerPropertiesHostLocator(ServerProperties serverProperties, String appName,
-			InetUtils inetUtils) {
+	public ServerPropertiesHostLocator(ServerProperties serverProperties,
+										String appName, ZipkinProperties zipkinProperties,
+										InetUtils inetUtils) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
-		this.inetUtils = inetUtils;
 		Assert.notNull(this.appName, "appName");
+		this.zipkinProperties = zipkinProperties;
+		if (inetUtils == null){
+			this.inetUtils = new InetUtils(new InetUtilsProperties());
+		}
+		else {
+			this.inetUtils = inetUtils;
+		}
 	}
 
 	@Override
@@ -96,7 +108,9 @@ public class ServerPropertiesHostLocator implements HostLocator {
 
 	private String getServiceName(Span span) {
 		String serviceName;
-		if (span.getProcessId() != null) {
+		if (StringUtils.hasText(this.zipkinProperties.getName())) {
+			serviceName = this.zipkinProperties.getName();
+		} else if (span.getProcessId() != null) {
 			serviceName = span.getProcessId();
 		}
 		else {

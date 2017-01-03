@@ -16,14 +16,14 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +34,8 @@ public class ServerPropertiesEndpointLocatorTests {
 	@Test
 	public void portDefaultsTo8080() throws UnknownHostException {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown", localAddress(ADDRESS1234));
+				new ServerProperties(), "unknown", new ZipkinProperties(),
+				localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port).isEqualTo((short) 8080);
 	}
@@ -45,7 +46,7 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setPort(1234);
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", localAddress(ADDRESS1234));
+				properties, "unknown", new ZipkinProperties(),localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port).isEqualTo((short) 1234);
 	}
@@ -53,7 +54,7 @@ public class ServerPropertiesEndpointLocatorTests {
 	@Test
 	public void portDefaultsToLocalhost() throws UnknownHostException {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown", localAddress(ADDRESS1234));
+				new ServerProperties(), "unknown", new ZipkinProperties(), localAddress(ADDRESS1234));
 
 		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
 	}
@@ -64,9 +65,22 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setAddress(InetAddress.getByAddress(ADDRESS1234));
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", localAddress(new byte[] { 4, 4, 4, 4 }));
+				properties, "unknown", new ZipkinProperties(),
+				localAddress(new byte[] { 4, 4, 4, 4 }));
 
 		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
+	}
+
+	@Test
+	public void appNameFromProperties() throws UnknownHostException {
+		ServerProperties properties = new ServerProperties();
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		zipkinProperties.getService().setName("foo");
+
+		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
+				properties, "unknown", zipkinProperties);
+
+		assertThat(locator.local().serviceName).isEqualTo("foo");
 	}
 
 	private InetUtils localAddress(byte[] address) throws UnknownHostException {

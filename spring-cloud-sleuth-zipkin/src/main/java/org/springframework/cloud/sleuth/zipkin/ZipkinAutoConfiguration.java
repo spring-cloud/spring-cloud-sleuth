@@ -35,6 +35,7 @@ import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.env.Environment;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -61,7 +62,7 @@ public class ZipkinAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin,
-			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
+										ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = new RestTemplate();
 		zipkinRestTemplateCustomizer.customize(restTemplate);
 		return new HttpZipkinSpanReporter(restTemplate, zipkin.getBaseUrl(), zipkin.getFlushInterval(),
@@ -81,8 +82,9 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Bean
-	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
-		return new ZipkinSpanListener(reporter, endpointLocator);
+	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
+											Environment environment) {
+		return new ZipkinSpanListener(reporter, endpointLocator, environment);
 	}
 
 	@Configuration
@@ -93,13 +95,19 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
 
+		@Autowired
+		private ZipkinProperties zipkinProperties;
+
+		@Autowired(required=false)
+		private InetUtils inetUtils;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Bean
-		public EndpointLocator zipkinEndpointLocator(InetUtils inetUtils) {
-			return new ServerPropertiesEndpointLocator(this.serverProperties,
-					this.appName, inetUtils);
+		public EndpointLocator zipkinEndpointLocator() {
+			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
+					this.zipkinProperties, this.inetUtils);
 		}
 
 	}
@@ -113,6 +121,12 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
 
+		@Autowired
+		private ZipkinProperties zipkinProperties;
+
+		@Autowired(required=false)
+		private InetUtils inetUtils;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
@@ -120,15 +134,15 @@ public class ZipkinAutoConfiguration {
 		private DiscoveryClient client;
 
 		@Bean
-		public EndpointLocator zipkinEndpointLocator(InetUtils inetUtils) {
+		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties,
-							this.appName, inetUtils));
+					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
+							this.zipkinProperties, this.inetUtils));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
 			if (this.client!=null) {
-				return new DiscoveryClientEndpointLocator(this.client);
+				return new DiscoveryClientEndpointLocator(this.client, this.zipkinProperties);
 			}
 			return null;
 		}

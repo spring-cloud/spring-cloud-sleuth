@@ -37,6 +37,7 @@ import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.integration.config.GlobalChannelInterceptor;
 import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -54,7 +55,7 @@ import org.springframework.scheduling.support.PeriodicTrigger;
  * @since 1.0.0
  */
 @Configuration
-@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class })
+@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class, ZipkinProperties.class })
 @AutoConfigureAfter(TraceMetricsAutoConfiguration.class)
 @AutoConfigureBefore(ChannelBindingAutoConfiguration.class)
 @EnableBinding(SleuthSource.class)
@@ -76,8 +77,8 @@ public class SleuthStreamAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter) {
-		return new StreamSpanReporter(endpointLocator, spanMetricReporter);
+														SpanMetricReporter spanMetricReporter, Environment environment) {
+		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment);
 	}
 
 	@Bean(name = StreamSpanReporter.POLLER)
@@ -97,13 +98,19 @@ public class SleuthStreamAutoConfiguration {
 		@Autowired(required = false)
 		private ServerProperties serverProperties;
 
+		@Autowired
+		private ZipkinProperties zipkinProperties;
+
+		@Autowired
+		InetUtils inetUtils;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Bean
-		public HostLocator zipkinEndpointLocator(InetUtils inetUtils) {
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName,
-					inetUtils);
+		public HostLocator zipkinEndpointLocator() {
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName, this.zipkinProperties,
+					this.inetUtils);
 		}
 
 	}
@@ -117,6 +124,12 @@ public class SleuthStreamAutoConfiguration {
 		@Autowired(required = false)
 		private ServerProperties serverProperties;
 
+		@Autowired
+		private ZipkinProperties zipkinProperties;
+
+		@Autowired(required = false)
+		InetUtils inetUtils;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
@@ -124,12 +137,12 @@ public class SleuthStreamAutoConfiguration {
 		private DiscoveryClient client;
 
 		@Bean
-		public HostLocator zipkinEndpointLocator(InetUtils inetUtils) {
+		public HostLocator zipkinEndpointLocator() {
 			if (this.client != null) {
-				return new DiscoveryClientHostLocator(this.client);
+				return new DiscoveryClientHostLocator(this.client, this.zipkinProperties);
 			}
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName,
-					inetUtils);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName, this.zipkinProperties,
+					this.inetUtils);
 		}
 
 	}

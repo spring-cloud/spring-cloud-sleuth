@@ -8,7 +8,6 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.Assert;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,23 +43,23 @@ public class ZipkinAutoConfigurationTest {
 		ctxt.close();
 	}
 
-    @Test
-    public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
-        ConfigurableApplicationContext ctxt = new SpringApplication(
-                ConfigurationWithDiscoveryClient.class).run("--spring.zipkin.discoveryLocalEndpointLocator=true");
-        assertThat(ctxt.getBean(EndpointLocator.class))
-                .isInstanceOf(FallbackHavingEndpointLocator.class);
-        ctxt.close();
-    }
+	@Test
+	public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
+		ConfigurableApplicationContext ctxt = new SpringApplication(
+				ConfigurationWithDiscoveryClient.class).run("--spring.zipkin.discoveryLocalEndpointLocator=true");
+		assertThat(ctxt.getBean(EndpointLocator.class))
+				.isInstanceOf(FallbackHavingEndpointLocator.class);
+		ctxt.close();
+	}
 
-    @Test
-    public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
-        ConfigurableApplicationContext ctxt = new SpringApplication(
-                ConfigurationWithDiscoveryClient.class,ConfigurationWithCustomLocator.class).run("--spring.zipkin.discoveryLocalEndpointLocator=true");
-        assertThat(ctxt.getBean(EndpointLocator.class))
-                .isSameAs(ConfigurationWithCustomLocator.locator);
-        ctxt.close();
-    }
+	@Test
+	public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
+		ConfigurableApplicationContext ctxt = new SpringApplication(
+				ConfigurationWithDiscoveryClient.class,ConfigurationWithCustomLocator.class).run("--spring.zipkin.discoveryLocalEndpointLocator=true");
+		assertThat(ctxt.getBean(EndpointLocator.class))
+				.isSameAs(ConfigurationWithCustomLocator.locator);
+		ctxt.close();
+	}
 
 	@Configuration
 	@EnableAutoConfiguration

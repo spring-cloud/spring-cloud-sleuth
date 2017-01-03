@@ -28,7 +28,7 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
 		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithDiscoveryClient.class)
-						.run("--spring.main.web_environment=false")) {
+				.run("--spring.main.web_environment=false")) {
 			assertThat(ctxt.getBean(HostLocator.class))
 					.isInstanceOf(ServerPropertiesHostLocator.class);
 		}
@@ -38,7 +38,7 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	public void endpointLocatorShouldRespectExistingEndpointLocator() {
 		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithCustomLocator.class)
-						.run("--spring.main.web_environment=false")) {
+				.run("--spring.main.web_environment=false")) {
 			assertThat(ctxt.getBean(HostLocator.class))
 					.isSameAs(ConfigurationWithCustomLocator.locator);
 		}
@@ -48,8 +48,8 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
 		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithDiscoveryClient.class).run(
-						"--spring.zipkin.discoveryLocalEndpointLocator=true",
-						"--spring.main.web_environment=false")) {
+				"--spring.zipkin.discoveryLocalEndpointLocator=true",
+				"--spring.main.web_environment=false")) {
 			assertThat(ctxt.getBean(HostLocator.class))
 					.isInstanceOf(DiscoveryClientHostLocator.class);
 		}
@@ -60,8 +60,8 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithDiscoveryClient.class,
 				ConfigurationWithCustomLocator.class).run(
-						"--spring.zipkin.discoveryLocalEndpointLocator=true",
-						"--spring.main.web_environment=false")) {
+				"--spring.zipkin.discoveryLocalEndpointLocator=true",
+				"--spring.main.web_environment=false")) {
 			assertThat(ctxt.getBean(HostLocator.class))
 					.isSameAs(ConfigurationWithCustomLocator.locator);
 		}
