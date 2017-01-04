@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-sleuth</artifactId>
-		<version>1.0.9.BUILD-SNAPSHOT</version>
+		<version>1.0.12.BUILD-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
