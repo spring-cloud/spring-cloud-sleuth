@@ -16,8 +16,6 @@
 	<properties>
 		<zipkin.version>1.16.2</zipkin.version>
 		<zipkin-reporter.version>0.6.9</zipkin-reporter.version>
-		<reactivestreams.version>1.0.0</reactivestreams.version>
-		<reactor.version>3.0.2.RELEASE</reactor.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -85,16 +83,6 @@
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin-junit</artifactId>
 				<version>${zipkin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.reactivestreams</groupId>
-				<artifactId>reactive-streams</artifactId>
-				<version>${reactivestreams.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.projectreactor</groupId>
-				<artifactId>reactor-core</artifactId>
-				<version>${reactor.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.reporter</groupId>
