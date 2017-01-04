@@ -470,6 +470,9 @@ We're registering a custom trace representation of a `Scheduler`. The way the Re
 is such that whenever a Span was created before running the `Flux` / `Mono` it will get continued when
  the first operation will take place and it will be the Reactor's internals that will *close* that span.
 
+You can wrap your `Publisher` in a trace representation like this `TracePublisher.from(...)`. If you're using
+Reactor's async operations then out trace representaiton of a `Scheduler` will take care of span creation and closing.
+
 If you want to disable the Reactor instrumentation just pass the `spring.sleuth.reactor.enabled` equal to false.
 
 === HTTP integration
