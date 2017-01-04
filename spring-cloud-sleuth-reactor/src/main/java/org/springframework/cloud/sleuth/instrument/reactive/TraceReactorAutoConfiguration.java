@@ -38,11 +38,11 @@ import reactor.core.scheduler.Schedulers;
  *
  * @author Marcin Grzejszczak
  * @author Stephane Maldini
- * @since 1.0.9
+ * @since 1.0.12
  */
 @Configuration
 @ConditionalOnClass(Scheduler.class)
-@ConditionalOnBean({Tracer.class, TraceKeys.class})
+@ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.reactor.enabled", matchIfMissing = true)
 public class TraceReactorAutoConfiguration {
 

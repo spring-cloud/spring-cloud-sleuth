@@ -29,7 +29,7 @@ import reactor.core.scheduler.Scheduler;
  *
  * @author Marcin Grzejszczak
  * @author Stephane Maldini
- * @since 1.0.9
+ * @since 1.0.12
  */
 public class TraceScheduler implements Scheduler {
 
@@ -64,7 +64,7 @@ public class TraceScheduler implements Scheduler {
 	 * Workers are thread safe. What's extremely important is that
 	 * the {@link Worker#schedule(Runnable)} method is executed in the
 	 * main thread. The delegate's {@code schedule} might be executed in a
-	 * separate thread. That's in the main thread we're *detaching* the
+	 * separate thread. That's why in the main thread we're *detaching* the
 	 * span from the current thread. That's because we want the Reactor
 	 * to eventually close a span. However closing of a span can take place
 	 * in another thread thus we need to clear the main one.

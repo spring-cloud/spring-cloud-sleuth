@@ -33,7 +33,7 @@ import org.springframework.cloud.sleuth.Tracer;
  *
  * @author Marcin Grzejszczak
  * @author Stephane Maldini
- * @since 1.0.9
+ * @since 1.0.12
  */
 public class TracePublisher<T> implements Publisher<T> {
 
@@ -78,13 +78,7 @@ public class TracePublisher<T> implements Publisher<T> {
 
 		@Override
 		public void onSubscribe(Subscription s) {
-			Span span;
-			if (this.parent == null) {
-				span = this.tracer.createSpan(REACTIVE_COMPONENT);
-			}
-			else {
-				span = this.tracer.continueSpan(this.parent);
-			}
+			Span span = createSpan();
 			if (!span.tags().containsKey(Span.SPAN_LOCAL_COMPONENT_TAG_NAME)) {
 				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, REACTIVE_COMPONENT);
 			}
@@ -92,6 +86,13 @@ public class TracePublisher<T> implements Publisher<T> {
 					+ this.traceKeys.getAsync().getThreadNameKey(), Thread.currentThread().getName());
 			this.current = span;
 			this.actual.onSubscribe(s);
+		}
+
+		private Span createSpan() {
+			if (this.parent == null) {
+				return this.tracer.createSpan(REACTIVE_COMPONENT);
+			}
+			return this.tracer.continueSpan(this.parent);
 		}
 
 		@Override
