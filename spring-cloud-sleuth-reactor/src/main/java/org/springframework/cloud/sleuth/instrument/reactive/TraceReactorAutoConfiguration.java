@@ -65,6 +65,17 @@ public class TraceReactorAutoConfiguration {
 							tracer, traceKeys);
 				}
 
+				@Override
+				public Scheduler newElastic(int ttlSeconds, ThreadFactory threadFactory) {
+					return new TraceScheduler(Schedulers.Factory.super.newElastic(ttlSeconds, threadFactory),
+							tracer, traceKeys);
+				}
+
+				@Override public Scheduler newParallel(int parallelism,
+						ThreadFactory threadFactory) {
+					return new TraceScheduler(Schedulers.Factory.super.newParallel(parallelism, threadFactory),
+							tracer, traceKeys);
+				}
 			});
 		}
 	}

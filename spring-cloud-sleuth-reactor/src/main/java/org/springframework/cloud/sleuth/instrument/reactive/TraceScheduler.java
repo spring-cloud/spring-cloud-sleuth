@@ -60,6 +60,10 @@ public class TraceScheduler implements Scheduler {
 		this.delegate.shutdown();
 	}
 
+	@Override public void dispose() {
+		this.delegate.dispose();
+	}
+
 	/**
 	 * Workers are thread safe. What's extremely important is that
 	 * the {@link Worker#schedule(Runnable)} method is executed in the
@@ -100,6 +104,20 @@ public class TraceScheduler implements Scheduler {
 					this.tracer.close(this.parent);
 				}
 			}
+		}
+
+		@Override public void dispose() {
+			try {
+				this.worker.dispose();
+			} finally {
+				if (this.parent != null) {
+					this.tracer.close(this.parent);
+				}
+			}
+		}
+
+		@Override public boolean isDisposed() {
+			return this.worker.isDisposed();
 		}
 	}
 

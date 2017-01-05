@@ -85,15 +85,17 @@ public class ReactorTests {
 
 		Flux.just(1, 2, 3)
 				.publishOn(Schedulers.single())
-				.log("reactor.")
+				.log("reactor.1")
 				.map( d -> d + 1)
 				.map( d -> d + 1)
+				.publishOn(Schedulers.newSingle("secondThread"))
+				.log("reactor.2")
 				.map( (d) -> {
 					spanInOperation.set(ReactorTests.this.tracer.getCurrentSpan());
 					return d + 1;
 				})
 				.map( d -> d + 1)
-				.subscribe();
+				.blockLast();
 
 		Awaitility.await().until(() -> {
 				then(spanInOperation.get()).isEqualTo(span);
