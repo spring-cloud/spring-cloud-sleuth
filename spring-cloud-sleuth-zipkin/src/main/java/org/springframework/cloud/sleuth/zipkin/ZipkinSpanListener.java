@@ -119,7 +119,7 @@ public class ZipkinSpanListener implements SpanReporter {
 		return zipkinSpan.build();
 	}
 
-	private void ensureLocalComponent(Span span, zipkin.Span.Builder zipkinSpan) {
+	private void ensureLocalComponent(Span span, zipkin.Span.Builder zipkinSpan, Endpoint localEndpoint) {
 		if (span.tags().containsKey(Constants.LOCAL_COMPONENT)) {
 			return;
 		}
@@ -130,14 +130,14 @@ public class ZipkinSpanListener implements SpanReporter {
 				.type(BinaryAnnotation.Type.STRING)
 				.key("lc") // LOCAL_COMPONENT
 				.value(processId)
-				.endpoint(this.endpointLocator.local()).build();
+				.endpoint(localEndpoint).build();
 		zipkinSpan.addBinaryAnnotation(component);
 	}
 
-	private void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan) {
+	private void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan, Endpoint localEndpoint) {
 		if (span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME)) {
 			zipkinSpan.addBinaryAnnotation(BinaryAnnotation.address(Constants.SERVER_ADDR,
-					this.endpointLocator.local().toBuilder().serviceName(
+					localEndpoint.toBuilder().serviceName(
 							span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME)).build()));
 		}
 	}
@@ -160,10 +160,10 @@ public class ZipkinSpanListener implements SpanReporter {
 		}
 		if (notClientOrServer) {
 			// A zipkin span without any annotations cannot be queried, add special "lc" to avoid that.
-			ensureLocalComponent(span, zipkinSpan);
+			ensureLocalComponent(span, zipkinSpan, endpoint);
 		}
 		if (hasClientSend) {
-			ensureServerAddr(span, zipkinSpan);
+			ensureServerAddr(span, zipkinSpan, endpoint);
 		}
 		if (instanceIdToTag && this.environment != null) {
 			setInstanceIdIfPresent(zipkinSpan, endpoint, Span.INSTANCEID);
