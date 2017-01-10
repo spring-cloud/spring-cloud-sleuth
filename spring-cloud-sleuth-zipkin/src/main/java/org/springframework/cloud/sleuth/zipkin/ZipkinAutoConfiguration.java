@@ -21,11 +21,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -70,7 +70,8 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnMissingClass("org.springframework.cloud.client.discovery.DiscoveryClient")
+	@ConditionalOnMissingBean(EndpointLocator.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "false", matchIfMissing = true)
 	protected static class DefaultEndpointLocatorConfiguration {
 
 		@Autowired(required=false)
@@ -79,19 +80,24 @@ public class ZipkinAutoConfiguration {
 		@Autowired
 		private ZipkinProperties zipkinProperties;
 
+		@Autowired(required=false)
+		private InetUtils inetUtils;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
-					this.zipkinProperties);
+					this.zipkinProperties, this.inetUtils);
 		}
 
 	}
 
 	@Configuration
 	@ConditionalOnClass(DiscoveryClient.class)
+	@ConditionalOnMissingBean(EndpointLocator.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "true")
 	protected static class DiscoveryClientEndpointLocatorConfiguration {
 
 		@Autowired(required=false)
@@ -99,6 +105,9 @@ public class ZipkinAutoConfiguration {
 
 		@Autowired
 		private ZipkinProperties zipkinProperties;
+
+		@Autowired(required=false)
+		private InetUtils inetUtils;
 
 		@Value("${spring.application.name:unknown}")
 		private String appName;
@@ -110,7 +119,7 @@ public class ZipkinAutoConfiguration {
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
 					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
-							this.zipkinProperties));
+							this.zipkinProperties, this.inetUtils));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {

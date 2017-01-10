@@ -10,6 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.EnvironmentTestUtils;
+import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.log.SpanLogger;
@@ -120,7 +121,7 @@ public class SleuthStreamAutoConfigurationTest {
 	@Import({ SleuthStreamAutoConfiguration.class, TraceMetricsAutoConfiguration.class,
 			TestSupportBinderAutoConfiguration.class,
 			ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class,
-			PropertyPlaceholderAutoConfiguration.class })
+			PropertyPlaceholderAutoConfiguration.class, UtilAutoConfiguration.class })
 	public static class BaseConfiguration {
 		@Bean
 		SpanLogger spanLogger() {

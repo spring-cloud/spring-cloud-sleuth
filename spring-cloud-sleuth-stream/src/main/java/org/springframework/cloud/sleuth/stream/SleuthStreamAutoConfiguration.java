@@ -22,11 +22,11 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
@@ -91,7 +91,8 @@ public class SleuthStreamAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnMissingClass("org.springframework.cloud.client.discovery.DiscoveryClient")
+	@ConditionalOnMissingBean(HostLocator.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "false", matchIfMissing = true)
 	protected static class DefaultEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
@@ -100,18 +101,24 @@ public class SleuthStreamAutoConfiguration {
 		@Autowired
 		private ZipkinProperties zipkinProperties;
 
+		@Autowired
+		InetUtils inetUtils;
+
 		@Value("${spring.application.name:unknown}")
 		private String appName;
 
 		@Bean
 		public HostLocator zipkinEndpointLocator() {
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName, this.zipkinProperties);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName, this.zipkinProperties,
+					this.inetUtils);
 		}
 
 	}
 
 	@Configuration
 	@ConditionalOnClass(DiscoveryClient.class)
+	@ConditionalOnMissingBean(HostLocator.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryLocalEndpointLocator", havingValue = "true")
 	protected static class DiscoveryClientEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
@@ -119,6 +126,9 @@ public class SleuthStreamAutoConfiguration {
 
 		@Autowired
 		private ZipkinProperties zipkinProperties;
+
+		@Autowired(required = false)
+		InetUtils inetUtils;
 
 		@Value("${spring.application.name:unknown}")
 		private String appName;
@@ -131,7 +141,8 @@ public class SleuthStreamAutoConfiguration {
 			if (this.client != null) {
 				return new DiscoveryClientHostLocator(this.client, this.zipkinProperties);
 			}
-			return new ServerPropertiesHostLocator(this.serverProperties, this.appName, this.zipkinProperties);
+			return new ServerPropertiesHostLocator(this.serverProperties, this.appName, this.zipkinProperties,
+					this.inetUtils);
 		}
 
 	}
