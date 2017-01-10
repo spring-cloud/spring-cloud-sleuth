@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import feign.Retryer;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 
@@ -37,7 +38,7 @@ final class SleuthHystrixFeignBuilder {
 	private SleuthHystrixFeignBuilder() {}
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
-		return HystrixFeign.builder()
+		return HystrixFeign.builder().retryer(Retryer.NEVER_RETRY)
 				.client(client(beanFactory));
 	}
 
