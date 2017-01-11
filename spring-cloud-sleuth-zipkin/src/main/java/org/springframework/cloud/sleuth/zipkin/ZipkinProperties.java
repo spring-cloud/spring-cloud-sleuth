@@ -34,6 +34,12 @@ public class ZipkinProperties {
 
 	private Service service = new Service();
 
+	private Locator locator = new Locator();
+
+	public Locator getLocator() {
+		return this.locator;
+	}
+
 	public String getBaseUrl() {
 		return this.baseUrl;
 	}
@@ -74,6 +80,10 @@ public class ZipkinProperties {
 		this.service = service;
 	}
 
+	public void setLocator(Locator locator) {
+		this.locator = locator;
+	}
+
 	/** When enabled, spans are gzipped before sent to the zipkin server */
 	public static class Compression {
 
@@ -100,6 +110,33 @@ public class ZipkinProperties {
 
 		public void setName(String name) {
 			this.name = name;
+		}
+	}
+
+	public static class Locator {
+
+		private Discovery discovery;
+
+		public Discovery getDiscovery() {
+			return this.discovery;
+		}
+
+		public void setDiscovery(Discovery discovery) {
+			this.discovery = discovery;
+		}
+
+		public static class Discovery {
+
+			/** Enabling of locating the host name via service discovery */
+			private boolean enabled;
+
+			public boolean isEnabled() {
+				return this.enabled;
+			}
+
+			public void setEnabled(boolean enabled) {
+				this.enabled = enabled;
+			}
 		}
 	}
 }

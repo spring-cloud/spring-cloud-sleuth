@@ -1,15 +1,13 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import zipkin.Span;
-import zipkin.junit.HttpFailure;
-import zipkin.junit.ZipkinRule;
-
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -20,6 +18,10 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.web.client.RestTemplate;
+
+import zipkin.Span;
+import zipkin.junit.HttpFailure;
+import zipkin.junit.ZipkinRule;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -128,7 +130,8 @@ public class HttpZipkinSpanReporterTest {
 		AtomicReference<Span> receivedSpan = new AtomicReference<>();
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
 				new NoOpSpanLogger(), new ZipkinSpanListener(receivedSpan::set,
-				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo", new ZipkinProperties())), new TraceKeys());
+				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo",
+						new ZipkinProperties(), new InetUtils(new InetUtilsProperties()))), new TraceKeys());
 		// tag::service_name[]
 		org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
 		try {

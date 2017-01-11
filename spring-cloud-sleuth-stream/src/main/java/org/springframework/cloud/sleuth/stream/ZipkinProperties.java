@@ -24,17 +24,66 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 1.0.12
  */
-@ConfigurationProperties("spring.zipkin.service")
+@ConfigurationProperties("spring.zipkin")
 public class ZipkinProperties {
 
-	/** The name of the service, from which the Span was sent via Stream, that should appear in Zipkin */
-	private String name;
+	private Service service = new Service();
 
-	public String getName() {
-		return this.name;
+	private Locator locator = new Locator();
+
+	public Service getService() {
+		return this.service;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setService(Service service) {
+		this.service = service;
+	}
+
+	public Locator getLocator() {
+		return this.locator;
+	}
+
+	public void setLocator(Locator locator) {
+		this.locator = locator;
+	}
+
+	public static class Service {
+		/** The name of the service, from which the Span was sent via Stream, that should appear in Zipkin */
+		private String name;
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	public static class Locator {
+
+		private Discovery discovery;
+
+		public Discovery getDiscovery() {
+			return this.discovery;
+		}
+
+		public void setDiscovery(Discovery discovery) {
+			this.discovery = discovery;
+		}
+
+		public static class Discovery {
+
+			/** Enabling of locating the host name via service discovery */
+			private boolean enabled;
+
+			public boolean isEnabled() {
+				return this.enabled;
+			}
+
+			public void setEnabled(boolean enabled) {
+				this.enabled = enabled;
+			}
+		}
 	}
 }

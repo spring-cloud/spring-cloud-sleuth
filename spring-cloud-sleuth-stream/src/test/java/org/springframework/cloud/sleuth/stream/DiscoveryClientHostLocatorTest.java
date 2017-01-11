@@ -67,7 +67,7 @@ public class DiscoveryClientHostLocatorTest {
 	public void should_override_the_service_name_from_properties() throws Exception {
 		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost());
 		ZipkinProperties zipkinProperties = new ZipkinProperties();
-		zipkinProperties.setName("foo");
+		zipkinProperties.getService().setName("foo");
 		this.discoveryClientHostLocator = new DiscoveryClientHostLocator(this.discoveryClient, zipkinProperties);
 
 		Host host = this.discoveryClientHostLocator.locate(null);
