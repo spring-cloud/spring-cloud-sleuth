@@ -17,12 +17,14 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import java.lang.invoke.MethodHandles;
+import java.nio.ByteBuffer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.StringUtils;
 
@@ -47,20 +49,25 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	private final ServerProperties serverProperties;
 	private final String appName;
+	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port;
 
 	@Deprecated
-	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-			String appName) {
-		this(serverProperties, appName, new ZipkinProperties());
+	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,String appName) {
+		this(serverProperties,appName,new ZipkinProperties(), null);
 	}
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-			String appName, ZipkinProperties zipkinProperties) {
+			String appName, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.serverProperties = serverProperties;
 		this.appName = appName;
 		this.zipkinProperties = zipkinProperties;
+		if (inetUtils == null) {
+			this.inetUtils = new InetUtils(new InetUtilsProperties());
+		} else {
+			this.inetUtils = inetUtils;
+		}
 	}
 
 	@Override
@@ -97,11 +104,12 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	}
 
 	private int getAddress() {
-		if (this.serverProperties!=null && this.serverProperties.getAddress() != null) {
-			return InetUtils.getIpAddressAsInt(this.serverProperties.getAddress().getHostAddress());
+		if (this.serverProperties != null && this.serverProperties.getAddress() != null) {
+			return ByteBuffer.wrap(this.serverProperties.getAddress().getAddress())
+					.getInt();
 		}
 		else {
-			return 127 << 24 | 1;
+			return ByteBuffer.wrap(this.inetUtils.findFirstNonLoopbackAddress().getAddress()).getInt();
 		}
 	}
 }

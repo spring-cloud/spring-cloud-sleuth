@@ -52,8 +52,8 @@ public class DiscoveryClientHostLocator implements HostLocator {
 	@Override
 	public Host locate(Span span) {
 		ServiceInstance instance = this.client.getLocalServiceInstance();
-		String serviceId = StringUtils.hasText(this.zipkinProperties.getName()) ?
-				this.zipkinProperties.getName() : instance.getServiceId();
+		String serviceId = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
+				this.zipkinProperties.getService().getName() : instance.getServiceId();
 		return new Host(serviceId, getIpAddress(instance),
 				instance.getPort());
 	}

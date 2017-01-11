@@ -305,6 +305,21 @@ By default Sleuth assumes that when you send a span to Zipkin, you want the span
 spring.zipkin.service.name: foo
 ----
 
+=== Host locator
+
+In order to define the host that is corresponding to a particular span we need to resolve the host name
+and port. The default approach is to take it from server properties. If those for some reason are not set
+then we're trying to retrieve the host name from the network interfaces.
+
+If you have the discovery client enabled and prefer to retrieve the host address from the registered
+instance in a service registry then you have to set the property (it's applicable for both HTTP and
+Stream based span reporting).
+
+[source,yaml]
+----
+spring.zipkin.locator.discovery.enabled: true
+----
+
 == Span Data as Messages
 
 You can accumulate and send span data over
