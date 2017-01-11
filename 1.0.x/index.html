@@ -472,6 +472,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_example">Example</a></li>
 <li><a href="#_custom_sa_tag_in_zipkin">Custom SA tag in Zipkin</a></li>
 <li><a href="#_custom_service_name">Custom service name</a></li>
+<li><a href="#_host_locator">Host locator</a></li>
 </ul>
 </li>
 <li><a href="#_span_data_as_messages">Span Data as Messages</a>
@@ -1988,6 +1989,24 @@ Remember not to add both <code>peer.service</code> tag and the <code>SA</code> t
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.service.name: foo</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_host_locator">Host locator</h3>
+<div class="paragraph">
+<p>In order to define the host that is corresponding to a particular span we need to resolve the host name
+and port. The default approach is to take it from server properties. If those for some reason are not set
+then we&#8217;re trying to retrieve the host name from the network interfaces.</p>
+</div>
+<div class="paragraph">
+<p>If you have the discovery client enabled and prefer to retrieve the host address from the registered
+instance in a service registry then you have to set the property (it&#8217;s applicable for both HTTP and
+Stream based span reporting).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.locator.discovery.enabled: true</code></pre>
 </div>
 </div>
 </div>
