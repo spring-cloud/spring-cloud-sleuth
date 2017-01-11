@@ -166,7 +166,8 @@ public class DefaultTracer implements Tracer {
 					.traceIdHigh(parent.getTraceIdHigh())
 					.traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
 					.processId(parent.getProcessId()).savedSpan(parent)
-					.exportable(parent.isExportable()).build();
+					.exportable(parent.isExportable())
+					.build();
 			this.spanLogger.logStartedSpan(parent, span);
 			return span;
 		}
