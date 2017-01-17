@@ -16,20 +16,17 @@
 
 package org.springframework.cloud.sleuth.assertions;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.Span;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -111,6 +108,16 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return this;
 	}
 
+	public ListOfSpansAssert allSpansAreExportable() {
+		isNotNull();
+		printSpans();
+		if (!everySpanIsExportable()) {
+			failWithMessage("Expected spans \n <%s> \nto be exportable but there's at least "
+					+ "one which is not", spansToString());
+		}
+		return this;
+	}
+
 	private boolean spanWithKeyTagExists(String tagKey) {
 		for (Span span : this.actual.spans) {
 			if (span.tags().containsKey(tagKey)) {
@@ -136,6 +143,15 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 			}
 		}
 		return exists;
+	}
+
+	private boolean everySpanIsExportable() {
+		for (Span span : this.actual.spans) {
+			if (!span.isExportable()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private boolean hasBaggage(String baggageKey, String baggageValue) {

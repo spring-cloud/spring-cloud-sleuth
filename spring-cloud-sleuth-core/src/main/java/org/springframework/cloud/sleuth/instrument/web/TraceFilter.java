@@ -15,18 +15,18 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,6 +34,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.core.Ordered;
@@ -311,7 +312,12 @@ public class TraceFilter extends GenericFilterBean {
 				spanFromRequest = this.tracer.createSpan(name, NeverSampler.INSTANCE);
 			}
 			else {
-				spanFromRequest = this.tracer.createSpan(name);
+				String header = request.getHeader(Span.SPAN_FLAGS);
+				if (Span.SPAN_SAMPLED.equals(header)) {
+					spanFromRequest = this.tracer.createSpan(name, new AlwaysSampler());
+				} else {
+					spanFromRequest = this.tracer.createSpan(name);
+				}
 			}
 			spanFromRequest.logEvent(Span.SERVER_RECV);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);

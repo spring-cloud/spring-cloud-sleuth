@@ -189,4 +189,14 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		}
 		return this;
 	}
+
+	public SpanAssert isNotExportable() {
+		isNotNull();
+		if (this.actual.isExportable()) {
+			String message = "The span is NOT supposed to be exportable but it is!";
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
 }

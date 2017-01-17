@@ -382,6 +382,38 @@ public class TraceFilterTests {
 		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
 	}
 
+	@Test
+	public void samplesASpanRegardlessOfTheSamplerWhenXB3FlagsIsPresentAndSetTo1() throws Exception {
+		this.request = builder()
+				.header(Span.SPAN_FLAGS, 1)
+				.buildRequest(new MockServletContext());
+		this.sampler = new NeverSampler();
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.httpTraceKeysInjector);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(new ListOfSpans(this.spanReporter.getSpans())).allSpansAreExportable();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	@Test
+	public void doesNotOverrideTheSampledFlagWhenXB3FlagIsSetToOtherValueThan1() throws Exception {
+		this.request = builder()
+				.header(Span.SPAN_FLAGS, 0)
+				.buildRequest(new MockServletContext());
+		this.sampler = new AlwaysSampler();
+		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
+				this.spanExtractor, this.httpTraceKeysInjector);
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(new ListOfSpans(this.spanReporter.getSpans())).allSpansAreExportable();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
 	public void verifyParentSpanHttpTags() {
 		verifyParentSpanHttpTags(HttpStatus.OK);
 	}

@@ -31,8 +31,13 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 				.traceIdHigh(traceId.length() == 32 ? Span.hexToId(traceId, 0) : 0)
 				.traceId(Span.hexToId(traceId))
 				.spanId(Span.hexToId(carrier.get(TraceMessageHeaders.SPAN_ID_NAME)));
-		spanBuilder.exportable(
+		String flags = carrier.get(TraceMessageHeaders.SPAN_FLAGS_NAME);
+		if (Span.SPAN_SAMPLED.equals(flags)) {
+			spanBuilder.exportable(true);
+		} else {
+			spanBuilder.exportable(
 				Span.SPAN_SAMPLED.equals(carrier.get(TraceMessageHeaders.SAMPLED_NAME)));
+		}
 		String processId = carrier.get(TraceMessageHeaders.PROCESS_ID_NAME);
 		String spanName = carrier.get(TraceMessageHeaders.SPAN_NAME_NAME);
 		if (spanName != null) {
