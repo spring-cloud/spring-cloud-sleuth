@@ -1443,6 +1443,20 @@ public Sampler defaultSampler() {
 }</code></pre>
 </div>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+You can set the HTTP header <code>X-B3-Flags</code> to <code>1</code> or when doing messaging you can
+set <code>spanFlags</code> header to <code>1</code>. Then the current span will be forced to be exportable
+regardless of the sampling decision.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
