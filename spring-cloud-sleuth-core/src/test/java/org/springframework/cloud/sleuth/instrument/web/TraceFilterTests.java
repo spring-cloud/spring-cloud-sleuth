@@ -433,7 +433,7 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void samplesWhenDebugFlagIsSetTo1AndOnlyTraceIdIsSet() throws Exception {
+	public void samplesWhenDebugFlagIsSetTo1AndTraceIdIsAlsoSet() throws Exception {
 		this.request = builder()
 				.header(Span.SPAN_FLAGS, 1)
 				.header(Span.TRACE_ID_NAME, 10L)
