@@ -36,6 +36,8 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 		Map<String, String> carrier = TextMapUtil.asMap(textMap);
 		boolean debug = Span.SPAN_SAMPLED.equals(carrier.get(Span.SPAN_FLAGS));
 		if (debug) {
+			// we're only generating Trace ID since if there's no Span ID will assume
+			// that it's equal to Trace ID
 			generateIdIfMissing(carrier, Span.TRACE_ID_NAME);
 		} else if (carrier.get(Span.TRACE_ID_NAME) == null) {
 			// can't build a Span without trace id

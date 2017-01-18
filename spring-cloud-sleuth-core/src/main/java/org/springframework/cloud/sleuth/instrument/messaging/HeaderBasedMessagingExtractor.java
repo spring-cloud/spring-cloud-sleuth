@@ -19,8 +19,10 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 	public Span joinTrace(SpanTextMap textMap) {
 		Map<String, String> carrier = TextMapUtil.asMap(textMap);
 		if (Span.SPAN_SAMPLED.equals(carrier.get(TraceMessageHeaders.SPAN_FLAGS_NAME))) {
-			generateIdIfMissing(carrier, TraceMessageHeaders.SPAN_ID_NAME);
-			generateIdIfMissing(carrier, TraceMessageHeaders.TRACE_ID_NAME);
+			String traceId = generateTraceIdIfMissing(carrier);
+			if (!carrier.containsKey(TraceMessageHeaders.SPAN_ID_NAME)) {
+				carrier.put(TraceMessageHeaders.SPAN_ID_NAME, traceId);
+			}
 		} else if (!hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME)
 				|| !hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME)) {
 			return null;
@@ -29,10 +31,11 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 		return extractSpanFromHeaders(carrier, Span.builder());
 	}
 
-	private void generateIdIfMissing(Map<String, String> carrier, String key) {
-		if (!hasHeader(carrier, key)) {
-			carrier.put(key, Span.idToHex(new Random().nextLong()));
+	private String generateTraceIdIfMissing(Map<String, String> carrier) {
+		if (!hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME)) {
+			carrier.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(new Random().nextLong()));
 		}
+		return carrier.get(TraceMessageHeaders.TRACE_ID_NAME);
 	}
 
 	private Span extractSpanFromHeaders(Map<String, String> carrier, Span.SpanBuilder spanBuilder) {

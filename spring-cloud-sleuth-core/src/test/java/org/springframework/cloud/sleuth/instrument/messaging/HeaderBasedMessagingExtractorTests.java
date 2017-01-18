@@ -123,7 +123,7 @@ public class HeaderBasedMessagingExtractorTests {
 
 		then(span).isExportable();
 		then(span.getTraceId()).isEqualTo(10L);
-		then(span.getSpanId()).isNotNull();
+		then(span.getSpanId()).isEqualTo(10L);
 	}
 
 	private SpanTextMap spanTextMap() {
