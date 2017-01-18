@@ -26,8 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.Span;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,8 +33,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfSpans> {
 
 	private static final Log log = LogFactory.getLog(ListOfSpansAssert.class);
-
-	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	public ListOfSpansAssert(ListOfSpans actual) {
 		super(actual, ListOfSpansAssert.class);
@@ -118,6 +114,16 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return this;
 	}
 
+	public ListOfSpansAssert allSpansHaveTraceId(long traceId) {
+		isNotNull();
+		printSpans();
+		if (!everySpanHasTraceId(traceId)) {
+			failWithMessage("Expected spans \n <%s> \nto have trace id <%s> but there's at least "
+					+ "one which doesn't have it", spansToString(), traceId);
+		}
+		return this;
+	}
+
 	private boolean spanWithKeyTagExists(String tagKey) {
 		for (Span span : this.actual.spans) {
 			if (span.tags().containsKey(tagKey)) {
@@ -148,6 +154,15 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 	private boolean everySpanIsExportable() {
 		for (Span span : this.actual.spans) {
 			if (!span.isExportable()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean everySpanHasTraceId(long traceId) {
+		for (Span span : this.actual.spans) {
+			if (span.getTraceId() != traceId) {
 				return false;
 			}
 		}
@@ -202,12 +217,37 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 				.collect(toList());
 	}
 
+	private List<Span> findSpansWithSpanId(long spanId) {
+		return this.actual.spans.stream()
+				.filter(span -> spanId == span.getSpanId())
+				.collect(toList());
+	}
+
 	public ListOfSpansAssert hasASpanWithName(String name) {
 		isNotNull();
 		printSpans();
 		List<Span> matchingSpans = findSpansWithName(name);
 		if (matchingSpans.isEmpty()) {
 			failWithMessage("Expected spans <%s> to contain a span with name <%s>", spansToString(), name);
+		}
+		return this;
+	}
+
+	public ListOfSpansAssert hasASpanWithSpanId(Long spanId) {
+		isNotNull();
+		printSpans();
+		List<Span> matchingSpans = findSpansWithSpanId(spanId);
+		if (matchingSpans.isEmpty()) {
+			failWithMessage("Expected spans <%s> to contain a span with id <%s>", spansToString(), spanId);
+		}
+		return this;
+	}
+
+	public ListOfSpansAssert hasSize(int size) {
+		isNotNull();
+		printSpans();
+		if (size != this.actual.spans.size()) {
+			failWithMessage("Expected spans <%s> to be of size <%s> but was <%s>", spansToString(), size, actual.spans.size());
 		}
 		return this;
 	}

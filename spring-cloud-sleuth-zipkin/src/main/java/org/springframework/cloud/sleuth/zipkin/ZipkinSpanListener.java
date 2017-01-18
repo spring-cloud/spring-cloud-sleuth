@@ -87,6 +87,7 @@ public class ZipkinSpanListener implements SpanReporter {
 	 */
 	// Visible for testing
 	zipkin.Span convert(Span span) {
+		//TODO: Consider adding support for the debug flag (related to #496)
 		zipkin.Span.Builder zipkinSpan = zipkin.Span.builder();
 
 		Endpoint endpoint = this.endpointLocator.local();

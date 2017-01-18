@@ -1,6 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Map;
+import java.util.Random;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
@@ -17,12 +18,21 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
 		Map<String, String> carrier = TextMapUtil.asMap(textMap);
-		if (!hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME)
+		if (Span.SPAN_SAMPLED.equals(carrier.get(TraceMessageHeaders.SPAN_FLAGS_NAME))) {
+			generateIdIfMissing(carrier, TraceMessageHeaders.SPAN_ID_NAME);
+			generateIdIfMissing(carrier, TraceMessageHeaders.TRACE_ID_NAME);
+		} else if (!hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME)
 				|| !hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME)) {
 			return null;
 			// TODO: Consider throwing IllegalArgumentException;
 		}
 		return extractSpanFromHeaders(carrier, Span.builder());
+	}
+
+	private void generateIdIfMissing(Map<String, String> carrier, String key) {
+		if (!hasHeader(carrier, key)) {
+			carrier.put(key, Span.idToHex(new Random().nextLong()));
+		}
 	}
 
 	private Span extractSpanFromHeaders(Map<String, String> carrier, Span.SpanBuilder spanBuilder) {

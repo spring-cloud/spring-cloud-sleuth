@@ -85,6 +85,47 @@ public class HeaderBasedMessagingExtractorTests {
 		then(span).isNotExportable();
 	}
 
+	@Test
+	public void samplesWhenDebugFlagIsSetTo1RegardlessOfTraceAndSpanId() {
+		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
+		SpanTextMap spanTextMap = spanTextMap();
+		spanTextMap.put(TraceMessageHeaders.SPAN_FLAGS_NAME, "1");
+
+		Span span = extractor.joinTrace(spanTextMap);
+
+		then(span).isExportable();
+		then(span.traceIdString()).isNotEmpty();
+		then(span.getSpanId()).isNotNull();
+	}
+
+	@Test
+	public void samplesWhenDebugFlagIsSetTo1AndOnlySpanIdIsSet() {
+		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
+		SpanTextMap spanTextMap = spanTextMap();
+		spanTextMap.put(TraceMessageHeaders.SPAN_FLAGS_NAME, "1");
+		spanTextMap.put(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(10L));
+
+		Span span = extractor.joinTrace(spanTextMap);
+
+		then(span).isExportable();
+		then(span.traceIdString()).isNotEmpty();
+		then(span.getSpanId()).isEqualTo(10L);
+	}
+
+	@Test
+	public void samplesWhenDebugFlagIsSetTo1AndOnlyTraceIdIsSet() {
+		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
+		SpanTextMap spanTextMap = spanTextMap();
+		spanTextMap.put(TraceMessageHeaders.SPAN_FLAGS_NAME, "1");
+		spanTextMap.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L));
+
+		Span span = extractor.joinTrace(spanTextMap);
+
+		then(span).isExportable();
+		then(span.getTraceId()).isEqualTo(10L);
+		then(span.getSpanId()).isNotNull();
+	}
+
 	private SpanTextMap spanTextMap() {
 		return new SpanTextMap() {
 			private final Map<String, String> map = new HashMap<>();

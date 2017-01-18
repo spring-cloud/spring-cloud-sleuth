@@ -72,6 +72,7 @@ final class ConvertToZipkinSpanList {
 	 */
 	// VisibleForTesting
 	static zipkin.Span convert(Span span, Host host) {
+		//TODO: Consider adding support for the debug flag (related to #496)
 		Builder zipkinSpan = zipkin.Span.builder();
 
 		Endpoint ep = Endpoint.builder()
