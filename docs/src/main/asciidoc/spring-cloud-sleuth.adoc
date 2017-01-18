@@ -49,6 +49,10 @@ A sampler can be installed just by creating a bean definition, e.g:
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
 ----
 
+TIP: You can set the HTTP header `X-B3-Flags` to `1` or when doing messaging you can
+set `spanFlags` header to `1`. Then the current span will be forced to be exportable
+regardless of the sampling decision.
+
 == Instrumentation
 
 Spring Cloud Sleuth instruments all your Spring application

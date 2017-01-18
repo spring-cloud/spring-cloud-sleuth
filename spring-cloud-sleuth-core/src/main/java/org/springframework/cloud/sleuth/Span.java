@@ -28,12 +28,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -82,6 +82,7 @@ public class Span implements SpanContext {
 	public static final String SPAN_NAME_NAME = "X-Span-Name";
 	public static final String SPAN_ID_NAME = "X-B3-SpanId";
 	public static final String SPAN_EXPORT_NAME = "X-Span-Export";
+	public static final String SPAN_FLAGS = "X-B3-Flags";
 	public static final String SPAN_BAGGAGE_HEADER_PREFIX = "baggage";
 	public static final Set<String> SPAN_HEADERS = new HashSet<>(
 			Arrays.asList(SAMPLED_NAME, PROCESS_ID_NAME, PARENT_ID_NAME, TRACE_ID_NAME,

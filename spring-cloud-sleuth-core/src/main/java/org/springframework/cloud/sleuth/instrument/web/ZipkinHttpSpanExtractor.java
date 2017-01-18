@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +34,12 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
 		Map<String, String> carrier = TextMapUtil.asMap(textMap);
-		if (carrier.get(Span.TRACE_ID_NAME) == null) {
+		boolean debug = Span.SPAN_SAMPLED.equals(carrier.get(Span.SPAN_FLAGS));
+		if (debug) {
+			// we're only generating Trace ID since if there's no Span ID will assume
+			// that it's equal to Trace ID
+			generateIdIfMissing(carrier, Span.TRACE_ID_NAME);
+		} else if (carrier.get(Span.TRACE_ID_NAME) == null) {
 			// can't build a Span without trace id
 			return null;
 		}
@@ -46,6 +52,12 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 		} catch (Exception e) {
 			log.error("Exception occurred while trying to extract span from carrier", e);
 			return null;
+		}
+	}
+
+	private void generateIdIfMissing(Map<String, String> carrier, String key) {
+		if (!carrier.containsKey(key)) {
+			carrier.put(key, Span.idToHex(new Random().nextLong()));
 		}
 	}
 
@@ -82,7 +94,10 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 			span.parent(Span.hexToId(carrier.get(Span.PARENT_ID_NAME)));
 		}
 		span.remote(true);
-		if (skip) {
+		boolean debug = Span.SPAN_SAMPLED.equals(carrier.get(Span.SPAN_FLAGS));
+		if (debug) {
+			span.exportable(true);
+		} else if (skip) {
 			span.exportable(false);
 		}
 		for (Map.Entry<String, String> entry : carrier.entrySet()) {
