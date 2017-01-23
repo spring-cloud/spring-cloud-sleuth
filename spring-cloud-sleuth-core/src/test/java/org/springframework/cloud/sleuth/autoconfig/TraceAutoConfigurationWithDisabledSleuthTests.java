@@ -24,9 +24,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class)
 @TestPropertySource(properties = "spring.sleuth.enabled=false")
 public class TraceAutoConfigurationWithDisabledSleuthTests {

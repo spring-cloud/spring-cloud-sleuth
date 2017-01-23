@@ -23,7 +23,7 @@ import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.boot.test.EnvironmentTestUtils.addEnvironment;
+import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 public class TraceAutoConfigurationTests {
 

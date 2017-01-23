@@ -4,10 +4,6 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.ServerList;
-import com.netflix.zuul.context.RequestContext;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -17,8 +13,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.netflix.ribbon.StaticServerList;
@@ -44,29 +39,35 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+import com.netflix.loadbalancer.Server;
+import com.netflix.loadbalancer.ServerList;
+import com.netflix.zuul.context.RequestContext;
+
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = SampleZuulProxyApplication.class)
-@WebAppConfiguration
-@IntegrationTest({ "server.port: 0", "zuul.routes.simple: /simple/**" })
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = SampleZuulProxyApplication.class, properties = {
+		"zuul.routes.simple: /simple/**" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class TraceZuulIntegrationTests {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 
 	@Value("${local.server.port}")
 	private int port;
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanAccumulator spanAccumulator;
-	@Autowired RestTemplate restTemplate;
+	@Autowired
+	Tracer tracer;
+	@Autowired
+	ArrayListSpanAccumulator spanAccumulator;
+	@Autowired
+	RestTemplate restTemplate;
 
 	@Before
 	@After
@@ -91,10 +92,10 @@ public class TraceZuulIntegrationTests {
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
 				.everyParentIdHasItsCorrespondingSpan()
-				.clientSideSpanWithNameHasTags("http:/simple/foo", TestTag.tag()
-						.tag("http.method", "GET")
-						.tag("http.status_code", "200")
-						.tag("http.path", "/simple/foo"));
+				.clientSideSpanWithNameHasTags("http:/simple/foo",
+						TestTag.tag().tag("http.method", "GET")
+								.tag("http.status_code", "200")
+								.tag("http.path", "/simple/foo"));
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -103,8 +104,8 @@ public class TraceZuulIntegrationTests {
 		Span span = this.tracer.createSpan("new_span");
 		log.info("Started span " + span);
 		ResponseEntity<String> result = this.restTemplate.exchange(
-				"http://localhost:" + this.port + "/simple/nonExistentUrl", HttpMethod.GET,
-				new HttpEntity<>((Void) null), String.class);
+				"http://localhost:" + this.port + "/simple/nonExistentUrl",
+				HttpMethod.GET, new HttpEntity<>((Void) null), String.class);
 
 		this.tracer.close(span);
 
@@ -112,10 +113,10 @@ public class TraceZuulIntegrationTests {
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans()))
 				.everyParentIdHasItsCorrespondingSpan()
-				.clientSideSpanWithNameHasTags("http:/simple/nonExistentUrl", TestTag.tag()
-						.tag("http.method", "GET")
-						.tag("http.status_code", "404")
-						.tag("http.path", "/simple/nonExistentUrl"));
+				.clientSideSpanWithNameHasTags("http:/simple/nonExistentUrl",
+						TestTag.tag().tag("http.method", "GET")
+								.tag("http.status_code", "404")
+								.tag("http.path", "/simple/nonExistentUrl"));
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -140,7 +141,6 @@ public class TraceZuulIntegrationTests {
 @RibbonClient(name = "simple", configuration = SimpleRibbonClientConfiguration.class)
 class SampleZuulProxyApplication {
 
-
 	@RequestMapping("/foo")
 	public String home() {
 		return "Hello world";
@@ -151,35 +151,41 @@ class SampleZuulProxyApplication {
 		throw new RuntimeException();
 	}
 
-	@Bean RouteLocator routeLocator(DiscoveryClient discoveryClient, ZuulProperties zuulProperties) {
+	@Bean
+	RouteLocator routeLocator(DiscoveryClient discoveryClient,
+			ZuulProperties zuulProperties) {
 		return new MyRouteLocator("/", discoveryClient, zuulProperties);
 	}
 
-	@Bean SpanReporter testSpanReporter() {
+	@Bean
+	SpanReporter testSpanReporter() {
 		return new ArrayListSpanAccumulator();
 	}
 
-	@Bean RestTemplate restTemplate() {
+	@Bean
+	RestTemplate restTemplate() {
 		HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
 		factory.setReadTimeout(5000);
 		RestTemplate restTemplate = new RestTemplate(factory);
 		restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
-			@Override public void handleError(ClientHttpResponse response)
-					throws IOException {
+			@Override
+			public void handleError(ClientHttpResponse response) throws IOException {
 
 			}
 		});
 		return restTemplate;
 	}
 
-	@Bean Sampler alwaysSampler() {
+	@Bean
+	Sampler alwaysSampler() {
 		return new AlwaysSampler();
 	}
 }
 
 class MyRouteLocator extends DiscoveryClientRouteLocator {
 
-	public MyRouteLocator(String servletPath, DiscoveryClient discovery, ZuulProperties properties) {
+	public MyRouteLocator(String servletPath, DiscoveryClient discovery,
+			ZuulProperties properties) {
 		super(servletPath, discovery, properties);
 	}
 }
@@ -188,9 +194,11 @@ class MyRouteLocator extends DiscoveryClientRouteLocator {
 @Configuration
 class SimpleRibbonClientConfiguration {
 
-	@Value("${local.server.port}") private int port;
+	@Value("${local.server.port}")
+	private int port;
 
-	@Bean public ServerList<Server> ribbonServerList() {
+	@Bean
+	public ServerList<Server> ribbonServerList() {
 		return new StaticServerList<>(new Server("localhost", this.port));
 	}
 }

@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -21,7 +21,7 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import rx.Observable;
 import rx.functions.Action0;
@@ -31,8 +31,8 @@ import rx.schedulers.Schedulers;
 import static com.jayway.awaitility.Awaitility.await;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {SleuthRxJavaTests.TestConfig.class})
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {SleuthRxJavaTests.TestConfig.class})
 @DirtiesContext
 public class SleuthRxJavaTests {
 

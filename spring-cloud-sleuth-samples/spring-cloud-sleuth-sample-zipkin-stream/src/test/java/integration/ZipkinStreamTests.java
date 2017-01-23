@@ -18,15 +18,13 @@ package integration;
 import java.util.Collections;
 import java.util.Random;
 
-import example.ZipkinStreamServerApplication;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
@@ -36,13 +34,15 @@ import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import example.ZipkinStreamServerApplication;
 import tools.AbstractIntegrationTest;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { TestSupportBinderAutoConfiguration.class,
-		ZipkinStreamServerApplication.class })
-@WebIntegrationTest({ "server.port=0", "management.health.rabbit.enabled=false" })
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = { TestSupportBinderAutoConfiguration.class, ZipkinStreamServerApplication.class },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = { "management.health.rabbit.enabled=false" })
 @ActiveProfiles("test")
 public class ZipkinStreamTests extends AbstractIntegrationTest {
 

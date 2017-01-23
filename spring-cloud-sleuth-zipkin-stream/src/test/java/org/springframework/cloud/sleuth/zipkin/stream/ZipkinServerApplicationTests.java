@@ -1,23 +1,23 @@
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.zipkin.stream.ZipkinServerApplicationTests.ZipkinStreamServerApplication;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import zipkin.storage.StorageComponent;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = ZipkinStreamServerApplication.class)
-@IntegrationTest({ "server.port=0", "spring.datasource.initialize=true" })
+import static org.junit.Assert.assertEquals;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = ZipkinStreamServerApplication.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = { "spring.datasource.initialize=true" })
 @ActiveProfiles("test")
 public class ZipkinServerApplicationTests {
 

@@ -27,9 +27,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.OutputCapture;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -47,7 +46,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -70,10 +69,10 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
  *
  * @author ryarabori
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(
-		classes = {FeignClientServerErrorTests.TestConfiguration.class})
-@WebIntegrationTest(value = {"spring.application.name=fooservice"}, randomPort = true)
+@RunWith(SpringRunner.class)
+@SpringBootTest(
+		classes = {FeignClientServerErrorTests.TestConfiguration.class},
+		properties = {"spring.application.name=fooservice"}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;

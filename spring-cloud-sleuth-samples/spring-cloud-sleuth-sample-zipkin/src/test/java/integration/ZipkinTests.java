@@ -25,14 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import sample.SampleZipkinApplication;
@@ -40,11 +38,11 @@ import tools.AbstractIntegrationTest;
 import zipkin.junit.ZipkinRule;
 import zipkin.server.EnableZipkinServer;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = { WaitUntilZipkinIsUpConfig.class,
-		SampleZipkinApplication.class })
-@WebIntegrationTest
-@TestPropertySource(properties = {"sample.zipkin.enabled=true"})
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = { WaitUntilZipkinIsUpConfig.class,
+		SampleZipkinApplication.class },
+		properties = {"sample.zipkin.enabled=true"},
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ZipkinTests extends AbstractIntegrationTest {
 
 	@ClassRule public static final ZipkinRule zipkin = new ZipkinRule();

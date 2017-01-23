@@ -29,8 +29,7 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -46,7 +45,7 @@ import org.springframework.http.client.AsyncClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,9 +61,9 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @RunWith(Enclosed.class)
 public class TraceWebAsyncClientAutoConfigurationTests {
 
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringApplicationConfiguration(classes = { CustomSyncAndAsyncClientFactory.TestConfiguration.class })
-	@WebIntegrationTest(randomPort = true)
+	@RunWith(SpringRunner.class)
+	@SpringBootTest(classes = { CustomSyncAndAsyncClientFactory.TestConfiguration.class },
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	public static class CustomSyncAndAsyncClientFactory {
 		@Autowired AsyncRestTemplate asyncRestTemplate;
 
@@ -96,9 +95,9 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 
 	}
 
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringApplicationConfiguration(classes = { CustomSyncClientFactory.TestConfiguration.class })
-	@WebIntegrationTest(randomPort = true)
+	@RunWith(SpringRunner.class)
+	@SpringBootTest(classes = { CustomSyncClientFactory.TestConfiguration.class },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	public static class CustomSyncClientFactory {
 		@Autowired AsyncRestTemplate asyncRestTemplate;
 
@@ -123,9 +122,9 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 
 	}
 
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringApplicationConfiguration(classes = { CustomASyncClientFactory.TestConfiguration.class })
-	@WebIntegrationTest(randomPort = true)
+	@RunWith(SpringRunner.class)
+	@SpringBootTest(classes = { CustomASyncClientFactory.TestConfiguration.class },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	public static class CustomASyncClientFactory {
 		@Autowired AsyncRestTemplate asyncRestTemplate;
 
@@ -164,9 +163,9 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 		}
 	}
 
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringApplicationConfiguration(classes = { DurationChecking.TestConfiguration.class })
-	@WebIntegrationTest(randomPort = true)
+	@RunWith(SpringRunner.class)
+	@SpringBootTest(classes = { DurationChecking.TestConfiguration.class },
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	public static class DurationChecking {
 		@Autowired AsyncRestTemplate asyncRestTemplate;
 		@Autowired Environment environment;

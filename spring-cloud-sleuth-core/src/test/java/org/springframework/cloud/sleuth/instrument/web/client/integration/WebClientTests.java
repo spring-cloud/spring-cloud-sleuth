@@ -39,8 +39,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.BasicErrorController;
 import org.springframework.boot.autoconfigure.web.ErrorAttributes;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -76,12 +75,12 @@ import junitparams.Parameters;
 
 import static junitparams.JUnitParamsRunner.$;
 import static org.assertj.core.api.Assertions.fail;
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
-@SpringApplicationConfiguration(classes = { WebClientTests.TestConfiguration.class })
-@WebIntegrationTest(value = { "spring.application.name=fooservice", "feign.hystrix.enabled=false" }, randomPort = true)
+@SpringBootTest(classes = { WebClientTests.TestConfiguration.class },
+		properties = { "spring.application.name=fooservice", "feign.hystrix.enabled=false" },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class WebClientTests {
 

@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
 
 import org.junit.Test;
