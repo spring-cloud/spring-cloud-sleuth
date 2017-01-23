@@ -42,7 +42,7 @@ import zipkin.server.EnableZipkinServer;
 @SpringBootTest(classes = { WaitUntilZipkinIsUpConfig.class,
 		SampleZipkinApplication.class },
 		properties = {"sample.zipkin.enabled=true"},
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class ZipkinTests extends AbstractIntegrationTest {
 
 	@ClassRule public static final ZipkinRule zipkin = new ZipkinRule();

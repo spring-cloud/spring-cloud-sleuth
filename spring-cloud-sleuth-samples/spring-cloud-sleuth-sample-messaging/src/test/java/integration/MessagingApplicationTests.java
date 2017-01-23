@@ -44,7 +44,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class },
 		properties="sample.zipkin.enabled=true",
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @DirtiesContext
 public class MessagingApplicationTests extends AbstractIntegrationTest {
 
