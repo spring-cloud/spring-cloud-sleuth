@@ -344,6 +344,13 @@ public class Span implements SpanContext {
 	}
 
 	/**
+	 * Add a {@link Log#event event} to a specific point in the timeline associated with this span.
+	 */
+	public void logEvent(long timestamp, String event) {
+		this.logs.add(new Log(timestamp, event));
+	}
+
+	/**
 	 * Sets a baggage item in the Span (and its SpanContext) as a key/value pair.
 	 *
 	 * Baggage enables powerful distributed context propagation functionality where arbitrary application data can be
