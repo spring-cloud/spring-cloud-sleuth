@@ -344,10 +344,11 @@ public class Span implements SpanContext {
 	}
 
 	/**
-	 * Add a {@link Log#event event} to a specific point in the timeline associated with this span.
+	 * Add a {@link Log#event event} to a specific point (a timestamp in milleseconds) in the timeline
+	 * associated with this span.
 	 */
-	public void logEvent(long timestamp, String event) {
-		this.logs.add(new Log(timestamp, event));
+	public void logEvent(long timestampMilleseconds, String event) {
+		this.logs.add(new Log(timestampMilleseconds, event));
 	}
 
 	/**
