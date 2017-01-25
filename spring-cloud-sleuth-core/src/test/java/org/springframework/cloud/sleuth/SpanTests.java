@@ -166,6 +166,12 @@ public class SpanTests {
 				.isEqualTo(span.logs());
 	}
 
+	@Test public void can_log_with_specified_timestamp() throws IOException {
+		span.logEvent(1L, "event1");
+
+		then(span.logs().get(0).getTimestamp()).isEqualTo(1L);
+	}
+
 	@Test public void should_properly_serialize_tags() throws IOException {
 		span.tag("calculatedTax", "100");
 
