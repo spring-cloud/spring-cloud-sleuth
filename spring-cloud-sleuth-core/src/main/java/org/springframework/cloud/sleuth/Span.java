@@ -340,7 +340,7 @@ public class Span implements SpanContext {
 	 * Add an {@link Log#event event} to the timeline associated with this span.
 	 */
 	public void logEvent(String event) {
-		this.logs.add(new Log(System.currentTimeMillis(), event));
+		logEvent(System.currentTimeMillis(), event);
 	}
 
 	/**
