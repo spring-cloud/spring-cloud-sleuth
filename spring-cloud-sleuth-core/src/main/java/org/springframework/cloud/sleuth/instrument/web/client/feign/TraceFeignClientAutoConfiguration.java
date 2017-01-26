@@ -60,7 +60,7 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@Scope("prototype")
-	@ConditionalOnProperty(name = "feign.hystrix.enabled", havingValue = "false", matchIfMissing = false)
+	@ConditionalOnProperty(name = "feign.hystrix.enabled", havingValue = "false")
 	Feign.Builder feignBuilder(BeanFactory beanFactory) {
 		return SleuthFeignBuilder.builder(beanFactory);
 	}
@@ -68,11 +68,6 @@ public class TraceFeignClientAutoConfiguration {
 	@Configuration
 	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
 	protected static class FeignBeanPostProcessorConfiguration {
-
-		@Bean
-		FeignBeanPostProcessor feignBeanPostProcessor(TraceFeignObjectWrapper traceFeignObjectWrapper) {
-			return new FeignBeanPostProcessor(traceFeignObjectWrapper);
-		}
 
 		@Bean
 		FeignContextBeanPostProcessor feignContextBeanPostProcessor(BeanFactory beanFactory) {
@@ -83,5 +78,10 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	TraceFeignObjectWrapper traceFeignObjectWrapper(BeanFactory beanFactory) {
 		return new TraceFeignObjectWrapper(beanFactory);
+	}
+
+	@Bean
+	TraceFeignAspect traceFeignAspect(BeanFactory beanFactory) {
+		return new TraceFeignAspect(beanFactory);
 	}
 }

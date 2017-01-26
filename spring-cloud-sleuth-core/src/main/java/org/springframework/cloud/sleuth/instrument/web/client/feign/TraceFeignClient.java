@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -54,7 +55,15 @@ class TraceFeignClient implements Client {
 
 	TraceFeignClient(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
-		this.delegate = new Client.Default(null, null);
+		this.delegate = client(beanFactory);
+	}
+
+	private Client client(BeanFactory beanFactory) {
+		try {
+			return beanFactory.getBean(Client.class);
+		} catch (NoSuchBeanDefinitionException e) {
+			return new Client.Default(null, null);
+		}
 	}
 
 	TraceFeignClient(BeanFactory beanFactory, Client delegate) {
