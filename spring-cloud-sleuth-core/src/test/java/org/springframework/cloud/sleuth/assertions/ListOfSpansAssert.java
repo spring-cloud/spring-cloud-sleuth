@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.assertions;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
 import org.springframework.cloud.sleuth.Span;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -142,6 +142,15 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return this;
 	}
 
+	public ListOfSpansAssert hasRpcTagsInProperOrder() {
+		isNotNull();
+		printSpans();
+		RpcLogKeeper rpcLogKeeper = findRpcLogs();
+		rpcLogKeeper.assertThatFullRpcCycleTookPlace();
+		rpcLogKeeper.assertThatRpcLogsTookPlaceInOrder();
+		return this;
+	}
+
 	private void printSpans() {
 		try {
 			log.info("Stored spans " + this.objectMapper.writeValueAsString(new ArrayList<>(this.actual.spans)));
@@ -154,5 +163,52 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 	protected void failWithMessage(String errorMessage, Object... arguments) {
 		log.error(String.format(errorMessage, arguments));
 		super.failWithMessage(errorMessage, arguments);
+	}
+
+	RpcLogKeeper findRpcLogs() {
+		final RpcLogKeeper rpcLogKeeper = new RpcLogKeeper();
+		this.actual.spans.forEach(span -> span.logs().forEach(log -> {
+			switch (log.getEvent()) {
+			case Span.CLIENT_SEND:
+				rpcLogKeeper.cs = log;
+				break;
+			case Span.SERVER_RECV:
+				rpcLogKeeper.sr = log;
+				break;
+			case Span.SERVER_SEND:
+				rpcLogKeeper.ss = log;
+				break;
+			case Span.CLIENT_RECV:
+				rpcLogKeeper.cr = log;
+				break;
+			default:
+				break;
+			}
+		}));
+		return rpcLogKeeper;
+	}
+}
+
+class RpcLogKeeper {
+	org.springframework.cloud.sleuth.Log cs;
+	org.springframework.cloud.sleuth.Log sr;
+	org.springframework.cloud.sleuth.Log ss;
+	org.springframework.cloud.sleuth.Log cr;
+
+	void assertThatFullRpcCycleTookPlace() {
+		SleuthAssertions.assertThat(this.cs).describedAs("Client Send").isNotNull();
+		SleuthAssertions.assertThat(this.sr).describedAs("Server Received").isNotNull();
+		SleuthAssertions.assertThat(this.ss).describedAs("Server Send").isNotNull();
+		SleuthAssertions.assertThat(this.cr).describedAs("Client Received").isNotNull();
+	}
+
+	void assertThatRpcLogsTookPlaceInOrder() {
+		long csTimestamp = this.cs.getTimestamp();
+		long srTimestamp = this.sr.getTimestamp();
+		long ssTimestamp = this.ss.getTimestamp();
+		long crTimestamp = this.cr.getTimestamp();
+		SleuthAssertions.assertThat(csTimestamp).as("CS happened before SR").isLessThan(srTimestamp);
+		SleuthAssertions.assertThat(srTimestamp).as("SR happened before SS").isLessThan(ssTimestamp);
+		SleuthAssertions.assertThat(ssTimestamp).as("SS happened before CR").isLessThan(crTimestamp);
 	}
 }

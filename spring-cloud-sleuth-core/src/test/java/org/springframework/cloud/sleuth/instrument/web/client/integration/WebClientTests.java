@@ -49,6 +49,7 @@ import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
@@ -112,7 +113,8 @@ public class WebClientTests {
 		then(getHeader(response, Span.TRACE_ID_NAME)).isNull();
 		then(getHeader(response, Span.SPAN_ID_NAME)).isNull();
 		then(this.listener.getSpans()).isNotEmpty();
-		Optional<Span> noTraceSpan = new ArrayList<>(this.listener.getSpans()).stream().filter(span ->
+		List<Span> spans = new ArrayList<>(this.listener.getSpans());
+		Optional<Span> noTraceSpan = spans.stream().filter(span ->
 				"http:/notrace".equals(span.getName()) && !span.tags().isEmpty()
 						&& span.tags().containsKey("http.path")).findFirst();
 		then(noTraceSpan.isPresent()).isTrue();
@@ -120,6 +122,7 @@ public class WebClientTests {
 		then(noTraceSpan.get()).matchesATag("http.url", ".*/notrace")
 				.hasATag("http.path", "/notrace")
 				.hasATag("http.method", "GET");
+		then(new ListOfSpans(spans)).hasRpcTagsInProperOrder();
 	}
 
 	Object[] parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent() {
