@@ -155,7 +155,14 @@ public class TraceFilter extends GenericFilterBean {
 				return;
 			}
 			spanFromRequest = createSpanIfRequestNotHandled(request, spanFromRequest, name, skip);
-			detachOrCloseSpans(request, response, spanFromRequest, exception);
+			if (!requestHasAlreadyBeenHandled(request)) {
+				if (log.isDebugEnabled() && !skip) {
+					log.debug("The request with uri [" + request.getRequestURI() + "] hasn't been handled by any of Sleuth's components. "
+							+ "That means that most likely you're using custom HandlerMappings and didn't add Sleuth's TraceHandlerInterceptor. "
+							+ "Sleuth will try to close that span");
+				}
+				detachOrCloseSpans(request, response, spanFromRequest, exception);
+			}
 		}
 	}
 

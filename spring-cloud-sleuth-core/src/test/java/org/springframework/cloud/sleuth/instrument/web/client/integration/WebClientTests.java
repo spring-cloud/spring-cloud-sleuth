@@ -128,8 +128,8 @@ public class WebClientTests {
 	Object[] parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent() {
 		return $(
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
-				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class));
+				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/notrace", String.class)
+		);
 	}
 
 	@Test
@@ -345,8 +345,10 @@ public class WebClientTests {
 
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
-				@RequestHeader(name = Span.TRACE_ID_NAME, required = false) String traceId) {
+				@RequestHeader(name = Span.TRACE_ID_NAME, required = false) String traceId)
+				throws InterruptedException {
 			then(traceId).isNotNull();
+			Thread.sleep(10);
 			return "OK";
 		}
 
