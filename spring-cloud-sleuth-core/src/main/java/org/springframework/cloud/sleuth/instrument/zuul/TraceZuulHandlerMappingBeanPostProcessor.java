@@ -22,7 +22,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.autoconfigure.web.ErrorController;
+import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
+import org.springframework.cloud.netflix.zuul.web.ZuulController;
 import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
 import org.springframework.cloud.sleuth.instrument.web.TraceHandlerInterceptor;
 
@@ -50,11 +54,34 @@ class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 			if (log.isDebugEnabled()) {
 				log.debug("Attaching trace interceptor to bean [" + beanName + "] of type [" + bean.getClass().getSimpleName() + "]");
 			}
-			ZuulHandlerMapping zuulHandlerMapping = (ZuulHandlerMapping) bean;
-			zuulHandlerMapping.setInterceptors(
-					new Object[] { new TraceHandlerInterceptor(this.beanFactory) });
+			RouteLocator routeLocator = this.beanFactory.getBean(RouteLocator.class);
+			ZuulController zuulController = this.beanFactory.getBean(ZuulController.class);
+			ZuulHandlerMappingWrapper wrapper = new ZuulHandlerMappingWrapper(routeLocator, zuulController);
+			wrapper.setErrorController(errorController());
+			wrapper.setInterceptors(new TraceHandlerInterceptor(this.beanFactory));
+			wrapper.forceRefresh();
+			return wrapper;
 		}
 		return bean;
+	}
+
+	private ErrorController errorController() {
+		try {
+			return this.beanFactory.getBean(ErrorController.class);
+		} catch (NoSuchBeanDefinitionException e) {
+			return null;
+		}
+	}
+
+	class ZuulHandlerMappingWrapper extends ZuulHandlerMapping {
+
+		ZuulHandlerMappingWrapper(RouteLocator routeLocator, ZuulController zuul) {
+			super(routeLocator, zuul);
+		}
+
+		void forceRefresh() {
+			initInterceptors();
+		}
 	}
 
 	@Override

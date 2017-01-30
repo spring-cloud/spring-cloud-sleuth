@@ -54,6 +54,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	private Tracer tracer;
 	private TraceKeys traceKeys;
 	private ErrorController errorController;
+	private SpanCloser spanCloser;
 
 	public TraceHandlerInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -127,13 +128,17 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
 			Object handler, Exception ex) throws Exception {
-		if (isErrorControllerRelated(request)) {
+		if (log.isDebugEnabled()) {
+			log.debug("Executing after completion");
+		}
+		Span span = getRootSpanFromAttribute(request);
+		if ((isErrorControllerRelated(request) && !(isInErrorController(request)))
+				|| spanWasAlreadyClosed(request)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Skipping closing of a span for error controller processing");
 			}
 			return;
 		}
-		Span span = getRootSpanFromAttribute(request);
 		if (ex != null) {
 			String errorMsg = ExceptionUtils.getExceptionMessage(ex);
 			if (log.isDebugEnabled()) {
@@ -150,6 +155,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			getTracer().close(newSpan);
 			clearNewSpanCreatedAttribute(request);
 		}
+		getSpanCloser().detachOrCloseSpans(request, response, span, ex);
 	}
 
 	private Span getNewSpanFromAttribute(HttpServletRequest request) {
@@ -172,6 +178,14 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		request.removeAttribute(TraceRequestAttributes.NEW_SPAN_REQUEST_ATTR);
 	}
 
+	private boolean isInErrorController(HttpServletRequest request) {
+		return request.getAttribute(TraceFilter.ERROR_CONTROLLER_REQUEST_ATTR) != null;
+	}
+
+	private boolean spanWasAlreadyClosed(HttpServletRequest request) {
+		return request.getAttribute(TraceFilter.SERVER_SPAN_CLOSED_REQUEST_ATTR) != null;
+	}
+
 	private Tracer getTracer() {
 		if (this.tracer == null) {
 			this.tracer = this.beanFactory.getBean(Tracer.class);
@@ -192,4 +206,12 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		}
 		return this.errorController;
 	}
+
+	private SpanCloser getSpanCloser() {
+		if (this.spanCloser == null) {
+			this.spanCloser = new SpanCloser(this.beanFactory);
+		}
+		return this.spanCloser;
+	}
+
 }

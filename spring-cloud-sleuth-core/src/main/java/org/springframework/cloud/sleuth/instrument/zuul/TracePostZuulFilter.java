@@ -18,14 +18,14 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.lang.invoke.MethodHandles;
 
-import com.netflix.zuul.ZuulFilter;
-import com.netflix.zuul.context.RequestContext;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+
+import com.netflix.zuul.ZuulFilter;
+import com.netflix.zuul.context.RequestContext;
 
 /**8
  * A post request {@link ZuulFilter} that publishes an event upon start of the filtering
