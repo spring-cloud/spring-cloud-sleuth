@@ -16,17 +16,22 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -134,14 +139,14 @@ public class TraceFilter extends GenericFilterBean {
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
-			processErrorRequest(filterChain, request, response, spanFromRequest);
+			processErrorRequest(filterChain, request, new TraceHttpServletResponse(response, spanFromRequest), spanFromRequest);
 			return;
 		}
 		String name = HTTP_COMPONENT + ":" + uri;
 		Throwable exception = null;
 		try {
 			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
-			filterChain.doFilter(request, response);
+			filterChain.doFilter(request, new TraceHttpServletResponse(response, spanFromRequest));
 		} catch (Throwable e) {
 			exception = e;
 			this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(e));
@@ -243,10 +248,7 @@ public class TraceFilter extends GenericFilterBean {
 				log.debug("Trying to send the parent span " + parent + " to Zipkin");
 			}
 			parent.stop();
-			parent.logEvent(Span.SERVER_SEND);
 			this.spanReporter.report(parent);
-		} else {
-			parent.logEvent(Span.SERVER_SEND);
 		}
 	}
 
@@ -368,5 +370,234 @@ public class TraceFilter extends GenericFilterBean {
 		} else {
 			return requestURI.append('?').append(queryString).toString();
 		}
+	}
+
+	static void annotateWithServerSendIfPossible(Span span) {
+		for (org.springframework.cloud.sleuth.Log log1 : span.logs()) {
+			if (Span.SERVER_SEND.equals(log1.getEvent())) {
+				return;
+			}
+		}
+		span.logEvent(Span.SERVER_SEND);
+	}
+}
+
+class TraceHttpServletResponse extends HttpServletResponseWrapper {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
+	private final Span span;
+
+	TraceHttpServletResponse(HttpServletResponse response, Span span) {
+		super(response);
+		this.span = span;
+	}
+
+	@Override public void flushBuffer() throws IOException {
+		if (log.isDebugEnabled()) {
+			log.debug("Will annotate SS once the response is flushed");
+		}
+		try {
+			super.flushBuffer();
+		} finally {
+			TraceFilter.annotateWithServerSendIfPossible(this.span);
+		}
+	}
+
+	@Override public ServletOutputStream getOutputStream() throws IOException {
+		return new TraceServletOutputStream(super.getOutputStream(), this.span);
+	}
+
+	@Override public PrintWriter getWriter() throws IOException {
+		return new TracePrintWriter(super.getWriter(), this.span);
+	}
+}
+
+class TraceServletOutputStream extends ServletOutputStream {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
+	private final ServletOutputStream delegate;
+	private final Span span;
+
+	TraceServletOutputStream(ServletOutputStream delegate, Span span) {
+		this.delegate = delegate;
+		this.span = span;
+	}
+
+	@Override public boolean isReady() {
+		return this.delegate.isReady();
+	}
+
+	@Override public void setWriteListener(WriteListener listener) {
+		this.delegate.setWriteListener(listener);
+	}
+
+	@Override public void write(int b) throws IOException {
+		if (log.isDebugEnabled()) {
+			log.debug("Will annotate SS once the response is flushed");
+		}
+		try {
+			this.delegate.write(b);
+		} finally {
+			TraceFilter.annotateWithServerSendIfPossible(this.span);
+		}
+	}
+}
+
+class TracePrintWriter extends PrintWriter {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
+	private final PrintWriter delegate;
+	private final Span span;
+
+	TracePrintWriter(PrintWriter delegate, Span span) {
+		super(delegate);
+		this.delegate = delegate;
+		this.span = span;
+	}
+
+	@Override public void flush() {
+		if (log.isDebugEnabled()) {
+			log.debug("Will annotate SS once the response is flushed");
+		}
+		try {
+			this.delegate.flush();
+		} finally {
+			TraceFilter.annotateWithServerSendIfPossible(this.span);
+		}
+	}
+
+	@Override public void close() {
+		this.delegate.close();
+	}
+
+	@Override public boolean checkError() {
+		return this.delegate.checkError();
+	}
+
+	@Override public void write(int c) {
+		this.delegate.write(c);
+	}
+
+	@Override public void write(char[] buf, int off, int len) {
+		this.delegate.write(buf, off, len);
+	}
+
+	@Override public void write(char[] buf) {
+		this.delegate.write(buf);
+	}
+
+	@Override public void write(String s, int off, int len) {
+		this.delegate.write(s, off, len);
+	}
+
+	@Override public void write(String s) {
+		this.delegate.write(s);
+	}
+
+	@Override public void print(boolean b) {
+		this.delegate.print(b);
+	}
+
+	@Override public void print(char c) {
+		this.delegate.print(c);
+	}
+
+	@Override public void print(int i) {
+		this.delegate.print(i);
+	}
+
+	@Override public void print(long l) {
+		this.delegate.print(l);
+	}
+
+	@Override public void print(float f) {
+		this.delegate.print(f);
+	}
+
+	@Override public void print(double d) {
+		this.delegate.print(d);
+	}
+
+	@Override public void print(char[] s) {
+		this.delegate.print(s);
+	}
+
+	@Override public void print(String s) {
+		this.delegate.print(s);
+	}
+
+	@Override public void print(Object obj) {
+		this.delegate.print(obj);
+	}
+
+	@Override public void println() {
+		this.delegate.println();
+	}
+
+	@Override public void println(boolean x) {
+		this.delegate.println(x);
+	}
+
+	@Override public void println(char x) {
+		this.delegate.println(x);
+	}
+
+	@Override public void println(int x) {
+		this.delegate.println(x);
+	}
+
+	@Override public void println(long x) {
+		this.delegate.println(x);
+	}
+
+	@Override public void println(float x) {
+		this.delegate.println(x);
+	}
+
+	@Override public void println(double x) {
+		this.delegate.println(x);
+	}
+
+	@Override public void println(char[] x) {
+		this.delegate.println(x);
+	}
+
+	@Override public void println(String x) {
+		this.delegate.println(x);
+	}
+
+	@Override public void println(Object x) {
+		this.delegate.println(x);
+	}
+
+	@Override public PrintWriter printf(String format, Object... args) {
+		return this.delegate.printf(format, args);
+	}
+
+	@Override public PrintWriter printf(Locale l, String format, Object... args) {
+		return this.delegate.printf(l, format, args);
+	}
+
+	@Override public PrintWriter format(String format, Object... args) {
+		return this.delegate.format(format, args);
+	}
+
+	@Override public PrintWriter format(Locale l, String format, Object... args) {
+		return this.delegate.format(l, format, args);
+	}
+
+	@Override public PrintWriter append(CharSequence csq) {
+		return this.delegate.append(csq);
+	}
+
+	@Override public PrintWriter append(CharSequence csq, int start, int end) {
+		return this.delegate.append(csq, start, end);
+	}
+
+	@Override public PrintWriter append(char c) {
+		return this.delegate.append(c);
 	}
 }

@@ -44,6 +44,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -86,6 +87,7 @@ public class WebClientExceptionTests {
 	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
 	@Autowired @LoadBalanced RestTemplate template;
 	@Autowired Tracer tracer;
+	@Autowired ArrayListSpanAccumulator accumulator;
 
 	@Before
 	public void open() {
@@ -154,6 +156,10 @@ public class WebClientExceptionTests {
 		@Bean
 		Sampler alwaysSampler() {
 			return new AlwaysSampler();
+		}
+
+		@Bean ArrayListSpanAccumulator accumulator() {
+			return new ArrayListSpanAccumulator();
 		}
 	}
 
