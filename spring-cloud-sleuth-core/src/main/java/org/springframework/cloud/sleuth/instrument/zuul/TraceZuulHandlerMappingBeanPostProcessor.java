@@ -75,7 +75,7 @@ class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 
 	class ZuulHandlerMappingWrapper extends ZuulHandlerMapping {
 
-		public ZuulHandlerMappingWrapper(RouteLocator routeLocator, ZuulController zuul) {
+		ZuulHandlerMappingWrapper(RouteLocator routeLocator, ZuulController zuul) {
 			super(routeLocator, zuul);
 		}
 

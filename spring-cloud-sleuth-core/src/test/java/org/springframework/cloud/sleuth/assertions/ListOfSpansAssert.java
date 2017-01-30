@@ -196,10 +196,10 @@ class RpcLogKeeper {
 	org.springframework.cloud.sleuth.Log cr;
 
 	void assertThatFullRpcCycleTookPlace() {
-		assertThat(this.cs).describedAs("Client Send").isNotNull();
-		assertThat(this.sr).describedAs("Server Received").isNotNull();
-		assertThat(this.ss).describedAs("Server Send").isNotNull();
-		assertThat(this.cr).describedAs("Client Received").isNotNull();
+		assertThat(this.cs).describedAs("Client Send log").isNotNull();
+		assertThat(this.sr).describedAs("Server Received log").isNotNull();
+		assertThat(this.ss).describedAs("Server Send log").isNotNull();
+		assertThat(this.cr).describedAs("Client Received log").isNotNull();
 	}
 
 	void assertThatRpcLogsTookPlaceInOrder() {
@@ -207,8 +207,8 @@ class RpcLogKeeper {
 		long srTimestamp = this.sr.getTimestamp();
 		long ssTimestamp = this.ss.getTimestamp();
 		long crTimestamp = this.cr.getTimestamp();
-		assertThat(csTimestamp).as("CS happened before SR").isLessThanOrEqualTo(srTimestamp);
-		assertThat(srTimestamp).as("SR happened before SS").isLessThanOrEqualTo(ssTimestamp);
-		assertThat(ssTimestamp).as("SS happened before CR").isLessThanOrEqualTo(crTimestamp);
+		assertThat(csTimestamp).as("CS timestamp should be before SR timestamp").isLessThanOrEqualTo(srTimestamp);
+		assertThat(srTimestamp).as("SR timestamp should be before SS timestamp").isLessThanOrEqualTo(ssTimestamp);
+		assertThat(ssTimestamp).as("SS timestamp should be before CR timestamp").isLessThanOrEqualTo(crTimestamp);
 	}
 }
