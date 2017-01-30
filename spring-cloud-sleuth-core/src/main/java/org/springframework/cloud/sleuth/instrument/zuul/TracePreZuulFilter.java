@@ -25,6 +25,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
 
 import com.netflix.zuul.ExecutionStatus;
@@ -44,6 +45,8 @@ public class TracePreZuulFilter extends ZuulFilter {
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final String ZUUL_COMPONENT = "zuul";
+	private static final String FORCE_SERVER_SPAN_CLOSING_REQUEST_ATTR = TraceFilter.class.getName()
+			+ ".FORCE_SERVER_SPAN_CLOSING";
 
 	private final Tracer tracer;
 	private final SpanInjector<RequestContext> spanInjector;
@@ -96,7 +99,7 @@ public class TracePreZuulFilter extends ZuulFilter {
 		return result;
 	}
 
-	// TraceFilter will not create the "fallback" span
+	// TraceFilter will not create the "fallback" span ...
 	private void markRequestAsHandled(RequestContext ctx) {
 		ctx.getRequest().setAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR, "true");
 	}
