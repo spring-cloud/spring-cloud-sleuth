@@ -75,8 +75,7 @@ public class TraceFilterWebIntegrationTests {
 				.hasASpanWithTagEqualTo("http.status_code", "500");
 		then(ExceptionUtils.getLastException()).isNull();
 		then(new ListOfSpans(this.accumulator.getSpans()))
-				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
+				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME, "Throwing exception");
 	}
 
 	private int port() {

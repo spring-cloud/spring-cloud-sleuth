@@ -98,8 +98,7 @@ public class FeignClientServerErrorTests {
 					.doesNotContain("Tried to close span but it is not the current span");
 			then(ExceptionUtils.getLastException()).isNull();
 			then(new ListOfSpans(this.listener.getEvents()))
-					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-							"Request processing failed; nested exception is java.lang.RuntimeException: Internal Error");
+					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME, "Internal Error");
 		});
 	}
 

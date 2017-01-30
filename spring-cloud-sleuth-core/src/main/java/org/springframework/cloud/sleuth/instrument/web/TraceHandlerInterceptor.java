@@ -25,12 +25,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -56,7 +54,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	private Tracer tracer;
 	private TraceKeys traceKeys;
 	private ErrorController errorController;
-	private SpanReporter spanReporter;
+	private SpanCloser spanCloser;
 
 	public TraceHandlerInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -134,18 +132,19 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			log.debug("Executing after completion");
 		}
 		Span span = getRootSpanFromAttribute(request);
+		if ((isErrorControllerRelated(request) && !(isInErrorController(request)))
+				|| spanWasAlreadyClosed(request)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Skipping closing of a span for error controller processing");
+			}
+			return;
+		}
 		if (ex != null) {
 			String errorMsg = ExceptionUtils.getExceptionMessage(ex);
 			if (log.isDebugEnabled()) {
 				log.debug("Adding an error tag [" + errorMsg + "] to span " + span + "");
 			}
 			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, errorMsg);
-		}
-		if (isErrorControllerRelated(request)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Skipping closing of a span for error controller processing");
-			}
-			return;
 		}
 		if (getNewSpanFromAttribute(request) != null) {
 			if (log.isDebugEnabled()) {
@@ -156,7 +155,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			getTracer().close(newSpan);
 			clearNewSpanCreatedAttribute(request);
 		}
-		detachOrCloseSpans(request, response, span, ex);
+		getSpanCloser().detachOrCloseSpans(request, response, span, ex);
 	}
 
 	private Span getNewSpanFromAttribute(HttpServletRequest request) {
@@ -179,84 +178,12 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		request.removeAttribute(TraceRequestAttributes.NEW_SPAN_REQUEST_ATTR);
 	}
 
-	private void detachOrCloseSpans(HttpServletRequest request,
-			HttpServletResponse response, Span spanFromRequest, Throwable exception) {
-		Span span = spanFromRequest;
-		if (span != null) {
-			addResponseTags(response, exception);
-			if (span.hasSavedSpan() && requestHasAlreadyBeenHandled(request)) {
-				recordParentSpan(span.getSavedSpan());
-			} else if (!requestHasAlreadyBeenHandled(request)) {
-				span = this.tracer.close(span);
-			}
-			recordParentSpan(span);
-			// in case of a response with exception status will close the span when exception dispatch is handled
-			// checking if tracing is in progress due to async / different order of view controller processing
-			if (httpStatusSuccessful(response) && this.tracer.isTracing()) {
-				if (log.isDebugEnabled()) {
-					log.debug("Closing the span " + span + " since the response was successful");
-				}
-				this.tracer.close(span);
-			} else if (errorAlreadyHandled(request) && this.tracer.isTracing()) {
-				if (log.isDebugEnabled()) {
-					log.debug(
-							"Won't detach the span " + span + " since error has already been handled");
-				}
-			} else if (this.tracer.isTracing()) {
-				if (log.isDebugEnabled()) {
-					log.debug("Detaching the span " + span + " since the response was unsuccessful");
-				}
-				this.tracer.detach(span);
-			}
-		}
+	private boolean isInErrorController(HttpServletRequest request) {
+		return request.getAttribute(TraceFilter.ERROR_CONTROLLER_REQUEST_ATTR) != null;
 	}
 
-	private void addResponseTags(HttpServletResponse response, Throwable e) {
-		int httpStatus = response.getStatus();
-		if (httpStatus == HttpServletResponse.SC_OK && e != null) {
-			// Filter chain threw exception but the response status may not have been set
-			// yet, so we have to guess.
-			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
-					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
-		}
-		// only tag valid http statuses
-		else if (httpStatus >= 100 && (httpStatus < 200) || (httpStatus > 399)) {
-			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
-					String.valueOf(response.getStatus()));
-		}
-	}
-
-	private void recordParentSpan(Span parent) {
-		if (parent == null) {
-			return;
-		}
-		if (parent.isRemote()) {
-			if (log.isDebugEnabled()) {
-				log.debug("Trying to send the parent span " + parent + " to Zipkin");
-			}
-			parent.stop();
-			parent.logEvent(Span.SERVER_SEND);
-			getSpanReporter().report(parent);
-		} else {
-			parent.logEvent(Span.SERVER_SEND);
-		}
-	}
-
-	private boolean requestHasAlreadyBeenHandled(HttpServletRequest request) {
-		return request.getAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR) != null;
-	}
-
-	private boolean errorAlreadyHandled(HttpServletRequest request) {
-		return Boolean.valueOf(
-				String.valueOf(request.getAttribute(TraceFilter.TRACE_ERROR_HANDLED_REQUEST_ATTR)));
-	}
-
-	private boolean httpStatusSuccessful(HttpServletResponse response) {
-		if (response.getStatus() == 0) {
-			return false;
-		}
-		HttpStatus.Series httpStatusSeries = HttpStatus.Series.valueOf(response.getStatus());
-		return httpStatusSeries == HttpStatus.Series.SUCCESSFUL || httpStatusSeries == HttpStatus.Series.REDIRECTION;
+	private boolean spanWasAlreadyClosed(HttpServletRequest request) {
+		return request.getAttribute(TraceFilter.SERVER_SPAN_CLOSED_REQUEST_ATTR) != null;
 	}
 
 	private Tracer getTracer() {
@@ -280,10 +207,11 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		return this.errorController;
 	}
 
-	private SpanReporter getSpanReporter() {
-		if (this.spanReporter == null) {
-			this.spanReporter = this.beanFactory.getBean(SpanReporter.class);
+	private SpanCloser getSpanCloser() {
+		if (this.spanCloser == null) {
+			this.spanCloser = new SpanCloser(this.beanFactory);
 		}
-		return this.spanReporter;
+		return this.spanCloser;
 	}
+
 }
