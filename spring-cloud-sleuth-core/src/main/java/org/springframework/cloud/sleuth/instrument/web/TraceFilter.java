@@ -139,7 +139,8 @@ public class TraceFilter extends GenericFilterBean {
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
-			processErrorRequest(filterChain, request, new TraceHttpServletResponse(response, spanFromRequest), spanFromRequest);
+			Span parentSpan = spanFromRequest.hasSavedSpan() ? spanFromRequest.getSavedSpan() : null;
+			processErrorRequest(filterChain, request, new TraceHttpServletResponse(response, parentSpan), spanFromRequest);
 			return;
 		}
 		String name = HTTP_COMPONENT + ":" + uri;
@@ -168,7 +169,7 @@ public class TraceFilter extends GenericFilterBean {
 			HttpServletResponse response, Span spanFromRequest)
 			throws IOException, ServletException {
 		if (log.isDebugEnabled()) {
-			log.debug("The span [" + spanFromRequest + "] was already detached once and we're processing an error");
+			log.debug("The span " + spanFromRequest + " was already detached once and we're processing an error");
 		}
 		try {
 			filterChain.doFilter(request, response);
@@ -371,17 +372,12 @@ public class TraceFilter extends GenericFilterBean {
 			return requestURI.append('?').append(queryString).toString();
 		}
 	}
-
-	static void annotateWithServerSendIfPossible(Span span) {
-		for (org.springframework.cloud.sleuth.Log log1 : span.logs()) {
-			if (Span.SERVER_SEND.equals(log1.getEvent())) {
-				return;
-			}
-		}
-		span.logEvent(Span.SERVER_SEND);
-	}
 }
 
+/**
+ * We want to set SS as fast as possible after the response was sent back. The response
+ * can be sent back by calling either of these methods.
+ */
 class TraceHttpServletResponse extends HttpServletResponseWrapper {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
@@ -394,13 +390,13 @@ class TraceHttpServletResponse extends HttpServletResponseWrapper {
 	}
 
 	@Override public void flushBuffer() throws IOException {
-		if (log.isDebugEnabled()) {
-			log.debug("Will annotate SS once the response is flushed");
+		if (log.isTraceEnabled()) {
+			log.trace("Will annotate SS once the response is flushed");
 		}
 		try {
 			super.flushBuffer();
 		} finally {
-			TraceFilter.annotateWithServerSendIfPossible(this.span);
+			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
 		}
 	}
 
@@ -434,13 +430,13 @@ class TraceServletOutputStream extends ServletOutputStream {
 	}
 
 	@Override public void write(int b) throws IOException {
-		if (log.isDebugEnabled()) {
-			log.debug("Will annotate SS once the response is flushed");
+		if (log.isTraceEnabled()) {
+			log.trace("Will annotate SS once the response is flushed");
 		}
 		try {
 			this.delegate.write(b);
 		} finally {
-			TraceFilter.annotateWithServerSendIfPossible(this.span);
+			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
 		}
 	}
 }
@@ -459,13 +455,13 @@ class TracePrintWriter extends PrintWriter {
 	}
 
 	@Override public void flush() {
-		if (log.isDebugEnabled()) {
-			log.debug("Will annotate SS once the response is flushed");
+		if (log.isTraceEnabled()) {
+			log.trace("Will annotate SS once the response is flushed");
 		}
 		try {
 			this.delegate.flush();
 		} finally {
-			TraceFilter.annotateWithServerSendIfPossible(this.span);
+			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
 		}
 	}
 
@@ -599,5 +595,16 @@ class TracePrintWriter extends PrintWriter {
 
 	@Override public PrintWriter append(char c) {
 		return this.delegate.append(c);
+	}
+}
+
+class SsLogSetter {
+	static void annotateWithServerSendIfLogIsNotAlreadyPresent(Span span) {
+		for (org.springframework.cloud.sleuth.Log log1 : span.logs()) {
+			if (Span.SERVER_SEND.equals(log1.getEvent())) {
+				return;
+			}
+		}
+		span.logEvent(Span.SERVER_SEND);
 	}
 }

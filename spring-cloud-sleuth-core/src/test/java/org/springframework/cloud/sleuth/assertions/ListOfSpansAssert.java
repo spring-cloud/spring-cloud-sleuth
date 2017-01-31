@@ -146,8 +146,21 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		isNotNull();
 		printSpans();
 		RpcLogKeeper rpcLogKeeper = findRpcLogs();
+		log.info("Rpc logs [" + rpcLogKeeper.toString() + "]");
+		rpcLogKeeper.assertThatAllBelongToSameTraceAndSpan();
 		rpcLogKeeper.assertThatFullRpcCycleTookPlace();
 		rpcLogKeeper.assertThatRpcLogsTookPlaceInOrder();
+		return this;
+	}
+
+	public ListOfSpansAssert hasRpcWithoutSeverSideDueToException() {
+		isNotNull();
+		printSpans();
+		RpcLogKeeper rpcLogKeeper = findRpcLogs();
+		log.info("Rpc logs [" + rpcLogKeeper.toString() + "]");
+		rpcLogKeeper.assertThatAllButBelongToSameTraceAndSpan();
+		rpcLogKeeper.assertThatClientSideEventsTookPlace();
+		rpcLogKeeper.assertThatCliendLogsTookPlaceInOrder();
 		return this;
 	}
 
@@ -171,15 +184,23 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 			switch (log.getEvent()) {
 			case Span.CLIENT_SEND:
 				rpcLogKeeper.cs = log;
+				rpcLogKeeper.csSpanId = span.getSpanId();
+				rpcLogKeeper.csTraceId = span.getTraceId();
 				break;
 			case Span.SERVER_RECV:
 				rpcLogKeeper.sr = log;
+				rpcLogKeeper.srSpanId = span.getSpanId();
+				rpcLogKeeper.srTraceId = span.getTraceId();
 				break;
 			case Span.SERVER_SEND:
 				rpcLogKeeper.ss = log;
+				rpcLogKeeper.ssSpanId = span.getSpanId();
+				rpcLogKeeper.ssTraceId = span.getTraceId();
 				break;
 			case Span.CLIENT_RECV:
 				rpcLogKeeper.cr = log;
+				rpcLogKeeper.crSpanId = span.getSpanId();
+				rpcLogKeeper.crTraceId = span.getTraceId();
 				break;
 			default:
 				break;
@@ -191,15 +212,40 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 
 class RpcLogKeeper {
 	org.springframework.cloud.sleuth.Log cs;
+	long csSpanId;
+	long csTraceId;
 	org.springframework.cloud.sleuth.Log sr;
+	long srSpanId;
+	long srTraceId;
 	org.springframework.cloud.sleuth.Log ss;
+	long ssSpanId;
+	long ssTraceId;
 	org.springframework.cloud.sleuth.Log cr;
+	long crSpanId;
+	long crTraceId;
 
 	void assertThatFullRpcCycleTookPlace() {
 		assertThat(this.cs).describedAs("Client Send log").isNotNull();
 		assertThat(this.sr).describedAs("Server Received log").isNotNull();
 		assertThat(this.ss).describedAs("Server Send log").isNotNull();
 		assertThat(this.cr).describedAs("Client Received log").isNotNull();
+	}
+
+	void assertThatClientSideEventsTookPlace() {
+		assertThat(this.cs).describedAs("Client Send log").isNotNull();
+		assertThat(this.cr).describedAs("Client Received log").isNotNull();
+	}
+
+	void assertThatAllBelongToSameTraceAndSpan() {
+		assertThat(this.csSpanId).describedAs("All logs should come from the same span")
+				.isEqualTo(this.srSpanId).isEqualTo(this.ssSpanId).isEqualTo(this.crSpanId);
+		assertThat(this.csTraceId).describedAs("All logs should come from the same trace")
+				.isEqualTo(this.srTraceId).isEqualTo(this.ssTraceId).isEqualTo(this.crTraceId);
+	}
+
+	void assertThatAllButBelongToSameTraceAndSpan() {
+		assertThat(this.csSpanId).describedAs("All logs should come from the same span").isEqualTo(this.crSpanId);
+		assertThat(this.csTraceId).describedAs("All logs should come from the same trace").isEqualTo(this.crTraceId);
 	}
 
 	void assertThatRpcLogsTookPlaceInOrder() {
@@ -210,5 +256,19 @@ class RpcLogKeeper {
 		assertThat(csTimestamp).as("CS timestamp should be before SR timestamp").isLessThanOrEqualTo(srTimestamp);
 		assertThat(srTimestamp).as("SR timestamp should be before SS timestamp").isLessThanOrEqualTo(ssTimestamp);
 		assertThat(ssTimestamp).as("SS timestamp should be before CR timestamp").isLessThanOrEqualTo(crTimestamp);
+	}
+
+	void assertThatCliendLogsTookPlaceInOrder() {
+		long csTimestamp = this.cs.getTimestamp();
+		long crTimestamp = this.cr.getTimestamp();
+		assertThat(csTimestamp).as("CS timestamp should be before CR timestamp").isLessThanOrEqualTo(crTimestamp);
+	}
+
+	@Override public String toString() {
+		return "RpcLogKeeper{" + "cs=" + cs + ", csSpanId=" + csSpanId + ", csTraceId="
+				+ csTraceId + ", sr=" + sr + ", srSpanId=" + srSpanId + ", srTraceId="
+				+ srTraceId + ", ss=" + ss + ", ssSpanId=" + ssSpanId + ", ssTraceId="
+				+ ssTraceId + ", cr=" + cr + ", crSpanId=" + crSpanId + ", crTraceId="
+				+ crTraceId + '}';
 	}
 }

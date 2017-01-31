@@ -42,6 +42,7 @@ import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
@@ -122,6 +123,7 @@ public class WebClientExceptionTests {
 		then(ExceptionUtils.getLastException()).isNull();
 		then(this.systemErrRule.getLog()).doesNotContain("Tried to detach trace span but it is not the current span");
 		then(this.systemOutRule.getLog()).doesNotContain("Tried to detach trace span but it is not the current span");
+		then(new ListOfSpans(this.accumulator.getSpans())).hasRpcWithoutSeverSideDueToException();
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
