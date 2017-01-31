@@ -132,7 +132,6 @@ public class FeignRetriesTests {
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
 		then(this.spanAccumulator.getSpans().get(0))
-				.hasNotLoggedAnEvent(Span.CLIENT_RECV)
 				.hasATag("error", "java.io.IOException");
 		then(this.spanAccumulator.getSpans().get(1))
 				.hasLoggedAnEvent(Span.CLIENT_RECV);
