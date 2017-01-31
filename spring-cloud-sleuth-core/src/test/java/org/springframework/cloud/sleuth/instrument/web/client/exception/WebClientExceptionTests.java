@@ -42,10 +42,8 @@ import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -88,7 +86,6 @@ public class WebClientExceptionTests {
 	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
 	@Autowired @LoadBalanced RestTemplate template;
 	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanAccumulator accumulator;
 
 	@Before
 	public void open() {
@@ -123,7 +120,6 @@ public class WebClientExceptionTests {
 		then(ExceptionUtils.getLastException()).isNull();
 		then(this.systemErrRule.getLog()).doesNotContain("Tried to detach trace span but it is not the current span");
 		then(this.systemOutRule.getLog()).doesNotContain("Tried to detach trace span but it is not the current span");
-		then(new ListOfSpans(this.accumulator.getSpans())).hasRpcWithoutSeverSideDueToException();
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
@@ -158,10 +154,6 @@ public class WebClientExceptionTests {
 		@Bean
 		Sampler alwaysSampler() {
 			return new AlwaysSampler();
-		}
-
-		@Bean ArrayListSpanAccumulator accumulator() {
-			return new ArrayListSpanAccumulator();
 		}
 	}
 

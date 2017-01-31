@@ -16,11 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.lang.invoke.MethodHandles;
 import java.net.URI;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
@@ -92,8 +89,6 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 
 	private static class TraceListenableFutureCallback<T> implements ListenableFutureCallback<T> {
 
-		private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
-
 		private final Tracer tracer;
 		private final Span parent;
 
@@ -104,9 +99,6 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 
 		@Override
 		public void onFailure(Throwable ex) {
-			if (log.isDebugEnabled()) {
-				log.debug("The callback failed - will close the span");
-			}
 			continueSpan();
 			this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
 			finish();
@@ -114,9 +106,6 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 
 		@Override
 		public void onSuccess(T result) {
-			if (log.isDebugEnabled()) {
-				log.debug("The callback succeeded - will close the span");
-			}
 			continueSpan();
 			finish();
 		}
