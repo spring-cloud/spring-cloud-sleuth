@@ -124,21 +124,15 @@ class TraceServletOutputStream extends ServletOutputStream {
 		if (log.isTraceEnabled()) {
 			log.trace("Will annotate SS once the stream is flushed");
 		}
-		try {
-			this.delegate.flush();
-		} finally {
-			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
-		}
+		SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
+		this.delegate.flush();
 	}
 
 	@Override public void close() throws IOException {
 		if (log.isTraceEnabled()) {
 			log.trace("Will annotate SS once the stream is closed");
 		}
-		try {
-			this.delegate.close();
-		} finally {
-			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
-		}
+		SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
+		this.delegate.close();
 	}
 }

@@ -44,22 +44,16 @@ class TracePrintWriter extends PrintWriter {
 		if (log.isTraceEnabled()) {
 			log.trace("Will annotate SS once the response is flushed");
 		}
-		try {
-			this.delegate.flush();
-		} finally {
-			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
-		}
+		this.delegate.flush();
+		SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
 	}
 
 	@Override public void close() {
 		if (log.isTraceEnabled()) {
 			log.trace("Will annotate SS once the stream is closed");
 		}
-		try {
-			this.delegate.close();
-		} finally {
-			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
-		}
+		SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(this.span);
+		this.delegate.close();
 	}
 
 	@Override public boolean checkError() {
