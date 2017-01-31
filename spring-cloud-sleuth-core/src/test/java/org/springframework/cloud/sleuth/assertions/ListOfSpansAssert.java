@@ -154,14 +154,25 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return this;
 	}
 
+	public ListOfSpansAssert hasServerSideSpansInProperOrder() {
+		isNotNull();
+		printSpans();
+		RpcLogKeeper rpcLogKeeper = findRpcLogs();
+		log.info("Rpc logs [" + rpcLogKeeper.toString() + "]");
+		rpcLogKeeper.assertThatServerSideEventsBelongToSameTraceAndSpan();
+		rpcLogKeeper.assertThatServerSideEventsTookPlace();
+		rpcLogKeeper.assertThatServerLogsTookPlaceInOrder();
+		return this;
+	}
+
 	public ListOfSpansAssert hasRpcWithoutSeverSideDueToException() {
 		isNotNull();
 		printSpans();
 		RpcLogKeeper rpcLogKeeper = findRpcLogs();
 		log.info("Rpc logs [" + rpcLogKeeper.toString() + "]");
-		rpcLogKeeper.assertThatAllButBelongToSameTraceAndSpan();
+		rpcLogKeeper.assertThatClientSideEventsBelongToSameTraceAndSpan();
 		rpcLogKeeper.assertThatClientSideEventsTookPlace();
-		rpcLogKeeper.assertThatCliendLogsTookPlaceInOrder();
+		rpcLogKeeper.assertThatClientLogsTookPlaceInOrder();
 		return this;
 	}
 
@@ -229,14 +240,15 @@ class RpcLogKeeper {
 	long crTraceId;
 
 	void assertThatFullRpcCycleTookPlace() {
-		log.info("Checking if Client Send took place");
-		assertThat(this.cs).describedAs("Client Send log").isNotNull();
+		assertThatServerSideEventsTookPlace();
+		assertThatClientSideEventsTookPlace();
+	}
+	void assertThatServerSideEventsTookPlace() {
 		log.info("Checking if Server Received took place");
 		assertThat(this.sr).describedAs("Server Received log").isNotNull();
 		log.info("Checking if Server Send took place");
 		assertThat(this.ss).describedAs("Server Send log").isNotNull();
 		log.info("Checking if Client Received took place");
-		assertThat(this.cr).describedAs("Client Received log").isNotNull();
 	}
 
 	void assertThatClientSideEventsTookPlace() {
@@ -255,11 +267,18 @@ class RpcLogKeeper {
 				.isEqualTo(this.srTraceId).isEqualTo(this.ssTraceId).isEqualTo(this.crTraceId);
 	}
 
-	void assertThatAllButBelongToSameTraceAndSpan() {
-		log.info("Checking if CR/CS spans are coming from the same span");
+	void assertThatClientSideEventsBelongToSameTraceAndSpan() {
+		log.info("Checking if CR/CS logs are coming from the same span");
 		assertThat(this.csSpanId).describedAs("All logs should come from the same span").isEqualTo(this.crSpanId);
-		log.info("Checking if CR/CS spans have the same trace id");
+		log.info("Checking if CR/CS logs have the same trace id");
 		assertThat(this.csTraceId).describedAs("All logs should come from the same trace").isEqualTo(this.crTraceId);
+	}
+
+	void assertThatServerSideEventsBelongToSameTraceAndSpan() {
+		log.info("Checking if SS/SR logs are coming from the same span");
+		assertThat(this.ssSpanId).describedAs("All logs should come from the same span").isEqualTo(this.srSpanId);
+		log.info("Checking if SS/SR logs have the same trace id");
+		assertThat(this.ssTraceId).describedAs("All logs should come from the same trace").isEqualTo(this.srTraceId);
 	}
 
 	void assertThatRpcLogsTookPlaceInOrder() {
@@ -275,11 +294,18 @@ class RpcLogKeeper {
 		assertThat(ssTimestamp).as("SS timestamp should be before CR timestamp").isLessThanOrEqualTo(crTimestamp);
 	}
 
-	void assertThatCliendLogsTookPlaceInOrder() {
+	void assertThatClientLogsTookPlaceInOrder() {
 		long csTimestamp = this.cs.getTimestamp();
 		long crTimestamp = this.cr.getTimestamp();
 		log.info("Checking if CS is before CR");
 		assertThat(csTimestamp).as("CS timestamp should be before CR timestamp").isLessThanOrEqualTo(crTimestamp);
+	}
+
+	void assertThatServerLogsTookPlaceInOrder() {
+		long srTimestamp = this.sr.getTimestamp();
+		long ssTimestamp = this.ss.getTimestamp();
+		log.info("Checking if CS is before CR");
+		assertThat(srTimestamp).as("SR timestamp should be before SS timestamp").isLessThanOrEqualTo(ssTimestamp);
 	}
 
 	@Override public String toString() {
