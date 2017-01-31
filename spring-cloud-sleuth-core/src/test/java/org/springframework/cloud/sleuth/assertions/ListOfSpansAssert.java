@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.assertions;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -211,6 +212,9 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 }
 
 class RpcLogKeeper {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	org.springframework.cloud.sleuth.Log cs;
 	long csSpanId;
 	long csTraceId;
@@ -225,26 +229,36 @@ class RpcLogKeeper {
 	long crTraceId;
 
 	void assertThatFullRpcCycleTookPlace() {
+		log.info("Checking if Client Send took place");
 		assertThat(this.cs).describedAs("Client Send log").isNotNull();
+		log.info("Checking if Server Received took place");
 		assertThat(this.sr).describedAs("Server Received log").isNotNull();
+		log.info("Checking if Server Send took place");
 		assertThat(this.ss).describedAs("Server Send log").isNotNull();
+		log.info("Checking if Client Received took place");
 		assertThat(this.cr).describedAs("Client Received log").isNotNull();
 	}
 
 	void assertThatClientSideEventsTookPlace() {
+		log.info("Checking if Client Send took place");
 		assertThat(this.cs).describedAs("Client Send log").isNotNull();
+		log.info("Checking if Client Received took place");
 		assertThat(this.cr).describedAs("Client Received log").isNotNull();
 	}
 
 	void assertThatAllBelongToSameTraceAndSpan() {
+		log.info("Checking if RPC spans are coming from the same span");
 		assertThat(this.csSpanId).describedAs("All logs should come from the same span")
 				.isEqualTo(this.srSpanId).isEqualTo(this.ssSpanId).isEqualTo(this.crSpanId);
+		log.info("Checking if RPC spans have the same trace id");
 		assertThat(this.csTraceId).describedAs("All logs should come from the same trace")
 				.isEqualTo(this.srTraceId).isEqualTo(this.ssTraceId).isEqualTo(this.crTraceId);
 	}
 
 	void assertThatAllButBelongToSameTraceAndSpan() {
+		log.info("Checking if CR/CS spans are coming from the same span");
 		assertThat(this.csSpanId).describedAs("All logs should come from the same span").isEqualTo(this.crSpanId);
+		log.info("Checking if CR/CS spans have the same trace id");
 		assertThat(this.csTraceId).describedAs("All logs should come from the same trace").isEqualTo(this.crTraceId);
 	}
 
@@ -253,14 +267,18 @@ class RpcLogKeeper {
 		long srTimestamp = this.sr.getTimestamp();
 		long ssTimestamp = this.ss.getTimestamp();
 		long crTimestamp = this.cr.getTimestamp();
+		log.info("Checking if CR is before SR");
 		assertThat(csTimestamp).as("CS timestamp should be before SR timestamp").isLessThanOrEqualTo(srTimestamp);
+		log.info("Checking if SR is before SS");
 		assertThat(srTimestamp).as("SR timestamp should be before SS timestamp").isLessThanOrEqualTo(ssTimestamp);
+		log.info("Checking if SS is before CR");
 		assertThat(ssTimestamp).as("SS timestamp should be before CR timestamp").isLessThanOrEqualTo(crTimestamp);
 	}
 
 	void assertThatCliendLogsTookPlaceInOrder() {
 		long csTimestamp = this.cs.getTimestamp();
 		long crTimestamp = this.cr.getTimestamp();
+		log.info("Checking if CS is before CR");
 		assertThat(csTimestamp).as("CS timestamp should be before CR timestamp").isLessThanOrEqualTo(crTimestamp);
 	}
 

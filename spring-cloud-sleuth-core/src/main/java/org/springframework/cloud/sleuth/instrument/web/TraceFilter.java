@@ -139,7 +139,7 @@ public class TraceFilter extends GenericFilterBean {
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
-			Span parentSpan = spanFromRequest.hasSavedSpan() ? spanFromRequest.getSavedSpan() : null;
+			Span parentSpan = spanFromRequest != null ? spanFromRequest.getSavedSpan() : null;
 			processErrorRequest(filterChain, request, new TraceHttpServletResponse(response, parentSpan), spanFromRequest);
 			return;
 		}
@@ -600,6 +600,9 @@ class TracePrintWriter extends PrintWriter {
 
 class SsLogSetter {
 	static void annotateWithServerSendIfLogIsNotAlreadyPresent(Span span) {
+		if (span == null) {
+			return;
+		}
 		for (org.springframework.cloud.sleuth.Log log1 : span.logs()) {
 			if (Span.SERVER_SEND.equals(log1.getEvent())) {
 				return;
