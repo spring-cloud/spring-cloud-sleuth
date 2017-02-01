@@ -96,8 +96,8 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		this.tracer.close(span);
 		SleuthAssertions.then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-						"Read timed out");
+				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME, "Read timed out")
+				.hasRpcWithoutSeverSideDueToException();
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 

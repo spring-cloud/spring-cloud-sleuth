@@ -19,6 +19,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -69,6 +70,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				.hasATagWithKey(new TraceKeys().getMvc().getControllerMethod())
 				.hasLoggedAnEvent(Span.SERVER_SEND);
 		then(ExceptionUtils.getLastException()).isNull();
+		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
 	}
 
 	@Test
@@ -129,6 +131,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(taggedSpan.get()).hasATag("mvc.controller.method", "deferredMethod");
 		then(taggedSpan.get()).hasATag("mvc.controller.class", "TestController");
 		then(ExceptionUtils.getLastException()).isNull();
+		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
 	}
 
 	@Test
@@ -152,6 +155,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				span.getSpanId() == span.getTraceId()).findAny().isPresent()).as("a root span exists").isTrue();
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
+		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
 	}
 
 	@Override

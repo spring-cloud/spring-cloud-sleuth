@@ -76,7 +76,8 @@ public class TraceFilterWebIntegrationTests {
 		then(ExceptionUtils.getLastException()).isNull();
 		then(new ListOfSpans(this.accumulator.getSpans()))
 				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
+						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
+				.hasRpcTagsInProperOrder();
 	}
 
 	private int port() {

@@ -134,14 +134,15 @@ public class TraceFilter extends GenericFilterBean {
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
-			processErrorRequest(filterChain, request, response, spanFromRequest);
+			Span parentSpan = parentSpan(spanFromRequest);
+			processErrorRequest(filterChain, request, new TraceHttpServletResponse(response, parentSpan), spanFromRequest);
 			return;
 		}
 		String name = HTTP_COMPONENT + ":" + uri;
 		Throwable exception = null;
 		try {
 			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
-			filterChain.doFilter(request, response);
+			filterChain.doFilter(request, new TraceHttpServletResponse(response, spanFromRequest));
 		} catch (Throwable e) {
 			exception = e;
 			this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(e));
@@ -159,11 +160,21 @@ public class TraceFilter extends GenericFilterBean {
 		}
 	}
 
+	private Span parentSpan(Span span) {
+		if (span == null) {
+			return null;
+		}
+		if (span.hasSavedSpan()) {
+			return span.getSavedSpan();
+		}
+		return span;
+	}
+
 	private void processErrorRequest(FilterChain filterChain, HttpServletRequest request,
 			HttpServletResponse response, Span spanFromRequest)
 			throws IOException, ServletException {
 		if (log.isDebugEnabled()) {
-			log.debug("The span [" + spanFromRequest + "] was already detached once and we're processing an error");
+			log.debug("The span " + spanFromRequest + " was already detached once and we're processing an error");
 		}
 		try {
 			filterChain.doFilter(request, response);
@@ -243,10 +254,12 @@ public class TraceFilter extends GenericFilterBean {
 				log.debug("Trying to send the parent span " + parent + " to Zipkin");
 			}
 			parent.stop();
-			parent.logEvent(Span.SERVER_SEND);
+			// should be already done by HttpServletResponse wrappers
+			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(parent);
 			this.spanReporter.report(parent);
 		} else {
-			parent.logEvent(Span.SERVER_SEND);
+			// should be already done by HttpServletResponse wrappers
+			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(parent);
 		}
 	}
 
@@ -375,3 +388,4 @@ public class TraceFilter extends GenericFilterBean {
 		}
 	}
 }
+

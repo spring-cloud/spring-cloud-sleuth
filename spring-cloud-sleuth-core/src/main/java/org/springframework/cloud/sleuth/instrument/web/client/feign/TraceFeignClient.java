@@ -91,6 +91,7 @@ class TraceFeignClient implements Client {
 			logCr();
 			return response;
 		} catch (RuntimeException | IOException e) {
+			logCr();
 			logError(e);
 			throw e;
 		} finally {

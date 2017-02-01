@@ -92,6 +92,7 @@ public class SpringDataInstrumentationTests {
 		});
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
+		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasRpcTagsInProperOrder();
 	}
 
 	Collection<String> names() {

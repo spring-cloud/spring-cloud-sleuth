@@ -102,7 +102,6 @@ public class TraceFeignClientTests {
 
 		then(this.tracer.getCurrentSpan()).isEqualTo(span);
 		then(this.spanAccumulator.getSpans().get(0))
-				.hasNotLoggedAnEvent(Span.CLIENT_RECV)
 				.hasATag(Span.SPAN_ERROR_TAG_NAME, "exception has occurred");
 	}
 

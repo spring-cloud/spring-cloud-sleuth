@@ -21,10 +21,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -45,8 +41,10 @@ import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,6 +57,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
+
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
@@ -66,10 +68,10 @@ import static junitparams.JUnitParamsRunner.$;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
-@SpringBootTest(classes = WebClientExceptionTests.TestConfiguration.class,
+@SpringBootTest(classes = {
+		WebClientExceptionTests.TestConfiguration.class },
+		properties = {"ribbon.ConnectTimeout=30000", "spring.application.name=exceptionservice" },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = {"ribbon.ConnectTimeout=30000",
-		"spring.application.name=exceptionservice" })
 public class WebClientExceptionTests {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
@@ -84,6 +86,7 @@ public class WebClientExceptionTests {
 	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
 	@Autowired @LoadBalanced RestTemplate template;
 	@Autowired Tracer tracer;
+	@Autowired ArrayListSpanAccumulator accumulator;
 
 	@Before
 	public void open() {
@@ -117,6 +120,7 @@ public class WebClientExceptionTests {
 		this.tracer.close(span);
 		then(ExceptionUtils.getLastException()).isNull();
 		then(this.capture.toString()).doesNotContain("Tried to detach trace span but it is not the current span");
+		then(new ListOfSpans(this.accumulator.getSpans())).hasRpcWithoutSeverSideDueToException();
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
@@ -151,6 +155,10 @@ public class WebClientExceptionTests {
 		@Bean
 		Sampler alwaysSampler() {
 			return new AlwaysSampler();
+		}
+
+		@Bean ArrayListSpanAccumulator accumulator() {
+			return new ArrayListSpanAccumulator();
 		}
 	}
 
