@@ -477,6 +477,19 @@ on before the Action was scheduled. To disable the custom RxJavaSchedulersHook s
 You can define a list of regular expressions for thread names, for which you don't want a Span to be created. Just provide a comma separated list
 of regular expressions in the `spring.sleuth.rxjava.schedulers.ignoredthreads` property.
 
+=== Project Reactor
+
+IMPORTANT: The `spring-cloud-sleuth-reactor` module requires Java 8!
+
+We're registering a custom trace representation of a `Scheduler`. The way the Reactor instrumentation works
+is such that whenever a Span was created before running the `Flux` / `Mono` it will get continued when
+ the first operation will take place and it will be the Reactor's internals that will *close* that span.
+
+You can wrap your `Publisher` in a trace representation like this `TracePublisher.from(...)`. If you're using
+Reactor's async operations then out trace representation of a `Scheduler` will take care of span creation and closing.
+
+If you want to disable the Reactor instrumentation just pass the `spring.sleuth.reactor.enabled` equal to false.
+
 === HTTP integration
 
 Features from this section can be disabled by providing the `spring.sleuth.web.enabled` property with value equal to `false`.

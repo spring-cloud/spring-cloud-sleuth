@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<include resource="org/springframework/boot/logging/logback/base.xml"/>
+	<logger name="org.springframework.cloud.sleuth" level="TRACE"/>
+	<logger name="org.springframework.cloud.sleuth.log" level="DEBUG"/>
+	<logger name="org.springframework.cloud.sleuth.trace" level="DEBUG"/>
+	<logger name="org.springframework.cloud.sleuth.instrument.rxjava" level="DEBUG"/>
+	<root level="INFO">
+		<appender-ref ref="CONSOLE"/>
+		<appender-ref ref="FILE"/>
+	</root>
+</configuration>
