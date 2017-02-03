@@ -194,8 +194,9 @@ Below you can find an example of a Logback configuration (file named https://git
 	<!-- Example for logging into the build folder of your project -->
 	<property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>​
 
+	<!-- You can override this to have a custom pattern -->
 	<property name="CONSOLE_LOG_PATTERN"
-			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${springAppName:-},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-B3-ParentSpanId:-},%X{X-Span-Export:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
 	<!-- Appender to log to console -->
 	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
@@ -256,7 +257,8 @@ Below you can find an example of a Logback configuration (file named https://git
 	​
 	<root level="INFO">
 		<appender-ref ref="console"/>
-		<appender-ref ref="logstash"/>
+		<!-- uncomment this to have also JSON logs -->
+		<!--<appender-ref ref="logstash"/>-->
 		<!--<appender-ref ref="flatfile"/>-->
 	</root>
 </configuration>
