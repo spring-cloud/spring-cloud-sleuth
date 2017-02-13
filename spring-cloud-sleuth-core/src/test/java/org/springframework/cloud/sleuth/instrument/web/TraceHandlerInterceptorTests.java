@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
@@ -28,8 +25,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.web.ErrorController;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.only;
 
 /**
  * @author Marcin Grzejszczak
@@ -41,13 +40,21 @@ public class TraceHandlerInterceptorTests {
 	@InjectMocks TraceHandlerInterceptor traceHandlerInterceptor;
 
 	@Test
-	public void should_not_blow_up_when_there_is_no_error_controller() throws Exception {
-		BDDMockito.given(this.beanFactory.getBean(ErrorController.class)).willThrow(new NoSuchBeanDefinitionException("errorController"));
-		HttpServletRequest request = new MockHttpServletRequest();
-		HttpServletResponse response = new MockHttpServletResponse();
-		Object handler = new Object();
+	public void should_cache_the_retrieved_bean_when_exception_took_place() throws Exception {
+		given(this.beanFactory.getBean(ErrorController.class)).willThrow(new NoSuchBeanDefinitionException("errorController"));
 
-		this.traceHandlerInterceptor.afterCompletion(request, response, handler, null);
+		then(this.traceHandlerInterceptor.getErrorController()).isNull();
+		then(this.traceHandlerInterceptor.getErrorController()).isNull();
+		BDDMockito.then(this.beanFactory).should(only()).getBean(ErrorController.class);
+	}
+
+	@Test
+	public void should_cache_the_retrieved_bean_when_no_exception_took_place() throws Exception {
+		given(this.beanFactory.getBean(ErrorController.class)).willReturn(() -> null);
+
+		then(this.traceHandlerInterceptor.getErrorController()).isNotNull();
+		then(this.traceHandlerInterceptor.getErrorController()).isNotNull();
+		BDDMockito.then(this.beanFactory).should(only()).getBean(ErrorController.class);
 	}
 
 }

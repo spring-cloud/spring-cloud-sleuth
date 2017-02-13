@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.lang.invoke.MethodHandles;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -54,7 +55,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 
 	private Tracer tracer;
 	private TraceKeys traceKeys;
-	private ErrorController errorController;
+	private AtomicReference<ErrorController> errorController;
 
 	public TraceHandlerInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -187,16 +188,19 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		return this.traceKeys;
 	}
 
-	private ErrorController getErrorController() {
+	ErrorController getErrorController() {
 		if (this.errorController == null) {
 			try {
-				this.errorController = this.beanFactory.getBean(ErrorController.class);
+				ErrorController errorController = this.beanFactory.getBean(ErrorController.class);
+				this.errorController = new AtomicReference<>(errorController);
 			} catch (NoSuchBeanDefinitionException e) {
 				if (log.isTraceEnabled()) {
 					log.trace("ErrorController bean not found");
 				}
+				this.errorController = new AtomicReference<>();
 			}
 		}
-		return this.errorController;
+		return this.errorController.get();
 	}
+
 }
