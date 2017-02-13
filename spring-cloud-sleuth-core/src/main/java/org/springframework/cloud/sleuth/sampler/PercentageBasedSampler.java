@@ -37,9 +37,9 @@ public class PercentageBasedSampler implements Sampler {
 
 	@Override
 	public boolean isSampled(Span currentSpan) {
-		if (this.configuration.getPercentage() == 0 || currentSpan == null) {
+		if (this.configuration.getPercentage() < 0.01f || currentSpan == null) {
 			return false;
-		} else if (this.configuration.getPercentage() == 100) {
+		} else if (this.configuration.getPercentage() > 0.99f) {
 			return true;
 		}
 		synchronized (this) {
