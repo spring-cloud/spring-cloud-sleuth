@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -188,7 +189,13 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 
 	private ErrorController getErrorController() {
 		if (this.errorController == null) {
-			this.errorController = this.beanFactory.getBean(ErrorController.class);
+			try {
+				this.errorController = this.beanFactory.getBean(ErrorController.class);
+			} catch (NoSuchBeanDefinitionException e) {
+				if (log.isTraceEnabled()) {
+					log.trace("ErrorController bean not found");
+				}
+			}
 		}
 		return this.errorController;
 	}
