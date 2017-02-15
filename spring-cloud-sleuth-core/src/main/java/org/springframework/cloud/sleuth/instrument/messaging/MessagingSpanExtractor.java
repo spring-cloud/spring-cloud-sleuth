@@ -53,7 +53,7 @@ class MessagingSpanExtractor implements SpanExtractor<Message<?>> {
 		}
 		if (hasHeader(carrier, Span.TRACE_ID_NAME)
 				|| hasHeader(carrier, Span.SPAN_ID_NAME)) {
-			log.warn("Deprecated trace headers detected. Please upgrade Sleuth to 1.1 "
+			log.warn("Deprecated trace headers detected. Please upgrade Sleuth to 1.2 "
 					+ "or start sending headers present in the TraceMessageHeaders class");
 			return extractSpanFromOldHeaders(carrier, Span.builder());
 		}
