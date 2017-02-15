@@ -94,7 +94,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 			return this.port;
 		}
 		Integer port;
-		if (this.serverProperties!=null && this.serverProperties.getPort() != null) {
+		if (this.serverProperties!=null && this.serverProperties.getPort() != null && this.serverProperties.getPort() > 0) {
 			port = this.serverProperties.getPort();
 		}
 		else {

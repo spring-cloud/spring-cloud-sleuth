@@ -89,6 +89,17 @@ public class ServerPropertiesHostLocatorTests {
 		assertThat(locator.locate(this.span).getServiceName()).isEqualTo("foo");
 	}
 
+	@Test
+	public void negativePortFromServerProperties() throws UnknownHostException {
+		ServerProperties properties = new ServerProperties();
+		properties.setPort(-1);
+
+		ServerPropertiesHostLocator locator = new ServerPropertiesHostLocator(properties,
+				"unknown", new ZipkinProperties(),localAddress(ADR1234));
+
+		assertThat(locator.locate(this.span).getPort()).isEqualTo((short) 8080);
+	}
+
 	private InetUtils localAddress(byte[] address) throws UnknownHostException {
 		InetUtils mocked = Mockito.spy(new InetUtils(new InetUtilsProperties()));
 		Mockito.when(mocked.findFirstNonLoopbackAddress())
