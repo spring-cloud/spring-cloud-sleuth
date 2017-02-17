@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,7 +47,10 @@ import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.GenericMessage;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -76,6 +83,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Autowired
 	private ArrayListSpanAccumulator accumulator;
+
+	@Autowired
+	private TraceChannelInterceptor interceptor;
 
 	private Message<?> message;
 
@@ -115,6 +125,15 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(spanId).isNotNull();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 		then(this.span.isExportable()).isFalse();
+	}
+
+	@Test
+	public void messageHeadersStillMutable() {
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
+		assertNotNull("message was null", this.message);
+		MessageHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class);
+		assertNotNull("Message header accessor should be still available", accessor);
 	}
 
 	@Test
@@ -302,6 +321,32 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(this.message).isNotNull();
 		then(this.accumulator.getSpans()).isNotEmpty();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
+	public void serializeMutableHeaders() throws Exception {
+		Map<String, Object> headers = new HashMap<>();
+		headers.put("foo", "bar");
+		Message<?> message = new GenericMessage<>("test", headers);
+		message = this.interceptor.preSend(message, this.tracedChannel);
+
+		Message<?> output = (Message<?>) serializeAndDeserialize(message);
+
+		then(output.getPayload()).isEqualTo("test");
+		then(output.getHeaders().get("foo")).isEqualTo("bar");
+		assertNotNull(output.getHeaders().get(MessageHeaders.CONTENT_TYPE));
+	}
+
+	private static Object serializeAndDeserialize(Object object) throws Exception {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream out = new ObjectOutputStream(baos);
+		out.writeObject(object);
+		out.close();
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		ObjectInputStream in = new ObjectInputStream(bais);
+		Object result = in.readObject();
+		in.close();
+		return result;
 	}
 
 	@Configuration
