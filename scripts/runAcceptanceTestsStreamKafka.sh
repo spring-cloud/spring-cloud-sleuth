@@ -16,4 +16,4 @@ chmod +x runAcceptanceTests.sh
 echo "Killing all running apps"
 ./runAcceptanceTests.sh -t "${AT_WHAT_TO_TEST}" -n
 
-./runAcceptanceTests.sh --kafka --whattotest "${AT_WHAT_TO_TEST}" --killattheend --cli "1.3.0.BUILD-SNAPSHOT"
+./runAcceptanceTests.sh --kafka --whattotest "${AT_WHAT_TO_TEST}" --killattheend -cli "1.3.0.BUILD-SNAPSHOT"
