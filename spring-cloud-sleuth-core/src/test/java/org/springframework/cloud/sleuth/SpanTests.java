@@ -19,10 +19,10 @@ package org.springframework.cloud.sleuth;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.junit.Test;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -167,9 +167,10 @@ public class SpanTests {
 	}
 
 	@Test public void can_log_with_generated_timestamp() throws IOException {
+		long beforeLog = System.currentTimeMillis();
+
 		span.logEvent("event1");
 
-		long beforeLog = System.currentTimeMillis();
 		assertThat(span.logs().get(0).getTimestamp()).isGreaterThanOrEqualTo(beforeLog);
 	}
 
