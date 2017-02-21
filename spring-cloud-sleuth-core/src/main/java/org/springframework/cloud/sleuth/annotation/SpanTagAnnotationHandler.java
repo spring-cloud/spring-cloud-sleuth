@@ -90,8 +90,7 @@ class SpanTagAnnotationHandler {
 	}
 
 	private boolean methodsAreTheSame(Method mostSpecificMethod, Method method1) {
-		return method1.getName().equals(mostSpecificMethod.getName())
-				&& method1.getParameterCount() == mostSpecificMethod.getParameterCount() &&
+		return method1.getName().equals(mostSpecificMethod.getName()) &&
 				Arrays.equals(method1.getParameterTypes(), mostSpecificMethod.getParameterTypes());
 	}
 
