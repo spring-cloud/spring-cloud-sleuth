@@ -40,18 +40,19 @@ public class SleuthAnnotationAutoConfiguration {
 	
 	@Autowired private Tracer tracer;
 	
-	@Bean SleuthSpanTagAnnotationHandler spanUtil(ApplicationContext context) {
-		return new SleuthSpanTagAnnotationHandler(context, this.tracer);
+	@Bean SpanTagAnnotationHandler spanTagAnnotationHandler(ApplicationContext context) {
+		return new SpanTagAnnotationHandler(context, this.tracer);
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(SleuthSpanCreator.class)
-	SleuthSpanCreator spanCreator(ApplicationContext context) {
-		return new DefaultSleuthSpanCreator(this.tracer, spanUtil(context));
+	@ConditionalOnMissingBean(SpanCreator.class)
+	SpanCreator spanCreator(ApplicationContext context) {
+		return new DefaultSpanCreator(this.tracer, spanTagAnnotationHandler(context));
 	}
-	
-	@Bean SleuthSpanCreateBeanPostProcessor sleuthSpanCreateBeanPostProcessor(SleuthSpanCreator spanCreator) {
-		return new SleuthSpanCreateBeanPostProcessor(new SleuthSpanCreatorAspect(spanCreator, this.tracer));
+
+	@Bean
+	SleuthSpanCreateBeanPostProcessor sleuthSpanCreateBeanPostProcessor(SpanCreator spanCreator) {
+		return new SleuthSpanCreateBeanPostProcessor(new SpanCreatorAspect(spanCreator, this.tracer));
 	}
 	
 }

@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		properties = "spring.sleuth.annotation.enabled=false")
 public class SleuthSpanCreatorAnnotationDisableTests {
 
-	@Autowired(required = false) SleuthSpanTagAnnotationHandler handler;
+	@Autowired(required = false) SpanTagAnnotationHandler handler;
 	
 	@Test
 	public void shouldNotAutowireBecauseConfigIsDisabled() {

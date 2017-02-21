@@ -47,14 +47,14 @@ import org.springframework.util.StringUtils;
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
-class SleuthSpanTagAnnotationHandler {
+class SpanTagAnnotationHandler {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final ApplicationContext context;
 	private final Tracer tracer;
 	
-	SleuthSpanTagAnnotationHandler(ApplicationContext context, Tracer tracer) {
+	SpanTagAnnotationHandler(ApplicationContext context, Tracer tracer) {
 		this.context = context;
 		this.tracer = tracer;
 	}

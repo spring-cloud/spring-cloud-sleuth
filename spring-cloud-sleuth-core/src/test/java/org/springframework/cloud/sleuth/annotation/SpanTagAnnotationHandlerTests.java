@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.fail;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SpanTagAnnotationHandlerTests {
 
-	@Autowired SleuthSpanTagAnnotationHandler handler;
+	@Autowired SpanTagAnnotationHandler handler;
 	@Autowired SleuthTagValueResolver tagValueResolver;
 
 	@Before

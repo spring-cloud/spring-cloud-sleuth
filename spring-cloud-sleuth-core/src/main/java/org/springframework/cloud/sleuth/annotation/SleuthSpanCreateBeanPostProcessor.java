@@ -39,9 +39,9 @@ class SleuthSpanCreateBeanPostProcessor implements BeanPostProcessor {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
-	private final SleuthSpanCreatorAspect advice;
+	private final SpanCreatorAspect advice;
 
-	SleuthSpanCreateBeanPostProcessor(SleuthSpanCreatorAspect advice) {
+	SleuthSpanCreateBeanPostProcessor(SpanCreatorAspect advice) {
 		this.advice = advice;
 	}
 	

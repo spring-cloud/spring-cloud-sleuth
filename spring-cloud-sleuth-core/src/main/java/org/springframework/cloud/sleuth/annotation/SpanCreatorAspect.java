@@ -42,12 +42,12 @@ import org.springframework.cloud.sleuth.Tracer;
  * @since 1.2.0
  */
 @Aspect
-class SleuthSpanCreatorAspect {
+class SpanCreatorAspect {
 
-	private final SleuthSpanCreator spanCreator;
+	private final SpanCreator spanCreator;
 	private final Tracer tracer;
 
-	SleuthSpanCreatorAspect(SleuthSpanCreator spanCreator, Tracer tracer) {
+	SpanCreatorAspect(SpanCreator spanCreator, Tracer tracer) {
 		this.spanCreator = spanCreator;
 		this.tracer = tracer;
 	}

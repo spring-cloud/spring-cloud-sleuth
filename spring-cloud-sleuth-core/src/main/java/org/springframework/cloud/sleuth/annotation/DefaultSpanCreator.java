@@ -21,19 +21,19 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.util.StringUtils;
 
 /**
- * Default implementation of the {@link SleuthSpanCreator} that creates
+ * Default implementation of the {@link SpanCreator} that creates
  * a new span around the annotated method.
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
-class DefaultSleuthSpanCreator implements SleuthSpanCreator {
+class DefaultSpanCreator implements SpanCreator {
 
 	private final Tracer tracer;
-	private final SleuthSpanTagAnnotationHandler annotationSpanUtil;
+	private final SpanTagAnnotationHandler annotationSpanUtil;
 
-	DefaultSleuthSpanCreator(Tracer tracer,
-			SleuthSpanTagAnnotationHandler annotationSpanUtil) {
+	DefaultSpanCreator(Tracer tracer,
+			SpanTagAnnotationHandler annotationSpanUtil) {
 		this.tracer = tracer;
 		this.annotationSpanUtil = annotationSpanUtil;
 	}

@@ -26,7 +26,7 @@ import org.springframework.cloud.sleuth.Span;
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
-public interface SleuthSpanCreator {
+public interface SpanCreator {
 
 	/**
 	 * Returns a new {@link Span} for the join point and {@link NewSpan}

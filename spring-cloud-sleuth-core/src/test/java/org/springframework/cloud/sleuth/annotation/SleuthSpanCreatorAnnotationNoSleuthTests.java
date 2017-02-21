@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		properties = "spring.sleuth.enabled=false")
 public class SleuthSpanCreatorAnnotationNoSleuthTests {
 
-	@Autowired(required = false) SleuthSpanTagAnnotationHandler handler;
+	@Autowired(required = false) SpanTagAnnotationHandler handler;
 	@Autowired(required = false) Tracer tracer;
 
 	@Test
