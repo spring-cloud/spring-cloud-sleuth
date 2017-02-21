@@ -27,6 +27,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.util.StringUtils;
 
 /**
  * Due to limitations of Spring AOP we're not creating two separate pointcuts:
@@ -73,11 +74,18 @@ class SpanCreatorAspect {
 			return pjp.proceed();
 		}
 		Span span = null;
+		boolean hasLog = StringUtils.hasText(annotation.log());
 		try {
 			span = this.spanCreator.createSpan(pjp, annotation);
+			if (hasLog) {
+				span.logEvent(annotation.log() + ".start");
+			}
 			return pjp.proceed();
 		} finally {
 			if (span != null) {
+				if (hasLog) {
+					span.logEvent(annotation.log() + ".end");
+				}
 				this.tracer.close(span);
 			}
 		}

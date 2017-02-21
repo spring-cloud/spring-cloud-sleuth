@@ -121,7 +121,8 @@ public class SleuthSpanCreatorAspectTests {
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
 				.hasASpanWithName("customNameOnTestMethod8")
-				.hasASpanWithLogEqualTo("test");
+				.hasASpanWithLogEqualTo("test.start")
+				.hasASpanWithLogEqualTo("test.end");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -134,7 +135,8 @@ public class SleuthSpanCreatorAspectTests {
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
 				.hasASpanWithName("customNameOnTestMethod9")
-				.hasASpanWithLogEqualTo("test");
+				.hasASpanWithLogEqualTo("customTest.start")
+				.hasASpanWithLogEqualTo("customTest.end");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -172,12 +174,12 @@ public class SleuthSpanCreatorAspectTests {
 		
 		void testMethod7();
 
-		@NewSpan(name = "customNameOnTestMethod8")
-		void testMethod8(@SpanLog String param);
+		@NewSpan(name = "customNameOnTestMethod8", log = "test")
+		void testMethod8(String param);
 
 		// tag::span_log[]
-		@NewSpan(name = "testMethod9")
-		void testMethod9(@SpanLog String param);
+		@NewSpan(name = "testMethod9", log = "test")
+		void testMethod9(String param);
 		// end::span_log[]
 	}
 	
@@ -218,13 +220,13 @@ public class SleuthSpanCreatorAspectTests {
 		}
 
 		@Override
-		public void testMethod8(@SpanLog String param) {
+		public void testMethod8(String param) {
 
 		}
 
-		@NewSpan(name = "customNameOnTestMethod9")
+		@NewSpan(name = "customNameOnTestMethod9", log = "customTest")
 		@Override
-		public void testMethod9(@SpanLog String param) {
+		public void testMethod9(String param) {
 
 		}
 	}

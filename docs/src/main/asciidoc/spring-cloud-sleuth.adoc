@@ -251,14 +251,11 @@ concrete one wins (in this case `customNameOnTestMethod3` will be set).
 ----
 // method declaration
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=span_log,indent=0]
-
-// and method execution
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=log_execution,indent=0]
 ----
 
-If you want to create append a log to the span it's enough to annotate the property of a method
-with `@SpanLog` annotation. In this case a log with event `test` will be set on the span.
-
+If you want to create append a log to the span it's enough to pass the `log` value of
+the annotation. In this case a log with name `test.start` will be set on the span before
+the method is executed and a log with name `test.end` just before closing the span.
 
 === More advanced tag setting
 

@@ -41,8 +41,4 @@ class SleuthAnnotatedParameter {
 		return this.annotation instanceof SpanTag;
 	}
 
-	boolean isSpanLog() {
-		return this.annotation instanceof SpanLog;
-	}
-
 }

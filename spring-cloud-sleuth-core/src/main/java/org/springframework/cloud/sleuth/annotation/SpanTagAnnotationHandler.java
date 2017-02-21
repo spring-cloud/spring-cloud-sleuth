@@ -112,9 +112,6 @@ class SpanTagAnnotationHandler {
 				SpanTag spanTag = (SpanTag) container.annotation;
 				String tagValue = resolveTagValue(spanTag, container.argument);
 				this.tracer.addTag(spanTag.value(), tagValue);
-			} else if (container.isSpanLog()) {
-				String log = container.argument != null ? container.argument.toString() : "";
-				this.tracer.getCurrentSpan().logEvent(log);
 			}
 		}
 	}
@@ -147,7 +144,7 @@ class SpanTagAnnotationHandler {
 		int i = 0;
 		for (Annotation[] parameter : parameters) {
 			for (Annotation parameter2 : parameter) {
-				if (parameter2 instanceof SpanTag || parameter2 instanceof SpanLog) {
+				if (parameter2 instanceof SpanTag) {
 					result.add(new SleuthAnnotatedParameter(i, parameter2, args[i]));
 				}
 			}
