@@ -92,10 +92,10 @@ class SpanTagAnnotationHandler {
 	private void mergeAnnotatedParameters(List<SleuthAnnotatedParameter> annotatedParametersIndices,
 			List<SleuthAnnotatedParameter> annotatedParametersIndicesForActualMethod) {
 		for (SleuthAnnotatedParameter container : annotatedParametersIndicesForActualMethod) {
-			final int index = container.getParameterIndex();
+			final int index = container.parameterIndex;
 			boolean parameterContained = false;
 			for (SleuthAnnotatedParameter parameterContainer : annotatedParametersIndices) {
-				if (parameterContainer.getParameterIndex() == index) {
+				if (parameterContainer.parameterIndex == index) {
 					parameterContained = true;
 					break;
 				}
@@ -108,8 +108,14 @@ class SpanTagAnnotationHandler {
 
 	private void addAnnotatedArguments(List<SleuthAnnotatedParameter> toBeAdded) {
 		for (SleuthAnnotatedParameter container : toBeAdded) {
-			String tagValue = resolveTagValue(container.getAnnotation(), container.getArgument());
-			this.tracer.addTag(container.getAnnotation().value(), tagValue);
+			if (container.isSpanTag()) {
+				SpanTag spanTag = (SpanTag) container.annotation;
+				String tagValue = resolveTagValue(spanTag, container.argument);
+				this.tracer.addTag(spanTag.value(), tagValue);
+			} else if (container.isSpanLog()) {
+				String log = container.argument != null ? container.argument.toString() : "";
+				this.tracer.getCurrentSpan().logEvent(log);
+			}
 		}
 	}
 
@@ -141,13 +147,8 @@ class SpanTagAnnotationHandler {
 		int i = 0;
 		for (Annotation[] parameter : parameters) {
 			for (Annotation parameter2 : parameter) {
-				if (parameter2 instanceof SpanTag) {
-					SpanTag annotation = (SpanTag) parameter2;
-					SleuthAnnotatedParameter container = new SleuthAnnotatedParameter();
-					container.setAnnotation(annotation);
-					container.setArgument(args[i]);
-					container.setParameterIndex(i);
-					result.add(container);
+				if (parameter2 instanceof SpanTag || parameter2 instanceof SpanLog) {
+					result.add(new SleuthAnnotatedParameter(i, parameter2, args[i]));
 				}
 			}
 			i++;

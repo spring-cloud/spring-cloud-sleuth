@@ -201,9 +201,9 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 will lead in creating a span named `calculateTax`.
 
-== @NewSpan and @SpanTag annotations
+== Managing spans with annotations
 
-If you really don't want to take care of local spans creation you can profit from the
+If you really don't want to take care of creating local spans manually you can profit from the
 `@NewSpan` annotation. Also we give you the `@SpanTag` annotation to add tags in an automated
 fashion.
 
@@ -246,6 +246,19 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 You can place the `@NewSpan` annotation on both the class and an interface. If you override the
 interface's method and provide a different value of the `@NewSpan` annotation then the most
 concrete one wins (in this case `customNameOnTestMethod3` will be set).
+
+[source,java]
+----
+// method declaration
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=span_log,indent=0]
+
+// and method execution
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=log_execution,indent=0]
+----
+
+If you want to create append a log to the span it's enough to annotate the property of a method
+with `@SpanLog` annotation. In this case a log with event `test` will be set on the span.
+
 
 === More advanced tag setting
 

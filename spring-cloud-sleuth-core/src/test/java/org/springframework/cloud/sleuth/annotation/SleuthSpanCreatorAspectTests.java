@@ -113,7 +113,31 @@ public class SleuthSpanCreatorAspectTests {
 				.hasASpanWithTagEqualTo("testTag6", "test");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
-	
+
+	@Test
+	public void shouldCreateSpanWithLogWhenAnnotationOnInterfaceMethod() {
+		this.testBean.testMethod8("test");
+
+		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
+		then(new ListOfSpans(spans)).hasSize(1)
+				.hasASpanWithName("customNameOnTestMethod8")
+				.hasASpanWithLogEqualTo("test");
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	@Test
+	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
+		// tag::log_execution[]
+		this.testBean.testMethod9("test");
+		// end::log_execution[]
+
+		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
+		then(new ListOfSpans(spans)).hasSize(1)
+				.hasASpanWithName("customNameOnTestMethod9")
+				.hasASpanWithLogEqualTo("test");
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
 	@Test
 	public void shouldNotCreateSpanWhenNotAnnotated() {
 		this.testBean.testMethod7();
@@ -147,6 +171,14 @@ public class SleuthSpanCreatorAspectTests {
 		void testMethod6(String test);
 		
 		void testMethod7();
+
+		@NewSpan(name = "customNameOnTestMethod8")
+		void testMethod8(@SpanLog String param);
+
+		// tag::span_log[]
+		@NewSpan(name = "testMethod9")
+		void testMethod9(@SpanLog String param);
+		// end::span_log[]
 	}
 	
 	protected static class TestBean implements TestBeanInterface {
@@ -183,6 +215,17 @@ public class SleuthSpanCreatorAspectTests {
 
 		@Override
 		public void testMethod7() {
+		}
+
+		@Override
+		public void testMethod8(@SpanLog String param) {
+
+		}
+
+		@NewSpan(name = "customNameOnTestMethod9")
+		@Override
+		public void testMethod9(@SpanLog String param) {
+
 		}
 	}
 	

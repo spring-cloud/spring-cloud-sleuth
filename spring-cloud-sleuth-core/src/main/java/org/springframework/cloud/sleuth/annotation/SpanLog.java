@@ -13,36 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.annotation;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
- * A container class that holds information about the parameter
- * of the annotated method argument.
- *
- * @author Christian Schwerdtfeger
+ * The value of a method parameter which is annotated with this annotation,
+ * will be added as a log to the span.
+ * 
+ * @author Marcin Grzejszczak
  * @since 1.2.0
  */
-class SleuthAnnotatedParameter {
-
-	int parameterIndex;
-
-	Object annotation;
-
-	Object argument;
-
-	SleuthAnnotatedParameter(int parameterIndex, Object annotation,
-			Object argument) {
-		this.parameterIndex = parameterIndex;
-		this.annotation = annotation;
-		this.argument = argument;
-	}
-
-	boolean isSpanTag() {
-		return this.annotation instanceof SpanTag;
-	}
-
-	boolean isSpanLog() {
-		return this.annotation instanceof SpanLog;
-	}
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Target(value = { ElementType.PARAMETER })
+public @interface SpanLog {
 
 }
