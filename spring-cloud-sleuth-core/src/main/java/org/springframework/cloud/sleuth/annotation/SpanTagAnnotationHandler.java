@@ -34,8 +34,8 @@ import org.springframework.util.StringUtils;
 
 /**
  * This class is able to find all methods annotated with the
- * {@link NewSpan} annotation. All methods mean that if you have both an interface
- * and an implementation annotated with {@link NewSpan} then this class is capable
+ * Sleuth annotations. All methods mean that if you have both an interface
+ * and an implementation annotated with Sleuth annotations then this class is capable
  * of finding both of them and merging into one set of tracing information.
  *
  * This information is then used to add proper tags to the span from the
