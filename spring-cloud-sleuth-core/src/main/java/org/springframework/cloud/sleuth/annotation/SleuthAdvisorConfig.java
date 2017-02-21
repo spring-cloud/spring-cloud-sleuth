@@ -66,7 +66,7 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 		this.pointcut = buildPointcut();
 		this.advice = buildAdvice();
 		if (this.advice instanceof BeanFactoryAware) {
-			((BeanFactoryAware) this.advice).setBeanFactory(beanFactory);
+			((BeanFactoryAware) this.advice).setBeanFactory(this.beanFactory);
 		}
 	}
 
@@ -80,7 +80,7 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 
 	@Override
 	public ClassFilter getClassFilter() {
-		return pointcut.getClassFilter();
+		return this.pointcut.getClassFilter();
 	}
 
 	@Override
@@ -146,7 +146,8 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 
 		@Override
 		public boolean matches(Method method, Class<?> targetClass, Object... args) {
-			return getClassFilter().matches(targetClass) || this.methodResolver.matches(method, targetClass, args);
+			return getClassFilter().matches(targetClass) ||
+					this.methodResolver.matches(method, targetClass, args);
 		}
 
 		@Override public ClassFilter getClassFilter() {
@@ -210,7 +211,7 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 								return;
 							}
 							Annotation annotation = AnnotationUtils.findAnnotation(method,
-									annotationType);
+									AnnotationMethodsResolver.this.annotationType);
 							if (annotation != null) { found.set(true); }
 						}
 					});
