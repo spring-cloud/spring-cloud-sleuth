@@ -162,7 +162,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		// tag::continue_span_execution[]
 		this.testBean.testMethod11("test");
-		// tag::continue_span_execution[]
+		// end::continue_span_execution[]
 
 		this.tracer.close(span);
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
