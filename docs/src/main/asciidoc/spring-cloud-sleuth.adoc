@@ -251,7 +251,6 @@ concrete one wins (in this case `customNameOnTestMethod3` will be set).
 
 [source,java]
 ----
-// method declaration
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=span_log,indent=0]
 ----
 
@@ -274,6 +273,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 ----
 
 That way the span will get continued and:
+
  - logs with name `testMethod11.start` and `testMethod11.end` will be created
  - tag with key `testTag11` and value `test` will be created
 
