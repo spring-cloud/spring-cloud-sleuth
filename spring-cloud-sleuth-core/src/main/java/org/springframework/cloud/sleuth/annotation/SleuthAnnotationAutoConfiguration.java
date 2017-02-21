@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.ApplicationContext;
@@ -39,6 +40,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(name = "spring.sleuth.annotation.enabled", matchIfMissing = true)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
+@EnableConfigurationProperties(SleuthAnnotationProperties.class)
 public class SleuthAnnotationAutoConfiguration {
 	
 	@Autowired private Tracer tracer;
