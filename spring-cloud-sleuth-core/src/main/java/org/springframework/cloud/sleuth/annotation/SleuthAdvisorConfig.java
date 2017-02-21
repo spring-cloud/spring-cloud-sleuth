@@ -46,7 +46,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * Custom pointcut advisor that picks all classes / interfaces that
- * have the {@link NewSpan}.
+ * have the Sleuth related annotations.
  *
  * @author Marcin Grzejszczak
  * @since 1.2.0
@@ -106,17 +106,12 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 		return new SleuthInterceptor();
 	}
 
-	/**
-	 * Calculate a pointcut for the given retry annotation types, if any.
-	 *
-	 * @return the applicable Pointcut object, or {@code null} if none
-	 */
 	private Pointcut buildPointcut() {
 		return new AnnotationClassOrMethodOrArgsPointcut();
 	}
 
 	/**
-	 * Checks if a method is {@link NewSpan} or {@link ContinueSpan} annotations
+	 * Checks if a class or a method is is annotated with Sleuth related annotations
 	 */
 	private final class AnnotationClassOrMethodOrArgsPointcut extends
 			DynamicMethodMatcherPointcut {
