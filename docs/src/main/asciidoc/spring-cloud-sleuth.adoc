@@ -203,6 +203,8 @@ will lead in creating a span named `calculateTax`.
 
 == Managing spans with annotations
 
+=== Creating new spans
+
 If you really don't want to take care of creating local spans manually you can profit from the
 `@NewSpan` annotation. Also we give you the `@SpanTag` annotation to add tags in an automated
 fashion.
@@ -256,6 +258,24 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 If you want to create append a log to the span it's enough to pass the `log` value of
 the annotation. In this case a log with name `test.start` will be set on the span before
 the method is executed and a log with name `test.end` just before closing the span.
+
+=== Continuing spans
+
+If you want to just add tags and annotations to an existing span it's enough
+to use the `@ContinueSpan` annotation as presented below:
+
+[source,java]
+----
+// method declaration
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span,indent=0]
+
+// method execution
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span_execution,indent=0]
+----
+
+That way the span will get continued and:
+ - logs with name `testMethod11.start` and `testMethod11.end` will be created
+ - tag with key `testTag11` and value `test` will be created
 
 === More advanced tag setting
 

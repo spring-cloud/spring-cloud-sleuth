@@ -102,7 +102,7 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 		return this.pointcut;
 	}
 
-	protected Advice buildAdvice() {
+	private Advice buildAdvice() {
 		return new SleuthInterceptor();
 	}
 
@@ -111,12 +111,12 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 	 *
 	 * @return the applicable Pointcut object, or {@code null} if none
 	 */
-	protected Pointcut buildPointcut() {
+	private Pointcut buildPointcut() {
 		return new AnnotationClassOrMethodOrArgsPointcut();
 	}
 
 	/**
-	 *
+	 * Checks if a method is {@link NewSpan} or {@link ContinueSpan} annotations
 	 */
 	private final class AnnotationClassOrMethodOrArgsPointcut extends
 			DynamicMethodMatcherPointcut {
@@ -129,7 +129,7 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 						Object... args) {
 					if (SleuthAnnotationUtils.isMethodAnnotated(method)) {
 						if (log.isDebugEnabled()) {
-							log.debug("Found a method with @NewSpan annotation");
+							log.debug("Found a method with Sleuth annotation");
 						}
 						return true;
 					}
@@ -150,7 +150,12 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 		}
 
 		@Override public ClassFilter getClassFilter() {
-			return new AnnotationClassOrMethodFilter(NewSpan.class);
+			return new ClassFilter() {
+				@Override public boolean matches(Class<?> clazz) {
+					return new AnnotationClassOrMethodFilter(NewSpan.class).matches(clazz) ||
+							new AnnotationClassOrMethodFilter(ContinueSpan.class).matches(clazz);
+				}
+			};
 		}
 
 		@Override
@@ -183,6 +188,9 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 
 	}
 
+	/**
+	 * Checks if a method is properly annotated with a given Sleuth annotation
+	 */
 	private static class AnnotationMethodsResolver {
 
 		private Class<? extends Annotation> annotationType;
@@ -212,11 +220,16 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 	}
 }
 
+/**
+ * Interceptor that creates or continues a span depending on the provided
+ * annotation. Also it adds logs and tags if necessary.
+ */
 class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 
 	private BeanFactory beanFactory;
 	private SpanCreator spanCreator;
 	private Tracer tracer;
+	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 
 	@Override public Object invoke(MethodInvocation invocation) throws Throwable {
 		Method method = invocation.getMethod();
@@ -225,26 +238,43 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 		}
 		Method mostSpecificMethod = AopUtils
 				.getMostSpecificMethod(method, invocation.getThis().getClass());
-		NewSpan annotation = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod);
-		if (annotation == null) {
+		NewSpan newSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, NewSpan.class);
+		ContinueSpan continueSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, ContinueSpan.class);
+		if (newSpan == null && continueSpan == null) {
 			return invocation.proceed();
 		}
-		Span span = null;
-		boolean hasLog = StringUtils.hasText(annotation.log());
+		Span span = tracer().getCurrentSpan();
+		String log = log(newSpan, continueSpan);
+		boolean hasLog = StringUtils.hasText(log);
 		try {
-			span = spanCreator().createSpan(invocation, annotation);
+			if (newSpan != null) {
+				span = spanCreator().createSpan(invocation, newSpan);
+			}
 			if (hasLog) {
-				span.logEvent(annotation.log() + ".start");
+				spanTagAnnotationHandler().addAnnotatedParameters(invocation);
+				span.logEvent(log + ".start");
 			}
 			return invocation.proceed();
 		} finally {
 			if (span != null) {
 				if (hasLog) {
-					span.logEvent(annotation.log() + ".end");
+					span.logEvent(log + ".end");
 				}
-				tracer().close(span);
+				if (newSpan != null) {
+					tracer().close(span);
+				}
 			}
 		}
+	}
+
+	private String log(NewSpan annotation, ContinueSpan continueSpan) {
+		if (annotation != null) {
+			return annotation.log();
+		}
+		if (continueSpan != null) {
+			return continueSpan.log();
+		}
+		return "";
 	}
 
 	private Tracer tracer() {
@@ -259,6 +289,13 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 			this.spanCreator = this.beanFactory.getBean(SpanCreator.class);
 		}
 		return this.spanCreator;
+	}
+
+	private SpanTagAnnotationHandler spanTagAnnotationHandler() {
+		if (this.spanTagAnnotationHandler == null) {
+			this.spanTagAnnotationHandler = this.beanFactory.getBean(SpanTagAnnotationHandler.class);
+		}
+		return this.spanTagAnnotationHandler;
 	}
 
 	@Override public boolean implementsInterface(Class<?> intf) {

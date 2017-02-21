@@ -38,7 +38,8 @@ class SleuthAnnotationUtils {
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	static boolean isMethodAnnotated(Method method) {
-		return findAnnotation(method) != null;
+		return findAnnotation(method, NewSpan.class) != null ||
+				findAnnotation(method, ContinueSpan.class) != null;
 	}
 
 	static boolean hasAnnotatedParams(Method method, Object[] args) {
@@ -63,11 +64,13 @@ class SleuthAnnotationUtils {
 	/**
 	 * Searches for an annotation either on a method or inside the method parameters
 	 */
-	static NewSpan findAnnotation(Method method) {
-		NewSpan annotation = AnnotationUtils.findAnnotation(method, NewSpan.class);
+	static <T extends Annotation> T findAnnotation(Method method, Class<T> clazz) {
+		T annotation = AnnotationUtils.findAnnotation(method, clazz);
 		if (annotation == null) {
 			try {
-				annotation = AnnotationUtils.findAnnotation(method.getDeclaringClass().getMethod(method.getName(), method.getParameterTypes()), NewSpan.class);
+				annotation = AnnotationUtils.findAnnotation(
+						method.getDeclaringClass().getMethod(method.getName(),
+								method.getParameterTypes()), clazz);
 			} catch (NoSuchMethodException | SecurityException e) {
 				if (log.isDebugEnabled()) {
 					log.debug("Exception occurred while tyring to find the annotation", e);

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.annotation;
 
 import java.lang.annotation.ElementType;
@@ -21,35 +22,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.core.annotation.AliasFor;
-
 /**
- * Allows to create a new span around a public method or a class.
- * <p>
- * For each public method in an annotated class, or self annotated method,
- * a new {@link org.springframework.cloud.sleuth.Span} will be created.
- * Method parameters can be annotated with {@link SpanTag}, which will
- * in adding the parameter value as a tag to the span.
+ * Tells Sleuth that all Sleuth related annotations should be applied
+ * to an existing span instead of creating a new one.
  *
- * @author Christian Schwerdtfeger
+ * @author Marcin Grzejszczak
  * @since 1.2.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Target(value = { ElementType.METHOD, ElementType.TYPE })
-public @interface NewSpan {
-
-	/**
-	 * The name of the span which will be created. Default is the annotated method's name.
-	 */
-	@AliasFor("value")
-	String name() default "";
-
-	/**
-	 * The name of the span which will be created. Default is the annotated method's name.
-	 */
-	@AliasFor("name")
-	String value() default "";
+public @interface ContinueSpan {
 
 	/**
 	 * The value passed to the annotation will be used and the framework

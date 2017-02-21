@@ -141,6 +141,40 @@ public class SleuthSpanCreatorAspectTests {
 	}
 
 	@Test
+	public void shouldContinueSpanWithLogWhenAnnotationOnInterfaceMethod() {
+		Span span = this.tracer.createSpan("foo");
+
+		this.testBean.testMethod10("test");
+
+		this.tracer.close(span);
+		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
+		then(new ListOfSpans(spans)).hasSize(1)
+				.hasASpanWithName("foo")
+				.hasASpanWithTagEqualTo("customTestTag10", "test")
+				.hasASpanWithLogEqualTo("customTest.start")
+				.hasASpanWithLogEqualTo("customTest.end");
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	@Test
+	public void shouldContinueSpanWithLogWhenAnnotationOnClassMethod() {
+		Span span = this.tracer.createSpan("foo");
+
+		// tag::continue_span_execution[]
+		this.testBean.testMethod11("test");
+		// tag::continue_span_execution[]
+
+		this.tracer.close(span);
+		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
+		then(new ListOfSpans(spans)).hasSize(1)
+				.hasASpanWithName("foo")
+				.hasASpanWithTagEqualTo("customTestTag11", "test")
+				.hasASpanWithLogEqualTo("customTest.start")
+				.hasASpanWithLogEqualTo("customTest.end");
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	@Test
 	public void shouldNotCreateSpanWhenNotAnnotated() {
 		this.testBean.testMethod7();
 
@@ -181,6 +215,14 @@ public class SleuthSpanCreatorAspectTests {
 		@NewSpan(name = "testMethod9", log = "test")
 		void testMethod9(String param);
 		// end::span_log[]
+
+		@ContinueSpan(log = "customTest")
+		void testMethod10(@SpanTag("testTag10") String param);
+
+		// tag::continue_span[]
+		@ContinueSpan(log = "testMethod11")
+		void testMethod11(@SpanTag("testTag11") String param);
+		// end::continue_span[]
 	}
 	
 	protected static class TestBean implements TestBeanInterface {
@@ -227,6 +269,17 @@ public class SleuthSpanCreatorAspectTests {
 		@NewSpan(name = "customNameOnTestMethod9", log = "customTest")
 		@Override
 		public void testMethod9(String param) {
+
+		}
+
+		@Override
+		public void testMethod10(@SpanTag("customTestTag10") String param) {
+
+		}
+
+		@ContinueSpan(log = "customTest")
+		@Override
+		public void testMethod11(@SpanTag("customTestTag11") String param) {
 
 		}
 	}
