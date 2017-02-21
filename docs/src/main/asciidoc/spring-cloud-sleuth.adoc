@@ -201,6 +201,103 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 will lead in creating a span named `calculateTax`.
 
+== @NewSpan and @SpanTag annotations
+
+If you really don't want to take care of local spans creation you can profit from the
+`@NewSpan` annotation. Also we give you the `@SpanTag` annotation to add tags in an automated
+fashion.
+
+Let's look at some examples of usage.
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=annotated_method,indent=0]
+----
+
+Annotating the method without any parameter will lead to a creation of a new span whose name
+will be equal to annotated method name.
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_on_annotated_method,indent=0]
+----
+
+If you provide the value in the annotation (either directly or via the `name` parameter) then
+the created span will have the name as the provided value.
+
+[source,java]
+----
+// method declaration
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_and_tag_on_annotated_method,indent=0]
+
+// and method execution
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=execution,indent=0]
+----
+
+You can combine both the name and a tag. Let's focus on the latter. In this case whatever the value of
+the annotated method's parameter runtime value will be - that will be the value of the tag. In our sample
+the tag key will be `testTag` and the tag value will be `test`.
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=name_on_implementation,indent=0]
+----
+
+You can place the `@NewSpan` annotation on both the class and an interface. If you override the
+interface's method and provide a different value of the `@NewSpan` annotation then the most
+concrete one wins (in this case `customNameOnTestMethod3` will be set).
+
+=== More advanced tag setting
+
+There are 3 different ways to add tags to a span. All of them are controlled by the `SpanTag` annotation.
+Precedence is:
+
+- try with the `SleuthTagValueResolver` bean
+- if there is no bean, try to evaluate a SPEL expression
+- if there's no SPEL expression just return a `toString()` value of the parameter
+
+==== Custom SleuthTagValueResolver Bean
+
+The value of the tag for following method will be computed by an implementation of `SleuthTagValueResolver` interface.
+
+Having such an annotated method:
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=resolver_bean,indent=0]
+----
+
+and such a `SleuthTagValueResolver` bean implementation
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=custom_resolver,indent=0]
+----
+
+Will lead to setting of a tag value equal to `Value from myCustomTagValueResolver`.
+
+==== Using SpEL expression for value
+
+Having such an annotated method:
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]
+----
+
+Will lead to evaluation of the SPEL expression and a tag with value `4 characters` will be set on the span.
+
+==== Using toString method
+
+Having such an annotated method:
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=toString,indent=0]
+----
+
+if executed with a value of `15` will lead to setting of a tag with a String value of `"15"`.
+
 == Customizations
 
 Thanks to the `SpanInjector` and `SpanExtractor` you can customize the way spans

@@ -16,7 +16,8 @@ org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfigu
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.zuul.TraceZuulAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.rxjava.RxJavaAutoConfiguration
+org.springframework.cloud.sleuth.instrument.rxjava.RxJavaAutoConfiguration,\
+org.springframework.cloud.sleuth.annotation.SleuthAnnotationAutoConfiguration
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
