@@ -28,7 +28,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 
 /**
  * Utility class that can verify whether the method is annotated with
- * the {@link NewSpan} annotation.
+ * the Sleuth annotations.
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
