@@ -54,8 +54,8 @@ public class SleuthAnnotationAutoConfiguration {
 	}
 
 	@Bean
-	SleuthSpanCreateBeanPostProcessor sleuthSpanCreateBeanPostProcessor(SpanCreator spanCreator) {
-		return new SleuthSpanCreateBeanPostProcessor(new SpanCreatorAspect(spanCreator, this.tracer));
+	SleuthAdvisorConfig sleuthAdvisorConfig() {
+		return new SleuthAdvisorConfig();
 	}
 	
 }

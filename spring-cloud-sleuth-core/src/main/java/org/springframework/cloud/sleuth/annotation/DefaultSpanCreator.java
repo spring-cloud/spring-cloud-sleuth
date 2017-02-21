@@ -15,7 +15,7 @@
  */
 package org.springframework.cloud.sleuth.annotation;
 
-import org.aspectj.lang.JoinPoint;
+import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.util.StringUtils;
@@ -38,9 +38,9 @@ class DefaultSpanCreator implements SpanCreator {
 		this.annotationSpanUtil = annotationSpanUtil;
 	}
 
-	@Override public Span createSpan(JoinPoint pjp, NewSpan newSpanAnnotation) {
+	@Override public Span createSpan(MethodInvocation pjp, NewSpan newSpanAnnotation) {
 		String key = StringUtils.isEmpty(newSpanAnnotation.name()) ?
-				pjp.getSignature().getName() : newSpanAnnotation.name();
+				pjp.getMethod().getName() : newSpanAnnotation.name();
 		Span span = createSpan(key);
 		this.annotationSpanUtil.addAnnotatedParameters(pjp);
 		return span;

@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import org.aspectj.lang.JoinPoint;
+import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.cloud.sleuth.Span;
 
 /**
@@ -31,5 +31,5 @@ public interface SpanCreator {
 	/**
 	 * Returns a new {@link Span} for the join point and {@link NewSpan}
 	 */
-	Span createSpan(JoinPoint pjp, NewSpan sleuthInstrumented);
+	Span createSpan(MethodInvocation methodInvocation, NewSpan sleuthInstrumented);
 }

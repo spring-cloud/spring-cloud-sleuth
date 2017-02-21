@@ -16,17 +16,14 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.Signature;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.ApplicationContext;
@@ -59,32 +56,52 @@ class SpanTagAnnotationHandler {
 		this.tracer = tracer;
 	}
 
-	void addAnnotatedParameters(JoinPoint pjp) {
+	void addAnnotatedParameters(MethodInvocation pjp) {
 		try {
-			Signature signature = pjp.getStaticPart().getSignature();
-			if (signature instanceof MethodSignature) {
-				MethodSignature ms = (MethodSignature) signature;
-				Method method = ms.getMethod();
-				Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method,
-						pjp.getTarget().getClass());
-				List<SleuthAnnotatedParameter> annotatedParameters =
-						findAnnotatedParameters(mostSpecificMethod, pjp.getArgs());
-				mergeAnnotatedMethodsIfNecessary(pjp, method, mostSpecificMethod,
-						annotatedParameters);
-				addAnnotatedArguments(annotatedParameters);
-			}
+			Method method = pjp.getMethod();
+			Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method,
+					pjp.getThis().getClass());
+			List<SleuthAnnotatedParameter> annotatedParameters =
+					SleuthAnnotationUtils.findAnnotatedParameters(mostSpecificMethod, pjp.getArguments());
+			getAnnotationsFromInterfaces(pjp, mostSpecificMethod, annotatedParameters);
+			mergeAnnotatedMethodsIfNecessary(pjp, method, mostSpecificMethod,
+					annotatedParameters);
+			addAnnotatedArguments(annotatedParameters);
 		} catch (SecurityException e) {
 			log.error("Exception occurred while trying to add annotated parameters", e);
 		}
 	}
 
-	private void mergeAnnotatedMethodsIfNecessary(JoinPoint pjp, Method method,
+	private void getAnnotationsFromInterfaces(MethodInvocation pjp,
+			Method mostSpecificMethod,
+			List<SleuthAnnotatedParameter> annotatedParameters) {
+		Class<?>[] implementedInterfaces = pjp.getThis().getClass().getInterfaces();
+		if (implementedInterfaces.length > 0) {
+			for (Class<?> implementedInterface : implementedInterfaces) {
+				for (Method methodFromInterface : implementedInterface.getMethods()) {
+					if (methodsAreTheSame(mostSpecificMethod, methodFromInterface)) {
+						List<SleuthAnnotatedParameter> annotatedParametersForActualMethod =
+								SleuthAnnotationUtils.findAnnotatedParameters(methodFromInterface, pjp.getArguments());
+						mergeAnnotatedParameters(annotatedParameters, annotatedParametersForActualMethod);
+					}
+				}
+			}
+		}
+	}
+
+	private boolean methodsAreTheSame(Method mostSpecificMethod, Method method1) {
+		return method1.getName().equals(mostSpecificMethod.getName())
+				&& method1.getParameterCount() == mostSpecificMethod.getParameterCount() &&
+				Arrays.equals(method1.getParameterTypes(), mostSpecificMethod.getParameterTypes());
+	}
+
+	private void mergeAnnotatedMethodsIfNecessary(MethodInvocation pjp, Method method,
 			Method mostSpecificMethod, List<SleuthAnnotatedParameter> annotatedParameters) {
 		// that can happen if we have an abstraction and a concrete class that is
 		// annotated with @NewSpan annotation
 		if (!method.equals(mostSpecificMethod)) {
-			List<SleuthAnnotatedParameter> annotatedParametersForActualMethod = findAnnotatedParameters(
-					method, pjp.getArgs());
+			List<SleuthAnnotatedParameter> annotatedParametersForActualMethod = SleuthAnnotationUtils.findAnnotatedParameters(
+					method, pjp.getArguments());
 			mergeAnnotatedParameters(annotatedParameters, annotatedParametersForActualMethod);
 		}
 	}
@@ -136,21 +153,6 @@ class SpanTagAnnotationHandler {
 			}
 		}
 		return argument.toString();
-	}
-
-	private List<SleuthAnnotatedParameter> findAnnotatedParameters(Method method, Object[] args) {
-		Annotation[][] parameters = method.getParameterAnnotations();
-		List<SleuthAnnotatedParameter> result = new ArrayList<>();
-		int i = 0;
-		for (Annotation[] parameter : parameters) {
-			for (Annotation parameter2 : parameter) {
-				if (parameter2 instanceof SpanTag) {
-					result.add(new SleuthAnnotatedParameter(i, parameter2, args[i]));
-				}
-			}
-			i++;
-		}
-		return result;
 	}
 
 }

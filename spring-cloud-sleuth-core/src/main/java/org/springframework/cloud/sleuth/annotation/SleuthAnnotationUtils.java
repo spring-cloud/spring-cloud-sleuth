@@ -16,8 +16,11 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,6 +39,25 @@ class SleuthAnnotationUtils {
 
 	static boolean isMethodAnnotated(Method method) {
 		return findAnnotation(method) != null;
+	}
+
+	static boolean hasAnnotatedParams(Method method, Object[] args) {
+		return !findAnnotatedParameters(method, args).isEmpty();
+	}
+
+	static List<SleuthAnnotatedParameter> findAnnotatedParameters(Method method, Object[] args) {
+		Annotation[][] parameters = method.getParameterAnnotations();
+		List<SleuthAnnotatedParameter> result = new ArrayList<>();
+		int i = 0;
+		for (Annotation[] parameter : parameters) {
+			for (Annotation parameter2 : parameter) {
+				if (parameter2 instanceof SpanTag) {
+					result.add(new SleuthAnnotatedParameter(i, parameter2, args[i]));
+				}
+			}
+			i++;
+		}
+		return result;
 	}
 
 	/**
