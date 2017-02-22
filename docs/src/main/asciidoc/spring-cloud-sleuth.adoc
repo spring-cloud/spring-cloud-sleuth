@@ -249,19 +249,11 @@ You can place the `@NewSpan` annotation on both the class and an interface. If y
 interface's method and provide a different value of the `@NewSpan` annotation then the most
 concrete one wins (in this case `customNameOnTestMethod3` will be set).
 
-[source,java]
-----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=span_log,indent=0]
-----
-
-If you want to create append a log to the span it's enough to pass the `log` value of
-the annotation. In this case a log with name `test.start` will be set on the span before
-the method is executed and a log with name `test.end` just before closing the span.
-
 === Continuing spans
 
 If you want to just add tags and annotations to an existing span it's enough
-to use the `@ContinueSpan` annotation as presented below:
+to use the `@ContinueSpan` annotation as presented below. Note that in contrast
+with the `@NewSpan` annotation you can also add logs via the `log` parameter:
 
 [source,java]
 ----

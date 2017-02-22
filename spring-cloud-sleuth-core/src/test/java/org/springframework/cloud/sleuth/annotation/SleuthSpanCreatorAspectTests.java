@@ -120,23 +120,17 @@ public class SleuthSpanCreatorAspectTests {
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("customNameOnTestMethod8")
-				.hasASpanWithLogEqualTo("test.start")
-				.hasASpanWithLogEqualTo("test.end");
+				.hasASpanWithName("customNameOnTestMethod8");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
-		// tag::log_execution[]
 		this.testBean.testMethod9("test");
-		// end::log_execution[]
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("customNameOnTestMethod9")
-				.hasASpanWithLogEqualTo("customTest.start")
-				.hasASpanWithLogEqualTo("customTest.end");
+				.hasASpanWithName("customNameOnTestMethod9");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -208,13 +202,11 @@ public class SleuthSpanCreatorAspectTests {
 		
 		void testMethod7();
 
-		@NewSpan(name = "customNameOnTestMethod8", log = "test")
+		@NewSpan(name = "customNameOnTestMethod8")
 		void testMethod8(String param);
 
-		// tag::span_log[]
-		@NewSpan(name = "testMethod9", log = "test")
+		@NewSpan(name = "testMethod9")
 		void testMethod9(String param);
-		// end::span_log[]
 
 		@ContinueSpan(log = "customTest")
 		void testMethod10(@SpanTag("testTag10") String param);
@@ -266,7 +258,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		}
 
-		@NewSpan(name = "customNameOnTestMethod9", log = "customTest")
+		@NewSpan(name = "customNameOnTestMethod9")
 		@Override
 		public void testMethod9(String param) {
 

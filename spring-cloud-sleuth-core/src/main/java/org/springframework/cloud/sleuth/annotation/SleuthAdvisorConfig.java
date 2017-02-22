@@ -241,7 +241,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 			return invocation.proceed();
 		}
 		Span span = tracer().getCurrentSpan();
-		String log = log(newSpan, continueSpan);
+		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
 		try {
 			if (newSpan != null) {
@@ -264,10 +264,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 		}
 	}
 
-	private String log(NewSpan annotation, ContinueSpan continueSpan) {
-		if (annotation != null) {
-			return annotation.log();
-		}
+	private String log(ContinueSpan continueSpan) {
 		if (continueSpan != null) {
 			return continueSpan.log();
 		}
