@@ -185,11 +185,11 @@ NOTE: If you're using a custom `logback-spring.xml` then you have to pass the `s
 
 ==== Propagating Span Context
 
-The span beanFactory is the state that must get propagated to any child Spans across process boundaries.
-Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span beanFactory.
+The span context is the state that must get propagated to any child Spans across process boundaries.
+Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
 Baggage is an optional part.
 
-Baggage is a set of key:value pairs stored in the span beanFactory. Baggage travels together with the trace
+Baggage is a set of key:value pairs stored in the span context. Baggage travels together with the trace
 and is attached to every span. Spring Cloud Sleuth will understand that a header is baggage related if the HTTP
  header is prefixed with `baggage-` and for messaging it starts with `baggage_`.
 
