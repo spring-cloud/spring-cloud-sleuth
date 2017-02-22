@@ -53,7 +53,7 @@ class SleuthAnnotationUtils {
 		for (Annotation[] parameter : parameters) {
 			for (Annotation parameter2 : parameter) {
 				if (parameter2 instanceof SpanTag) {
-					result.add(new SleuthAnnotatedParameter(i, parameter2, args[i]));
+					result.add(new SleuthAnnotatedParameter(i, (SpanTag) parameter2, args[i]));
 				}
 			}
 			i++;

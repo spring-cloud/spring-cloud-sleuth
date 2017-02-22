@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,12 +40,14 @@ import static org.assertj.core.api.Assertions.fail;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SpanTagAnnotationHandlerTests {
 
-	@Autowired SpanTagAnnotationHandler handler;
+	@Autowired BeanFactory beanFactory;
 	@Autowired SleuthTagValueResolver tagValueResolver;
+	SpanTagAnnotationHandler handler;
 
 	@Before
 	public void setup() {
 		ExceptionUtils.setFail(true);
+		this.handler = new SpanTagAnnotationHandler(this.beanFactory);
 	}
 
 	@Test

@@ -74,7 +74,7 @@ danger of accidentally collecting too much data without configuring
 something).
 
 NOTE: Currently the instrumentation in Spring Cloud Sleuth is eager - it means that
-we're actively trying to pass the tracing context between threads. Also timing events
+we're actively trying to pass the tracing beanFactory between threads. Also timing events
 are captured even when sleuth isn't exporting data to a tracing system.
 This approach may change in the future towards being lazy on this matter.
 

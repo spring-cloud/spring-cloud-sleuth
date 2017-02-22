@@ -34,7 +34,7 @@ rest template, scheduled actions, message channels, zuul filters, feign client).
 works via Zipkin-compatible request headers. This propagation logic is defined and customized via
 `SpanInjector` and `SpanExtractor` implementations.
 
-* Sleuth gives you the possibility to propagate context (also known as baggage) between processes. That means that if you set on a Span
+* Sleuth gives you the possibility to propagate beanFactory (also known as baggage) between processes. That means that if you set on a Span
 a baggage element then it will be sent downstream either via HTTP or messaging to other processes.
 
 * Provides a way to create / continue spans and add tags and logs via annotations.

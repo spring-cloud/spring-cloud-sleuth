@@ -227,7 +227,8 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 	private Tracer tracer;
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 
-	@Override public Object invoke(MethodInvocation invocation) throws Throwable {
+	@Override
+	public Object invoke(MethodInvocation invocation) throws Throwable {
 		Method method = invocation.getMethod();
 		if (method == null) {
 			return invocation.proceed();
@@ -289,7 +290,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 
 	private SpanTagAnnotationHandler spanTagAnnotationHandler() {
 		if (this.spanTagAnnotationHandler == null) {
-			this.spanTagAnnotationHandler = this.beanFactory.getBean(SpanTagAnnotationHandler.class);
+			this.spanTagAnnotationHandler = new SpanTagAnnotationHandler(this.beanFactory);
 		}
 		return this.spanTagAnnotationHandler;
 	}

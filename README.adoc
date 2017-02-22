@@ -225,7 +225,7 @@ Below you can find an example of a Logback configuration (file named https://git
 <configuration>
 	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 	​
-	<springProperty scope="context" name="springAppName" source="spring.application.name"/>
+	<springProperty scope="beanFactory" name="springAppName" source="spring.application.name"/>
 	<!-- Example for logging into the build folder of your project -->
 	<property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>​
 
@@ -304,11 +304,11 @@ NOTE: If you're using a custom `logback-spring.xml` then you have to pass the `s
 
 ==== Propagating Span Context
 
-The span context is the state that must get propagated to any child Spans across process boundaries.
-Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
+The span beanFactory is the state that must get propagated to any child Spans across process boundaries.
+Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span beanFactory.
 Baggage is an optional part.
 
-Baggage is a set of key:value pairs stored in the span context. Baggage travels together with the trace
+Baggage is a set of key:value pairs stored in the span beanFactory. Baggage travels together with the trace
 and is attached to every span. Spring Cloud Sleuth will understand that a header is baggage related if the HTTP
  header is prefixed with `baggage-` and for messaging it starts with `baggage_`.
 
@@ -626,7 +626,7 @@ rest template, scheduled actions, message channels, zuul filters, feign client).
 works via Zipkin-compatible request headers. This propagation logic is defined and customized via
 `SpanInjector` and `SpanExtractor` implementations.
 
-* Sleuth gives you the possibility to propagate context (also known as baggage) between processes. That means that if you set on a Span
+* Sleuth gives you the possibility to propagate beanFactory (also known as baggage) between processes. That means that if you set on a Span
 a baggage element then it will be sent downstream either via HTTP or messaging to other processes.
 
 * Provides a way to create / continue spans and add tags and logs via annotations.

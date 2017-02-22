@@ -25,8 +25,8 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -48,12 +48,11 @@ class SpanTagAnnotationHandler {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
-	private final ApplicationContext context;
-	private final Tracer tracer;
+	private final BeanFactory beanFactory;
+	private Tracer tracer;
 	
-	SpanTagAnnotationHandler(ApplicationContext context, Tracer tracer) {
-		this.context = context;
-		this.tracer = tracer;
+	SpanTagAnnotationHandler(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	void addAnnotatedParameters(MethodInvocation pjp) {
@@ -125,7 +124,7 @@ class SpanTagAnnotationHandler {
 	private void addAnnotatedArguments(List<SleuthAnnotatedParameter> toBeAdded) {
 		for (SleuthAnnotatedParameter container : toBeAdded) {
 			String tagValue = resolveTagValue(container.annotation, container.argument);
-			this.tracer.addTag(container.annotation.value(), tagValue);
+			tracer().addTag(container.annotation.value(), tagValue);
 		}
 	}
 
@@ -136,7 +135,7 @@ class SpanTagAnnotationHandler {
 		if (StringUtils.hasText(annotation.tagValueResolverBeanName())) {
 			// Resolve via custom impl of Sleuth Tag Value Resolver
 			SleuthTagValueResolver tagValueResolver =
-					this.context.getBean(annotation.tagValueResolverBeanName(), SleuthTagValueResolver.class);
+					this.beanFactory.getBean(annotation.tagValueResolverBeanName(), SleuthTagValueResolver.class);
 			return tagValueResolver.resolveTagValue(argument);
 		} else if (StringUtils.hasText(annotation.tagValueExpression())) {
 			// SPEL
@@ -149,6 +148,13 @@ class SpanTagAnnotationHandler {
 			}
 		}
 		return argument.toString();
+	}
+
+	private Tracer tracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
+		return this.tracer;
 	}
 
 }

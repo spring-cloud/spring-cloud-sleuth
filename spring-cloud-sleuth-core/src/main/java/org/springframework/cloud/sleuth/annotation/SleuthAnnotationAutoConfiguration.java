@@ -52,7 +52,7 @@ public class SleuthAnnotationAutoConfiguration {
 	}
 
 	private SpanTagAnnotationHandler spanTagAnnotationHandler(ApplicationContext context) {
-		return new SpanTagAnnotationHandler(context, this.tracer);
+		return new SpanTagAnnotationHandler(context);
 	}
 
 	@Bean
