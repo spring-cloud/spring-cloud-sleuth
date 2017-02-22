@@ -30,19 +30,19 @@ import org.springframework.util.StringUtils;
 class DefaultSpanCreator implements SpanCreator {
 
 	private final Tracer tracer;
-	private final SpanTagAnnotationHandler annotationSpanUtil;
+	private final SpanTagAnnotationHandler annotationHandler;
 
 	DefaultSpanCreator(Tracer tracer,
-			SpanTagAnnotationHandler annotationSpanUtil) {
+			SpanTagAnnotationHandler annotationHandler) {
 		this.tracer = tracer;
-		this.annotationSpanUtil = annotationSpanUtil;
+		this.annotationHandler = annotationHandler;
 	}
 
 	@Override public Span createSpan(MethodInvocation pjp, NewSpan newSpanAnnotation) {
 		String key = StringUtils.isEmpty(newSpanAnnotation.name()) ?
 				pjp.getMethod().getName() : newSpanAnnotation.name();
 		Span span = createSpan(key);
-		this.annotationSpanUtil.addAnnotatedParameters(pjp);
+		this.annotationHandler.addAnnotatedParameters(pjp);
 		return span;
 	}
 

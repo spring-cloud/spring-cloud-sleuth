@@ -26,19 +26,15 @@ class SleuthAnnotatedParameter {
 
 	int parameterIndex;
 
-	Object annotation;
+	SpanTag annotation;
 
 	Object argument;
 
-	SleuthAnnotatedParameter(int parameterIndex, Object annotation,
+	SleuthAnnotatedParameter(int parameterIndex, SpanTag annotation,
 			Object argument) {
 		this.parameterIndex = parameterIndex;
 		this.annotation = annotation;
 		this.argument = argument;
-	}
-
-	boolean isSpanTag() {
-		return this.annotation instanceof SpanTag;
 	}
 
 }
