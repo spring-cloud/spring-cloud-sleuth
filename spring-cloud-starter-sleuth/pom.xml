@@ -20,14 +20,14 @@
 			<artifactId>spring-cloud-starter</artifactId>
 		</dependency>
 		<dependency>
-			<!-- TODO: maybe this should be optional -->
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+			<scope>optional</scope>
 		</dependency>
 		<dependency>
-			<!-- TODO: maybe this should be optional -->
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+			<scope>optional</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
