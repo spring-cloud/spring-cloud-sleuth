@@ -51,9 +51,4 @@ public @interface NewSpan {
 	@AliasFor("name")
 	String value() default "";
 
-	/**
-	 * The value passed to the annotation will be used and the framework
-	 * will create two events with the {@code .start} and {@code .end} suffixes
-	 */
-	String log() default "";
 }
