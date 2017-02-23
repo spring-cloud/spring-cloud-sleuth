@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -44,24 +43,28 @@ import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.ChannelInterceptorAdapter;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.SerializationUtils;
 
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Dave Syer
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = App.class, webEnvironment = WebEnvironment.NONE)
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = App.class,
+		properties = "spring.sleuth.integration.patterns=traced*",
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DirtiesContext
-@TestPropertySource(properties = "spring.sleuth.integration.patterns=traced*")
 public class TraceChannelInterceptorTests implements MessageHandler {
 
 	@Autowired
@@ -272,6 +275,28 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(this.message).isNotNull();
 		then(this.accumulator.getSpans()).isNotEmpty();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
+	public void serializeMutableHeaders() throws Exception {
+		Map<String, Object> headers = new HashMap<>();
+		headers.put("foo", "bar");
+		Message<?> message = new GenericMessage<>("test", headers);
+		ChannelInterceptor immutableMessageInterceptor = new ChannelInterceptorAdapter() {
+			@Override
+			public Message<?> preSend(Message<?> message, MessageChannel channel) {
+				MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
+				return new GenericMessage<Object>(message.getPayload(), headers.toMessageHeaders());
+			}
+		};
+		this.tracedChannel.addInterceptor(immutableMessageInterceptor);
+
+		this.tracedChannel.send(message);
+
+		Message<?> output = (Message<?>) SerializationUtils.deserialize(SerializationUtils.serialize(this.message));
+		then(output.getPayload()).isEqualTo("test");
+		then(output.getHeaders().get("foo")).isEqualTo("bar");
+		this.tracedChannel.removeInterceptor(immutableMessageInterceptor);
 	}
 
 	@Configuration
