@@ -33,6 +33,7 @@ import org.springframework.context.annotation.Scope;
 
 import feign.Client;
 import feign.Feign;
+import feign.okhttp.OkHttpClient;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -72,6 +73,16 @@ public class TraceFeignClientAutoConfiguration {
 		@Bean
 		FeignContextBeanPostProcessor feignContextBeanPostProcessor(BeanFactory beanFactory) {
 			return new FeignContextBeanPostProcessor(beanFactory);
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass(OkHttpClient.class)
+	protected static class OkHttpClientFeignBeanPostProcessorConfiguration {
+
+		@Bean
+		OkHttpFeignClientBeanPostProcessor okHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
+			return new OkHttpFeignClientBeanPostProcessor(beanFactory);
 		}
 	}
 
