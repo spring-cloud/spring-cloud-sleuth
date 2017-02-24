@@ -59,7 +59,7 @@ public class SleuthSpanCreatorAspectTests {
 		this.testBean.testMethod();
 		
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("testMethod");
+		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("test-method");
 		BDDAssertions.then(ExceptionUtils.getLastException()).isNull();
 	}
 	
@@ -68,7 +68,7 @@ public class SleuthSpanCreatorAspectTests {
 		this.testBean.testMethod2();
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("testMethod2");
+		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("test-method2");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 	
@@ -77,7 +77,7 @@ public class SleuthSpanCreatorAspectTests {
 		this.testBean.testMethod3();
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("customNameOnTestMethod3");
+		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("custom-name-on-test-method3");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 	
@@ -86,7 +86,7 @@ public class SleuthSpanCreatorAspectTests {
 		this.testBean.testMethod4();
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("customNameOnTestMethod4");
+		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("custom-name-on-test-method4");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 	
@@ -98,7 +98,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("customNameOnTestMethod5")
+				.hasASpanWithName("custom-name-on-test-method5")
 				.hasASpanWithTagEqualTo("testTag", "test");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
@@ -109,7 +109,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("customNameOnTestMethod6")
+				.hasASpanWithName("custom-name-on-test-method6")
 				.hasASpanWithTagEqualTo("testTag6", "test");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
@@ -120,7 +120,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("customNameOnTestMethod8");
+				.hasASpanWithName("custom-name-on-test-method8");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -130,7 +130,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("customNameOnTestMethod9");
+				.hasASpanWithName("custom-name-on-test-method9");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 

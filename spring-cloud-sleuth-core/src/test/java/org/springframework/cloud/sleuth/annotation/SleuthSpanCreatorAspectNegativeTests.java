@@ -64,7 +64,7 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		this.annotatedTestBean.testMethod();
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("testMethod");
+		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("test-method");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 	

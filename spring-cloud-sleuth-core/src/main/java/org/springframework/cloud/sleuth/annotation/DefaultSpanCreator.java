@@ -15,9 +15,14 @@
  */
 package org.springframework.cloud.sleuth.annotation;
 
+import java.lang.invoke.MethodHandles;
+
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.util.StringUtils;
 
 /**
@@ -29,6 +34,8 @@ import org.springframework.util.StringUtils;
  */
 class DefaultSpanCreator implements SpanCreator {
 
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	private final Tracer tracer;
 	private final SpanTagAnnotationHandler annotationHandler;
 
@@ -39,18 +46,23 @@ class DefaultSpanCreator implements SpanCreator {
 	}
 
 	@Override public Span createSpan(MethodInvocation pjp, NewSpan newSpanAnnotation) {
-		String key = StringUtils.isEmpty(newSpanAnnotation.name()) ?
+		String name = StringUtils.isEmpty(newSpanAnnotation.name()) ?
 				pjp.getMethod().getName() : newSpanAnnotation.name();
-		Span span = createSpan(key);
+		String changedName = SpanNameUtil.toLowerHyphen(name);
+		if (log.isDebugEnabled()) {
+			log.debug("For the class [" + pjp.getThis().getClass() + "] method "
+					+ "[" + pjp.getMethod().getName() + "] will name the span [" + changedName + "]");
+		}
+		Span span = createSpan(changedName);
 		this.annotationHandler.addAnnotatedParameters(pjp);
 		return span;
 	}
 
-	private Span createSpan(String key) {
+	private Span createSpan(String name) {
 		if (this.tracer.isTracing()) {
-			return this.tracer.createSpan(key, this.tracer.getCurrentSpan());
+			return this.tracer.createSpan(name, this.tracer.getCurrentSpan());
 		}
-		return this.tracer.createSpan(key);
+		return this.tracer.createSpan(name);
 	}
 
 }

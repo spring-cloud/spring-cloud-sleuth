@@ -31,5 +31,5 @@ public interface SpanCreator {
 	/**
 	 * Returns a new {@link Span} for the join point and {@link NewSpan}
 	 */
-	Span createSpan(MethodInvocation methodInvocation, NewSpan sleuthInstrumented);
+	Span createSpan(MethodInvocation methodInvocation, NewSpan newSpan);
 }
