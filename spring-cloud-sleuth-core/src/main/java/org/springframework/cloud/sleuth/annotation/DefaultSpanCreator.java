@@ -37,12 +37,9 @@ class DefaultSpanCreator implements SpanCreator {
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final Tracer tracer;
-	private final SpanTagAnnotationHandler annotationHandler;
 
-	DefaultSpanCreator(Tracer tracer,
-			SpanTagAnnotationHandler annotationHandler) {
+	DefaultSpanCreator(Tracer tracer) {
 		this.tracer = tracer;
-		this.annotationHandler = annotationHandler;
 	}
 
 	@Override public Span createSpan(MethodInvocation pjp, NewSpan newSpanAnnotation) {
@@ -53,9 +50,7 @@ class DefaultSpanCreator implements SpanCreator {
 			log.debug("For the class [" + pjp.getThis().getClass() + "] method "
 					+ "[" + pjp.getMethod().getName() + "] will name the span [" + changedName + "]");
 		}
-		Span span = createSpan(changedName);
-		this.annotationHandler.addAnnotatedParameters(pjp);
-		return span;
+		return createSpan(changedName);
 	}
 
 	private Span createSpan(String name) {
