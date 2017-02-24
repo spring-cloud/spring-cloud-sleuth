@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,9 +23,11 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -43,7 +43,7 @@ public class StreamEnvironmentPostProcessorTests {
 		postProcess();
 		assertThat(this.environment
 				.getProperty("spring.cloud.stream.test.binder.headers[0]"))
-						.isEqualTo(Span.SPAN_ID_NAME);
+						.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
 	@Test
@@ -54,7 +54,7 @@ public class StreamEnvironmentPostProcessorTests {
 		postProcess();
 		assertThat(this.environment
 				.getProperty("spring.cloud.stream.test.binder.headers[2]"))
-						.isEqualTo(Span.SPAN_ID_NAME);
+						.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
 	@Test
@@ -66,7 +66,7 @@ public class StreamEnvironmentPostProcessorTests {
 		Collection<String> headerValues = defaultPropertiesSource().values();
 
 		Collection<String> traceIds = headerValues.stream()
-				.filter(input -> input.contains(Span.TRACE_ID_NAME))
+				.filter(input -> input.contains(TraceMessageHeaders.TRACE_ID_NAME))
 				.collect(Collectors.toList());
 		assertThat(traceIds).hasSize(1);
 		assertThat(defaultPropertiesSource().keySet().stream()

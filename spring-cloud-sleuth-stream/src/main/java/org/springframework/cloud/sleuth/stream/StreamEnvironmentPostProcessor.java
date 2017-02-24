@@ -25,7 +25,7 @@ import java.util.Properties;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -46,9 +46,9 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
-	static String[] headers = new String[] { Span.SPAN_ID_NAME,
-			Span.TRACE_ID_NAME, Span.PARENT_ID_NAME, Span.PROCESS_ID_NAME,
-			Span.SAMPLED_NAME, Span.SPAN_NAME_NAME };
+	static String[] headers = new String[] { TraceMessageHeaders.SPAN_ID_NAME,
+			TraceMessageHeaders.TRACE_ID_NAME, TraceMessageHeaders.PARENT_ID_NAME, TraceMessageHeaders.PROCESS_ID_NAME,
+			TraceMessageHeaders.SAMPLED_NAME, TraceMessageHeaders.SPAN_NAME_NAME };
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
