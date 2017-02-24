@@ -28,6 +28,7 @@ import org.springframework.cloud.sleuth.TraceRunnable;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 /**
  * Default implementation of {@link Tracer}
@@ -36,6 +37,8 @@ import org.springframework.cloud.sleuth.util.ExceptionUtils;
  * @since 1.0.0
  */
 public class DefaultTracer implements Tracer {
+
+	private static final int MAX_CHARS_IN_SPAN_NAME = 50;
 
 	private final Sampler defaultSampler;
 
@@ -79,13 +82,14 @@ public class DefaultTracer implements Tracer {
 
 	@Override
 	public Span createSpan(String name, Sampler sampler) {
+		String shortenedName = SpanNameUtil.shorten(name);
 		Span span;
 		if (isTracing()) {
-			span = createChild(getCurrentSpan(), name);
+			span = createChild(getCurrentSpan(), shortenedName);
 		}
 		else {
 			long id = createId();
-			span = Span.builder().name(name)
+			span = Span.builder().name(shortenedName)
 					.traceIdHigh(this.traceId128 ? createId() : 0L)
 					.traceId(id)
 					.spanId(id).build();
@@ -96,6 +100,11 @@ public class DefaultTracer implements Tracer {
 			this.spanLogger.logStartedSpan(null, span);
 		}
 		return continueSpan(span);
+	}
+
+	private String shortenNameIfNecessary(String name) {
+		int maxLength = name.length() > MAX_CHARS_IN_SPAN_NAME ? MAX_CHARS_IN_SPAN_NAME : name.length();
+		return name.substring(0, maxLength);
 	}
 
 	@Override
@@ -148,9 +157,10 @@ public class DefaultTracer implements Tracer {
 	}
 
 	protected Span createChild(Span parent, String name) {
+		String shortenedName = SpanNameUtil.shorten(name);
 		long id = createId();
 		if (parent == null) {
-			Span span = Span.builder().name(name)
+			Span span = Span.builder().name(shortenedName)
 					.traceIdHigh(this.traceId128 ? createId() : 0L)
 					.traceId(id)
 					.spanId(id).build();
@@ -162,7 +172,7 @@ public class DefaultTracer implements Tracer {
 			if (!isTracing()) {
 				SpanContextHolder.push(parent, true);
 			}
-			Span span = Span.builder().name(name)
+			Span span = Span.builder().name(shortenedName)
 					.traceIdHigh(parent.getTraceIdHigh())
 					.traceId(parent.getTraceId()).parent(parent.getSpanId()).spanId(id)
 					.processId(parent.getProcessId()).savedSpan(parent)

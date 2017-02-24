@@ -35,6 +35,7 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
@@ -150,6 +151,28 @@ public class TraceRestTemplateInterceptorTests {
 		this.template.getForEntity("/", Map.class).getBody();
 
 		then(this.testController.span).hasNameEqualTo("http:/");
+	}
+
+	@Test
+	public void willShortenTheNameOfTheSpan() {
+		this.tracer.continueSpan(Span.builder().traceId(1L).spanId(2L).exportable(false).build());
+
+		try {
+			this.template.getForEntity("/" + bigName(), Map.class).getBody();
+		} catch (Exception e) {
+
+		}
+
+		then(this.spanAccumulator.getSpans().get(0).getName()).hasSize(50);
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	private String bigName() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 60; i++) {
+			sb.append("a");
+		}
+		return sb.toString();
 	}
 
 	@RestController

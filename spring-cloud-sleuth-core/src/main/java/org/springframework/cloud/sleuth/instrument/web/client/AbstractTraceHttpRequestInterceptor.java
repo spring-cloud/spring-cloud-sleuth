@@ -25,6 +25,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.http.HttpRequest;
 /**
  * Abstraction over classes that interact with Http requests. Allows you
@@ -54,7 +55,7 @@ abstract class AbstractTraceHttpRequestInterceptor {
 	 */
 	protected void publishStartEvent(HttpRequest request) {
 		URI uri = request.getURI();
-		String spanName = uriScheme(uri) + ":" + uri.getPath();
+		String spanName = getName(uri);
 		Span newSpan = this.tracer.createSpan(spanName);
 		this.spanInjector.inject(newSpan, request);
 		addRequestTags(request);
@@ -62,6 +63,10 @@ abstract class AbstractTraceHttpRequestInterceptor {
 		if (log.isDebugEnabled()) {
 			log.debug("Starting new client span [" + newSpan + "]");
 		}
+	}
+
+	private String getName(URI uri) {
+		return SpanNameUtil.shorten(uriScheme(uri) + ":" + uri.getPath());
 	}
 
 	private String uriScheme(URI uri) {
