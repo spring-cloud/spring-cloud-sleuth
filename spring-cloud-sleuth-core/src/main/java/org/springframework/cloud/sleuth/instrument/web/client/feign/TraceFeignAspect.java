@@ -39,7 +39,7 @@ class TraceFeignAspect {
 		this.beanFactory = beanFactory;
 	}
 
-	@Around("execution (* feign.Client.*(..))")
+	@Around("execution (* feign.Client.*(..)) && !within(is(FinalType))")
 	public Object feignClientWasCalled(final ProceedingJoinPoint pjp) throws Throwable {
 		Object[] args = pjp.getArgs();
 		Request request = (Request) args[0];

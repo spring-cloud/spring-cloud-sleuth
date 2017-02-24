@@ -41,6 +41,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import feign.okhttp.OkHttpClient;
+
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -87,6 +89,12 @@ class Application {
 	@Bean
 	public DemoController demoController(MyNameRemote myNameRemote) {
 		return new DemoController(myNameRemote);
+	}
+
+	// issue #513
+	@Bean
+	public OkHttpClient myOkHttpClient() {
+		return new OkHttpClient();
 	}
 
 	@Bean

@@ -596,11 +596,6 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 Spring Cloud Sleuth integrates with http://projects.spring.io/spring-integration/[Spring Integration]. It creates spans for publish and
 subscribe events. To disable Spring Integration instrumentation, set `spring.sleuth.integration.enabled` to false.
 
-Spring Cloud Sleuth up till version 1.0.4 is sending invalid tracing headers when using messaging. Those headers are actually
-the same as the ones sent in HTTP (they contain a `-`) in its name. For the sake of
-backwards compatibility in 1.0.4 we've started sending both valid and invalid headers. Please upgrade to 1.0.4 because
-in Spring Cloud Sleuth 1.1 we will remove the support for the deprecated headers.
-
 You can provide the `spring.sleuth.integration.patterns` pattern to explicitly
 provide the names of channels that you want to include for tracing. By default all channels
 are included.

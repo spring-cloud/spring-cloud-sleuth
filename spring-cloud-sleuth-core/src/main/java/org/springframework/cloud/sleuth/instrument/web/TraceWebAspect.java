@@ -34,12 +34,12 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * Aspect that adds tracing to
  * <p/>
  * <ul>
- * <li>{@link org.springframework.web.bind.annotation.RestController} annotated classes
+ * <li>{@code RestController} annotated classes
  * with public {@link Callable} methods</li>
  * <li>{@link org.springframework.stereotype.Controller} annotated classes with public
  * {@link Callable} methods</li>
  * <li>{@link org.springframework.stereotype.Controller} or
- * {@link org.springframework.web.bind.annotation.RestController} annotated classes with
+ * {@code RestController} annotated classes with
  * public {@link WebAsyncTask} methods</li>
  * </ul>
  * <p/>
@@ -57,7 +57,6 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * @author Spencer Gibb
  * @since 1.0.0
  *
- * @see org.springframework.web.bind.annotation.RestController
  * @see org.springframework.stereotype.Controller
  * @see org.springframework.web.client.RestOperations
  * @see org.springframework.cloud.sleuth.TraceCallable
