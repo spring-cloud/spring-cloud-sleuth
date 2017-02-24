@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -43,6 +44,13 @@ public class StreamEnvironmentPostProcessorTests {
 		postProcess();
 		assertThat(this.environment.getProperty("spring.cloud.stream.test.binder.headers[0]"))
 				.isEqualTo(Span.SPAN_ID_NAME);
+	}
+
+	@Test
+	public void should_append_new_tracing_headers() {
+		postProcess();
+		assertThat(this.environment.getProperty("spring.cloud.stream.test.binder.headers[6]"))
+				.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
 	@Test
