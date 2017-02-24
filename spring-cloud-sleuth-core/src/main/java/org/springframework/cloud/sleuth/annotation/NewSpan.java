@@ -40,13 +40,13 @@ import org.springframework.core.annotation.AliasFor;
 public @interface NewSpan {
 
 	/**
-	 * The name of the span which will be created. Default is the annotated method's name.
+	 * The name of the span which will be created. Default is the annotated method's name separated by hyphens.
 	 */
 	@AliasFor("value")
 	String name() default "";
 
 	/**
-	 * The name of the span which will be created. Default is the annotated method's name.
+	 * The name of the span which will be created. Default is the annotated method's name separated by hyphens.
 	 */
 	@AliasFor("name")
 	String value() default "";
