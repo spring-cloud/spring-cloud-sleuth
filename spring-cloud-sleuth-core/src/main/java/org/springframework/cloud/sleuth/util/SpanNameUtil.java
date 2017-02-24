@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.util;
 
+import org.springframework.util.StringUtils;
+
 /**
  * Utility class that provides the name in hyphen based notation
  *
@@ -23,6 +25,16 @@ package org.springframework.cloud.sleuth.util;
  * @since 1.0.2
  */
 public final class SpanNameUtil {
+
+	static final int MAX_NAME_LENGTH = 50;
+
+	public static String shorten(String name) {
+		if (StringUtils.isEmpty(name)) {
+			return name;
+		}
+		int maxLength = name.length() > MAX_NAME_LENGTH ? MAX_NAME_LENGTH : name.length();
+		return name.substring(0, maxLength);
+	}
 
 	public static String toLowerHyphen(String name) {
 		StringBuilder result = new StringBuilder();
@@ -35,6 +47,6 @@ public final class SpanNameUtil {
 				result.append(c);
 			}
 		}
-		return result.toString();
+		return SpanNameUtil.shorten(result.toString());
 	}
 }

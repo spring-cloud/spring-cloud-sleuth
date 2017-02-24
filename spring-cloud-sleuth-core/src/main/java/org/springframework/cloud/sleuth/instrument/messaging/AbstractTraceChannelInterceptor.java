@@ -8,6 +8,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.MessageChannel;
@@ -93,7 +94,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	String getMessageChannelName(MessageChannel channel) {
-		return MESSAGE_COMPONENT + ":" + getChannelName(channel);
+		return SpanNameUtil.shorten(MESSAGE_COMPONENT + ":" + getChannelName(channel));
 	}
 
 }

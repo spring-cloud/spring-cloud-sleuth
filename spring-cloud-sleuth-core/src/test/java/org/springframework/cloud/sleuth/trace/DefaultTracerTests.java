@@ -68,7 +68,6 @@ public class DefaultTracerTests {
 
 	@Test
 	public void tracingWorks() {
-
 		DefaultTracer tracer = new DefaultTracer(NeverSampler.INSTANCE, new Random(),
 				new DefaultSpanNamer(), this.spanLogger, this.spanReporter, new TraceKeys());
 
@@ -217,6 +216,35 @@ public class DefaultTracerTests {
 				.hasBaggageItem("baz1", "baz1")
 				.hasBaggageItem("baz2", "baz2");
 		then(parent).isEqualTo(continuedSpan);
+	}
+
+	@Test
+	public void shouldCreateNewSpanWithShortenedName() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.spanNamer, this.spanLogger, this.spanReporter, new TraceKeys());
+		Span span = tracer.createSpan(bigName());
+
+		then(span.getName().length()).isEqualTo(50);
+		tracer.close(span);
+	}
+
+	@Test
+	public void shouldCreateChildOfSpanWithShortenedName() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.spanNamer, this.spanLogger, this.spanReporter, new TraceKeys());
+		Span span = Span.builder().name(bigName()).traceId(1L).spanId(1L).build();
+
+		Span child = tracer.createChild(span, bigName());
+
+		then(child.getName().length()).isEqualTo(50);
+	}
+
+	private String bigName() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 60; i++) {
+			sb.append("a");
+		}
+		return sb.toString();
 	}
 
 	private Span assertSpan(List<Span> spans, Long parentId, String name) {

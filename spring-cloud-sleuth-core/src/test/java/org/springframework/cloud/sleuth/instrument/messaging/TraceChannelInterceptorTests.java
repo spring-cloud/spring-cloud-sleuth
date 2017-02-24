@@ -278,6 +278,28 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	}
 
 	@Test
+	public void shouldShortenTheNameWhenItsTooLarge() {
+		this.tracedChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader(TraceMessageHeaders.SPAN_NAME_NAME, bigName())
+				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
+
+		then(this.message).isNotNull();
+
+		then(this.accumulator.getSpans()).isNotEmpty();
+		this.accumulator.getSpans().forEach(span1 -> then(span1.getName().length()).isLessThanOrEqualTo(50));
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	private String bigName() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 60; i++) {
+			sb.append("a");
+		}
+		return sb.toString();
+	}
+
+	@Test
 	public void serializeMutableHeaders() throws Exception {
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("foo", "bar");

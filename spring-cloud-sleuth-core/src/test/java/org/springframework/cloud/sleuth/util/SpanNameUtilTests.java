@@ -32,4 +32,25 @@ public class SpanNameUtilTests {
 		SleuthAssertions.then(SpanNameUtil.toLowerHyphen("MySuperClassName"))
 				.isEqualTo("my-super-class-name");
 	}
+
+	@Test
+	public void should_not_shorten_a_name_that_is_below_max_threshold() throws Exception {
+		SleuthAssertions.then(SpanNameUtil.shorten("someName"))
+				.isEqualTo("someName");
+	}
+
+	@Test
+	public void should_not_shorten_a_name_that_is_null() throws Exception {
+		SleuthAssertions.then(SpanNameUtil.shorten(null)).isNull();
+	}
+
+	@Test
+	public void should_shorten_a_name_that_is_above_max_threshold() throws Exception {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 60; i++) {
+			sb.append("a");
+		}
+		SleuthAssertions.then(SpanNameUtil.shorten(sb.toString()).length())
+				.isEqualTo(SpanNameUtil.MAX_NAME_LENGTH);
+	}
 }

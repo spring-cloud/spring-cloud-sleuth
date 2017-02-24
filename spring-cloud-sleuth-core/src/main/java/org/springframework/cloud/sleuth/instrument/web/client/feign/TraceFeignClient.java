@@ -30,6 +30,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 import feign.Client;
 import feign.Request;
@@ -101,7 +102,7 @@ class TraceFeignClient implements Client {
 
 	private String getSpanName(Request request) {
 		URI uri = URI.create(request.url());
-		return uriScheme(uri) + ":" + uri.getPath();
+		return SpanNameUtil.shorten(uriScheme(uri) + ":" + uri.getPath());
 	}
 
 	private String uriScheme(URI uri) {

@@ -107,6 +107,10 @@ was a span present in this thread then it would become the parent of that span.
 
 IMPORTANT: Always clean after you create a span! Don't forget to close a span if you want to send it to Zipkin.
 
+IMPORTANT: If your span contains a name greater than 50 chars, then that name will
+be truncated to 50 chars. Your names have to be explicit and concrete. Big names lead to
+latency issues and sometimes even thrown exceptions.
+
 === Continuing spans [[continuing-spans]]
 
 Sometimes you don't want to create a new span but you want to continue one. Example of such a

@@ -105,4 +105,21 @@ public class TraceFeignClientTests {
 				.hasATag(Span.SPAN_ERROR_TAG_NAME, "exception has occurred");
 	}
 
+	@Test
+	public void should_shorten_the_span_name() throws IOException {
+		this.traceFeignClient.execute(
+				Request.create("GET", "http://foo/" + bigName(), new HashMap<>(), "".getBytes(),
+						Charset.defaultCharset()), new Request.Options());
+
+		then(this.spanAccumulator.getSpans().get(0).getName()).hasSize(50);
+	}
+
+	private String bigName() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 60; i++) {
+			sb.append("a");
+		}
+		return sb.toString();
+	}
+
 }
