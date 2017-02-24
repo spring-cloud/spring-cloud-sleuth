@@ -15,7 +15,6 @@
  */
 package org.springframework.cloud.sleuth.annotation;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,7 +22,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -43,16 +41,10 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(SleuthAnnotationProperties.class)
 public class SleuthAnnotationAutoConfiguration {
 	
-	@Autowired private Tracer tracer;
-	
 	@Bean
 	@ConditionalOnMissingBean(SpanCreator.class)
-	SpanCreator spanCreator(ApplicationContext context) {
-		return new DefaultSpanCreator(this.tracer, spanTagAnnotationHandler(context));
-	}
-
-	private SpanTagAnnotationHandler spanTagAnnotationHandler(ApplicationContext context) {
-		return new SpanTagAnnotationHandler(context);
+	SpanCreator spanCreator(Tracer tracer) {
+		return new DefaultSpanCreator(tracer);
 	}
 
 	@Bean

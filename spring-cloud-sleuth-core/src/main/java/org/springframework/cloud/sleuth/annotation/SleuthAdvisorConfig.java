@@ -248,9 +248,9 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 				span = spanCreator().createSpan(invocation, newSpan);
 			}
 			if (hasLog) {
-				spanTagAnnotationHandler().addAnnotatedParameters(invocation);
 				span.logEvent(log + ".start");
 			}
+			spanTagAnnotationHandler().addAnnotatedParameters(invocation);
 			return invocation.proceed();
 		} finally {
 			if (span != null) {
