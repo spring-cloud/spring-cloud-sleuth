@@ -39,6 +39,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
@@ -252,6 +253,9 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 			}
 			spanTagAnnotationHandler().addAnnotatedParameters(invocation);
 			return invocation.proceed();
+		} catch (Exception e) {
+			tracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(e));
+			throw e;
 		} finally {
 			if (span != null) {
 				if (hasLog) {

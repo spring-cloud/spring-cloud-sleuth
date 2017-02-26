@@ -60,7 +60,7 @@ public class SleuthSpanCreatorAspectTests {
 		
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("test-method");
-		BDDAssertions.then(ExceptionUtils.getLastException()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 	
 	@Test
@@ -169,6 +169,39 @@ public class SleuthSpanCreatorAspectTests {
 	}
 
 	@Test
+	public void shouldAddErrorTagWhenExceptionOccurredInNewSpan() {
+		try {
+			this.testBean.testMethod12("test");
+		} catch (RuntimeException ignored) {
+		}
+
+		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
+		then(new ListOfSpans(spans)).hasSize(1)
+				.hasASpanWithName("test-method12")
+				.hasASpanWithTagEqualTo("testTag12", "test")
+				.hasASpanWithTagEqualTo("error", "test exception 12");
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	@Test
+	public void shouldAddErrorTagWhenExceptionOccurredInContinueSpan() {
+		Span span = this.tracer.createSpan("foo");
+		try {
+			this.testBean.testMethod13();
+		} catch (RuntimeException ignored) {
+		}
+		finally {
+			this.tracer.close(span);
+		}
+
+		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
+		then(new ListOfSpans(spans)).hasSize(1)
+				.hasASpanWithName("foo")
+				.hasASpanWithTagEqualTo("error", "test exception 13");
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	@Test
 	public void shouldNotCreateSpanWhenNotAnnotated() {
 		this.testBean.testMethod7();
 
@@ -215,6 +248,12 @@ public class SleuthSpanCreatorAspectTests {
 		@ContinueSpan(log = "testMethod11")
 		void testMethod11(@SpanTag("testTag11") String param);
 		// end::continue_span[]
+
+		@NewSpan
+		void testMethod12(@SpanTag("testTag12") String param);
+
+		@ContinueSpan(log = "testMethod13")
+		void testMethod13();
 	}
 	
 	protected static class TestBean implements TestBeanInterface {
@@ -273,6 +312,16 @@ public class SleuthSpanCreatorAspectTests {
 		@Override
 		public void testMethod11(@SpanTag("customTestTag11") String param) {
 
+		}
+
+		@Override
+		public void testMethod12(String param) {
+			throw new RuntimeException("test exception 12");
+		}
+
+		@Override
+		public void testMethod13() {
+			throw new RuntimeException("test exception 13");
 		}
 	}
 	
