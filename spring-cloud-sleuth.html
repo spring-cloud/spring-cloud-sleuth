@@ -470,6 +470,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_tostring_method">toString() method</a></li>
 </ul>
 </li>
+<li><a href="#_managing_spans_with_annotations">Managing spans with annotations</a>
+<ul class="sectlevel2">
+<li><a href="#_rationale">Rationale</a></li>
+<li><a href="#_creating_new_spans">Creating new spans</a></li>
+<li><a href="#_continuing_spans">Continuing spans</a></li>
+<li><a href="#_more_advanced_tag_setting">More advanced tag setting</a>
+<ul class="sectlevel3">
+<li><a href="#_custom_extractor">Custom extractor</a></li>
+<li><a href="#_resolving_expressions_for_value">Resolving expressions for value</a></li>
+<li><a href="#_using_tostring_method">Using toString method</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a href="#_customizations">Customizations</a>
 <ul class="sectlevel2">
 <li><a href="#_spring_integration">Spring Integration</a></li>
@@ -1419,6 +1433,9 @@ works via Zipkin-compatible request headers. This propagation logic is defined a
 a baggage element then it will be sent downstream either via HTTP or messaging to other processes.</p>
 </li>
 <li>
+<p>Provides a way to create / continue spans and add tags and logs via annotations.</p>
+</li>
+<li>
 <p>Provides simple metrics of accepted / dropped spans.</p>
 </li>
 <li>
@@ -1867,6 +1884,235 @@ future.get();</code></pre>
 </div>
 <div class="paragraph">
 <p>will lead in creating a span named <code>calculateTax</code>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_managing_spans_with_annotations">Managing spans with annotations</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_rationale">Rationale</h3>
+<div class="paragraph">
+<p>The main arguments for this features are</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>api-agnostic means to collaborate with a span</p>
+<div class="ulist">
+<ul>
+<li>
+<p>use of annotations allows users to add to a span with no library dependency on a span api.
+This allows Sleuth to change its core api less impact to user code.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>reduced surface area for basic span operations.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>without this feature one has to use the span api, which has lifecycle commands that
+could be used incorrectly. By only exposing scope, tag and log functionality, users can
+collaborate without accidentally breaking span lifecycle.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>collaboration with runtime generated code</p>
+<div class="ulist">
+<ul>
+<li>
+<p>with libraries such as Spring Data / Feign the implementations of interfaces are generated
+at runtime thus span wrapping of objects was tedious. Now you can provide annotations
+ over interfaces and arguments of those interfaces</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_creating_new_spans">Creating new spans</h3>
+<div class="paragraph">
+<p>If you really don&#8217;t want to take care of creating local spans manually you can profit from the
+<code>@NewSpan</code> annotation. Also we give you the <code>@SpanTag</code> annotation to add tags in an automated
+fashion.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s look at some examples of usage.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan
+void testMethod();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Annotating the method without any parameter will lead to a creation of a new span whose name
+will be equal to annotated method name.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan("customNameOnTestMethod4")
+void testMethod4();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you provide the value in the annotation (either directly or via the <code>name</code> parameter) then
+the created span will have the name as the provided value.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">// method declaration
+@NewSpan(name = "customNameOnTestMethod5")
+void testMethod5(@SpanTag("testTag") String param);
+
+// and method execution
+this.testBean.testMethod5("test");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can combine both the name and a tag. Let&#8217;s focus on the latter. In this case whatever the value of
+the annotated method&#8217;s parameter runtime value will be - that will be the value of the tag. In our sample
+the tag key will be <code>testTag</code> and the tag value will be <code>test</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan(name = "customNameOnTestMethod3")
+@Override
+public void testMethod3() {
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can place the <code>@NewSpan</code> annotation on both the class and an interface. If you override the
+interface&#8217;s method and provide a different value of the <code>@NewSpan</code> annotation then the most
+concrete one wins (in this case <code>customNameOnTestMethod3</code> will be set).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_continuing_spans">Continuing spans</h3>
+<div class="paragraph">
+<p>If you want to just add tags and annotations to an existing span it&#8217;s enough
+to use the <code>@ContinueSpan</code> annotation as presented below. Note that in contrast
+with the <code>@NewSpan</code> annotation you can also add logs via the <code>log</code> parameter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">// method declaration
+@ContinueSpan(log = "testMethod11")
+void testMethod11(@SpanTag("testTag11") String param);
+
+// method execution
+this.testBean.testMethod11("test");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That way the span will get continued and:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>logs with name <code>testMethod11.before</code> and <code>testMethod11.after</code> will be created</p>
+</li>
+<li>
+<p>if an exception will be thrown a log <code>testMethod11.afterFailure</code> will also be created</p>
+</li>
+<li>
+<p>tag with key <code>testTag11</code> and value <code>test</code> will be created</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_more_advanced_tag_setting">More advanced tag setting</h3>
+<div class="paragraph">
+<p>There are 3 different ways to add tags to a span. All of them are controlled by the <code>SpanTag</code> annotation.
+Precedence is:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>try with the bean of <code>TagValueResolver</code> type and provided name</p>
+</li>
+<li>
+<p>if one hasn&#8217;t provided the bean name, try to evaluate an expression. We&#8217;re searching for a <code>TagValueExpressionResolver</code> bean.
+The default implementation uses SPEL expression resolution.</p>
+</li>
+<li>
+<p>if one hasn&#8217;t provided any expression to evaluate just return a <code>toString()</code> value of the parameter</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="_custom_extractor">Custom extractor</h4>
+<div class="paragraph">
+<p>The value of the tag for following method will be computed by an implementation of <code>TagValueResolver</code> interface.
+Its class name has to be passed as the value of the <code>resolver</code> attribute.</p>
+</div>
+<div class="paragraph">
+<p>Having such an annotated method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan
+public void getAnnotationForTagValueResolver(@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and such a <code>TagValueResolver</code> bean implementation</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean(name = "myCustomTagValueResolver")
+public TagValueResolver tagValueResolver() {
+	return parameter -&gt; "Value from myCustomTagValueResolver";
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Will lead to setting of a tag value equal to <code>Value from myCustomTagValueResolver</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_resolving_expressions_for_value">Resolving expressions for value</h4>
+<div class="paragraph">
+<p>Having such an annotated method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan
+public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "length() + ' characters'") String test) {
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and no custom implementation of a <code>TagValueExpressionResolver</code> will lead to evaluation of the SPEL expression and a tag with value <code>4 characters</code> will be set on the span.
+If you want to use some other expression resolution mechanism you can create your own implementation
+of the bean.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_using_tostring_method">Using toString method</h4>
+<div class="paragraph">
+<p>Having such an annotated method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan
+public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>if executed with a value of <code>15</code> will lead to setting of a tag with a String value of <code>"15"</code>.</p>
+</div>
 </div>
 </div>
 </div>
