@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -28,7 +27,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.PostConstruct;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -82,7 +80,7 @@ public class StreamSpanListenerTests {
 	@Autowired
 	SpanReporter spanReporter;
 
-	@Before
+	@PostConstruct
 	public void init() {
 		this.test.spans.clear();
 	}
@@ -178,9 +176,7 @@ public class StreamSpanListenerTests {
 		StreamSpanReporter listener;
 
 		@ServiceActivator(inputChannel = SleuthSource.OUTPUT)
-		public void handle(Spans input) {
-			this.spans.clear();
-			this.spans.addAll(input.getSpans());
+		public void handle(Message<?> msg) {
 		}
 
 		@Bean
@@ -189,7 +185,7 @@ public class StreamSpanListenerTests {
 		}
 
 		@Bean
-		Sampler defaultSampler() {
+		public Sampler defaultSampler() {
 			return new AlwaysSampler();
 		}
 
