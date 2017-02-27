@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
 
-import java.io.IOException;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-import javax.servlet.ServletException;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -34,66 +32,50 @@ import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.benchmarks.app.SleuthBenchmarkingSpringApp;
-import org.springframework.cloud.sleuth.instrument.web.client.TraceRestTemplateInterceptor;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-/**
- * We're checking how much overhead does the instrumentation
- * of the RestTemplate take
- */
 @Measurement(iterations = 5)
 @Warmup(iterations = 10)
 @Fork(3)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(Threads.MAX)
-public class RestTemplateBenchmark {
+public class AnnotationBenchmarks {
 
 	@State(Scope.Benchmark)
 	public static class BenchmarkContext {
 		volatile ConfigurableApplicationContext withSleuth;
-		volatile MockMvc mockMvc;
-		volatile RestTemplate tracedTemplate;
-		volatile RestTemplate untracedTemplate;
+		volatile SleuthBenchmarkingSpringApp sleuth;
 
 		@Setup public void setup() {
 			this.withSleuth = new SpringApplication(
 					SleuthBenchmarkingSpringApp.class)
 					.run("--spring.jmx.enabled=false",
 							"--spring.application.name=withSleuth");
-			this.mockMvc = MockMvcBuilders.standaloneSetup(
-					this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
-					.build();
-			this.tracedTemplate = new RestTemplate(
-					new MockMvcClientHttpRequestFactory(this.mockMvc));
-			this.tracedTemplate.setInterceptors(Collections.singletonList(
-					this.withSleuth.getBean(TraceRestTemplateInterceptor.class)));
-			this.untracedTemplate = new RestTemplate(
-					new MockMvcClientHttpRequestFactory(this.mockMvc));
+			this.sleuth = this.withSleuth.getBean(
+					SleuthBenchmarkingSpringApp.class);
 		}
 
 		@TearDown public void clean() {
-			this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class).clean();
+			this.sleuth.clean();
 			this.withSleuth.close();
 		}
 	}
 
 	@Benchmark
-	public void syncEndpointWithoutSleuth(BenchmarkContext context)
-			throws IOException, ServletException {
-		then(context.untracedTemplate.getForObject("/foo", String.class)).isEqualTo("foo");
+	public void manuallyCreatedSpans(BenchmarkContext context)
+			throws Exception {
+		then(context.sleuth.manualSpan()).isEqualTo("continued");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Benchmark
-	public void syncEndpointWithSleuth(BenchmarkContext context)
-			throws ServletException, IOException {
-		then(context.tracedTemplate.getForObject("/foo", String.class)).isEqualTo("foo");
+	public void spanCreatedWithAnnotations(BenchmarkContext context)
+			throws Exception {
+		then(context.sleuth.newSpan()).isEqualTo("continued");
+		then(ExceptionUtils.getLastException()).isNull();
 	}
-
 }

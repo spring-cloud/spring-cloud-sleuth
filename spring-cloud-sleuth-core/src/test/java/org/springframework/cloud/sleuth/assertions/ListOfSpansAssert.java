@@ -196,6 +196,25 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return this;
 	}
 
+	public ListOfSpansAssert hasASpanWithLogEqualTo(String logName) {
+		isNotNull();
+		printSpans();
+		boolean found = false;
+		for (Span span : this.actual.spans) {
+			try {
+				SleuthAssertions.assertThat(span).hasLoggedAnEvent(logName);
+				found = true;
+				break;
+			} catch (AssertionError e) {}
+		}
+
+		if (!found) {
+			failWithMessage("Expected spans \n <%s> \nto contain at least one span with log name "
+					+ "equal to <%s>.\n\n", spansToString(), logName);
+		}
+		return this;
+	}
+
 	private String spansToString() {
 		return this.actual.spans.stream().map(span ->  "\nSPAN: " + span.toString() + " with name [" + span.getName() + "] " +
 				"\nwith tags " + span.tags() + "\nwith logs " + span.logs() +
