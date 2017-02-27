@@ -57,6 +57,8 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.jayway.awaitility.Awaitility;
+
 /**
  * @author Dave Syer
  *
@@ -89,7 +91,7 @@ public class StreamSpanListenerTests {
 
 		this.tracer.close(context);
 
-		assertThat(this.test.spans).hasSize(1);
+		Awaitility.await().until(() -> assertThat(StreamSpanListenerTests.this.test.spans).hasSize(1));
 	}
 
 	@Test
@@ -103,7 +105,7 @@ public class StreamSpanListenerTests {
 
 		this.tracer.close(context);
 
-		assertThat(this.test.spans).hasSize(2);
+		Awaitility.await().until(() -> assertThat(StreamSpanListenerTests.this.test.spans).hasSize(2));
 	}
 
 	void logServerReceived(Span parent) {
