@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;

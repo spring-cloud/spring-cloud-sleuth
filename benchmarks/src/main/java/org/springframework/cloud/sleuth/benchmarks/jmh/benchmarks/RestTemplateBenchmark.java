@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-
 import javax.servlet.ServletException;
 
 import org.openjdk.jmh.annotations.Benchmark;

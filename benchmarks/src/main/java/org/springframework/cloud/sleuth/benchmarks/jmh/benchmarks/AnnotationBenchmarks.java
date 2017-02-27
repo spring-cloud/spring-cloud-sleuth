@@ -47,44 +47,32 @@ public class AnnotationBenchmarks {
 	@State(Scope.Benchmark)
 	public static class BenchmarkContext {
 		volatile ConfigurableApplicationContext withSleuth;
-		volatile ConfigurableApplicationContext withoutSleuth;
-		volatile SleuthBenchmarkingSpringApp tracedAsyncMethodHavingBean;
-		volatile SleuthBenchmarkingSpringApp untracedAsyncMethodHavingBean;
+		volatile SleuthBenchmarkingSpringApp sleuth;
 
 		@Setup public void setup() {
 			this.withSleuth = new SpringApplication(
 					SleuthBenchmarkingSpringApp.class)
 					.run("--spring.jmx.enabled=false",
 							"--spring.application.name=withSleuth");
-			this.withoutSleuth = new SpringApplication(
-					SleuthBenchmarkingSpringApp.class)
-					.run("--spring.jmx.enabled=false",
-							"--spring.application.name=withoutSleuth",
-							"--spring.sleuth.enabled=false",
-							"--spring.sleuth.async.enabled=false");
-			this.tracedAsyncMethodHavingBean = this.withSleuth.getBean(
-					SleuthBenchmarkingSpringApp.class);
-			this.untracedAsyncMethodHavingBean = this.withoutSleuth.getBean(
+			this.sleuth = this.withSleuth.getBean(
 					SleuthBenchmarkingSpringApp.class);
 		}
 
 		@TearDown public void clean() {
-			this.tracedAsyncMethodHavingBean.clean();
-			this.untracedAsyncMethodHavingBean.clean();
+			this.sleuth.clean();
 			this.withSleuth.close();
-			this.withoutSleuth.close();
 		}
 	}
 
 	@Benchmark
 	public void manuallyCreatedSpans(BenchmarkContext context)
 			throws Exception {
-		then(context.untracedAsyncMethodHavingBean.manualSpan()).isEqualTo("continued");
+		then(context.sleuth.manualSpan()).isEqualTo("continued");
 	}
 
 	@Benchmark
 	public void spanCreatedWithAnnotations(BenchmarkContext context)
 			throws Exception {
-		then(context.untracedAsyncMethodHavingBean.newSpan()).isEqualTo("continued");
+		then(context.sleuth.newSpan()).isEqualTo("continued");
 	}
 }

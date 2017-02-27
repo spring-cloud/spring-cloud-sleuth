@@ -282,7 +282,8 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 That way the span will get continued and:
 
- - logs with name `testMethod11.start` and `testMethod11.end` will be created
+ - logs with name `testMethod11.before` and `testMethod11.after` will be created
+ - if an exception will be thrown a log `testMethod11.afterFailure` will also be created
  - tag with key `testTag11` and value `test` will be created
 
 === More advanced tag setting

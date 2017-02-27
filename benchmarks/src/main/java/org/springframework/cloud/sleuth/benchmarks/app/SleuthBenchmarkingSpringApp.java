@@ -63,7 +63,7 @@ public class SleuthBenchmarkingSpringApp implements
 
 	public int port;
 
-	@Autowired Tracer tracer;
+	@Autowired(required = false) Tracer tracer;
 
 	@RequestMapping("/foo")
 	public String foo() {
