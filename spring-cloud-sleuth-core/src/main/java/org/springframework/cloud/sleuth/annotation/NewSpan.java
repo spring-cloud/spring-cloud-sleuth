@@ -24,12 +24,14 @@ import java.lang.annotation.Target;
 import org.springframework.core.annotation.AliasFor;
 
 /**
- * Allows to create a new span around a public method or a class.
+ * Allows to create a new span around a public method or a class. The new span
+ * will be either a child of an existing span if a trace is already in progress
+ * or a new span will be created if there was no previous trace.
  * <p>
- * For each public method in an annotated class, or self annotated method,
- * a new {@link org.springframework.cloud.sleuth.Span} will be created.
- * Method parameters can be annotated with {@link SpanTag}, which will
- * in adding the parameter value as a tag to the span.
+ * Method parameters can be annotated with {@link SpanTag}, which will end
+ * in adding the parameter value as a tag value to the span. The tag key will be
+ * the value of the {@code key} annotation from {@link SpanTag}.
+ *
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0

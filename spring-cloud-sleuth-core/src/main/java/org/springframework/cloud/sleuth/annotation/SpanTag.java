@@ -25,10 +25,15 @@ import java.lang.annotation.Target;
 import org.springframework.core.annotation.AliasFor;
 
 /**
- * A method parameter which is annotated with this annotation,
- * will be added as a tag. The name will be the {@code value} property,
- * using the {@code toString()} representation of the parameter as tag-value.
- * 
+ * There are 3 different ways to add tags to a span. All of them are controlled by the annotation values.
+ * Precedence is:
+ *
+ *  <ul>
+ *      <li>try with the {@link SleuthTagValueResolver} bean</li>
+ *      <li>if the value of the bean wasn't set, try to evaluate a SPEL expression</li>
+ *      <li>if there’s no SPEL expression just return a {@code toString()} value of the parameter</li>
+ *  </ul>
+ *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
@@ -38,24 +43,25 @@ import org.springframework.core.annotation.AliasFor;
 public @interface SpanTag {
 
 	/**
-	 * The name of the key of the tag which should be created
+	 * The name of the key of the tag which should be created.
 	 */
 	@AliasFor("key")
 	String value() default "";
 
 	/**
-	 * The name of the key of the tag which should be created
+	 * The name of the key of the tag which should be created.
 	 */
 	@AliasFor("value")
 	String key() default "";
 
 	/**
-	 * Execute this SPEL expression to calculate the tag value
+	 * Execute this SPEL expression to calculate the tag value. Will be analyzed if no value of the
+	 * {@link SpanTag#tagValueResolverBeanName()} was set.
 	 */
 	String tagValueExpression() default "";
 
 	/**
-	 * Use this bean name to retrieve the tag value
+	 * Use this bean name to retrieve the tag value. Has the highest precedence.
 	 */
 	String tagValueResolverBeanName() default "";
 
