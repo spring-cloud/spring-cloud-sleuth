@@ -40,7 +40,9 @@ import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -64,6 +66,7 @@ public class SleuthBenchmarkingSpringApp implements
 	public int port;
 
 	@Autowired(required = false) Tracer tracer;
+	@Autowired AClass aClass;
 
 	@RequestMapping("/foo")
 	public String foo() {
@@ -80,37 +83,17 @@ public class SleuthBenchmarkingSpringApp implements
 		return this.async().get();
 	}
 
-	public String manualSpan() {
-		Span manual = this.tracer.createSpan("span-name");
-		try {
-			return continuedSpan();
-		} finally {
-			this.tracer.close(manual);
-		}
-	}
-
-	private String continuedSpan() {
-		Span continuedSpan = this.tracer.continueSpan(this.tracer.getCurrentSpan());
-		this.tracer.addTag("foo", "bar");
-		continuedSpan.logEvent("continuedspan.start");
-		String response = "continued";
-		continuedSpan.logEvent("continuedspan.end");
-		return response;
-	}
-
-	@NewSpan
-	public String newSpan() {
-		return continuedAnnotation("bar");
-	}
-
-	@ContinueSpan(log = "continuedspan")
-	public String continuedAnnotation(@SpanTag("foo") String tagValue) {
-		return "continued";
-	}
-
 	@Async
 	public Future<String> async() {
 		return this.pool.submit(() -> "async");
+	}
+
+	public String manualSpan() {
+		return this.aClass.manualSpan();
+	}
+
+	public String newSpan() {
+		return this.aClass.newSpan();
 	}
 
 	@Override
@@ -129,9 +112,16 @@ public class SleuthBenchmarkingSpringApp implements
 		this.pool.shutdownNow();
 	}
 
-	@Bean
-	public Sampler alwaysSampler() {
+ 	@Bean Sampler alwaysSampler() {
 		return new AlwaysSampler();
+	}
+
+	@Bean AnotherClass anotherClass() {
+		return new AnotherClass(this.tracer);
+	}
+
+	@Bean AClass aClass() {
+		return new AClass(this.tracer, anotherClass());
 	}
 
 	public ExecutorService getPool() {
@@ -140,5 +130,50 @@ public class SleuthBenchmarkingSpringApp implements
 
 	public static void main(String... args) {
 		SpringApplication.run(SleuthBenchmarkingSpringApp.class, args);
+	}
+}
+class AClass {
+	private final Tracer tracer;
+	private final AnotherClass anotherClass;
+
+	AClass(Tracer tracer, AnotherClass anotherClass) {
+		this.tracer = tracer;
+		this.anotherClass = anotherClass;
+	}
+
+	public String manualSpan() {
+		Span manual = this.tracer.createSpan("span-name");
+		try {
+			return this.anotherClass.continuedSpan();
+		} finally {
+			this.tracer.close(manual);
+		}
+	}
+
+	@NewSpan
+	public String newSpan() {
+		return this.anotherClass.continuedAnnotation("bar");
+	}
+}
+
+class AnotherClass {
+	private final Tracer tracer;
+
+	AnotherClass(Tracer tracer) {
+		this.tracer = tracer;
+	}
+
+	@ContinueSpan(log = "continuedspan")
+	public String continuedAnnotation(@SpanTag("foo") String tagValue) {
+		return "continued";
+	}
+
+	public String continuedSpan() {
+		Span continuedSpan = this.tracer.continueSpan(this.tracer.getCurrentSpan());
+		this.tracer.addTag("foo", "bar");
+		continuedSpan.logEvent("continuedspan.before");
+		String response = "continued";
+		continuedSpan.logEvent("continuedspan.after");
+		return response;
 	}
 }

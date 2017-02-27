@@ -223,6 +223,8 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
  */
 class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 
+	private static final Log logger = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
 	private BeanFactory beanFactory;
 	private SpanCreator spanCreator;
 	private Tracer tracer;
@@ -249,26 +251,39 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 				span = spanCreator().createSpan(invocation, newSpan);
 			}
 			if (hasLog) {
-				span.logEvent(log + ".before");
+				logEvent(span, log + ".before");
 			}
 			spanTagAnnotationHandler().addAnnotatedParameters(invocation);
 			return invocation.proceed();
 		} catch (Exception e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Exception occurred while trying to continue the pointcut", e);
+			}
 			if (hasLog) {
-				span.logEvent(log + ".afterFailure");
+				logEvent(span, log + ".afterFailure");
 			}
 			tracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(e));
 			throw e;
 		} finally {
 			if (span != null) {
 				if (hasLog) {
-					span.logEvent(log + ".after");
+					logEvent(span, log + ".after");
 				}
 				if (newSpan != null) {
 					tracer().close(span);
 				}
 			}
 		}
+	}
+
+	private void logEvent(Span span, String name) {
+		if (span == null) {
+			logger.warn("You were trying to continue a span which was null. Please "
+					+ "remember that if two proxied methods are calling each other from "
+					+ "the same class then the aspect will not be properly resolved");
+			return;
+		}
+		span.logEvent(name);
 	}
 
 	private String log(ContinueSpan continueSpan) {
