@@ -29,7 +29,7 @@ import org.springframework.core.annotation.AliasFor;
  * Precedence is:
  *
  *  <ul>
- *      <li>try with the {@link SleuthTagValueResolver} bean</li>
+ *      <li>try with the {@link TagValueResolver} bean</li>
  *      <li>if the value of the bean wasn't set, try to evaluate a SPEL expression</li>
  *      <li>if there’s no SPEL expression just return a {@code toString()} value of the parameter</li>
  *  </ul>
@@ -56,13 +56,13 @@ public @interface SpanTag {
 
 	/**
 	 * Execute this SPEL expression to calculate the tag value. Will be analyzed if no value of the
-	 * {@link SpanTag#tagValueResolverBeanName()} was set.
+	 * {@link SpanTag#resolver()} was set.
 	 */
-	String tagValueExpression() default "";
+	String expression() default "";
 
 	/**
-	 * Use this bean name to retrieve the tag value. Has the highest precedence.
+	 * Use this bean to resolve the tag value. Has the highest precedence.
 	 */
-	String tagValueResolverBeanName() default "";
+	Class<? extends TagValueResolver> resolver() default NoOpTagValueResolver.class;
 
 }

@@ -27,9 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.StringUtils;
 
 /**
@@ -132,20 +129,12 @@ class SpanTagAnnotationHandler {
 		if (argument == null) {
 			return "";
 		}
-		if (StringUtils.hasText(annotation.tagValueResolverBeanName())) {
-			// Resolve via custom impl of Sleuth Tag Value Resolver
-			SleuthTagValueResolver tagValueResolver =
-					this.beanFactory.getBean(annotation.tagValueResolverBeanName(), SleuthTagValueResolver.class);
-			return tagValueResolver.resolveTagValue(argument);
-		} else if (StringUtils.hasText(annotation.tagValueExpression())) {
-			// SPEL
-			try {
-				ExpressionParser expressionParser = new SpelExpressionParser();
-				Expression expression = expressionParser.parseExpression(annotation.tagValueExpression());
-				return expression.getValue(argument, String.class);
-			} catch (Exception e) {
-				log.error("Exception occurred while tying to evaluate the SPEL expression [" + annotation.tagValueExpression() + "]", e);
-			}
+		if (annotation.resolver() != NoOpTagValueResolver.class) {
+			TagValueResolver tagValueResolver = this.beanFactory.getBean(annotation.resolver());
+			return tagValueResolver.resolve(argument);
+		} else if (StringUtils.hasText(annotation.expression())) {
+			return this.beanFactory.getBean(TagValueExpressionResolver.class)
+					.resolve(annotation.expression(), argument);
 		}
 		return argument.toString();
 	}

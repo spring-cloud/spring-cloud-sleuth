@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.fail;
 public class SpanTagAnnotationHandlerTests {
 
 	@Autowired BeanFactory beanFactory;
-	@Autowired SleuthTagValueResolver tagValueResolver;
+	@Autowired TagValueResolver tagValueResolver;
 	SpanTagAnnotationHandler handler;
 
 	@Before
@@ -91,13 +91,13 @@ public class SpanTagAnnotationHandlerTests {
 
 		// tag::resolver_bean[]
 		@NewSpan
-		public void getAnnotationForTagValueResolver(@SpanTag(key = "test", tagValueResolverBeanName = "myCustomTagValueResolver") String test) {
+		public void getAnnotationForTagValueResolver(@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
 		}
 		// end::resolver_bean[]
 
 		// tag::spel[]
 		@NewSpan
-		public void getAnnotationForTagValueExpression(@SpanTag(key = "test", tagValueExpression = "length() + ' characters'") String test) {
+		public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "length() + ' characters'") String test) {
 		}
 		// end::spel[]
 
@@ -114,7 +114,7 @@ public class SpanTagAnnotationHandlerTests {
 
 		// tag::custom_resolver[]
 		@Bean(name = "myCustomTagValueResolver")
-		public SleuthTagValueResolver tagValueResolver() {
+		public TagValueResolver tagValueResolver() {
 			return parameter -> "Value from myCustomTagValueResolver";
 		}
 		// end::custom_resolver[]

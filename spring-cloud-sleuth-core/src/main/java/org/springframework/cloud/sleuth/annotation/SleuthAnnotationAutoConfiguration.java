@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Configuration;
  * You can also apply this annotation to an interface.
  *
  * @author Christian Schwerdtfeger
+ * @author Marcin Grzejszczak
  * @since 1.2.0
  */
 @Configuration
@@ -42,9 +43,21 @@ import org.springframework.context.annotation.Configuration;
 public class SleuthAnnotationAutoConfiguration {
 	
 	@Bean
-	@ConditionalOnMissingBean(SpanCreator.class)
+	@ConditionalOnMissingBean
 	SpanCreator spanCreator(Tracer tracer) {
 		return new DefaultSpanCreator(tracer);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	TagValueExpressionResolver spelTagValueExpressionResolver() {
+		return new SpelTagValueExpressionResolver();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	TagValueResolver noOpTagValueResolver() {
+		return new NoOpTagValueResolver();
 	}
 
 	@Bean

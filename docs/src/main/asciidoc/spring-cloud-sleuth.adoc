@@ -203,6 +203,22 @@ will lead in creating a span named `calculateTax`.
 
 == Managing spans with annotations
 
+=== Rationale
+
+The main arguments for this features are
+
+* api-agnostic means to collaborate with a span
+    - use of annotations allows users to add to a span with no library dependency on a span api.
+    This allows Sleuth to change its core api less impact to user code.
+* reduced surface area for basic span operations.
+    - without this feature one has to use the span api, which has lifecycle commands that
+    could be used incorrectly. By only exposing scope, tag and log functionality, users can
+    collaborate without accidentally breaking span lifecycle.
+* collaboration with runtime generated code
+    - with libraries such as Spring Data / Feign the implementations of interfaces are generated
+    at runtime thus span wrapping of objects was tedious. Now you can provide annotations
+     over interfaces and arguments of those interfaces
+
 === Creating new spans
 
 If you really don't want to take care of creating local spans manually you can profit from the
@@ -274,13 +290,15 @@ That way the span will get continued and:
 There are 3 different ways to add tags to a span. All of them are controlled by the `SpanTag` annotation.
 Precedence is:
 
-- try with the `SleuthTagValueResolver` bean
-- if there is no bean, try to evaluate a SPEL expression
-- if there's no SPEL expression just return a `toString()` value of the parameter
+- try with the bean of `TagValueResolver` type and provided name
+- if one hasn't provided the bean name, try to evaluate an expression. We're searching for a `TagValueExpressionResolver` bean.
+The default implementation uses SPEL expression resolution.
+- if one hasn't provided any expression to evaluate just return a `toString()` value of the parameter
 
-==== Custom SleuthTagValueResolver Bean
+==== Custom extractor
 
-The value of the tag for following method will be computed by an implementation of `SleuthTagValueResolver` interface.
+The value of the tag for following method will be computed by an implementation of `TagValueResolver` interface.
+Its class name has to be passed as the value of the `resolver` attribute.
 
 Having such an annotated method:
 
@@ -289,7 +307,7 @@ Having such an annotated method:
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=resolver_bean,indent=0]
 ----
 
-and such a `SleuthTagValueResolver` bean implementation
+and such a `TagValueResolver` bean implementation
 
 [source,java]
 ----
@@ -298,7 +316,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 Will lead to setting of a tag value equal to `Value from myCustomTagValueResolver`.
 
-==== Using SpEL expression for value
+==== Resolving expressions for value
 
 Having such an annotated method:
 
@@ -307,7 +325,9 @@ Having such an annotated method:
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]
 ----
 
-Will lead to evaluation of the SPEL expression and a tag with value `4 characters` will be set on the span.
+and no custom implementation of a `TagValueExpressionResolver` will lead to evaluation of the SPEL expression and a tag with value `4 characters` will be set on the span.
+If you want to use some other expression resolution mechanism you can create your own implementation
+of the bean.
 
 ==== Using toString method
 
