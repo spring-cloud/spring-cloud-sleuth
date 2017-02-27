@@ -26,6 +26,7 @@ import javax.annotation.PreDestroy;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -33,6 +34,11 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.annotation.ContinueSpan;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -57,6 +63,8 @@ public class SleuthBenchmarkingSpringApp implements
 
 	public int port;
 
+	@Autowired Tracer tracer;
+
 	@RequestMapping("/foo")
 	public String foo() {
 		return "foo";
@@ -70,6 +78,34 @@ public class SleuthBenchmarkingSpringApp implements
 	@RequestMapping("/async")
 	public String asyncHttp() throws ExecutionException, InterruptedException {
 		return this.async().get();
+	}
+
+	public String manualSpan() {
+		Span manual = this.tracer.createSpan("span-name");
+		try {
+			return continuedSpan();
+		} finally {
+			this.tracer.close(manual);
+		}
+	}
+
+	private String continuedSpan() {
+		Span continuedSpan = this.tracer.continueSpan(this.tracer.getCurrentSpan());
+		this.tracer.addTag("foo", "bar");
+		continuedSpan.logEvent("continuedspan.start");
+		String response = "continued";
+		continuedSpan.logEvent("continuedspan.end");
+		return response;
+	}
+
+	@NewSpan
+	public String newSpan() {
+		return continuedAnnotation("bar");
+	}
+
+	@ContinueSpan(log = "continuedspan")
+	public String continuedAnnotation(@SpanTag("foo") String tagValue) {
+		return "continued";
 	}
 
 	@Async

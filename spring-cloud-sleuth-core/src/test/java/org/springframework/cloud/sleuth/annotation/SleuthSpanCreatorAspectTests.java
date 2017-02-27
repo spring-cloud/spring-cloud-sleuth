@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.assertj.core.api.BDDAssertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -145,8 +144,8 @@ public class SleuthSpanCreatorAspectTests {
 		then(new ListOfSpans(spans)).hasSize(1)
 				.hasASpanWithName("foo")
 				.hasASpanWithTagEqualTo("customTestTag10", "test")
-				.hasASpanWithLogEqualTo("customTest.start")
-				.hasASpanWithLogEqualTo("customTest.end");
+				.hasASpanWithLogEqualTo("customTest.before")
+				.hasASpanWithLogEqualTo("customTest.after");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -163,8 +162,8 @@ public class SleuthSpanCreatorAspectTests {
 		then(new ListOfSpans(spans)).hasSize(1)
 				.hasASpanWithName("foo")
 				.hasASpanWithTagEqualTo("customTestTag11", "test")
-				.hasASpanWithLogEqualTo("customTest.start")
-				.hasASpanWithLogEqualTo("customTest.end");
+				.hasASpanWithLogEqualTo("customTest.before")
+				.hasASpanWithLogEqualTo("customTest.after");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -197,7 +196,10 @@ public class SleuthSpanCreatorAspectTests {
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
 				.hasASpanWithName("foo")
-				.hasASpanWithTagEqualTo("error", "test exception 13");
+				.hasASpanWithTagEqualTo("error", "test exception 13")
+				.hasASpanWithLogEqualTo("testMethod13.before")
+				.hasASpanWithLogEqualTo("testMethod13.afterFailure")
+				.hasASpanWithLogEqualTo("testMethod13.after");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
