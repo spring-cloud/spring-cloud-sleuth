@@ -92,6 +92,9 @@ public class StreamSpanReporter implements SpanReporter {
 		if (result.isEmpty()) {
 			return null;
 		}
+		if (log.isDebugEnabled()) {
+			log.debug("Processed [" + result.size() + "] spans");
+		}
 		this.spanMetricReporter.incrementAcceptedSpans(result.size());
 		return new Spans(this.endpointLocator.locate(result.get(0)), result);
 	}

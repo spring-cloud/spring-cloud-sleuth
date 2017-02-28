@@ -22,11 +22,13 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 
+import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.annotation.PostConstruct;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -80,9 +82,18 @@ public class StreamSpanListenerTests {
 	@Autowired
 	SpanReporter spanReporter;
 
-	@PostConstruct
+	@Before
 	public void init() {
-		this.test.spans.clear();
+		this.test.clear();
+	}
+
+	@Test
+	public void acquireAndRelease() {
+		Span context = this.tracer.createSpan("http:foo");
+
+		this.tracer.close(context);
+
+		Awaitility.await().until(() -> assertThat(StreamSpanListenerTests.this.test.spans()).hasSize(1));
 	}
 
 	@Test
@@ -96,7 +107,7 @@ public class StreamSpanListenerTests {
 
 		this.tracer.close(context);
 
-		Awaitility.await().until(() -> assertThat(StreamSpanListenerTests.this.test.spans).hasSize(2));
+		Awaitility.await().until(() -> assertThat(StreamSpanListenerTests.this.test.spans()).hasSize(2));
 	}
 
 	void logServerReceived(Span parent) {
@@ -161,7 +172,23 @@ public class StreamSpanListenerTests {
 	@MessageEndpoint
 	protected static class ZipkinTestConfiguration {
 
-		private BlockingQueue<Span> spans = new LinkedBlockingQueue<>();
+		private BlockingQueue<Span> copyOfSpans = new LinkedBlockingQueue<>();
+
+		private BlockingQueue<Span> spans = new LinkedBlockingQueue<Span>() {
+			@Override public int drainTo(Collection<? super Span> c) {
+				ZipkinTestConfiguration.this.copyOfSpans.addAll(this);
+				return super.drainTo(c);
+			}
+		};
+
+		void clear() {
+			this.spans.clear();
+			this.copyOfSpans.clear();
+		}
+
+		BlockingQueue<Span> spans() {
+			return this.copyOfSpans;
+		}
 
 		@Autowired
 		StreamSpanReporter listener;
