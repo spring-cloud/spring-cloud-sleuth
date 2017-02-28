@@ -86,15 +86,6 @@ public class StreamSpanListenerTests {
 	}
 
 	@Test
-	public void acquireAndRelease() {
-		Span context = this.tracer.createSpan("http:foo");
-
-		this.tracer.close(context);
-
-		Awaitility.await().until(() -> assertThat(StreamSpanListenerTests.this.test.spans).hasSize(1));
-	}
-
-	@Test
 	public void rpcAnnotations() {
 		Span parent = Span.builder().traceId(1L).name("http:parent").remote(true)
 				.build();
