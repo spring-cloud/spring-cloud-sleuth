@@ -227,7 +227,7 @@ export MAVEN_CMD_LINE_ARGS
 WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
 
 echo "Running version check"
-VERSION=$( sed '\!<parent!,\!</parent!d' pom.xml | grep '<version' | head -1 | sed -e 's/.*<version>//' -e 's!</version>.*$!!' )
+VERSION=$( sed '\!<parent!,\!</parent!d' `dirname $0`/pom.xml | grep '<version' | head -1 | sed -e 's/.*<version>//' -e 's!</version>.*$!!' )
 echo "The found version is [${VERSION}]"
 
 if echo $VERSION | egrep -q 'M|RC'; then
@@ -236,6 +236,14 @@ if echo $VERSION | egrep -q 'M|RC'; then
 else
     echo Deactivating \"milestone\" profile for version=\"$VERSION\"
     echo $MAVEN_ARGS | grep -q milestone && MAVEN_ARGS=$(echo $MAVEN_ARGS | sed -e 's/-Pmilestone//')
+fi
+
+if echo $VERSION | egrep -q 'RELEASE'; then
+    echo Activating \"central\" profile for version=\"$VERSION\"
+    echo $MAVEN_ARGS | grep -q milestone || MAVEN_ARGS="$MAVEN_ARGS -Pcentral"
+else
+    echo Deactivating \"central\" profile for version=\"$VERSION\"
+    echo $MAVEN_ARGS | grep -q central && MAVEN_ARGS=$(echo $MAVEN_ARGS | sed -e 's/-Pcentral//')
 fi
 
 exec "$JAVACMD" \
