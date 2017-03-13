@@ -235,9 +235,9 @@
 		<surefire.plugin.version>2.19.1</surefire.plugin.version>
 		<checkstyle.version>2.17</checkstyle.version>
 		<spring-cloud-build.version>1.2.3.BUILD-SNAPSHOT</spring-cloud-build.version>
-		<spring-cloud-commons.version>1.1.8.BUILD-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-commons.version>1.1.9.BUILD-SNAPSHOT</spring-cloud-commons.version>
 		<spring-cloud-stream.version>Brooklyn.BUILD-SNAPSHOT</spring-cloud-stream.version>
-		<spring-cloud-netflix.version>1.2.6.BUILD-SNAPSHOT</spring-cloud-netflix.version>
+		<spring-cloud-netflix.version>1.2.7.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 	</properties>
 
 	<profiles>
