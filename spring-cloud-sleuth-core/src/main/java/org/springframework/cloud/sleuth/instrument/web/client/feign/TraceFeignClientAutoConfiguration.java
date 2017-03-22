@@ -52,7 +52,7 @@ public class TraceFeignClientAutoConfiguration {
 
 	@Bean
 	@Scope("prototype")
-	@ConditionalOnClass(name = "com.netflix.hystrix.HystrixCommand")
+	@ConditionalOnClass(name = {"com.netflix.hystrix.HystrixCommand", "feign.hystrix.HystrixFeign"})
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", matchIfMissing = true)
 	Feign.Builder feignHystrixBuilder(BeanFactory beanFactory) {
 		return SleuthHystrixFeignBuilder.builder(beanFactory);
