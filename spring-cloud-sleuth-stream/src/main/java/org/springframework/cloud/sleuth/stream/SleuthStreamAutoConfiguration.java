@@ -28,12 +28,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
+import org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -55,9 +57,9 @@ import org.springframework.scheduling.support.PeriodicTrigger;
  * @since 1.0.0
  */
 @Configuration
-@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class, ZipkinProperties.class })
+@EnableConfigurationProperties({SleuthStreamProperties.class, SamplerProperties.class, ZipkinProperties.class})
 @AutoConfigureAfter(TraceMetricsAutoConfiguration.class)
-@AutoConfigureBefore(ChannelBindingAutoConfiguration.class)
+@AutoConfigureBefore({ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class, ChannelsEndpointAutoConfiguration.class})
 @EnableBinding(SleuthSource.class)
 @ConditionalOnProperty(value = "spring.sleuth.stream.enabled", matchIfMissing = true)
 public class SleuthStreamAutoConfiguration {
