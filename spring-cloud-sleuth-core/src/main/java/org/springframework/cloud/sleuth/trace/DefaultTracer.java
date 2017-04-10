@@ -16,9 +16,12 @@
 
 package org.springframework.cloud.sleuth.trace;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
@@ -38,6 +41,8 @@ import org.springframework.cloud.sleuth.util.SpanNameUtil;
  * @since 1.0.0
  */
 public class DefaultTracer implements Tracer {
+
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final int MAX_CHARS_IN_SPAN_NAME = 50;
 
@@ -119,17 +124,18 @@ public class DefaultTracer implements Tracer {
 		return continueSpan(span);
 	}
 
-	private String shortenNameIfNecessary(String name) {
-		int maxLength = name.length() > MAX_CHARS_IN_SPAN_NAME ? MAX_CHARS_IN_SPAN_NAME : name.length();
-		return name.substring(0, maxLength);
-	}
-
 	@Override
 	public Span detach(Span span) {
 		if (span == null) {
 			return null;
 		}
 		Span cur = SpanContextHolder.getCurrentSpan();
+		if (cur == null) {
+			if (log.isTraceEnabled()) {
+				log.trace("Span in the context is null so something has already detached the span. Won't do anything about it");
+			}
+			return null;
+		}
 		if (!span.equals(cur)) {
 			ExceptionUtils.warn("Tried to detach trace span but "
 					+ "it is not the current span: " + span

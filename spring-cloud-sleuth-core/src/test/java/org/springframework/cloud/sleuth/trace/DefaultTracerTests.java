@@ -22,9 +22,11 @@ import java.util.Random;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
@@ -55,6 +57,7 @@ public class DefaultTracerTests {
 	private SpanNamer spanNamer = new DefaultSpanNamer();
 	private SpanLogger spanLogger = Mockito.mock(SpanLogger.class);
 	private SpanReporter spanReporter = Mockito.mock(SpanReporter.class);
+	@Rule public OutputCapture capture = new OutputCapture();
 
 	@Before
 	public void setup() {
@@ -237,6 +240,18 @@ public class DefaultTracerTests {
 		Span child = tracer.createChild(span, bigName());
 
 		then(child.getName().length()).isEqualTo(50);
+	}
+
+	@Test
+	public void shouldNotProduceAWarningMessageWhenThereIsNoSpanInContextAndWeDetachASpan() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.spanNamer, this.spanLogger, this.spanReporter);
+		Span span = Span.builder().name("foo").traceId(1L).spanId(1L).build();
+
+		Span child = tracer.detach(span);
+
+		then(child).isNull();
+		then(this.capture.toString()).doesNotContain("Tried to detach trace span");
 	}
 
 	private String bigName() {
