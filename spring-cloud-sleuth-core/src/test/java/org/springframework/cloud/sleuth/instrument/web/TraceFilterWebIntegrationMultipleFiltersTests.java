@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -60,6 +63,10 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 	@Autowired RestTemplate restTemplate;
 	@Autowired Environment environment;
 	@Autowired MyFilter myFilter;
+	// issue #550
+	@Autowired @Qualifier("myExecutor") Executor myExecutor;
+	@Autowired @Qualifier("finalExecutor") Executor finalExecutor;
+	@Autowired MyExecutor cglibExecutor;
 
 	@Before
 	@After
@@ -70,6 +77,10 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 
 	@Test
 	public void should_register_trace_filter_before_the_custom_filter() {
+		this.myExecutor.execute(() -> System.out.println("foo"));
+		this.cglibExecutor.execute(() -> System.out.println("foo"));
+		this.finalExecutor.execute(() -> System.out.println("foo"));
+
 		this.restTemplate.getForObject("http://localhost:" + port() + "/", String.class);
 
 		then(this.tracer.getCurrentSpan()).isNull();
@@ -85,10 +96,24 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 	@Configuration
 	public static class Config {
 
+		// issue #550
+		@Bean Executor myExecutor() {
+			return new MyExecutorWithFinalMethod();
+		}
+
+		// issue #550
+		@Bean MyExecutor cglibExecutor() {
+			return new MyExecutor();
+		}
+
+		// issue #550
+		@Bean MyFinalExecutor finalExecutor() {
+			return new MyFinalExecutor();
+		}
+
 		@Bean Sampler alwaysSampler() {
 			return new AlwaysSampler();
 		}
-
 
 		@Bean RestTemplate restTemplate() {
 			RestTemplate restTemplate = new RestTemplate();
@@ -130,6 +155,33 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 
 		public AtomicReference<Span> getSpan() {
 			return span;
+		}
+	}
+
+	static class MyExecutor implements Executor {
+
+		private final Executor delegate = Executors.newSingleThreadExecutor();
+
+		@Override public void execute(Runnable command) {
+			this.delegate.execute(command);
+		}
+	}
+
+	static class MyExecutorWithFinalMethod implements Executor {
+
+		private final Executor delegate = Executors.newSingleThreadExecutor();
+
+		@Override public final void execute(Runnable command) {
+			this.delegate.execute(command);
+		}
+	}
+
+	static final class MyFinalExecutor implements Executor {
+
+		private final Executor delegate = Executors.newSingleThreadExecutor();
+
+		@Override public void execute(Runnable command) {
+			this.delegate.execute(command);
 		}
 	}
 }
