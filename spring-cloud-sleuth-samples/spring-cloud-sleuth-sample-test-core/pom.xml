@@ -40,6 +40,12 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>false</skip>
+				</configuration>
+			</plugin>
 			<!-- This is a test jar - it can have jdk8 -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
