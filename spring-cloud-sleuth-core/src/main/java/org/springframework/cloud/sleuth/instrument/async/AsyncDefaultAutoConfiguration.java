@@ -71,4 +71,9 @@ public class AsyncDefaultAutoConfiguration {
 		return new TraceAsyncAspect(tracer, traceKeys, this.beanFactory);
 	}
 
+	@Bean
+	public ExecutorBeanPostProcessor executorBeanPostProcessor() {
+		return new ExecutorBeanPostProcessor(this.beanFactory);
+	}
+
 }

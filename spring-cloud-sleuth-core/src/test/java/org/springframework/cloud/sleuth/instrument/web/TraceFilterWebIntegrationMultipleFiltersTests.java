@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.io.IOException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -32,9 +30,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
@@ -51,22 +49,24 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.GenericFilterBean;
 
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 /**
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-		TraceFilterWebIntegrationMultipleFiltersTests.Config.class }, webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = { TraceFilterWebIntegrationMultipleFiltersTests.Config.class },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TraceFilterWebIntegrationMultipleFiltersTests {
 
-	@Autowired
-	Tracer tracer;
-	@Autowired
-	RestTemplate restTemplate;
-	@Autowired
-	Environment environment;
-	@Autowired
-	MyFilter myFilter;
+	@Autowired Tracer tracer;
+	@Autowired RestTemplate restTemplate;
+	@Autowired Environment environment;
+	@Autowired MyFilter myFilter;
+	// issue #550
+	@Autowired @Qualifier("myExecutor") Executor myExecutor;
+	@Autowired @Qualifier("finalExecutor") Executor finalExecutor;
+	@Autowired MyExecutor cglibExecutor;
 
 	@Before
 	@After
@@ -77,6 +77,10 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 
 	@Test
 	public void should_register_trace_filter_before_the_custom_filter() {
+		this.myExecutor.execute(() -> System.out.println("foo"));
+		this.cglibExecutor.execute(() -> System.out.println("foo"));
+		this.finalExecutor.execute(() -> System.out.println("foo"));
+
 		this.restTemplate.getForObject("http://localhost:" + port() + "/", String.class);
 
 		then(this.tracer.getCurrentSpan()).isNull();
@@ -92,29 +96,40 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 	@Configuration
 	public static class Config {
 
-		@Bean
-		Sampler alwaysSampler() {
+		// issue #550
+		@Bean Executor myExecutor() {
+			return new MyExecutorWithFinalMethod();
+		}
+
+		// issue #550
+		@Bean MyExecutor cglibExecutor() {
+			return new MyExecutor();
+		}
+
+		// issue #550
+		@Bean MyFinalExecutor finalExecutor() {
+			return new MyFinalExecutor();
+		}
+
+		@Bean Sampler alwaysSampler() {
 			return new AlwaysSampler();
 		}
 
-		@Bean
-		RestTemplate restTemplate() {
+		@Bean RestTemplate restTemplate() {
 			RestTemplate restTemplate = new RestTemplate();
 			restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
-				@Override
-				public void handleError(ClientHttpResponse response) throws IOException {
+				@Override public void handleError(ClientHttpResponse response)
+						throws IOException {
 				}
 			});
 			return restTemplate;
 		}
 
-		@Bean
-		MyFilter myFilter(Tracer tracer) {
+		@Bean MyFilter myFilter(Tracer tracer) {
 			return new MyFilter(tracer);
 		}
 
-		@Bean
-		FilterRegistrationBean registrationBean(MyFilter myFilter) {
+		@Bean FilterRegistrationBean registrationBean(MyFilter myFilter) {
 			FilterRegistrationBean bean = new FilterRegistrationBean();
 			bean.setFilter(myFilter);
 			bean.setOrder(0);
@@ -132,8 +147,7 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 			this.tracer = tracer;
 		}
 
-		@Override
-		public void doFilter(ServletRequest request, ServletResponse response,
+		@Override public void doFilter(ServletRequest request, ServletResponse response,
 				FilterChain chain) throws IOException, ServletException {
 			Span currentSpan = tracer.getCurrentSpan();
 			this.span.set(currentSpan);
@@ -141,6 +155,33 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 
 		public AtomicReference<Span> getSpan() {
 			return span;
+		}
+	}
+
+	static class MyExecutor implements Executor {
+
+		private final Executor delegate = Executors.newSingleThreadExecutor();
+
+		@Override public void execute(Runnable command) {
+			this.delegate.execute(command);
+		}
+	}
+
+	static class MyExecutorWithFinalMethod implements Executor {
+
+		private final Executor delegate = Executors.newSingleThreadExecutor();
+
+		@Override public final void execute(Runnable command) {
+			this.delegate.execute(command);
+		}
+	}
+
+	static final class MyFinalExecutor implements Executor {
+
+		private final Executor delegate = Executors.newSingleThreadExecutor();
+
+		@Override public void execute(Runnable command) {
+			this.delegate.execute(command);
 		}
 	}
 }
