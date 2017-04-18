@@ -521,7 +521,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_http_client_integration">HTTP client integration</a>
 <ul class="sectlevel3">
 <li><a href="#_synchronous_rest_template">Synchronous Rest Template</a></li>
-<li><a href="#_asynchronous_rest_template">Asynchronous Rest Template</a></li>
+<li><a href="#_asynchronous_rest_template">Asynchronous Rest Template</a>
+<ul class="sectlevel4">
+<li><a href="#_multiple_asynchronous_rest_templates">Multiple Asynchronous Rest Templates</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#_feign">Feign</a></li>
@@ -2770,6 +2774,51 @@ public static class TestConfiguration {
 <p>To block the <code>AsyncRestTemplate</code> features set <code>spring.sleuth.web.async.client.enabled</code> to <code>false</code>.
 To disable creation of the default <code>TraceAsyncClientHttpRequestFactoryWrapper</code> set <code>spring.sleuth.web.async.client.factory.enabled</code>
 to <code>false</code>. If you don&#8217;t want to create <code>AsyncRestClient</code> at all set <code>spring.sleuth.web.async.client.template.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_multiple_asynchronous_rest_templates">Multiple Asynchronous Rest Templates</h5>
+<div class="paragraph">
+<p>Sometimes you need to use multiple implementations of Asynchronous Rest Template. In the following snippet you
+can see an example of how to set up such a custom <code>AsyncRestTemplate</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableAutoConfiguration
+static class Config {
+	@Autowired Tracer tracer;
+	@Autowired HttpTraceKeysInjector httpTraceKeysInjector;
+	@Autowired HttpSpanInjector spanInjector;
+
+	@Bean(name = "customAsyncRestTemplate")
+	public AsyncRestTemplate traceAsyncRestTemplate(@Qualifier("customHttpRequestFactoryWrapper")
+			TraceAsyncClientHttpRequestFactoryWrapper wrapper) {
+		return new TraceAsyncRestTemplate(wrapper, this.tracer);
+	}
+
+	@Bean(name = "customHttpRequestFactoryWrapper")
+	public TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactory() {
+		return new TraceAsyncClientHttpRequestFactoryWrapper(this.tracer,
+				this.spanInjector,
+				asyncClientFactory(),
+				clientHttpRequestFactory(),
+				this.httpTraceKeysInjector);
+	}
+
+	private ClientHttpRequestFactory clientHttpRequestFactory() {
+		ClientHttpRequestFactory clientHttpRequestFactory = new CustomClientHttpRequestFactory();
+		//CUSTOMIZE HERE
+		return clientHttpRequestFactory;
+	}
+
+	private AsyncClientHttpRequestFactory asyncClientFactory() {
+		AsyncClientHttpRequestFactory factory = new CustomAsyncClientHttpRequestFactory();
+		//CUSTOMIZE HERE
+		return factory;
+	}
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
