@@ -22,6 +22,7 @@ import java.util.concurrent.Executor;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -40,6 +41,10 @@ import org.springframework.http.client.AsyncClientHttpRequest;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.AsyncRestTemplate;
 
@@ -48,16 +53,24 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = MultipleAsyncRestTemplateTests.Config.class,
+@RunWith(SpringRunner.class) @SpringBootTest(
+		classes = { MultipleAsyncRestTemplateTests.Config.class,
+				MultipleAsyncRestTemplateTests.CustomExecutorConfig.class },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class MultipleAsyncRestTemplateTests {
 
 	@Autowired @Qualifier("customAsyncRestTemplate") AsyncRestTemplate asyncRestTemplate;
+	@Autowired AsyncConfigurer executor;
 
 	@Test
 	public void should_start_context_with_custom_async_client() throws Exception {
 		then(this.asyncRestTemplate).isNotNull();
+	}
+
+	@Test
+	public void should_start_context_with_custom_executor() throws Exception {
+		then(this.executor).isNotNull();
+		then(this.executor.getAsyncExecutor()).isInstanceOf(LazyTraceExecutor.class);
 	}
 
 	//tag::custom_async_rest_template[]
@@ -96,6 +109,28 @@ public class MultipleAsyncRestTemplateTests {
 		}
 	}
 	//end::custom_async_rest_template[]
+
+	//tag::custom_executor[]
+	@Configuration
+	@EnableAutoConfiguration
+	@EnableAsync
+	static class CustomExecutorConfig extends AsyncConfigurerSupport {
+
+		@Autowired BeanFactory beanFactory;
+
+		@Override public Executor getAsyncExecutor() {
+			ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+			// CUSTOMIZE HERE
+			executor.setCorePoolSize(7);
+			executor.setMaxPoolSize(42);
+			executor.setQueueCapacity(11);
+			executor.setThreadNamePrefix("MyExecutor-");
+			// DON'T FORGET TO INITIALIZE
+			executor.initialize();
+			return new LazyTraceExecutor(this.beanFactory, executor);
+		}
+	}
+	//end::custom_executor[]
 }
 
 class CustomClientHttpRequestFactory implements ClientHttpRequestFactory {
@@ -112,12 +147,5 @@ class CustomAsyncClientHttpRequestFactory implements AsyncClientHttpRequestFacto
 	public AsyncClientHttpRequest createAsyncRequest(URI uri, HttpMethod httpMethod)
 			throws IOException {
 		return null;
-	}
-}
-
-class YourCustomThreadPoolTaskExecutor implements Executor {
-
-	@Override public void execute(Runnable command) {
-
 	}
 }
