@@ -596,6 +596,16 @@ Here you can see an example of how to pass tracing information with `TraceableEx
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/TraceableExecutorServiceTests.java[tags=completablefuture,indent=0]
 ----
 
+===== Customization of Executors
+
+Sometimes you need to set up a custom instance of the `AsyncExecutor`. In the following snippet you
+can see an example of how to set up such a custom `Executor`.
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]
+----
+
 === Messaging
 
 Spring Cloud Sleuth integrates with http://projects.spring.io/spring-integration/[Spring Integration]. It creates spans for publish and
