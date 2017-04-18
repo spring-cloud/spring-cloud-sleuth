@@ -533,7 +533,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel3">
 <li><a href="#__async_annotated_methods">@Async annotated methods</a></li>
 <li><a href="#__scheduled_annotated_methods">@Scheduled annotated methods</a></li>
-<li><a href="#_executor_executorservice_and_scheduledexecutorservice">Executor, ExecutorService and ScheduledExecutorService</a></li>
+<li><a href="#_executor_executorservice_and_scheduledexecutorservice">Executor, ExecutorService and ScheduledExecutorService</a>
+<ul class="sectlevel4">
+<li><a href="#_customization_of_executors">Customization of Executors</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#_messaging">Messaging</a></li>
@@ -2910,6 +2914,36 @@ are creating Spans each time a new task is submitted, invoked or scheduled.</p>
 }, new TraceableExecutorService(executorService,
 		// 'calculateTax' explicitly names the span - this param is optional
 		tracer, traceKeys, spanNamer, "calculateTax"));</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_customization_of_executors">Customization of Executors</h5>
+<div class="paragraph">
+<p>Sometimes you need to set up a custom instance of the <code>AsyncExecutor</code>. In the following snippet you
+can see an example of how to set up such a custom <code>Executor</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableAutoConfiguration
+@EnableAsync
+static class CustomExecutorConfig extends AsyncConfigurerSupport {
+
+	@Autowired BeanFactory beanFactory;
+
+	@Override public Executor getAsyncExecutor() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		// CUSTOMIZE HERE
+		executor.setCorePoolSize(7);
+		executor.setMaxPoolSize(42);
+		executor.setQueueCapacity(11);
+		executor.setThreadNamePrefix("MyExecutor-");
+		// DON'T FORGET TO INITIALIZE
+		executor.initialize();
+		return new LazyTraceExecutor(this.beanFactory, executor);
+	}
+}</code></pre>
+</div>
 </div>
 </div>
 </div>
