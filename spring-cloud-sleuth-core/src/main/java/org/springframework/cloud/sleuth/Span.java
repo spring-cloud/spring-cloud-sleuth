@@ -696,6 +696,15 @@ public class Span {
 			return this;
 		}
 
+		public Span.SpanBuilder from(Span span) {
+			return begin(span.begin).end(span.end).name(span.name)
+					.traceIdHigh(span.traceIdHigh).traceId(span.traceId)
+					.parents(span.getParents()).logs(span.logs).tags(span.tags)
+					.spanId(span.spanId).remote(span.remote).exportable(span.exportable)
+					.processId(span.processId).savedSpan(span.savedSpan);
+
+		}
+
 		public Span build() {
 			return new Span(this);
 		}
