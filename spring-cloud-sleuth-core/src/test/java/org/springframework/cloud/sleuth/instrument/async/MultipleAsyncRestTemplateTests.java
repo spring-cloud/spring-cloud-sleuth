@@ -28,6 +28,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.SpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceAsyncClientHttpRequestFactoryWrapper;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceAsyncRestTemplate;
@@ -65,7 +66,7 @@ public class MultipleAsyncRestTemplateTests {
 	static class Config {
 		@Autowired Tracer tracer;
 		@Autowired HttpTraceKeysInjector httpTraceKeysInjector;
-		@Autowired SpanInjector<HttpRequest> spanInjector;
+		@Autowired HttpSpanInjector spanInjector;
 
 		@Bean(name = "customAsyncRestTemplate")
 		public AsyncRestTemplate traceAsyncRestTemplate(@Qualifier("customHttpRequestFactoryWrapper")
