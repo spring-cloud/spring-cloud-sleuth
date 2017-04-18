@@ -28,6 +28,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
@@ -77,8 +78,8 @@ public class SleuthStreamAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter, Environment environment) {
-		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment);
+			SpanMetricReporter spanMetricReporter, Environment environment, SpanAdjuster spanAdjuster) {
+		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment, spanAdjuster);
 	}
 
 	@Bean(name = StreamSpanReporter.POLLER)

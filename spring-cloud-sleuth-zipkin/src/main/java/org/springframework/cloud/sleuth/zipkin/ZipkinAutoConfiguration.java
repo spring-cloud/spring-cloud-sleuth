@@ -27,6 +27,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
@@ -65,8 +66,8 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
-			Environment environment) {
-		return new ZipkinSpanListener(reporter, endpointLocator, environment);
+			Environment environment, SpanAdjuster spanAdjuster) {
+		return new ZipkinSpanListener(reporter, endpointLocator, environment, spanAdjuster);
 	}
 
 	@Configuration

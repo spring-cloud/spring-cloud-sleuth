@@ -292,6 +292,20 @@ public class ZipkinSpanListenerTests {
 				.isEmpty();
 	}
 
+	@Test
+	public void should_adjust_span_before_reporting_it() {
+		this.parent.logEvent(Span.CLIENT_RECV);
+		ZipkinSpanListener spanListener = new ZipkinSpanListener(this.spanReporter,
+				this.endpointLocator, null);
+
+		zipkin.Span result = spanListener.convert(this.parent);
+
+		assertThat(result.binaryAnnotations)
+				.filteredOn("key", Span.INSTANCEID)
+				.extracting(input -> input.value)
+				.isEmpty();
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class TestConfiguration {
