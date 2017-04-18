@@ -32,6 +32,13 @@ public final class TraceRequestAttributes {
 			+ ".TRACE_HANDLED";
 
 	/**
+	 * Attribute containing a {@link org.springframework.cloud.sleuth.Span} set on a request when it got handled by a Sleuth component.
+	 * If that attribute is set then {@link TraceFilter} will not close a span processed by the Error Controller.
+	 */
+	public static final String ERROR_HANDLED_SPAN_REQUEST_ATTR = TraceRequestAttributes.class.getName()
+			+ ".ERROR_TRACE_HANDLED";
+
+	/**
 	 * Set if Handler interceptor has executed some logic
 	 */
 	public static final String NEW_SPAN_REQUEST_ATTR = TraceRequestAttributes.class.getName()
