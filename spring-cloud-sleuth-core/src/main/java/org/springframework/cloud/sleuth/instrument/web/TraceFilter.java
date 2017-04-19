@@ -181,7 +181,9 @@ public class TraceFilter extends GenericFilterBean {
 		} finally {
 			request.setAttribute(TRACE_ERROR_HANDLED_REQUEST_ATTR, true);
 			addResponseTags(response, null);
-			this.tracer.close(spanFromRequest);
+			if (request.getAttribute(TraceRequestAttributes.ERROR_HANDLED_SPAN_REQUEST_ATTR) == null) {
+				this.tracer.close(spanFromRequest);
+			}
 		}
 	}
 
