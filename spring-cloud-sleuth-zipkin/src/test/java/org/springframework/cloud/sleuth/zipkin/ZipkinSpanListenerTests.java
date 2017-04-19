@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
@@ -290,6 +291,19 @@ public class ZipkinSpanListenerTests {
 				.filteredOn("key", Span.INSTANCEID)
 				.extracting(input -> input.value)
 				.isEmpty();
+	}
+
+	@Test
+	public void should_adjust_span_before_reporting_it() {
+		this.parent.logEvent(Span.CLIENT_RECV);
+		ZipkinSpanListener spanListener = new ZipkinSpanListener(this.spanReporter,
+				this.endpointLocator, null, span -> Span.builder().from(span)
+						.name("foo")
+						.build());
+
+		zipkin.Span result = spanListener.convert(this.parent);
+
+		assertThat(result.name).isEqualTo("foo");
 	}
 
 	@Configuration

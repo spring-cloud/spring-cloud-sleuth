@@ -92,4 +92,23 @@ public class StreamSpanReporterTests {
 				.isNullOrEmpty();
 	}
 
+	@Test
+	@SuppressWarnings("unchecked")
+	public void should_adjust_span_before_reporting_it() throws Exception {
+		this.reporter = new StreamSpanReporter(this.endpointLocator, this.spanMetricReporter, null,
+				span -> Span.builder().from(span).name("foo").build());
+		LinkedBlockingQueue<Span> queue = new LinkedBlockingQueue<>(1000);
+		this.reporter.setQueue(queue);
+		Span span = Span.builder().name("bar").exportable(true).build();
+		span.logEvent(Span.CLIENT_SEND);
+
+		this.reporter.report(span);
+
+		assertThat(queue).isNotEmpty();
+		assertThat(queue.poll())
+				.extracting(Span::getName)
+				.filteredOn(o -> o.equals("foo"))
+				.isNotEmpty();
+	}
+
 }
