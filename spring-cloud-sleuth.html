@@ -491,6 +491,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_example">Example</a></li>
 <li><a href="#_custom_sa_tag_in_zipkin">Custom SA tag in Zipkin</a></li>
 <li><a href="#_custom_service_name">Custom service name</a></li>
+<li><a href="#_customization_of_reported_spans">Customization of reported spans</a></li>
 <li><a href="#_host_locator">Host locator</a></li>
 </ul>
 </li>
@@ -2386,6 +2387,31 @@ Remember not to add both <code>peer.service</code> tag and the <code>SA</code> t
 <div class="content">
 <pre class="highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.service.name: foo</code></pre>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_customization_of_reported_spans">Customization of reported spans</h3>
+<div class="paragraph">
+<p>Before reporting spans to e.g. Zipkin you can be interested in modifying that span in some way.
+ You can achieve that by using the <code>SpanAdjuster</code> interface.</p>
+</div>
+<div class="paragraph">
+<p>Example of usage:</p>
+</div>
+<div class="paragraph">
+<p>In Sleuth we&#8217;re generating spans with a fixed name. Some users want to modify the name depending on values
+of tags. Implementation of the <code>SpanAdjuster</code> interface can be used to alter that name. Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">@Bean
+SpanAdjuster customSpanAdjuster() {
+    return span -&gt; span.toBuilder().name(scrub(span.getName())).build();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This will lead in changing the name of the reported span just before it gets sent to Zipkin.</p>
 </div>
 </div>
 <div class="sect2">
