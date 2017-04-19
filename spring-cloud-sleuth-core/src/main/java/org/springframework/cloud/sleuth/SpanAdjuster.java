@@ -25,7 +25,13 @@ package org.springframework.cloud.sleuth;
 public interface SpanAdjuster {
 	/**
 	 * You can adjust the {@link Span} by creating a new one using the {@link Span.SpanBuilder}
-	 * before reporting it. That way you can e.g. change the name of the span.
+	 * before reporting it.
+	 *
+	 * In Sleuth we're generating spans with a fixed name. Some users want to modify the name
+	 * depending on some values of tags. Implementation of this interface can be used to alter
+	 * then name. Example:
+	 *
+	 * {@code span -> span.toBuilder().name(scrub(span.getName())).build();}
 	 */
 	Span adjust(Span span);
 }

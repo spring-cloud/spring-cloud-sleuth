@@ -486,6 +486,13 @@ public class Span {
 	}
 
 	/**
+	 * Converts the span to a {@link SpanBuilder} format
+	 */
+	public SpanBuilder toBuilder() {
+		return builder().from(this);
+	}
+
+	/**
 	 * Represents given long id as 16-character lower-hex string
 	 *
 	 * @see #traceIdString()
@@ -647,6 +654,7 @@ public class Span {
 		}
 
 		public Span.SpanBuilder parents(Collection<Long> parents) {
+			this.parents.clear();
 			this.parents.addAll(parents);
 			return this;
 		}
@@ -657,6 +665,7 @@ public class Span {
 		}
 
 		public Span.SpanBuilder logs(Collection<Log> logs) {
+			this.logs.clear();
 			this.logs.addAll(logs);
 			return this;
 		}
@@ -667,6 +676,7 @@ public class Span {
 		}
 
 		public Span.SpanBuilder tags(Map<String, String> tags) {
+			this.tags.clear();
 			this.tags.putAll(tags);
 			return this;
 		}
@@ -702,7 +712,6 @@ public class Span {
 					.parents(span.getParents()).logs(span.logs).tags(span.tags)
 					.spanId(span.spanId).remote(span.remote).exportable(span.exportable)
 					.processId(span.processId).savedSpan(span.savedSpan);
-
 		}
 
 		public Span build() {
