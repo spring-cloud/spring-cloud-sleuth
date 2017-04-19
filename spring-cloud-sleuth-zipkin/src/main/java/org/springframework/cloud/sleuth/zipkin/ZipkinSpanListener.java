@@ -23,7 +23,9 @@ import java.util.Map;
 
 import org.springframework.cloud.commons.util.IdUtils;
 import org.springframework.cloud.sleuth.Log;
+import org.springframework.cloud.sleuth.NoOpSpanAdjuster;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
@@ -54,6 +56,7 @@ public class ZipkinSpanListener implements SpanReporter {
 
 	private final ZipkinSpanReporter reporter;
 	private final Environment environment;
+	private final SpanAdjuster spanAdjuster;
 	/**
 	 * Endpoint is the visible IP address of this service, the port it is listening on and
 	 * the service name from discovery.
@@ -66,11 +69,18 @@ public class ZipkinSpanListener implements SpanReporter {
 		this(reporter, endpointLocator, null);
 	}
 
+	@Deprecated
 	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
 			Environment environment) {
+		this(reporter, endpointLocator, environment, new NoOpSpanAdjuster());
+	}
+
+	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
+			Environment environment, SpanAdjuster spanAdjuster) {
 		this.reporter = reporter;
 		this.endpointLocator = endpointLocator;
 		this.environment = environment;
+		this.spanAdjuster = spanAdjuster;
 	}
 
 	/**
@@ -88,34 +98,34 @@ public class ZipkinSpanListener implements SpanReporter {
 	// Visible for testing
 	zipkin.Span convert(Span span) {
 		//TODO: Consider adding support for the debug flag (related to #496)
+		Span convertedSpan = this.spanAdjuster.adjust(span);
 		zipkin.Span.Builder zipkinSpan = zipkin.Span.builder();
-
 		Endpoint endpoint = this.endpointLocator.local();
-		processLogs(span, zipkinSpan, endpoint);
-		addZipkinAnnotations(zipkinSpan, span, endpoint);
-		addZipkinBinaryAnnotations(zipkinSpan, span, endpoint);
+		processLogs(convertedSpan, zipkinSpan, endpoint);
+		addZipkinAnnotations(zipkinSpan, convertedSpan, endpoint);
+		addZipkinBinaryAnnotations(zipkinSpan, convertedSpan, endpoint);
 		// In the RPC span model, the client owns the timestamp and duration of the span. If we
 		// were propagated an id, we can assume that we shouldn't report timestamp or duration,
 		// rather let the client do that. Worst case we were propagated an unreported ID and
 		// Zipkin backfills timestamp and duration.
-		if (!span.isRemote()) {
-			zipkinSpan.timestamp(span.getBegin() * 1000L);
-			if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
-				zipkinSpan.duration(calculateDurationInMicros(span));
+		if (!convertedSpan.isRemote()) {
+			zipkinSpan.timestamp(convertedSpan.getBegin() * 1000L);
+			if (!convertedSpan.isRunning()) { // duration is authoritative, only write when the span stopped
+				zipkinSpan.duration(calculateDurationInMicros(convertedSpan));
 			}
 		}
-		zipkinSpan.traceIdHigh(span.getTraceIdHigh());
-		zipkinSpan.traceId(span.getTraceId());
-		if (span.getParents().size() > 0) {
-			if (span.getParents().size() > 1) {
+		zipkinSpan.traceIdHigh(convertedSpan.getTraceIdHigh());
+		zipkinSpan.traceId(convertedSpan.getTraceId());
+		if (convertedSpan.getParents().size() > 0) {
+			if (convertedSpan.getParents().size() > 1) {
 				log.error("Zipkin doesn't support spans with multiple parents. Omitting "
-						+ "other parents for " + span);
+						+ "other parents for " + convertedSpan);
 			}
-			zipkinSpan.parentId(span.getParents().get(0));
+			zipkinSpan.parentId(convertedSpan.getParents().get(0));
 		}
-		zipkinSpan.id(span.getSpanId());
-		if (StringUtils.hasText(span.getName())) {
-			zipkinSpan.name(span.getName());
+		zipkinSpan.id(convertedSpan.getSpanId());
+		if (StringUtils.hasText(convertedSpan.getName())) {
+			zipkinSpan.name(convertedSpan.getName());
 		}
 		return zipkinSpan.build();
 	}

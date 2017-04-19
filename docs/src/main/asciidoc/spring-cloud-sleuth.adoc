@@ -446,6 +446,26 @@ By default Sleuth assumes that when you send a span to Zipkin, you want the span
 spring.zipkin.service.name: foo
 ----
 
+=== Customization of reported spans
+
+Before reporting spans to e.g. Zipkin you can be interested in modifying that span in some way.
+ You can achieve that by using the `SpanAdjuster` interface.
+
+Example of usage:
+
+In Sleuth we're generating spans with a fixed name. Some users want to modify the name depending on values
+of tags. Implementation of the `SpanAdjuster` interface can be used to alter that name. Example:
+
+[source,yaml]
+----
+@Bean
+SpanAdjuster customSpanAdjuster() {
+    return span -> span.toBuilder().name(scrub(span.getName())).build();
+}
+----
+
+This will lead in changing the name of the reported span just before it gets sent to Zipkin.
+
 === Host locator
 
 In order to define the host that is corresponding to a particular span we need to resolve the host name

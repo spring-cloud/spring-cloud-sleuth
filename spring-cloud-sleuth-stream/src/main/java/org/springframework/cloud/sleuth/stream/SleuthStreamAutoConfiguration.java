@@ -28,6 +28,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
@@ -57,9 +58,9 @@ import org.springframework.scheduling.support.PeriodicTrigger;
  * @since 1.0.0
  */
 @Configuration
-@EnableConfigurationProperties({SleuthStreamProperties.class, SamplerProperties.class, ZipkinProperties.class})
+@EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class, ZipkinProperties.class })
 @AutoConfigureAfter(TraceMetricsAutoConfiguration.class)
-@AutoConfigureBefore({ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class, ChannelsEndpointAutoConfiguration.class})
+@AutoConfigureBefore({ ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class, ChannelsEndpointAutoConfiguration.class })
 @EnableBinding(SleuthSource.class)
 @ConditionalOnProperty(value = "spring.sleuth.stream.enabled", matchIfMissing = true)
 public class SleuthStreamAutoConfiguration {
@@ -79,8 +80,8 @@ public class SleuthStreamAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter, Environment environment) {
-		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment);
+			SpanMetricReporter spanMetricReporter, Environment environment, SpanAdjuster spanAdjuster) {
+		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment, spanAdjuster);
 	}
 
 	@Bean(name = StreamSpanReporter.POLLER)

@@ -27,7 +27,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.commons.util.IdUtils;
 import org.springframework.cloud.sleuth.Log;
+import org.springframework.cloud.sleuth.NoOpSpanAdjuster;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.core.env.Environment;
@@ -61,6 +63,7 @@ public class StreamSpanReporter implements SpanReporter {
 	private final HostLocator endpointLocator;
 	private final SpanMetricReporter spanMetricReporter;
 	private final Environment environment;
+	private final SpanAdjuster spanAdjuster;
 
 	@Deprecated
 	public StreamSpanReporter(HostLocator endpointLocator,
@@ -68,11 +71,18 @@ public class StreamSpanReporter implements SpanReporter {
 		this(endpointLocator, spanMetricReporter, null);
 	}
 
+	@Deprecated
 	public StreamSpanReporter(HostLocator endpointLocator,
 			SpanMetricReporter spanMetricReporter, Environment environment) {
+		this(endpointLocator, spanMetricReporter, environment, new NoOpSpanAdjuster());
+	}
+
+	public StreamSpanReporter(HostLocator endpointLocator,
+			SpanMetricReporter spanMetricReporter, Environment environment, SpanAdjuster spanAdjuster) {
 		this.endpointLocator = endpointLocator;
 		this.spanMetricReporter = spanMetricReporter;
 		this.environment = environment;
+		this.spanAdjuster = spanAdjuster;
 	}
 
 	public void setQueue(BlockingQueue<Span> queue) {
@@ -101,21 +111,23 @@ public class StreamSpanReporter implements SpanReporter {
 
 	@Override
 	public void report(Span span) {
-		if (span.isExportable()) {
+		Span spanToReport = span;
+		if (spanToReport.isExportable()) {
 			try {
 				if (this.environment != null) {
-					processLogs(span);
+					processLogs(spanToReport);
 				}
-				this.queue.add(span);
+				spanToReport = this.spanAdjuster.adjust(spanToReport);
+				this.queue.add(spanToReport);
 			} catch (Exception e) {
 				this.spanMetricReporter.incrementDroppedSpans(1);
 				if (log.isDebugEnabled()) {
-					log.debug("The span " + span + " will not be sent to Zipkin due to [" + e + "]");
+					log.debug("The span " + spanToReport + " will not be sent to Zipkin due to [" + e + "]");
 				}
 			}
 		} else {
 			if (log.isDebugEnabled()) {
-				log.debug("The span " + span + " will not be sent to Zipkin due to sampling");
+				log.debug("The span " + spanToReport + " will not be sent to Zipkin due to sampling");
 			}
 		}
 	}

@@ -253,4 +253,29 @@ public class SpanTests {
 		// We round so that we don't confuse "not started" with a short span.
 		assertThat(span.getAccumulatedMicros()).isEqualTo(1L);
 	}
+
+	@Test
+	public void should_build_a_span_from_provided_span() throws IOException {
+		Span span = builder().build();
+
+		Span builtSpan = Span.builder().from(span).build();
+
+		assertThat(builtSpan).isEqualTo(span);
+	}
+
+	@Test
+	public void should_convert_a_span_to_builder() throws IOException {
+		Span.SpanBuilder spanBuilder = builder();
+		Span span = spanBuilder.build();
+
+		Span span2 = span.toBuilder().build();
+
+		assertThat(span).isEqualTo(span2);
+	}
+
+	private Span.SpanBuilder builder() {
+		return Span.builder().name("http:name").traceId(1L).spanId(2L).parent(3L)
+				.begin(1L).end(2L).traceId(3L).exportable(true).parent(4L)
+				.remote(true).tag("tag", "tag").log(new Log(System.currentTimeMillis(), "log"));
+	}
 }
