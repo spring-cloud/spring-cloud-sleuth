@@ -73,7 +73,12 @@ public class TraceFilter extends GenericFilterBean {
 
 	private static final String HTTP_COMPONENT = "http";
 
-	protected static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
+	/**
+	 * If you register your filter before the {@link TraceFilter} then you will not
+	 * have the tracing context passed for you out of the box. That means that e.g. your
+	 * logs will not get correlated.
+	 */
+	public static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
 	protected static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".TRACE";
