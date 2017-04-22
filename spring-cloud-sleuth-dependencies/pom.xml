@@ -14,8 +14,8 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<zipkin.version>1.19.2</zipkin.version>
-		<zipkin-reporter.version>0.6.12</zipkin-reporter.version>
+		<zipkin.version>1.23.1</zipkin.version>
+		<zipkin-reporter.version>0.6.14</zipkin-reporter.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
