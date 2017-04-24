@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth;
 /**
  * Adds ability to adjust a span before reporting it.
  *
+ * IMPORTANT: Your {@link SpanReporter} should inject the {@link SpanAdjuster} and
+ * allow {@link Span} manipulation before the actual reporting is done.
+ *
  * @author Marcin Grzejszczak
  * @since 1.1.4
  */
