@@ -329,6 +329,9 @@ SpanAdjuster customSpanAdjuster() {
 
 This will lead in changing the name of the reported span just before it gets sent to Zipkin.
 
+IMPORTANT: Your `SpanReporter` should inject the `SpanAdjuster` and
+ allow span manipulation before the actual reporting is done.
+
 === Host locator
 
 In order to define the host that is corresponding to a particular span we need to resolve the host name

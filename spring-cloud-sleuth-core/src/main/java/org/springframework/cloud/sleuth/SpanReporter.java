@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth;
 /**
  * Contract for reporting Sleuth spans for collection. For example to Zipkin.
  *
+ * IMPORTANT: Your {@link SpanReporter} should inject the {@link SpanAdjuster} and
+ * allow {@link Span} manipulation before the actual reporting is done.
+ *
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
