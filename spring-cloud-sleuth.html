@@ -2413,6 +2413,19 @@ SpanAdjuster customSpanAdjuster() {
 <div class="paragraph">
 <p>This will lead in changing the name of the reported span just before it gets sent to Zipkin.</p>
 </div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+Your <code>SpanReporter</code> should inject the <code>SpanAdjuster</code> and
+ allow span manipulation before the actual reporting is done.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_host_locator">Host locator</h3>
