@@ -103,7 +103,7 @@ public interface Tracer extends SpanAccessor {
 	void addTag(String key, String value);
 
 	/**
-	 * Remove this span from the current thread, but don't stop it yet or send it for
+	 * Remove this span from the current thread, but don't stop it yet nor send it for
 	 * collection. This is useful if the span object is then passed to another thread for
 	 * use with {@link Tracer#continueSpan(Span)}.
 	 * <p>
