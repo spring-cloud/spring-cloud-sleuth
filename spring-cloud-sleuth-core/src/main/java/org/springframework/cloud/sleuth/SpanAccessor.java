@@ -26,8 +26,16 @@ package org.springframework.cloud.sleuth;
  */
 public interface SpanAccessor {
 
+	/**
+	 * Retrieves the span that is present in the context. If currently there is
+	 * no tracing going on, then this method will return {@code null}.
+	 */
 	Span getCurrentSpan();
 
+	/**
+	 * Returns {@code true} when a span is present in the current context. In other
+	 * words if a span was started or continued then this method returns {@code true}.
+	 */
 	boolean isTracing();
 
 }
