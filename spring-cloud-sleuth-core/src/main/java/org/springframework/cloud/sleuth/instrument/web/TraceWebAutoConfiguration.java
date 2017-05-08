@@ -75,8 +75,8 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public TraceWebAspect traceWebAspect(Tracer tracer, SpanNamer spanNamer) {
-		return new TraceWebAspect(tracer, spanNamer);
+	public TraceWebAspect traceWebAspect(Tracer tracer, SpanNamer spanNamer, SpanReporter spanReporter) {
+		return new TraceWebAspect(tracer, spanNamer, spanReporter);
 	}
 
 	@Bean

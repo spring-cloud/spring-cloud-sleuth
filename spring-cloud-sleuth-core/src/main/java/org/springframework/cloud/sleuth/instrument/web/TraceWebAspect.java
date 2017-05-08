@@ -18,15 +18,21 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 /**
@@ -70,10 +76,19 @@ public class TraceWebAspect {
 
 	private final Tracer tracer;
 	private final SpanNamer spanNamer;
+	private final SpanReporter spanReporter;
 
+	@Deprecated
 	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer) {
 		this.tracer = tracer;
 		this.spanNamer = spanNamer;
+		this.spanReporter = new NoOpSpanReporter();
+	}
+
+	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer, SpanReporter spanReporter) {
+		this.tracer = tracer;
+		this.spanNamer = spanNamer;
+		this.spanReporter = spanReporter;
 	}
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
@@ -90,6 +105,9 @@ public class TraceWebAspect {
 
 	@Pointcut("execution(public org.springframework.web.context.request.async.WebAsyncTask *(..))")
 	private void anyPublicMethodReturningWebAsyncTask() { } // NOSONAR
+
+	@Pointcut("execution(public * org.springframework.web.servlet.HandlerExceptionResolver.resolveException(..)) && args(request, response, handler, ex)")
+	private void anyHandlerExceptionResolver(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) { } // NOSONAR
 
 	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethodReturningWebAsyncTask()")
 	private void anyControllerOrRestControllerWithPublicWebAsyncTaskMethod() { } // NOSONAR
@@ -127,6 +145,23 @@ public class TraceWebAspect {
 			}
 		}
 		return webAsyncTask;
+	}
+
+	@Around("anyHandlerExceptionResolver(request, response, handler, ex)")
+	public Object markRequestForSpanClosing(ProceedingJoinPoint pjp,
+			HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Throwable {
+		Span currentSpan = this.tracer.getCurrentSpan();
+		try {
+			if (!currentSpan.tags().containsKey(Span.SPAN_ERROR_TAG_NAME)) {
+				this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
+			}
+			return pjp.proceed();
+		} finally {
+			if (log.isDebugEnabled()) {
+				log.debug("Marking span " + currentSpan + " for closure by Trace Filter");
+			}
+			request.setAttribute(TraceFilter.TRACE_CLOSE_SPAN_REQUEST_ATTR, true);
+		}
 	}
 
 }
