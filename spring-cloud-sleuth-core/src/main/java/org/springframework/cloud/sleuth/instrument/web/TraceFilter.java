@@ -86,6 +86,9 @@ public class TraceFilter extends GenericFilterBean {
 	protected static final String TRACE_ERROR_HANDLED_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".ERROR_HANDLED";
 
+	protected static final String TRACE_CLOSE_SPAN_REQUEST_ATTR = TraceFilter.class.getName()
+			+ ".CLOSE_SPAN";
+
 	/**
 	 * @deprecated please use {@link SleuthWebProperties#DEFAULT_SKIP_PATTERN}
 	 */
@@ -243,6 +246,12 @@ public class TraceFilter extends GenericFilterBean {
 					log.debug(
 							"Won't detach the span " + span + " since error has already been handled");
 				}
+			}  else if (shouldCloseSpan(request) && this.tracer.isTracing() && stillTracingCurrentSapn(span)) {
+				if (log.isDebugEnabled()) {
+					log.debug(
+							"Will close span " + span + " since some component marked it for closure");
+				}
+				this.tracer.close(span);
 			} else if (this.tracer.isTracing()) {
 				if (log.isDebugEnabled()) {
 					log.debug("Detaching the span " + span + " since the response was unsuccessful");
@@ -250,6 +259,10 @@ public class TraceFilter extends GenericFilterBean {
 				this.tracer.detach(span);
 			}
 		}
+	}
+
+	private boolean stillTracingCurrentSapn(Span span) {
+		return this.tracer.getCurrentSpan().equals(span);
 	}
 
 	private void recordParentSpan(Span parent) {
@@ -285,6 +298,11 @@ public class TraceFilter extends GenericFilterBean {
 	private boolean errorAlreadyHandled(HttpServletRequest request) {
 		return Boolean.valueOf(
 				String.valueOf(request.getAttribute(TRACE_ERROR_HANDLED_REQUEST_ATTR)));
+	}
+
+	private boolean shouldCloseSpan(HttpServletRequest request) {
+		return Boolean.valueOf(
+				String.valueOf(request.getAttribute(TRACE_CLOSE_SPAN_REQUEST_ATTR)));
 	}
 
 	private boolean isSpanContinued(HttpServletRequest request) {
