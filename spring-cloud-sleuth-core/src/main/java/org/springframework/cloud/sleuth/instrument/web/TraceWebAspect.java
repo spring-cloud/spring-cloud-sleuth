@@ -26,10 +26,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceContinuingCallable;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
@@ -76,19 +74,10 @@ public class TraceWebAspect {
 
 	private final Tracer tracer;
 	private final SpanNamer spanNamer;
-	private final SpanReporter spanReporter;
 
-	@Deprecated
 	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer) {
 		this.tracer = tracer;
 		this.spanNamer = spanNamer;
-		this.spanReporter = new NoOpSpanReporter();
-	}
-
-	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer, SpanReporter spanReporter) {
-		this.tracer = tracer;
-		this.spanNamer = spanNamer;
-		this.spanReporter = spanReporter;
 	}
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
