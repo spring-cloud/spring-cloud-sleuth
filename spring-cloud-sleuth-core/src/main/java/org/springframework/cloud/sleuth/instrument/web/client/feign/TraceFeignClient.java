@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import feign.Client;
+import feign.Request;
+import feign.Response;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
@@ -24,17 +28,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
-
-import feign.Client;
-import feign.Request;
-import feign.Response;
 
 /**
  * A Feign Client that closes a Span if there is no response body. In other cases Span
@@ -53,6 +53,7 @@ class TraceFeignClient implements Client {
 	private final BeanFactory beanFactory;
 	private Tracer tracer;
 	private HttpSpanInjector spanInjector;
+	private ErrorParser errorParser;
 
 	TraceFeignClient(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -154,7 +155,7 @@ class TraceFeignClient implements Client {
 	private void logError(Exception e) {
 		Span span = getTracer().getCurrentSpan();
 		if (span != null) {
-			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(e));
+			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, getErrorParser().parseError(e));
 		}
 	}
 
@@ -163,5 +164,12 @@ class TraceFeignClient implements Client {
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
+	}
+
+	private ErrorParser getErrorParser() {
+		if (this.errorParser == null) {
+			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
+		}
+		return this.errorParser;
 	}
 }

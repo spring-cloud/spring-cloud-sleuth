@@ -1,17 +1,20 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
@@ -26,6 +29,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TraceFilterAlwaysSamplerIntegrationTests.Config.class)
@@ -57,8 +62,18 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(new TraceFilter(this.tracer, this.traceKeys,
-				new NoOpSpanReporter(), this.spanExtractor, this.httpTraceKeysInjector));
+		BeanFactory beanFactory = beanFactory();
+		mockMvcBuilder.addFilters(new TraceFilter(beanFactory));
+	}
+
+	private BeanFactory beanFactory() {
+		BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
+		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
+		BDDMockito.given(beanFactory.getBean(TraceKeys.class)).willReturn(this.traceKeys);
+		BDDMockito.given(beanFactory.getBean(HttpSpanExtractor.class)).willReturn(this.spanExtractor);
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(new NoOpSpanReporter());
+		BDDMockito.given(beanFactory.getBean(HttpTraceKeysInjector.class)).willReturn(this.httpTraceKeysInjector);
+		return beanFactory;
 	}
 
 	private MvcResult whenSentPingWithTraceIdAndNotSampling(Long traceId)

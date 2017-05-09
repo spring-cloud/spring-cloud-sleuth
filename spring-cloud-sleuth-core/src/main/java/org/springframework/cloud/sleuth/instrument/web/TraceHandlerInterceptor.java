@@ -26,10 +26,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.web.ErrorController;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -55,6 +55,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 
 	private Tracer tracer;
 	private TraceKeys traceKeys;
+	private ErrorParser errorParser;
 	private AtomicReference<ErrorController> errorController;
 
 	public TraceHandlerInterceptor(BeanFactory beanFactory) {
@@ -137,7 +138,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		}
 		Span span = getRootSpanFromAttribute(request);
 		if (ex != null) {
-			String errorMsg = ExceptionUtils.getExceptionMessage(ex);
+			String errorMsg = getErrorParser().parseError(ex);
 			if (log.isDebugEnabled()) {
 				log.debug("Adding an error tag [" + errorMsg + "] to span " + span + "");
 			}
@@ -186,6 +187,13 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
 		}
 		return this.traceKeys;
+	}
+
+	private ErrorParser getErrorParser() {
+		if (this.errorParser == null) {
+			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
+		}
+		return this.errorParser;
 	}
 
 	ErrorController getErrorController() {

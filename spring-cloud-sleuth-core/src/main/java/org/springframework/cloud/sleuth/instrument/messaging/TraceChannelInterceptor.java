@@ -16,12 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
@@ -38,10 +38,15 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
+	@Deprecated
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			MessagingSpanTextMapExtractor spanExtractor,
 			MessagingSpanTextMapInjector spanInjector) {
 		super(tracer, traceKeys, spanExtractor, spanInjector);
+	}
+
+	public TraceChannelInterceptor(BeanFactory beanFactory) {
+		super(beanFactory);
 	}
 
 	@Override
@@ -124,7 +129,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private void addErrorTag(Exception ex) {
 		if (ex != null) {
-			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
+			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, getErrorParser().parseError(ex));
 		}
 	}
 
