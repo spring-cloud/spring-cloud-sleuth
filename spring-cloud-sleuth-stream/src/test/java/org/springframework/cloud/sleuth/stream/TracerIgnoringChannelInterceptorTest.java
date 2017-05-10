@@ -23,7 +23,7 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;

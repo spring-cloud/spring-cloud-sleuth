@@ -13,17 +13,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
@@ -103,23 +101,16 @@ public class TraceableExecutorServiceTests {
 				BDDMockito.eq(1L) , BDDMockito.eq(TimeUnit.DAYS));
 	}
 
-	private Matcher<Collection<? extends Callable<Object>>> withSpanContinuingTraceCallablesOnly() {
-		return new TypeSafeMatcher<Collection<? extends Callable<Object>>>() {
-			@Override
-			protected boolean matchesSafely(Collection<? extends Callable<Object>> item) {
-				try {
-					SleuthAssertions.then(item)
-							.flatExtracting(Object::getClass)
-							.containsOnlyElementsOf(Collections.singletonList(SpanContinuingTraceCallable.class));
-				} catch (AssertionError e) {
-					return false;
-				}
-				return true;
+	private ArgumentMatcher<Collection<? extends Callable<Object>>> withSpanContinuingTraceCallablesOnly() {
+		return argument -> {
+			try {
+				SleuthAssertions.then(argument)
+						.flatExtracting(Object::getClass)
+						.containsOnlyElementsOf(Collections.singletonList(SpanContinuingTraceCallable.class));
+			} catch (AssertionError e) {
+				return false;
 			}
-
-			@Override public void describeTo(Description description) {
-				description.appendText("should contain a single local component trace callable");
-			}
+			return true;
 		};
 	}
 

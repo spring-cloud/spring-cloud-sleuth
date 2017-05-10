@@ -16,12 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.Tracer;
@@ -38,17 +49,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.GenericFilterBean;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -80,7 +80,7 @@ public class TraceCustomFilterResponseInjectorTests {
 	@Configuration
 	@EnableAutoConfiguration
 	static class Config
-			implements ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+			implements ApplicationListener<ServletWebServerInitializedEvent> {
 		int port;
 
 		// tag::configuration[]
@@ -95,8 +95,8 @@ public class TraceCustomFilterResponseInjectorTests {
 		// end::configuration[]
 
 		@Override
-		public void onApplicationEvent(EmbeddedServletContainerInitializedEvent event) {
-			this.port = event.getEmbeddedServletContainer().getPort();
+		public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+			this.port = event.getSource().getPort();
 		}
 
 		@Bean

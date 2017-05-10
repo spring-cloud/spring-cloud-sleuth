@@ -18,8 +18,10 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.BDDMockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
@@ -32,7 +34,6 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 
-import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -56,7 +57,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		this.traceAsyncListenableTaskExecutor.submitListenable(aRunnable());
 
 		BDDMockito.then(this.delegate).should().submitListenable(
-				BDDMockito.<Runnable>argThat(instanceOf(TraceRunnable.class)));
+				BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))));
 	}
 
 	@Test
@@ -64,7 +65,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		this.traceAsyncListenableTaskExecutor.submitListenable(aCallable());
 
 		BDDMockito.then(this.delegate).should().submitListenable(
-				BDDMockito.<Callable<?>>argThat(instanceOf(TraceCallable.class)));
+				BDDMockito.argThat(matcher(Callable.class, instanceOf(TraceCallable.class))));
 	}
 
 	@Test
@@ -72,7 +73,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		this.traceAsyncListenableTaskExecutor.execute(aRunnable());
 
 		BDDMockito.then(this.delegate).should()
-				.execute(BDDMockito.<Runnable>argThat(instanceOf(TraceRunnable.class)));
+				.execute(BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))));
 	}
 
 	@Test
@@ -80,7 +81,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		this.traceAsyncListenableTaskExecutor.execute(aRunnable(), 1L);
 
 		BDDMockito.then(this.delegate).should().execute(
-				BDDMockito.<Runnable>argThat(instanceOf(TraceRunnable.class)),
+				BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))),
 				BDDMockito.anyLong());
 	}
 
@@ -89,7 +90,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		this.traceAsyncListenableTaskExecutor.submit(aCallable());
 
 		BDDMockito.then(this.delegate).should()
-				.submit(BDDMockito.<Callable<?>>argThat(instanceOf(TraceCallable.class)));
+				.submit(BDDMockito.argThat(matcher(Callable.class, instanceOf(TraceCallable.class))));
 	}
 
 	@Test
@@ -97,7 +98,15 @@ public class TraceAsyncListenableTaskExecutorTest {
 		this.traceAsyncListenableTaskExecutor.submit(aRunnable());
 
 		BDDMockito.then(this.delegate).should()
-				.submit(BDDMockito.<Runnable>argThat(instanceOf(TraceRunnable.class)));
+				.submit(BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))));
+	}
+
+	Predicate<Object> instanceOf(Class clazz) {
+		return (argument) -> argument.getClass().isAssignableFrom(clazz);
+	}
+
+	<T> ArgumentMatcher<T> matcher(Class<T> clazz, Predicate predicate) {
+		return predicate::test;
 	}
 
 	Runnable aRunnable() {
