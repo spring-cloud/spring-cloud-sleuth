@@ -169,7 +169,7 @@ public class TraceFilter extends GenericFilterBean {
 			filterChain.doFilter(request, new TraceHttpServletResponse(response, spanFromRequest));
 		} catch (Throwable e) {
 			exception = e;
-			tracer().addTag(Span.SPAN_ERROR_TAG_NAME, errorParser().parseError(e));
+			errorParser().parseErrorTags(tracer().getCurrentSpan(), e);
 			throw e;
 		} finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {

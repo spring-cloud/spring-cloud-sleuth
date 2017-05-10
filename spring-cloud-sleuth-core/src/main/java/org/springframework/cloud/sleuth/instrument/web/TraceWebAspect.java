@@ -157,7 +157,7 @@ public class TraceWebAspect {
 		Span currentSpan = this.tracer.getCurrentSpan();
 		try {
 			if (!currentSpan.tags().containsKey(Span.SPAN_ERROR_TAG_NAME)) {
-				this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, this.errorParser.parseError(ex));
+				this.errorParser.parseErrorTags(currentSpan, ex);
 			}
 			return pjp.proceed();
 		} finally {

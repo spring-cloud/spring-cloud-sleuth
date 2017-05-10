@@ -1,8 +1,9 @@
 package org.springframework.cloud.sleuth;
 
 /**
- * Contract for parsing errors. For the given exception will produce a message
- * that will be then added as a {@link Span#SPAN_ERROR_TAG_NAME} tag to the Span.
+ * Contract for hooking into process of adding error response tags.
+ * This interface is only called when an exception is thrown upon receiving a response.
+ * (e.g. a response of 500 may not be an exception).
  *
  * @author Marcin Grzejszczak
  * @since 1.2.1
@@ -10,7 +11,10 @@ package org.springframework.cloud.sleuth;
 public interface ErrorParser {
 
 	/**
-	 * Returns a {@link String} representation of a {@link Throwable}
+	 * Allows setting of tags when an exception was thrown when the response was received.
+	 *
+	 * @param span - current span in context
+	 * @param error - error that was thrown upon receiving a response
 	 */
-	String parseError(Throwable error);
+	void parseErrorTags(Span span, Throwable error);
 }

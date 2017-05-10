@@ -293,7 +293,7 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 			if (log.isDebugEnabled()) {
 				log.debug("The callback failed - will close the span");
 			}
-			this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, this.errorParser.parseError(ex));
+			this.errorParser.parseErrorTags(currentSpan(), ex);
 			finish();
 		}
 

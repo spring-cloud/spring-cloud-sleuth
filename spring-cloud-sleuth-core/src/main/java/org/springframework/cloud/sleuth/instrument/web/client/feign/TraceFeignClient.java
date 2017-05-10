@@ -155,7 +155,7 @@ class TraceFeignClient implements Client {
 	private void logError(Exception e) {
 		Span span = getTracer().getCurrentSpan();
 		if (span != null) {
-			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, getErrorParser().parseError(e));
+			getErrorParser().parseErrorTags(span, e);
 		}
 	}
 

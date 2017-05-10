@@ -129,7 +129,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private void addErrorTag(Exception ex) {
 		if (ex != null) {
-			getTracer().addTag(Span.SPAN_ERROR_TAG_NAME, getErrorParser().parseError(ex));
+			getErrorParser().parseErrorTags(getTracer().getCurrentSpan(), ex);
 		}
 	}
 

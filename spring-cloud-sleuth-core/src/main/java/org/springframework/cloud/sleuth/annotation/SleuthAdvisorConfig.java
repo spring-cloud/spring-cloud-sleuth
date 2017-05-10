@@ -263,7 +263,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 			if (hasLog) {
 				logEvent(span, log + ".afterFailure");
 			}
-			tracer().addTag(Span.SPAN_ERROR_TAG_NAME, errorParser().parseError(e));
+			errorParser().parseErrorTags(tracer().getCurrentSpan(), e);
 			throw e;
 		} finally {
 			if (span != null) {

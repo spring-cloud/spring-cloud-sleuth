@@ -72,7 +72,7 @@ public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterc
 			if (log.isDebugEnabled()) {
 				log.debug("Exception occurred while trying to execute the request. Will close the span [" + currentSpan() + "]", e);
 			}
-			this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, this.errorParser.parseError(e));
+			this.errorParser.parseErrorTags(currentSpan(), e);
 			finish();
 			throw e;
 		}
