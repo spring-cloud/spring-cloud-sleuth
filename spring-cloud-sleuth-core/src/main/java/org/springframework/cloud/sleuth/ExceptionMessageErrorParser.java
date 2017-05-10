@@ -6,7 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 
 /**
- * {@link ErrorParser} that returns an exception message of a given error.
+ * {@link ErrorParser} that sets the error tag for an exportable span.
  *
  * @author Marcin Grzejszczak
  * @since 1.2.1
