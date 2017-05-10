@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;

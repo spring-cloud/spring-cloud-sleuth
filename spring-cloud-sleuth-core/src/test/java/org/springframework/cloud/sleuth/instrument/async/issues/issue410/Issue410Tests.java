@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.async.issues.issue410;
 
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 import java.lang.invoke.MethodHandles;

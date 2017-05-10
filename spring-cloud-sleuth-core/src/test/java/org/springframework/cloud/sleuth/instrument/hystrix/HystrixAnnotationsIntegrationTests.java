@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 import java.util.concurrent.atomic.AtomicReference;

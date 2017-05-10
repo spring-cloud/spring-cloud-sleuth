@@ -63,7 +63,6 @@ import com.netflix.loadbalancer.Server;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
