@@ -16,20 +16,16 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import java.lang.invoke.MethodHandles;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.*;
 import org.springframework.cloud.sleuth.log.Slf4jSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+
+import java.lang.invoke.MethodHandles;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -51,6 +47,7 @@ public class CustomLoggerTests {
 
 		then(child).hasBaggageItem("foo", "bar");
 		then(this.spanLogger.called.get()).isTrue();
+		TestSpanContextHolder.removeCurrentSpan();
 	}
 }
 
