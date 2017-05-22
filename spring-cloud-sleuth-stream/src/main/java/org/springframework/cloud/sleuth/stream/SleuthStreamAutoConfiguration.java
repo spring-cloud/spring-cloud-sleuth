@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -80,8 +82,9 @@ public class SleuthStreamAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter, Environment environment, SpanAdjuster spanAdjuster) {
-		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment, spanAdjuster);
+			SpanMetricReporter spanMetricReporter, Environment environment,
+			List<SpanAdjuster> spanAdjusters) {
+		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment, spanAdjusters);
 	}
 
 	@Bean(name = StreamSpanReporter.POLLER)

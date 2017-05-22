@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -35,8 +37,8 @@ import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.core.env.Environment;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -84,8 +86,8 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
-			Environment environment, SpanAdjuster spanAdjuster) {
-		return new ZipkinSpanListener(reporter, endpointLocator, environment, spanAdjuster);
+			Environment environment, List<SpanAdjuster> spanAdjusters) {
+		return new ZipkinSpanListener(reporter, endpointLocator, environment, spanAdjusters);
 	}
 
 	@Configuration

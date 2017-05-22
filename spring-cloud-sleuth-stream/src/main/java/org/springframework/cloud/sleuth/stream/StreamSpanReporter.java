@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.stream;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,7 +64,7 @@ public class StreamSpanReporter implements SpanReporter {
 	private final HostLocator endpointLocator;
 	private final SpanMetricReporter spanMetricReporter;
 	private final Environment environment;
-	private final SpanAdjuster spanAdjuster;
+	private final List<SpanAdjuster> spanAdjusters;
 
 	@Deprecated
 	public StreamSpanReporter(HostLocator endpointLocator,
@@ -74,15 +75,15 @@ public class StreamSpanReporter implements SpanReporter {
 	@Deprecated
 	public StreamSpanReporter(HostLocator endpointLocator,
 			SpanMetricReporter spanMetricReporter, Environment environment) {
-		this(endpointLocator, spanMetricReporter, environment, new NoOpSpanAdjuster());
+		this(endpointLocator, spanMetricReporter, environment, Collections.<SpanAdjuster>singletonList(new NoOpSpanAdjuster()));
 	}
 
 	public StreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter, Environment environment, SpanAdjuster spanAdjuster) {
+			SpanMetricReporter spanMetricReporter, Environment environment, List<SpanAdjuster> spanAdjusters) {
 		this.endpointLocator = endpointLocator;
 		this.spanMetricReporter = spanMetricReporter;
 		this.environment = environment;
-		this.spanAdjuster = spanAdjuster;
+		this.spanAdjusters = spanAdjusters;
 	}
 
 	public void setQueue(BlockingQueue<Span> queue) {
@@ -117,7 +118,9 @@ public class StreamSpanReporter implements SpanReporter {
 				if (this.environment != null) {
 					processLogs(spanToReport);
 				}
-				spanToReport = this.spanAdjuster.adjust(spanToReport);
+				for (SpanAdjuster adjuster : this.spanAdjusters) {
+					spanToReport = adjuster.adjust(spanToReport);
+				}
 				this.queue.add(spanToReport);
 			} catch (Exception e) {
 				this.spanMetricReporter.incrementDroppedSpans(1);

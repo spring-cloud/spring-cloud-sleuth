@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.PostConstruct;
 
@@ -297,9 +298,8 @@ public class ZipkinSpanListenerTests {
 	public void should_adjust_span_before_reporting_it() {
 		this.parent.logEvent(Span.CLIENT_RECV);
 		ZipkinSpanListener spanListener = new ZipkinSpanListener(this.spanReporter,
-				this.endpointLocator, null, span -> Span.builder().from(span)
-						.name("foo")
-						.build());
+				this.endpointLocator, null, Collections.<SpanAdjuster>singletonList(
+						span -> Span.builder().from(span).name("foo").build()));
 
 		zipkin.Span result = spanListener.convert(this.parent);
 

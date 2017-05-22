@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.mock.env.MockEnvironment;
 
@@ -96,7 +98,7 @@ public class StreamSpanReporterTests {
 	@SuppressWarnings("unchecked")
 	public void should_adjust_span_before_reporting_it() throws Exception {
 		this.reporter = new StreamSpanReporter(this.endpointLocator, this.spanMetricReporter, null,
-				span -> Span.builder().from(span).name("foo").build());
+				Collections.<SpanAdjuster>singletonList(span -> Span.builder().from(span).name("foo").build()));
 		LinkedBlockingQueue<Span> queue = new LinkedBlockingQueue<>(1000);
 		this.reporter.setQueue(queue);
 		Span span = Span.builder().name("bar").exportable(true).build();
