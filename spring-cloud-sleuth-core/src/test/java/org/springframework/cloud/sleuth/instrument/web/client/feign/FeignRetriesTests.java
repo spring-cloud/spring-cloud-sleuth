@@ -16,6 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import feign.Client;
+import feign.Feign;
+import feign.FeignException;
+import feign.Request;
+import feign.RequestLine;
+import feign.Response;
+import okhttp3.mockwebserver.MockWebServer;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -32,10 +40,12 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.ZipkinHttpSpanInjector;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
@@ -44,14 +54,6 @@ import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
-
-import feign.Client;
-import feign.Feign;
-import feign.FeignException;
-import feign.Request;
-import feign.RequestLine;
-import feign.Response;
-import okhttp3.mockwebserver.MockWebServer;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -81,6 +83,7 @@ public class FeignRetriesTests {
 		BDDMockito.given(this.beanFactory.getBean(HttpSpanInjector.class))
 				.willReturn(new ZipkinHttpSpanInjector());
 		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
+		BDDMockito.given(this.beanFactory.getBean(ErrorParser.class)).willReturn(new ExceptionMessageErrorParser());
 	}
 
 	@Test

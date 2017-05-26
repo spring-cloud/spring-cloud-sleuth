@@ -26,12 +26,13 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.SpanContinuingTraceCallable;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 /**
@@ -76,11 +77,22 @@ public class TraceWebAspect {
 	private final Tracer tracer;
 	private final SpanNamer spanNamer;
 	private final TraceKeys traceKeys;
+	private final ErrorParser errorParser;
 
+	@Deprecated
 	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer, TraceKeys traceKeys) {
 		this.tracer = tracer;
 		this.spanNamer = spanNamer;
 		this.traceKeys = traceKeys;
+		this.errorParser = new ExceptionMessageErrorParser();
+	}
+
+	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer, TraceKeys traceKeys,
+			ErrorParser errorParser) {
+		this.tracer = tracer;
+		this.spanNamer = spanNamer;
+		this.traceKeys = traceKeys;
+		this.errorParser = errorParser;
 	}
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
@@ -145,7 +157,7 @@ public class TraceWebAspect {
 		Span currentSpan = this.tracer.getCurrentSpan();
 		try {
 			if (!currentSpan.tags().containsKey(Span.SPAN_ERROR_TAG_NAME)) {
-				this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
+				this.errorParser.parseErrorTags(currentSpan, ex);
 			}
 			return pjp.proceed();
 		} finally {
