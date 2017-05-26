@@ -144,7 +144,7 @@ public class TraceWebAspect {
 			HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Throwable {
 		Span currentSpan = this.tracer.getCurrentSpan();
 		try {
-			if (!currentSpan.tags().containsKey(Span.SPAN_ERROR_TAG_NAME)) {
+			if (currentSpan != null && !currentSpan.tags().containsKey(Span.SPAN_ERROR_TAG_NAME)) {
 				this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
 			}
 			return pjp.proceed();
