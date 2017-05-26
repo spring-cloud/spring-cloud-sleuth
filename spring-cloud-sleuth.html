@@ -630,7 +630,7 @@ will receive the whole time needed by the client to receive the response from th
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Trace Id = X
+<pre class="prettyprint highlight"><code>Trace Id = X
 Span Id = D
 Client Sent</code></pre>
 </div>
@@ -776,7 +776,7 @@ setting proper tags on the span which Zipkin can properly colorize. You could se
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>service1.log:2016-02-26 11:15:47.561  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
+<pre class="prettyprint highlight"><code>service1.log:2016-02-26 11:15:47.561  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
 service2.log:2016-02-26 11:15:47.710  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Hello from service2. Calling service3 and then service4
 service3.log:2016-02-26 11:15:47.895  INFO [service3,2485ec27856c56f4,1210be13194bfe5,true] 68060 --- [nio-8083-exec-1] i.s.c.sleuth.docs.service3.Application   : Hello from service3
 service2.log:2016-02-26 11:15:47.924  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service3 [Hello from service3]
@@ -800,7 +800,7 @@ Kibana would look like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>filter {
+<pre class="prettyprint highlight"><code>filter {
        # pattern matching logback pattern
        grok {
               match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
@@ -822,7 +822,7 @@ If you want to use Grok together with the logs from Cloud Foundry you have to us
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>filter {
+<pre class="prettyprint highlight"><code>filter {
        # pattern matching logback pattern
        grok {
               match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
@@ -870,7 +870,7 @@ we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</co
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre class="prettyprint highlight"><code class="language-xml" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;configuration&gt;
 	&lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
 	​
@@ -994,7 +994,7 @@ to exceeding transport-level message or header capacity.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Span initialSpan = this.tracer.createSpan("span");
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">Span initialSpan = this.tracer.createSpan("span");
 initialSpan.setBaggageItem("foo", "bar");</code></pre>
 </div>
 </div>
@@ -1013,7 +1013,7 @@ can search by tag to find the trace, where there exists a span having the search
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Autowired Tracer tracer;
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Autowired Tracer tracer;
 
 Span span = tracer.getCurrentSpan();
 String baggageKey = "key";
@@ -1036,7 +1036,7 @@ the <code>spring-cloud-starter-sleuth</code> module to your project.</p>
 <div class="listingblock primary">
 <div class="title">Maven</div>
 <div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
+<pre class="prettyprint highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
          &lt;dependencies&gt;
              &lt;dependency&gt;
                  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
@@ -1068,7 +1068,7 @@ the Spring BOM</p>
 <div class="listingblock secondary">
 <div class="title">Gradle</div>
 <div class="content">
-<pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
     }
@@ -1099,7 +1099,7 @@ the Spring BOM</p>
 <div class="listingblock primary">
 <div class="title">Maven</div>
 <div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
+<pre class="prettyprint highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
          &lt;dependencies&gt;
              &lt;dependency&gt;
                  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
@@ -1131,7 +1131,7 @@ the Spring BOM</p>
 <div class="listingblock secondary">
 <div class="title">Gradle</div>
 <div class="content">
-<pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
     }
@@ -1162,7 +1162,7 @@ the Spring BOM</p>
 <div class="listingblock primary">
 <div class="title">Maven</div>
 <div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
+<pre class="prettyprint highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
          &lt;dependencies&gt;
              &lt;dependency&gt;
                  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
@@ -1209,7 +1209,7 @@ the Spring BOM</p>
 <div class="listingblock secondary">
 <div class="title">Gradle</div>
 <div class="content">
-<pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
     }
@@ -1250,7 +1250,7 @@ dependency</p>
 <div class="listingblock primary">
 <div class="title">Maven</div>
 <div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
+<pre class="prettyprint highlight"><code class="language-xml" data-lang="xml">&lt;dependencyManagement&gt; <b class="conum">(1)</b>
          &lt;dependencies&gt;
              &lt;dependency&gt;
                  &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
@@ -1297,7 +1297,7 @@ the Spring BOM</p>
 <div class="listingblock secondary">
 <div class="title">Gradle</div>
 <div class="content">
-<pre class="highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">dependencyManagement { <b class="conum">(1)</b>
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
     }
@@ -1333,7 +1333,7 @@ the Spring BOM</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">package example;
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">package example;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -1531,7 +1531,7 @@ For backwards compatibility reasons we&#8217;re not changing the property name.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Bean
 public Sampler defaultSampler() {
 	return new AlwaysSampler();
 }</code></pre>
@@ -1650,7 +1650,7 @@ Spring creates the instance of <code>Tracer</code> for you. In order to use it a
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// Start a span. If there was a span present in this thread it will become
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">// Start a span. If there was a span present in this thread it will become
 // the `newSpan`'s parent.
 Span newSpan = this.tracer.createSpan("calculateTax");
 try {
@@ -1720,7 +1720,7 @@ only a technical implementation detail that you wouldn&#8217;t necessarily want 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Span continuedSpan = this.tracer.continueSpan(spanToContinue);
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">Span continuedSpan = this.tracer.continueSpan(spanToContinue);
 assertThat(continuedSpan).isEqualTo(spanToContinue);</code></pre>
 </div>
 </div>
@@ -1729,7 +1729,7 @@ assertThat(continuedSpan).isEqualTo(spanToContinue);</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// let's assume that we're in a thread Y and we've received
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">// let's assume that we're in a thread Y and we've received
 // the `initialSpan` from thread X
 Span continuedSpan = this.tracer.continueSpan(initialSpan);
 try {
@@ -1771,7 +1771,7 @@ Let&#8217;s assume that the parent of a span is in one thread and you want to st
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// let's assume that we're in a thread Y and we've received
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">// let's assume that we're in a thread Y and we've received
 // the `initialSpan` from thread X. `initialSpan` will be the parent
 // of the `newSpan`
 Span newSpan = this.tracer.createSpan("calculateCommission", initialSpan);
@@ -1841,7 +1841,7 @@ artificial like:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@SpanName("calculateTax")
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@SpanName("calculateTax")
 class TaxCountingRunnable implements Runnable {
 
 	@Override public void run() {
@@ -1855,7 +1855,7 @@ class TaxCountingRunnable implements Runnable {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Runnable runnable = new TraceRunnable(tracer, spanNamer, new TaxCountingRunnable());
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">Runnable runnable = new TraceRunnable(tracer, spanNamer, new TaxCountingRunnable());
 Future&lt;?&gt; future = executorService.submit(runnable);
 // ... some additional logic ...
 future.get();</code></pre>
@@ -1877,7 +1877,7 @@ we&#8217;re checking if the class has a custom implementation of the <code>toStr
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Runnable runnable = new TraceRunnable(tracer, spanNamer, new Runnable() {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">Runnable runnable = new TraceRunnable(tracer, spanNamer, new Runnable() {
 	@Override public void run() {
 		// perform logic
 	}
@@ -1957,7 +1957,7 @@ fashion.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@NewSpan
 void testMethod();</code></pre>
 </div>
 </div>
@@ -1967,7 +1967,7 @@ will be equal to annotated method name.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan("customNameOnTestMethod4")
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@NewSpan("customNameOnTestMethod4")
 void testMethod4();</code></pre>
 </div>
 </div>
@@ -1977,7 +1977,7 @@ the created span will have the name as the provided value.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// method declaration
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">// method declaration
 @NewSpan(name = "customNameOnTestMethod5")
 void testMethod5(@SpanTag("testTag") String param);
 
@@ -1992,7 +1992,7 @@ the tag key will be <code>testTag</code> and the tag value will be <code>test</c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan(name = "customNameOnTestMethod3")
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@NewSpan(name = "customNameOnTestMethod3")
 @Override
 public void testMethod3() {
 }</code></pre>
@@ -2013,7 +2013,7 @@ with the <code>@NewSpan</code> annotation you can also add logs via the <code>lo
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// method declaration
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">// method declaration
 @ContinueSpan(log = "testMethod11")
 void testMethod11(@SpanTag("testTag11") String param);
 
@@ -2069,7 +2069,7 @@ Its class name has to be passed as the value of the <code>resolver</code> attrib
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@NewSpan
 public void getAnnotationForTagValueResolver(@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
 }</code></pre>
 </div>
@@ -2079,7 +2079,7 @@ public void getAnnotationForTagValueResolver(@SpanTag(key = "test", resolver = T
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Bean(name = "myCustomTagValueResolver")
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Bean(name = "myCustomTagValueResolver")
 public TagValueResolver tagValueResolver() {
 	return parameter -&gt; "Value from myCustomTagValueResolver";
 }</code></pre>
@@ -2096,7 +2096,7 @@ public TagValueResolver tagValueResolver() {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@NewSpan
 public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "length() + ' characters'") String test) {
 }</code></pre>
 </div>
@@ -2114,7 +2114,7 @@ of the bean.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@NewSpan
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@NewSpan
 public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 }</code></pre>
 </div>
@@ -2222,7 +2222,7 @@ you have</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpSpanExtractor implements HttpSpanExtractor {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">static class CustomHttpSpanExtractor implements HttpSpanExtractor {
 
 	@Override public Span joinTrace(SpanTextMap carrier) {
 		Map&lt;String, String&gt; map = TextMapUtil.asMap(carrier);
@@ -2250,7 +2250,7 @@ static class CustomHttpSpanInjector implements HttpSpanInjector {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Bean
 HttpSpanInjector customHttpSpanInjector() {
 	return new CustomHttpSpanInjector();
 }
@@ -2267,7 +2267,7 @@ that injects the headers into the Http Response and a Servlet filter which makes
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">static class CustomHttpServletResponseSpanInjector extends ZipkinHttpSpanInjector {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">static class CustomHttpServletResponseSpanInjector extends ZipkinHttpSpanInjector {
 
 	@Override
 	public void inject(Span span, SpanTextMap carrier) {
@@ -2325,7 +2325,7 @@ static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Bean HttpSpanInjector customHttpServletResponseSpanInjector() {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Bean HttpSpanInjector customHttpServletResponseSpanInjector() {
 	return new CustomHttpServletResponseSpanInjector();
 }
 
@@ -2345,7 +2345,7 @@ Below you can see an example of a call to Redis that is wrapped in such a span.<
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
 try {
 	newSpan.tag("redis.op", "get");
 	newSpan.tag("lc", "redis");
@@ -2385,7 +2385,7 @@ Remember not to add both <code>peer.service</code> tag and the <code>SA</code> t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.service.name: foo</code></pre>
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.service.name: foo</code></pre>
 </div>
 </div>
 </div>
@@ -2404,7 +2404,7 @@ of tags. Implementation of the <code>SpanAdjuster</code> interface can be used t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">@Bean
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">@Bean
 SpanAdjuster customSpanAdjuster() {
     return span -&gt; span.toBuilder().name(scrub(span.getName())).build();
 }</code></pre>
@@ -2441,7 +2441,7 @@ Stream based span reporting).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.locator.discovery.enabled: true</code></pre>
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.locator.discovery.enabled: true</code></pre>
 </div>
 </div>
 </div>
@@ -2468,7 +2468,7 @@ for the Span data and pushing it into a Zipkin <code>SpanStore</code>. This appl
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@SpringBootApplication
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@SpringBootApplication
 @EnableZipkinStreamServer
 public class Consumer {
 	public static void main(String[] args) {
@@ -2485,7 +2485,7 @@ starters exist for Redis and Kafka). If you add the following UI dependency</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;groupId&gt;io.zipkin.java&lt;/groupId&gt;
+<pre class="prettyprint highlight"><code class="language-xml" data-lang="xml">&lt;groupId&gt;io.zipkin.java&lt;/groupId&gt;
 &lt;artifactId&gt;zipkin-autoconfigure-ui&lt;/artifactId&gt;</code></pre>
 </div>
 </div>
@@ -2502,7 +2502,7 @@ started quickly). For a more robust solution you can add MySQL and
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
   datasource:
@@ -2544,7 +2544,7 @@ querying in the Zipkin Web UI.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@EnableBinding(SleuthSink.class)
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@EnableBinding(SleuthSink.class)
 @SpringBootApplication(exclude = SleuthStreamAutoConfiguration.class)
 @MessageEndpoint
 public class Consumer {
@@ -2577,7 +2577,7 @@ with name equal to <code>StreamSpanReporter.POLLER</code>. Here you can find an 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Configuration
 public static class CustomPollerConfiguration {
 
 	@Bean(name = StreamSpanReporter.POLLER)
@@ -2618,7 +2618,7 @@ the number of dropped spans will get increased.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Runnable runnable = new Runnable() {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">Runnable runnable = new Runnable() {
 	@Override
 	public void run() {
 		// do some work
@@ -2641,7 +2641,7 @@ Runnable traceRunnableFromTracer = tracer.wrap(runnable);</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Callable&lt;String&gt; callable = new Callable&lt;String&gt;() {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">Callable&lt;String&gt; callable = new Callable&lt;String&gt;() {
 	@Override
 	public String call() throws Exception {
 		return someLogic();
@@ -2681,7 +2681,7 @@ on before the Hystrix command was called. To disable the custom Hystrix Concurre
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">HystrixCommand&lt;String&gt; hystrixCommand = new HystrixCommand&lt;String&gt;(setter) {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">HystrixCommand&lt;String&gt; hystrixCommand = new HystrixCommand&lt;String&gt;(setter) {
 	@Override
 	protected String run() throws Exception {
 		return someLogic();
@@ -2695,7 +2695,7 @@ on before the Hystrix command was called. To disable the custom Hystrix Concurre
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">TraceCommand&lt;String&gt; traceCommand = new TraceCommand&lt;String&gt;(tracer, traceKeys, setter) {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">TraceCommand&lt;String&gt; traceCommand = new TraceCommand&lt;String&gt;(tracer, traceKeys, setter) {
 	@Override
 	public String doRun() throws Exception {
 		return someLogic();
@@ -2797,7 +2797,7 @@ wrap <code>ThreadPoolTaskScheduler</code> in a <code>TraceAsyncListenableTaskExe
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@EnableAutoConfiguration
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@EnableAutoConfiguration
 @Configuration
 public static class TestConfiguration {
 
@@ -2826,7 +2826,7 @@ can see an example of how to set up such a custom <code>AsyncRestTemplate</code>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Configuration
 @EnableAutoConfiguration
 static class Config {
 	@Autowired Tracer tracer;
@@ -2947,7 +2947,7 @@ are creating Spans each time a new task is submitted, invoked or scheduled.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">CompletableFuture&lt;Long&gt; completableFuture = CompletableFuture.supplyAsync(() -&gt; {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">CompletableFuture&lt;Long&gt; completableFuture = CompletableFuture.supplyAsync(() -&gt; {
 	// perform some logic
 	return 1_000_000L;
 }, new TraceableExecutorService(executorService,
@@ -2963,7 +2963,7 @@ can see an example of how to set up such a custom <code>Executor</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Configuration
 @EnableAutoConfiguration
 @EnableAsync
 static class CustomExecutorConfig extends AsyncConfigurerSupport {
@@ -3040,5 +3040,8 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 </div>
 </div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js"></script>
+<script>prettyPrint()</script>
 </body>
 </html>
