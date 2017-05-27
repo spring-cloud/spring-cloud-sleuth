@@ -33,28 +33,28 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 			}
 			return;
 		}
-		addHeaders(span, carrier);
+		addHeaders(map, span, carrier);
 	}
 
 	private boolean isSampled(Map<String, String> initialMessage, String sampledHeaderName) {
 		return Span.SPAN_SAMPLED.equals(initialMessage.get(sampledHeaderName));
 	}
 
-	private void addHeaders(Span span, SpanTextMap textMap) {
-		addHeader(textMap, TraceMessageHeaders.TRACE_ID_NAME, span.traceIdString());
-		addHeader(textMap, TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
+	private void addHeaders(Map<String, String> map, Span span, SpanTextMap textMap) {
+		addHeader(map, textMap, TraceMessageHeaders.TRACE_ID_NAME, span.traceIdString());
+		addHeader(map, textMap, TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
 		if (span.isExportable()) {
 			addAnnotations(this.traceKeys, textMap, span);
 			Long parentId = getFirst(span.getParents());
 			if (parentId != null) {
-				addHeader(textMap, TraceMessageHeaders.PARENT_ID_NAME, Span.idToHex(parentId));
+				addHeader(map, textMap, TraceMessageHeaders.PARENT_ID_NAME, Span.idToHex(parentId));
 			}
-			addHeader(textMap, TraceMessageHeaders.SPAN_NAME_NAME, span.getName());
-			addHeader(textMap, TraceMessageHeaders.PROCESS_ID_NAME, span.getProcessId());
-			addHeader(textMap, TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_SAMPLED);
+			addHeader(map, textMap, TraceMessageHeaders.SPAN_NAME_NAME, span.getName());
+			addHeader(map, textMap, TraceMessageHeaders.PROCESS_ID_NAME, span.getProcessId());
+			addHeader(map, textMap, TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_SAMPLED);
 		}
 		else {
-			addHeader(textMap, TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
+			addHeader(map, textMap, TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
 		}
 		for (Map.Entry<String, String> entry : span.baggageItems()) {
 			textMap.put(prefixedKey(entry.getKey()), entry.getValue());
@@ -92,8 +92,8 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 		}
 	}
 
-	private void addHeader(SpanTextMap textMap, String name, String value) {
-		if (StringUtils.hasText(value)) {
+	private void addHeader(Map<String, String> map, SpanTextMap textMap, String name, String value) {
+		if (StringUtils.hasText(value) && !map.containsKey(name)) {
 			textMap.put(name, value);
 		}
 	}
