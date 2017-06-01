@@ -74,7 +74,7 @@ public class HttpTraceKeysInjector {
 	private void addRequestTagsFromHeaders(Map<String, ? extends Collection<String>> headers) {
 		for (String name : this.traceKeys.getHttp().getHeaders()) {
 			Collection<String> values = headers.get(name);
-			if(values != null) {
+			if (values != null) {
 				addTagForEntry(name, values);
 			}
 		}
