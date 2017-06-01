@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,8 @@ import org.springframework.web.client.RestTemplate;
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 public class ZipkinAutoConfiguration {
 
+	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
+
 	@Bean
 	@ConditionalOnMissingBean
 	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin,
@@ -86,8 +89,8 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	public SpanReporter zipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
-			Environment environment, List<SpanAdjuster> spanAdjusters) {
-		return new ZipkinSpanListener(reporter, endpointLocator, environment, spanAdjusters);
+			Environment environment) {
+		return new ZipkinSpanListener(reporter, endpointLocator, environment, this.spanAdjusters);
 	}
 
 	@Configuration

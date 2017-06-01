@@ -16,74 +16,75 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class DiscoveryClientEndpointLocatorConfigurationTest {
 
-    @Test
-    public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
-        ConfigurableApplicationContext ctxt = new SpringApplication(
-                EmptyConfiguration.class).run();
-        assertThat(ctxt.getBean(EndpointLocator.class))
-                .isInstanceOf(ServerPropertiesEndpointLocator.class);
-        ctxt.close();
-    }
+	@Test
+	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
+		ConfigurableApplicationContext ctxt = new SpringApplication(
+				EmptyConfiguration.class).run("--spring.jmx.enabled=false");
+		assertThat(ctxt.getBean(EndpointLocator.class))
+				.isInstanceOf(ServerPropertiesEndpointLocator.class);
+		ctxt.close();
+	}
 
-    @Test
-    public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
-        ConfigurableApplicationContext ctxt = new SpringApplication(
-                ConfigurationWithDiscoveryClient.class).run();
-        assertThat(ctxt.getBean(EndpointLocator.class))
-                .isInstanceOf(ServerPropertiesEndpointLocator.class);
-        ctxt.close();
-    }
+	@Test
+	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
+		ConfigurableApplicationContext ctxt = new SpringApplication(
+				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false");
+		assertThat(ctxt.getBean(EndpointLocator.class))
+				.isInstanceOf(ServerPropertiesEndpointLocator.class);
+		ctxt.close();
+	}
 
-    @Test
-    public void endpointLocatorShouldRespectExistingEndpointLocator() {
-        ConfigurableApplicationContext ctxt = new SpringApplication(
-                ConfigurationWithCustomLocator.class).run();
-        assertThat(ctxt.getBean(EndpointLocator.class))
-                .isSameAs(ConfigurationWithCustomLocator.locator);
-        ctxt.close();
-    }
+	@Test
+	public void endpointLocatorShouldRespectExistingEndpointLocator() {
+		ConfigurableApplicationContext ctxt = new SpringApplication(
+				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false");
+		assertThat(ctxt.getBean(EndpointLocator.class))
+				.isSameAs(ConfigurationWithCustomLocator.locator);
+		ctxt.close();
+	}
 
-    @Test
-    public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
-        ConfigurableApplicationContext ctxt = new SpringApplication(
-                ConfigurationWithDiscoveryClient.class).run("--spring.zipkin.locator.discovery.enabled=true");
-        assertThat(ctxt.getBean(EndpointLocator.class))
-                .isInstanceOf(FallbackHavingEndpointLocator.class);
-        ctxt.close();
-    }
+	@Test
+	public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
+		ConfigurableApplicationContext ctxt = new SpringApplication(
+				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false",
+				"--spring.zipkin.locator.discovery.enabled=true");
+		assertThat(ctxt.getBean(EndpointLocator.class))
+				.isInstanceOf(FallbackHavingEndpointLocator.class);
+		ctxt.close();
+	}
 
-    @Test
-    public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
-        ConfigurableApplicationContext ctxt = new SpringApplication(
-                ConfigurationWithDiscoveryClient.class,ConfigurationWithCustomLocator.class).run("--spring.zipkin.locator.discovery.enabled=true");
-        assertThat(ctxt.getBean(EndpointLocator.class))
-                .isSameAs(ConfigurationWithCustomLocator.locator);
-        ctxt.close();
-    }
+	@Test
+	public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
+		ConfigurableApplicationContext ctxt = new SpringApplication(
+				ConfigurationWithDiscoveryClient.class,
+				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false",
+				"--spring.zipkin.locator.discovery.enabled=true");
+		assertThat(ctxt.getBean(EndpointLocator.class))
+				.isSameAs(ConfigurationWithCustomLocator.locator);
+		ctxt.close();
+	}
 
-    @Configuration
-    @EnableAutoConfiguration
-    public static class EmptyConfiguration {
-    }
+	@Configuration
+	@EnableAutoConfiguration
+	public static class EmptyConfiguration {
+	}
 
-    @Configuration
-    @EnableAutoConfiguration
-    public static class ConfigurationWithDiscoveryClient {
-        @Bean
-        public DiscoveryClient getDiscoveryClient() {
-            return Mockito.mock(DiscoveryClient.class);
-        }
-    }
+	@Configuration
+	@EnableAutoConfiguration
+	public static class ConfigurationWithDiscoveryClient {
+		@Bean public DiscoveryClient getDiscoveryClient() {
+			return Mockito.mock(DiscoveryClient.class);
+		}
+	}
 
-    @Configuration
-    @EnableAutoConfiguration
-    public static class ConfigurationWithCustomLocator {
-        static EndpointLocator locator = Mockito.mock(EndpointLocator.class);
+	@Configuration
+	@EnableAutoConfiguration
+	public static class ConfigurationWithCustomLocator {
+		static EndpointLocator locator = Mockito.mock(EndpointLocator.class);
 
-        @Bean
-        public EndpointLocator getEndpointLocator() {
-            return locator;
-        }
-    }
+		@Bean public EndpointLocator getEndpointLocator() {
+			return locator;
+		}
+	}
 
 }

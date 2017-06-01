@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +68,8 @@ import org.springframework.scheduling.support.PeriodicTrigger;
 @ConditionalOnProperty(value = "spring.sleuth.stream.enabled", matchIfMissing = true)
 public class SleuthStreamAutoConfiguration {
 
+	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
+
 	@Bean
 	@ConditionalOnMissingBean
 	public Sampler defaultTraceSampler(SamplerProperties config) {
@@ -82,9 +85,9 @@ public class SleuthStreamAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter, Environment environment,
-			List<SpanAdjuster> spanAdjusters) {
-		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment, spanAdjusters);
+			SpanMetricReporter spanMetricReporter, Environment environment) {
+		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment,
+				this.spanAdjusters);
 	}
 
 	@Bean(name = StreamSpanReporter.POLLER)
