@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import org.junit.Before;
+import feign.Client;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -9,10 +9,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Tracer;
 
-import feign.Client;
-
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -24,11 +21,6 @@ public class TraceFeignObjectWrapperTests {
 	@Mock Tracer tracer;
 	@Mock BeanFactory beanFactory;
 	@InjectMocks TraceFeignObjectWrapper traceFeignObjectWrapper;
-
-	@Before
-	public void setup() {
-		given(this.beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
-	}
 
 	@Test
 	public void should_wrap_a_client_into_trace_client() throws Exception {

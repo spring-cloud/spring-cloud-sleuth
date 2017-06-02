@@ -44,7 +44,6 @@ public class FallbackHavingEndpointLocatorTests {
 	@Test
 	public void should_use_discovery_client_locator_by_default() {
 		given(this.discoveryClientEndpointLocator.local()).willReturn(this.expectedEndpoint);
-		given(this.serverPropertiesEndpointLocator.local()).willThrow(new RuntimeException());
 		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(this.discoveryClientEndpointLocator,
 				this.serverPropertiesEndpointLocator);
 

@@ -19,7 +19,7 @@ package sample;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -31,7 +31,7 @@ import org.springframework.web.client.RestTemplate;
  *
  */
 @MessageEndpoint public class SampleService implements
-		ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+		ApplicationListener<ServletWebServerInitializedEvent> {
 	private static final Log log = LogFactory.getLog(SampleService.class);
 
 	@Autowired private RestTemplate restTemplate;
@@ -43,8 +43,7 @@ import org.springframework.web.client.RestTemplate;
 		this.restTemplate.getForObject("http://localhost:" + this.port + "/foo", String.class);
 	}
 
-	@Override public void onApplicationEvent(
-			EmbeddedServletContainerInitializedEvent event) {
-		this.port = event.getEmbeddedServletContainer().getPort();
+	@Override public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+		this.port = event.getSource().getPort();
 	}
 }

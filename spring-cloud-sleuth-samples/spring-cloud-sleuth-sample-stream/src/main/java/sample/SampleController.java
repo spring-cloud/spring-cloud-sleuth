@@ -16,13 +16,10 @@
 
 package sample;
 
-import java.util.Random;
-import java.util.concurrent.Callable;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAccessor;
 import org.springframework.cloud.sleuth.Tracer;
@@ -32,12 +29,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Random;
+import java.util.concurrent.Callable;
+
 /**
  * @author Spencer Gibb
  */
 @RestController
 public class SampleController
-		implements ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+		implements ApplicationListener<ServletWebServerInitializedEvent> {
 	private static final Log log = LogFactory.getLog(SampleController.class);
 
 	@Autowired
@@ -118,7 +118,7 @@ public class SampleController
 	}
 
 	@Override
-	public void onApplicationEvent(EmbeddedServletContainerInitializedEvent event) {
-		this.port = event.getEmbeddedServletContainer().getPort();
+	public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+		this.port = event.getSource().getPort();
 	}
 }

@@ -15,32 +15,22 @@
  */
 package tools;
 
-import java.lang.invoke.MethodHandles;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.springframework.cloud.sleuth.trace.IntegrationTestSpanContextHolder;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
-
 import zipkin.Codec;
 import zipkin.Span;
+
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -71,15 +61,15 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected Runnable zipkinServerIsUp() {
-		return checkServerHealth("Zipkin Stream Server", this::endpointToCheckZipkinServerHealth);
+		return checkServerHealth(this::endpointToCheckZipkinServerHealth);
 	}
 
-	protected Runnable checkServerHealth(String appName, RequestExchanger requestExchanger) {
+	protected Runnable checkServerHealth(RequestExchanger requestExchanger) {
 		return () -> {
 			ResponseEntity<String> response = requestExchanger.exchange();
-			log.info(String.format("Response from the [%s] health endpoint is [%s]", appName, response));
+			log.info(String.format("Response from the [%s] health endpoint is [%s]", "Zipkin Stream Server", response));
 			then(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-			log.info(String.format("[%s] is up!", appName));
+			log.info(String.format("[%s] is up!", "Zipkin Stream Server"));
 		};
 	}
 
@@ -88,7 +78,7 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected ResponseEntity<String> endpointToCheckZipkinServerHealth() {
-		URI uri = URI.create("http://localhost:" +getZipkinServerPort()+"/health");
+		URI uri = URI.create("http://localhost:" +getZipkinServerPort()+"/application/health");
 		log.info(String.format("Sending request to the Zipkin Server [%s]", uri));
 		return exchangeRequest(uri);
 	}
