@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.regex.Pattern;
-
 import org.junit.Test;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration.SkipPatternProviderConfig;
+
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -46,7 +46,7 @@ public class SkipPatternProviderConfigTest {
 
 		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), sleuthWebProperties);
 
-		then(pattern.pattern()).isEqualTo("foo.*|bar.*");
+		then(pattern.pattern()).isEqualTo("foo.*|bar.*|/application.*");
 	}
 
 	@Test
@@ -65,7 +65,13 @@ public class SkipPatternProviderConfigTest {
 		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
 		sleuthWebProperties.setSkipPattern("");
 
-		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), sleuthWebProperties);
+		Pattern pattern = SkipPatternProviderConfig.getPatternForManagementServerProperties(
+				new ManagementServerProperties() {
+					@Override
+					public String getContextPath() {
+						return "";
+					}
+				}, sleuthWebProperties);
 
 		then(pattern.pattern()).isEqualTo(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 	}

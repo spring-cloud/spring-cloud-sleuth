@@ -16,24 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.function.Predicate;
-
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.BDDMockito;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.TraceCallable;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.TraceRunnable;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.*;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 
+import java.util.Random;
+import java.util.concurrent.Callable;
+
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -56,32 +50,28 @@ public class TraceAsyncListenableTaskExecutorTest {
 	public void should_submit_listenable_trace_runnable() throws Exception {
 		this.traceAsyncListenableTaskExecutor.submitListenable(aRunnable());
 
-		BDDMockito.then(this.delegate).should().submitListenable(
-				BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))));
+		BDDMockito.then(this.delegate).should().submitListenable(any(TraceRunnable.class));
 	}
 
 	@Test
 	public void should_submit_listenable_trace_callable() throws Exception {
 		this.traceAsyncListenableTaskExecutor.submitListenable(aCallable());
 
-		BDDMockito.then(this.delegate).should().submitListenable(
-				BDDMockito.argThat(matcher(Callable.class, instanceOf(TraceCallable.class))));
+		BDDMockito.then(this.delegate).should().submitListenable(any(TraceCallable.class));
 	}
 
 	@Test
 	public void should_execute_a_trace_runnable() throws Exception {
 		this.traceAsyncListenableTaskExecutor.execute(aRunnable());
 
-		BDDMockito.then(this.delegate).should()
-				.execute(BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))));
+		BDDMockito.then(this.delegate).should().execute(any(TraceRunnable.class));
 	}
 
 	@Test
 	public void should_execute_with_timeout_a_trace_runnable() throws Exception {
 		this.traceAsyncListenableTaskExecutor.execute(aRunnable(), 1L);
 
-		BDDMockito.then(this.delegate).should().execute(
-				BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))),
+		BDDMockito.then(this.delegate).should().execute(any(TraceRunnable.class),
 				BDDMockito.anyLong());
 	}
 
@@ -89,24 +79,14 @@ public class TraceAsyncListenableTaskExecutorTest {
 	public void should_submit_trace_callable() throws Exception {
 		this.traceAsyncListenableTaskExecutor.submit(aCallable());
 
-		BDDMockito.then(this.delegate).should()
-				.submit(BDDMockito.argThat(matcher(Callable.class, instanceOf(TraceCallable.class))));
+		BDDMockito.then(this.delegate).should().submit(any(TraceCallable.class));
 	}
 
 	@Test
 	public void should_submit_trace_runnable() throws Exception {
 		this.traceAsyncListenableTaskExecutor.submit(aRunnable());
 
-		BDDMockito.then(this.delegate).should()
-				.submit(BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))));
-	}
-
-	Predicate<Object> instanceOf(Class clazz) {
-		return (argument) -> argument.getClass().isAssignableFrom(clazz);
-	}
-
-	<T> ArgumentMatcher<T> matcher(Class<T> clazz, Predicate predicate) {
-		return predicate::test;
+		BDDMockito.then(this.delegate).should().submit(any(TraceRunnable.class));
 	}
 
 	Runnable aRunnable() {

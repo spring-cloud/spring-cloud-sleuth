@@ -27,6 +27,7 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -272,6 +273,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		@Configuration
 		static class ManagementServer {
 			@Bean
+			@Primary
 			ManagementServerProperties managementServerProperties() {
 				ManagementServerProperties managementServerProperties = new ManagementServerProperties();
 				managementServerProperties.setContextPath("/additionalContextPath");

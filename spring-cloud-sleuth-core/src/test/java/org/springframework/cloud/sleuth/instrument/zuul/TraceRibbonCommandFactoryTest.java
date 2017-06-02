@@ -39,8 +39,8 @@ import com.netflix.niws.client.http.RestClient;
 import com.netflix.zuul.context.RequestContext;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
