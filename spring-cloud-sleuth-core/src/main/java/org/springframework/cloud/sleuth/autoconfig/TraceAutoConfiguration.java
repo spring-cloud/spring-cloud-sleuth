@@ -23,6 +23,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.NoOpSpanAdjuster;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Sampler;
@@ -89,6 +91,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	public SpanAdjuster defaultSpanAdjuster() {
 		return new NoOpSpanAdjuster();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public ErrorParser defaultErrorParser() {
+		return new ExceptionMessageErrorParser();
 	}
 
 }

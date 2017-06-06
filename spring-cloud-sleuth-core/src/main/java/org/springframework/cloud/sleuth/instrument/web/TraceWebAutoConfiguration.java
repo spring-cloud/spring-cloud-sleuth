@@ -28,8 +28,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Bean;
@@ -73,8 +73,8 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	public TraceWebAspect traceWebAspect(Tracer tracer, TraceKeys traceKeys,
-			SpanNamer spanNamer) {
-		return new TraceWebAspect(tracer, spanNamer, traceKeys);
+			SpanNamer spanNamer, ErrorParser errorParser) {
+		return new TraceWebAspect(tracer, spanNamer, traceKeys, errorParser);
 	}
 
 	@Bean
@@ -95,12 +95,9 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public TraceFilter traceFilter(Tracer tracer, TraceKeys traceKeys,
-			SkipPatternProvider skipPatternProvider, SpanReporter spanReporter,
-			HttpSpanExtractor spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
-		return new TraceFilter(tracer, traceKeys, skipPatternProvider.skipPattern(),
-				spanReporter, spanExtractor, httpTraceKeysInjector);
+	public TraceFilter traceFilter(BeanFactory beanFactory,
+			SkipPatternProvider skipPatternProvider) {
+		return new TraceFilter(beanFactory, skipPatternProvider.skipPattern());
 	}
 
 	@Configuration

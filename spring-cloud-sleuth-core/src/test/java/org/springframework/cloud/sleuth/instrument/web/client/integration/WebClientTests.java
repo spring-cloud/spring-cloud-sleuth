@@ -78,7 +78,6 @@ import org.springframework.web.client.RestTemplate;
 
 import static junitparams.JUnitParamsRunner.$;
 import static org.assertj.core.api.Assertions.fail;
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)

@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,10 +34,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -769,7 +769,7 @@ public class Span implements SpanContext {
 		public Span.SpanBuilder from(Span span) {
 			return begin(span.begin).end(span.end).name(span.name)
 					.traceIdHigh(span.traceIdHigh).traceId(span.traceId)
-					.parents(span.getParents()).logs(span.logs).tags(span.tags)
+					.parents(span.getParents()).logs(span.logs).tags(span.tags).baggage(span.baggage)
 					.spanId(span.spanId).remote(span.remote).exportable(span.exportable)
 					.processId(span.processId).savedSpan(span.savedSpan);
 		}

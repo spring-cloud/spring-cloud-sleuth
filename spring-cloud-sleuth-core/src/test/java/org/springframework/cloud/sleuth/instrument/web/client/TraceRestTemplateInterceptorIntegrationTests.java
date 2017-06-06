@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
@@ -27,6 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
@@ -43,10 +48,6 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
-
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.SocketPolicy;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -69,7 +70,8 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 				new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanAccumulator, new TraceKeys());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.tracer, new ZipkinHttpSpanInjector(),
-						new HttpTraceKeysInjector(this.tracer, new TraceKeys()))));
+						new HttpTraceKeysInjector(this.tracer, new TraceKeys()),
+						new ExceptionMessageErrorParser())));
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 
