@@ -1,11 +1,11 @@
 package org.springframework.cloud.sleuth.sampler;
 
+import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.Span;
+
 import java.util.BitSet;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
 
 /**
  * This sampler is appropriate for low-traffic instrumentation (ex servers that each receive <100K
@@ -39,7 +39,7 @@ public class PercentageBasedSampler implements Sampler {
 	public boolean isSampled(Span currentSpan) {
 		if (this.configuration.getPercentage() == 0 || currentSpan == null) {
 			return false;
-		} else if (this.configuration.getPercentage() == 100) {
+		} else if (this.configuration.getPercentage() == 1.0f) {
 			return true;
 		}
 		synchronized (this) {
