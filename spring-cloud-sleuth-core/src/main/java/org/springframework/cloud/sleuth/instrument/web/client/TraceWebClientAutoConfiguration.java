@@ -16,18 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -53,9 +54,10 @@ public class TraceWebClientAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public TraceRestTemplateInterceptor traceRestTemplateInterceptor(Tracer tracer,
-			HttpSpanInjector spanInjector,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
-		return new TraceRestTemplateInterceptor(tracer, spanInjector, httpTraceKeysInjector);
+			HttpSpanInjector spanInjector, HttpTraceKeysInjector httpTraceKeysInjector,
+			ErrorParser errorParser) {
+		return new TraceRestTemplateInterceptor(tracer, spanInjector,
+				httpTraceKeysInjector, errorParser);
 	}
 
 	@Configuration

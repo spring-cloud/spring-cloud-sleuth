@@ -2,7 +2,6 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 import java.util.ArrayList;

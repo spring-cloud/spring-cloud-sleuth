@@ -24,9 +24,10 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
@@ -52,33 +53,78 @@ import org.springframework.web.client.RestTemplate;
 public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 
 	private final Tracer tracer;
+	private final ErrorParser errorParser;
 
+	@Deprecated
 	public TraceAsyncRestTemplate(Tracer tracer) {
 		super();
 		this.tracer = tracer;
+		this.errorParser = new ExceptionMessageErrorParser();
 	}
 
+	@Deprecated
 	public TraceAsyncRestTemplate(AsyncListenableTaskExecutor taskExecutor, Tracer tracer) {
 		super(taskExecutor);
 		this.tracer = tracer;
+		this.errorParser = new ExceptionMessageErrorParser();
 	}
 
+	@Deprecated
 	public TraceAsyncRestTemplate(AsyncClientHttpRequestFactory asyncRequestFactory,
 			Tracer tracer) {
 		super(asyncRequestFactory);
 		this.tracer = tracer;
+		this.errorParser = new ExceptionMessageErrorParser();
 	}
 
+	@Deprecated
 	public TraceAsyncRestTemplate(AsyncClientHttpRequestFactory asyncRequestFactory,
 			ClientHttpRequestFactory syncRequestFactory, Tracer tracer) {
 		super(asyncRequestFactory, syncRequestFactory);
 		this.tracer = tracer;
+		this.errorParser = new ExceptionMessageErrorParser();
 	}
 
+	@Deprecated
 	public TraceAsyncRestTemplate(AsyncClientHttpRequestFactory requestFactory,
 			RestTemplate restTemplate, Tracer tracer) {
 		super(requestFactory, restTemplate);
 		this.tracer = tracer;
+		this.errorParser = new ExceptionMessageErrorParser();
+	}
+
+	public TraceAsyncRestTemplate(Tracer tracer, ErrorParser errorParser) {
+		super();
+		this.tracer = tracer;
+		this.errorParser = errorParser;
+	}
+
+	public TraceAsyncRestTemplate(AsyncListenableTaskExecutor taskExecutor,
+			Tracer tracer, ErrorParser errorParser) {
+		super(taskExecutor);
+		this.tracer = tracer;
+		this.errorParser = errorParser;
+	}
+
+	public TraceAsyncRestTemplate(AsyncClientHttpRequestFactory asyncRequestFactory,
+			Tracer tracer, ErrorParser errorParser) {
+		super(asyncRequestFactory);
+		this.tracer = tracer;
+		this.errorParser = errorParser;
+	}
+
+	public TraceAsyncRestTemplate(AsyncClientHttpRequestFactory asyncRequestFactory,
+			ClientHttpRequestFactory syncRequestFactory, Tracer tracer, ErrorParser errorParser) {
+		super(asyncRequestFactory, syncRequestFactory);
+		this.tracer = tracer;
+		this.errorParser = errorParser;
+	}
+
+	public TraceAsyncRestTemplate(AsyncClientHttpRequestFactory requestFactory,
+			RestTemplate restTemplate, Tracer tracer, ErrorParser errorParser) {
+		super(requestFactory, restTemplate);
+		this.tracer = tracer;
+		this.errorParser = errorParser;
 	}
 
 	@Override
@@ -87,7 +133,8 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 			throws RestClientException {
 		final ListenableFuture<T> future = super.doExecute(url, method, requestCallback, responseExtractor);
 		final Span span = this.tracer.getCurrentSpan();
-		future.addCallback(new TraceListenableFutureCallback<>(this.tracer, span));
+		future.addCallback(new TraceListenableFutureCallback<>(this.tracer, span,
+				this.errorParser));
 		// potential race can happen here
 		if (span != null && span.equals(this.tracer.getCurrentSpan())) {
 			this.tracer.detach(span);
@@ -231,10 +278,13 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 
 		private final Tracer tracer;
 		private final Span parent;
+		private final ErrorParser errorParser;
 
-		private TraceListenableFutureCallback(Tracer tracer, Span parent) {
+		private TraceListenableFutureCallback(Tracer tracer, Span parent,
+				ErrorParser errorParser) {
 			this.tracer = tracer;
 			this.parent = parent;
+			this.errorParser = errorParser;
 		}
 
 		@Override
@@ -243,7 +293,7 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 			if (log.isDebugEnabled()) {
 				log.debug("The callback failed - will close the span");
 			}
-			this.tracer.addTag(Span.SPAN_ERROR_TAG_NAME, ExceptionUtils.getExceptionMessage(ex));
+			this.errorParser.parseErrorTags(currentSpan(), ex);
 			finish();
 		}
 

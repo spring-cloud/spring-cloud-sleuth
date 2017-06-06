@@ -27,6 +27,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -73,7 +74,8 @@ public class TraceRestTemplateInterceptorTests {
 				new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanAccumulator, new TraceKeys());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				new TraceRestTemplateInterceptor(this.tracer, new ZipkinHttpSpanInjector(),
-						new HttpTraceKeysInjector(this.tracer, new TraceKeys()))));
+						new HttpTraceKeysInjector(this.tracer, new TraceKeys()),
+						new ExceptionMessageErrorParser())));
 		TestSpanContextHolder.removeCurrentSpan();
 	}
 

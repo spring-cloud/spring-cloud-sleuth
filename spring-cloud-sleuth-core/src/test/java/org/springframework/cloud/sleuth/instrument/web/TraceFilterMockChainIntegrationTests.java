@@ -21,9 +21,13 @@ import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
@@ -72,9 +76,7 @@ public class TraceFilterMockChainIntegrationTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, new NoOpSpanReporter(),
-				new ZipkinHttpSpanExtractor(Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN)),
-				keysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
 	}
@@ -84,11 +86,22 @@ public class TraceFilterMockChainIntegrationTests {
 		Random generator = new Random();
 		this.request = builder().header(Span.SPAN_ID_NAME, generator.nextLong())
 				.header(Span.TRACE_ID_NAME, generator.nextLong()).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, new NoOpSpanReporter(),
-				new ZipkinHttpSpanExtractor(Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN)),
-				keysInjector);
+		BeanFactory beanFactory = beanFactory();
+		TraceFilter filter = new TraceFilter(beanFactory);
 		filter.doFilter(this.request, this.response, this.filterChain);
 		assertNull(TestSpanContextHolder.getCurrentSpan());
+	}
+
+	private BeanFactory beanFactory() {
+		BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
+		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
+		BDDMockito.given(beanFactory.getBean(TraceKeys.class)).willReturn(this.traceKeys);
+		BDDMockito.given(beanFactory.getBean(HttpSpanExtractor.class))
+				.willReturn(new ZipkinHttpSpanExtractor(
+						Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN)));
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(new NoOpSpanReporter());
+		BDDMockito.given(beanFactory.getBean(HttpTraceKeysInjector.class)).willReturn(this.keysInjector);
+		return beanFactory;
 	}
 
 }

@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.Random;
-
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -51,11 +50,8 @@ public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = "${spring.sleuth.integration.patterns:*}")
-	public TraceChannelInterceptor traceChannelInterceptor(Tracer tracer,
-			TraceKeys traceKeys, Random random, MessagingSpanTextMapExtractor spanExtractor,
-			MessagingSpanTextMapInjector spanInjector) {
-		return new IntegrationTraceChannelInterceptor(tracer, traceKeys, spanExtractor,
-				spanInjector);
+	public TraceChannelInterceptor traceChannelInterceptor(BeanFactory beanFactory) {
+		return new IntegrationTraceChannelInterceptor(beanFactory);
 	}
 
 }

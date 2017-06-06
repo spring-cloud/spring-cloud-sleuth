@@ -4,6 +4,9 @@ import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -36,11 +39,14 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 */
 	protected static final String MESSAGE_COMPONENT = "message";
 
-	private final Tracer tracer;
-	private final TraceKeys traceKeys;
-	private final MessagingSpanTextMapExtractor spanExtractor;
-	private final MessagingSpanTextMapInjector spanInjector;
+	private Tracer tracer;
+	private TraceKeys traceKeys;
+	private MessagingSpanTextMapExtractor spanExtractor;
+	private MessagingSpanTextMapInjector spanInjector;
+	private ErrorParser errorParser;
+	private BeanFactory beanFactory;
 
+	@Deprecated
 	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			MessagingSpanTextMapExtractor spanExtractor,
 			MessagingSpanTextMapInjector spanInjector) {
@@ -48,18 +54,46 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		this.traceKeys = traceKeys;
 		this.spanExtractor = spanExtractor;
 		this.spanInjector = spanInjector;
+		this.errorParser = new ExceptionMessageErrorParser();
+	}
+
+	protected AbstractTraceChannelInterceptor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	protected Tracer getTracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
 		return this.tracer;
 	}
 
 	protected TraceKeys getTraceKeys() {
+		if (this.traceKeys == null) {
+			this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
+		}
 		return this.traceKeys;
 	}
 
+	protected MessagingSpanTextMapExtractor getSpanExtractor() {
+		if (this.spanExtractor == null) {
+			this.spanExtractor = this.beanFactory.getBean(MessagingSpanTextMapExtractor.class);
+		}
+		return this.spanExtractor;
+	}
+
 	protected MessagingSpanTextMapInjector getSpanInjector() {
+		if (this.spanInjector == null) {
+			this.spanInjector = this.beanFactory.getBean(MessagingSpanTextMapInjector.class);
+		}
 		return this.spanInjector;
+	}
+
+	protected ErrorParser getErrorParser() {
+		if (this.errorParser == null) {
+			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
+		}
+		return this.errorParser;
 	}
 
 	/**
@@ -68,7 +102,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	 */
 	protected Span buildSpan(SpanTextMap carrier) {
 		try {
-			return this.spanExtractor.joinTrace(carrier);
+			return getSpanExtractor().joinTrace(carrier);
 		} catch (Exception e) {
 			log.error("Exception occurred while trying to extract span from carrier", e);
 			return null;

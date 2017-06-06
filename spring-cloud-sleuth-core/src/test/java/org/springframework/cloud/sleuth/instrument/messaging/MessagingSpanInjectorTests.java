@@ -26,7 +26,6 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
 
 /**

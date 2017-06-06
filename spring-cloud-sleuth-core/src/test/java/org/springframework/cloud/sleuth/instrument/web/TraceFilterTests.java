@@ -24,8 +24,14 @@ import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.BDDMockito;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
+import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -109,8 +115,7 @@ public class TraceFilterTests {
 	@Test
 	public void notTraced() throws Exception {
 		this.sampler = NeverSampler.INSTANCE;
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
@@ -123,8 +128,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyCurrentSpanStatusCode(HttpStatus.OK);
@@ -134,8 +138,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void shouldNotStoreHttpStatusCodeWhenResponseCodeHasNotYetBeenSet() throws Exception {
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		this.response.setStatus(0);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -150,10 +153,10 @@ public class TraceFilterTests {
 				.header(Span.SPAN_ID_NAME, Span.idToHex(PARENT_ID))
 				.header(Span.TRACE_ID_NAME, Span.idToHex(2L))
 				.header(Span.PARENT_ID_NAME, Span.idToHex(3L))
-				.buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+				.buildRequest(new MockServletContext());BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(this.spanReporter);
 
+		TraceFilter filter = new TraceFilter(beanFactory);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		// this creates a child span which is why we'd expect the parents to include the parent id
@@ -184,8 +187,7 @@ public class TraceFilterTests {
 		// It should have been removed from the thread local context so simulate that
 		TestSpanContextHolder.removeCurrentSpan();
 
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
@@ -200,8 +202,7 @@ public class TraceFilterTests {
 		// It should have been removed from the thread local context so simulate that
 		TestSpanContextHolder.removeCurrentSpan();
 
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
@@ -217,8 +218,7 @@ public class TraceFilterTests {
 		// It should have been removed from the thread local context so simulate that
 		TestSpanContextHolder.removeCurrentSpan();
 
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
@@ -228,9 +228,10 @@ public class TraceFilterTests {
 	public void continuesSpanFromHeaders() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(this.spanReporter);
 
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		verifyParentSpanHttpTags();
@@ -242,10 +243,11 @@ public class TraceFilterTests {
 	public void addsAdditionalHeaders() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(this.spanReporter);
+
+		TraceFilter filter = new TraceFilter(beanFactory);
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -272,10 +274,10 @@ public class TraceFilterTests {
 	public void additionalMultiValuedHeader() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		this.traceKeys.getHttp().getHeaders().add("x-foo");BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(this.spanReporter);
 
-		this.traceKeys.getHttp().getHeaders().add("x-foo");
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory);
 		this.request.addHeader("X-Foo", "bar");
 		this.request.addHeader("X-Foo", "spam");
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -289,8 +291,10 @@ public class TraceFilterTests {
 	public void shouldAnnotateSpanWithErrorWhenExceptionIsThrown() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(this.spanReporter);
+
+		TraceFilter filter = new TraceFilter(beanFactory);
 		this.filterChain = new MockFilterChain() {
 			@Override
 			public void doFilter(javax.servlet.ServletRequest request,
@@ -316,8 +320,7 @@ public class TraceFilterTests {
 	public void detachesSpanWhenResponseStatusIsNot2xx() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		this.response.setStatus(404);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -329,8 +332,7 @@ public class TraceFilterTests {
 	public void closesSpanWhenResponseStatusIs2xx() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		this.response.setStatus(200);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -342,8 +344,7 @@ public class TraceFilterTests {
 	public void closesSpanWhenResponseStatusIs3xx() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 		this.response.setStatus(302);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
@@ -355,8 +356,7 @@ public class TraceFilterTests {
 	public void returns400IfSpanIsMalformedAndCreatesANewSpan() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, "asd")
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -371,8 +371,7 @@ public class TraceFilterTests {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.PARENT_ID_NAME, "-")
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -388,8 +387,7 @@ public class TraceFilterTests {
 				.header(Span.SPAN_FLAGS, 1)
 				.buildRequest(new MockServletContext());
 		this.sampler = new NeverSampler();
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -404,8 +402,7 @@ public class TraceFilterTests {
 				.header(Span.SPAN_FLAGS, 0)
 				.buildRequest(new MockServletContext());
 		this.sampler = new AlwaysSampler();
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -421,9 +418,10 @@ public class TraceFilterTests {
 				.header(Span.SPAN_ID_NAME, 10L)
 				.buildRequest(new MockServletContext());
 		this.sampler = new NeverSampler();
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(this.spanReporter);
 
+		TraceFilter filter = new TraceFilter(beanFactory);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(new ListOfSpans(this.spanReporter.getSpans()))
@@ -439,8 +437,7 @@ public class TraceFilterTests {
 				.header(Span.TRACE_ID_NAME, 10L)
 				.buildRequest(new MockServletContext());
 		this.sampler = new NeverSampler();
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, this.spanReporter,
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -483,5 +480,16 @@ public class TraceFilterTests {
 		public boolean isSampled(Span span) {
 			return TraceFilterTests.this.sampler.isSampled(span);
 		}
+	}
+
+	private BeanFactory beanFactory() {
+		BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
+		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
+		BDDMockito.given(beanFactory.getBean(TraceKeys.class)).willReturn(this.traceKeys);
+		BDDMockito.given(beanFactory.getBean(HttpSpanExtractor.class)).willReturn(this.spanExtractor);
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(new NoOpSpanReporter());
+		BDDMockito.given(beanFactory.getBean(HttpTraceKeysInjector.class)).willReturn(this.httpTraceKeysInjector);
+		BDDMockito.given(beanFactory.getBean(ErrorParser.class)).willReturn(new ExceptionMessageErrorParser());
+		return beanFactory;
 	}
 }
