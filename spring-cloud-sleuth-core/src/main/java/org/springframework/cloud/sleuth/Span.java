@@ -365,7 +365,7 @@ public class Span implements SpanContext {
 	 * @return this Span instance, for chaining
 	 */
 	public Span setBaggageItem(String key, String value) {
-		this.baggage.put(key, value);
+		this.baggage.put(key.toLowerCase(), value);
 		return this;
 	}
 
@@ -373,7 +373,7 @@ public class Span implements SpanContext {
 	 * @return the value of the baggage item identified by the given key, or null if no such item could be found
 	 */
 	public String getBaggageItem(String key) {
-		return this.baggage.get(key);
+		return this.baggage.get(key.toLowerCase());
 	}
 
 	@Override
@@ -732,7 +732,7 @@ public class Span implements SpanContext {
 		}
 
 		public Span.SpanBuilder baggage(String baggageKey, String baggageValue) {
-			this.baggage.put(baggageKey, baggageValue);
+			this.baggage.put(baggageKey.toLowerCase(), baggageValue);
 			return this;
 		}
 
