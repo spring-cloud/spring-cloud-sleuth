@@ -90,6 +90,7 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		return this.delegate.getThreadPoolExecutor();
 	}
 
+	@Override
 	public void destroy() {
 		this.delegate.destroy();
 		super.destroy();
@@ -99,6 +100,11 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	public void afterPropertiesSet() {
 		this.delegate.afterPropertiesSet();
 		super.afterPropertiesSet();
+	}
+
+	@Override
+	public void shutdown() {
+		this.delegate.shutdown();
 	}
 
 	private Tracer tracer() {
