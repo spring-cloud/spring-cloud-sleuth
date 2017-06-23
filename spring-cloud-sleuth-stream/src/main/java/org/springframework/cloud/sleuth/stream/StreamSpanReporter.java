@@ -66,18 +66,6 @@ public class StreamSpanReporter implements SpanReporter {
 	private final Environment environment;
 	private final List<SpanAdjuster> spanAdjusters;
 
-	@Deprecated
-	public StreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter) {
-		this(endpointLocator, spanMetricReporter, null);
-	}
-
-	@Deprecated
-	public StreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter, Environment environment) {
-		this(endpointLocator, spanMetricReporter, environment, Collections.<SpanAdjuster>singletonList(new NoOpSpanAdjuster()));
-	}
-
 	public StreamSpanReporter(HostLocator endpointLocator,
 			SpanMetricReporter spanMetricReporter, Environment environment, List<SpanAdjuster> spanAdjusters) {
 		this.endpointLocator = endpointLocator;

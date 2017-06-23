@@ -32,7 +32,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -91,12 +90,6 @@ public class TraceFilter extends GenericFilterBean {
 	protected static final String TRACE_CLOSE_SPAN_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".CLOSE_SPAN";
 
-	/**
-	 * @deprecated please use {@link SleuthWebProperties#DEFAULT_SKIP_PATTERN}
-	 */
-	@Deprecated
-	public static final String DEFAULT_SKIP_PATTERN = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
-
 	private Tracer tracer;
 	private TraceKeys traceKeys;
 	private Pattern skipPattern;
@@ -107,27 +100,6 @@ public class TraceFilter extends GenericFilterBean {
 	private BeanFactory beanFactory;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
-
-	@Deprecated
-	public TraceFilter(Tracer tracer, TraceKeys traceKeys, SpanReporter spanReporter,
-			HttpSpanExtractor spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
-		this(tracer, traceKeys, Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN), spanReporter,
-				spanExtractor, httpTraceKeysInjector);
-	}
-
-	@Deprecated
-	public TraceFilter(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern,
-			SpanReporter spanReporter, HttpSpanExtractor spanExtractor,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
-		this.tracer = tracer;
-		this.traceKeys = traceKeys;
-		this.skipPattern = skipPattern;
-		this.spanReporter = spanReporter;
-		this.spanExtractor = spanExtractor;
-		this.httpTraceKeysInjector = httpTraceKeysInjector;
-		this.errorParser = new ExceptionMessageErrorParser();
-	}
 
 	public TraceFilter(BeanFactory beanFactory) {
 		this(beanFactory, Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN));

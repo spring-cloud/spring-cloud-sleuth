@@ -65,17 +65,6 @@ public class ZipkinSpanListener implements SpanReporter {
 	// Visible for testing
 	EndpointLocator endpointLocator;
 
-	@Deprecated
-	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator) {
-		this(reporter, endpointLocator, null);
-	}
-
-	@Deprecated
-	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
-			Environment environment) {
-		this(reporter, endpointLocator, environment, Collections.<SpanAdjuster>singletonList(new NoOpSpanAdjuster()));
-	}
-
 	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
 			Environment environment, List<SpanAdjuster> spanAdjusters) {
 		this.reporter = reporter;

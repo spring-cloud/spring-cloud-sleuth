@@ -171,7 +171,10 @@ public class Span implements SpanContext {
 	 * Creates a new span that still tracks tags and logs of the current span. This is
 	 * crucial when continuing spans since the changes in those collections done in the
 	 * continued span need to be reflected until the span gets closed.
+	 *
+	 * @deprecated - use {@link SpanBuilder}
 	 */
+	@Deprecated
 	public Span(Span current, Span savedSpan) {
 		this.begin = current.getBegin();
 		this.end = current.getEnd();
@@ -191,21 +194,13 @@ public class Span implements SpanContext {
 		this.savedSpan = savedSpan;
 	}
 
-	/**
-	 * @deprecated please use {@link SpanBuilder}
-	 */
-	@Deprecated
-	public Span(long begin, long end, String name, long traceId, List<Long> parents,
+	Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId) {
 		this(begin, end, name, traceId, parents, spanId, remote, exportable, processId,
 				null);
 	}
 
-	/**
-	 * @deprecated please use {@link SpanBuilder}
-	 */
-	@Deprecated
-	public Span(long begin, long end, String name, long traceId, List<Long> parents,
+	Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId,
 			Span savedSpan) {
 		this(new SpanBuilder()
@@ -272,18 +267,6 @@ public class Span implements SpanContext {
 				this.durationMicros = (this.end - this.begin) * 1000;
 			}
 		}
-	}
-
-	/**
-	 * Return the total amount of time elapsed since start was called, if running, or
-	 * difference between stop and start
-	 *
-	 * @deprecated use {@link #getAccumulatedMicros()} as it is more precise.
-	 */
-	@Deprecated
-	@JsonIgnore
-	public synchronized long getAccumulatedMillis() {
-		return getAccumulatedMicros() / 1000;
 	}
 
 	/**
@@ -662,6 +645,7 @@ public class Span implements SpanContext {
 		private List<Log> logs = new ArrayList<>();
 		private Map<String, String> tags = new LinkedHashMap<>();
 		private Map<String, String> baggage = new LinkedHashMap<>();
+		private Span inputSpan;
 
 		SpanBuilder() {
 		}
@@ -766,7 +750,11 @@ public class Span implements SpanContext {
 			return this;
 		}
 
+		/**
+		 * Creates a {@link Span.SpanBuilder} from the {@link Span}.
+		 */
 		public Span.SpanBuilder from(Span span) {
+			this.inputSpan = span;
 			return begin(span.begin).end(span.end).name(span.name)
 					.traceIdHigh(span.traceIdHigh).traceId(span.traceId)
 					.parents(span.getParents()).logs(span.logs).tags(span.tags).baggage(span.baggage)
@@ -774,8 +762,26 @@ public class Span implements SpanContext {
 					.processId(span.processId).savedSpan(span.savedSpan);
 		}
 
+		/**
+		 * Builds a span. All collections lik baggage / tags / logs are *copied*, not continued.
+		 * In other words if you add a tag to the input {@link Span}, the created span
+		 * will not reflect that change. To build a span whose collections will continue
+		 * the input one, please use the {@link SpanBuilder#buildContinuedSpan()}.
+		 */
 		public Span build() {
 			return new Span(this);
+		}
+
+		/**
+		 * Builds a span. All collections lik baggage / tags / logs are continued.
+		 * In other words if you add a tag to the input {@link Span}, the created span
+		 * will reflect that change. In order to use this function you have to call the
+		 * builder via {@link SpanBuilder#from(Span)}}.
+		 */
+		public Span buildContinuedSpan() {
+			Assert.notNull(this.inputSpan, "You need to call the builder via"
+					+ "the from(Span) method to continue the span");
+			return new Span(this.inputSpan, this.savedSpan);
 		}
 
 		@Override
