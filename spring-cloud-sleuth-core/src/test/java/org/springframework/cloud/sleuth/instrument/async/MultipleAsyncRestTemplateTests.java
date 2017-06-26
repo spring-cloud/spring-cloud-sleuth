@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -81,8 +82,8 @@ public class MultipleAsyncRestTemplateTests {
 
 		@Bean(name = "customAsyncRestTemplate")
 		public AsyncRestTemplate traceAsyncRestTemplate(@Qualifier("customHttpRequestFactoryWrapper")
-				TraceAsyncClientHttpRequestFactoryWrapper wrapper) {
-			return new TraceAsyncRestTemplate(wrapper, this.tracer);
+				TraceAsyncClientHttpRequestFactoryWrapper wrapper, ErrorParser errorParser) {
+			return new TraceAsyncRestTemplate(wrapper, this.tracer, errorParser);
 		}
 
 		@Bean(name = "customHttpRequestFactoryWrapper")

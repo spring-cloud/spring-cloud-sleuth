@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import java.util.Collections;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
@@ -26,8 +25,8 @@ import zipkin.Endpoint;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ZipkinMessageListenerTests {
-	Span span = new Span(1, 3, "http:name", 1L, Collections.<Long>emptyList(), 2L, true, true,
-			"process");
+	Span span = Span.builder().begin(1).end(3).name("http:name").traceId(1L).spanId(2L).remote(true)
+			.exportable(true).processId("process").build();
 	Host host = new Host("myservice", "1.2.3.4", 8080);
 	Endpoint endpoint = Endpoint.builder()
 			.serviceName("myservice")
@@ -54,8 +53,8 @@ public class ZipkinMessageListenerTests {
 	/** Sleuth timestamps are millisecond granularity while zipkin is microsecond. */
 	@Test
 	public void convertsTimestampAndDurationToMicroseconds() {
-		Span span = new Span(1, 3, "http:name", 1L, Collections.<Long>emptyList(), 2L, false, true,
-				"process");
+		Span span = Span.builder().begin(1).end(3).name("http:name").traceId(1L).spanId(2L).remote(false)
+				.exportable(true).processId("process").build();
 		long start = System.currentTimeMillis();
 		span.logEvent("hystrix/retry"); // System.currentTimeMillis
 

@@ -16,6 +16,13 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import org.springframework.cloud.commons.util.IdUtils;
+import org.springframework.cloud.sleuth.Log;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAdjuster;
+import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.core.env.Environment;
+import org.springframework.util.StringUtils;
 import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
@@ -23,18 +30,8 @@ import zipkin.Endpoint;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.cloud.commons.util.IdUtils;
-import org.springframework.cloud.sleuth.Log;
-import org.springframework.cloud.sleuth.NoOpSpanAdjuster;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAdjuster;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.core.env.Environment;
-import org.springframework.util.StringUtils;
 
 /**
  * Listener of Sleuth events. Reports to Zipkin via {@link ZipkinSpanReporter}.
