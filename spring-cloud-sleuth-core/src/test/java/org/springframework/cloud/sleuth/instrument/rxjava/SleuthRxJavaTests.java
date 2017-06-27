@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -70,7 +70,7 @@ public class SleuthRxJavaTests {
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.getCurrentSpan()).isNull();
 		await().atMost(5, SECONDS)
-				.until(() -> then(this.listener.getEvents()).hasSize(1));
+				.untilAsserted(() -> then(this.listener.getEvents()).hasSize(1));
 		then(this.listener.getEvents().get(0)).hasNameEqualTo("rxjava");
 		then(this.listener.getEvents().get(0)).isExportable();
 		then(this.listener.getEvents().get(0)).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME,

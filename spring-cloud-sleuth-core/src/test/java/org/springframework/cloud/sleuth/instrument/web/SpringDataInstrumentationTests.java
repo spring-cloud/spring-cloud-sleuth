@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import com.jayway.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,6 +41,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
+import org.awaitility.Awaitility;
 import javax.annotation.PostConstruct;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -81,7 +81,7 @@ public class SpringDataInstrumentationTests {
 
 		then(noOfNames).isEqualTo(8);
 		then(this.arrayListSpanAccumulator.getSpans()).isNotEmpty();
-		Awaitility.await().until(() -> {
+		Awaitility.await().untilAsserted(() -> {
 			then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
 					.hasASpanWithName("http:/reservations")
 					.hasASpanWithTagKeyEqualTo("mvc.controller.class");

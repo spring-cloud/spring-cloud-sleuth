@@ -63,11 +63,13 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId));
+		await().atMost(5, SECONDS).untilAsserted(() ->
+				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId).run()
+		);
 
-		await().atMost(5, SECONDS).until(() -> {
-			thenAllSpansHaveTraceIdEqualTo(traceId);
-		});
+		await().atMost(5, SECONDS).untilAsserted(() ->
+			thenAllSpansHaveTraceIdEqualTo(traceId)
+		);
 	}
 
 	@Test
@@ -75,9 +77,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		long traceId = new Random().nextLong();
 		long spanId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId));
+		await().atMost(5, SECONDS).untilAsserted(() ->
+				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId).run()
+		);
 
-		await().atMost(5, SECONDS).until(() -> {
+		await().atMost(5, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenTheSpansHaveProperParentStructure();
 		});
@@ -87,9 +91,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_with_annotations_in_async_thread_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId));
+		await().atMost(5, SECONDS).untilAsserted(() ->
+				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId).run()
+		);
 
-		await().atMost(5, SECONDS).until(() -> {
+		await().atMost(5, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenThereIsAtLeastOneBinaryAnnotationWithKey("background-sleep-millis");
 		});

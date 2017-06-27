@@ -16,13 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.integration;
 
-import com.jayway.awaitility.Awaitility;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,6 +69,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import org.awaitility.Awaitility;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import static junitparams.JUnitParamsRunner.$;
 import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -112,7 +113,7 @@ public class WebClientTests {
 			ResponseEntityProvider provider) {
 		ResponseEntity<String> response = provider.get(this);
 
-		Awaitility.await().atMost(2, TimeUnit.SECONDS).until(() -> {
+		Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
 			then(getHeader(response, Span.TRACE_ID_NAME)).isNull();
 			then(getHeader(response, Span.SPAN_ID_NAME)).isNull();
 			List<Span> spans = new ArrayList<>(this.listener.getSpans());
