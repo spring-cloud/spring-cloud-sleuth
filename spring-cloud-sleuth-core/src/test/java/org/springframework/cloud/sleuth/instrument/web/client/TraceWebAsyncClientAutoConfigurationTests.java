@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -206,7 +206,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 
 			}
 
-			Awaitility.await().until(() -> {
+			Awaitility.await().untilAsserted(() -> {
 				then(new ArrayList<>(this.accumulator.getSpans()).stream()
 						.filter(span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
 								.findFirst().isPresent()).findFirst().get()).matches(

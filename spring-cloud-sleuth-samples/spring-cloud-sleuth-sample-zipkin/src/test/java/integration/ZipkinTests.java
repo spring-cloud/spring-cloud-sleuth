@@ -15,6 +15,12 @@
  */
 package integration;
 
+import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
+import sample.SampleZipkinApplication;
+import tools.AbstractIntegrationTest;
+import zipkin.junit.ZipkinRule;
+import zipkin.server.EnableZipkinServer;
+
 import java.net.URI;
 import java.util.Random;
 
@@ -32,12 +38,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
-import sample.SampleZipkinApplication;
-import tools.AbstractIntegrationTest;
-import zipkin.junit.ZipkinRule;
-import zipkin.server.EnableZipkinServer;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -67,10 +67,14 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	public void should_propagate_spans_to_zipkin() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(10, SECONDS).until(httpMessageWithTraceIdInHeadersIsSuccessfullySent(
-				this.sampleAppUrl + "/hi2", traceId));
+		await().atMost(10, SECONDS).untilAsserted(() ->
+				httpMessageWithTraceIdInHeadersIsSuccessfullySent(
+				this.sampleAppUrl + "/hi2", traceId).run()
+		);
 
-		await().atMost(10, SECONDS).until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId));
+		await().atMost(10, SECONDS).untilAsserted(() ->
+				allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId).run()
+		);
 	}
 
 	@Override

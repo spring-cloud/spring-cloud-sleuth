@@ -60,7 +60,8 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 	@Before
 	public void setup() {
-		await().atMost(10, SECONDS).until(zipkinServerIsUp());
+		await().atMost(10, SECONDS)
+				.untilAsserted(() -> zipkinServerIsUp().run());
 	}
 
 	@Test
@@ -70,7 +71,9 @@ public class ZipkinStreamTests extends AbstractIntegrationTest {
 
 		this.input.send(messageWithSpan(span));
 
-		await().atMost(5, SECONDS).until(allSpansWereRegisteredInZipkinWithTraceIdEqualTo(this.traceId));
+		await().atMost(5, SECONDS).untilAsserted(() ->
+				allSpansWereRegisteredInZipkinWithTraceIdEqualTo(this.traceId)
+		);
 	}
 
 	private Message<Spans> messageWithSpan(Span span) {

@@ -49,7 +49,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -83,9 +83,11 @@ public class TraceFilterCustomExtractorTests {
  		} finally {
 			this.tracer.close(newSpan);
 		}
-		await().atMost(5, SECONDS).until(() -> then(this.accumulator.getSpans().stream().filter(
-				span -> span.getSpanId() == newSpan.getSpanId()).findFirst().get())
-				.hasTraceIdEqualTo(newSpan.getTraceId()));
+		await().atMost(5, SECONDS).untilAsserted(() -> {
+			then(this.accumulator.getSpans().stream().filter(
+					span -> span.getSpanId() == newSpan.getSpanId()).findFirst().get())
+					.hasTraceIdEqualTo(newSpan.getTraceId());
+		});
 		BDDAssertions.then(responseEntity.getBody())
 				.containsEntry("correlationid", Span.idToHex(newSpan.getTraceId()))
 				.containsKey("myspanid")

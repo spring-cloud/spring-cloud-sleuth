@@ -52,7 +52,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 
 /**
  * @author Marcin Grzejszczak
@@ -88,7 +88,7 @@ public class Issue410Tests {
 					"http://localhost:" + port() + "/without_pool", String.class);
 
 			then(response).isEqualTo(span.traceIdString());
-			Awaitility.await().until(() -> {
+			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId())
 						.isEqualTo(span.getTraceId());
@@ -108,7 +108,7 @@ public class Issue410Tests {
 					"http://localhost:" + port() + "/with_pool", String.class);
 
 			then(response).isEqualTo(span.traceIdString());
-			Awaitility.await().until(() -> {
+			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId())
 						.isEqualTo(span.getTraceId());
@@ -131,7 +131,7 @@ public class Issue410Tests {
 					"http://localhost:" + port() + "/completable", String.class);
 
 			then(response).isEqualTo(span.traceIdString());
-			Awaitility.await().until(() -> {
+			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId())
 						.isEqualTo(span.getTraceId());
@@ -154,7 +154,7 @@ public class Issue410Tests {
 					"http://localhost:" + port() + "/taskScheduler", String.class);
 
 			then(response).isEqualTo(span.traceIdString());
-			Awaitility.await().until(() -> {
+			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
 				then(this.asyncTask.getSpan().get().getTraceId())
 						.isEqualTo(span.getTraceId());

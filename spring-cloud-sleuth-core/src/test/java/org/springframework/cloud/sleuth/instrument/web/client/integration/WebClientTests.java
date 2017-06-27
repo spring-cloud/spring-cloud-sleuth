@@ -69,7 +69,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
@@ -113,7 +113,7 @@ public class WebClientTests {
 			ResponseEntityProvider provider) {
 		ResponseEntity<String> response = provider.get(this);
 
-		Awaitility.await().atMost(2, TimeUnit.SECONDS).until(() -> {
+		Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
 			then(getHeader(response, Span.TRACE_ID_NAME)).isNull();
 			then(getHeader(response, Span.SPAN_ID_NAME)).isNull();
 			List<Span> spans = new ArrayList<>(this.listener.getSpans());

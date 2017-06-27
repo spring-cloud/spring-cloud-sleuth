@@ -23,7 +23,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
@@ -53,17 +53,13 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOne(final Span span) {
-		Awaitility.await().atMost(5, SECONDS).until(new Runnable() {
-			@Override
-			public void run() {
-				then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())
-						.hasTraceIdEqualTo(span.getTraceId())
-						.hasNameEqualTo("invoke-asynchronous-logic")
-						.isALocalComponentSpan()
-						.hasATag("class", "ClassPerformingAsyncLogic")
-						.hasATag("method", "invokeAsynchronousLogic");
-			}
-		});
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(
+				() -> then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())
+					.hasTraceIdEqualTo(span.getTraceId())
+					.hasNameEqualTo("invoke-asynchronous-logic")
+					.isALocalComponentSpan()
+					.hasATag("class", "ClassPerformingAsyncLogic")
+					.hasATag("method", "invokeAsynchronousLogic"));
 	}
 
 	@After

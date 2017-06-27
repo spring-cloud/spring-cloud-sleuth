@@ -54,7 +54,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 
 /**
  * @author Marcin Grzejszczak
@@ -84,7 +84,7 @@ public class SpringDataInstrumentationTests {
 
 		then(names).isNotEmpty();
 		then(this.arrayListSpanAccumulator.getSpans()).isNotEmpty();
-		Awaitility.await().until(() -> {
+		Awaitility.await().untilAsserted(() -> {
 			then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
 					.hasASpanWithName("http:/reservations")
 					.hasASpanWithTagKeyEqualTo("mvc.controller.class");

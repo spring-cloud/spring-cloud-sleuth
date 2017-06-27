@@ -16,25 +16,19 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
-
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
 import javax.annotation.PostConstruct;
 
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.metrics.CounterService;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
@@ -59,7 +53,11 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.jayway.awaitility.Awaitility;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Dave Syer
@@ -93,7 +91,7 @@ public class StreamSpanListenerTests {
 
 		this.tracer.close(context);
 
-		Awaitility.await().until(() -> assertThat(StreamSpanListenerTests.this.test.spans()).hasSize(1));
+		Awaitility.await().untilAsserted(() -> assertThat(StreamSpanListenerTests.this.test.spans()).hasSize(1));
 	}
 
 	@Test
@@ -107,7 +105,7 @@ public class StreamSpanListenerTests {
 
 		this.tracer.close(context);
 
-		Awaitility.await().until(() -> assertThat(StreamSpanListenerTests.this.test.spans()).hasSize(2));
+		Awaitility.await().untilAsserted(() -> assertThat(StreamSpanListenerTests.this.test.spans()).hasSize(2));
 	}
 
 	void logServerReceived(Span parent) {

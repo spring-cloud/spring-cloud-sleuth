@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.scheduling;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hamcrest.Matchers;
@@ -36,6 +32,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { ScheduledTestConfiguration.class })
 public class TracingOnScheduledTests {
@@ -47,13 +47,13 @@ public class TracingOnScheduledTests {
 
 	@Test
 	public void should_have_span_set_after_scheduled_method_has_been_executed() {
-		await().atMost(5, SECONDS).until(spanIsSetOnAScheduledMethod());
+		await().atMost(5, SECONDS).untilAsserted(this::spanIsSetOnAScheduledMethod);
 	}
 
 	@Test
 	public void should_have_a_new_span_set_each_time_a_scheduled_method_has_been_executed() {
-		Span firstSpan = this.beanWithScheduledMethod.getSpan();
-		await().atMost(5, SECONDS).until(differentSpanHasBeenSetThan(firstSpan));
+		final Span firstSpan = this.beanWithScheduledMethod.getSpan();
+		await().atMost(5, SECONDS).untilAsserted(() -> differentSpanHasBeenSetThan(firstSpan));
 	}
 
 	@Test
@@ -65,27 +65,19 @@ public class TracingOnScheduledTests {
 	}
 
 	private Runnable spanIsSetOnAScheduledMethod() {
-		return new Runnable() {
-			@Override
-			public void run() {
-				Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod
-						.getSpan();
-				then(storedSpan).isNotNull();
-				then(storedSpan.getTraceId()).isNotNull();
-				then(storedSpan).hasATag("class", "TestBeanWithScheduledMethod");
-				then(storedSpan).hasATag("method", "scheduledMethod");
-			}
+		return () -> {
+			Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod
+					.getSpan();
+			then(storedSpan).isNotNull();
+			then(storedSpan.getTraceId()).isNotNull();
+			then(storedSpan).hasATag("class", "TestBeanWithScheduledMethod");
+			then(storedSpan).hasATag("method", "scheduledMethod");
 		};
 	}
 
 	private Runnable differentSpanHasBeenSetThan(final Span spanToCompare) {
-		return new Runnable() {
-			@Override
-			public void run() {
-				then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan())
-						.isNotEqualTo(spanToCompare);
-			}
-		};
+		return () -> then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan())
+				.isNotEqualTo(spanToCompare);
 	}
 
 }

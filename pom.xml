@@ -201,27 +201,27 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>com.jayway.awaitility</groupId>
+				<groupId>org.awaitility</groupId>
 				<artifactId>awaitility</artifactId>
-				<version>1.7.0</version>
+				<version>3.0.0</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.github.tomakehurst</groupId>
 				<artifactId>wiremock</artifactId>
-				<version>2.5.1</version>
+				<version>2.6.0</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>pl.pragmatists</groupId>
 				<artifactId>JUnitParams</artifactId>
-				<version>1.0.6</version>
+				<version>1.1.0</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.assertj</groupId>
 				<artifactId>assertj-core</artifactId>
-				<version>3.6.2</version>
+				<version>3.8.0</version>
 				<scope>test</scope>
 			</dependency>
 		</dependencies>

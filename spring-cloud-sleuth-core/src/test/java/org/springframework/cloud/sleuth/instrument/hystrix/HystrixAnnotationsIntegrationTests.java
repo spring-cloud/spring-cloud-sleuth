@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.strategy.HystrixPlugins;
 
@@ -91,26 +91,20 @@ public class HystrixAnnotationsIntegrationTests {
 
 	private void thenSpanInHystrixThreadIsContinued(final Span span) {
 		then(span).isNotNull();
-		Awaitility.await().atMost(5, SECONDS).until(new Runnable() {
-			@Override
-			public void run() {
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 				then(HystrixAnnotationsIntegrationTests.this.catcher).isNotNull();
 				then(span)
 						.hasTraceIdEqualTo(HystrixAnnotationsIntegrationTests.this.catcher
 								.getTraceId())
 						.hasNameEqualTo(HystrixAnnotationsIntegrationTests.this.catcher
 								.getSpanName());
-			}
 		});
 	}
 
 	private void thenSpanInHystrixThreadIsCreated() {
-		Awaitility.await().atMost(5, SECONDS).until(new Runnable() {
-			@Override
-			public void run() {
-				then(HystrixAnnotationsIntegrationTests.this.catcher.getSpan())
-						.nameStartsWith("hystrix").isALocalComponentSpan();
-			}
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
+			then(HystrixAnnotationsIntegrationTests.this.catcher.getSpan())
+					.nameStartsWith("hystrix").isALocalComponentSpan();
 		});
 	}
 
