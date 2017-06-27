@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.sleuth.trace;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,6 +32,10 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.atLeast;
@@ -245,7 +245,7 @@ public class DefaultTracerTests {
 	@Test
 	public void shouldNotProduceAWarningMessageWhenThereIsNoSpanInContextAndWeDetachASpan() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new TraceKeys());
 		Span span = Span.builder().name("foo").traceId(1L).spanId(1L).build();
 
 		Span child = tracer.detach(span);

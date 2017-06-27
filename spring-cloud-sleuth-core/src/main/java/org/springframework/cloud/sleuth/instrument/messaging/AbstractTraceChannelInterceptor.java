@@ -1,12 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.lang.invoke.MethodHandles;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -18,6 +15,8 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.util.ClassUtils;
+
+import java.lang.invoke.MethodHandles;
 
 /**
  * Abstraction over classes related to channel intercepting
@@ -45,17 +44,6 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	private MessagingSpanTextMapInjector spanInjector;
 	private ErrorParser errorParser;
 	private BeanFactory beanFactory;
-
-	@Deprecated
-	protected AbstractTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			MessagingSpanTextMapExtractor spanExtractor,
-			MessagingSpanTextMapInjector spanInjector) {
-		this.tracer = tracer;
-		this.traceKeys = traceKeys;
-		this.spanExtractor = spanExtractor;
-		this.spanInjector = spanInjector;
-		this.errorParser = new ExceptionMessageErrorParser();
-	}
 
 	protected AbstractTraceChannelInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;

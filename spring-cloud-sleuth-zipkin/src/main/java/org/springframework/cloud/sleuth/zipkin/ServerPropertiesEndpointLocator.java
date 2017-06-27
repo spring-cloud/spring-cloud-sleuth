@@ -53,11 +53,6 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 	private final ZipkinProperties zipkinProperties;
 	private Integer port;
 
-	@Deprecated
-	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,String appName) {
-		this(serverProperties,appName,new ZipkinProperties(), null);
-	}
-
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
 			String appName, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.serverProperties = serverProperties;

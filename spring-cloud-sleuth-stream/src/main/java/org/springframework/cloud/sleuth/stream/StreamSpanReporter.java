@@ -16,19 +16,9 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import java.lang.invoke.MethodHandles;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.commons.util.IdUtils;
 import org.springframework.cloud.sleuth.Log;
-import org.springframework.cloud.sleuth.NoOpSpanAdjuster;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -37,6 +27,14 @@ import org.springframework.core.env.Environment;
 import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.Poller;
+
+import java.lang.invoke.MethodHandles;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * A message source for spans. Also handles RPC flavoured annotations.
@@ -65,18 +63,6 @@ public class StreamSpanReporter implements SpanReporter {
 	private final SpanMetricReporter spanMetricReporter;
 	private final Environment environment;
 	private final List<SpanAdjuster> spanAdjusters;
-
-	@Deprecated
-	public StreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter) {
-		this(endpointLocator, spanMetricReporter, null);
-	}
-
-	@Deprecated
-	public StreamSpanReporter(HostLocator endpointLocator,
-			SpanMetricReporter spanMetricReporter, Environment environment) {
-		this(endpointLocator, spanMetricReporter, environment, Collections.<SpanAdjuster>singletonList(new NoOpSpanAdjuster()));
-	}
 
 	public StreamSpanReporter(HostLocator endpointLocator,
 			SpanMetricReporter spanMetricReporter, Environment environment, List<SpanAdjuster> spanAdjusters) {

@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -259,6 +259,16 @@ public class SpanTests {
 		Span span = builder().build();
 
 		Span builtSpan = Span.builder().from(span).build();
+
+		assertThat(builtSpan).isEqualTo(span);
+	}
+
+	@Test
+	public void should_build_a_continued_span_from_provided_span() throws IOException {
+		Span span = builder().tag("foo", "bar").build();
+		Span builtSpan = Span.builder().from(span).buildContinuedSpan();
+
+		span.tag("foo2", "bar2");
 
 		assertThat(builtSpan).isEqualTo(span);
 	}

@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -86,8 +87,8 @@ public class TraceWebAsyncClientAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(value = "spring.sleuth.web.async.client.template.enabled", matchIfMissing = true)
-	public AsyncRestTemplate traceAsyncRestTemplate() {
-		return new TraceAsyncRestTemplate(traceAsyncClientHttpRequestFactory(), this.tracer);
+	public AsyncRestTemplate traceAsyncRestTemplate(ErrorParser errorParser) {
+		return new TraceAsyncRestTemplate(traceAsyncClientHttpRequestFactory(), this.tracer, errorParser);
 	}
 
 }
