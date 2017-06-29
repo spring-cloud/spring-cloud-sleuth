@@ -43,11 +43,6 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 	private final DiscoveryClient client;
 	private final ZipkinProperties zipkinProperties;
 
-	@Deprecated
-	public DiscoveryClientEndpointLocator(DiscoveryClient client) {
-		this(client, new ZipkinProperties());
-	}
-
 	public DiscoveryClientEndpointLocator(DiscoveryClient client,
 			ZipkinProperties zipkinProperties) {
 		this.client = client;

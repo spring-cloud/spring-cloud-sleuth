@@ -44,8 +44,6 @@ public class DefaultTracer implements Tracer {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
-	private static final int MAX_CHARS_IN_SPAN_NAME = 50;
-
 	private final Sampler defaultSampler;
 
 	private final Random random;
@@ -59,18 +57,6 @@ public class DefaultTracer implements Tracer {
 	private final TraceKeys traceKeys;
 
 	private final boolean traceId128;
-
-	@Deprecated
-	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
-			SpanLogger spanLogger, SpanReporter spanReporter) {
-		this(defaultSampler, random, spanNamer, spanLogger, spanReporter, false);
-	}
-
-	@Deprecated
-	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
-				SpanLogger spanLogger, SpanReporter spanReporter, boolean traceId128) {
-		this(defaultSampler, random, spanNamer, spanLogger, spanReporter, traceId128, null);
-	}
 
 	public DefaultTracer(Sampler defaultSampler, Random random, SpanNamer spanNamer,
 				SpanLogger spanLogger, SpanReporter spanReporter, TraceKeys traceKeys) {

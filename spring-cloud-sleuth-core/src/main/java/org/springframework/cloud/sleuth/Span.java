@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,9 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -171,7 +170,10 @@ public class Span implements SpanContext {
 	 * Creates a new span that still tracks tags and logs of the current span. This is
 	 * crucial when continuing spans since the changes in those collections done in the
 	 * continued span need to be reflected until the span gets closed.
+	 *
+	 * @deprecated - use {@link SpanBuilder}
 	 */
+	@Deprecated
 	public Span(Span current, Span savedSpan) {
 		this.begin = current.getBegin();
 		this.end = current.getEnd();
@@ -191,21 +193,13 @@ public class Span implements SpanContext {
 		this.savedSpan = savedSpan;
 	}
 
-	/**
-	 * @deprecated please use {@link SpanBuilder}
-	 */
-	@Deprecated
-	public Span(long begin, long end, String name, long traceId, List<Long> parents,
+	Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId) {
 		this(begin, end, name, traceId, parents, spanId, remote, exportable, processId,
 				null);
 	}
 
-	/**
-	 * @deprecated please use {@link SpanBuilder}
-	 */
-	@Deprecated
-	public Span(long begin, long end, String name, long traceId, List<Long> parents,
+	Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId,
 			Span savedSpan) {
 		this(new SpanBuilder()
@@ -272,18 +266,6 @@ public class Span implements SpanContext {
 				this.durationMicros = (this.end - this.begin) * 1000;
 			}
 		}
-	}
-
-	/**
-	 * Return the total amount of time elapsed since start was called, if running, or
-	 * difference between stop and start
-	 *
-	 * @deprecated use {@link #getAccumulatedMicros()} as it is more precise.
-	 */
-	@Deprecated
-	@JsonIgnore
-	public synchronized long getAccumulatedMillis() {
-		return getAccumulatedMicros() / 1000;
 	}
 
 	/**
@@ -766,6 +748,9 @@ public class Span implements SpanContext {
 			return this;
 		}
 
+		/**
+		 * Creates a {@link Span.SpanBuilder} from the {@link Span}.
+		 */
 		public Span.SpanBuilder from(Span span) {
 			return begin(span.begin).end(span.end).name(span.name)
 					.traceIdHigh(span.traceIdHigh).traceId(span.traceId)
@@ -774,6 +759,11 @@ public class Span implements SpanContext {
 					.processId(span.processId).savedSpan(span.savedSpan);
 		}
 
+		/**
+		 * Builds a span. All collections lik baggage / tags / logs are *copied*, not continued.
+		 * In other words if you add a tag to the input {@link Span}, the created span
+		 * will not reflect that change.
+		 */
 		public Span build() {
 			return new Span(this);
 		}

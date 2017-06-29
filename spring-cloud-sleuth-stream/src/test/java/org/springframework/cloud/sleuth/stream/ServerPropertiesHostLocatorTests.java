@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Collections;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -27,14 +23,16 @@ import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.Span;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ServerPropertiesHostLocatorTests {
 
 	public static final byte[] ADR1234 = { 1, 2, 3, 4 };
 
-	Span span = new Span(1, 3, "http:name", 1L, Collections.<Long>emptyList(), 2L, true, true,
-			"process");
+	Span span = Span.builder().begin(1).end(3).name("http:name").traceId(1L).spanId(2L).remote(true).exportable(true).processId("process").build();
 
 	@Test
 	public void portDefaultsTo8080() throws UnknownHostException {
