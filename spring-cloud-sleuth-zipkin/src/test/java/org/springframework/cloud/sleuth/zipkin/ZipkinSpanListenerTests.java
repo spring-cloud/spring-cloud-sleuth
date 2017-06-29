@@ -284,7 +284,7 @@ public class ZipkinSpanListenerTests {
 	public void shouldNotAddAnyServiceIdTagWhenSpanContainsRpcEventAndThereIsNoEnvironment() {
 		this.parent.logEvent(Span.CLIENT_RECV);
 		ZipkinSpanListener spanListener = new ZipkinSpanListener(this.spanReporter,
-				this.endpointLocator, null);
+				this.endpointLocator, null, new ArrayList<>());
 
 		zipkin.Span result = spanListener.convert(this.parent);
 

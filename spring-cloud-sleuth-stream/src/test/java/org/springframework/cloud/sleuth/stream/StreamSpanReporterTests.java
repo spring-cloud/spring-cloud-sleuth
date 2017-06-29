@@ -16,11 +16,6 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -28,6 +23,12 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.mock.env.MockEnvironment;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
@@ -44,7 +45,8 @@ public class StreamSpanReporterTests {
 
 	@Before
 	public void setup() {
-		this.reporter = new StreamSpanReporter(this.endpointLocator, this.spanMetricReporter, this.mockEnvironment);
+		this.reporter = new StreamSpanReporter(this.endpointLocator, this.spanMetricReporter,
+				this.mockEnvironment, new ArrayList<>());
 	}
 
 	@Test
@@ -79,7 +81,8 @@ public class StreamSpanReporterTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void should_not_append_server_serviceid_when_span_has_rpc_event_and_there_is_no_environment() throws Exception {
-		this.reporter = new StreamSpanReporter(this.endpointLocator, this.spanMetricReporter, null);
+		this.reporter = new StreamSpanReporter(this.endpointLocator, this.spanMetricReporter,
+				null, new ArrayList<>());
 		LinkedBlockingQueue<Span> queue = new LinkedBlockingQueue<>(1000);
 		this.reporter.setQueue(queue);
 		Span span = Span.builder().name("bar").exportable(true).build();

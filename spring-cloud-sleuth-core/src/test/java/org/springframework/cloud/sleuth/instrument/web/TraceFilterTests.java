@@ -16,11 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Random;
-import java.util.regex.Pattern;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +48,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Random;
+import java.util.regex.Pattern;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
@@ -83,6 +83,7 @@ public class TraceFilterTests {
 	private MockHttpServletResponse response;
 	private MockFilterChain filterChain;
 	private Sampler sampler = new AlwaysSampler();
+	BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
 
 	@Before
 	public void init() {
@@ -260,8 +261,8 @@ public class TraceFilterTests {
 	public void ensuresThatParentSpanIsStoppedWhenReported() throws Exception {
 		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
-		TraceFilter filter = new TraceFilter(this.tracer, this.traceKeys, spanIsStoppedVeryfingReporter(),
-				this.spanExtractor, this.httpTraceKeysInjector);
+		TraceFilter filter = new TraceFilter(beanFactory());
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(spanIsStoppedVeryfingReporter());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 	}
@@ -483,7 +484,6 @@ public class TraceFilterTests {
 	}
 
 	private BeanFactory beanFactory() {
-		BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
 		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
 		BDDMockito.given(beanFactory.getBean(TraceKeys.class)).willReturn(this.traceKeys);
 		BDDMockito.given(beanFactory.getBean(HttpSpanExtractor.class)).willReturn(this.spanExtractor);

@@ -17,8 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.integration.channel.ChannelInterceptorAware;
 import org.springframework.integration.channel.interceptor.VetoCapableInterceptor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -29,14 +27,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
  */
 class IntegrationTraceChannelInterceptor extends TraceChannelInterceptor implements VetoCapableInterceptor {
 
-	@Deprecated
-	public IntegrationTraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			MessagingSpanTextMapExtractor spanExtractor,
-			MessagingSpanTextMapInjector spanInjector) {
-		super(tracer, traceKeys, spanExtractor, spanInjector);
-	}
-
-	public IntegrationTraceChannelInterceptor(BeanFactory beanFactory) {
+	IntegrationTraceChannelInterceptor(BeanFactory beanFactory) {
 		super(beanFactory);
 	}
 

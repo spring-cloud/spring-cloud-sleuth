@@ -16,24 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.lang.reflect.Field;
-import java.util.concurrent.Callable;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.logging.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.SpanContinuingTraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Field;
+import java.util.concurrent.Callable;
 
 /**
  * Aspect that adds tracing to
@@ -78,14 +77,6 @@ public class TraceWebAspect {
 	private final SpanNamer spanNamer;
 	private final TraceKeys traceKeys;
 	private final ErrorParser errorParser;
-
-	@Deprecated
-	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer, TraceKeys traceKeys) {
-		this.tracer = tracer;
-		this.spanNamer = spanNamer;
-		this.traceKeys = traceKeys;
-		this.errorParser = new ExceptionMessageErrorParser();
-	}
 
 	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer, TraceKeys traceKeys,
 			ErrorParser errorParser) {

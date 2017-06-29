@@ -38,11 +38,6 @@ public class DiscoveryClientHostLocator implements HostLocator {
 	private final DiscoveryClient client;
 	private final ZipkinProperties zipkinProperties;
 
-	@Deprecated
-	public DiscoveryClientHostLocator(DiscoveryClient client) {
-		this(client, new ZipkinProperties());
-	}
-
 	public DiscoveryClientHostLocator(DiscoveryClient client, ZipkinProperties zipkinProperties) {
 		this.client = client;
 		Assert.notNull(this.client, "client");

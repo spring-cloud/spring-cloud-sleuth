@@ -53,11 +53,6 @@ public class ServerPropertiesHostLocator implements HostLocator {
 	private final ZipkinProperties zipkinProperties;
 	private Integer port; // Lazy assigned
 
-	@Deprecated
-	public ServerPropertiesHostLocator(ServerProperties serverProperties, String appName) {
-		this(serverProperties, appName, new ZipkinProperties(),null);
-	}
-
 	public ServerPropertiesHostLocator(ServerProperties serverProperties, String appName,
 			ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.serverProperties = serverProperties;

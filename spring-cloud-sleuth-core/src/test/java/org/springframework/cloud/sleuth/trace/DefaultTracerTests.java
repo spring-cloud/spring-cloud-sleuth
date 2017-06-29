@@ -237,7 +237,7 @@ public class DefaultTracerTests {
 	@Test
 	public void shouldNotProduceAWarningMessageWhenThereIsNoSpanInContextAndWeDetachASpan() {
 		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				this.spanNamer, this.spanLogger, this.spanReporter);
+				this.spanNamer, this.spanLogger, this.spanReporter, new TraceKeys());
 		Span span = Span.builder().name("foo").traceId(1L).spanId(1L).build();
 
 		Span child = tracer.detach(span);

@@ -16,10 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.io.IOException;
-
 import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
@@ -27,6 +24,8 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+
+import java.io.IOException;
 
 /**
  * Interceptor that verifies whether the trance and span id has been set on the request
@@ -42,13 +41,6 @@ public class TraceRestTemplateInterceptor extends AbstractTraceHttpRequestInterc
 		implements ClientHttpRequestInterceptor {
 
 	private final ErrorParser errorParser;
-
-	@Deprecated
-	public TraceRestTemplateInterceptor(Tracer tracer, HttpSpanInjector spanInjector,
-			HttpTraceKeysInjector httpTraceKeysInjector) {
-		super(tracer, spanInjector, httpTraceKeysInjector);
-		this.errorParser = new ExceptionMessageErrorParser();
-	}
 
 	public TraceRestTemplateInterceptor(Tracer tracer, HttpSpanInjector spanInjector,
 			HttpTraceKeysInjector httpTraceKeysInjector, ErrorParser errorParser) {

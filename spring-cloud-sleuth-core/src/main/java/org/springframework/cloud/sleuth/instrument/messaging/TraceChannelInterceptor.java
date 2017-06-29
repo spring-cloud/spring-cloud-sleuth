@@ -19,8 +19,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -37,13 +35,6 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  * @since 1.0.0
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
-
-	@Deprecated
-	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
-			MessagingSpanTextMapExtractor spanExtractor,
-			MessagingSpanTextMapInjector spanInjector) {
-		super(tracer, traceKeys, spanExtractor, spanInjector);
-	}
 
 	public TraceChannelInterceptor(BeanFactory beanFactory) {
 		super(beanFactory);
