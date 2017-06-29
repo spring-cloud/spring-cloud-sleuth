@@ -2835,8 +2835,8 @@ static class Config {
 
 	@Bean(name = "customAsyncRestTemplate")
 	public AsyncRestTemplate traceAsyncRestTemplate(@Qualifier("customHttpRequestFactoryWrapper")
-			TraceAsyncClientHttpRequestFactoryWrapper wrapper) {
-		return new TraceAsyncRestTemplate(wrapper, this.tracer);
+			TraceAsyncClientHttpRequestFactoryWrapper wrapper, ErrorParser errorParser) {
+		return new TraceAsyncRestTemplate(wrapper, this.tracer, errorParser);
 	}
 
 	@Bean(name = "customHttpRequestFactoryWrapper")
