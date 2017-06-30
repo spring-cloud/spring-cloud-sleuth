@@ -20,6 +20,11 @@ public class ExceptionMessageErrorParserTests {
 	}
 
 	@Test
+	public void should_not_throw_an_exception_when_span_is_null() throws Exception {
+		new ExceptionMessageErrorParser().parseErrorTags(null, null);
+	}
+
+	@Test
 	public void should_not_append_tag_for_non_exportable_span() throws Exception {
 		Throwable e = new RuntimeException("foo");
 		Span span = new Span.SpanBuilder().exportable(false).build();
