@@ -1,9 +1,9 @@
 package org.springframework.cloud.sleuth;
 
-import java.lang.invoke.MethodHandles;
-
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
+
+import java.lang.invoke.MethodHandles;
 
 /**
  * {@link ErrorParser} that sets the error tag for an exportable span.
@@ -17,7 +17,7 @@ public class ExceptionMessageErrorParser implements ErrorParser {
 
 	@Override
 	public void parseErrorTags(Span span, Throwable error) {
-		if (span.isExportable()) {
+		if (span != null && span.isExportable()) {
 			String errorMsg = ExceptionUtils.getExceptionMessage(error);
 			if (log.isDebugEnabled()) {
 				log.debug("Adding an error tag [" + errorMsg + "] to span " + span);
