@@ -16,10 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign.servererrors;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+import com.jayway.awaitility.Awaitility;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
+import feign.codec.Decoder;
+import feign.codec.ErrorDecoder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,14 +57,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import com.jayway.awaitility.Awaitility;
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
-import feign.codec.Decoder;
-import feign.codec.ErrorDecoder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -72,7 +70,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = { "spring.application.name=fooservice" })
+@TestPropertySource(properties = { "spring.application.name=fooservice" ,
+"feign.hystrix.enabled=true"})
 public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;
