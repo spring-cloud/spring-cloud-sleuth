@@ -71,7 +71,8 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = { "spring.application.name=fooservice" })
+@TestPropertySource(properties = { "spring.application.name=fooservice" ,
+"feign.hystrix.enabled=true"})
 public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;
@@ -139,7 +140,6 @@ public class FeignClientServerErrorTests {
 		Awaitility.await().untilAsserted(() -> {
 			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
 			then(ExceptionUtils.getLastException()).isNull();
-
 		});
 	}
 
