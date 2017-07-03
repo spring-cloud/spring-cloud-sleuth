@@ -22,11 +22,6 @@ import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,6 +56,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
