@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -55,8 +56,9 @@ public class TraceZuulAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer,
-			HttpSpanInjector spanInjector, HttpTraceKeysInjector httpTraceKeysInjector) {
-		return new TracePreZuulFilter(tracer, spanInjector, httpTraceKeysInjector);
+			HttpSpanInjector spanInjector, HttpTraceKeysInjector httpTraceKeysInjector,
+			ErrorParser errorParser) {
+		return new TracePreZuulFilter(tracer, spanInjector, httpTraceKeysInjector, errorParser);
 	}
 
 	@Bean

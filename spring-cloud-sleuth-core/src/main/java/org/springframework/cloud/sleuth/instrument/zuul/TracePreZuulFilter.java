@@ -16,21 +16,22 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.lang.invoke.MethodHandles;
-import java.net.URI;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
-import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
-
 import com.netflix.zuul.ExecutionStatus;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.ZuulFilterResult;
 import com.netflix.zuul.context.RequestContext;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
+import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
+
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
 
 /**
  * A pre request {@link ZuulFilter} that sets tracing related headers on the request
@@ -48,12 +49,23 @@ public class TracePreZuulFilter extends ZuulFilter {
 	private final Tracer tracer;
 	private final HttpSpanInjector spanInjector;
 	private final HttpTraceKeysInjector httpTraceKeysInjector;
+	private final ErrorParser errorParser;
 
+	@Deprecated
 	public TracePreZuulFilter(Tracer tracer, HttpSpanInjector spanInjector,
 			HttpTraceKeysInjector httpTraceKeysInjector) {
 		this.tracer = tracer;
 		this.spanInjector = spanInjector;
 		this.httpTraceKeysInjector = httpTraceKeysInjector;
+		this.errorParser = new ExceptionMessageErrorParser();
+	}
+
+	public TracePreZuulFilter(Tracer tracer, HttpSpanInjector spanInjector,
+			HttpTraceKeysInjector httpTraceKeysInjector, ErrorParser errorParser) {
+		this.tracer = tracer;
+		this.spanInjector = spanInjector;
+		this.httpTraceKeysInjector = httpTraceKeysInjector;
+		this.errorParser = errorParser;
 	}
 
 	@Override
@@ -91,6 +103,7 @@ public class TracePreZuulFilter extends ZuulFilter {
 				log.debug("The result of Zuul filter execution was not successful thus "
 						+ "will close the current span " + newSpan);
 			}
+			this.errorParser.parseErrorTags(newSpan, result.getException());
 			this.tracer.close(newSpan);
 		}
 		return result;
