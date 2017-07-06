@@ -15,9 +15,6 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
@@ -28,6 +25,10 @@ import zipkin.BinaryAnnotation;
 import zipkin.Constants;
 import zipkin.Endpoint;
 import zipkin.Span.Builder;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * This converts sleuth spans to zipkin ones, skipping invalid or unsampled.
@@ -88,7 +89,7 @@ final class ConvertToZipkinSpanList {
 		ZipkinMessageListener.addZipkinAnnotations(zipkinSpan, span, ep);
 		ZipkinMessageListener.addZipkinBinaryAnnotations(zipkinSpan, span, ep);
 		if (hasClientSend(span)) {
-			ensureServerAddr(span, zipkinSpan, ep);
+			ensureServerAddr(span, zipkinSpan);
 		}
 		// In the RPC span model, the client owns the timestamp and duration of the span. If we
 		// were propagated an id, we can assume that we shouldn't report timestamp or duration,
@@ -129,10 +130,9 @@ final class ConvertToZipkinSpanList {
 				BinaryAnnotation.create(Constants.LOCAL_COMPONENT, processId, ep));
 	}
 
-	private static void ensureServerAddr(Span span, Builder zipkinSpan,
-			Endpoint ep) {
+	private static void ensureServerAddr(Span span, Builder zipkinSpan) {
 		if (span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME)) {
-			Endpoint endpoint = ep.toBuilder().serviceName(span.tags().get(
+			Endpoint endpoint = Endpoint.builder().serviceName(span.tags().get(
 					Span.SPAN_PEER_SERVICE_TAG_NAME)).build();
 			zipkinSpan.addBinaryAnnotation(
 					BinaryAnnotation.address(Constants.SERVER_ADDR, endpoint));

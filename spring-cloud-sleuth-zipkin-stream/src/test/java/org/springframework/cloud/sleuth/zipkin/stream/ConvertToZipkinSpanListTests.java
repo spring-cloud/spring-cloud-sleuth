@@ -15,15 +15,18 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import org.assertj.core.api.Condition;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.Spans;
 import zipkin.Constants;
+import zipkin.Endpoint;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -86,8 +89,14 @@ public class ConvertToZipkinSpanListTests {
 				.hasSize(1)
 				.flatExtracting(input1 -> input1.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
-				.extracting(input -> input.endpoint.serviceName)
-				.contains("myservice");
+				.extracting(input -> input.endpoint)
+				.hasSize(1)
+				.has(new Condition<List<? extends Endpoint>>() {
+					@Override public boolean matches(List<? extends Endpoint> value) {
+						Endpoint endpoint = value.get(0);
+						return endpoint.serviceName.equals("myservice") && endpoint.ipv4 == 0;
+					}
+				});
 	}
 
 	@Test
