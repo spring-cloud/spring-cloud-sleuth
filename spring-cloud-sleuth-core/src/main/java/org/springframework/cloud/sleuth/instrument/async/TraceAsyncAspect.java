@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.lang.reflect.Method;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -27,8 +25,9 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.Method;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
@@ -68,17 +67,6 @@ public class TraceAsyncAspect {
 		} finally {
 			this.tracer.close(span);
 		}
-	}
-
-	@Around("execution (* org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.*(..))")
-	public Object traceThreadPoolTaskExecutor(final ProceedingJoinPoint pjp) throws Throwable {
-		LazyTraceThreadPoolTaskExecutor executor = new LazyTraceThreadPoolTaskExecutor(this.beanFactory,
-				(ThreadPoolTaskExecutor) pjp.getTarget());
-		Method methodOnTracedBean = getMethod(pjp, executor);
-		if (methodOnTracedBean != null) {
-			return methodOnTracedBean.invoke(executor, pjp.getArgs());
-		}
-		return pjp.proceed();
 	}
 
 	private Method getMethod(ProceedingJoinPoint pjp, Object object) {
