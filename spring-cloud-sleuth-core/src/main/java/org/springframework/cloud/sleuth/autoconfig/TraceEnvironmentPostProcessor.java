@@ -43,6 +43,7 @@ import org.springframework.core.env.PropertySource;
 public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
+	public static final String SPRING_AOP_PROXY_TARGET_CLASS = "spring.aop.proxyTargetClass";
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
@@ -52,7 +53,10 @@ public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		// traces in logs without having to configure it.
 		map.put("logging.pattern.level",
 				"%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]");
-		map.put("spring.aop.proxyTargetClass", "true");
+		// TODO: Remove this in 2.0.x. For compatibility we always set to true
+		if (!environment.containsProperty(SPRING_AOP_PROXY_TARGET_CLASS)) {
+			map.put(SPRING_AOP_PROXY_TARGET_CLASS, "true");
+		}
 		addOrReplace(environment.getPropertySources(), map);
 	}
 

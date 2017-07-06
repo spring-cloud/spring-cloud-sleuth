@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.concurrent.Executor;
-
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactoryBean;
@@ -28,6 +24,10 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.concurrent.Executor;
 
 /**
  * Bean post processor that wraps a call to an {@link Executor} either in a
@@ -62,7 +62,20 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			Executor executor = (Executor) bean;
 			ProxyFactoryBean factory = new ProxyFactoryBean();
 			factory.setProxyTargetClass(cglibProxy);
-			factory.addAdvice(new ExecutorMethodInterceptor(executor, this.beanFactory));
+			factory.addAdvice(new ExecutorMethodInterceptor<>(executor, this.beanFactory));
+			factory.setTarget(bean);
+			return factory.getObject();
+		} else if (bean instanceof ThreadPoolTaskExecutor) {
+			boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+			boolean cglibProxy = !classFinal;
+			ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
+			ProxyFactoryBean factory = new ProxyFactoryBean();
+			factory.setProxyTargetClass(cglibProxy);
+			factory.addAdvice(new ExecutorMethodInterceptor<ThreadPoolTaskExecutor>(executor, this.beanFactory) {
+				@Override Executor executor(BeanFactory beanFactory, ThreadPoolTaskExecutor executor) {
+					return new LazyTraceThreadPoolTaskExecutor(beanFactory, executor);
+				}
+			});
 			factory.setTarget(bean);
 			return factory.getObject();
 		}
@@ -70,19 +83,19 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	}
 }
 
-class ExecutorMethodInterceptor implements MethodInterceptor {
+class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor {
 
-	private final Executor delegate;
+	private final T delegate;
 	private final BeanFactory beanFactory;
 
-	ExecutorMethodInterceptor(Executor delegate, BeanFactory beanFactory) {
+	ExecutorMethodInterceptor(T delegate, BeanFactory beanFactory) {
 		this.delegate = delegate;
 		this.beanFactory = beanFactory;
 	}
 
 	@Override public Object invoke(MethodInvocation invocation)
 			throws Throwable {
-		LazyTraceExecutor executor = new LazyTraceExecutor(this.beanFactory, this.delegate);
+		Executor executor = executor(this.beanFactory, this.delegate);
 		Method methodOnTracedBean = getMethod(invocation, executor);
 		if (methodOnTracedBean != null) {
 			return methodOnTracedBean.invoke(executor, invocation.getArguments());
@@ -94,5 +107,9 @@ class ExecutorMethodInterceptor implements MethodInterceptor {
 		Method method = invocation.getMethod();
 		return ReflectionUtils
 				.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
+	}
+
+	Executor executor(BeanFactory beanFactory, T executor) {
+		return new LazyTraceExecutor(beanFactory, executor);
 	}
 }
