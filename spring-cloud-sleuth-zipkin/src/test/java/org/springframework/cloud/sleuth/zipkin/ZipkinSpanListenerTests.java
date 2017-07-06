@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import org.assertj.core.api.Condition;
 import zipkin.Constants;
 
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.context.junit4.SpringRunner;
+import zipkin.Endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -219,7 +221,14 @@ public class ZipkinSpanListenerTests {
 
 		assertThat(result.binaryAnnotations)
 				.filteredOn("key", Constants.SERVER_ADDR)
-				.isNotEmpty();
+				.extracting(input -> input.endpoint)
+				.hasSize(1)
+				.has(new Condition<List<? extends Endpoint>>() {
+					@Override public boolean matches(List<? extends Endpoint> value) {
+						Endpoint endpoint = value.get(0);
+						return endpoint.serviceName.equals("fooservice") && endpoint.ipv4 == 0;
+					}
+				});
 	}
 
 	@Test

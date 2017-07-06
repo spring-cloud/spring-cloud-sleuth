@@ -16,6 +16,14 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import org.springframework.cloud.commons.util.IdUtils;
+import org.springframework.cloud.sleuth.Log;
+import org.springframework.cloud.sleuth.NoOpSpanAdjuster;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAdjuster;
+import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.core.env.Environment;
+import org.springframework.util.StringUtils;
 import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
@@ -26,15 +34,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.cloud.commons.util.IdUtils;
-import org.springframework.cloud.sleuth.Log;
-import org.springframework.cloud.sleuth.NoOpSpanAdjuster;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAdjuster;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.core.env.Environment;
-import org.springframework.util.StringUtils;
 
 /**
  * Listener of Sleuth events. Reports to Zipkin via {@link ZipkinSpanReporter}.
@@ -149,10 +148,10 @@ public class ZipkinSpanListener implements SpanReporter {
 		zipkinSpan.addBinaryAnnotation(component);
 	}
 
-	private void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan, Endpoint localEndpoint) {
+	private void ensureServerAddr(Span span, zipkin.Span.Builder zipkinSpan) {
 		if (span.tags().containsKey(Span.SPAN_PEER_SERVICE_TAG_NAME)) {
 			zipkinSpan.addBinaryAnnotation(BinaryAnnotation.address(Constants.SERVER_ADDR,
-					localEndpoint.toBuilder().serviceName(
+					Endpoint.builder().serviceName(
 							span.tags().get(Span.SPAN_PEER_SERVICE_TAG_NAME)).build()));
 		}
 	}
@@ -178,7 +177,7 @@ public class ZipkinSpanListener implements SpanReporter {
 			ensureLocalComponent(span, zipkinSpan, endpoint);
 		}
 		if (hasClientSend) {
-			ensureServerAddr(span, zipkinSpan, endpoint);
+			ensureServerAddr(span, zipkinSpan);
 		}
 		if (instanceIdToTag && this.environment != null) {
 			setInstanceIdIfPresent(zipkinSpan, endpoint, Span.INSTANCEID);
