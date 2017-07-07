@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.context.Context;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -44,7 +43,7 @@ public class TraceReactorAutoConfiguration {
 		@PostConstruct
 		public void setupHooks() {
 			Hooks.onNewSubscriber((pub, sub) ->
-					new SpanSubscriber(sub, Context.from(sub), this.tracer, pub.toString()));
+					new SpanSubscriber(sub, sub.currentContext(), this.tracer, pub.toString()));
 			Schedulers.setFactory(new Schedulers.Factory() {
 				@Override public ScheduledExecutorService decorateScheduledExecutorService(
 						String schedulerType,

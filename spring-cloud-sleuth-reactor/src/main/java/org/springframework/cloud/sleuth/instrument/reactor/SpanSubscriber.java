@@ -6,10 +6,10 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import reactor.core.CoreSubscriber;
 import reactor.util.Logger;
 import reactor.util.Loggers;
 import reactor.util.context.Context;
-import reactor.util.context.Contextualized;
 
 /**
  * A trace representation of the {@link Subscriber}
@@ -18,8 +18,7 @@ import reactor.util.context.Contextualized;
  * @author Marcin Grzejszczak
  * @since 1.3.0
  */
-class SpanSubscriber extends AtomicBoolean
-		implements Subscriber<Object>, Subscription, Contextualized {
+class SpanSubscriber extends AtomicBoolean implements Subscription, CoreSubscriber<Object> {
 
 	private static final Logger log = Loggers.getLogger(SpanSubscriber.class);
 
