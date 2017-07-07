@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.reactor;
+package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
