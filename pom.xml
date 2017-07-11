@@ -30,7 +30,6 @@
 		<module>spring-cloud-sleuth-core</module>
 		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-sleuth-stream</module>
-		<module>spring-cloud-sleuth-reactor</module>
 		<module>spring-cloud-sleuth-zipkin-stream</module>
 		<module>spring-cloud-starter-sleuth</module>
 		<module>spring-cloud-starter-zipkin</module>
@@ -172,6 +171,21 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!-- For Reactor -->
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-bom</artifactId>
+				<version>${reactor.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<!-- Spock -->
 			<dependency>
 				<groupId>org.spockframework</groupId>
@@ -200,16 +214,6 @@
 				<groupId>commons-logging</groupId>
 				<artifactId>commons-logging</artifactId>
 				<version>1.2</version>
-			</dependency>
-			<dependency>
-				<groupId>io.projectreactor</groupId>
-				<artifactId>reactor-core</artifactId>
-				<version>${reactor.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.reactivestreams</groupId>
-				<artifactId>reactive-streams</artifactId>
-				<version>${reactive-streams.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.hamcrest</groupId>
@@ -254,8 +258,9 @@
 		<spring-cloud-commons.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-commons.version>
 		<spring-cloud-stream.version>Elmhurst.BUILD-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
-		<reactor.version>3.1.0.BUILD-SNAPSHOT</reactor.version>
-		<reactive-streams.version>1.0.0</reactive-streams.version>
+		<reactor.version>Bismuth-BUILD-SNAPSHOT</reactor.version>
+		<!-- To make Reactor work -->
+		<spring-boot.version>2.0.0.BUILD-SNAPSHOT</spring-boot.version>
 	</properties>
 
 	<profiles>

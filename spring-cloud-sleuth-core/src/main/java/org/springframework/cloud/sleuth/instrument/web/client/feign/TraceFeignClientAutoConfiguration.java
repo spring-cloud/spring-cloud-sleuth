@@ -26,7 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -47,7 +47,7 @@ import feign.okhttp.OkHttpClient;
 @ConditionalOnClass(Client.class)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
-@AutoConfigureAfter({SleuthHystrixAutoConfiguration.class, TraceWebAutoConfiguration.class})
+@AutoConfigureAfter({SleuthHystrixAutoConfiguration.class, TraceWebServletAutoConfiguration.class})
 public class TraceFeignClientAutoConfiguration {
 
 	@Bean

@@ -17,7 +17,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -27,78 +26,25 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-
-import static javax.servlet.DispatcherType.ASYNC;
-import static javax.servlet.DispatcherType.ERROR;
-import static javax.servlet.DispatcherType.FORWARD;
-import static javax.servlet.DispatcherType.INCLUDE;
-import static javax.servlet.DispatcherType.REQUEST;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} enables tracing to HTTP requests.
+ * Auto-configuration} that sets up common building blocks for both reactive
+ * and servlet based web application.
  *
- * @author Tomasz Nurkewicz, 4financeIT
- * @author Michal Chmielarz, 4financeIT
  * @author Marcin Grzejszczak
- * @author Spencer Gibb
  * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
-@ConditionalOnWebApplication
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.ANY)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
 public class TraceWebAutoConfiguration {
-
-	/**
-	 * Nested config that configures Web MVC if it's present (without adding a runtime
-	 * dependency to it)
-	 */
-	@Configuration
-	@ConditionalOnClass(WebMvcConfigurerAdapter.class)
-	@Import(TraceWebMvcConfigurer.class)
-	protected static class TraceWebMvcAutoConfiguration {
-	}
-
-	@Bean
-	public TraceWebAspect traceWebAspect(Tracer tracer, TraceKeys traceKeys,
-			SpanNamer spanNamer, ErrorParser errorParser) {
-		return new TraceWebAspect(tracer, spanNamer, traceKeys, errorParser);
-	}
-
-	@Bean
-	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
-	public TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
-			BeanFactory beanFactory) {
-		return new TraceSpringDataBeanPostProcessor(beanFactory);
-	}
-
-	@Bean
-	public FilterRegistrationBean traceWebFilter(TraceFilter traceFilter) {
-		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
-				traceFilter);
-		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE,
-				REQUEST);
-		filterRegistrationBean.setOrder(TraceFilter.ORDER);
-		return filterRegistrationBean;
-	}
-
-	@Bean
-	public TraceFilter traceFilter(BeanFactory beanFactory,
-			SkipPatternProvider skipPatternProvider) {
-		return new TraceFilter(beanFactory, skipPatternProvider.skipPattern());
-	}
 
 	@Configuration
 	@ConditionalOnClass(ManagementServerProperties.class)
@@ -157,12 +103,7 @@ public class TraceWebAutoConfiguration {
 
 	private static SkipPatternProvider defaultSkipPatternProvider(
 			final String skipPattern) {
-		return new SkipPatternProvider() {
-			@Override
-			public Pattern skipPattern() {
-				return defaultSkipPattern(skipPattern);
-			}
-		};
+		return () -> defaultSkipPattern(skipPattern);
 	}
 
 	private static Pattern defaultSkipPattern(String skipPattern) {
@@ -170,7 +111,5 @@ public class TraceWebAutoConfiguration {
 				: Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 	}
 
-	interface SkipPatternProvider {
-		Pattern skipPattern();
-	}
 }
+

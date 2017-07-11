@@ -47,7 +47,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.net.URI;
-import java.util.Collection;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -88,7 +87,7 @@ public class SpringDataInstrumentationTests {
 		});
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
-		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasRpcTagsInProperOrder();
+		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasRpcLogsInProperOrder();
 	}
 
 	long namesCount() {

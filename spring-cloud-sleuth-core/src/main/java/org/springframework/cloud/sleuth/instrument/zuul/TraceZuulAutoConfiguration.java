@@ -32,7 +32,7 @@ import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -50,7 +50,7 @@ import okhttp3.Request;
 @ConditionalOnWebApplication
 @ConditionalOnClass(ZuulFilter.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(TraceWebAutoConfiguration.class)
+@AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceZuulAutoConfiguration {
 
 	@Bean

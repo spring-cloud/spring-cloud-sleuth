@@ -125,7 +125,7 @@ public class WebClientTests {
 			// TODO: matches cause there is an issue with Feign not providing the full URL at the interceptor level
 			then(noTraceSpan.get()).matchesATag("http.url", ".*/notrace")
 					.hasATag("http.path", "/notrace").hasATag("http.method", "GET");
-			then(new ListOfSpans(spans)).hasRpcTagsInProperOrder();
+			then(new ListOfSpans(spans)).hasRpcLogsInProperOrder();
 		});
 	}
 
