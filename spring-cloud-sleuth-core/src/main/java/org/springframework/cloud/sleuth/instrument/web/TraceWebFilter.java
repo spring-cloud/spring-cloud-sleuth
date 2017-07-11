@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -19,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.util.StringUtils;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -64,7 +67,7 @@ public class TraceWebFilter implements WebFilter, Ordered {
 		this.skipPattern = skipPattern;
 	}
 
-	@Override public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+	@Override public Mono<Void> filter(final ServerWebExchange exchange, WebFilterChain chain) {
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse response = exchange.getResponse();
 		String uri = request.getPath().pathWithinApplication().value();
@@ -82,7 +85,35 @@ public class TraceWebFilter implements WebFilter, Ordered {
 		}).doOnError(t -> {
 			errorParser().parseErrorTags(tracer().getCurrentSpan(), t);
 			addResponseTags(response, t);
-		}).doFinally(t -> detachOrCloseSpans(span)));
+		}).doFinally(t -> {
+			HandlerMethod handlerMethod = exchange.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+			addClassMethodTag(handlerMethod, span);
+			addClassNameTag(handlerMethod, span);
+			detachOrCloseSpans(span);
+		}));
+	}
+
+	private void addClassMethodTag(Object handler, Span span) {
+		if (handler instanceof HandlerMethod) {
+			String methodName = ((HandlerMethod) handler).getMethod().getName();
+			tracer().addTag(traceKeys().getMvc().getControllerMethod(), methodName);
+			if (log.isDebugEnabled()) {
+				log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
+			}
+		}
+	}
+
+	private void addClassNameTag(Object handler, Span span) {
+		String className;
+		if (handler instanceof HandlerMethod) {
+			className = ((HandlerMethod) handler).getBeanType().getSimpleName();
+		} else {
+			className = handler.getClass().getSimpleName();
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("Adding a class tag with value [" + className + "] to a span " + span);
+		}
+		tracer().addTag(traceKeys().getMvc().getControllerClass(), className);
 	}
 
 	private String sampledHeader(ServerHttpRequest request) {

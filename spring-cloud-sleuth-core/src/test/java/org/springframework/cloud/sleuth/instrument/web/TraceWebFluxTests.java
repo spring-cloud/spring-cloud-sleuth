@@ -59,7 +59,9 @@ public class TraceWebFluxTests {
 						.hasASpanWithLogEqualTo(Span.CLIENT_SEND)
 						.hasASpanWithLogEqualTo(Span.SERVER_RECV)
 						.hasASpanWithLogEqualTo(Span.SERVER_SEND)
-						.hasASpanWithLogEqualTo(Span.CLIENT_RECV);
+						.hasASpanWithLogEqualTo(Span.CLIENT_RECV)
+						.hasASpanWithTagEqualTo("mvc.controller.method", "successful")
+						.hasASpanWithTagEqualTo("mvc.controller.class", "Controller2");
 			});
 		} finally {
 			context.getBean(Tracer.class).close(span);
