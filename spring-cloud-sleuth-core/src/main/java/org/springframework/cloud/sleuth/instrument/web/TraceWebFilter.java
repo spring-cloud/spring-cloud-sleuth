@@ -1,6 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
