@@ -796,4 +796,4 @@ To disable Zuul support set the `spring.sleuth.zuul.enabled` property to `false`
 You can find the running examples deployed in the https://run.pivotal.io/[Pivotal Web Services]. Check them out in the following links:
 
 - http://docssleuth-zipkin-server.cfapps.io/[Zipkin for apps presented in the samples to the top]
-- http://docsbrewing-zipkin-web.cfapps.io/[Zipkin for Brewery on PWS], its https://github.com/spring-cloud-samples/brewery[Github Code]
+- http://docsbrewing-zipkin-server.cfapps.io/[Zipkin for Brewery on PWS], its https://github.com/spring-cloud-samples/brewery[Github Code]
