@@ -14,6 +14,7 @@ import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -21,6 +22,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import org.springframework.web.servlet.HandlerMapping;
 import reactor.core.publisher.Mono;
 
 /**
@@ -30,13 +32,19 @@ import reactor.core.publisher.Mono;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-public class TraceWebFilter implements WebFilter {
+public class TraceWebFilter implements WebFilter, Ordered {
 
 	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
 
 	protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
 			+ ".TRACE";
-	private static final String HTTP_COMPONENT = "http";
+	private static final String HTTP_COMPONENT = "http";/**
+
+	 * If you register your filter before the {@link TraceWebFilter} then you will not
+	 * have the tracing context passed for you out of the box. That means that e.g. your
+	 * logs will not get correlated.
+	 */
+	public static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
 	private Tracer tracer;
 	private TraceKeys traceKeys;
@@ -258,5 +266,9 @@ public class TraceWebFilter implements WebFilter {
 			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
 		}
 		return this.errorParser;
+	}
+
+	@Override public int getOrder() {
+		return ORDER;
 	}
 }
