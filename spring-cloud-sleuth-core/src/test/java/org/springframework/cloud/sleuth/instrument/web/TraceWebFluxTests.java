@@ -29,14 +29,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import rx.plugins.RxJavaHooks;
 
 public class TraceWebFluxTests {
 
 	@BeforeClass
 	public static void setup() {
-		RxJavaHooks.reset();
-		RxJavaHooks.clear();
 		Hooks.resetOnNewSubscriber();
 		Schedulers.resetFactory();
 	}
