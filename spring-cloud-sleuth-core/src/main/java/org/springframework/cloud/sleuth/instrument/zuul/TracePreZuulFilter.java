@@ -27,6 +27,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
+import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
 
 import java.lang.invoke.MethodHandles;
@@ -42,6 +43,11 @@ import java.net.URI;
 public class TracePreZuulFilter extends ZuulFilter {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
+	private static final String TRACE_REQUEST_ATTR = TraceFilter.class.getName()
+			+ ".TRACE";
+	private static final String TRACE_CLOSE_SPAN_REQUEST_ATTR = TraceFilter.class.getName()
+			+ ".CLOSE_SPAN";
 
 	private static final String ZUUL_COMPONENT = "zuul";
 
@@ -84,6 +90,11 @@ public class TracePreZuulFilter extends ZuulFilter {
 		if (log.isDebugEnabled()) {
 			log.debug("New Zuul Span is " + newSpan + "");
 		}
+		if (log.isDebugEnabled()) {
+			log.debug("Setting attributes for TraceFilter to pick up later");
+		}
+		RequestContext.getCurrentContext().getRequest().setAttribute(TRACE_REQUEST_ATTR, this.tracer.getCurrentSpan());
+		RequestContext.getCurrentContext().getRequest().setAttribute(TRACE_CLOSE_SPAN_REQUEST_ATTR, true);
 		ZuulFilterResult result = super.runFilter();
 		if (log.isDebugEnabled()) {
 			log.debug("Result of Zuul filter is [" + result.getStatus() + "]");

@@ -3,6 +3,8 @@ package org.springframework.cloud.sleuth.instrument.web.multiple;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.Aggregator;
 import org.springframework.integration.annotation.Gateway;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 @MessageEndpoint
 @IntegrationComponentScan
 public class DemoApplication {
+
+	private static final Log log = LogFactory.getLog(DemoApplication.class);
 
 	@Autowired
 	Sender sender;
@@ -42,7 +46,7 @@ public class DemoApplication {
 
 	@ServiceActivator(inputChannel="counts")
 	public void report(int count) {
-		System.err.println("Count: " + count);
+		log.info("Count: " + count);
 	}
 
 }
