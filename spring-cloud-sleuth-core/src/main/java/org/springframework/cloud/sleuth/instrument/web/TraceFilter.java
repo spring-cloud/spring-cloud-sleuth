@@ -229,7 +229,8 @@ public class TraceFilter extends GenericFilterBean {
 					log.debug("Closing the span " + span + " since the response was successful");
 				}
 				tracer().close(span);
-			} else if (errorAlreadyHandled(request) && tracer().isTracing()) {
+				clearTraceAttribute(request);
+			} else if (errorAlreadyHandled(request) && tracer().isTracing() && !shouldCloseSpan(request)) {
 				if (log.isDebugEnabled()) {
 					log.debug(
 							"Won't detach the span " + span + " since error has already been handled");
@@ -240,11 +241,13 @@ public class TraceFilter extends GenericFilterBean {
 							"Will close span " + span + " since some component marked it for closure");
 				}
 				tracer().close(span);
+				clearTraceAttribute(request);
 			} else if (tracer().isTracing()) {
 				if (log.isDebugEnabled()) {
 					log.debug("Detaching the span " + span + " since the response was unsuccessful");
 				}
 				tracer().detach(span);
+				clearTraceAttribute(request);
 			}
 		}
 	}
@@ -281,6 +284,10 @@ public class TraceFilter extends GenericFilterBean {
 
 	private Span getSpanFromAttribute(HttpServletRequest request) {
 		return (Span) request.getAttribute(TRACE_REQUEST_ATTR);
+	}
+
+	private void clearTraceAttribute(HttpServletRequest request) {
+		request.setAttribute(TRACE_REQUEST_ATTR, null);
 	}
 
 	private boolean errorAlreadyHandled(HttpServletRequest request) {
