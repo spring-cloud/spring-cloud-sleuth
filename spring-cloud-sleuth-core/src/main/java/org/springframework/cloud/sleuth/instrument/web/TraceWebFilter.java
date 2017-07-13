@@ -1,7 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
@@ -75,8 +74,10 @@ public class TraceWebFilter implements WebFilter, Ordered {
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "] that should not be sampled [" + skip + "]");
 		}
-		Optional<Span> spanFromAttribute = getSpanFromAttribute(exchange);
-		spanFromAttribute.ifPresent(span -> continueSpan(exchange, span));
+		Span spanFromAttribute = getSpanFromAttribute(exchange);
+		if (spanFromAttribute != null) {
+			continueSpan(exchange, spanFromAttribute);
+		}
 		String name = HTTP_COMPONENT + ":" + uri;
 		Span span = createSpan(request, exchange, skip, spanFromAttribute, name);
 		return chain.filter(exchange).compose(f -> f.doOnSuccess(t -> {
@@ -131,13 +132,13 @@ public class TraceWebFilter implements WebFilter, Ordered {
 	 * Creates a span and appends it as the current request's attribute
 	 */
 	private Span createSpan(ServerHttpRequest request, ServerWebExchange exchange,
-			boolean skip, Optional<Span> spanFromAttribute, String name) {
+			boolean skip, Span spanFromAttribute, String name) {
 		Span spanFromRequest = null;
-		if (spanFromAttribute.isPresent()) {
+		if (spanFromAttribute != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Span has already been created - continuing with the previous one");
 			}
-			return spanFromAttribute.get();
+			return spanFromAttribute;
 		}
 		Span parent = spanExtractor().joinTrace(new ServerHttpRequestTextMap(request));
 		if (parent != null) {
@@ -221,9 +222,8 @@ public class TraceWebFilter implements WebFilter, Ordered {
 		}
 	}
 
-	private Optional<Span> getSpanFromAttribute(ServerWebExchange exchange) {
-		Optional<Span> attribute = exchange.getAttribute(TRACE_REQUEST_ATTR);
-		return attribute == null ? Optional.ofNullable(null) : attribute;
+	private Span getSpanFromAttribute(ServerWebExchange exchange) {
+		return exchange.getAttribute(TRACE_REQUEST_ATTR);
 	}
 
 	private void detachOrCloseSpans(Span spanFromRequest) {
