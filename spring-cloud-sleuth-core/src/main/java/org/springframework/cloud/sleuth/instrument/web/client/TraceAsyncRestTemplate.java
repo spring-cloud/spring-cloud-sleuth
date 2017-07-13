@@ -16,6 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.ErrorParser;
@@ -34,12 +40,6 @@ import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.lang.invoke.MethodHandles;
-import java.net.URI;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * An {@link AsyncRestTemplate} that closes started spans when a response has been
@@ -98,7 +98,10 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 				this.errorParser));
 		// potential race can happen here
 		if (span != null && span.equals(this.tracer.getCurrentSpan())) {
-			this.tracer.detach(span);
+			Span parent = this.tracer.detach(span);
+			if (parent != null) {
+				this.tracer.continueSpan(parent);
+			}
 		}
 		return new ListenableFuture<T>() {
 
@@ -287,9 +290,4 @@ public class TraceAsyncRestTemplate extends AsyncRestTemplate {
 			return this.tracer.isTracing();
 		}
 	}
-
-
-
-
-
 }
