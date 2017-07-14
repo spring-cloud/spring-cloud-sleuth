@@ -17,26 +17,49 @@ package org.springframework.cloud.sleuth.autoconfig;
 
 import java.security.SecureRandom;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class)
-@TestPropertySource(properties = "spring.sleuth.enabled=false")
+@SpringBootTest(classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class,
+				properties = "spring.sleuth.enabled=false",
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("disabled")
 public class TraceAutoConfigurationWithDisabledSleuthTests {
 
-	@Test
-	public void shouldStartContext(){
+	private static final Log log = LogFactory.getLog(TraceAutoConfigurationWithDisabledSleuthTests.class);
 
+	@Rule public OutputCapture capture = new OutputCapture();
+	@Autowired(required = false) Tracer tracer;
+
+	@Test
+	public void shouldStartContext() {
+		SleuthAssertions.then(this.tracer).isNull();
+	}
+
+	@Test
+	public void shouldNotContainAnyTracingInfoInTheLogs() {
+		log.info("hello");
+
+		SleuthAssertions.then(this.capture.toString()).doesNotContain("[foo");
 	}
 
 	@EnableAutoConfiguration
+	@Configuration
 	static class Config {
 		@Bean
 		public FactoryBean<SecureRandom> secureRandom() {
