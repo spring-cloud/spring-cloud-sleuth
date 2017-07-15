@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,9 +25,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
@@ -64,6 +67,7 @@ import org.springframework.web.client.RestTemplate;
 public class ZipkinAutoConfiguration {
 
 	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
+	@Autowired ZipkinUrlExtractor extractor;
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -71,8 +75,49 @@ public class ZipkinAutoConfiguration {
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = new RestTemplate();
 		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return new HttpZipkinSpanReporter(restTemplate, zipkin.getBaseUrl(), zipkin.getFlushInterval(),
+		String zipkinUrl = this.extractor.zipkinUrl(zipkin);
+		return new HttpZipkinSpanReporter(restTemplate, zipkinUrl, zipkin.getFlushInterval(),
 				spanMetricReporter);
+	}
+
+	@Configuration
+	@ConditionalOnClass(DiscoveryClient.class)
+	static class DiscoveryClientZipkinUrlExtractorConfiguration {
+
+		@Autowired(required = false) DiscoveryClient discoveryClient;
+
+		@Bean
+		ZipkinUrlExtractor zipkinUrlExtractor() {
+			final DiscoveryClient discoveryClient = this.discoveryClient;
+			return new ZipkinUrlExtractor() {
+				@Override
+				public String zipkinUrl(ZipkinProperties zipkinProperties) {
+					if (discoveryClient != null) {
+						URI uri = URI.create(zipkinProperties.getBaseUrl());
+						String host = uri.getHost();
+						List<ServiceInstance> instances = discoveryClient.getInstances(host);
+						if (!instances.isEmpty()) {
+							return instances.get(0).getUri().toString();
+						}
+					}
+					return zipkinProperties.getBaseUrl();
+				}
+			};
+		}
+	}
+
+	@Configuration
+	@ConditionalOnMissingClass("org.springframework.cloud.client.discovery.DiscoveryClient")
+	static class DefaultZipkinUrlExtractorConfiguration {
+		@Bean
+		ZipkinUrlExtractor zipkinUrlExtractor() {
+			return new ZipkinUrlExtractor() {
+				@Override
+				public String zipkinUrl(ZipkinProperties zipkinProperties) {
+					return zipkinProperties.getBaseUrl();
+				}
+			};
+		}
 	}
 
 	@Bean
@@ -155,4 +200,8 @@ public class ZipkinAutoConfiguration {
 
 	}
 
+}
+
+interface ZipkinUrlExtractor {
+	String zipkinUrl(ZipkinProperties zipkinProperties);
 }

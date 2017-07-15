@@ -8,7 +8,7 @@ import java.util.Date;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
