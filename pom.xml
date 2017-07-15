@@ -227,12 +227,6 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>com.github.tomakehurst</groupId>
-				<artifactId>wiremock</artifactId>
-				<version>2.6.0</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
 				<groupId>pl.pragmatists</groupId>
 				<artifactId>JUnitParams</artifactId>
 				<version>1.1.0</version>

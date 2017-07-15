@@ -26,7 +26,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("spring.zipkin")
 public class ZipkinProperties {
-	/** URL of the zipkin query server instance. */
+	/** URL of the zipkin query server instance. You can also provide
+	 *  the service id of the Zipkin server if Zipkin's registered in
+	 *  service discovery (e.g. http://zipkinserver/)
+	 */
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;
 	private int flushInterval = 1;

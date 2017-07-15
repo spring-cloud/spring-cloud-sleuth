@@ -17,11 +17,16 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import org.assertj.core.api.Condition;
+import org.junit.Ignore;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import zipkin.Constants;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.junit.Test;
@@ -56,7 +61,6 @@ import static org.junit.Assert.assertEquals;
 public class ZipkinSpanListenerTests {
 
 	@Autowired Tracer tracer;
-	@Autowired ApplicationContext application;
 	@Autowired TestConfiguration test;
 	@Autowired ZipkinSpanListener spanListener;
 	@Autowired ZipkinSpanReporter spanReporter;
