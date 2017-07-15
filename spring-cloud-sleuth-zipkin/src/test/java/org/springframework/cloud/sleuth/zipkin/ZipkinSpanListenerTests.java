@@ -66,12 +66,10 @@ public class ZipkinSpanListenerTests {
 	@Autowired ZipkinSpanReporter spanReporter;
 	@Autowired MockEnvironment mockEnvironment;
 	@Autowired EndpointLocator endpointLocator;
-	@Autowired ZipkinDiscoveryClient discoveryClient;
 
 	@PostConstruct
 	public void init() {
 		this.test.zipkinSpans.clear();
-		this.discoveryClient.serviceCalled = false;
 	}
 
 	Span parent = Span.builder().traceId(1L).name("http:parent").remote(true).build();
@@ -283,17 +281,6 @@ public class ZipkinSpanListenerTests {
 	}
 
 	@Test
-	@Ignore
-	public void shouldUseDiscoveryClientToFindZipkinUrlIfPresent() {
-		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).name("foo").build();
-
-		this.spanListener.report(span);
-
-		assertThat(this.test.zipkinSpans).isNotEmpty();
-		assertThat(this.discoveryClient.serviceCalled).isTrue();
-	}
-
-	@Test
 	public void shouldAddClientServiceIdTagWhenSpanContainsRpcEvent() {
 		this.parent.logEvent(Span.CLIENT_SEND);
 		this.mockEnvironment.setProperty("vcap.application.instance_id", "foo");
@@ -352,71 +339,6 @@ public class ZipkinSpanListenerTests {
 			return new MockEnvironment();
 		}
 
-		@Bean
-		DiscoveryClient client() {
-			return new ZipkinDiscoveryClient();
-		}
-
-	}
-
-}
-
-class ZipkinDiscoveryClient implements DiscoveryClient {
-
-	boolean serviceCalled = false;
-
-	@Override
-	public String description() {
-		return "";
-	}
-
-	@Override
-	public ServiceInstance getLocalServiceInstance() {
-		return null;
-	}
-
-	@Override
-	public List<ServiceInstance> getInstances(String s) {
-		if ("zipkin".equals(s)) {
-			this.serviceCalled = true;
-			return Collections.singletonList(new ServiceInstance() {
-				@Override
-				public String getServiceId() {
-					return "zipkin";
-				}
-
-				@Override
-				public String getHost() {
-					return "1.2.3.4";
-				}
-
-				@Override
-				public int getPort() {
-					return 1234;
-				}
-
-				@Override
-				public boolean isSecure() {
-					return false;
-				}
-
-				@Override
-				public URI getUri() {
-					return URI.create("http://1.2.3.4:1234");
-				}
-
-				@Override
-				public Map<String, String> getMetadata() {
-					return null;
-				}
-			});
-		}
-		return Collections.emptyList();
-	}
-
-	@Override
-	public List<String> getServices() {
-		return Collections.singletonList("zipkin");
 	}
 
 }
