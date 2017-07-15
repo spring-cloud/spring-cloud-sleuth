@@ -495,6 +495,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_host_locator">Host locator</a></li>
 </ul>
 </li>
+<li><a href="#_sending_spans_to_zipkin">Sending spans to Zipkin</a></li>
 <li><a href="#_span_data_as_messages">Span Data as Messages</a>
 <ul class="sectlevel2">
 <li><a href="#_zipkin_consumer">Zipkin Consumer</a></li>
@@ -2444,6 +2445,31 @@ Stream based span reporting).</p>
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.locator.discovery.enabled: true</code></pre>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sending_spans_to_zipkin">Sending spans to Zipkin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By default if you add <code>spring-cloud-starter-zipkin</code> as a dependency to your project,
+when the span is closed, it will be sent to Zipkin over HTTP. The communication
+is asynchronous. You can configure the URL by setting the <code>spring.zipkin.baseUrl</code>
+property as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.baseUrl: http://192.168.99.100:9411/</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to find Zipkin via service discovery it&#8217;s enough to pass the
+Zipkin&#8217;s service id inside the URL (example for <code>zipkinserver</code> service id)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring.zipkin.baseUrl: http://zipkinserver/</code></pre>
 </div>
 </div>
 </div>
