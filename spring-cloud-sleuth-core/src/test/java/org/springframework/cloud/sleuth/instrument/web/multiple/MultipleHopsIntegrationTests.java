@@ -73,11 +73,13 @@ public class MultipleHopsIntegrationTests {
 		//tag::baggage[]
 		Span initialSpan = this.tracer.createSpan("span");
 		initialSpan.setBaggageItem("foo", "bar");
+		initialSpan.setBaggageItem("UPPER_CASE", "someValue");
 		//end::baggage[]
 
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.put("baggage-baz", Collections.singletonList("baz"));
+			headers.put("BAGGAGE-bizarreCASE", Collections.singletonList("value"));
 			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
 					URI.create("http://localhost:" + this.config.port + "/greeting"));
 			this.restTemplate.exchange(requestEntity, String.class);
@@ -85,7 +87,9 @@ public class MultipleHopsIntegrationTests {
 			await().atMost(5, SECONDS).untilAsserted(() -> {
 				then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
 						.everySpanHasABaggage("foo", "bar")
-						.anySpanHasABaggage("baz", "baz");
+						.everySpanHasABaggage("upper_case", "someValue")
+						.anySpanHasABaggage("baz", "baz")
+						.anySpanHasABaggage("bizarrecase", "value");
 			});
 		} finally {
 			this.tracer.close(initialSpan);
