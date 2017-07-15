@@ -1,15 +1,15 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.lang.invoke.MethodHandles;
-import java.util.Map;
-import java.util.Random;
-import java.util.regex.Pattern;
-
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.util.TextMapUtil;
 import org.springframework.util.StringUtils;
+
+import java.lang.invoke.MethodHandles;
+import java.util.Map;
+import java.util.Random;
+import java.util.regex.Pattern;
 
 /**
  * Default implementation, compatible with Zipkin propagation.
@@ -101,7 +101,7 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 			span.exportable(false);
 		}
 		for (Map.Entry<String, String> entry : carrier.entrySet()) {
-			if (entry.getKey().startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + HEADER_DELIMITER)) {
+			if (entry.getKey().toLowerCase().startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + HEADER_DELIMITER)) {
 				span.baggage(unprefixedKey(entry.getKey()), entry.getValue());
 			}
 		}
@@ -109,7 +109,7 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 	}
 
 	private String unprefixedKey(String key) {
-		return key.substring(key.indexOf(HEADER_DELIMITER) + 1);
+		return key.substring(key.indexOf(HEADER_DELIMITER) + 1).toLowerCase();
 	}
 
 }

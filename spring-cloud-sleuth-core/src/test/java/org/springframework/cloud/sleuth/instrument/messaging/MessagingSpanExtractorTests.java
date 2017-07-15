@@ -16,15 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 import org.junit.Test;
-
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -62,6 +62,21 @@ public class MessagingSpanExtractorTests {
 						.copyHeaders(headers(traceId128, randomId()))));
 
 		then(span.traceIdString()).isEqualTo(traceId128);
+	}
+
+	@Test
+	public void should_propagate_baggage_headers() {
+		String traceId128 = "463ac35c9f6413ad48485a3953bb6124";
+
+		Span span = this.extractor.joinTrace(
+				new MessagingTextMap(MessageBuilder.withPayload("")
+						.copyHeaders(headers(traceId128, randomId()))));
+
+		then(span)
+				.hasBaggageItem("foo", "foofoo")
+				.hasBaggageItem("bar", "barbar");
+		then(span.getBaggageItem("Foo")).isEqualTo("foofoo");
+		then(span.getBaggageItem("BAr")).isEqualTo("barbar");
 	}
 
 	@Test
@@ -107,6 +122,8 @@ public class MessagingSpanExtractorTests {
 		if (StringUtils.hasText(parentId)) {
 			map.put(TraceMessageHeaders.PARENT_ID_NAME, parentId);
 		}
+		map.put("baggage_foo", "foofoo");
+		map.put("BAGGAGE_BAR", "barbar");
 		return new MessageHeaders(map);
 	}
 	
