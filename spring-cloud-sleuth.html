@@ -995,7 +995,8 @@ to exceeding transport-level message or header capacity.
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-java" data-lang="java">Span initialSpan = this.tracer.createSpan("span");
-initialSpan.setBaggageItem("foo", "bar");</code></pre>
+initialSpan.setBaggageItem("foo", "bar");
+initialSpan.setBaggageItem("UPPER_CASE", "someValue");</code></pre>
 </div>
 </div>
 <div class="sect4">
