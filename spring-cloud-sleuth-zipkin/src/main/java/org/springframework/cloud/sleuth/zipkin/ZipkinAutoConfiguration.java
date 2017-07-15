@@ -17,9 +17,12 @@
 package org.springframework.cloud.sleuth.zipkin;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -42,6 +45,10 @@ import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -73,11 +80,14 @@ public class ZipkinAutoConfiguration {
 	@ConditionalOnMissingBean
 	public ZipkinSpanReporter reporter(SpanMetricReporter spanMetricReporter, ZipkinProperties zipkin,
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
-		RestTemplate restTemplate = new RestTemplate();
+		RestTemplate restTemplate = zipkinRestTemplate(zipkin);
 		zipkinRestTemplateCustomizer.customize(restTemplate);
-		String zipkinUrl = this.extractor.zipkinUrl(zipkin);
-		return new HttpZipkinSpanReporter(restTemplate, zipkinUrl, zipkin.getFlushInterval(),
+		return new HttpZipkinSpanReporter(restTemplate, zipkin.getBaseUrl(), zipkin.getFlushInterval(),
 				spanMetricReporter);
+	}
+
+	private RestTemplate zipkinRestTemplate(ZipkinProperties zipkinProperties) {
+		return new ZipkinRestTemplateWrapper(zipkinProperties, this.extractor);
 	}
 
 	@Configuration
@@ -91,16 +101,16 @@ public class ZipkinAutoConfiguration {
 			final DiscoveryClient discoveryClient = this.discoveryClient;
 			return new ZipkinUrlExtractor() {
 				@Override
-				public String zipkinUrl(ZipkinProperties zipkinProperties) {
+				public URI zipkinUrl(ZipkinProperties zipkinProperties) {
 					if (discoveryClient != null) {
 						URI uri = URI.create(zipkinProperties.getBaseUrl());
 						String host = uri.getHost();
 						List<ServiceInstance> instances = discoveryClient.getInstances(host);
 						if (!instances.isEmpty()) {
-							return instances.get(0).getUri().toString();
+							return instances.get(0).getUri();
 						}
 					}
-					return zipkinProperties.getBaseUrl();
+					return URI.create(zipkinProperties.getBaseUrl());
 				}
 			};
 		}
@@ -113,8 +123,8 @@ public class ZipkinAutoConfiguration {
 		ZipkinUrlExtractor zipkinUrlExtractor() {
 			return new ZipkinUrlExtractor() {
 				@Override
-				public String zipkinUrl(ZipkinProperties zipkinProperties) {
-					return zipkinProperties.getBaseUrl();
+				public URI zipkinUrl(ZipkinProperties zipkinProperties) {
+					return URI.create(zipkinProperties.getBaseUrl());
 				}
 			};
 		}
@@ -202,6 +212,51 @@ public class ZipkinAutoConfiguration {
 
 }
 
+/**
+ * Internal interface to provide a way to retrieve Zipkin URI. If there's no discovery client
+ * then this value will be taken from the properties. Otherwise host will be assumed to
+ * be a service id.
+ */
 interface ZipkinUrlExtractor {
-	String zipkinUrl(ZipkinProperties zipkinProperties);
+	URI zipkinUrl(ZipkinProperties zipkinProperties);
+}
+
+/**
+ * Resolves at runtime where the Zipkin server is. If there's no discovery client then
+ * {@link URI} from the properties is taken. Otherwise service discovery is pinged
+ * for current Zipkin address.
+ */
+class ZipkinRestTemplateWrapper extends RestTemplate {
+
+	private static final Log log = LogFactory.getLog(ZipkinRestTemplateWrapper.class);
+
+	private final ZipkinProperties zipkinProperties;
+	private final ZipkinUrlExtractor extractor;
+
+	ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties,
+			ZipkinUrlExtractor extractor) {
+		this.zipkinProperties = zipkinProperties;
+		this.extractor = extractor;
+	}
+
+	@Override protected <T> T doExecute(URI originalUrl, HttpMethod method,
+			RequestCallback requestCallback,
+			ResponseExtractor<T> responseExtractor) throws RestClientException {
+		URI uri = this.extractor.zipkinUrl(this.zipkinProperties);
+		URI newUri = resolvedZipkinUri(originalUrl, uri);
+		return super.doExecute(newUri, method, requestCallback, responseExtractor);
+	}
+
+	private URI resolvedZipkinUri(URI originalUrl, URI resolvedZipkinUri) {
+		try {
+			return new URI(resolvedZipkinUri.getScheme(), resolvedZipkinUri.getUserInfo(),
+					resolvedZipkinUri.getHost(), resolvedZipkinUri.getPort(), originalUrl.getPath(),
+					originalUrl.getQuery(), originalUrl.getFragment());
+		} catch (URISyntaxException e) {
+			if (log.isDebugEnabled()) {
+				log.debug("Failed to create the new URI from original [" + originalUrl + "] and new one [" + resolvedZipkinUri + "]");
+			}
+			return originalUrl;
+		}
+	}
 }
