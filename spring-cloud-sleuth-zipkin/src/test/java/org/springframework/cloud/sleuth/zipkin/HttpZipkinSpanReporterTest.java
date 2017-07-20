@@ -1,5 +1,16 @@
 package org.springframework.cloud.sleuth.zipkin;
 
+import static java.util.Arrays.asList;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.awaitility.Awaitility.await;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -15,17 +26,11 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.web.client.RestTemplate;
+
 import zipkin.Span;
 import zipkin.junit.HttpFailure;
 import zipkin.junit.ZipkinRule;
-
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
+import zipkin.reporter.Encoding;
 
 public class HttpZipkinSpanReporterTest {
 
@@ -155,6 +160,28 @@ public class HttpZipkinSpanReporterTest {
 		then(receivedSpan.get().binaryAnnotations)
 				.flatExtracting(input -> input.key, input -> new String(input.value))
 				.contains("peer.service", "redisService");
+	}
+
+	@Test
+	public void testSenderThriftEncoding() {
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		zipkinProperties.setEncoding(Encoding.THRIFT);
+		zipkinProperties.setBaseUrl(zipkin.httpUrl());
+
+		HttpZipkinSpanReporter httpZipkinSpanReporter = new HttpZipkinSpanReporter(restTemplate(zipkinProperties)
+				, zipkinProperties.getBaseUrl(), 1, spanMetricReporter, zipkinProperties.getEncoding());
+
+		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
+				new NoOpSpanLogger(),new ZipkinSpanListener(httpZipkinSpanReporter,
+				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo",
+						zipkinProperties, new InetUtils(new InetUtilsProperties())),
+				null, Collections.emptyList()), new TraceKeys());
+
+		tracer.close(tracer.createSpan("foo"));
+		httpZipkinSpanReporter.flush();
+
+		await().until(() -> zipkin.getTraces().size() == 1);
+		assertThat(zipkin.getTraces().size()).isEqualTo(1);
 	}
 
 	static Span span(long traceId, String spanName) {

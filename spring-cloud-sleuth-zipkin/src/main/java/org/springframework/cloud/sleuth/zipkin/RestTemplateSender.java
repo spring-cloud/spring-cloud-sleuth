@@ -18,13 +18,18 @@ final class RestTemplateSender implements Sender {
 	final RestTemplate restTemplate;
 	final String url;
 
-	RestTemplateSender(RestTemplate restTemplate, String baseUrl) {
+	final Encoding encoding;
+	final MediaType mediaType;
+
+	RestTemplateSender(RestTemplate restTemplate, String baseUrl, Encoding encoding) {
 		this.restTemplate = restTemplate;
 		this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
+		this.encoding = encoding;
+		this.mediaType = mediaType(encoding);
 	}
 
 	@Override public Encoding encoding() {
-		return Encoding.JSON;
+		return this.encoding;
 	}
 
 	@Override public int messageMaxBytes() {
@@ -42,7 +47,7 @@ final class RestTemplateSender implements Sender {
 	@Override public void sendSpans(List<byte[]> encodedSpans, Callback callback) {
 		if (this.closeCalled) throw new IllegalStateException("close");
 		try {
-			byte[] message = BytesMessageEncoder.JSON.encode(encodedSpans);
+			byte[] message = BytesMessageEncoder.forEncoding(this.encoding).encode(encodedSpans);
 			post(message);
 			callback.onComplete();
 		} catch (Throwable e) {
@@ -67,9 +72,21 @@ final class RestTemplateSender implements Sender {
 
 	void post(byte[] json) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+		httpHeaders.setContentType(this.mediaType);
 		RequestEntity<byte[]> requestEntity =
 				new RequestEntity<>(json, httpHeaders, HttpMethod.POST, URI.create(this.url));
 		this.restTemplate.exchange(requestEntity, String.class);
+	}
+
+	private MediaType mediaType(Encoding encoding) {
+		MediaType mediaType = null;
+		switch (this.encoding) {
+			case JSON:
+				mediaType = MediaType.APPLICATION_JSON;
+				break;
+			case THRIFT:
+				mediaType = new MediaType("application","x-thrift");
+		}
+		return mediaType;
 	}
 }

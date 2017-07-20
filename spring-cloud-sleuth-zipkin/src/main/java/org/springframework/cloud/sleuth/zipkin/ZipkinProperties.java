@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.zipkin;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import zipkin.reporter.Encoding;
+
 /**
  * Zipkin settings
  *
@@ -33,6 +35,7 @@ public class ZipkinProperties {
 	private String baseUrl = "http://localhost:9411/";
 	private boolean enabled = true;
 	private int flushInterval = 1;
+	private Encoding encoding = Encoding.JSON;
 	private Compression compression = new Compression();
 
 	private Service service = new Service();
@@ -85,6 +88,14 @@ public class ZipkinProperties {
 
 	public void setLocator(Locator locator) {
 		this.locator = locator;
+	}
+
+	public Encoding getEncoding() {
+		return this.encoding;
+	}
+
+	public void setEncoding(Encoding encoding) {
+		this.encoding = encoding;
 	}
 
 	/** When enabled, spans are gzipped before sent to the zipkin server */
