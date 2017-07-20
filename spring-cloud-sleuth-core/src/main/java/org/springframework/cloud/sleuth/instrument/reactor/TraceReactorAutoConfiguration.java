@@ -16,6 +16,8 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
+
+import reactor.core.Fuseable;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -44,8 +46,15 @@ public class TraceReactorAutoConfiguration {
 
 		@PostConstruct
 		public void setupHooks() {
-			Hooks.onNewSubscriber((pub, sub) ->
-					new SpanSubscriber(sub, sub.currentContext(), this.tracer, pub.toString()));
+			Hooks.onNewSubscriber((pub, sub) -> {
+				//do not trace fused flows or simple just/error/empty
+				if(pub instanceof Fuseable && sub instanceof Fuseable.QueueSubscription
+						|| pub instanceof Fuseable.ScalarCallable){
+					return sub;
+				}
+				return new SpanSubscriber(sub, sub.currentContext(), this.tracer, pub
+						.toString());
+			});
 			Schedulers.setFactory(new Schedulers.Factory() {
 				@Override public ScheduledExecutorService decorateScheduledExecutorService(
 						String schedulerType,
