@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +20,9 @@ import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -69,14 +71,14 @@ public class SpanSubscriberTests {
 		log.info("Hello");
 
 		Mono.just(1)
-				.flatMap( d -> Flux.just(d + 1).collectList().map(p -> p.get(0)))
-				.map( d -> d + 1)
-				.map( (d) -> {
+		    .flatMap( d -> Flux.just(d + 1).collectList().map(p -> p.get(0)))
+		    .map( d -> d + 1)
+		    .map( (d) -> {
 					spanInOperation.set(SpanSubscriberTests.this.tracer.getCurrentSpan());
 					return d + 1;
 				})
-				.map( d -> d + 1)
-				.subscribe(System.out::println);
+		    .map( d -> d + 1)
+		    .subscribe(System.out::println);
 
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(spanInOperation.get().getParents().get(0)).isEqualTo(span.getSpanId());
@@ -89,38 +91,38 @@ public class SpanSubscriberTests {
 		log.info("Hello");
 
 		Mono.just(1)
-				.subscribe(new BaseSubscriber<Integer>() {
-					@Override
-					protected void hookOnSubscribe(Subscription subscription) {
-						spanInOperation.set(subscription);
-					}
-				});
+		    .subscribe(new BaseSubscriber<Integer>() {
+			    @Override
+			    protected void hookOnSubscribe(Subscription subscription) {
+				    spanInOperation.set(subscription);
+			    }
+		    });
 
 		then(this.tracer.getCurrentSpan()).isNotNull();
 		then(spanInOperation.get()).isNotInstanceOf(SpanSubscriber.class);
 
 		Mono.<Integer>error(new Exception())
-				.subscribe(new BaseSubscriber<Integer>() {
-					@Override
-					protected void hookOnSubscribe(Subscription subscription) {
-						spanInOperation.set(subscription);
-					}
+		    .subscribe(new BaseSubscriber<Integer>() {
+			    @Override
+			    protected void hookOnSubscribe(Subscription subscription) {
+				    spanInOperation.set(subscription);
+			    }
 
-					@Override
-					protected void hookOnError(Throwable throwable) {
-					}
-				});
+			    @Override
+			    protected void hookOnError(Throwable throwable) {
+			    }
+		    });
 
 		then(this.tracer.getCurrentSpan()).isNotNull();
 		then(spanInOperation.get()).isNotInstanceOf(SpanSubscriber.class);
 
 		Mono.<Integer>empty()
-				.subscribe(new BaseSubscriber<Integer>() {
-					@Override
-					protected void hookOnSubscribe(Subscription subscription) {
-						spanInOperation.set(subscription);
-					}
-				});
+		    .subscribe(new BaseSubscriber<Integer>() {
+			    @Override
+			    protected void hookOnSubscribe(Subscription subscription) {
+				    spanInOperation.set(subscription);
+			    }
+		    });
 
 		then(this.tracer.getCurrentSpan()).isNotNull();
 		then(spanInOperation.get()).isNotInstanceOf(SpanSubscriber.class);
