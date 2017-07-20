@@ -1,16 +1,5 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import static java.util.Arrays.asList;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.awaitility.Awaitility.await;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -26,11 +15,20 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.web.client.RestTemplate;
-
+import zipkin.reporter.Encoding;
 import zipkin.Span;
 import zipkin.junit.HttpFailure;
 import zipkin.junit.ZipkinRule;
-import zipkin.reporter.Encoding;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.awaitility.Awaitility.await;
 
 public class HttpZipkinSpanReporterTest {
 
