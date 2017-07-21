@@ -18,8 +18,7 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  * @since 1.3.0
  */
-class SpanSubscriber extends AtomicBoolean
-		implements Subscription, CoreSubscriber<Object> {
+class SpanSubscriber extends AtomicBoolean implements Subscription, CoreSubscriber<Object> {
 
 	private static final Logger log = Loggers.getLogger(SpanSubscriber.class);
 
@@ -62,30 +61,29 @@ class SpanSubscriber extends AtomicBoolean
 	}
 
 	@Override public void request(long n) {
+		if (log.isTraceEnabled()) {
+			log.trace("Request");
+		}
 		this.tracer.continueSpan(this.span);
 		if (log.isTraceEnabled()) {
 			log.trace("Request - continued");
 		}
 		this.s.request(n);
-		Span localSpan = this.span;
-		Span rootSpan = this.rootSpan;
 		// We're in the main thread so we don't want to pollute it with wrong spans
 		// that's why we need to detach the current one and continue with its parent
-		if (log.isTraceEnabled()) {
-			log.trace("Will detach spans. Root span is " + rootSpan + " and stored span is " + localSpan);
-		}
-		while (localSpan != null) {
-			if (rootSpan != null) {
-				if (localSpan.getSpanId() != rootSpan.getSpanId() &&
-						!isRootParentSpan(localSpan)) {
-					localSpan = continueDetachedSpan(localSpan);
+		Span localRootSpan = this.span;
+		while (localRootSpan != null) {
+			if (this.rootSpan != null) {
+				if (localRootSpan.getSpanId() != this.rootSpan.getSpanId() &&
+						!isRootParentSpan(localRootSpan)) {
+					localRootSpan = continueDetachedSpan(localRootSpan);
 				} else {
-					localSpan = null;
+					localRootSpan = null;
 				}
-			} else if (!isRootParentSpan(localSpan)) {
-				localSpan = continueDetachedSpan(localSpan);
+			} else if (!isRootParentSpan(localRootSpan)) {
+				localRootSpan = continueDetachedSpan(localRootSpan);
 			} else {
-				localSpan = null;
+				localRootSpan = null;
 			}
 		}
 		if (log.isTraceEnabled()) {
@@ -103,12 +101,7 @@ class SpanSubscriber extends AtomicBoolean
 			log.trace("Will detach span {}", localRootSpan);
 		}
 		Span detachedSpan = this.tracer.detach(localRootSpan);
-		Span continuedSpan = this.tracer.continueSpan(detachedSpan);
-		if (log.isTraceEnabled()) {
-			log.trace("Now current span is " + continuedSpan + ". Root span is " + this.rootSpan +
-					" and stored span for the subscriber is " + this.span);
-		}
-		return continuedSpan;
+		return this.tracer.continueSpan(detachedSpan);
 	}
 
 	@Override public void cancel() {
