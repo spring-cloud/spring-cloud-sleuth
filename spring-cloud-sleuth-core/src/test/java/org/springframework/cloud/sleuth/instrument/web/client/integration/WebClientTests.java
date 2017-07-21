@@ -37,9 +37,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.BasicErrorController;
-import org.springframework.boot.autoconfigure.web.ErrorAttributes;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
@@ -125,7 +125,7 @@ public class WebClientTests {
 			// TODO: matches cause there is an issue with Feign not providing the full URL at the interceptor level
 			then(noTraceSpan.get()).matchesATag("http.url", ".*/notrace")
 					.hasATag("http.path", "/notrace").hasATag("http.method", "GET");
-			then(new ListOfSpans(spans)).hasRpcTagsInProperOrder();
+			then(new ListOfSpans(spans)).hasRpcLogsInProperOrder();
 		});
 	}
 

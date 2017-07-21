@@ -16,6 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.sleuth.ErrorParser;
@@ -34,12 +40,6 @@ import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.lang.invoke.MethodHandles;
-import java.net.URI;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * An {@link AsyncRestTemplate} that closes started spans when a response has been

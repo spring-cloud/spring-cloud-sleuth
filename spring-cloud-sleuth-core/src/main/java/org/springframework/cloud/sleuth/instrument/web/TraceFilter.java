@@ -65,7 +65,7 @@ import org.springframework.web.util.UrlPathHelper;
  *
  * @see Tracer
  * @see TraceKeys
- * @see TraceWebAutoConfiguration#traceFilter
+ * @see TraceWebServletAutoConfiguration#traceFilter
  */
 @Order(TraceFilter.ORDER)
 public class TraceFilter extends GenericFilterBean {
@@ -92,12 +92,12 @@ public class TraceFilter extends GenericFilterBean {
 
 	private Tracer tracer;
 	private TraceKeys traceKeys;
-	private Pattern skipPattern;
+	private final Pattern skipPattern;
 	private SpanReporter spanReporter;
 	private HttpSpanExtractor spanExtractor;
 	private HttpTraceKeysInjector httpTraceKeysInjector;
 	private ErrorParser errorParser;
-	private BeanFactory beanFactory;
+	private final BeanFactory beanFactory;
 
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 

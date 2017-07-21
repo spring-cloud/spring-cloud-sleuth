@@ -13,8 +13,6 @@
  */
 package org.springframework.cloud.sleuth.autoconfig;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -24,6 +22,8 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TraceAutoConfigurationTests {
 

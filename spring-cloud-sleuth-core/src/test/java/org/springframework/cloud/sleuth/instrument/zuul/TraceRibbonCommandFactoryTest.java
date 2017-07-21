@@ -16,15 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.ArrayList;
-
+import com.netflix.zuul.context.RequestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
 import org.springframework.cloud.sleuth.Span;
@@ -35,12 +33,9 @@ import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
 
-import com.netflix.niws.client.http.RestClient;
-import com.netflix.zuul.context.RequestContext;
+import java.util.ArrayList;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
@@ -50,7 +45,6 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 public class TraceRibbonCommandFactoryTest {
 
 	@Mock Tracer tracer;
-	@Mock SpringClientFactory springClientFactory;
 	HttpTraceKeysInjector httpTraceKeysInjector;
 	@Mock RibbonCommandFactory ribbonCommandFactory;
 	TraceRibbonCommandFactory traceRibbonCommandFactory;
@@ -64,10 +58,7 @@ public class TraceRibbonCommandFactoryTest {
 		this.traceRibbonCommandFactory = new TraceRibbonCommandFactory(
 				this.ribbonCommandFactory, this.tracer,
 				httpTraceKeysInjector);
-		given(this.springClientFactory.getClient(anyString(), any(Class.class)))
-				.willReturn(new RestClient());
 		given(this.tracer.getCurrentSpan()).willReturn(span);
-		given(this.tracer.isTracing()).willReturn(true);
 	}
 
 	@After

@@ -31,8 +31,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -57,7 +57,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @EnableAsync
 public class SleuthBenchmarkingSpringApp implements
-		ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+		ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(SleuthBenchmarkingSpringApp.class);
 
@@ -97,8 +97,8 @@ public class SleuthBenchmarkingSpringApp implements
 	}
 
 	@Override
-	public void onApplicationEvent(EmbeddedServletContainerInitializedEvent event) {
-		this.port = event.getEmbeddedServletContainer().getPort();
+	public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+		this.port = event.getSource().getPort();
 	}
 
 	@Bean

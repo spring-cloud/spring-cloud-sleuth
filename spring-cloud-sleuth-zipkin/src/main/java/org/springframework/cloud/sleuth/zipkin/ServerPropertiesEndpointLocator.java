@@ -16,19 +16,18 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import zipkin.Endpoint;
-
-import java.lang.invoke.MethodHandles;
-import java.nio.ByteBuffer;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.util.StringUtils;
+import zipkin.Endpoint;
+
+import java.lang.invoke.MethodHandles;
+import java.nio.ByteBuffer;
 
 /**
  * {@link EndpointLocator} implementation that:
@@ -79,9 +78,9 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 				.build();
 	}
 
-	@EventListener(EmbeddedServletContainerInitializedEvent.class)
-	public void grabPort(EmbeddedServletContainerInitializedEvent event) {
-		this.port = event.getEmbeddedServletContainer().getPort();
+	@EventListener(ServletWebServerInitializedEvent.class)
+	public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+		this.port = event.getSource().getPort();
 	}
 
 	private Integer getPort() {

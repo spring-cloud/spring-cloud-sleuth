@@ -26,8 +26,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -97,7 +97,7 @@ public class TraceFilterCustomExtractorTests {
 	@Configuration
 	@EnableAutoConfiguration
 	static class Config
-			implements ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+			implements ApplicationListener<ServletWebServerInitializedEvent> {
 		int port;
 
 		// tag::configuration[]
@@ -113,8 +113,8 @@ public class TraceFilterCustomExtractorTests {
 		// end::configuration[]
 
 		@Override
-		public void onApplicationEvent(EmbeddedServletContainerInitializedEvent event) {
-			this.port = event.getEmbeddedServletContainer().getPort();
+		public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+			this.port = event.getSource().getPort();
 		}
 
 		@Bean

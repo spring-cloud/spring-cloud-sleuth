@@ -24,10 +24,10 @@ import org.slf4j.MDC;
 import org.springframework.cloud.sleuth.Span;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
@@ -89,7 +89,7 @@ public class Slf4JSpanLoggerTest {
 		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameNotToBeExcluded,
 				this.spanWithNameNotToBeExcluded);
 
-		then(this.log).should(times(2)).trace(anyString(), anyList());
+		then(this.log).should(times(2)).trace(anyString(), any(Span.class));
 	}
 
 	@Test
@@ -97,7 +97,7 @@ public class Slf4JSpanLoggerTest {
 		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameToBeExcluded,
 				this.spanWithNameNotToBeExcluded);
 
-		then(this.log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), any(Span.class));
 	}
 
 	@Test
@@ -105,21 +105,21 @@ public class Slf4JSpanLoggerTest {
 		this.slf4JSpanLogger.logContinuedSpan(
 				this.spanWithNameNotToBeExcluded);
 
-		then(this.log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), any(Span.class));
 	}
 
 	@Test
 	public void should_not_log_when_continue_event_arrived_and_pattern_matches_name() throws Exception {
 		this.slf4JSpanLogger.logContinuedSpan(this.spanWithNameToBeExcluded);
 
-		then(this.log).should(never()).trace(anyString(), anyList());
+		then(this.log).should(never()).trace(anyString(), any(Span.class));
 	}
 
 	@Test
 	public void should_log_when_close_event_arrived_and_pattern_doesnt_match_span_name() throws Exception {
 		this.slf4JSpanLogger.logStoppedSpan(null, this.spanWithNameNotToBeExcluded);
 
-		then(this.log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), any(Span.class));
 	}
 
 	@Test
@@ -127,7 +127,7 @@ public class Slf4JSpanLoggerTest {
 		this.slf4JSpanLogger.logStoppedSpan(this.spanWithNameNotToBeExcluded,
 				this.spanWithNameNotToBeExcluded);
 
-		then(this.log).should(times(2)).trace(anyString(), anyList());
+		then(this.log).should(times(2)).trace(anyString(), any(Span.class));
 	}
 
 	@Test
@@ -135,7 +135,7 @@ public class Slf4JSpanLoggerTest {
 		this.slf4JSpanLogger.logStoppedSpan(this.spanWithNameToBeExcluded,
 				this.spanWithNameToBeExcluded);
 
-		then(this.log).should(never()).trace(anyString(), anyList());
+		then(this.log).should(never()).trace(anyString(), any(Span.class));
 	}
 
 	@Test
@@ -143,14 +143,14 @@ public class Slf4JSpanLoggerTest {
 		this.slf4JSpanLogger.logStoppedSpan(this.spanWithNameNotToBeExcluded,
 				this.spanWithNameToBeExcluded);
 
-		then(this.log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), any(Span.class));
 	}
 
 	@Test
 	public void should_log_only_current_span_if_there_is_no_parent() throws Exception {
 		this.slf4JSpanLogger.logStoppedSpan(null, this.spanWithNameNotToBeExcluded);
 
-		then(this.log).should().trace(anyString(), anyList());
+		then(this.log).should().trace(anyString(), any(Span.class));
 	}
 
 	@Test

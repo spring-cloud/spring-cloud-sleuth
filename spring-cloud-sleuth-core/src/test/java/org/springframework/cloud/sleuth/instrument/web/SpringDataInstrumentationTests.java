@@ -16,17 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
-import java.util.Collection;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.annotation.PostConstruct;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,18 +32,25 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.hateoas.PagedResources;
+import org.springframework.http.RequestEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import org.awaitility.Awaitility;
+import javax.annotation.PostConstruct;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import java.net.URI;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -80,9 +76,9 @@ public class SpringDataInstrumentationTests {
 
 	@Test
 	public void should_create_span_instrumented_by_a_handler_interceptor() {
-		Collection<String> names = names();
+		long noOfNames = namesCount();
 
-		then(names).isNotEmpty();
+		then(noOfNames).isEqualTo(8);
 		then(this.arrayListSpanAccumulator.getSpans()).isNotEmpty();
 		Awaitility.await().untilAsserted(() -> {
 			then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
@@ -91,17 +87,14 @@ public class SpringDataInstrumentationTests {
 		});
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
-		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasRpcTagsInProperOrder();
+		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasRpcLogsInProperOrder();
 	}
 
-	Collection<String> names() {
-		ParameterizedTypeReference<Resources<Reservation>> ptr = new ParameterizedTypeReference<Resources<Reservation>>() {
-		};
-		ResponseEntity<Resources<Reservation>> responseEntity = this.restTemplate
-				.exchange("http://localhost:" + port() + "/reservations", HttpMethod.GET,
-						null, ptr);
-		return responseEntity.getBody().getContent().stream()
-				.map(Reservation::getReservationName).collect(Collectors.toList());
+	long namesCount() {
+		return
+				this.restTemplate.exchange(RequestEntity
+						.get(URI.create("http://localhost:" + port() + "/reservations")).build(), PagedResources.class)
+				.getBody().getMetadata().getTotalElements();
 	}
 
 	private int port() {
@@ -133,13 +126,13 @@ class ReservationServiceApplication {
 	Sampler alwaysSampler() {
 		return new AlwaysSampler();
 	}
+
 }
 
 class SampleRecords {
 
 	private final ReservationRepository reservationRepository;
 
-	@Autowired
 	public SampleRecords(ReservationRepository reservationRepository) {
 		this.reservationRepository = reservationRepository;
 	}

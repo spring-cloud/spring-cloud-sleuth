@@ -70,15 +70,15 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected Runnable zipkinServerIsUp() {
-		return checkServerHealth("Zipkin Stream Server", this::endpointToCheckZipkinServerHealth);
+		return checkServerHealth(this::endpointToCheckZipkinServerHealth);
 	}
 
-	protected Runnable checkServerHealth(String appName, RequestExchanger requestExchanger) {
+	protected Runnable checkServerHealth(RequestExchanger requestExchanger) {
 		return () -> {
 			ResponseEntity<String> response = requestExchanger.exchange();
-			log.info(String.format("Response from the [%s] health endpoint is [%s]", appName, response));
+			log.info(String.format("Response from the [%s] health endpoint is [%s]", "Zipkin Stream Server", response));
 			then(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-			log.info(String.format("[%s] is up!", appName));
+			log.info(String.format("[%s] is up!", "Zipkin Stream Server"));
 		};
 	}
 
@@ -87,7 +87,7 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected ResponseEntity<String> endpointToCheckZipkinServerHealth() {
-		URI uri = URI.create("http://localhost:" +getZipkinServerPort()+"/health");
+		URI uri = URI.create("http://localhost:" +getZipkinServerPort()+"/application/health");
 		log.info(String.format("Sending request to the Zipkin Server [%s]", uri));
 		return exchangeRequest(uri);
 	}

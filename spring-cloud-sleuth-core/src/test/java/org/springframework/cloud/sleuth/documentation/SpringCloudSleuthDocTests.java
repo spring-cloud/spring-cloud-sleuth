@@ -16,26 +16,10 @@
 
 package org.springframework.cloud.sleuth.documentation;
 
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanName;
-import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.TraceCallable;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.TraceRunnable;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.*;
 import org.springframework.cloud.sleuth.instrument.async.SpanContinuingTraceCallable;
 import org.springframework.cloud.sleuth.instrument.async.SpanContinuingTraceRunnable;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
@@ -43,6 +27,9 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Random;
+import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -90,7 +77,7 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_annotated_runnable_execution[]
 
-		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
+		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), (Span) BDDMockito.any());
 	}
 
 	@Test
@@ -115,7 +102,7 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_to_string_runnable_execution[]
 
-		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), BDDMockito.any(Span.class));
+		BDDMockito.then(tracer).should().createSpan(BDDMockito.eq("calculateTax"), (Span) BDDMockito.any());
 		executorService.shutdown();
 	}
 
