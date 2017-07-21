@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 
 import zipkin.Span;
 import zipkin.reporter.AsyncReporter;
+import zipkin.reporter.Encoding;
 
 /**
  * Submits spans using Zipkin's {@code POST /spans} endpoint.
@@ -28,7 +29,19 @@ public final class HttpZipkinSpanReporter implements ZipkinSpanReporter, Flushab
 	 */
 	public HttpZipkinSpanReporter(RestTemplate restTemplate, String baseUrl, int flushInterval,
 			SpanMetricReporter spanMetricReporter) {
-		this.sender = new RestTemplateSender(restTemplate, baseUrl);
+		this(restTemplate, baseUrl, flushInterval, spanMetricReporter, Encoding.JSON);
+	}
+
+	/**
+	 * @param restTemplate {@link RestTemplate} used for sending requests to Zipkin
+	 * @param baseUrl       URL of the zipkin query server instance. Like: http://localhost:9411/
+	 * @param flushInterval in seconds. 0 implies spans are {@link #flush() flushed} externally.
+	 * @param spanMetricReporter service to count number of accepted / dropped spans
+	 * @param encoding span encoding.
+	 */
+	public HttpZipkinSpanReporter(RestTemplate restTemplate, String baseUrl, int flushInterval,
+								SpanMetricReporter spanMetricReporter, Encoding encoding) {
+		this.sender = new RestTemplateSender(restTemplate, baseUrl, encoding);
 		this.delegate = AsyncReporter.builder(this.sender)
 				.queuedMaxSpans(1000) // historical constraint. Note: AsyncReporter supports memory bounds
 				.messageTimeout(flushInterval, TimeUnit.SECONDS)

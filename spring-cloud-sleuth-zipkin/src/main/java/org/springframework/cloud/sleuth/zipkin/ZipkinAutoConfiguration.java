@@ -83,7 +83,7 @@ public class ZipkinAutoConfiguration {
 		RestTemplate restTemplate = zipkinRestTemplate(zipkin);
 		zipkinRestTemplateCustomizer.customize(restTemplate);
 		return new HttpZipkinSpanReporter(restTemplate, zipkin.getBaseUrl(), zipkin.getFlushInterval(),
-				spanMetricReporter);
+				spanMetricReporter, zipkin.getEncoding());
 	}
 
 	private RestTemplate zipkinRestTemplate(ZipkinProperties zipkinProperties) {
