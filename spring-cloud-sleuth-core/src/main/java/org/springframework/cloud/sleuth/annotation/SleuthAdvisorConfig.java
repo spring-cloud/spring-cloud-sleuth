@@ -29,7 +29,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.ClassFilter;
-import org.springframework.aop.IntroductionAdvisor;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
@@ -54,8 +53,7 @@ import org.springframework.util.StringUtils;
  * @since 1.2.0
  */
 @SuppressWarnings("serial")
-class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
-		IntroductionAdvisor, BeanFactoryAware {
+class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements BeanFactoryAware {
 
 	private Advice advice;
 
@@ -78,20 +76,6 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
-	}
-
-	@Override
-	public ClassFilter getClassFilter() {
-		return this.pointcut.getClassFilter();
-	}
-
-	@Override
-	public Class<?>[] getInterfaces() {
-		return new Class[] {};
-	}
-
-	@Override
-	public void validateInterfaces() throws IllegalArgumentException {
 	}
 
 	@Override
