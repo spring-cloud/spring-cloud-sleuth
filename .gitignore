@@ -6,6 +6,7 @@
 .project
 .settings/
 .springBeans
+.apt_generated/
 target/
 _site/
 .idea
