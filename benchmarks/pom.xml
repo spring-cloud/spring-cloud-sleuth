@@ -22,7 +22,7 @@
 
 	<properties>
 		<main.basedir>${project.basedir}/..</main.basedir>
-		<jmh.version>1.11.3</jmh.version>
+		<jmh.version>1.16</jmh.version>
 		<maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
 		<maven-install-plugin.version>2.5.2</maven-install-plugin.version>
 		<sonar.skip>true</sonar.skip>
@@ -51,13 +51,6 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-dependencies</artifactId>
-			<version>${project.version}</version>
-			<type>pom</type>
-			<scope>import</scope>
-		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>spring-cloud-sleuth-core</artifactId>
@@ -248,7 +241,7 @@
 					<plugin>
 						<groupId>org.springframework.boot</groupId>
 						<artifactId>spring-boot-maven-plugin</artifactId>
-						<version>1.5.1.RELEASE</version>
+						<version>1.5.4.RELEASE</version>
 						<executions>
 							<execution>
 								<goals>
