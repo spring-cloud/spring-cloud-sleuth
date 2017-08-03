@@ -693,6 +693,14 @@ Since we want the span names to be precise we're using a `TraceHandlerIntercepto
 
 If your controller returns a `Callable` or a `WebAsyncTask` Spring Cloud Sleuth will continue the existing span instead of creating a new one.
 
+==== WebFlux support
+
+Via the `TraceWebFilter` all sampled incoming requests result in creation of a Span. That Span's name is `http:` + the path to which
+ the request was sent. E.g. if the request was sent to `/foo/bar` then the name will be `http:/foo/bar`. You can configure which URIs you would
+ like to skip via the `spring.sleuth.web.skipPattern` property. If you have `ManagementServerProperties` on classpath then
+ its value of `contextPath` gets appended to the provided skip pattern.
+
+
 === HTTP client integration
 
 ==== Synchronous Rest Template
@@ -733,6 +741,14 @@ can see an example of how to set up such a custom `AsyncRestTemplate`.
 ----
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/MultipleAsyncRestTemplateTests.java[tags=custom_async_rest_template,indent=0]
 ----
+
+==== WebClient
+
+We inject a `ExchangeFilterFunction` implementation that creates a span and via on success and on
+error callbacks takes care of closing client side spans.
+
+IMPORTANT: You have to register `WebClient` as a bean so that the tracing instrumention gets applied.
+If you create a `WebClient` instance with a `new` keyword then the instrumentation WILL NOT work.
 
 === Feign
 
