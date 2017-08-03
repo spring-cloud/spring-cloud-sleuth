@@ -22,6 +22,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
@@ -66,7 +67,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(message);
+		Message<?> retrievedMessage = getMessage(message);
+		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
 		Span parentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
 				: buildSpan(new MessagingTextMap(messageBuilder));
 		String name = getMessageChannelName(channel);
@@ -80,7 +82,16 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		getSpanInjector().inject(span, new MessagingTextMap(messageBuilder));
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
 		headers.copyHeaders(messageBuilder.build().getHeaders());
-		return new GenericMessage<Object>(message.getPayload(), headers.getMessageHeaders());
+		return new GenericMessage<>(retrievedMessage.getPayload(), headers.getMessageHeaders());
+	}
+
+	private Message getMessage(Message<?> message) {
+		Object payload = message.getPayload();
+		if (payload instanceof MessageDeliveryException) {
+			MessageDeliveryException e = (MessageDeliveryException) payload;
+			return e.getFailedMessage();
+		}
+		return message;
 	}
 
 	private Span startSpan(Span span, String name, Message<?> message) {
