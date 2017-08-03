@@ -44,6 +44,7 @@ import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -320,6 +321,25 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(output.getHeaders().get("foo")).isEqualTo("bar");
 		this.tracedChannel.removeInterceptor(immutableMessageInterceptor);
 	}
+
+	@Test
+	public void workWithMessageDeliveryException() throws Exception {
+		Message<?> message = new GenericMessage<>(new MessageDeliveryException(
+				MessageBuilder.withPayload("hi")
+						.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+						.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build()
+		));
+
+		this.tracedChannel.send(message);
+
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		then(spanId).isNotNull();
+		long traceId = Span
+				.hexToId(this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
+		then(traceId).isEqualTo(10L);
+		then(spanId).isNotEqualTo(20L);
+		then(this.accumulator.getSpans()).hasSize(1);
+		}
 
 	@Configuration
 	@EnableAutoConfiguration
