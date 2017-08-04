@@ -82,7 +82,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		getSpanInjector().inject(span, new MessagingTextMap(messageBuilder));
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
 		headers.copyHeaders(messageBuilder.build().getHeaders());
-		return new GenericMessage<>(retrievedMessage.getPayload(), headers.getMessageHeaders());
+		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
 	}
 
 	private Message getMessage(Message<?> message) {
