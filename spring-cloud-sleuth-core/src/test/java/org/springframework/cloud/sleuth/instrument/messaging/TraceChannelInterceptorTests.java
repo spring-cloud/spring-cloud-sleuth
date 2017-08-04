@@ -333,13 +333,14 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.tracedChannel.send(message);
 
 		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		then(message.getPayload()).isEqualTo(this.message.getPayload());
 		then(spanId).isNotNull();
 		long traceId = Span
 				.hexToId(this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		then(this.accumulator.getSpans()).hasSize(1);
-		}
+	}
 
 	@Configuration
 	@EnableAutoConfiguration
