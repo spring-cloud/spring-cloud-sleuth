@@ -22,10 +22,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageDeliveryException;
-import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.*;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -96,8 +93,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	private Message getMessage(Message<?> message) {
 		Object payload = message.getPayload();
-		if (payload instanceof MessageDeliveryException) {
-			MessageDeliveryException e = (MessageDeliveryException) payload;
+		if (payload instanceof MessagingException) {
+			MessagingException e = (MessagingException) payload;
 			return e.getFailedMessage();
 		}
 		return message;
