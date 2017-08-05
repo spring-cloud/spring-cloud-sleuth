@@ -16,20 +16,21 @@ import reactor.util.context.Context;
  *
  * @author Stephane Maldini
  * @author Marcin Grzejszczak
- * @since 1.3.0
+ * @since 2.0.0
  */
-class SpanSubscriber extends AtomicBoolean implements Subscription, CoreSubscriber<Object> {
+final class SpanSubscriber<T> extends AtomicBoolean implements Subscription,
+		CoreSubscriber<T> {
 
 	private static final Logger log = Loggers.getLogger(SpanSubscriber.class);
 
 	private final Span span;
 	private final Span rootSpan;
-	private final Subscriber<? super Object> subscriber;
+	private final Subscriber<? super T> subscriber;
 	private final Context context;
 	private final Tracer tracer;
 	private Subscription s;
 
-	SpanSubscriber(Subscriber<? super Object> subscriber, Context ctx, Tracer tracer,
+	SpanSubscriber(Subscriber<? super T> subscriber, Context ctx, Tracer tracer,
 			String name) {
 		this.subscriber = subscriber;
 		this.tracer = tracer;
@@ -116,7 +117,7 @@ class SpanSubscriber extends AtomicBoolean implements Subscription, CoreSubscrib
 		}
 	}
 
-	@Override public void onNext(Object o) {
+	@Override public void onNext(T o) {
 		this.subscriber.onNext(o);
 	}
 
