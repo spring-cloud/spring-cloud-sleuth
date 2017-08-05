@@ -44,15 +44,7 @@ public class TraceReactorAutoConfiguration {
 
 		@PostConstruct
 		public void setupHooks() {
-			Hooks.onNewSubscriber((pub, sub) -> {
-				//do not trace fused flows or simple just/error/empty
-				if(pub instanceof Fuseable && sub instanceof Fuseable.QueueSubscription
-						|| pub instanceof Fuseable.ScalarCallable){
-					return sub;
-				}
-				return new SpanSubscriber(sub, sub.currentContext(), this.tracer, pub
-						.toString());
-			});
+			Hooks.onLastOperator(ReactorSleuth.spanOperator(tracer));
 			Schedulers.setFactory(new Schedulers.Factory() {
 				@Override public ScheduledExecutorService decorateScheduledExecutorService(
 						String schedulerType,
