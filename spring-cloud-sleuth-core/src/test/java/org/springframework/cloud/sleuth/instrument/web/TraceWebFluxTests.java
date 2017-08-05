@@ -34,7 +34,7 @@ public class TraceWebFluxTests {
 
 	@BeforeClass
 	public static void setup() {
-		Hooks.resetOnNewSubscriber();
+		Hooks.resetOnEachOperator();
 		Schedulers.resetFactory();
 	}
 

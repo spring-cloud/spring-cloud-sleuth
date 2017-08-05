@@ -180,7 +180,7 @@ public class SpanSubscriberTests {
 
 	@AfterClass
 	public static void cleanup() {
-		Hooks.resetOnNewSubscriber();
+		Hooks.resetOnEachOperator();
 		Schedulers.resetFactory();
 	}
 
