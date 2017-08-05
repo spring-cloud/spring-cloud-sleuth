@@ -1,8 +1,8 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import javax.annotation.PostConstruct;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
-import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -16,7 +16,6 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.context.annotation.Configuration;
 
-import reactor.core.Fuseable;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -44,7 +43,7 @@ public class TraceReactorAutoConfiguration {
 
 		@PostConstruct
 		public void setupHooks() {
-			Hooks.onLastOperator(ReactorSleuth.spanOperator(tracer));
+			Hooks.onLastOperator(ReactorSleuth.spanOperator(this.tracer));
 			Schedulers.setFactory(new Schedulers.Factory() {
 				@Override public ScheduledExecutorService decorateScheduledExecutorService(
 						String schedulerType,

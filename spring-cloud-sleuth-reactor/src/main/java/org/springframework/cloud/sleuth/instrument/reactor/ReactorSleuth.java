@@ -4,16 +4,17 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.reactivestreams.Publisher;
+import org.springframework.cloud.sleuth.Tracer;
+
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.core.publisher.Operators;
-
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * Reactive Span pointcuts factories
  *
  * @author Stephane Maldini
+ * @since 1.3.0
  */
 public abstract class ReactorSleuth {
 
@@ -35,7 +36,6 @@ public abstract class ReactorSleuth {
 			if(scannable instanceof Fuseable && sub instanceof Fuseable.QueueSubscription){
 				return sub;
 			}
-
 			return new SpanSubscriber<>(
 					sub,
 					sub.currentContext(),
