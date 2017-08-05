@@ -323,8 +323,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	}
 
 	@Test
-	public void workWithMessageDeliveryException() throws Exception {
-		Message<?> message = new GenericMessage<>(new MessageDeliveryException(
+	public void workWithMessagingException() throws Exception {
+		Message<?> message = new GenericMessage<>(new MessagingException(
 				MessageBuilder.withPayload("hi")
 						.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
 						.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build()
