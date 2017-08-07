@@ -1,8 +1,9 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import javax.annotation.PostConstruct;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -16,7 +17,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
-
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -56,6 +56,12 @@ public class TraceReactorAutoConfiguration {
 							TraceReactorConfiguration.this.spanNamer);
 				}
 			});
+		}
+
+		@PreDestroy
+		public void cleanupHooks() {
+			Hooks.resetOnLastOperator();
+			Schedulers.resetFactory();
 		}
 	}
 }
