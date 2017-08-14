@@ -21,12 +21,15 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.PostConstruct;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoRestTemplateCustomizer;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
@@ -35,6 +38,7 @@ import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfig
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -93,5 +97,63 @@ public class TraceWebClientAutoConfiguration {
 		TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(BeanFactory beanFactory) {
 			return new TraceWebClientBeanPostProcessor(beanFactory);
 		}
+	}
+
+	@Configuration
+	@ConditionalOnClass(UserInfoRestTemplateCustomizer.class)
+	protected static class TraceOAuthConfiguration {
+
+		@Autowired BeanFactory beanFactory;
+
+		@Bean UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor() {
+			return new UserInfoRestTemplateCustomizerBPP(this.beanFactory);
+		}
+
+		class UserInfoRestTemplateCustomizerBPP implements BeanPostProcessor {
+
+			private final BeanFactory beanFactory;
+
+			UserInfoRestTemplateCustomizerBPP(BeanFactory beanFactory) {
+				this.beanFactory = beanFactory;
+			}
+
+			@Override
+			public Object postProcessBeforeInitialization(Object bean,
+					String beanName) throws BeansException {
+				return bean;
+			}
+
+			@Override
+			public Object postProcessAfterInitialization(final Object bean,
+					String beanName) throws BeansException {
+				final BeanFactory beanFactory = this.beanFactory;
+				if (bean instanceof UserInfoRestTemplateCustomizer) {
+					return new UserInfoRestTemplateCustomizer() {
+						@Override public void customize(OAuth2RestTemplate template) {
+							final TraceRestTemplateInterceptor interceptor =
+									beanFactory.getBean(TraceRestTemplateInterceptor.class);
+							new RestTemplateInterceptorInjector(interceptor).inject(template);
+							((UserInfoRestTemplateCustomizer) bean).customize(template);
+						}
+					};
+				}
+				return bean;
+			}
+		}
+	}
+}
+
+class RestTemplateInterceptorInjector {
+	private final TraceRestTemplateInterceptor interceptor;
+
+	RestTemplateInterceptorInjector(TraceRestTemplateInterceptor interceptor) {
+		this.interceptor = interceptor;
+	}
+
+	void inject(RestTemplate restTemplate) {
+		List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>(
+				restTemplate.getInterceptors());
+		interceptors.add(this.interceptor);
+		restTemplate.setInterceptors(interceptors);
 	}
 }
