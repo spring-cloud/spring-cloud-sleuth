@@ -562,7 +562,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect2">
-<h3 id="_terminology">Terminology</h3>
+<h3 id="_terminology"><a class="link" href="#_terminology">Terminology</a></h3>
 <div class="paragraph">
 <p>Spring Cloud Sleuth borrows <a href="http://research.google.com/pubs/pub36356.html">Dapper&#8217;s</a> terminology.</p>
 </div>
@@ -650,12 +650,12 @@ Client Sent</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_purpose">Purpose</h3>
+<h3 id="_purpose"><a class="link" href="#_purpose">Purpose</a></h3>
 <div class="paragraph">
 <p>In the following sections the example from the image above will be taken into consideration.</p>
 </div>
 <div class="sect3">
-<h4 id="_distributed_tracing_with_zipkin">Distributed tracing with Zipkin</h4>
+<h4 id="_distributed_tracing_with_zipkin"><a class="link" href="#_distributed_tracing_with_zipkin">Distributed tracing with Zipkin</a></h4>
 <div class="paragraph">
 <p>Altogether there are <strong>7 spans</strong> . If you go to traces in Zipkin you will see this number in the second trace:</p>
 </div>
@@ -721,7 +721,7 @@ to <code>service1</code> and <strong>3</strong> spans related to RPC calls.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_visualizing_errors">Visualizing errors</h4>
+<h4 id="_visualizing_errors"><a class="link" href="#_visualizing_errors">Visualizing errors</a></h4>
 <div class="paragraph">
 <p>Zipkin allows you to visualize errors in your trace. When an exception was thrown and wasn&#8217;t caught then we&#8217;re
 setting proper tags on the span which Zipkin can properly colorize. You could see in the list of traces one
@@ -748,7 +748,7 @@ setting proper tags on the span which Zipkin can properly colorize. You could se
 </div>
 </div>
 <div class="sect3">
-<h4 id="_live_examples">Live examples</h4>
+<h4 id="_live_examples"><a class="link" href="#_live_examples">Live examples</a></h4>
 <div class="imageblock">
 <div class="content">
 <a class="image" href="http://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
@@ -771,7 +771,7 @@ setting proper tags on the span which Zipkin can properly colorize. You could se
 </div>
 </div>
 <div class="sect3">
-<h4 id="_log_correlation">Log correlation</h4>
+<h4 id="_log_correlation"><a class="link" href="#_log_correlation">Log correlation</a></h4>
 <div class="paragraph">
 <p>When grepping the logs of those four applications by trace id equal to e.g. <code>2485ec27856c56f4</code> one would get the following:</p>
 </div>
@@ -832,7 +832,7 @@ If you want to use Grok together with the logs from Cloud Foundry you have to us
 </div>
 </div>
 <div class="sect4">
-<h5 id="_json_logback_with_logstash">JSON Logback with Logstash</h5>
+<h5 id="_json_logback_with_logstash"><a class="link" href="#_json_logback_with_logstash">JSON Logback with Logstash</a></h5>
 <div class="paragraph">
 <p>Often you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick. To do that you have to do the following (for readability
 we&#8217;re passing the dependencies in the <code>groupId:artifactId:version</code> notation.</p>
@@ -965,7 +965,7 @@ If you&#8217;re using a custom <code>logback-spring.xml</code> then you have to 
 </div>
 </div>
 <div class="sect3">
-<h4 id="_propagating_span_context">Propagating Span Context</h4>
+<h4 id="_propagating_span_context"><a class="link" href="#_propagating_span_context">Propagating Span Context</a></h4>
 <div class="paragraph">
 <p>The span context is the state that must get propagated to any child Spans across process boundaries.
 Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
@@ -1001,7 +1001,7 @@ initialSpan.setBaggageItem("UPPER_CASE", "someValue");</code></pre>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_baggage_vs_span_tags">Baggage vs. Span Tags</h5>
+<h5 id="_baggage_vs_span_tags"><a class="link" href="#_baggage_vs_span_tags">Baggage vs. Span Tags</a></h5>
 <div class="paragraph">
 <p>Baggage travels with the trace (i.e. every child span contains the baggage of its parent). Zipkin has no knowledge of
 baggage and will not even receive that information.</p>
@@ -1028,9 +1028,9 @@ tracer.addTag(baggageKey, baggageValue);</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_adding_to_the_project">Adding to the project</h3>
+<h3 id="_adding_to_the_project"><a class="link" href="#_adding_to_the_project">Adding to the project</a></h3>
 <div class="sect3">
-<h4 id="_only_sleuth_log_correlation">Only Sleuth (log correlation)</h4>
+<h4 id="_only_sleuth_log_correlation"><a class="link" href="#_only_sleuth_log_correlation">Only Sleuth (log correlation)</a></h4>
 <div class="paragraph">
 <p>If you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
 the <code>spring-cloud-starter-sleuth</code> module to your project.</p>
@@ -1094,7 +1094,7 @@ the Spring BOM</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</h4>
+<h4 id="_sleuth_with_zipkin_via_http"><a class="link" href="#_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</a></h4>
 <div class="paragraph">
 <p>If you want both Sleuth and Zipkin just add the <code>spring-cloud-starter-zipkin</code> dependency.</p>
 </div>
@@ -1157,7 +1157,7 @@ the Spring BOM</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_sleuth_with_zipkin_via_spring_cloud_stream">Sleuth with Zipkin via Spring Cloud Stream</h4>
+<h4 id="_sleuth_with_zipkin_via_spring_cloud_stream"><a class="link" href="#_sleuth_with_zipkin_via_spring_cloud_stream">Sleuth with Zipkin via Spring Cloud Stream</a></h4>
 <div class="paragraph">
 <p>If you want both Sleuth and Zipkin just add the <code>spring-cloud-sleuth-stream</code> dependency.</p>
 </div>
@@ -1244,7 +1244,7 @@ the Spring BOM</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_spring_cloud_sleuth_stream_zipkin_collector">Spring Cloud Sleuth Stream Zipkin Collector</h4>
+<h4 id="_spring_cloud_sleuth_stream_zipkin_collector"><a class="link" href="#_spring_cloud_sleuth_stream_zipkin_collector">Spring Cloud Sleuth Stream Zipkin Collector</a></h4>
 <div class="paragraph">
 <p>If you want to start a Spring Cloud Sleuth Stream Zipkin collector just add the <code>spring-cloud-sleuth-zipkin-stream</code>
 dependency</p>
@@ -1355,7 +1355,7 @@ public class ZipkinStreamServerApplication {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_additional_resources">Additional resources</h2>
+<h2 id="_additional_resources"><a class="link" href="#_additional_resources">Additional resources</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p><strong>Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin</strong></p>
@@ -1371,7 +1371,7 @@ public class ZipkinStreamServerApplication {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_features">Features</h2>
+<h2 id="_features"><a class="link" href="#_features">Features</a></h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -1493,7 +1493,7 @@ the SLF4J MDC is always set and logback users will immediately see the trace and
 </div>
 </div>
 <div class="sect1">
-<h2 id="_sampling">Sampling</h2>
+<h2 id="_sampling"><a class="link" href="#_sampling">Sampling</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>In distributed tracing the data volumes can be very high so sampling
@@ -1556,7 +1556,7 @@ regardless of the sampling decision.
 </div>
 </div>
 <div class="sect1">
-<h2 id="_instrumentation">Instrumentation</h2>
+<h2 id="_instrumentation"><a class="link" href="#_instrumentation">Instrumentation</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Spring Cloud Sleuth instruments all your Spring application
@@ -1606,7 +1606,7 @@ This approach may change in the future towards being lazy on this matter.
 </div>
 </div>
 <div class="sect1">
-<h2 id="_span_lifecycle">Span lifecycle</h2>
+<h2 id="_span_lifecycle"><a class="link" href="#_span_lifecycle">Span lifecycle</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You can do the following operations on the Span by means of <strong>org.springframework.cloud.sleuth.Tracer</strong> interface:</p>
@@ -1646,7 +1646,7 @@ Spring creates the instance of <code>Tracer</code> for you. In order to use it a
 </table>
 </div>
 <div class="sect2">
-<h3 id="creating-and-closing-spans">Creating and closing spans</h3>
+<h3 id="creating-and-closing-spans"><a class="link" href="#creating-and-closing-spans">Creating and closing spans</a></h3>
 <div class="paragraph">
 <p>You can manually create spans by using the <strong>Tracer</strong> interface.</p>
 </div>
@@ -1701,7 +1701,7 @@ latency issues and sometimes even thrown exceptions.
 </div>
 </div>
 <div class="sect2">
-<h3 id="continuing-spans">Continuing spans</h3>
+<h3 id="continuing-spans"><a class="link" href="#continuing-spans">Continuing spans</a></h3>
 <div class="paragraph">
 <p>Sometimes you don&#8217;t want to create a new span but you want to continue one. Example of such a
 situation might be (of course it all depends on the use-case):</p>
@@ -1765,7 +1765,7 @@ Always clean after you create a span! Don&#8217;t forget to detach a span if som
 </div>
 </div>
 <div class="sect2">
-<h3 id="creating-spans-with-explicit-parent">Creating spans with an explicit parent</h3>
+<h3 id="creating-spans-with-explicit-parent"><a class="link" href="#creating-spans-with-explicit-parent">Creating spans with an explicit parent</a></h3>
 <div class="paragraph">
 <p>There is a possibility that you want to start a new span and provide an explicit parent of that span.
 Let&#8217;s assume that the parent of a span is in one thread and you want to start a new span in another thread. The
@@ -1810,7 +1810,7 @@ After having created such a span remember to close it. Otherwise you will see a 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_naming_spans">Naming spans</h2>
+<h2 id="_naming_spans"><a class="link" href="#_naming_spans">Naming spans</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Picking a span name is not a trivial task. Span name should depict an operation name. The name should
@@ -1837,7 +1837,7 @@ artificial like:</p>
 <p>Fortunately, for the asynchronous processing you can provide explicit naming.</p>
 </div>
 <div class="sect2">
-<h3 id="__spanname_annotation">@SpanName annotation</h3>
+<h3 id="__spanname_annotation"><a class="link" href="#__spanname_annotation">@SpanName annotation</a></h3>
 <div class="paragraph">
 <p>You can name the span explicitly via the <code>@SpanName</code> annotation.</p>
 </div>
@@ -1868,7 +1868,7 @@ future.get();</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_tostring_method">toString() method</h3>
+<h3 id="_tostring_method"><a class="link" href="#_tostring_method">toString() method</a></h3>
 <div class="paragraph">
 <p>It&#8217;s pretty rare to create separate classes for <code>Runnable</code> or <code>Callable</code>. Typically one creates an anonymous
 instance of those classes. You can&#8217;t annotate such classes thus to override that, if there is no <code>@SpanName</code> annotation present,
@@ -1900,10 +1900,10 @@ future.get();</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_managing_spans_with_annotations">Managing spans with annotations</h2>
+<h2 id="_managing_spans_with_annotations"><a class="link" href="#_managing_spans_with_annotations">Managing spans with annotations</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_rationale">Rationale</h3>
+<h3 id="_rationale"><a class="link" href="#_rationale">Rationale</a></h3>
 <div class="paragraph">
 <p>The main arguments for this features are</p>
 </div>
@@ -1948,7 +1948,7 @@ at runtime thus span wrapping of objects was tedious. Now you can provide annota
 </div>
 </div>
 <div class="sect2">
-<h3 id="_creating_new_spans">Creating new spans</h3>
+<h3 id="_creating_new_spans"><a class="link" href="#_creating_new_spans">Creating new spans</a></h3>
 <div class="paragraph">
 <p>If you really don&#8217;t want to take care of creating local spans manually you can profit from the
 <code>@NewSpan</code> annotation. Also we give you the <code>@SpanTag</code> annotation to add tags in an automated
@@ -2007,7 +2007,7 @@ concrete one wins (in this case <code>customNameOnTestMethod3</code> will be set
 </div>
 </div>
 <div class="sect2">
-<h3 id="_continuing_spans">Continuing spans</h3>
+<h3 id="_continuing_spans"><a class="link" href="#_continuing_spans">Continuing spans</a></h3>
 <div class="paragraph">
 <p>If you want to just add tags and annotations to an existing span it&#8217;s enough
 to use the <code>@ContinueSpan</code> annotation as presented below. Note that in contrast
@@ -2041,7 +2041,7 @@ this.testBean.testMethod11("test");</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_more_advanced_tag_setting">More advanced tag setting</h3>
+<h3 id="_more_advanced_tag_setting"><a class="link" href="#_more_advanced_tag_setting">More advanced tag setting</a></h3>
 <div class="paragraph">
 <p>There are 3 different ways to add tags to a span. All of them are controlled by the <code>SpanTag</code> annotation.
 Precedence is:</p>
@@ -2061,7 +2061,7 @@ The default implementation uses SPEL expression resolution.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="_custom_extractor">Custom extractor</h4>
+<h4 id="_custom_extractor"><a class="link" href="#_custom_extractor">Custom extractor</a></h4>
 <div class="paragraph">
 <p>The value of the tag for following method will be computed by an implementation of <code>TagValueResolver</code> interface.
 Its class name has to be passed as the value of the <code>resolver</code> attribute.</p>
@@ -2092,7 +2092,7 @@ public TagValueResolver tagValueResolver() {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_resolving_expressions_for_value">Resolving expressions for value</h4>
+<h4 id="_resolving_expressions_for_value"><a class="link" href="#_resolving_expressions_for_value">Resolving expressions for value</a></h4>
 <div class="paragraph">
 <p>Having such an annotated method:</p>
 </div>
@@ -2110,7 +2110,7 @@ of the bean.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_using_tostring_method">Using toString method</h4>
+<h4 id="_using_tostring_method"><a class="link" href="#_using_tostring_method">Using toString method</a></h4>
 <div class="paragraph">
 <p>Having such an annotated method:</p>
 </div>
@@ -2129,7 +2129,7 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_customizations">Customizations</h2>
+<h2 id="_customizations"><a class="link" href="#_customizations">Customizations</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Thanks to the <code>SpanInjector</code> and <code>SpanExtractor</code> you can customize the way spans
@@ -2164,7 +2164,7 @@ implementation of  a <code>SpanTextMap</code> that delegates calls to <code>FooR
 and insertion of HTTP headers.</p>
 </div>
 <div class="sect2">
-<h3 id="_spring_integration">Spring Integration</h3>
+<h3 id="_spring_integration"><a class="link" href="#_spring_integration">Spring Integration</a></h3>
 <div class="paragraph">
 <p>For Spring Integration there are 2 interfaces responsible for creation of a Span from a <code>Message</code>.
 These are:</p>
@@ -2184,7 +2184,7 @@ These are:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_http">HTTP</h3>
+<h3 id="_http"><a class="link" href="#_http">HTTP</a></h3>
 <div class="paragraph">
 <p>For HTTP there are 2 interfaces responsible for creation of a Span from a <code>Message</code>.
 These are:</p>
@@ -2204,7 +2204,7 @@ These are:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_example">Example</h3>
+<h3 id="_example"><a class="link" href="#_example">Example</a></h3>
 <div class="paragraph">
 <p>Let&#8217;s assume that instead of the standard Zipkin compatible tracing HTTP header names
 you have</p>
@@ -2339,7 +2339,7 @@ HttpResponseInjectingTraceFilter responseInjectingTraceFilter(Tracer tracer) {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_custom_sa_tag_in_zipkin">Custom SA tag in Zipkin</h3>
+<h3 id="_custom_sa_tag_in_zipkin"><a class="link" href="#_custom_sa_tag_in_zipkin">Custom SA tag in Zipkin</a></h3>
 <div class="paragraph">
 <p>Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
 What you can do is to create a span with the <code>peer.service</code> tag that will contain a value of the service that you want to call.
@@ -2377,7 +2377,7 @@ Remember not to add both <code>peer.service</code> tag and the <code>SA</code> t
 </div>
 </div>
 <div class="sect2">
-<h3 id="_custom_service_name">Custom service name</h3>
+<h3 id="_custom_service_name"><a class="link" href="#_custom_service_name">Custom service name</a></h3>
 <div class="paragraph">
 <p>By default Sleuth assumes that when you send a span to Zipkin, you want the span&#8217;s service name
  to be equal to <code>spring.application.name</code> value. That&#8217;s not always the case though. There
@@ -2392,7 +2392,7 @@ Remember not to add both <code>peer.service</code> tag and the <code>SA</code> t
 </div>
 </div>
 <div class="sect2">
-<h3 id="_customization_of_reported_spans">Customization of reported spans</h3>
+<h3 id="_customization_of_reported_spans"><a class="link" href="#_customization_of_reported_spans">Customization of reported spans</a></h3>
 <div class="paragraph">
 <p>Before reporting spans to e.g. Zipkin you can be interested in modifying that span in some way.
  You can achieve that by using the <code>SpanAdjuster</code> interface.</p>
@@ -2430,7 +2430,7 @@ Your <code>SpanReporter</code> should inject the <code>SpanAdjuster</code> and
 </div>
 </div>
 <div class="sect2">
-<h3 id="_host_locator">Host locator</h3>
+<h3 id="_host_locator"><a class="link" href="#_host_locator">Host locator</a></h3>
 <div class="paragraph">
 <p>In order to define the host that is corresponding to a particular span we need to resolve the host name
 and port. The default approach is to take it from server properties. If those for some reason are not set
@@ -2450,7 +2450,7 @@ Stream based span reporting).</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_sending_spans_to_zipkin">Sending spans to Zipkin</h2>
+<h2 id="_sending_spans_to_zipkin"><a class="link" href="#_sending_spans_to_zipkin">Sending spans to Zipkin</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>By default if you add <code>spring-cloud-starter-zipkin</code> as a dependency to your project,
@@ -2475,7 +2475,7 @@ Zipkin&#8217;s service id inside the URL (example for <code>zipkinserver</code> 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_span_data_as_messages">Span Data as Messages</h2>
+<h2 id="_span_data_as_messages"><a class="link" href="#_span_data_as_messages">Span Data as Messages</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You can accumulate and send span data over
@@ -2488,7 +2488,7 @@ automatically turn your app into a producer of messages with payload
 type <code>Spans</code>.</p>
 </div>
 <div class="sect2">
-<h3 id="_zipkin_consumer">Zipkin Consumer</h3>
+<h3 id="_zipkin_consumer"><a class="link" href="#_zipkin_consumer">Zipkin Consumer</a></h3>
 <div class="paragraph">
 <p>There is a special convenience annotation for setting up a message consumer
 for the Span data and pushing it into a Zipkin <code>SpanStore</code>. This application</p>
@@ -2564,7 +2564,7 @@ querying in the Zipkin Web UI.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_custom_consumer">Custom Consumer</h3>
+<h3 id="_custom_consumer"><a class="link" href="#_custom_consumer">Custom Consumer</a></h3>
 <div class="paragraph">
 <p>A custom consumer can also easily be implemented using
 <code>spring-cloud-sleuth-stream</code> and binding to the <code>SleuthSink</code>. Example:</p>
@@ -2621,7 +2621,7 @@ public static class CustomPollerConfiguration {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_metrics">Metrics</h2>
+<h2 id="_metrics"><a class="link" href="#_metrics">Metrics</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Currently Spring Cloud Sleuth registers very simple metrics related to spans.
@@ -2633,10 +2633,10 @@ the number of dropped spans will get increased.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_integrations">Integrations</h2>
+<h2 id="_integrations"><a class="link" href="#_integrations">Integrations</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_runnable_and_callable">Runnable and Callable</h3>
+<h3 id="_runnable_and_callable"><a class="link" href="#_runnable_and_callable">Runnable and Callable</a></h3>
 <div class="paragraph">
 <p>If you&#8217;re wrapping your logic in <code>Runnable</code> or <code>Callable</code> it&#8217;s enough to wrap those classes in their Sleuth representative.</p>
 </div>
@@ -2691,9 +2691,9 @@ Callable&lt;String&gt; traceCallableFromTracer = tracer.wrap(callable);</code></
 </div>
 </div>
 <div class="sect2">
-<h3 id="_hystrix">Hystrix</h3>
+<h3 id="_hystrix"><a class="link" href="#_hystrix">Hystrix</a></h3>
 <div class="sect3">
-<h4 id="_custom_concurrency_strategy">Custom Concurrency Strategy</h4>
+<h4 id="_custom_concurrency_strategy"><a class="link" href="#_custom_concurrency_strategy">Custom Concurrency Strategy</a></h4>
 <div class="paragraph">
 <p>We&#8217;re registering a custom <a href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy"><code>HystrixConcurrencyStrategy</code></a>
 that wraps all <code>Callable</code> instances into their Sleuth representative -
@@ -2702,7 +2702,7 @@ on before the Hystrix command was called. To disable the custom Hystrix Concurre
 </div>
 </div>
 <div class="sect3">
-<h4 id="_manual_command_setting">Manual Command setting</h4>
+<h4 id="_manual_command_setting"><a class="link" href="#_manual_command_setting">Manual Command setting</a></h4>
 <div class="paragraph">
 <p>Assuming that you have the following <code>HystrixCommand</code>:</p>
 </div>
@@ -2733,7 +2733,7 @@ on before the Hystrix command was called. To disable the custom Hystrix Concurre
 </div>
 </div>
 <div class="sect2">
-<h3 id="_rxjava">RxJava</h3>
+<h3 id="_rxjava"><a class="link" href="#_rxjava">RxJava</a></h3>
 <div class="paragraph">
 <p>We&#8217;re registering a custom <a href="https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook"><code>RxJavaSchedulersHook</code></a>
 that wraps all <code>Action0</code> instances into their Sleuth representative -
@@ -2746,12 +2746,12 @@ of regular expressions in the <code>spring.sleuth.rxjava.schedulers.ignoredthrea
 </div>
 </div>
 <div class="sect2">
-<h3 id="_http_integration">HTTP integration</h3>
+<h3 id="_http_integration"><a class="link" href="#_http_integration">HTTP integration</a></h3>
 <div class="paragraph">
 <p>Features from this section can be disabled by providing the <code>spring.sleuth.web.enabled</code> property with value equal to <code>false</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="_http_filter">HTTP Filter</h4>
+<h4 id="_http_filter"><a class="link" href="#_http_filter">HTTP Filter</a></h4>
 <div class="paragraph">
 <p>Via the <code>TraceFilter</code> all sampled incoming requests result in creation of a Span. That Span&#8217;s name is <code>http:</code> + the path to which
  the request was sent. E.g. if the request was sent to <code>/foo/bar</code> then the name will be <code>http:/foo/bar</code>. You can configure which URIs you would
@@ -2760,7 +2760,7 @@ of regular expressions in the <code>spring.sleuth.rxjava.schedulers.ignoredthrea
 </div>
 </div>
 <div class="sect3">
-<h4 id="_handlerinterceptor">HandlerInterceptor</h4>
+<h4 id="_handlerinterceptor"><a class="link" href="#_handlerinterceptor">HandlerInterceptor</a></h4>
 <div class="paragraph">
 <p>Since we want the span names to be precise we&#8217;re using a <code>TraceHandlerInterceptor</code> that either wraps an
  existing <code>HandlerInterceptor</code> or is added directly to the list of existing <code>HandlerInterceptors</code>. The
@@ -2771,16 +2771,16 @@ of regular expressions in the <code>spring.sleuth.rxjava.schedulers.ignoredthrea
 </div>
 </div>
 <div class="sect3">
-<h4 id="_async_servlet_support">Async Servlet support</h4>
+<h4 id="_async_servlet_support"><a class="link" href="#_async_servlet_support">Async Servlet support</a></h4>
 <div class="paragraph">
 <p>If your controller returns a <code>Callable</code> or a <code>WebAsyncTask</code> Spring Cloud Sleuth will continue the existing span instead of creating a new one.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_http_client_integration">HTTP client integration</h3>
+<h3 id="_http_client_integration"><a class="link" href="#_http_client_integration">HTTP client integration</a></h3>
 <div class="sect3">
-<h4 id="_synchronous_rest_template">Synchronous Rest Template</h4>
+<h4 id="_synchronous_rest_template"><a class="link" href="#_synchronous_rest_template">Synchronous Rest Template</a></h4>
 <div class="paragraph">
 <p>We&#8217;re injecting a <code>RestTemplate</code> interceptor that ensures that all the tracing information is passed to the requests. Each time a
 call is made a new Span is created. It gets closed upon receiving the response. In order to block the synchronous <code>RestTemplate</code> features
@@ -2801,7 +2801,7 @@ If you create a <code>RestTemplate</code> instance with a <code>new</code> keywo
 </div>
 </div>
 <div class="sect3">
-<h4 id="_asynchronous_rest_template">Asynchronous Rest Template</h4>
+<h4 id="_asynchronous_rest_template"><a class="link" href="#_asynchronous_rest_template">Asynchronous Rest Template</a></h4>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -2846,7 +2846,7 @@ To disable creation of the default <code>TraceAsyncClientHttpRequestFactoryWrapp
 to <code>false</code>. If you don&#8217;t want to create <code>AsyncRestClient</code> at all set <code>spring.sleuth.web.async.client.template.enabled</code> to <code>false</code>.</p>
 </div>
 <div class="sect4">
-<h5 id="_multiple_asynchronous_rest_templates">Multiple Asynchronous Rest Templates</h5>
+<h5 id="_multiple_asynchronous_rest_templates"><a class="link" href="#_multiple_asynchronous_rest_templates">Multiple Asynchronous Rest Templates</a></h5>
 <div class="paragraph">
 <p>Sometimes you need to use multiple implementations of Asynchronous Rest Template. In the following snippet you
 can see an example of how to set up such a custom <code>AsyncRestTemplate</code>.</p>
@@ -2893,7 +2893,7 @@ static class Config {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_feign">Feign</h3>
+<h3 id="_feign"><a class="link" href="#_feign">Feign</a></h3>
 <div class="paragraph">
 <p>By default Spring Cloud Sleuth provides integration with feign via the <code>TraceFeignClientAutoConfiguration</code>. You can disable it entirely
 by setting <code>spring.sleuth.feign.enabled</code> to false. If you do so then no Feign related instrumentation will take place.</p>
@@ -2905,9 +2905,9 @@ however will be still there.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_asynchronous_communication">Asynchronous communication</h3>
+<h3 id="_asynchronous_communication"><a class="link" href="#_asynchronous_communication">Asynchronous communication</a></h3>
 <div class="sect3">
-<h4 id="__async_annotated_methods">@Async annotated methods</h4>
+<h4 id="__async_annotated_methods"><a class="link" href="#__async_annotated_methods">@Async annotated methods</a></h4>
 <div class="paragraph">
 <p>In Spring Cloud Sleuth we&#8217;re instrumenting async related components so that the tracing information is passed between threads.
 You can disable this behaviour by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false</code>.</p>
@@ -2918,7 +2918,10 @@ You can disable this behaviour by setting the value of <code>spring.sleuth.async
 <div class="ulist">
 <ul>
 <li>
-<p>the Span name will be the annotated method name</p>
+<p>if the method is annotated with <code>@SpanName</code> then the value of the annotation will be the Span&#8217;s name</p>
+</li>
+<li>
+<p>if the method is <strong>not</strong> annotated with <code>@SpanName</code> the Span name will be the annotated method name</p>
 </li>
 <li>
 <p>the Span will be tagged with that method&#8217;s class name and the method name too</p>
@@ -2927,7 +2930,7 @@ You can disable this behaviour by setting the value of <code>spring.sleuth.async
 </div>
 </div>
 <div class="sect3">
-<h4 id="__scheduled_annotated_methods">@Scheduled annotated methods</h4>
+<h4 id="__scheduled_annotated_methods"><a class="link" href="#__scheduled_annotated_methods">@Scheduled annotated methods</a></h4>
 <div class="paragraph">
 <p>In Spring Cloud Sleuth we&#8217;re instrumenting scheduled method execution so that the tracing information is passed between threads. You can disable this behaviour
 by setting the value of <code>spring.sleuth.scheduled.enabled</code> to <code>false</code>.</p>
@@ -2964,7 +2967,7 @@ If you are using <code>spring-cloud-sleuth-stream</code> and <code>spring-cloud-
 </div>
 </div>
 <div class="sect3">
-<h4 id="_executor_executorservice_and_scheduledexecutorservice">Executor, ExecutorService and ScheduledExecutorService</h4>
+<h4 id="_executor_executorservice_and_scheduledexecutorservice"><a class="link" href="#_executor_executorservice_and_scheduledexecutorservice">Executor, ExecutorService and ScheduledExecutorService</a></h4>
 <div class="paragraph">
 <p>We&#8217;re providing <code>LazyTraceExecutor</code>, <code>TraceableExecutorService</code> and <code>TraceableScheduledExecutorService</code>. Those implementations
 are creating Spans each time a new task is submitted, invoked or scheduled.</p>
@@ -2983,7 +2986,7 @@ are creating Spans each time a new task is submitted, invoked or scheduled.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_customization_of_executors">Customization of Executors</h5>
+<h5 id="_customization_of_executors"><a class="link" href="#_customization_of_executors">Customization of Executors</a></h5>
 <div class="paragraph">
 <p>Sometimes you need to set up a custom instance of the <code>AsyncExecutor</code>. In the following snippet you
 can see an example of how to set up such a custom <code>Executor</code>.</p>
@@ -3015,7 +3018,7 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 </div>
 </div>
 <div class="sect2">
-<h3 id="_messaging">Messaging</h3>
+<h3 id="_messaging"><a class="link" href="#_messaging">Messaging</a></h3>
 <div class="paragraph">
 <p>Spring Cloud Sleuth integrates with <a href="http://projects.spring.io/spring-integration/">Spring Integration</a>. It creates spans for publish and
 subscribe events. To disable Spring Integration instrumentation, set <code>spring.sleuth.integration.enabled</code> to false.</p>
@@ -3040,7 +3043,7 @@ Decorating Spring Integration Executor Channel with <code>TraceableExecutorServi
 </div>
 </div>
 <div class="sect2">
-<h3 id="_zuul">Zuul</h3>
+<h3 id="_zuul"><a class="link" href="#_zuul">Zuul</a></h3>
 <div class="paragraph">
 <p>We&#8217;re registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
 To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property to <code>false</code>.</p>
@@ -3049,7 +3052,7 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 </div>
 </div>
 <div class="sect1">
-<h2 id="_running_examples">Running examples</h2>
+<h2 id="_running_examples"><a class="link" href="#_running_examples">Running examples</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You can find the running examples deployed in the <a href="https://run.pivotal.io/">Pivotal Web Services</a>. Check them out in the following links:</p>
