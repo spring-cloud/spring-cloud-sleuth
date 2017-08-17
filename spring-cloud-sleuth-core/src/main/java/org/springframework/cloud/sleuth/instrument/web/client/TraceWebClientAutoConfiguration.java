@@ -109,7 +109,7 @@ public class TraceWebClientAutoConfiguration {
 			return new UserInfoRestTemplateCustomizerBPP(this.beanFactory);
 		}
 
-		class UserInfoRestTemplateCustomizerBPP implements BeanPostProcessor {
+		private static class UserInfoRestTemplateCustomizerBPP implements BeanPostProcessor {
 
 			private final BeanFactory beanFactory;
 
