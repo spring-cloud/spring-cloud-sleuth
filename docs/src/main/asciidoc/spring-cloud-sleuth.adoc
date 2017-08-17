@@ -735,6 +735,22 @@ can see an example of how to set up such a custom `AsyncRestTemplate`.
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/MultipleAsyncRestTemplateTests.java[tags=custom_async_rest_template,indent=0]
 ----
 
+==== Traverson
+
+If you're using the http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson[Traverson] library
+it's enough for you to inject a `RestTemplate` as a bean into your Traverson object. Since `RestTemplate`
+is already intercepted, you will get full support of tracing in your client. Below you can find a pseudo code
+of how to do that:
+
+[source,java]
+----
+@Autowired RestTemplate restTemplate;
+
+Traverson traverson = new Traverson(URI.create("http://some/address"),
+    MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
+// use Traverson
+----
+
 === Feign
 
 By default Spring Cloud Sleuth provides integration with feign via the `TraceFeignClientAutoConfiguration`. You can disable it entirely
