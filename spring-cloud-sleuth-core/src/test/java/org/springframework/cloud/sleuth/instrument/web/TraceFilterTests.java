@@ -16,6 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Random;
+import java.util.regex.Pattern;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,11 +52,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Random;
-import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -132,7 +132,7 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		verifyCurrentSpanStatusCode(HttpStatus.OK);
+		assertThat(this.span.tags()).containsEntry("http.status_code", HttpStatus.OK.toString());
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
@@ -448,6 +448,29 @@ public class TraceFilterTests {
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
+	// #668
+	@Test
+	public void shouldSetTraceKeysForAnUntracedRequest() throws Exception {
+		this.request = builder()
+				.param("foo", "bar")
+				.buildRequest(new MockServletContext());
+		this.response.setStatus(295);
+		TraceFilter filter = new TraceFilter(beanFactory());
+
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		then(new ListOfSpans(this.spanReporter.getSpans()))
+				.hasASpanWithName("http:/")
+				.hasASpanWithTagEqualTo("http.url", "http://localhost/?foo=bar")
+				.hasASpanWithTagEqualTo("http.host", "localhost")
+				.hasASpanWithTagEqualTo("http.path", "/")
+				.hasASpanWithTagEqualTo("http.method", "GET")
+				.hasASpanWithTagEqualTo("http.status_code", "295")
+				.allSpansAreExportable();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
 	public void verifyParentSpanHttpTags() {
 		verifyParentSpanHttpTags(HttpStatus.OK);
 	}
@@ -460,11 +483,11 @@ public class TraceFilterTests {
 		assertThat(parentSpan().tags()).contains(entry("http.host", "localhost"),
 				entry("http.url", "http://localhost/?foo=bar"), entry("http.path", "/"),
 				entry("http.method", "GET"));
-		verifyCurrentSpanStatusCode(status);
+		verifyCurrentSpanStatusCodeForAContinuedSpan(status);
 
 	}
 
-	private void verifyCurrentSpanStatusCode(HttpStatus status) {
+	private void verifyCurrentSpanStatusCodeForAContinuedSpan(HttpStatus status) {
 		// Status is only interesting in non-success case. Omitting it saves at least
 		// 20bytes per span.
 		if (status.is2xxSuccessful()) {

@@ -90,6 +90,9 @@ public class TraceFilter extends GenericFilterBean {
 	protected static final String TRACE_CLOSE_SPAN_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".CLOSE_SPAN";
 
+	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceFilter.class.getName()
+			+ ".SPAN_WITH_NO_PARENT";
+
 	private Tracer tracer;
 	private TraceKeys traceKeys;
 	private final Pattern skipPattern;
@@ -216,6 +219,7 @@ public class TraceFilter extends GenericFilterBean {
 		Span span = spanFromRequest;
 		if (span != null) {
 			addResponseTags(response, exception);
+			addResponseTagsForSpanWithoutParent(request, response);
 			if (span.hasSavedSpan() && requestHasAlreadyBeenHandled(request)) {
 				recordParentSpan(span.getSavedSpan());
 			} else if (!requestHasAlreadyBeenHandled(request)) {
@@ -250,6 +254,18 @@ public class TraceFilter extends GenericFilterBean {
 				clearTraceAttribute(request);
 			}
 		}
+	}
+
+	private void addResponseTagsForSpanWithoutParent(HttpServletRequest request,
+			HttpServletResponse response) {
+		if (spanWithoutParent(request) && response.getStatus() >= 100) {
+			tracer().addTag(traceKeys().getHttp().getStatusCode(),
+					String.valueOf(response.getStatus()));
+		}
+	}
+
+	private boolean spanWithoutParent(HttpServletRequest request) {
+		return request.getAttribute(TRACE_SPAN_WITHOUT_PARENT) != null;
 	}
 
 	private boolean stillTracingCurrentSapn(Span span) {
@@ -351,6 +367,8 @@ public class TraceFilter extends GenericFilterBean {
 				} else {
 					spanFromRequest = tracer().createSpan(name);
 				}
+				addRequestTags(spanFromRequest, request);
+				request.setAttribute(TRACE_SPAN_WITHOUT_PARENT, spanFromRequest);
 			}
 			spanFromRequest.logEvent(Span.SERVER_RECV);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
