@@ -528,6 +528,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_multiple_asynchronous_rest_templates">Multiple Asynchronous Rest Templates</a></li>
 </ul>
 </li>
+<li><a href="#_traverson">Traverson</a></li>
 </ul>
 </li>
 <li><a href="#_feign">Feign</a></li>
@@ -2888,6 +2889,24 @@ static class Config {
 	}
 }</code></pre>
 </div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_traverson"><a class="link" href="#_traverson">Traverson</a></h4>
+<div class="paragraph">
+<p>If you&#8217;re using the <a href="http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</a> library
+it&#8217;s enough for you to inject a <code>RestTemplate</code> as a bean into your Traverson object. Since <code>RestTemplate</code>
+is already intercepted, you will get full support of tracing in your client. Below you can find a pseudo code
+of how to do that:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Autowired RestTemplate restTemplate;
+
+Traverson traverson = new Traverson(URI.create("http://some/address"),
+    MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
+// use Traverson</code></pre>
 </div>
 </div>
 </div>
