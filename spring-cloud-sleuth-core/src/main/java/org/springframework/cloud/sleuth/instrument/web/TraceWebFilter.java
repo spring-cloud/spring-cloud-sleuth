@@ -38,6 +38,8 @@ public class TraceWebFilter implements WebFilter, Ordered {
 
 	protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
 			+ ".TRACE";
+	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName()
+			+ ".SPAN_WITH_NO_PARENT";
 	private static final String HTTP_COMPONENT = "http";/**
 
 	 * If you register your filter before the {@link TraceWebFilter} then you will not
@@ -89,8 +91,17 @@ public class TraceWebFilter implements WebFilter, Ordered {
 			HandlerMethod handlerMethod = exchange.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
 			addClassMethodTag(handlerMethod, span);
 			addClassNameTag(handlerMethod, span);
+			addResponseTagsForSpanWithoutParent(exchange, response);
 			detachOrCloseSpans(span);
 		}));
+	}
+
+	private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange,
+			ServerHttpResponse response) {
+		if (spanWithoutParent(exchange) && response.getStatusCode() != null) {
+			tracer().addTag(traceKeys().getHttp().getStatusCode(),
+					String.valueOf(response.getStatusCode().value()));
+		}
 	}
 
 	private void addClassMethodTag(Object handler, Span span) {
@@ -166,9 +177,11 @@ public class TraceWebFilter implements WebFilter, Ordered {
 				} else {
 					spanFromRequest = tracer().createSpan(name);
 				}
+				addRequestTags(spanFromRequest, request);
 			}
 			spanFromRequest.logEvent(Span.SERVER_RECV);
 			exchange.getAttributes().put(TRACE_REQUEST_ATTR, spanFromRequest);
+			exchange.getAttributes().put(TRACE_SPAN_WITHOUT_PARENT, spanFromRequest);
 			if (log.isDebugEnabled()) {
 				log.debug("No parent span present - creating a new span");
 			}
@@ -224,6 +237,10 @@ public class TraceWebFilter implements WebFilter, Ordered {
 
 	private Span getSpanFromAttribute(ServerWebExchange exchange) {
 		return exchange.getAttribute(TRACE_REQUEST_ATTR);
+	}
+
+	private boolean spanWithoutParent(ServerWebExchange exchange) {
+		return exchange.getAttribute(TRACE_SPAN_WITHOUT_PARENT) != null;
 	}
 
 	private void detachOrCloseSpans(Span spanFromRequest) {
