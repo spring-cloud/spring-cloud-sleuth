@@ -5,6 +5,7 @@
 :toc: left
 :toclevels: 8
 :nofooter:
+:sectlinks: true
 
 Spring Cloud Sleuth
 ====================
@@ -752,7 +753,8 @@ You can disable this behaviour by setting the value of `spring.sleuth.async.enab
 
 If you annotate your method with `@Async` then we'll automatically create a new Span with the following characteristics:
 
-    - the Span name will be the annotated method name
+    - if the method is annotated with `@SpanName` then the value of the annotation will be the Span's name
+    - if the method is *not* annotated with `@SpanName` the Span name will be the annotated method name
     - the Span will be tagged with that method's class name and the method name too
 
 ==== @Scheduled annotated methods

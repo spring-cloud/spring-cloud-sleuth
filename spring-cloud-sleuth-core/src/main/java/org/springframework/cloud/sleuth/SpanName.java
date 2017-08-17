@@ -55,10 +55,13 @@ import java.lang.annotation.Target;
  *     };
  * }</pre>
  *
+ * Starting with version {@code 1.3.0} you can also put the annotation on an {@link org.springframework.scheduling.annotation.Async}
+ * annotated method and the value of that annotation will be used as the span name.
+ *
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
-@Target(ElementType.TYPE)
+@Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface SpanName {

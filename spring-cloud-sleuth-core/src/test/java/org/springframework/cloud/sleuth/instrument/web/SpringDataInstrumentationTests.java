@@ -51,6 +51,7 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
@@ -62,6 +63,7 @@ import org.awaitility.Awaitility;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ReservationServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
+@ActiveProfiles("data")
 public class SpringDataInstrumentationTests {
 
 	@Autowired

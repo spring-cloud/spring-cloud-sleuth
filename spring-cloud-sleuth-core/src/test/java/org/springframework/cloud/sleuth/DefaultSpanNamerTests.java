@@ -16,7 +16,10 @@
 
 package org.springframework.cloud.sleuth;
 
+import java.lang.reflect.Method;
+
 import org.junit.Test;
+import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -42,6 +45,18 @@ public class DefaultSpanNamerTests {
 		then(this.defaultSpanNamer.name(new ClassWithoutToString(), "default")).isEqualTo("default");
 	}
 
+	@Test
+	public void should_return_value_of_span_name_from_annotation_on_method() throws Exception {
+		Method method = ReflectionUtils.findMethod(ClassWithAnnotatedMethod.class, "method");
+		then(this.defaultSpanNamer.name(method, "default")).isEqualTo("foo");
+	}
+
+	@Test
+	public void should_return_default_value_of_span_name_from_annotation_on_method() throws Exception {
+		Method method = ReflectionUtils.findMethod(ClassWithNonAnnotatedMethod.class, "method");
+		then(this.defaultSpanNamer.name(method, "default")).isEqualTo("default");
+	}
+
 	@SpanName("somevalue")
 	static class ClassWithAnnotation {}
 
@@ -60,4 +75,13 @@ public class DefaultSpanNamerTests {
 	}
 
 	static class ClassWithoutToString {}
+
+	static class ClassWithAnnotatedMethod {
+		@SpanName("foo")
+		void method() {}
+	}
+
+	static class ClassWithNonAnnotatedMethod {
+		void method() {}
+	}
 }
