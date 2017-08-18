@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.lang.invoke.MethodHandles;
-
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Log;
