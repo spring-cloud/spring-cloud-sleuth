@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.lang.invoke.MethodHandles;
+
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
@@ -39,6 +42,9 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
+	private static final org.apache.commons.logging.Log log = LogFactory
+			.getLog(TraceChannelInterceptor.class);
+
 	@Deprecated
 	public TraceChannelInterceptor(Tracer tracer, TraceKeys traceKeys,
 			MessagingSpanTextMapExtractor spanExtractor,
@@ -53,13 +59,28 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
 		Span currentSpan = getTracer().getCurrentSpan();
+		if (log.isDebugEnabled()) {
+			log.debug("Completed sending and current span is " + currentSpan);
+		}
 		if (containsServerReceived(currentSpan)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Marking span with server send");
+			}
 			currentSpan.logEvent(Span.SERVER_SEND);
 		} else if (currentSpan != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Marking span with client received");
+			}
 			currentSpan.logEvent(Span.CLIENT_RECV);
 		}
 		addErrorTag(ex);
+		if (log.isDebugEnabled()) {
+			log.debug("Closing messaging span " + currentSpan);
+		}
 		getTracer().close(currentSpan);
+		if (log.isDebugEnabled()) {
+			log.debug("Messaging span " + currentSpan + " successfully closed");
+		}
 	}
 
 	private boolean containsServerReceived(Span span) {
@@ -76,15 +97,30 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
+		if (log.isDebugEnabled()) {
+			log.debug("Processing message before sending it to the channel");
+		}
 		Message<?> retrievedMessage = getMessage(message);
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
 		Span parentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
 				: buildSpan(new MessagingTextMap(messageBuilder));
+		if (log.isDebugEnabled()) {
+			log.debug("Parent span is " + parentSpan);
+		}
 		String name = getMessageChannelName(channel);
+		if (log.isDebugEnabled()) {
+			log.debug("Name of the span will be [" + name + "]");
+		}
 		Span span = startSpan(parentSpan, name, message);
 		if (message.getHeaders().containsKey(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Marking span with server received");
+			}
 			span.logEvent(Span.SERVER_RECV);
 		} else {
+			if (log.isDebugEnabled()) {
+				log.debug("Marking span with client send");
+			}
 			span.logEvent(Span.CLIENT_SEND);
 			messageBuilder.setHeader(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT, true);
 		}
@@ -117,10 +153,19 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
 			MessageHandler handler) {
 		Span spanFromHeader = getTracer().getCurrentSpan();
-		if (spanFromHeader!= null) {
+		if (log.isDebugEnabled()) {
+			log.debug("Continuing span " + spanFromHeader + " before handling message");
+		}
+		if (spanFromHeader != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Marking span with server received");
+			}
 			spanFromHeader.logEvent(Span.SERVER_RECV);
 		}
 		getTracer().continueSpan(spanFromHeader);
+		if (log.isDebugEnabled()) {
+			log.debug("Span " + spanFromHeader + " successfully continued");
+		}
 		return message;
 	}
 
@@ -128,13 +173,22 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	public void afterMessageHandled(Message<?> message, MessageChannel channel,
 			MessageHandler handler, Exception ex) {
 		Span spanFromHeader = getTracer().getCurrentSpan();
-		if (spanFromHeader!= null) {
+		if (log.isDebugEnabled()) {
+			log.debug("Continuing span " + spanFromHeader + " after message handled");
+		}
+		if (spanFromHeader != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Marking span with server send");
+			}
 			spanFromHeader.logEvent(Span.SERVER_SEND);
 			addErrorTag(ex);
 		}
 		// related to #447
 		if (getTracer().isTracing()) {
 			getTracer().detach(spanFromHeader);
+			if (log.isDebugEnabled()) {
+				log.debug("Detached " + spanFromHeader + " from current thread");
+			}
 		}
 	}
 
