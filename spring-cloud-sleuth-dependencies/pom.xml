@@ -9,11 +9,7 @@
         <relativePath/>
 	</parent>
 	<artifactId>spring-cloud-sleuth-dependencies</artifactId>
-<<<<<<< HEAD
 	<version>1.3.0.BUILD-SNAPSHOT</version>
-=======
-	<version>1.2.5.BUILD-SNAPSHOT</version>
->>>>>>> 1.2.x
 	<packaging>pom</packaging>
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
