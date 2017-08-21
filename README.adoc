@@ -322,7 +322,6 @@ Example of setting baggage on a span:
 ----
 Span initialSpan = this.tracer.createSpan("span");
 initialSpan.setBaggageItem("foo", "bar");
-initialSpan.setBaggageItem("UPPER_CASE", "someValue");
 ----
 
 ===== Baggage vs. Span Tags
