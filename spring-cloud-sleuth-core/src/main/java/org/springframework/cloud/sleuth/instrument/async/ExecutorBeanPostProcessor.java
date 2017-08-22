@@ -22,6 +22,9 @@ import java.util.concurrent.Executor;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.aop.framework.AopConfigException;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -38,6 +41,8 @@ import org.springframework.util.ReflectionUtils;
  * @since 1.1.4
  */
 class ExecutorBeanPostProcessor implements BeanPostProcessor {
+
+	private static final Log log = LogFactory.getLog(ExecutorBeanPostProcessor.class);
 
 	private final BeanFactory beanFactory;
 
@@ -60,13 +65,27 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
 			boolean cglibProxy = !methodFinal && !classFinal;
 			Executor executor = (Executor) bean;
-			ProxyFactoryBean factory = new ProxyFactoryBean();
-			factory.setProxyTargetClass(cglibProxy);
-			factory.addAdvice(new ExecutorMethodInterceptor(executor, this.beanFactory));
-			factory.setTarget(bean);
-			return factory.getObject();
+			try {
+				return createProxy(bean, cglibProxy, executor);
+			} catch (AopConfigException e) {
+				if (cglibProxy) {
+					if (log.isDebugEnabled()) {
+						log.debug("Exception occurred while trying to create a proxy, falling back to JDK proxy", e);
+					}
+					return createProxy(bean, false, executor);
+				}
+				throw e;
+			}
 		}
 		return bean;
+	}
+
+	Object createProxy(Object bean, boolean cglibProxy, Executor executor) {
+		ProxyFactoryBean factory = new ProxyFactoryBean();
+		factory.setProxyTargetClass(cglibProxy);
+		factory.addAdvice(new ExecutorMethodInterceptor(executor, this.beanFactory));
+		factory.setTarget(bean);
+		return factory.getObject();
 	}
 }
 
