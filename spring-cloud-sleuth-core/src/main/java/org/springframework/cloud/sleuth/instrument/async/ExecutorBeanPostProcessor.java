@@ -16,18 +16,21 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.concurrent.Executor;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.aop.framework.AopConfigException;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ReflectionUtils;
-
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.concurrent.Executor;
 
 /**
  * Bean post processor that wraps a call to an {@link Executor} either in a
@@ -38,6 +41,8 @@ import java.util.concurrent.Executor;
  * @since 1.1.4
  */
 class ExecutorBeanPostProcessor implements BeanPostProcessor {
+
+	private static final Log log = LogFactory.getLog(ExecutorBeanPostProcessor.class);
 
 	private final BeanFactory beanFactory;
 
@@ -60,26 +65,45 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
 			boolean cglibProxy = !methodFinal && !classFinal;
 			Executor executor = (Executor) bean;
-			ProxyFactoryBean factory = new ProxyFactoryBean();
-			factory.setProxyTargetClass(cglibProxy);
-			factory.addAdvice(new ExecutorMethodInterceptor<>(executor, this.beanFactory));
-			factory.setTarget(bean);
-			return factory.getObject();
+			try {
+				return createProxy(bean, cglibProxy, executor);
+			} catch (AopConfigException e) {
+				if (cglibProxy) {
+					if (log.isDebugEnabled()) {
+						log.debug("Exception occurred while trying to create a proxy, falling back to JDK proxy", e);
+					}
+					return createProxy(bean, false, executor);
+				}
+				throw e;
+			}
 		} else if (bean instanceof ThreadPoolTaskExecutor) {
 			boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
 			boolean cglibProxy = !classFinal;
 			ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
-			ProxyFactoryBean factory = new ProxyFactoryBean();
-			factory.setProxyTargetClass(cglibProxy);
-			factory.addAdvice(new ExecutorMethodInterceptor<ThreadPoolTaskExecutor>(executor, this.beanFactory) {
-				@Override Executor executor(BeanFactory beanFactory, ThreadPoolTaskExecutor executor) {
-					return new LazyTraceThreadPoolTaskExecutor(beanFactory, executor);
-				}
-			});
-			factory.setTarget(bean);
-			return factory.getObject();
+			return createThreadPoolTaskExecutorProxy(bean, cglibProxy, executor);
 		}
 		return bean;
+	}
+
+	Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
+			ThreadPoolTaskExecutor executor) {
+		ProxyFactoryBean factory = new ProxyFactoryBean();
+		factory.setProxyTargetClass(cglibProxy);
+		factory.addAdvice(new ExecutorMethodInterceptor<ThreadPoolTaskExecutor>(executor, this.beanFactory) {
+			@Override Executor executor(BeanFactory beanFactory, ThreadPoolTaskExecutor executor) {
+				return new LazyTraceThreadPoolTaskExecutor(beanFactory, executor);
+			}
+		});
+		factory.setTarget(bean);
+		return factory.getObject();
+	}
+
+	Object createProxy(Object bean, boolean cglibProxy, Executor executor) {
+		ProxyFactoryBean factory = new ProxyFactoryBean();
+		factory.setProxyTargetClass(cglibProxy);
+		factory.addAdvice(new ExecutorMethodInterceptor(executor, this.beanFactory));
+		factory.setTarget(bean);
+		return factory.getObject();
 	}
 }
 
