@@ -86,13 +86,20 @@ public class TraceWebClientAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass(UserInfoRestTemplateCustomizer.class)
+	@ConditionalOnClass({ UserInfoRestTemplateCustomizer.class, OAuth2RestTemplate.class })
 	protected static class TraceOAuthConfiguration {
 
 		@Autowired BeanFactory beanFactory;
 
-		@Bean UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor() {
+		@Bean
+		UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor() {
 			return new UserInfoRestTemplateCustomizerBPP(this.beanFactory);
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer() {
+			return new TraceUserInfoRestTemplateCustomizer(this.beanFactory);
 		}
 
 		private static class UserInfoRestTemplateCustomizerBPP implements BeanPostProcessor {
@@ -113,15 +120,9 @@ public class TraceWebClientAutoConfiguration {
 			public Object postProcessAfterInitialization(final Object bean,
 					String beanName) throws BeansException {
 				final BeanFactory beanFactory = this.beanFactory;
-				if (bean instanceof UserInfoRestTemplateCustomizer) {
-					return new UserInfoRestTemplateCustomizer() {
-						@Override public void customize(OAuth2RestTemplate template) {
-							final TraceRestTemplateInterceptor interceptor =
-									beanFactory.getBean(TraceRestTemplateInterceptor.class);
-							new RestTemplateInterceptorInjector(interceptor).inject(template);
-							((UserInfoRestTemplateCustomizer) bean).customize(template);
-						}
-					};
+				if (bean instanceof UserInfoRestTemplateCustomizer &&
+						!(bean instanceof TraceUserInfoRestTemplateCustomizer)) {
+					return new TraceUserInfoRestTemplateCustomizer(beanFactory, bean);
 				}
 				return bean;
 			}
@@ -141,5 +142,29 @@ class RestTemplateInterceptorInjector {
 				restTemplate.getInterceptors());
 		interceptors.add(this.interceptor);
 		restTemplate.setInterceptors(interceptors);
+	}
+}
+
+class TraceUserInfoRestTemplateCustomizer implements UserInfoRestTemplateCustomizer {
+
+	private final BeanFactory beanFactory;
+	private final Object delegate;
+
+	TraceUserInfoRestTemplateCustomizer(BeanFactory beanFactory) {
+		this(beanFactory, null);
+	}
+
+	TraceUserInfoRestTemplateCustomizer(BeanFactory beanFactory, Object bean) {
+		this.beanFactory = beanFactory;
+		this.delegate = bean;
+	}
+
+	@Override public void customize(OAuth2RestTemplate template) {
+		final TraceRestTemplateInterceptor interceptor =
+				this.beanFactory.getBean(TraceRestTemplateInterceptor.class);
+		new RestTemplateInterceptorInjector(interceptor).inject(template);
+		if (this.delegate != null) {
+			((UserInfoRestTemplateCustomizer) this.delegate).customize(template);
+		}
 	}
 }
