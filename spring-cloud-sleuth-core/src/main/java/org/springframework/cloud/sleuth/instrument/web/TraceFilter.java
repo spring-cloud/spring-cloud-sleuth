@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -105,12 +106,28 @@ public class TraceFilter extends GenericFilterBean {
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(BeanFactory beanFactory) {
-		this(beanFactory, Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN));
+		this(beanFactory, skipPattern(beanFactory));
 	}
 
 	public TraceFilter(BeanFactory beanFactory, Pattern skipPattern) {
 		this.beanFactory = beanFactory;
 		this.skipPattern = skipPattern;
+	}
+
+	private static Pattern skipPattern(BeanFactory beanFactory) {
+		try {
+			SkipPatternProvider patternProvider = beanFactory
+					.getBean(SkipPatternProvider.class);
+			// the null value will not happen on production but might happen in tests
+			if (patternProvider != null) {
+				return patternProvider.skipPattern();
+			}
+		} catch (NoSuchBeanDefinitionException e) {
+			if (log.isDebugEnabled()) {
+				log.debug("The default SkipPatternProvider implementation is missing, will fallback to a default value of patterns");
+			}
+		}
+		return Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 	}
 
 	@Override

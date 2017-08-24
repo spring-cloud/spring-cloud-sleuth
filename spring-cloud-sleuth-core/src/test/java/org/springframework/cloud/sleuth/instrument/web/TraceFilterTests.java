@@ -28,6 +28,7 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
@@ -529,6 +530,8 @@ public class TraceFilterTests {
 	}
 
 	private BeanFactory beanFactory() {
+		BDDMockito.given(beanFactory.getBean(SkipPatternProvider.class))
+				.willThrow(new NoSuchBeanDefinitionException("foo"));
 		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
 		BDDMockito.given(beanFactory.getBean(TraceKeys.class)).willReturn(this.traceKeys);
 		BDDMockito.given(beanFactory.getBean(HttpSpanExtractor.class)).willReturn(this.spanExtractor);
