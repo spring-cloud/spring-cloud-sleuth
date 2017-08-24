@@ -4,6 +4,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -11,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,7 +62,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@Test
-	public void should_create_and_return_trace_in_HTTP_header() throws Exception {
+	public void should_create_a_trace() throws Exception {
 		whenSentPingWithoutTracingData();
 
 		then(this.spanAccumulator.getSpans()).hasSize(1);
@@ -155,6 +158,17 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(this.tracer.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
+	}
+
+	@Test
+	public void should_return_custom_response_headers_when_custom_trace_filter_gets_registered() throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+
+		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
+
+		then(ExceptionUtils.getLastException()).isNull();
+		then(mvcResult.getResponse().getHeader("ZIPKIN-TRACE-ID")).isEqualTo(Span.idToHex(expectedTraceId));
+		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasASpanWithTagEqualTo("custom", "tag");
 	}
 
 	@Override
@@ -288,5 +302,23 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		Sampler alwaysSampler() {
 			return new AlwaysSampler();
 		}
+
+		//tag::response_headers[]
+		@Bean
+		TraceFilter myTraceFilter(BeanFactory beanFactory, final Tracer tracer) {
+			return new TraceFilter(beanFactory) {
+				@Override protected void addResponseTags(HttpServletResponse response,
+						Throwable e) {
+					// execute the default behaviour
+					super.addResponseTags(response, e);
+					// for readability we're returning trace id in a hex form
+					response.addHeader("ZIPKIN-TRACE-ID",
+							Span.idToHex(tracer.getCurrentSpan().getTraceId()));
+					// we can also add some custom tags
+					tracer.addTag("custom", "tag");
+				}
+			};
+		}
+		//end::response_headers[]
 	}
 }
