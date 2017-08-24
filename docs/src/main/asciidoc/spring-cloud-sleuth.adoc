@@ -420,6 +420,21 @@ And you could register them like this:
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceCustomFilterResponseInjectorTests.java[tags=configuration,indent=0]
 ----
 
+=== TraceFilter
+
+You can also modify the behaviour of the `TraceFilter` - the component that is responsible
+for processing the input HTTP request and adding tags basing on the HTTP response. You can customize
+the tags, or modify the response headers by registering your own instance of the `TraceFilter` bean.
+
+In the following example we will register the `TraceFilter` bean and we will add the
+`ZIPKIN-TRACE-ID` response header containing the current Span's trace id. Also we will
+add to the Span a tag with key `custom` and a value `tag`.
+
+[source,java]
+----
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]
+----
+
 === Custom SA tag in Zipkin
 
 Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.

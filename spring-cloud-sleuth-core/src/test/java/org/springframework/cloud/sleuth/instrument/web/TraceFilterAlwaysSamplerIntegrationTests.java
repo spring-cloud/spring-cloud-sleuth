@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
@@ -68,6 +69,8 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 
 	private BeanFactory beanFactory() {
 		BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
+		BDDMockito.given(beanFactory.getBean(TraceWebAutoConfiguration.SkipPatternProvider.class))
+				.willThrow(new NoSuchBeanDefinitionException("foo"));
 		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
 		BDDMockito.given(beanFactory.getBean(TraceKeys.class)).willReturn(this.traceKeys);
 		BDDMockito.given(beanFactory.getBean(HttpSpanExtractor.class)).willReturn(this.spanExtractor);
