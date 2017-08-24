@@ -489,6 +489,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_spring_integration">Spring Integration</a></li>
 <li><a href="#_http">HTTP</a></li>
 <li><a href="#_example">Example</a></li>
+<li><a href="#_tracefilter">TraceFilter</a></li>
 <li><a href="#_custom_sa_tag_in_zipkin">Custom SA tag in Zipkin</a></li>
 <li><a href="#_custom_service_name">Custom service name</a></li>
 <li><a href="#_customization_of_reported_spans">Customization of reported spans</a></li>
@@ -2335,6 +2336,38 @@ static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
 @Bean
 HttpResponseInjectingTraceFilter responseInjectingTraceFilter(Tracer tracer) {
 	return new HttpResponseInjectingTraceFilter(tracer, customHttpServletResponseSpanInjector());
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_tracefilter"><a class="link" href="#_tracefilter">TraceFilter</a></h3>
+<div class="paragraph">
+<p>You can also modify the behaviour of the <code>TraceFilter</code> - the component that is responsible
+for processing the input HTTP request and adding tags basing on the HTTP response. You can customize
+the tags, or modify the response headers by registering your own instance of the <code>TraceFilter</code> bean.</p>
+</div>
+<div class="paragraph">
+<p>In the following example we will register the <code>TraceFilter</code> bean and we will add the
+<code>ZIPKIN-TRACE-ID</code> response header containing the current Span&#8217;s trace id. Also we will
+add to the Span a tag with key <code>custom</code> and a value <code>tag</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Bean
+TraceFilter myTraceFilter(BeanFactory beanFactory, final Tracer tracer) {
+	return new TraceFilter(beanFactory) {
+		@Override protected void addResponseTags(HttpServletResponse response,
+				Throwable e) {
+			// execute the default behaviour
+			super.addResponseTags(response, e);
+			// for readability we're returning trace id in a hex form
+			response.addHeader("ZIPKIN-TRACE-ID",
+					Span.idToHex(tracer.getCurrentSpan().getTraceId()));
+			// we can also add some custom tags
+			tracer.addTag("custom", "tag");
+		}
+	};
 }</code></pre>
 </div>
 </div>
