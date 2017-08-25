@@ -37,7 +37,7 @@ import org.springframework.cloud.sleuth.Tracer;
  * @since 1.0.0
  */
 public class TraceableExecutorService implements ExecutorService {
-	ExecutorService delegate;
+	final ExecutorService delegate;
 	Tracer tracer;
 	private final String spanName;
 	TraceKeys traceKeys;

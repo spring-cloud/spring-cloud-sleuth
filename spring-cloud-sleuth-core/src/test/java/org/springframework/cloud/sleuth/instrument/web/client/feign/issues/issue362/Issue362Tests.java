@@ -217,8 +217,7 @@ class ServiceTestController {
 
 	@RequestMapping("/ok")
 	public String ok() throws InterruptedException, ExecutionException {
-		String result = "I'm OK";
-		return result;
+		return "I'm OK";
 	}
 
 	@RequestMapping("/not-ok")
@@ -237,13 +236,11 @@ class SleuthTestController {
 
 	@RequestMapping("/test-ok")
 	public String ok() throws InterruptedException, ExecutionException {
-		String result = myFeignClient.ok();
-		return result;
+		return myFeignClient.ok();
 	}
 
 	@RequestMapping("/test-not-ok")
 	public String notOk() throws InterruptedException, ExecutionException {
-		String result = myFeignClient.exp();
-		return result;
+		return myFeignClient.exp();
 	}
 }

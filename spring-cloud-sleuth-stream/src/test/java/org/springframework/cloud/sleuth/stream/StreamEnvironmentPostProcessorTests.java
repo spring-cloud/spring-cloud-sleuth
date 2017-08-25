@@ -42,18 +42,18 @@ public class StreamEnvironmentPostProcessorTests {
 	public void should_append_tracing_headers() {
 		postProcess();
 		assertThat(this.environment
-				.getProperty("spring.cloud.stream.test.binder.headers[0]"))
+				.getProperty("spring.cloud.stream.test.binder.HEADERS[0]"))
 						.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
 	@Test
 	public void should_append_tracing_headers_to_existing_ones() {
 		EnvironmentTestUtils.addEnvironment(this.environment,
-				"spring.cloud.stream.test.binder.headers[0]=X-Custom",
-				"spring.cloud.stream.test.binder.headers[1]=X-Mine");
+				"spring.cloud.stream.test.binder.HEADERS[0]=X-Custom",
+				"spring.cloud.stream.test.binder.HEADERS[1]=X-Mine");
 		postProcess();
 		assertThat(this.environment
-				.getProperty("spring.cloud.stream.test.binder.headers[2]"))
+				.getProperty("spring.cloud.stream.test.binder.HEADERS[2]"))
 						.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
@@ -71,9 +71,9 @@ public class StreamEnvironmentPostProcessorTests {
 		assertThat(traceIds).hasSize(1);
 		assertThat(defaultPropertiesSource().keySet().stream()
 				.filter(input -> input
-						.startsWith("spring.cloud.stream.test.binder.headers"))
+						.startsWith("spring.cloud.stream.test.binder.HEADERS"))
 				.collect(Collectors.toList()))
-						.hasSize(StreamEnvironmentPostProcessor.headers.length);
+						.hasSize(StreamEnvironmentPostProcessor.HEADERS.length);
 	}
 
 	private void postProcess() {

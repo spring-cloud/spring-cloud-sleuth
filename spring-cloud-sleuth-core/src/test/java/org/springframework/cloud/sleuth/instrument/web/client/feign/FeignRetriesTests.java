@@ -118,8 +118,12 @@ public class FeignRetriesTests {
 				throw new IOException();
 			} else {
 				// with the second retry (first retry) we send back good result
-				return Response.create(200, "OK", new HashMap<>(),
-						"OK", Charset.defaultCharset());
+				return Response.builder()
+						.status(200)
+						.reason("OK")
+						.headers(new HashMap<>())
+						.body("OK", Charset.defaultCharset())
+						.build();
 			}
 		};
 		TestInterface api =

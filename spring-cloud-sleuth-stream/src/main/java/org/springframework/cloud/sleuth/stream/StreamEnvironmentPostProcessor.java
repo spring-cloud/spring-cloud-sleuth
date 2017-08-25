@@ -46,7 +46,7 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
-	static String[] headers = new String[] { TraceMessageHeaders.SPAN_ID_NAME,
+	static final String[] HEADERS = new String[] { TraceMessageHeaders.SPAN_ID_NAME,
 			TraceMessageHeaders.TRACE_ID_NAME, TraceMessageHeaders.PARENT_ID_NAME, TraceMessageHeaders.PROCESS_ID_NAME,
 			TraceMessageHeaders.SAMPLED_NAME, TraceMessageHeaders.SPAN_NAME_NAME };
 
@@ -82,7 +82,7 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 	}
 
 	private int findStartIndex(ConfigurableEnvironment environment, String binder) {
-		String prefix = "spring.cloud.stream." + binder + ".binder.headers";
+		String prefix = "spring.cloud.stream." + binder + ".binder.HEADERS";
 		int i = 0;
 		while (environment.getProperty(prefix + "[" + i + "]")!=null) {
 			i++;
@@ -127,10 +127,10 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 
 	private void addHeaders(Map<String, Object> map, MutablePropertySources propertySources,
 			String binder, int startIndex) {
-		String stem = "spring.cloud.stream." + binder + ".binder.headers";
-		for (int i = 0; i < headers.length; i++) {
-			if (!hasTracingHeadersValue(propertySources, headers[i])) {
-				map.put(stem + "[" + (i + startIndex) + "]", headers[i]);
+		String stem = "spring.cloud.stream." + binder + ".binder.HEADERS";
+		for (int i = 0; i < HEADERS.length; i++) {
+			if (!hasTracingHeadersValue(propertySources, HEADERS[i])) {
+				map.put(stem + "[" + (i + startIndex) + "]", HEADERS[i]);
 			}
 		}
 	}

@@ -16,6 +16,11 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.cloud.commons.util.IdUtils;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
@@ -27,11 +32,6 @@ import zipkin.Annotation;
 import zipkin.BinaryAnnotation;
 import zipkin.Constants;
 import zipkin.Endpoint;
-
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Listener of Sleuth events. Reports to Zipkin via {@link ZipkinSpanReporter}.
@@ -60,7 +60,7 @@ public class ZipkinSpanListener implements SpanReporter {
 	 * the service name from discovery.
 	 */
 	// Visible for testing
-	EndpointLocator endpointLocator;
+	final EndpointLocator endpointLocator;
 
 	public ZipkinSpanListener(ZipkinSpanReporter reporter, EndpointLocator endpointLocator,
 			Environment environment, List<SpanAdjuster> spanAdjusters) {

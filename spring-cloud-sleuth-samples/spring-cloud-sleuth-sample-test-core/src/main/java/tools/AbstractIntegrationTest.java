@@ -53,7 +53,7 @@ public abstract class AbstractIntegrationTest {
 
 	protected static final int POLL_INTERVAL = 1;
 	protected static final int TIMEOUT = 20;
-	protected RestTemplate restTemplate = new AssertingRestTemplate();
+	protected final RestTemplate restTemplate = new AssertingRestTemplate();
 
 	@Before
 	public void clearSpanBefore() {

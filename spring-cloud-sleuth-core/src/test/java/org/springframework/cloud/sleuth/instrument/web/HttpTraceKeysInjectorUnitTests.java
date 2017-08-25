@@ -42,7 +42,7 @@ public class HttpTraceKeysInjectorUnitTests {
 		headers.add(Span.SPAN_ID_NAME, "763261a53162f330");
 		headers.add(Span.SAMPLED_NAME,"1");
 		headers.add(Span.SPAN_NAME_NAME, "http:/");
-		this.traceKeys.getHttp().setHeaders(Arrays.asList("Accept", "User-Agent", "Content-Type"));;
+		this.traceKeys.getHttp().setHeaders(Arrays.asList("Accept", "User-Agent", "Content-Type"));
 
 		this.injector.addRequestTags(url.toString(), url.getHost(), url.getPath(), HttpMethod.GET.name(), headers );
 

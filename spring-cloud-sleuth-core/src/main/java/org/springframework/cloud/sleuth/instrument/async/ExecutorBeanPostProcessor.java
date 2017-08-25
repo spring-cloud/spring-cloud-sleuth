@@ -98,6 +98,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		return factory.getObject();
 	}
 
+	@SuppressWarnings("unchecked")
 	Object createProxy(Object bean, boolean cglibProxy, Executor executor) {
 		ProxyFactoryBean factory = new ProxyFactoryBean();
 		factory.setProxyTargetClass(cglibProxy);

@@ -123,11 +123,11 @@ public class WebClientExceptionTests {
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
-		return $(
+		return new Object[] {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
 						.shouldFailToConnect(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://exceptionservice/", Map.class));
+						.getForEntity("http://exceptionservice/", Map.class) };
 	}
 
 	@FeignClient("exceptionservice")

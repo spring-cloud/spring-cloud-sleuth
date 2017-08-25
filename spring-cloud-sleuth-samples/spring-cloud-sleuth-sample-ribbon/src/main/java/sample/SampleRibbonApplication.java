@@ -37,7 +37,7 @@ import zipkin.Span;
 @EnableZuulProxy
 public class SampleRibbonApplication {
 
-	private static Log logger = LogFactory.getLog(SampleRibbonApplication.class);
+	private static final Log logger = LogFactory.getLog(SampleRibbonApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(SampleRibbonApplication.class, args);

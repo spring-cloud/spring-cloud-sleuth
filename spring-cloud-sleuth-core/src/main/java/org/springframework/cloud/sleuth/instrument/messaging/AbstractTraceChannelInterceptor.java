@@ -43,7 +43,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 	private MessagingSpanTextMapExtractor spanExtractor;
 	private MessagingSpanTextMapInjector spanInjector;
 	private ErrorParser errorParser;
-	private BeanFactory beanFactory;
+	private final BeanFactory beanFactory;
 
 	protected AbstractTraceChannelInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;

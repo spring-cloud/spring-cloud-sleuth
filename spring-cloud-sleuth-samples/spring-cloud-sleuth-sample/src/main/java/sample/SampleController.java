@@ -48,7 +48,7 @@ public class SampleController
 	@Autowired
 	private SampleBackground controller;
 
-	private Random random = new Random();
+	private final Random random = new Random();
 	private int port;
 
 	@RequestMapping("/")

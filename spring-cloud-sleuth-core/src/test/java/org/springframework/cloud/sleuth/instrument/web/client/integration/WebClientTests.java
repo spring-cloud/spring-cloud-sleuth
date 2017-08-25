@@ -77,7 +77,6 @@ import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
-import static junitparams.JUnitParamsRunner.$;
 import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -130,7 +129,7 @@ public class WebClientTests {
 	}
 
 	Object[] parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent() {
-		return $(
+		return new Object[] {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
@@ -146,7 +145,8 @@ public class WebClientTests {
 				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/notrace", String.class),
-				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/notrace", String.class));
+				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("http://fooservice/notrace", String.class)
+		};
 	}
 
 	@Test
@@ -166,9 +166,10 @@ public class WebClientTests {
 	}
 
 	Object[] parametersForShouldPropagateNotSamplingHeader() {
-		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
+		return new Object[] {
+				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/", Map.class));
+						.getForEntity("http://fooservice/", Map.class) };
 	}
 
 	@Test
@@ -206,9 +207,10 @@ public class WebClientTests {
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
-		return $((ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
+		return new Object[] {
+				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/traceid", String.class));
+						.getForEntity("http://fooservice/traceid", String.class) };
 	}
 
 	@Test
@@ -229,11 +231,12 @@ public class WebClientTests {
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
-		return $(
-				(ResponseEntityProvider) (tests) -> tests.testFeignInterface
-						.noResponseBody(),
-				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/noresponse", String.class));
+		return new Object[] {
+				(ResponseEntityProvider) (tests) ->
+						tests.testFeignInterface.noResponseBody(),
+				(ResponseEntityProvider) (tests) ->
+						tests.template.getForEntity("http://fooservice/noresponse", String.class)
+		};
 	}
 
 	@Test

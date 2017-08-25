@@ -30,7 +30,7 @@ import org.springframework.cloud.sleuth.SpanAccessor;
  */
 public class IsTracingSampler implements Sampler {
 
-	private SpanAccessor accessor;
+	private final SpanAccessor accessor;
 
 	public IsTracingSampler(SpanAccessor accessor) {
 		this.accessor = accessor;
