@@ -34,7 +34,7 @@ import zipkin.Span;
 @EnableFeignClients
 public class SampleFeignApplication {
 
-	private static Log logger = LogFactory.getLog(SampleFeignApplication.class);
+	private static final Log logger = LogFactory.getLog(SampleFeignApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(SampleFeignApplication.class, args);

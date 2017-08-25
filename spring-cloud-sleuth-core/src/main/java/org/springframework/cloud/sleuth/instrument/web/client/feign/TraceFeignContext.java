@@ -24,12 +24,14 @@ class TraceFeignContext extends FeignContext {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T getInstance(String name, Class<T> type) {
 		T object = this.delegate.getInstance(name, type);
 		return (T) this.traceFeignObjectWrapper.wrap(object);
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> Map<String, T> getInstances(String name, Class<T> type) {
 		Map<String, T> instances = this.delegate.getInstances(name, type);
 		if (instances == null) {

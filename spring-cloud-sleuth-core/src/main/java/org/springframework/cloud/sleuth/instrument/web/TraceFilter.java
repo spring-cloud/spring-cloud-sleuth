@@ -103,7 +103,7 @@ public class TraceFilter extends GenericFilterBean {
 	private ErrorParser errorParser;
 	private final BeanFactory beanFactory;
 
-	private UrlPathHelper urlPathHelper = new UrlPathHelper();
+	private final UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(BeanFactory beanFactory) {
 		this(beanFactory, skipPattern(beanFactory));

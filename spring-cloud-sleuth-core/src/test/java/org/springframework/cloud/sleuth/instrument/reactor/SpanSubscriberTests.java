@@ -91,7 +91,7 @@ public class SpanSubscriberTests {
 	}
 
 	@Test public void should_not_trace_scalar_flows() {
-		Span span = this.tracer.createSpan("foo");
+		this.tracer.createSpan("foo");
 		final AtomicReference<Subscription> spanInOperation = new AtomicReference<>();
 		log.info("Hello");
 

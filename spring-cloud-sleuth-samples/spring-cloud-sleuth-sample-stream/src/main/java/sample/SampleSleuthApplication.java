@@ -31,8 +31,6 @@ import org.springframework.web.client.RestTemplate;
 @EnableAsync
 public class SampleSleuthApplication {
 
-	public static final String CLIENT_NAME = "testApp";
-
 	@Bean
 	public RestTemplate restTemplate() {
 		return new RestTemplate();

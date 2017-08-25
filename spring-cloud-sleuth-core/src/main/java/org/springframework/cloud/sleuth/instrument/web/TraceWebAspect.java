@@ -67,6 +67,7 @@ import java.util.concurrent.Callable;
  * @see org.springframework.cloud.sleuth.Tracer
  * @see org.springframework.cloud.sleuth.instrument.web.TraceFilter
  */
+@SuppressWarnings("ArgNamesWarningsInspection")
 @Aspect
 public class TraceWebAspect {
 

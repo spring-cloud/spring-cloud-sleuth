@@ -31,9 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SampleController {
 
-	private Zipkin zipkin;
-
-	private Random random = new Random();
+	private final Zipkin zipkin;
+	private final Random random = new Random();
 
 	@Autowired
 	public SampleController(Zipkin zipkin) {

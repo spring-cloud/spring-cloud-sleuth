@@ -2,12 +2,10 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

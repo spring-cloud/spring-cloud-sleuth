@@ -64,8 +64,8 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		isNotNull();
 		printSpans();
 		List<Span> matchingSpans = this.actual.spans.stream()
-				.filter(span -> span.getName().equals(name) && span.logs().stream().filter(entry ->
-						entry.getEvent().equals(Span.CLIENT_SEND)).findAny().isPresent()).collect(toList());
+				.filter(span -> span.getName().equals(name) && span.logs().stream().anyMatch(entry ->
+						entry.getEvent().equals(Span.CLIENT_SEND))).collect(toList());
 		assertThat(matchingSpans).isNotEmpty();
 		List<Map<String, String>> matchingSpansTags = matchingSpans.stream().map(Span::tags).collect(
 				toList());

@@ -52,7 +52,7 @@ class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 			}
 			ZuulHandlerMapping zuulHandlerMapping = (ZuulHandlerMapping) bean;
 			zuulHandlerMapping.setInterceptors(
-					new Object[] { new TraceHandlerInterceptor(this.beanFactory) });
+					new TraceHandlerInterceptor(this.beanFactory));
 		}
 		return bean;
 	}

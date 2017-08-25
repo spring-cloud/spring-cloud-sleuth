@@ -108,8 +108,7 @@ class ServiceTestController {
 
 	@RequestMapping("/ok")
 	public String ok() throws InterruptedException, ExecutionException {
-		String result = "I'm OK";
-		return result;
+		return "I'm OK";
 	}
 
 	@RequestMapping("/not-ok")

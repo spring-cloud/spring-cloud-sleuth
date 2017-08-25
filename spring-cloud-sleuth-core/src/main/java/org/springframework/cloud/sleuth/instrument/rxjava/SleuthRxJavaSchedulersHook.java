@@ -83,9 +83,9 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 	static class TraceAction implements Action0 {
 
 		private final Action0 actual;
-		private Tracer tracer;
-		private TraceKeys traceKeys;
-		private Span parent;
+		private final Tracer tracer;
+		private final TraceKeys traceKeys;
+		private final Span parent;
 		private final List<String> threadsToIgnore;
 
 		public TraceAction(Tracer tracer, TraceKeys traceKeys, Action0 actual,

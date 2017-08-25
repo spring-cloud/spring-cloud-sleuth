@@ -635,15 +635,15 @@ public class Span implements SpanContext {
 		private String name;
 		private long traceIdHigh;
 		private long traceId;
-		private ArrayList<Long> parents = new ArrayList<>();
+		private final ArrayList<Long> parents = new ArrayList<>();
 		private long spanId;
 		private boolean remote;
 		private boolean exportable = true;
 		private String processId;
 		private Span savedSpan;
-		private List<Log> logs = new ArrayList<>();
-		private Map<String, String> tags = new LinkedHashMap<>();
-		private Map<String, String> baggage = new LinkedHashMap<>();
+		private final List<Log> logs = new ArrayList<>();
+		private final Map<String, String> tags = new LinkedHashMap<>();
+		private final Map<String, String> baggage = new LinkedHashMap<>();
 
 		SpanBuilder() {
 		}

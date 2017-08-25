@@ -112,9 +112,9 @@ class SpanContextHolder {
 	}
 
 	private static class SpanContext {
-		Span span;
-		boolean autoClose;
-		SpanContext parent;
+		final Span span;
+		final boolean autoClose;
+		final SpanContext parent;
 
 		public SpanContext(Span span, boolean autoClose) {
 			this.span = span;

@@ -24,11 +24,9 @@ package org.springframework.cloud.sleuth.annotation;
  */
 class SleuthAnnotatedParameter {
 
-	int parameterIndex;
-
-	SpanTag annotation;
-
-	Object argument;
+	final int parameterIndex;
+	final SpanTag annotation;
+	final Object argument;
 
 	SleuthAnnotatedParameter(int parameterIndex, SpanTag annotation,
 			Object argument) {
