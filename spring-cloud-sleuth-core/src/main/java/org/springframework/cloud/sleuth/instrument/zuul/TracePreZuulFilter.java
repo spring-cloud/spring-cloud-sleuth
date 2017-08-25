@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+
 import com.netflix.zuul.ExecutionStatus;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.ZuulFilterResult;
@@ -29,9 +32,6 @@ import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
-
-import java.lang.invoke.MethodHandles;
-import java.net.URI;
 
 /**
  * A pre request {@link ZuulFilter} that sets tracing related headers on the request
