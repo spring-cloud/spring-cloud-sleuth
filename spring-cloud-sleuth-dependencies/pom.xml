@@ -26,11 +26,6 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-sleuth-reactor</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-zipkin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
