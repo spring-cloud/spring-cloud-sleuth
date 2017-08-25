@@ -171,33 +171,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!-- For Reactor -->
-			<dependency>
-				<groupId>io.projectreactor</groupId>
-				<artifactId>reactor-bom</artifactId>
-				<version>${reactor.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-core</artifactId>
-				<version>${spring.version}</version>
-			</dependency>
-			<!--<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-framework-bom</artifactId>
-				<version>${spring.version}</version>
-				<scope>import</scope>
-				<type>pom</type>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${spring-boot.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>-->
 			<!-- Spock -->
 			<dependency>
 				<groupId>org.spockframework</groupId>
@@ -265,9 +238,6 @@
 		<spring-cloud-stream.version>Elmhurst.BUILD-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<reactor.version>Bismuth-BUILD-SNAPSHOT</reactor.version>
-		<!-- To make Reactor work -->
-		<spring-boot.version>2.0.0.BUILD-SNAPSHOT</spring-boot.version>
-		<spring.version>5.0.0.BUILD-SNAPSHOT</spring.version>
 	</properties>
 
 	<profiles>
