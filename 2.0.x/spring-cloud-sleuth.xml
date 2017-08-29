@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?asciidoc-toc maxdepth="8"?>
 <?asciidoc-numbered?>
-<book xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
+<book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
 <date>2017-08-29</date>
@@ -18,10 +18,10 @@
 </preface>
 <chapter xml:id="_introduction">
 <title>Introduction</title>
-<simpara>Spring Cloud Sleuth implements a distributed tracing solution for <link xlink:href="http://cloud.spring.io">Spring Cloud</link>.</simpara>
+<simpara>Spring Cloud Sleuth implements a distributed tracing solution for <link xl:href="http://cloud.spring.io">Spring Cloud</link>.</simpara>
 <section xml:id="_terminology">
 <title>Terminology</title>
-<simpara>Spring Cloud Sleuth borrows <link xlink:href="http://research.google.com/pubs/pub36356.html">Dapper&#8217;s</link> terminology.</simpara>
+<simpara>Spring Cloud Sleuth borrows <link xl:href="http://research.google.com/pubs/pub36356.html">Dapper&#8217;s</link> terminology.</simpara>
 <simpara><emphasis role="strong">Span:</emphasis> The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an
 RPC. Span&#8217;s are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span
 is a part of.  Spans also have other data, such as descriptions, timestamped events, key-value
@@ -199,8 +199,8 @@ service2.log:2016-02-26 11:15:47.924  INFO [service2,2485ec27856c56f4,9aa10ee6fb
 service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
 service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
 service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]</screen>
-<simpara>If you&#8217;re using a log aggregating tool like <link xlink:href="https://www.elastic.co/products/kibana">Kibana</link>,
-<link xlink:href="http://www.splunk.com/">Splunk</link> etc. you can order the events that took place. An example of
+<simpara>If you&#8217;re using a log aggregating tool like <link xl:href="https://www.elastic.co/products/kibana">Kibana</link>,
+<link xl:href="http://www.splunk.com/">Splunk</link> etc. you can order the events that took place. An example of
 Kibana would look like this:</simpara>
 <informalfigure>
 <mediaobject>
@@ -210,7 +210,7 @@ Kibana would look like this:</simpara>
 <textobject><phrase>Log correlation with Kibana</phrase></textobject>
 </mediaobject>
 </informalfigure>
-<simpara>If you want to use <link xlink:href="https://www.elastic.co/guide/en/logstash/current/index.html">Logstash</link> here is the Grok pattern for Logstash:</simpara>
+<simpara>If you want to use <link xl:href="https://www.elastic.co/guide/en/logstash/current/index.html">Logstash</link> here is the Grok pattern for Logstash:</simpara>
 <screen>filter {
        # pattern matching logback pattern
        grok {
@@ -240,7 +240,7 @@ we&#8217;re passing the dependencies in the <literal>groupId:artifactId:version<
 </listitem>
 </itemizedlist>
 <simpara><emphasis role="strong">Logback setup</emphasis></simpara>
-<simpara>Below you can find an example of a Logback configuration (file named <link xlink:href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml">logback-spring.xml</link>) that:</simpara>
+<simpara>Below you can find an example of a Logback configuration (file named <link xl:href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml">logback-spring.xml</link>) that:</simpara>
 <itemizedlist>
 <listitem>
 <simpara>logs information from the application in a JSON format to a <literal>build/${spring.application.name}.json</literal> file</simpara>
@@ -252,7 +252,82 @@ we&#8217;re passing the dependencies in the <literal>groupId:artifactId:version<
 <simpara>has the same logging pattern as the one presented in the previous section</simpara>
 </listitem>
 </itemizedlist>
-<programlisting language="xml" linenumbering="unnumbered">link:https://raw.githubusercontent.com/spring-cloud-samples/sleuth-documentation-apps/master/service1/src/main/resources/logback-spring.xml[]</programlisting>
+<programlisting language="xml" linenumbering="unnumbered">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+	&lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
+	​
+	&lt;springProperty scope="context" name="springAppName" source="spring.application.name"/&gt;
+	&lt;!-- Example for logging into the build folder of your project --&gt;
+	&lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;​
+
+	&lt;!-- You can override this to have a custom pattern --&gt;
+	&lt;property name="CONSOLE_LOG_PATTERN"
+			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
+
+	&lt;!-- Appender to log to console --&gt;
+	&lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
+		&lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+			&lt;!-- Minimum logging level to be presented in the console logs--&gt;
+			&lt;level&gt;DEBUG&lt;/level&gt;
+		&lt;/filter&gt;
+		&lt;encoder&gt;
+			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+			&lt;charset&gt;utf8&lt;/charset&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+
+	&lt;!-- Appender to log to file --&gt;​
+	&lt;appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+		&lt;file&gt;${LOG_FILE}&lt;/file&gt;
+		&lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+			&lt;fileNamePattern&gt;${LOG_FILE}.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+			&lt;maxHistory&gt;7&lt;/maxHistory&gt;
+		&lt;/rollingPolicy&gt;
+		&lt;encoder&gt;
+			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+			&lt;charset&gt;utf8&lt;/charset&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+	​
+	&lt;!-- Appender to log to file in a JSON format --&gt;
+	&lt;appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+		&lt;file&gt;${LOG_FILE}.json&lt;/file&gt;
+		&lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+			&lt;fileNamePattern&gt;${LOG_FILE}.json.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+			&lt;maxHistory&gt;7&lt;/maxHistory&gt;
+		&lt;/rollingPolicy&gt;
+		&lt;encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder"&gt;
+			&lt;providers&gt;
+				&lt;timestamp&gt;
+					&lt;timeZone&gt;UTC&lt;/timeZone&gt;
+				&lt;/timestamp&gt;
+				&lt;pattern&gt;
+					&lt;pattern&gt;
+						{
+						"severity": "%level",
+						"service": "${springAppName:-}",
+						"trace": "%X{X-B3-TraceId:-}",
+						"span": "%X{X-B3-SpanId:-}",
+						"parent": "%X{X-B3-ParentSpanId:-}",
+						"exportable": "%X{X-Span-Export:-}",
+						"pid": "${PID:-}",
+						"thread": "%thread",
+						"class": "%logger{40}",
+						"rest": "%message"
+						}
+					&lt;/pattern&gt;
+				&lt;/pattern&gt;
+			&lt;/providers&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+	​
+	&lt;root level="INFO"&gt;
+		&lt;appender-ref ref="console"/&gt;
+		&lt;!-- uncomment this to have also JSON logs --&gt;
+		&lt;!--&lt;appender-ref ref="logstash"/&gt;--&gt;
+		&lt;!--&lt;appender-ref ref="flatfile"/&gt;--&gt;
+	&lt;/root&gt;
+&lt;/configuration&gt;</programlisting>
 <note>
 <simpara>If you&#8217;re using a custom <literal>logback-spring.xml</literal> then you have to pass the <literal>spring.application.name</literal> in
 <literal>bootstrap</literal> instead of <literal>application</literal> property file. Otherwise your custom logback file won&#8217;t read the property properly.</simpara>
@@ -273,7 +348,9 @@ too many can decrease system throughput or increase RPC latency. In extreme case
 to exceeding transport-level message or header capacity.</simpara>
 </important>
 <simpara>Example of setting baggage on a span:</simpara>
-<programlisting language="java" linenumbering="unnumbered">link:https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[]</programlisting>
+<programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.createSpan("span");
+initialSpan.setBaggageItem("foo", "bar");
+initialSpan.setBaggageItem("UPPER_CASE", "someValue");</programlisting>
 <section xml:id="_baggage_vs_span_tags">
 <title>Baggage vs. Span Tags</title>
 <simpara>Baggage travels with the trace (i.e. every child span contains the baggage of its parent). Zipkin has no knowledge of
@@ -571,7 +648,21 @@ the Spring BOM</para>
 </callout>
 </calloutlist>
 <simpara>and then just annotate your main class with <literal>@EnableZipkinStreamServer</literal> annotation:</simpara>
-<programlisting language="java" linenumbering="unnumbered">link:https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/src/main/java/example/ZipkinStreamServerApplication.java[]</programlisting>
+<programlisting language="java" linenumbering="unnumbered">package example;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.sleuth.zipkin.stream.EnableZipkinStreamServer;
+
+@SpringBootApplication
+@EnableZipkinStreamServer
+public class ZipkinStreamServerApplication {
+
+	public static void main(String[] args) throws Exception {
+		SpringApplication.run(ZipkinStreamServerApplication.class, args);
+	}
+
+}</programlisting>
 </section>
 </section>
 </chapter>
@@ -579,7 +670,7 @@ the Spring BOM</para>
 <title>Additional resources</title>
 <simpara><emphasis role="strong">Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin</emphasis></simpara>
 
-<simpara><link xlink:href="https://www.youtube.com/watch?v=eQV71Mw1u1c">click here to see the video</link></simpara>
+<simpara><link xl:href="https://www.youtube.com/watch?v=eQV71Mw1u1c">click here to see the video</link></simpara>
 </chapter>
 <chapter xml:id="_features">
 <title>Features</title>
@@ -654,7 +745,7 @@ By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using <literal>spring.zipkin.baseUrl</literal>.</simpara>
 </listitem>
 <listitem>
-<simpara>If <literal>spring-cloud-sleuth-stream</literal> then the app will generate and collect traces via <link xlink:href="https://github.com/spring-cloud/spring-cloud-stream">Spring Cloud Stream</link>.
+<simpara>If <literal>spring-cloud-sleuth-stream</literal> then the app will generate and collect traces via <link xl:href="https://github.com/spring-cloud/spring-cloud-stream">Spring Cloud Stream</link>.
 Your app automatically becomes a producer of tracer messages that are sent over your broker of choice
 (e.g. RabbitMQ, Apache Kafka, Redis).</simpara>
 </listitem>
@@ -1311,7 +1402,7 @@ Zipkin&#8217;s service id inside the URL (example for <literal>zipkinserver</lit
 <chapter xml:id="_span_data_as_messages">
 <title>Span Data as Messages</title>
 <simpara>You can accumulate and send span data over
-<link xlink:href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</link> by
+<link xl:href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</link> by
 including the <literal>spring-cloud-sleuth-stream</literal> jar as a dependency, and
 adding a Channel Binder implementation
 (e.g. <literal>spring-cloud-starter-stream-rabbit</literal> for RabbitMQ or
@@ -1336,7 +1427,7 @@ starters exist for Redis and Kafka). If you add the following UI dependency</sim
 <programlisting language="xml" linenumbering="unnumbered">&lt;groupId&gt;io.zipkin.java&lt;/groupId&gt;
 &lt;artifactId&gt;zipkin-autoconfigure-ui&lt;/artifactId&gt;</programlisting>
 <simpara>Then you&#8217;ll have your app a
-<link xlink:href="https://github.com/openzipkin/zipkin">Zipkin server</link>, which hosts
+<link xl:href="https://github.com/openzipkin/zipkin">Zipkin server</link>, which hosts
 the UI and api on port 9411.</simpara>
 <simpara>The default <literal>SpanStore</literal> is in-memory (good for demos and getting
 started quickly). For a more robust solution you can add MySQL and
@@ -1403,7 +1494,7 @@ public static class CustomPollerConfiguration {
 <chapter xml:id="_metrics">
 <title>Metrics</title>
 <simpara>Currently Spring Cloud Sleuth registers very simple metrics related to spans.
-It&#8217;s using the <link xlink:href="http://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics">Spring Boot&#8217;s metrics support</link>
+It&#8217;s using the <link xl:href="http://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics">Spring Boot&#8217;s metrics support</link>
 to calculate the number of accepted and dropped spans. Each time a span gets
 sent to Zipkin the number of accepted spans will increase. If there&#8217;s an error then
 the number of dropped spans will get increased.</simpara>
@@ -1453,7 +1544,7 @@ Callable&lt;String&gt; traceCallableFromTracer = tracer.wrap(callable);</program
 <title>Hystrix</title>
 <section xml:id="_custom_concurrency_strategy">
 <title>Custom Concurrency Strategy</title>
-<simpara>We&#8217;re registering a custom <link xlink:href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy"><literal>HystrixConcurrencyStrategy</literal></link>
+<simpara>We&#8217;re registering a custom <link xl:href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy"><literal>HystrixConcurrencyStrategy</literal></link>
 that wraps all <literal>Callable</literal> instances into their Sleuth representative -
 the <literal>TraceCallable</literal>. The strategy either starts or continues a span depending on the fact whether tracing was already going
 on before the Hystrix command was called. To disable the custom Hystrix Concurrency Strategy set the <literal>spring.sleuth.hystrix.strategy.enabled</literal> to <literal>false</literal>.</simpara>
@@ -1479,7 +1570,7 @@ on before the Hystrix command was called. To disable the custom Hystrix Concurre
 </section>
 <section xml:id="_rxjava">
 <title>RxJava</title>
-<simpara>We&#8217;re registering a custom <link xlink:href="https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook"><literal>RxJavaSchedulersHook</literal></link>
+<simpara>We&#8217;re registering a custom <link xl:href="https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook"><literal>RxJavaSchedulersHook</literal></link>
 that wraps all <literal>Action0</literal> instances into their Sleuth representative -
 the <literal>TraceAction</literal>. The hook either starts or continues a span depending on the fact whether tracing was already going
 on before the Action was scheduled. To disable the custom RxJavaSchedulersHook set the <literal>spring.sleuth.rxjava.schedulers.hook.enabled</literal> to <literal>false</literal>.</simpara>
@@ -1608,7 +1699,7 @@ If you create a <literal>WebClient</literal> instance with a <literal>new</liter
 </section>
 <section xml:id="_traverson">
 <title>Traverson</title>
-<simpara>If you&#8217;re using the <link xlink:href="http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</link> library
+<simpara>If you&#8217;re using the <link xl:href="http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</link> library
 it&#8217;s enough for you to inject a <literal>RestTemplate</literal> as a bean into your Traverson object. Since <literal>RestTemplate</literal>
 is already intercepted, you will get full support of tracing in your client. Below you can find a pseudo code
 of how to do that:</simpara>
@@ -1705,7 +1796,7 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 </section>
 <section xml:id="_messaging">
 <title>Messaging</title>
-<simpara>Spring Cloud Sleuth integrates with <link xlink:href="http://projects.spring.io/spring-integration/">Spring Integration</link>. It creates spans for publish and
+<simpara>Spring Cloud Sleuth integrates with <link xl:href="http://projects.spring.io/spring-integration/">Spring Integration</link>. It creates spans for publish and
 subscribe events. To disable Spring Integration instrumentation, set <literal>spring.sleuth.integration.enabled</literal> to false.</simpara>
 <simpara>You can provide the <literal>spring.sleuth.integration.patterns</literal> pattern to explicitly
 provide the names of channels that you want to include for tracing. By default all channels
@@ -1723,13 +1814,13 @@ To disable Zuul support set the <literal>spring.sleuth.zuul.enabled</literal> pr
 </chapter>
 <chapter xml:id="_running_examples">
 <title>Running examples</title>
-<simpara>You can find the running examples deployed in the <link xlink:href="https://run.pivotal.io/">Pivotal Web Services</link>. Check them out in the following links:</simpara>
+<simpara>You can find the running examples deployed in the <link xl:href="https://run.pivotal.io/">Pivotal Web Services</link>. Check them out in the following links:</simpara>
 <itemizedlist>
 <listitem>
-<simpara><link xlink:href="http://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</link></simpara>
+<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</link></simpara>
 </listitem>
 <listitem>
-<simpara><link xlink:href="http://docsbrewing-zipkin-server.cfapps.io/">Zipkin for Brewery on PWS</link>, its <link xlink:href="https://github.com/spring-cloud-samples/brewery">Github Code</link></simpara>
+<simpara><link xl:href="http://docsbrewing-zipkin-server.cfapps.io/">Zipkin for Brewery on PWS</link>, its <link xl:href="https://github.com/spring-cloud-samples/brewery">Github Code</link></simpara>
 </listitem>
 </itemizedlist>
 </chapter>

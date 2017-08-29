@@ -16,5 +16,8 @@
 		</module>
 		<module name="UnusedImports"/>
 		<module name="RedundantImport"/>
+		<module name="com.puppycrawl.tools.checkstyle.checks.imports.IllegalImportCheck" >
+			<property name="illegalPkgs" value="com.google.common"/>
+		</module>
 	</module>
 </module>
