@@ -44,6 +44,8 @@ service name as well as the trace and span ids.
 
 :branch: master
 
+== Introduction
+
 Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.spring.io[Spring Cloud].
 
 === Terminology
