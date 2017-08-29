@@ -240,7 +240,7 @@ the `spring-cloud-starter-sleuth` module to your project.
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Camden.RELEASE</version>
+                  <version>${release.train.version}</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -261,7 +261,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
     }
 }
 
@@ -285,7 +285,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` de
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Camden.RELEASE</version>
+                  <version>${release.train.version}</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -306,7 +306,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
     }
 }
 
@@ -330,7 +330,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dep
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Camden.RELEASE</version>
+                  <version>${release.train.version}</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -362,7 +362,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
     }
 }
 
@@ -392,7 +392,7 @@ dependency
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
                   <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>Camden.RELEASE</version>
+                  <version>${release.train.version}</version>
                   <type>pom</type>
                   <scope>import</scope>
               </dependency>
@@ -424,7 +424,7 @@ the Spring BOM
 ----
 dependencyManagement { <1>
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
     }
 }
 
