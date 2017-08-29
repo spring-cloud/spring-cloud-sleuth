@@ -15,8 +15,10 @@
 <preface>
 <title></title>
 <simpara><emphasis role="strong">1.3.0.BUILD-SNAPSHOT</emphasis></simpara>
-<simpara>Spring Cloud Sleuth implements a distributed tracing solution for <link xl:href="http://cloud.spring.io">Spring Cloud</link>.</simpara>
 </preface>
+<chapter xml:id="_introduction">
+<title>Introduction</title>
+<simpara>Spring Cloud Sleuth implements a distributed tracing solution for <link xl:href="http://cloud.spring.io">Spring Cloud</link>.</simpara>
 <section xml:id="_terminology">
 <title>Terminology</title>
 <simpara>Spring Cloud Sleuth borrows <link xl:href="http://research.google.com/pubs/pub36356.html">Dapper&#8217;s</link> terminology.</simpara>
@@ -663,6 +665,7 @@ public class ZipkinStreamServerApplication {
 }</programlisting>
 </section>
 </section>
+</chapter>
 <chapter xml:id="_additional_resources">
 <title>Additional resources</title>
 <simpara><emphasis role="strong">Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin</emphasis></simpara>
