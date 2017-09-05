@@ -20,14 +20,12 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.PostConstruct;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.aop.Pointcut;
@@ -40,6 +38,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
@@ -177,6 +176,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 	private BeanFactory beanFactory;
 	private SpanCreator spanCreator;
 	private Tracer tracer;
+	private TraceKeys traceKeys;
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 	private ErrorParser errorParser;
 
@@ -204,6 +204,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 				logEvent(span, log + ".before");
 			}
 			spanTagAnnotationHandler().addAnnotatedParameters(invocation);
+			addTags(invocation, span);
 			return invocation.proceed();
 		} catch (Exception e) {
 			if (logger.isDebugEnabled()) {
@@ -224,6 +225,13 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 				}
 			}
 		}
+	}
+
+	private void addTags(MethodInvocation invocation, Span span) {
+		String classNameKey = traceKeys().getAnnotation().getClassNameKey();
+		String methodNameKey = traceKeys().getAnnotation().getMethodNameKey();
+		tracer().addTag(classNameKey, invocation.getThis().getClass().getSimpleName());
+		tracer().addTag(methodNameKey, invocation.getMethod().getName());
 	}
 
 	private void logEvent(Span span, String name) {
@@ -248,6 +256,13 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
+	}
+
+	private TraceKeys traceKeys() {
+		if (this.traceKeys == null) {
+			this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
+		}
+		return this.traceKeys;
 	}
 
 	private SpanCreator spanCreator() {

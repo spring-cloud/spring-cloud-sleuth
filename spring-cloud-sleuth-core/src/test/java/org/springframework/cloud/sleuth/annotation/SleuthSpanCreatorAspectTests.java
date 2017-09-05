@@ -129,7 +129,9 @@ public class SleuthSpanCreatorAspectTests {
 
 		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
 		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("custom-name-on-test-method9");
+				.hasASpanWithName("custom-name-on-test-method9")
+				.hasASpanWithTagEqualTo("class", "TestBean")
+				.hasASpanWithTagEqualTo("method", "testMethod9");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -162,6 +164,8 @@ public class SleuthSpanCreatorAspectTests {
 		then(new ListOfSpans(spans)).hasSize(1)
 				.hasASpanWithName("foo")
 				.hasASpanWithTagEqualTo("customTestTag11", "test")
+				.hasASpanWithTagEqualTo("class", "TestBean")
+				.hasASpanWithTagEqualTo("method", "testMethod11")
 				.hasASpanWithLogEqualTo("customTest.before")
 				.hasASpanWithLogEqualTo("customTest.after");
 		then(ExceptionUtils.getLastException()).isNull();
