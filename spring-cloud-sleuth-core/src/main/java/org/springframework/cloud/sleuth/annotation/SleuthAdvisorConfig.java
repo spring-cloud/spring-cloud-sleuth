@@ -38,7 +38,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
@@ -172,11 +171,12 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements BeanFactor
 class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 
 	private static final Log logger = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final String CLASS_KEY = "class";
+	private static final String METHOD_KEY = "method";
 
 	private BeanFactory beanFactory;
 	private SpanCreator spanCreator;
 	private Tracer tracer;
-	private TraceKeys traceKeys;
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 	private ErrorParser errorParser;
 
@@ -228,10 +228,8 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 	}
 
 	private void addTags(MethodInvocation invocation, Span span) {
-		String classNameKey = traceKeys().getAnnotation().getClassNameKey();
-		String methodNameKey = traceKeys().getAnnotation().getMethodNameKey();
-		tracer().addTag(classNameKey, invocation.getThis().getClass().getSimpleName());
-		tracer().addTag(methodNameKey, invocation.getMethod().getName());
+		tracer().addTag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
+		tracer().addTag(METHOD_KEY, invocation.getMethod().getName());
 	}
 
 	private void logEvent(Span span, String name) {
@@ -256,13 +254,6 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
-	}
-
-	private TraceKeys traceKeys() {
-		if (this.traceKeys == null) {
-			this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
-		}
-		return this.traceKeys;
 	}
 
 	private SpanCreator spanCreator() {

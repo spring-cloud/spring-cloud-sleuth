@@ -61,8 +61,6 @@ public class TraceKeys {
 
 	private Mvc mvc = new Mvc();
 
-	private Annotation annotation = new Annotation();
-
 	public Http getHttp() {
 		return this.http;
 	}
@@ -83,10 +81,6 @@ public class TraceKeys {
 		return this.mvc;
 	}
 
-	public Annotation getAnnotation() {
-		return this.annotation;
-	}
-
 	public void setHttp(Http http) {
 		this.http = http;
 	}
@@ -105,10 +99,6 @@ public class TraceKeys {
 
 	public void setMvc(Mvc mvc) {
 		this.mvc = mvc;
-	}
-
-	public void setAnnotation(Annotation annotation) {
-		this.annotation = annotation;
 	}
 
 	public static class Message {
@@ -494,43 +484,6 @@ public class TraceKeys {
 
 		public void setControllerMethod(String controllerMethod) {
 			this.controllerMethod = controllerMethod;
-		}
-	}
-
-	/**
-	 * Trace keys related to spans created / continued via annotations
-	 */
-	public static class Annotation {
-
-		/**
-		 * Simple name of the class with a method annotated with {@code @Async}
-		 * from which the asynchronous process started
-		 *
-		 * @see org.springframework.scheduling.annotation.Async
-		 */
-		private String classNameKey = "class";
-
-		/**
-		 * Name of the method annotated with {@code @Async}
-		 *
-		 * @see org.springframework.scheduling.annotation.Async
-		 */
-		private String methodNameKey = "method";
-
-		public String getClassNameKey() {
-			return this.classNameKey;
-		}
-
-		public String getMethodNameKey() {
-			return this.methodNameKey;
-		}
-
-		public void setClassNameKey(String classNameKey) {
-			this.classNameKey = classNameKey;
-		}
-
-		public void setMethodNameKey(String methodNameKey) {
-			this.methodNameKey = methodNameKey;
 		}
 	}
 
