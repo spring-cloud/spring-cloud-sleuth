@@ -20,14 +20,12 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.PostConstruct;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.aop.Pointcut;
@@ -173,6 +171,8 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements BeanFactor
 class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 
 	private static final Log logger = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final String CLASS_KEY = "class";
+	private static final String METHOD_KEY = "method";
 
 	private BeanFactory beanFactory;
 	private SpanCreator spanCreator;
@@ -204,6 +204,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 				logEvent(span, log + ".before");
 			}
 			spanTagAnnotationHandler().addAnnotatedParameters(invocation);
+			addTags(invocation, span);
 			return invocation.proceed();
 		} catch (Exception e) {
 			if (logger.isDebugEnabled()) {
@@ -224,6 +225,11 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 				}
 			}
 		}
+	}
+
+	private void addTags(MethodInvocation invocation, Span span) {
+		tracer().addTag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
+		tracer().addTag(METHOD_KEY, invocation.getMethod().getName());
 	}
 
 	private void logEvent(Span span, String name) {
