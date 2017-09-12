@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.regex.Pattern;
 
 import org.junit.Test;
-import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
+import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
