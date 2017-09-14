@@ -1,11 +1,11 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.Map;
+import java.util.Random;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.util.TextMapUtil;
-
-import java.util.Map;
-import java.util.Random;
 
 /**
  * Default implementation for messaging
@@ -18,9 +18,11 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
 		Map<String, String> carrier = TextMapUtil.asMap(textMap);
+		boolean spanIdMissing = !hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME);
+		boolean traceIdMissing = !hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME);
 		if (Span.SPAN_SAMPLED.equals(carrier.get(TraceMessageHeaders.SPAN_FLAGS_NAME))) {
-			String traceId = generateTraceIdIfMissing(carrier);
-			if (!carrier.containsKey(TraceMessageHeaders.SPAN_ID_NAME)) {
+			String traceId = generateTraceIdIfMissing(carrier, traceIdMissing);
+			if (spanIdMissing) {
 				carrier.put(TraceMessageHeaders.SPAN_ID_NAME, traceId);
 			}
 		} else if (!hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME)
@@ -28,28 +30,32 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 			return null;
 			// TODO: Consider throwing IllegalArgumentException;
 		}
-		return extractSpanFromHeaders(carrier, Span.builder());
+		boolean idMissing = spanIdMissing || traceIdMissing;
+		return extractSpanFromHeaders(carrier, Span.builder(), idMissing);
 	}
 
-	private String generateTraceIdIfMissing(Map<String, String> carrier) {
-		if (!hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME)) {
+	private String generateTraceIdIfMissing(Map<String, String> carrier,
+			boolean traceIdMissing) {
+		if (traceIdMissing) {
 			carrier.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(new Random().nextLong()));
 		}
 		return carrier.get(TraceMessageHeaders.TRACE_ID_NAME);
 	}
 
-	private Span extractSpanFromHeaders(Map<String, String> carrier, Span.SpanBuilder spanBuilder) {
+	private Span extractSpanFromHeaders(Map<String, String> carrier,
+			Span.SpanBuilder spanBuilder, boolean idMissing) {
 		String traceId = carrier.get(TraceMessageHeaders.TRACE_ID_NAME);
 		spanBuilder = spanBuilder
 				.traceIdHigh(traceId.length() == 32 ? Span.hexToId(traceId, 0) : 0)
 				.traceId(Span.hexToId(traceId))
 				.spanId(Span.hexToId(carrier.get(TraceMessageHeaders.SPAN_ID_NAME)));
 		String flags = carrier.get(TraceMessageHeaders.SPAN_FLAGS_NAME);
-		if (Span.SPAN_SAMPLED.equals(flags)) {
+		boolean debug = Span.SPAN_SAMPLED.equals(flags);
+		boolean spanSampled = Span.SPAN_SAMPLED.equals(carrier.get(TraceMessageHeaders.SAMPLED_NAME));
+		if (debug) {
 			spanBuilder.exportable(true);
 		} else {
-			spanBuilder.exportable(
-				Span.SPAN_SAMPLED.equals(carrier.get(TraceMessageHeaders.SAMPLED_NAME)));
+			spanBuilder.exportable(spanSampled);
 		}
 		String processId = carrier.get(TraceMessageHeaders.PROCESS_ID_NAME);
 		String spanName = carrier.get(TraceMessageHeaders.SPAN_NAME_NAME);
@@ -61,6 +67,7 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 		}
 		setParentIdIfApplicable(carrier, spanBuilder, TraceMessageHeaders.PARENT_ID_NAME);
 		spanBuilder.remote(true);
+		spanBuilder.shared((debug || spanSampled) && !idMissing);
 		for (Map.Entry<String, String> entry : carrier.entrySet()) {
 			if (entry.getKey().toLowerCase().startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + TraceMessageHeaders.HEADER_DELIMITER)) {
 				spanBuilder.baggage(unprefixedKey(entry.getKey()), entry.getValue());

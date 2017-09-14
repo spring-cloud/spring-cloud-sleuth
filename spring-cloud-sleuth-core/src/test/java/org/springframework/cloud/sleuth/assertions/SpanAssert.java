@@ -190,6 +190,26 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
+	public SpanAssert isShared() {
+		isNotNull();
+		if (!this.actual.isShared()) {
+			String message = "The span is supposed to be shared but it's not!";
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
+	public SpanAssert isNotShared() {
+		isNotNull();
+		if (this.actual.isShared()) {
+			String message = "The span is NOT supposed to be shared but it is!";
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
 	public SpanAssert isNotExportable() {
 		isNotNull();
 		if (this.actual.isExportable()) {

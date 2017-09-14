@@ -15,6 +15,11 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
 import org.assertj.core.api.Condition;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
@@ -22,11 +27,6 @@ import org.springframework.cloud.sleuth.stream.Host;
 import org.springframework.cloud.sleuth.stream.Spans;
 import zipkin.Constants;
 import zipkin.Endpoint;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -215,6 +215,39 @@ public class ConvertToZipkinSpanListTests {
 
 		assertThat(result.traceIdHigh).isEqualTo(span.getTraceIdHigh());
 		assertThat(result.traceId).isEqualTo(span.getTraceId());
+	}
+
+	@Test
+	public void shouldRemoveTimestampAndDurationForNonRemoteSharedSpan() {
+		Span span = Span.builder()
+				.name("foo")
+				.exportable(false)
+				.remote(false)
+				.shared(true)
+				.build();
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+
+		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
+
+		assertThat(result.duration).isNull();
+		assertThat(result.timestamp).isNull();
+	}
+
+	@Test
+	public void shouldNotRemoveTimestampAndDurationForNonRemoteNonSharedSpan() {
+		Span span = Span.builder()
+				.name("foo")
+				.exportable(false)
+				.remote(false)
+				.shared(false)
+				.build();
+		span.stop();
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
+
+		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
+
+		assertThat(result.duration).isNotNull();
+		assertThat(result.timestamp).isNotNull();
 	}
 
 	Span span(String name) {
