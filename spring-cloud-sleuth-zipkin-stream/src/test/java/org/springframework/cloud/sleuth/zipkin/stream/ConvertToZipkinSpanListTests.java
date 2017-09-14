@@ -242,7 +242,7 @@ public class ConvertToZipkinSpanListTests {
 				.shared(false)
 				.build();
 		span.stop();
-		Spans spans S= new Spans(this.host, Collections.singletonList(span));
+		Spans spans = new Spans(this.host, Collections.singletonList(span));
 
 		zipkin.Span result = ConvertToZipkinSpanList.convert(spans).get(0);
 
