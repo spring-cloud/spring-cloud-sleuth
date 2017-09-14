@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -23,8 +25,6 @@ import java.util.Map;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
-
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -42,7 +42,7 @@ public class HeaderBasedMessagingExtractorTests {
 
 		Span span = extractor.joinTrace(spanTextMap);
 
-		then(span).isExportable();
+		then(span).isExportable().isShared();
 	}
 
 	@Test
@@ -56,7 +56,7 @@ public class HeaderBasedMessagingExtractorTests {
 
 		Span span = extractor.joinTrace(spanTextMap);
 
-		then(span).isExportable();
+		then(span).isExportable().isShared();
 	}
 
 	@Test
@@ -69,7 +69,7 @@ public class HeaderBasedMessagingExtractorTests {
 
 		Span span = extractor.joinTrace(spanTextMap);
 
-		then(span).isExportable();
+		then(span).isExportable().isShared();
 	}
 
 	@Test
@@ -82,7 +82,7 @@ public class HeaderBasedMessagingExtractorTests {
 
 		Span span = extractor.joinTrace(spanTextMap);
 
-		then(span).isNotExportable();
+		then(span).isNotExportable().isNotShared();
 	}
 
 	@Test
@@ -93,7 +93,7 @@ public class HeaderBasedMessagingExtractorTests {
 
 		Span span = extractor.joinTrace(spanTextMap);
 
-		then(span).isExportable();
+		then(span).isExportable().isNotShared();
 		then(span.traceIdString()).isNotEmpty();
 		then(span.getSpanId()).isNotNull();
 	}
@@ -107,7 +107,7 @@ public class HeaderBasedMessagingExtractorTests {
 
 		Span span = extractor.joinTrace(spanTextMap);
 
-		then(span).isExportable();
+		then(span).isExportable().isNotShared();
 		then(span.traceIdString()).isNotEmpty();
 		then(span.getSpanId()).isEqualTo(10L);
 	}
@@ -121,7 +121,7 @@ public class HeaderBasedMessagingExtractorTests {
 
 		Span span = extractor.joinTrace(spanTextMap);
 
-		then(span).isExportable();
+		then(span).isExportable().isNotShared();
 		then(span.getTraceId()).isEqualTo(10L);
 		then(span.getSpanId()).isEqualTo(10L);
 	}
