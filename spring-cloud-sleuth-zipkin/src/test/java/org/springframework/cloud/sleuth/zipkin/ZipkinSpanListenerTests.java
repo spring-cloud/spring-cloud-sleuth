@@ -319,6 +319,37 @@ public class ZipkinSpanListenerTests {
 		assertThat(result.name).isEqualTo("foo");
 	}
 
+	@Test
+	public void shouldRemoveTimestampAndDurationForNonRemoteSharedSpan() {
+		Span span = Span.builder()
+				.name("foo")
+				.exportable(false)
+				.remote(false)
+				.shared(true)
+				.build();
+
+		zipkin.Span result = this.spanListener.convert(span);
+
+		assertThat(result.duration).isNull();
+		assertThat(result.timestamp).isNull();
+	}
+
+	@Test
+	public void shouldNotRemoveTimestampAndDurationForNonRemoteNonSharedSpan() {
+		Span span = Span.builder()
+				.name("foo")
+				.exportable(false)
+				.remote(false)
+				.shared(false)
+				.build();
+		span.stop();
+
+		zipkin.Span result = this.spanListener.convert(span);
+
+		assertThat(result.duration).isNotNull();
+		assertThat(result.timestamp).isNotNull();
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class TestConfiguration {

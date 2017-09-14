@@ -99,9 +99,14 @@ public class ZipkinSpanListener implements SpanReporter {
 		// rather let the client do that. Worst case we were propagated an unreported ID and
 		// Zipkin backfills timestamp and duration.
 		if (!convertedSpan.isRemote()) {
-			zipkinSpan.timestamp(convertedSpan.getBegin() * 1000L);
-			if (!convertedSpan.isRunning()) { // duration is authoritative, only write when the span stopped
-				zipkinSpan.duration(calculateDurationInMicros(convertedSpan));
+			// don't report server-side timestamp on shared spans
+			if (Boolean.TRUE.equals(convertedSpan.isShared())) {
+				zipkinSpan.timestamp(null).duration(null);
+			} else {
+				zipkinSpan.timestamp(convertedSpan.getBegin() * 1000L);
+				if (!convertedSpan.isRunning()) { // duration is authoritative, only write when the span stopped
+					zipkinSpan.duration(calculateDurationInMicros(convertedSpan));
+				}
 			}
 		}
 		zipkinSpan.traceIdHigh(convertedSpan.getTraceIdHigh());

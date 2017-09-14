@@ -512,6 +512,9 @@ public class Span implements SpanContext {
 
 	/**
 	 * Span and trace id got extracted from a carrier?
+	 * We are adding data to the same span created by a remote client2
+	 *
+	 * @since 1.3.0
 	 */
 	public boolean isShared() {
 		return this.shared;
