@@ -16,16 +16,16 @@
 
 package org.springframework.cloud.sleuth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.assertThat;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Marcin Grzejszczak
@@ -276,6 +276,7 @@ public class SpanTests {
 	private Span.SpanBuilder builder() {
 		return Span.builder().name("http:name").traceId(1L).spanId(2L).parent(3L)
 				.begin(1L).end(2L).traceId(3L).exportable(true).parent(4L)
-				.baggage("foo", "bar").remote(true).tag("tag", "tag").log(new Log(System.currentTimeMillis(), "log"));
+				.baggage("foo", "bar")
+				.remote(true).shared(true).tag("tag", "tag").log(new Log(System.currentTimeMillis(), "log"));
 	}
 }
