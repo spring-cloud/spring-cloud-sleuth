@@ -512,7 +512,7 @@ public class Span implements SpanContext {
 
 	/**
 	 * Span and trace id got extracted from a carrier?
-	 * We are adding data to the same span created by a remote client2
+	 * We are adding data to the same span created by a remote client
 	 *
 	 * @since 1.3.0
 	 */
