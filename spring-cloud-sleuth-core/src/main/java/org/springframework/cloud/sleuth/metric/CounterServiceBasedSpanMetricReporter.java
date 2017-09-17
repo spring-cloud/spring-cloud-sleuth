@@ -1,37 +1,31 @@
 package org.springframework.cloud.sleuth.metric;
 
-import org.springframework.boot.actuate.metrics.CounterService;
+import io.micrometer.core.instrument.Counter;
 
 /**
  * Service to operate on accepted and dropped spans statistics.
- * Operates on a {@link CounterService} underneath
+ * Operates on a {@link Counter} underneath
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
 public class CounterServiceBasedSpanMetricReporter implements SpanMetricReporter {
-	private final String acceptedSpansMetricName;
-	private final String droppedSpansMetricName;
-	private final CounterService counterService;
+	private final Counter acceptedSpansCounter;
+	private final Counter droppedSpansCounter;
 
-	public CounterServiceBasedSpanMetricReporter(String acceptedSpansMetricName,
-			String droppedSpansMetricName, CounterService counterService) {
-		this.acceptedSpansMetricName = acceptedSpansMetricName;
-		this.droppedSpansMetricName = droppedSpansMetricName;
-		this.counterService = counterService;
+	public CounterServiceBasedSpanMetricReporter(Counter acceptedSpansCounter,
+			Counter droppedSpansCounter) {
+		this.acceptedSpansCounter = acceptedSpansCounter;
+		this.droppedSpansCounter = droppedSpansCounter;
 	}
 
 	@Override
 	public void incrementAcceptedSpans(long quantity) {
-		for (int i = 0; i < quantity; i++) {
-			this.counterService.increment(this.acceptedSpansMetricName);
-		}
+		this.acceptedSpansCounter.increment(quantity);
 	}
 
 	@Override
 	public void incrementDroppedSpans(long quantity) {
-		for (int i = 0; i < quantity; i++) {
-			this.counterService.increment(this.droppedSpansMetricName);
-		}
+		this.droppedSpansCounter.increment(quantity);
 	}
 }

@@ -20,7 +20,6 @@ import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -33,6 +32,9 @@ import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.AnnotatedTypeMetadata;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -53,19 +55,22 @@ public class TraceMetricsAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass(CounterService.class)
+	@ConditionalOnClass(Counter.class)
 	@ConditionalOnMissingBean(SpanMetricReporter.class)
 	protected static class CounterServiceSpanReporterConfig {
 		@Bean
-		@ConditionalOnBean(CounterService.class)
-		public SpanMetricReporter spanReporterCounterService(CounterService counterService,
-				SleuthMetricProperties sleuthMetricProperties) {
-			return new CounterServiceBasedSpanMetricReporter(sleuthMetricProperties.getSpan().getAcceptedName(),
-					sleuthMetricProperties.getSpan().getDroppedName(), counterService);
+		@ConditionalOnBean(Counter.class)
+		public SpanMetricReporter spanReporterCounterService(SleuthMetricProperties sleuthMetricProperties,
+				MeterRegistry meterRegistry) {
+			Counter acceptedSpansCounter = Counter.builder(
+					sleuthMetricProperties.getSpan().getAcceptedName()).register(meterRegistry);
+			Counter droppedSpansCounter = Counter.builder(
+					sleuthMetricProperties.getSpan().getDroppedName()).register(meterRegistry);
+			return new CounterServiceBasedSpanMetricReporter(acceptedSpansCounter, droppedSpansCounter);
 		}
 
 		@Bean
-		@ConditionalOnMissingBean(CounterService.class)
+		@ConditionalOnMissingBean(Counter.class)
 		public SpanMetricReporter noOpSpanReporterCounterService() {
 			return new NoOpSpanMetricReporter();
 		}
@@ -78,6 +83,7 @@ public class TraceMetricsAutoConfiguration {
 		return new NoOpSpanMetricReporter();
 	}
 
+	// TODO: Remove this
 	static class PickMetricIfMetricsIsMissing extends SpringBootCondition {
 
 		private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
