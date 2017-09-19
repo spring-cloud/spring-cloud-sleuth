@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import zipkin.Endpoint;
-
 import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 
@@ -27,8 +25,11 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
+import zipkin.Endpoint;
 
 /**
  * {@link EndpointLocator} implementation that:
@@ -43,15 +44,18 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class ServerPropertiesEndpointLocator implements EndpointLocator {
+public class ServerPropertiesEndpointLocator implements EndpointLocator,
+		EnvironmentAware {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 
 	private final ServerProperties serverProperties;
 	private final String appName;
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port;
+	private Environment environment;
 
 	@Deprecated
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,String appName) {
@@ -108,8 +112,18 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 			return ByteBuffer.wrap(this.serverProperties.getAddress().getAddress())
 					.getInt();
 		}
+		else if (this.environment != null) {
+			String ipAddress = this.environment
+					.getProperty(IP_ADDRESS_PROP_NAME, String.class);
+			return InetUtils.getIpAddressAsInt(ipAddress);
+		}
 		else {
 			return ByteBuffer.wrap(this.inetUtils.findFirstNonLoopbackAddress().getAddress()).getInt();
 		}
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
 	}
 }
