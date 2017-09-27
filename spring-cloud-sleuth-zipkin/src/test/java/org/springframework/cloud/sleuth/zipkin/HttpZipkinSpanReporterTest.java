@@ -1,5 +1,13 @@
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.internal.MeterId;
+import io.micrometer.core.instrument.simple.SimpleCounter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -15,15 +23,10 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.web.client.RestTemplate;
-import zipkin.reporter.Encoding;
 import zipkin.Span;
 import zipkin.junit.HttpFailure;
 import zipkin.junit.ZipkinRule;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
+import zipkin.reporter.Encoding;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,9 +36,13 @@ import static org.awaitility.Awaitility.await;
 public class HttpZipkinSpanReporterTest {
 
 	@Rule public final ZipkinRule zipkin = new ZipkinRule();
-	InMemorySpanCounter inMemorySpanCounter = new InMemorySpanCounter();
-	SpanMetricReporter spanMetricReporter = new CounterServiceBasedSpanMetricReporter("accepted", "dropped",
-			this.inMemorySpanCounter);
+	Counter accepted = new SimpleCounter(
+			new MeterId("accepted", Collections.emptyList(), "", "")
+	);
+	Counter dropped = new SimpleCounter(
+			new MeterId("dropped", Collections.emptyList(), "", "")
+	);
+	SpanMetricReporter spanMetricReporter = new CounterServiceBasedSpanMetricReporter(this.accepted, this.dropped);
 	RestTemplate restTemplate = defaultRestTemplate();
 
 	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(restTemplate, this.zipkin.httpUrl(),
@@ -54,8 +61,8 @@ public class HttpZipkinSpanReporterTest {
 	public void reportIncrementsAcceptedMetrics() throws Exception {
 		this.reporter.report(span(1L, "foo"));
 
-		assertThat(this.inMemorySpanCounter.getAcceptedSpans()).isEqualTo(1);
-		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isZero();
+		assertThat(this.accepted.count()).isEqualTo(1);
+		assertThat(this.dropped.count()).isZero();
 	}
 
 	@Test
@@ -63,8 +70,8 @@ public class HttpZipkinSpanReporterTest {
 		for (int i = 0; i < 1001; i++)
 			this.reporter.report(span(1L, "foo"));
 
-		assertThat(this.inMemorySpanCounter.getAcceptedSpans()).isEqualTo(1001);
-		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isEqualTo(1);
+		assertThat(this.accepted.count()).isEqualTo(1001);
+		assertThat(this.dropped.count()).isEqualTo(1);
 	}
 
 	@Test
@@ -113,7 +120,7 @@ public class HttpZipkinSpanReporterTest {
 
 		this.reporter.flush(); // manually flush the spans
 
-		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isEqualTo(2);
+		assertThat(this.dropped.count()).isEqualTo(2);
 	}
 
 	@Test
@@ -125,7 +132,7 @@ public class HttpZipkinSpanReporterTest {
 
 		this.reporter.flush(); // manually flush the spans
 
-		assertThat(this.inMemorySpanCounter.getDroppedSpans()).isEqualTo(2);
+		assertThat(this.dropped.count()).isEqualTo(2);
 	}
 
 	@Test
