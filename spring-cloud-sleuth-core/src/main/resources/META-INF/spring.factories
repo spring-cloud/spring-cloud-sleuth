@@ -9,6 +9,7 @@ org.springframework.cloud.sleuth.instrument.messaging.websocket.TraceWebSocketAu
 org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.jms.TraceJmsAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
