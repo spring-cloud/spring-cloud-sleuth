@@ -8,7 +8,7 @@
 	<name>Spring Cloud Sleuth Core</name>
 	<description>Spring Cloud Sleuth Core</description>
 
-	<parent>
+    <parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-sleuth</artifactId>
 		<version>1.2.5.BUILD-SNAPSHOT</version>
@@ -163,6 +163,11 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-eureka</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-activemq</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
