@@ -804,6 +804,20 @@ If you want to skip Span creation for some `@Scheduled` annotated classes you ca
 
 TIP: If you are using `spring-cloud-sleuth-stream` and `spring-cloud-netflix-hystrix-stream` together, Span will be created for each Hystrix metrics and sent to Zipkin. This may be annoying. You can prevent this by setting `spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask`
 
+==== @JmsListener annotated methods
+
+In Spring Cloud Sleuth we're instrumenting jms listening related method execution so that tracing information is passed between threads.
+You can disable this behaviour by setting the value of `spring.sleuth.jms.enabled` to `false`.
+
+If you annotate your method with `@JmsListener` then we'll automatically create a new Span with the following characteristics:
+
+    - the Span name will be the annotated method name
+    - the Span will be tagged with that method's class name and the method name too
+
+If you want to skip Span creation for some `@JmsListener` annotated classes you can set the
+`spring.sleuth.jms.skipPattern` with a regular expression that will match the fully qualified name of the
+`@JmsListener` annotated class.
+
 ==== Executor, ExecutorService and ScheduledExecutorService
 
 We're providing `LazyTraceExecutor`, `TraceableExecutorService` and `TraceableScheduledExecutorService`. Those implementations
