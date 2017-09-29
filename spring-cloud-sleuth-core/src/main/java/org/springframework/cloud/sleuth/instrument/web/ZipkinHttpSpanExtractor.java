@@ -35,7 +35,8 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 	public Span joinTrace(SpanTextMap textMap) {
 		Map<String, String> carrier = TextMapUtil.asMap(textMap);
 		boolean debug = Span.SPAN_SAMPLED.equals(carrier.get(Span.SPAN_FLAGS));
-		if (debug && onlySpanIdIsPresent(carrier)) {
+		boolean idToBeGenerated = debug && onlySpanIdIsPresent(carrier);
+		if (idToBeGenerated) {
 			// we're only generating Trace ID since if there's no Span ID will assume
 			// that it's equal to Trace ID - we're trying to fix a malformed request
 			generateIdIfMissing(carrier, Span.TRACE_ID_NAME);
@@ -48,7 +49,7 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 			boolean skip = this.skipPattern.matcher(uri).matches()
 					|| Span.SPAN_NOT_SAMPLED.equals(carrier.get(Span.SAMPLED_NAME));
 			long spanId = spanId(carrier);
-			return buildParentSpan(carrier, uri, skip, spanId);
+			return buildParentSpan(carrier, uri, skip, spanId, idToBeGenerated);
 		} catch (Exception e) {
 			log.error("Exception occurred while trying to extract span from carrier", e);
 			return null;
@@ -86,7 +87,8 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 		}
 	}
 
-	private Span buildParentSpan(Map<String, String> carrier, String uri, boolean skip, long spanId) {
+	private Span buildParentSpan(Map<String, String> carrier, String uri, boolean skip,
+			long spanId, boolean idToBeGenerated) {
 		String traceId = carrier.get(Span.TRACE_ID_NAME);
 		Span.SpanBuilder span = Span.builder()
 				.traceIdHigh(traceId.length() == 32 ? Span.hexToId(traceId, 0) : 0)
@@ -106,6 +108,8 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 			span.parent(Span.hexToId(carrier.get(Span.PARENT_ID_NAME)));
 		}
 		span.remote(true);
+		// trace, span id were retrieved from the headers and span is sampled
+		span.shared(!(skip || idToBeGenerated));
 		boolean debug = Span.SPAN_SAMPLED.equals(carrier.get(Span.SPAN_FLAGS));
 		if (debug) {
 			span.exportable(true);

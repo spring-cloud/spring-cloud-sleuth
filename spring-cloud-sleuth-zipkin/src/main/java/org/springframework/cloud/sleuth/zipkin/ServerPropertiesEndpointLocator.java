@@ -22,7 +22,9 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import zipkin.Endpoint;
 
@@ -42,15 +44,18 @@ import java.nio.ByteBuffer;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class ServerPropertiesEndpointLocator implements EndpointLocator {
+public class ServerPropertiesEndpointLocator implements EndpointLocator,
+		EnvironmentAware {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 
 	private final ServerProperties serverProperties;
 	private final String appName;
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port;
+	private Environment environment;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
 			String appName, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
@@ -102,8 +107,18 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator {
 			return ByteBuffer.wrap(this.serverProperties.getAddress().getAddress())
 					.getInt();
 		}
+		else if (this.environment != null) {
+			String ipAddress = this.environment
+					.getProperty(IP_ADDRESS_PROP_NAME, String.class);
+			return InetUtils.getIpAddressAsInt(ipAddress);
+		}
 		else {
 			return ByteBuffer.wrap(this.inetUtils.findFirstNonLoopbackAddress().getAddress()).getInt();
 		}
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
 	}
 }

@@ -15,6 +15,10 @@
  */
 package org.springframework.cloud.sleuth.zipkin.stream;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.stream.Host;
@@ -25,10 +29,6 @@ import zipkin.BinaryAnnotation;
 import zipkin.Constants;
 import zipkin.Endpoint;
 import zipkin.Span.Builder;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * This converts sleuth spans to zipkin ones, skipping invalid or unsampled.
@@ -96,9 +96,14 @@ final class ConvertToZipkinSpanList {
 		// rather let the client do that. Worst case we were propagated an unreported ID and
 		// Zipkin backfills timestamp and duration.
 		if (!span.isRemote()) {
-			zipkinSpan.timestamp(span.getBegin() * 1000);
-			if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
-				zipkinSpan.duration(calculateDurationInMicros(span));
+			if (Boolean.TRUE.equals(span.isShared())) {
+				// don't report server-side timestamp on shared spans
+				zipkinSpan.timestamp(null).duration(null);
+			} else {
+				zipkinSpan.timestamp(span.getBegin() * 1000);
+				if (!span.isRunning()) { // duration is authoritative, only write when the span stopped
+					zipkinSpan.duration(calculateDurationInMicros(span));
+				}
 			}
 		}
 		zipkinSpan.traceIdHigh(span.getTraceIdHigh());

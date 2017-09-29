@@ -45,6 +45,7 @@ import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -135,6 +136,35 @@ public class TraceFilterTests {
 		assertThat(this.span.tags()).containsEntry("http.status_code", HttpStatus.OK.toString());
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(new ListOfSpans(this.spanReporter.getSpans()))
+				.hasSize(1)
+				.hasASpanWithTagEqualTo("http.url", "http://localhost/?foo=bar")
+				.hasASpanWithTagEqualTo("http.host", "localhost")
+				.hasASpanWithTagEqualTo("http.path", "/")
+				.hasASpanWithTagEqualTo("http.method", HttpMethod.GET.toString())
+				.hasASpanWithTagEqualTo("http.status_code", HttpStatus.OK.toString())
+				.allSpansAreExportable();
+	}
+
+	@Test
+	public void startsNewTraceWithTraceHandlerInterceptor() throws Exception {
+		final BeanFactory beanFactory = beanFactory();
+		TraceFilter filter = new TraceFilter(beanFactory);
+		filter.doFilter(this.request, this.response, (req, resp) -> {
+			this.filterChain.doFilter(req, resp);
+			// Simulate execution of the TraceHandlerInterceptor
+			request.setAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR, tracer.getCurrentSpan());
+		});
+
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(new ListOfSpans(this.spanReporter.getSpans()))
+				.hasSize(1)
+				.hasASpanWithTagEqualTo("http.url", "http://localhost/?foo=bar")
+				.hasASpanWithTagEqualTo("http.host", "localhost")
+				.hasASpanWithTagEqualTo("http.path", "/")
+				.hasASpanWithTagEqualTo("http.method", HttpMethod.GET.toString())
+				.hasASpanWithTagEqualTo("http.status_code", HttpStatus.OK.toString())
+				.allSpansAreExportable();
 	}
 
 	@Test
@@ -160,16 +190,14 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(beanFactory);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		// this creates a child span which is why we'd expect the parents to include the parent id
-		// especially important if no handler interceptors have been used.
-		// We add a child span on the server side to show which controller serviced the request
-		assertThat(this.span.getParents()).containsOnly(PARENT_ID);
-		assertThat(parentSpan())
+		assertThat(this.span.getSpanId()).isEqualTo(PARENT_ID);
+		assertThat(this.span)
 				.hasATag("http.url", "http://localhost/?foo=bar")
 				.hasATag("http.host", "localhost")
 				.hasATag("http.path", "/")
 				.hasATag("http.method", "GET");
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	private Span parentSpan() {
@@ -252,8 +280,8 @@ public class TraceFilterTests {
 		this.request.addHeader("X-Foo", "bar");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "bar"));
-		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "bar"));
+		assertThat(this.span.tags()).contains(entry("http.x-foo", "bar"));
+		assertThat(this.span.tags()).contains(entry("http.x-foo", "bar"));
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
@@ -283,7 +311,7 @@ public class TraceFilterTests {
 		this.request.addHeader("X-Foo", "spam");
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		assertThat(parentSpan().tags()).contains(entry("http.x-foo", "'bar','spam'"));
+		assertThat(this.span.tags()).contains(entry("http.x-foo", "'bar','spam'"));
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
@@ -426,7 +454,7 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(new ListOfSpans(this.spanReporter.getSpans()))
-				.allSpansAreExportable().hasSize(2).hasASpanWithSpanId(Span.hexToId("10"));
+				.allSpansAreExportable().hasSize(1).hasASpanWithSpanId(Span.hexToId("10"));
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 		then(ExceptionUtils.getLastException()).isNull();
 	}
@@ -479,11 +507,7 @@ public class TraceFilterTests {
 		this.sampler = new NeverSampler();
 		TraceFilter filter = new TraceFilter(beanFactory());
 
-		filter.doFilter(this.request, this.response, (req, res) -> {
-			// Simulate the TraceHandlerInterceptor
-			req.setAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR, span);
-			this.filterChain.doFilter(req, res);
-		});
+		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(new ListOfSpans(this.spanReporter.getSpans()))
 				.doesNotHaveASpanWithName("http:/parent/")
@@ -503,7 +527,7 @@ public class TraceFilterTests {
 	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
 	 */
 	public void verifyParentSpanHttpTags(HttpStatus status) {
-		assertThat(parentSpan().tags()).contains(entry("http.host", "localhost"),
+		assertThat(this.span.tags()).contains(entry("http.host", "localhost"),
 				entry("http.url", "http://localhost/?foo=bar"), entry("http.path", "/"),
 				entry("http.method", "GET"));
 		verifyCurrentSpanStatusCodeForAContinuedSpan(status);

@@ -16,12 +16,6 @@
 
 package org.springframework.cloud.sleuth;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +27,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Class for gathering and reporting statistics about a block of execution.
@@ -160,6 +161,13 @@ public class Span implements SpanContext {
 	@JsonIgnore
 	private final Long startNanos;
 	private Long durationMicros; // serialized in json so micros precision isn't lost
+	/*
+	 Using B3 propagation, it is most typical to share the same span ID across client and
+	 the server. This has backend implications like who owns the timestamp (hint the
+	 client does). When a SpanReporter receives a completed span, it should know if it
+	 is shared or not.
+	  */
+	private final boolean shared;
 
 	@SuppressWarnings("unused")
 	private Span() {
@@ -191,17 +199,18 @@ public class Span implements SpanContext {
 		this.durationMicros = current.durationMicros;
 		this.baggage = current.baggage;
 		this.savedSpan = savedSpan;
+		this.shared = current.shared;
 	}
 
 	Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId) {
 		this(begin, end, name, traceId, parents, spanId, remote, exportable, processId,
-				null);
+				null, false);
 	}
 
 	Span(long begin, long end, String name, long traceId, List<Long> parents,
 			long spanId, boolean remote, boolean exportable, String processId,
-			Span savedSpan) {
+			Span savedSpan, boolean shared) {
 		this(new SpanBuilder()
 				.begin(begin)
 				.end(end)
@@ -212,7 +221,8 @@ public class Span implements SpanContext {
 				.remote(remote)
 				.exportable(exportable)
 				.processId(processId)
-				.savedSpan(savedSpan));
+				.savedSpan(savedSpan)
+				.shared(shared));
 	}
 
 	Span(SpanBuilder builder) {
@@ -242,6 +252,7 @@ public class Span implements SpanContext {
 		this.logs.addAll(builder.logs);
 		this.baggage = new ConcurrentHashMap<>();
 		this.baggage.putAll(builder.baggage);
+		this.shared = builder.shared;
 	}
 
 	public static SpanBuilder builder() {
@@ -500,6 +511,16 @@ public class Span implements SpanContext {
 	}
 
 	/**
+	 * Span and trace id got extracted from a carrier?
+	 * We are adding data to the same span created by a remote client
+	 *
+	 * @since 1.3.0
+	 */
+	public boolean isShared() {
+		return this.shared;
+	}
+
+	/**
 	 * Returns the 16 or 32 character hex representation of the span's trace ID
 	 *
 	 * @since 1.0.11
@@ -644,6 +665,7 @@ public class Span implements SpanContext {
 		private final List<Log> logs = new ArrayList<>();
 		private final Map<String, String> tags = new LinkedHashMap<>();
 		private final Map<String, String> baggage = new LinkedHashMap<>();
+		private boolean shared;
 
 		SpanBuilder() {
 		}
@@ -745,6 +767,11 @@ public class Span implements SpanContext {
 
 		public Span.SpanBuilder savedSpan(Span savedSpan) {
 			this.savedSpan = savedSpan;
+			return this;
+		}
+
+		public Span.SpanBuilder shared(boolean shared) {
+			this.shared = shared;
 			return this;
 		}
 

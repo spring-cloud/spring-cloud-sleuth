@@ -94,18 +94,60 @@ public class HttpServletRequestExtractorTests {
 
 	@Test
 	public void should_accept_128bit_trace_id() {
-		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
-		String lower64Bits = "48485a3953bb6124";
+		String hex128Bits = spanInHeaders();
 
-		BDDMockito.given(this.request.getHeaderNames())
-				.willReturn(new Vector<>(Arrays.asList(Span.TRACE_ID_NAME, Span.SPAN_ID_NAME)).elements());
-		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
-				.willReturn(hex128Bits);
-		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
-				.willReturn(lower64Bits);
 
 		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
 
 		then(span.traceIdString()).isEqualTo(hex128Bits);
+	}
+
+	@Test
+	public void should_set_shared_flag_for_sampled_span_in_headers() {
+		spanInHeaders();
+
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
+
+		then(span.isShared()).isTrue();
+	}
+
+	@Test
+	public void should_not_set_shared_flag_for_non_sampled_span_in_headers() {
+		spanInHeaders();
+		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
+				.willReturn(Span.SPAN_NOT_SAMPLED);
+
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
+
+		then(span.isShared()).isFalse();
+	}
+
+	@Test
+	public void should_not_set_shared_flag_for_sampled_span_in_headers_without_span_trace_id() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.SPAN_FLAGS, Span.SPAN_ID_NAME)).elements());
+		BDDMockito.given(this.request.getHeader(Span.SPAN_FLAGS))
+				.willReturn("1");
+		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn("48485a3953bb6124");
+
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
+
+		then(span.isShared()).isFalse();
+	}
+
+	private String spanInHeaders() {
+		String hex128Bits = "463ac35c9f6413ad48485a3953bb6124";
+		String lower64Bits = "48485a3953bb6124";
+
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.TRACE_ID_NAME, Span.SPAN_ID_NAME, Span.SAMPLED_NAME)).elements());
+		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(hex128Bits);
+		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(lower64Bits);
+		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
+				.willReturn(Span.SPAN_SAMPLED);
+		return hex128Bits;
 	}
 }

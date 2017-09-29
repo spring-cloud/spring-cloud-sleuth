@@ -171,7 +171,6 @@ public class TraceFilter extends GenericFilterBean {
 				// TODO: how to deal with response annotations and async?
 				return;
 			}
-			spanFromRequest = createSpanIfRequestNotHandled(request, spanFromRequest, name, skip);
 			detachOrCloseSpans(request, response, spanFromRequest, exception);
 		}
 	}
@@ -211,22 +210,6 @@ public class TraceFilter extends GenericFilterBean {
 		}
 	}
 
-	// This method is a fallback in case if handler interceptors didn't catch the request.
-	// In that case we are creating an artificial span so that it can be visible in Zipkin.
-	private Span createSpanIfRequestNotHandled(HttpServletRequest request,
-			Span spanFromRequest, String name, boolean skip) {
-		if (!requestHasAlreadyBeenHandled(request)) {
-			spanFromRequest = tracer().createSpan(name);
-			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
-			if (log.isDebugEnabled() && !skip) {
-				log.debug("The request with uri [" + request.getRequestURI() + "] hasn't been handled by any of Sleuth's components. "
-						+ "That means that most likely you're using custom HandlerMappings and didn't add Sleuth's TraceHandlerInterceptor. "
-						+ "Sleuth will create a span to ensure that the graph of calls remains valid in Zipkin");
-			}
-		}
-		return spanFromRequest;
-	}
-
 	private boolean requestHasAlreadyBeenHandled(HttpServletRequest request) {
 		return request.getAttribute(TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR) != null;
 	}
@@ -239,8 +222,6 @@ public class TraceFilter extends GenericFilterBean {
 			addResponseTagsForSpanWithoutParent(request, response);
 			if (span.hasSavedSpan() && requestHasAlreadyBeenHandled(request)) {
 				recordParentSpan(span.getSavedSpan());
-			} else if (!requestHasAlreadyBeenHandled(request)) {
-				span = tracer().close(span);
 			}
 			recordParentSpan(span);
 			// in case of a response with exception status will close the span when exception dispatch is handled
