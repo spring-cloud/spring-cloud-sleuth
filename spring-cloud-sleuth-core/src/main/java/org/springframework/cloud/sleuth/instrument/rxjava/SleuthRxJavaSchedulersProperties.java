@@ -15,7 +15,7 @@ public class SleuthRxJavaSchedulersProperties {
 	 * Thread names for which spans will not be sampled.
 	 */
 	private String[] ignoredthreads = { "HystrixMetricPoller", "^RxComputation.*$" };
-	private Hook hook;
+	private Hook hook = new Hook();
 
 	public String[] getIgnoredthreads() {
 		return this.ignoredthreads;
