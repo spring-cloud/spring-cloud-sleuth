@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -62,7 +63,7 @@ import org.springframework.scheduling.support.PeriodicTrigger;
  */
 @Configuration
 @EnableConfigurationProperties({ SleuthStreamProperties.class, SamplerProperties.class, ZipkinProperties.class })
-@AutoConfigureAfter(TraceMetricsAutoConfiguration.class)
+@AutoConfigureAfter({ TraceMetricsAutoConfiguration.class, IntegrationAutoConfiguration.class })
 @AutoConfigureBefore({ ChannelBindingAutoConfiguration.class, TraceAutoConfiguration.class, ChannelsEndpointAutoConfiguration.class })
 @EnableBinding(SleuthSource.class)
 @ConditionalOnProperty(value = "spring.sleuth.stream.enabled", matchIfMissing = true)
