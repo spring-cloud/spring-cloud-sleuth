@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.EnvironmentAware;
@@ -34,7 +35,8 @@ import zipkin2.Endpoint;
  * {@link EndpointLocator} implementation that:
  *
  * <ul>
- *     <li><b>address</b> - from {@link ServerProperties}</li>
+ *     <li><b>serviceName</b> - from {@link ServerProperties} or {@link Registration}</li>
+ *     <li><b>ip</b> - from {@link ServerProperties}</li>
  *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
@@ -43,12 +45,12 @@ import zipkin2.Endpoint;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class ServerPropertiesEndpointLocator implements EndpointLocator,
-		EnvironmentAware {
+public class DefaultEndpointLocator implements EndpointLocator, EnvironmentAware {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 
+	private final Registration registration;
 	private final ServerProperties serverProperties;
 	private final String appName;
 	private final InetUtils inetUtils;
@@ -56,8 +58,9 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 	private Integer port;
 	private Environment environment;
 
-	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
+	public DefaultEndpointLocator(Registration registration, ServerProperties serverProperties,
 			String appName, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
+		this.registration = registration;
 		this.serverProperties = serverProperties;
 		this.appName = appName;
 		this.zipkinProperties = zipkinProperties;
@@ -70,8 +73,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 
 	@Override
 	public Endpoint local() {
-		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
-				this.zipkinProperties.getService().getName() : this.appName;
+		String serviceName = getLocalServiceName();
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");
 		}
@@ -79,6 +81,19 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 				.serviceName(serviceName)
 				.port(getPort());
 		return addAddress(builder).build();
+	}
+
+	private String getLocalServiceName() {
+		if (StringUtils.hasText(this.zipkinProperties.getService().getName())) {
+			return this.zipkinProperties.getService().getName();
+		} else if (this.registration != null) {
+			try {
+				return this.registration.getServiceId();
+			} catch (RuntimeException e) {
+				log.warn("error getting service name from registration", e);
+			}
+		}
+		return this.appName;
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)

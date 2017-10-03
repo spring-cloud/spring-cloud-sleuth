@@ -35,6 +35,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanAdjuster;
@@ -185,17 +186,17 @@ public class ZipkinAutoConfiguration {
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
+			return new DefaultEndpointLocator(null, this.serverProperties, this.appName,
 					this.zipkinProperties, this.inetUtils);
 		}
 
 	}
 
 	@Configuration
-	@ConditionalOnClass(DiscoveryClient.class)
+	@ConditionalOnClass(Registration.class)
 	@ConditionalOnMissingBean(EndpointLocator.class)
 	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled", havingValue = "true")
-	protected static class DiscoveryClientEndpointLocatorConfiguration {
+	protected static class RegistrationEndpointLocatorConfiguration {
 
 		@Autowired(required=false)
 		private ServerProperties serverProperties;
@@ -210,24 +211,14 @@ public class ZipkinAutoConfiguration {
 		private String appName;
 
 		@Autowired(required=false)
-		private DiscoveryClient client;
+		private Registration registration;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
-							this.zipkinProperties, this.inetUtils));
+			return new DefaultEndpointLocator(this.registration, this.serverProperties, this.appName,
+							this.zipkinProperties, this.inetUtils);
 		}
-
-		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
-			if (this.client!=null) {
-				return new DiscoveryClientEndpointLocator(this.client, this.zipkinProperties);
-			}
-			return null;
-		}
-
 	}
-
 }
 
 /**
