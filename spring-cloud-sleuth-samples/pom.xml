@@ -23,7 +23,7 @@
 		<module>spring-cloud-sleuth-sample-websocket</module>
 		<module>spring-cloud-sleuth-sample-feign</module>
 		<module>spring-cloud-sleuth-sample-ribbon</module>
-		<module>spring-cloud-sleuth-sample-zipkin</module>
+		<module>spring-cloud-sleuth-sample-zipkin2</module>
 		<module>spring-cloud-sleuth-sample-stream</module>
 		<module>spring-cloud-sleuth-sample-zipkin-stream</module>
 	</modules>
@@ -59,12 +59,17 @@
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin</artifactId>
-				<version>1.28.0</version>
+				<version>2.1.0</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.zipkin2</groupId>
+				<artifactId>zipkin</artifactId>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin-server</artifactId>
-				<version>1.28.0</version>
+				<version>2.1.0</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
