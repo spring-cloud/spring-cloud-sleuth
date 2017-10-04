@@ -17,14 +17,15 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -46,17 +47,23 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	}
 
 	@Override
-	public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
-		Span currentSpan = getTracer().getCurrentSpan();
+	public void afterSendCompletion(Message<?> message, MessageChannel channel,
+			boolean sent, Exception ex) {
+		Message<?> retrievedMessage = getMessage(message);
+		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
+		Span currentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
+				: buildSpan(new MessagingTextMap(messageBuilder));
 		if (log.isDebugEnabled()) {
 			log.debug("Completed sending and current span is " + currentSpan);
 		}
+		getTracer().continueSpan(currentSpan);
 		if (containsServerReceived(currentSpan)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Marking span with server send");
 			}
 			currentSpan.logEvent(Span.SERVER_SEND);
-		} else if (currentSpan != null) {
+		}
+		else if (currentSpan != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Marking span with client received");
 			}
@@ -93,6 +100,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
 		Span parentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
 				: buildSpan(new MessagingTextMap(messageBuilder));
+		// Do not continue the parent (assume that this is handled by caller)
+		// getTracer().continueSpan(parentSpan);
 		if (log.isDebugEnabled()) {
 			log.debug("Parent span is " + parentSpan);
 		}
@@ -101,12 +110,14 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			log.debug("Name of the span will be [" + name + "]");
 		}
 		Span span = startSpan(parentSpan, name, message);
-		if (message.getHeaders().containsKey(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT)) {
+		if (message.getHeaders()
+				.containsKey(TraceMessageHeaders.MESSAGE_SENT_FROM_CLIENT)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Marking span with server received");
 			}
 			span.logEvent(Span.SERVER_RECV);
-		} else {
+		}
+		else {
 			if (log.isDebugEnabled()) {
 				log.debug("Marking span with client send");
 			}
@@ -119,7 +130,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
 	}
 
-	private Message getMessage(Message<?> message) {
+	private Message<?> getMessage(Message<?> message) {
 		Object payload = message.getPayload();
 		if (payload instanceof MessagingException) {
 			MessagingException e = (MessagingException) payload;
@@ -132,7 +143,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		if (span != null) {
 			return getTracer().createSpan(name, span);
 		}
-		if (Span.SPAN_NOT_SAMPLED.equals(message.getHeaders().get(TraceMessageHeaders.SAMPLED_NAME))) {
+		if (Span.SPAN_NOT_SAMPLED
+				.equals(message.getHeaders().get(TraceMessageHeaders.SAMPLED_NAME))) {
 			return getTracer().createSpan(name, NeverSampler.INSTANCE);
 		}
 		return getTracer().createSpan(name);
@@ -141,7 +153,10 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
 			MessageHandler handler) {
-		Span spanFromHeader = getTracer().getCurrentSpan();
+		Message<?> retrievedMessage = getMessage(message);
+		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
+		Span spanFromHeader = getTracer().isTracing() ? getTracer().getCurrentSpan()
+				: buildSpan(new MessagingTextMap(messageBuilder));
 		if (log.isDebugEnabled()) {
 			log.debug("Continuing span " + spanFromHeader + " before handling message");
 		}
