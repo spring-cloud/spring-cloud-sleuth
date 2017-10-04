@@ -21,12 +21,12 @@ import java.lang.invoke.MethodHandles;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.EnvironmentAware;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import zipkin2.Endpoint;
@@ -45,7 +45,8 @@ import zipkin2.Endpoint;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class DefaultEndpointLocator implements EndpointLocator, EnvironmentAware {
+public class DefaultEndpointLocator implements EndpointLocator, EnvironmentAware,
+		ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
@@ -96,9 +97,9 @@ public class DefaultEndpointLocator implements EndpointLocator, EnvironmentAware
 		return this.appName;
 	}
 
-	@EventListener(EmbeddedServletContainerInitializedEvent.class)
-	public void grabPort(EmbeddedServletContainerInitializedEvent event) {
-		this.port = event.getEmbeddedServletContainer().getPort();
+	@Override
+	public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+		this.port = event.getSource().getPort();
 	}
 
 	private Integer getPort() {

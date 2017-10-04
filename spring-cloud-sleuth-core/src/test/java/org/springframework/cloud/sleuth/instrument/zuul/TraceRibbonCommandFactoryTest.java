@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.util.ArrayList;
+
 import com.netflix.zuul.context.RequestContext;
 import org.junit.After;
 import org.junit.Before;
@@ -23,7 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
+import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -32,8 +34,6 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
-
-import java.util.ArrayList;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
