@@ -1,6 +1,5 @@
 package org.springframework.cloud.sleuth.zipkin;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.SpringApplication;
@@ -13,16 +12,15 @@ import org.springframework.context.annotation.Configuration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author Matcin Wielgus
+ * @author Marcin Wielgus
  */
-//TODO: Fix me
-@Ignore
 public class DiscoveryClientEndpointLocatorConfigurationTest {
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
-				EmptyConfiguration.class).run("--spring.jmx.enabled=false");
+				EmptyConfiguration.class).run("--spring.jmx.enabled=false",
+				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
 		assertThat(ctxt.getBean(EndpointLocator.class))
 				.isInstanceOf(ServerPropertiesEndpointLocator.class);
 		ctxt.close();
@@ -31,7 +29,8 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false");
+				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false",
+				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
 		assertThat(ctxt.getBean(EndpointLocator.class))
 				.isInstanceOf(ServerPropertiesEndpointLocator.class);
 		ctxt.close();
@@ -40,7 +39,8 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocator() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false");
+				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false",
+				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
 		assertThat(ctxt.getBean(EndpointLocator.class))
 				.isSameAs(ConfigurationWithCustomLocator.locator);
 		ctxt.close();
@@ -50,7 +50,8 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false",
-				"--spring.zipkin.locator.discovery.enabled=true");
+				"--spring.zipkin.locator.discovery.enabled=true",
+				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
 		assertThat(ctxt.getBean(EndpointLocator.class))
 				.isInstanceOf(FallbackHavingEndpointLocator.class);
 		ctxt.close();
@@ -61,7 +62,8 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithDiscoveryClient.class,
 				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false",
-				"--spring.zipkin.locator.discovery.enabled=true");
+				"--spring.zipkin.locator.discovery.enabled=true",
+				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
 		assertThat(ctxt.getBean(EndpointLocator.class))
 				.isSameAs(ConfigurationWithCustomLocator.locator);
 		ctxt.close();

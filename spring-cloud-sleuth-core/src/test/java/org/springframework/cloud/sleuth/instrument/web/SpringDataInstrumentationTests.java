@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Tracer;
@@ -57,12 +58,10 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-// TODO: Fix this
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ReservationServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 @ActiveProfiles("data")
-@Ignore("doesn't work with Boot 2.0")
 public class SpringDataInstrumentationTests {
 
 	@Autowired
@@ -108,7 +107,7 @@ public class SpringDataInstrumentationTests {
 }
 
 @Configuration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = SecurityAutoConfiguration.class)
 @EntityScan(basePackageClasses = Reservation.class)
 class ReservationServiceApplication {
 

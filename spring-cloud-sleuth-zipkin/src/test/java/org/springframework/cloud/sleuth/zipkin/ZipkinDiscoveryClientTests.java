@@ -31,11 +31,10 @@ import org.springframework.util.SocketUtils;
 
 import zipkin.junit.ZipkinRule;
 
-// TODO: Fix me
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class,
-		properties = "spring.zipkin.baseUrl=http://zipkin/")
-@Ignore
+@SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class, properties = {
+		"spring.zipkin.baseUrl=http://zipkin/",
+		"spring.cloud.discovery.client.composite-indicator.enabled=false" })
 public class ZipkinDiscoveryClientTests {
 
 	@ClassRule public static ZipkinRule ZIPKIN_RULE = new ZipkinRule();

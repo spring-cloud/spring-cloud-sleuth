@@ -16,20 +16,17 @@
 
 package org.springframework.cloud.sleuth.stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
-
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import javax.annotation.PostConstruct;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -59,14 +56,18 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+
 /**
  * @author Dave Syer
  *
  */
-// TODO: Fix me
 @SpringBootTest(classes = TestConfiguration.class, webEnvironment = WebEnvironment.NONE)
 @RunWith(SpringJUnit4ClassRunner.class)
-@Ignore
 public class StreamSpanListenerTests {
 
 	@Autowired
@@ -78,9 +79,9 @@ public class StreamSpanListenerTests {
 	@Autowired
 	StreamSpanReporter listener;
 	@Autowired
-	Counter counter;
-	@Autowired
 	SpanReporter spanReporter;
+	@Autowired
+	MeterRegistry meterRegistry;
 
 	@Before
 	public void init() {
@@ -139,7 +140,10 @@ public class StreamSpanListenerTests {
 		this.tracer.close(context);
 		this.listener.poll();
 
-		verify(this.counter, atLeastOnce()).increment();
+		Optional<Counter> counter = this.meterRegistry.find("counter.span.accepted")
+				.counter();
+		then(counter.isPresent()).isTrue();
+		then(counter.get().count()).isGreaterThan(0d);
 	}
 
 	@Test
@@ -208,8 +212,8 @@ public class StreamSpanListenerTests {
 		}
 
 		@Bean
-		Counter counter() {
-			return Mockito.mock(Counter.class);
+		public MeterRegistry testMeterRegistry() {
+			return new SimpleMeterRegistry();
 		}
 
 		@PostConstruct

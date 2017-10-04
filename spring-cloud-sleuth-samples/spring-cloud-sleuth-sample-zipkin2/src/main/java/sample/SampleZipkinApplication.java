@@ -32,7 +32,7 @@ import zipkin2.reporter.Reporter;
  * @author Spencer Gibb
  */
 @SpringBootApplication
-@EnableAspectJAutoProxy(proxyTargetClass = true)
+
 @EnableAsync
 public class SampleZipkinApplication {
 

@@ -31,7 +31,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @SpringBootApplication
-@EnableAspectJAutoProxy(proxyTargetClass = true)
+
 @EnableAsync
 @IntegrationComponentScan
 @RestController
