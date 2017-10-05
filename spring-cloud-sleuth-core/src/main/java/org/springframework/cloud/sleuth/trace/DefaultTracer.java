@@ -98,7 +98,7 @@ public class DefaultTracer implements Tracer {
 		else {
 			long id = createId();
 			span = Span.builder().name(shortenedName)
-					.traceIdHigh(this.traceId128 ? createId() : 0L)
+					.traceIdHigh(this.traceId128 ? createTraceIdHigh() : 0L)
 					.traceId(id)
 					.spanId(id).build();
 			if (sampler == null) {
@@ -171,7 +171,7 @@ public class DefaultTracer implements Tracer {
 		long id = createId();
 		if (parent == null) {
 			Span span = Span.builder().name(shortenedName)
-					.traceIdHigh(this.traceId128 ? createId() : 0L)
+					.traceIdHigh(this.traceId128 ? createTraceIdHigh() : 0L)
 					.traceId(id)
 					.spanId(id).build();
 			span = sampledSpan(span, this.defaultSampler);
@@ -206,6 +206,21 @@ public class DefaultTracer implements Tracer {
 					.exportable(false).build();
 		}
 		return span;
+	}
+
+	/**
+	 * Encodes a timestamp into the upper 32-bits, so that it can be converted to an Amazon trace ID.
+	 *
+	 * <p>For example, an Amazon trace ID is composed of the following: {@code |-- 32 bits for epoch
+	 * seconds -- | -- 96 bits for random data -- |}
+	 *
+	 * <p>To support this, {@link Span#getTraceIdHigh() traceIdHigh} holds the epoch seconds and first
+	 * 32 random bits: and {@link Span#getTraceId()} traceId} holds the remaining 64 random bits.
+	 */
+	private long createTraceIdHigh() {
+		long epochSeconds = System.currentTimeMillis() / 1000;
+		int random = this.random.nextInt();
+		return (epochSeconds & 0xffffffffL) << 32 | (random & 0xffffffffL);
 	}
 
 	private long createId() {
