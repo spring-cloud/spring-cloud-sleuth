@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.zipkin.stream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -24,13 +25,12 @@ import zipkin.collector.CollectorSampler;
 import zipkin.internal.V2StorageComponent;
 import zipkin.server.ZipkinHttpCollector;
 import zipkin.server.ZipkinQueryApiV1;
-import zipkin.server.ZipkinServerConfiguration;
-import zipkin.server.brave.BraveConfiguration;
 import zipkin.storage.StorageComponent;
 import zipkin2.storage.InMemoryStorage;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = ZipkinStreamServerApplication.class, properties = {
 		"spring.datasource.initialize=true" }, webEnvironment = WebEnvironment.RANDOM_PORT)
