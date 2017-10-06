@@ -30,6 +30,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
@@ -54,6 +55,7 @@ public class TraceFilterMockChainIntegrationTests {
 			new Random(), new DefaultSpanNamer(),
 			new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
 	private TraceKeys traceKeys = new TraceKeys();
+	private SleuthProperties properties = new SleuthProperties();
 	private HttpTraceKeysInjector keysInjector = new HttpTraceKeysInjector(this.tracer, this.traceKeys);
 
 	private MockHttpServletRequest request;
@@ -94,6 +96,7 @@ public class TraceFilterMockChainIntegrationTests {
 
 	private BeanFactory beanFactory() {
 		BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
+		BDDMockito.given(beanFactory.getBean(SleuthProperties.class)).willReturn(this.properties);
 		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
 		BDDMockito.given(beanFactory.getBean(TraceKeys.class)).willReturn(this.traceKeys);
 		BDDMockito.given(beanFactory.getBean(HttpSpanExtractor.class))

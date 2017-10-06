@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.trace;
 
+import java.util.Date;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -220,6 +221,20 @@ public class DefaultTracerTests {
 		Span span = tracer.createSpan(bigName());
 
 		then(span.getName().length()).isEqualTo(50);
+		tracer.close(span);
+	}
+
+  /**
+   * To support conversion to Amazon trace IDs, the first 32 bits of the trace ID are epoch seconds.
+   */
+  @Test
+  public void creates128bitTraceIdWithEncodedTimestamp() {
+		DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
+				this.spanNamer, this.spanLogger, this.spanReporter, true, new TraceKeys());
+		Span span = tracer.createSpan(bigName());
+		String traceId = span.traceIdString();
+		long epochSeconds = Long.parseLong(traceId.substring(0, 8), 16);
+		then(new Date(epochSeconds * 1000)).isToday();
 		tracer.close(span);
 	}
 
