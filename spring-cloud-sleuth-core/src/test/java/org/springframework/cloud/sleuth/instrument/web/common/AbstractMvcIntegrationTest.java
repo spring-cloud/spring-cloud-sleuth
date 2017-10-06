@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.instrument.web.common;
 
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanExtractor;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
@@ -30,6 +31,7 @@ public abstract class AbstractMvcIntegrationTest {
 
 	@Autowired protected WebApplicationContext webApplicationContext;
 	protected MockMvc mockMvc;
+	@Autowired protected SleuthProperties properties;
 	@Autowired protected Tracer tracer;
 	@Autowired protected TraceKeys traceKeys;
 	@Autowired protected HttpSpanExtractor spanExtractor;
