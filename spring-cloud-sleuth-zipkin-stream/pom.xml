@@ -60,10 +60,22 @@
 		<dependency>
 			<groupId>io.zipkin.java</groupId>
 			<artifactId>zipkin-server</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.java</groupId>
 			<artifactId>zipkin-autoconfigure-storage-mysql</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
