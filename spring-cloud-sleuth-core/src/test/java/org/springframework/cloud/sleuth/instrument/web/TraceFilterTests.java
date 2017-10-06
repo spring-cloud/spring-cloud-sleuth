@@ -38,6 +38,7 @@ import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
+import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 import org.springframework.cloud.sleuth.log.SpanLogger;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
@@ -67,7 +68,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public class TraceFilterTests {
 
 	public static final long PARENT_ID = 10L;
-	public static final String PARENT_ID_AS_STRING = String.valueOf(PARENT_ID);
 
 	@Mock SpanLogger spanLogger;
 	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
@@ -76,6 +76,7 @@ public class TraceFilterTests {
 
 	private Tracer tracer;
 	private TraceKeys traceKeys = new TraceKeys();
+	private SleuthProperties properties = new SleuthProperties();
 	private HttpTraceKeysInjector httpTraceKeysInjector;
 
 	private Span span;
@@ -200,15 +201,6 @@ public class TraceFilterTests {
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
-	private Span parentSpan() {
-		Optional<Span> parent = this.spanReporter.getSpans().stream()
-				.filter(span -> Span.idToHex(span.getSpanId()).equals(PARENT_ID_AS_STRING)
-				|| span.getName().equals("http:/parent/"))
-				.findFirst();
-		assertThat(parent.isPresent()).isTrue();
-		return parent.get();
-	}
-
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
 		Span span = this.tracer.createSpan("http:foo");
@@ -266,6 +258,21 @@ public class TraceFilterTests {
 		verifyParentSpanHttpTags();
 
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
+	public void createsChildFromHeadersWhenJoinUnsupported() throws Exception {
+		this.properties.setSupportsJoin(false);
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(this.spanReporter);
+
+		TraceFilter filter = new TraceFilter(beanFactory);
+		filter.doFilter(this.request, this.response, this.filterChain);
+
+		assertThat(this.spanReporter.getSpans().get(0).getParents().get(0))
+				.isEqualTo(16); // test data is in hex!
 	}
 
 	@Test
@@ -556,6 +563,7 @@ public class TraceFilterTests {
 	private BeanFactory beanFactory() {
 		BDDMockito.given(beanFactory.getBean(TraceWebAutoConfiguration.SkipPatternProvider.class))
 				.willThrow(new NoSuchBeanDefinitionException("foo"));
+		BDDMockito.given(beanFactory.getBean(SleuthProperties.class)).willReturn(this.properties);
 		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
 		BDDMockito.given(beanFactory.getBean(TraceKeys.class)).willReturn(this.traceKeys);
 		BDDMockito.given(beanFactory.getBean(HttpSpanExtractor.class)).willReturn(this.spanExtractor);

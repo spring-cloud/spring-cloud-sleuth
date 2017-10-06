@@ -37,6 +37,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.core.Ordered;
@@ -97,6 +98,7 @@ public class TraceFilter extends GenericFilterBean {
 	private Tracer tracer;
 	private TraceKeys traceKeys;
 	private final Pattern skipPattern;
+	private final boolean supportsJoin;
 	private SpanReporter spanReporter;
 	private HttpSpanExtractor spanExtractor;
 	private HttpTraceKeysInjector httpTraceKeysInjector;
@@ -111,6 +113,7 @@ public class TraceFilter extends GenericFilterBean {
 
 	public TraceFilter(BeanFactory beanFactory, Pattern skipPattern) {
 		this.beanFactory = beanFactory;
+		this.supportsJoin = beanFactory.getBean(SleuthProperties.class).isSupportsJoin();
 		this.skipPattern = skipPattern;
 	}
 
@@ -344,10 +347,14 @@ public class TraceFilter extends GenericFilterBean {
 			if (log.isDebugEnabled()) {
 				log.debug("Found a parent span " + parent + " in the request");
 			}
-			addRequestTagsForParentSpan(request, parent);
-			spanFromRequest = parent;
+			if (!this.supportsJoin) { // create a child span for this side of the RPC
+				spanFromRequest = tracer().createSpan(parent.getName(), parent);
+			} else {
+				spanFromRequest = parent;
+			}
+			addRequestTagsForParentSpan(request, spanFromRequest);
 			tracer().continueSpan(spanFromRequest);
-			if (parent.isRemote()) {
+			if (parent.isRemote()) { // then we are in a server span
 				parent.logEvent(Span.SERVER_RECV);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);

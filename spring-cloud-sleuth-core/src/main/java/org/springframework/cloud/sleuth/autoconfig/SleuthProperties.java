@@ -29,6 +29,8 @@ public class SleuthProperties {
 	private boolean enabled = true;
 	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
 	private boolean traceId128 = false;
+	/** When true, your tracing system allows sharing a span ID between a client and server span */
+	private boolean supportsJoin = true;
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -44,5 +46,13 @@ public class SleuthProperties {
 
 	public void setTraceId128(boolean traceId128) {
 		this.traceId128 = traceId128;
+	}
+
+	public boolean isSupportsJoin() {
+		return this.supportsJoin;
+	}
+
+	public void setSupportsJoin(boolean supportsJoin) {
+		this.supportsJoin = supportsJoin;
 	}
 }
