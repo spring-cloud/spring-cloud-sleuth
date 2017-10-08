@@ -15,9 +15,6 @@
  */
 package tools;
 
-import zipkin.Codec;
-import zipkin.Span;
-
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.ArrayList;
@@ -40,6 +37,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import zipkin.Codec;
+import zipkin.Span;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -87,7 +86,7 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected ResponseEntity<String> endpointToCheckZipkinServerHealth() {
-		URI uri = URI.create("http://localhost:" +getZipkinServerPort()+"/application/health");
+		URI uri = URI.create("http://localhost:" + getZipkinServerPort() + "/zipkin/");
 		log.info(String.format("Sending request to the Zipkin Server [%s]", uri));
 		return exchangeRequest(uri);
 	}

@@ -26,11 +26,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import zipkin.junit.ZipkinRule;
 
-// TODO: Fix me
-@Ignore
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class,
-		properties = "spring.zipkin.baseUrl=http://zipkin/")
+		properties = {"spring.zipkin.baseUrl=http://zipkin/",
+		"spring.cloud.discovery.client.composite-indicator.enabled=false"})
 public class ZipkinDiscoveryClientTests {
 
 	@ClassRule public static ZipkinRule ZIPKIN_RULE = new ZipkinRule();

@@ -30,7 +30,6 @@ import zipkin2.storage.InMemoryStorage;
 
 import static org.junit.Assert.assertEquals;
 
-@Ignore
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = ZipkinStreamServerApplication.class, properties = {
 		"spring.datasource.initialize=true" }, webEnvironment = WebEnvironment.RANDOM_PORT)
