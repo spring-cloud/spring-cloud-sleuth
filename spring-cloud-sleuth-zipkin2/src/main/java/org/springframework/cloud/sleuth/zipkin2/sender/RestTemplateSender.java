@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.zipkin2;
+package org.springframework.cloud.sleuth.zipkin2.sender;
 
 import java.io.IOException;
 import java.net.URI;

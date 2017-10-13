@@ -32,9 +32,9 @@ import zipkin2.reporter.Reporter;
 /**
  * Listener of Sleuth events. Reports to Zipkin via {@link Reporter}.
  */
-public class ZipkinSpanListener implements SpanReporter {
+public class ZipkinSpanReporter implements SpanReporter {
 	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-			.getLog(ZipkinSpanListener.class);
+			.getLog(ZipkinSpanReporter.class);
 
 	private final Reporter<zipkin2.Span> reporter;
 	private final Environment environment;
@@ -46,7 +46,7 @@ public class ZipkinSpanListener implements SpanReporter {
 	// Visible for testing
 	final EndpointLocator endpointLocator;
 
-	public ZipkinSpanListener(Reporter<zipkin2.Span> reporter, EndpointLocator endpointLocator,
+	public ZipkinSpanReporter(Reporter<zipkin2.Span> reporter, EndpointLocator endpointLocator,
 			Environment environment, List<SpanAdjuster> spanAdjusters) {
 		this.reporter = reporter;
 		this.endpointLocator = endpointLocator;
@@ -201,5 +201,10 @@ public class ZipkinSpanListener implements SpanReporter {
 				log.debug("The span " + span + " will not be sent to Zipkin due to sampling");
 			}
 		}
+	}
+
+	@Override
+	public String toString(){
+		return "ZipkinSpanReporter(" + this.reporter + ")";
 	}
 }
