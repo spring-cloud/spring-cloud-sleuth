@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
-import org.springframework.cloud.sleuth.util.TextMapUtil;
 import org.springframework.util.StringUtils;
 
 /**
@@ -15,11 +14,11 @@ import org.springframework.util.StringUtils;
  */
 public class ZipkinHttpSpanInjector implements HttpSpanInjector {
 
-	private static final String HEADER_DELIMITER = "-";
+	private static final ZipkinHttpSpanMapper SPAN_CARRIER_MAPPER = new ZipkinHttpSpanMapper();
 
 	@Override
 	public void inject(Span span, SpanTextMap map) {
-		Map<String, String> carrier = TextMapUtil.asMap(map);
+		Map<String, String> carrier = SPAN_CARRIER_MAPPER.convert(map);
 		setHeader(map, carrier, Span.TRACE_ID_NAME, span.traceIdString());
 		setIdHeader(map, carrier, Span.SPAN_ID_NAME, span.getSpanId());
 		setHeader(map, carrier, Span.SAMPLED_NAME, span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
@@ -32,10 +31,12 @@ public class ZipkinHttpSpanInjector implements HttpSpanInjector {
 	}
 
 	private String prefixedKey(String key) {
-		if (key.startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX + HEADER_DELIMITER)) {
+		if (key.startsWith(Span.SPAN_BAGGAGE_HEADER_PREFIX
+				+ ZipkinHttpSpanMapper.HEADER_DELIMITER)) {
 			return key;
 		}
-		return Span.SPAN_BAGGAGE_HEADER_PREFIX + HEADER_DELIMITER + key;
+		return Span.SPAN_BAGGAGE_HEADER_PREFIX + ZipkinHttpSpanMapper.HEADER_DELIMITER
+				+ key;
 	}
 
 	private Long getParentId(Span span) {
