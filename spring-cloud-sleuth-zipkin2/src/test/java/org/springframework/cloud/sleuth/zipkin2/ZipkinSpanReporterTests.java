@@ -32,7 +32,7 @@ import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.zipkin2.ZipkinSpanListenerTests.TestConfiguration;
+import org.springframework.cloud.sleuth.zipkin2.ZipkinSpanReporterTests.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -52,12 +52,12 @@ import static org.junit.Assert.assertEquals;
  */
 @SpringBootTest(classes = TestConfiguration.class)
 @RunWith(SpringRunner.class)
-public class ZipkinSpanListenerTests {
+public class ZipkinSpanReporterTests {
 
 	@Autowired Tracer tracer;
 	@Autowired TestConfiguration test;
-	@Autowired ZipkinSpanListener spanListener;
-	@Autowired Reporter<zipkin2.Span> spanReporter;
+	@Autowired ZipkinSpanReporter spanReporter;
+	@Autowired Reporter<zipkin2.Span> zipkinReporter;
 	@Autowired MockEnvironment mockEnvironment;
 	@Autowired EndpointLocator endpointLocator;
 
@@ -76,7 +76,7 @@ public class ZipkinSpanListenerTests {
 		span.logEvent("hystrix/retry"); // System.currentTimeMillis
 		span.stop();
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		assertThat(result.timestamp())
 				.isEqualTo(span.getBegin() * 1000);
@@ -97,7 +97,7 @@ public class ZipkinSpanListenerTests {
 		Thread.sleep(20);
 		span.stop();
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		assertThat(result.timestamp()).isEqualTo(span.getBegin() * 1000);
 		long clientSendTimestamp = span.logs().stream()
@@ -114,7 +114,7 @@ public class ZipkinSpanListenerTests {
 	@Test
 	public void doesntSetDurationWhenStillRunning() {
 		Span span = Span.builder().traceId(1L).name("http:api").build();
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		assertThat(result.timestamp())
 				.isGreaterThan(0); // sanity check it did start
@@ -128,16 +128,16 @@ public class ZipkinSpanListenerTests {
 		this.parent.logEvent("hystrix/retry");
 		this.parent.tag("spring-boot/version", "1.3.1.RELEASE");
 
-		zipkin2.Span result = this.spanListener.convert(this.parent);
+		zipkin2.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.localEndpoint())
-				.isEqualTo(this.spanListener.endpointLocator.local());
+				.isEqualTo(this.spanReporter.endpointLocator.local());
 	}
 
 	/** zipkin's Endpoint.serviceName should never be null. */
 	@Test
 	public void localEndpointIncludesServiceName() {
-		assertThat(this.spanListener.endpointLocator.local().serviceName())
+		assertThat(this.spanReporter.endpointLocator.local().serviceName())
 				.isNotEmpty();
 	}
 
@@ -155,7 +155,7 @@ public class ZipkinSpanListenerTests {
 		Span context = this.tracer.createSpan("http:child", this.parent);
 		context.logEvent(Span.CLIENT_SEND);
 		logServerReceived(this.parent);
-		logServerSent(this.spanListener, this.parent);
+		logServerSent(this.spanReporter, this.parent);
 		this.tracer.close(context);
 		assertEquals(2, this.test.zipkinSpans.size());
 	}
@@ -178,7 +178,7 @@ public class ZipkinSpanListenerTests {
 		this.parent.logEvent("hystrix/retry");
 		this.parent.stop();
 
-		zipkin2.Span result = this.spanListener.convert(this.parent);
+		zipkin2.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.tags())
 				.isEmpty();
@@ -190,7 +190,7 @@ public class ZipkinSpanListenerTests {
 		this.parent.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "fooservice");
 		this.parent.stop();
 
-		zipkin2.Span result = this.spanListener.convert(this.parent);
+		zipkin2.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.remoteEndpoint())
 				.isEqualTo(Endpoint.newBuilder().serviceName("fooservice").build());
@@ -201,7 +201,7 @@ public class ZipkinSpanListenerTests {
 		this.parent.logEvent("cs");
 		this.parent.stop();
 
-		zipkin2.Span result = this.spanListener.convert(this.parent);
+		zipkin2.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.remoteEndpoint())
 				.isNull();
@@ -211,7 +211,7 @@ public class ZipkinSpanListenerTests {
 	public void converts128BitTraceId() {
 		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).name("foo").build();
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		assertThat(result.traceId())
 				.isEqualTo("00000000000000010000000000000002");
@@ -223,7 +223,7 @@ public class ZipkinSpanListenerTests {
 		this.parent.tag(Span.SPAN_PEER_SERVICE_TAG_NAME, "fooservice");
 		this.parent.stop();
 
-		zipkin2.Span result = this.spanListener.convert(this.parent);
+		zipkin2.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.remoteEndpoint())
 				.isEqualTo(Endpoint.newBuilder().serviceName("fooservice").build());
@@ -233,7 +233,7 @@ public class ZipkinSpanListenerTests {
 	public void shouldNotReportToZipkinWhenSpanIsNotExportable() {
 		Span span = Span.builder().exportable(false).build();
 
-		this.spanListener.report(span);
+		this.spanReporter.report(span);
 
 		assertThat(this.test.zipkinSpans).isEmpty();
 	}
@@ -243,7 +243,7 @@ public class ZipkinSpanListenerTests {
 		this.parent.logEvent(Span.CLIENT_SEND);
 		this.mockEnvironment.setProperty("vcap.application.instance_id", "foo");
 
-		zipkin2.Span result = this.spanListener.convert(this.parent);
+		zipkin2.Span result = this.spanReporter.convert(this.parent);
 
 		assertThat(result.tags())
 				.containsExactly(entry(Span.INSTANCEID, "foo"));
@@ -252,7 +252,7 @@ public class ZipkinSpanListenerTests {
 	@Test
 	public void shouldNotAddAnyServiceIdTagWhenSpanContainsRpcEventAndThereIsNoEnvironment() {
 		this.parent.logEvent(Span.CLIENT_RECV);
-		ZipkinSpanListener spanListener = new ZipkinSpanListener(this.spanReporter,
+		ZipkinSpanReporter spanListener = new ZipkinSpanReporter(this.zipkinReporter,
 				this.endpointLocator, null, new ArrayList<>());
 
 		zipkin2.Span result = spanListener.convert(this.parent);
@@ -264,7 +264,7 @@ public class ZipkinSpanListenerTests {
 	@Test
 	public void should_adjust_span_before_reporting_it() {
 		this.parent.logEvent(Span.CLIENT_RECV);
-		ZipkinSpanListener spanListener = new ZipkinSpanListener(this.spanReporter,
+		ZipkinSpanReporter spanListener = new ZipkinSpanReporter(this.zipkinReporter,
 				this.endpointLocator, null, Collections.<SpanAdjuster>singletonList(
 						span -> Span.builder().from(span).name("foo").build())) {
 			@Override String defaultInstanceId() {
@@ -288,7 +288,7 @@ public class ZipkinSpanListenerTests {
 				.build();
 		span.stop();
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		assertThat(result.duration()).isNotNull();
 		assertThat(result.timestamp()).isNotNull();
@@ -302,7 +302,7 @@ public class ZipkinSpanListenerTests {
 		span.logEvent("ss");
 		span.stop();
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		then(result.kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
 		then(result.annotations()).isEmpty();
@@ -315,7 +315,7 @@ public class ZipkinSpanListenerTests {
 		span.logEvent("cr");
 		span.stop();
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		then(result.kind()).isEqualTo(zipkin2.Span.Kind.CLIENT);
 		then(result.annotations()).isEmpty();
@@ -327,7 +327,7 @@ public class ZipkinSpanListenerTests {
 		span.logEvent("ms");
 		span.stop();
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		then(result.kind()).isEqualTo(zipkin2.Span.Kind.PRODUCER);
 		then(result.annotations()).isEmpty();
@@ -339,7 +339,7 @@ public class ZipkinSpanListenerTests {
 		span.logEvent("mr");
 		span.stop();
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		then(result.kind()).isEqualTo(zipkin2.Span.Kind.CONSUMER);
 		then(result.annotations()).isEmpty();
@@ -364,7 +364,7 @@ public class ZipkinSpanListenerTests {
 		}
 		// end::service_name[]
 
-		zipkin2.Span result = this.spanListener.convert(span);
+		zipkin2.Span result = this.spanReporter.convert(span);
 
 		then(result.remoteEndpoint())
 				.isEqualTo(Endpoint.newBuilder().serviceName("redis").ip("1.2.3.4").port(1234).build());
