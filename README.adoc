@@ -350,6 +350,9 @@ tracer.addTag(baggageKey, baggageValue);
 
 === Adding to the project
 
+IMPORTANT: To ensure that your application name is properly displayed in Zipkin
+ set the `spring.application.name` property in `bootstrap.yml`.
+
 ==== Only Sleuth (log correlation)
 
 If you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add

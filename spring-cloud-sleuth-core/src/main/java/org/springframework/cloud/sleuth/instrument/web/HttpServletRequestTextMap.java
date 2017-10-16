@@ -16,11 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.AbstractMap;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.web.util.UrlPathHelper;
@@ -34,29 +35,47 @@ import org.springframework.web.util.UrlPathHelper;
 class HttpServletRequestTextMap implements SpanTextMap {
 
 	private final HttpServletRequest delegate;
-	private final Map<String, String> additionalHeaders = new HashMap<>();
+	private final UrlPathHelper urlPathHelper;
 
 	HttpServletRequestTextMap(HttpServletRequest delegate) {
 		this.delegate = delegate;
-		UrlPathHelper urlPathHelper = new UrlPathHelper();
-		this.additionalHeaders.put(ZipkinHttpSpanExtractor.URI_HEADER,
-				urlPathHelper.getPathWithinApplication(delegate));
+		this.urlPathHelper = new UrlPathHelper();
 	}
 
 	@Override
 	public Iterator<Map.Entry<String, String>> iterator() {
-		Map<String, String> map = new HashMap<>();
-		Enumeration<String> headerNames = this.delegate.getHeaderNames();
-		while (headerNames != null && headerNames.hasMoreElements()) {
-			String name = headerNames.nextElement();
-			map.put(name, this.delegate.getHeader(name));
-		}
-		map.putAll(this.additionalHeaders);
-		return map.entrySet().iterator();
+		final Enumeration<String> headerNames = this.delegate.getHeaderNames();
+
+		return new Iterator<Map.Entry<String, String>>() {
+
+			private boolean useAdditionalHeader = true;
+
+			@Override
+			public boolean hasNext() {
+				return useAdditionalHeader
+						|| (headerNames != null && headerNames.hasMoreElements());
+			}
+
+			@Override
+			public Map.Entry<String, String> next() {
+				if (useAdditionalHeader) {
+					useAdditionalHeader = false;
+					return new AbstractMap.SimpleImmutableEntry<>(
+							ZipkinHttpSpanMapper.URI_HEADER,
+							HttpServletRequestTextMap.this.urlPathHelper
+									.getPathWithinApplication(
+											HttpServletRequestTextMap.this.delegate));
+				}
+
+				String name = headerNames.nextElement();
+				String value = HttpServletRequestTextMap.this.delegate.getHeader(name);
+				return new AbstractMap.SimpleEntry<>(name, value);
+			}
+		};
 	}
 
 	@Override
 	public void put(String key, String value) {
-		this.additionalHeaders.put(key, value);
+		throw new UnsupportedOperationException("change servlet request isn't supported");
 	}
 }
