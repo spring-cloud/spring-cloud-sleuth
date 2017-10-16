@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,8 +28,6 @@ import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -51,6 +51,16 @@ public class StreamEnvironmentPostProcessorTests {
 		EnvironmentTestUtils.addEnvironment(this.environment,
 				"spring.cloud.stream.test.binder.headers[0]=X-Custom",
 				"spring.cloud.stream.test.binder.headers[1]=X-Mine");
+		postProcess();
+		assertThat(this.environment
+				.getProperty("spring.cloud.stream.test.binder.headers[2]"))
+						.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
+	}
+
+	@Test
+	public void should_append_tracing_headers_to_existing_ones_in_single_line() {
+		EnvironmentTestUtils.addEnvironment(this.environment,
+				"spring.cloud.stream.test.binder.headers=foo,bar");
 		postProcess();
 		assertThat(this.environment
 				.getProperty("spring.cloud.stream.test.binder.headers[2]"))
