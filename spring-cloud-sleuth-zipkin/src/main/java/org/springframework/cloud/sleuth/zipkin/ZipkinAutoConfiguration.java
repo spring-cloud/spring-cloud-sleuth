@@ -98,7 +98,17 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required = false) DiscoveryClient discoveryClient;
 
 		@Bean
-		ZipkinUrlExtractor zipkinUrlExtractor() {
+		@ConditionalOnMissingBean
+		ZipkinLoadBalancer returnFirstInstanceZipkinLoadBalancer() {
+			return new ZipkinLoadBalancer() {
+				@Override public URI instance(List<ServiceInstance> instances) {
+					return instances.get(0).getUri();
+				}
+			};
+		}
+
+		@Bean
+		ZipkinUrlExtractor zipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
 			final DiscoveryClient discoveryClient = this.discoveryClient;
 			return new ZipkinUrlExtractor() {
 				@Override
@@ -108,7 +118,7 @@ public class ZipkinAutoConfiguration {
 						String host = uri.getHost();
 						List<ServiceInstance> instances = discoveryClient.getInstances(host);
 						if (!instances.isEmpty()) {
-							return instances.get(0).getUri();
+							return zipkinLoadBalancer.instance(instances);
 						}
 					}
 					return URI.create(zipkinProperties.getBaseUrl());
