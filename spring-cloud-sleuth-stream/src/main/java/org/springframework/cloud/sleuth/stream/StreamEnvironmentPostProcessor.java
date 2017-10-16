@@ -84,7 +84,11 @@ public class StreamEnvironmentPostProcessor implements EnvironmentPostProcessor 
 	private int findStartIndex(ConfigurableEnvironment environment, String binder) {
 		String prefix = "spring.cloud.stream." + binder + ".binder.HEADERS";
 		int i = 0;
-		while (environment.getProperty(prefix + "[" + i + "]")!=null) {
+		String oldHeaders = environment.getProperty(prefix);
+		if (oldHeaders != null) {
+			i = oldHeaders.split(",").length;
+		}
+		while (environment.getProperty(prefix + "[" + i + "]") != null) {
 			i++;
 		}
 		return i;
