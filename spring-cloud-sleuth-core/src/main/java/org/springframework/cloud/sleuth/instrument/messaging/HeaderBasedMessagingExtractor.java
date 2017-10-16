@@ -15,6 +15,8 @@ import org.springframework.cloud.sleuth.util.TextMapUtil;
  */
 public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtractor {
 
+	private final Random random = new Random();
+
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
 		Map<String, String> carrier = TextMapUtil.asMap(textMap);
@@ -37,7 +39,7 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 	private String generateTraceIdIfMissing(Map<String, String> carrier,
 			boolean traceIdMissing) {
 		if (traceIdMissing) {
-			carrier.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(new Random().nextLong()));
+			carrier.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(this.random.nextLong()));
 		}
 		return carrier.get(TraceMessageHeaders.TRACE_ID_NAME);
 	}
