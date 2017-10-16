@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -154,6 +155,23 @@ public class TraceRestTemplateInterceptorTests {
 		this.template.getForEntity("/", Map.class).getBody();
 
 		then(this.testController.span).hasNameEqualTo("http:/");
+	}
+
+	@Test
+	public void createdSpanNameHasOnlyPrintableAsciiCharactersForNonEncodedURIWithNonAsciiChars() {
+		this.tracer.continueSpan(Span.builder().traceId(1L).spanId(2L).exportable(false).build());
+
+		try {
+			this.template.getForEntity("/cas~fs~åˆ’", Map.class).getBody();
+		}
+		catch (Exception e) {
+
+		}
+
+		String spanName = this.spanAccumulator.getSpans().get(0).getName();
+		then(this.spanAccumulator.getSpans().get(0).getName()).isEqualTo("http:/cas~fs~%C3%A5%CB%86%E2%80%99");
+		then(StringUtils.isAsciiPrintable(spanName));
+		then(ExceptionUtils.getLastException()).isNull();
 	}
 
 	@Test

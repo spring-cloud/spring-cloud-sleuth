@@ -66,7 +66,9 @@ abstract class AbstractTraceHttpRequestInterceptor {
 	}
 
 	private String getName(URI uri) {
-		return SpanNameUtil.shorten(uriScheme(uri) + ":" + uri.getPath());
+		// The returned name should comply with RFC 882 - Section 3.1.2.
+		// i.e Header values must composed of printable ASCII values.
+		return SpanNameUtil.shorten(uriScheme(uri) + ":" + uri.getRawPath());
 	}
 
 	private String uriScheme(URI uri) {
