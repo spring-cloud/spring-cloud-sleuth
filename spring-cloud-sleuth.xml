@@ -4,7 +4,7 @@
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
-<date>2017-10-12</date>
+<date>2017-10-16</date>
 <author>
 <personname>
 <firstname>Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer</firstname>
@@ -370,6 +370,10 @@ tracer.addTag(baggageKey, baggageValue);</programlisting>
 </section>
 <section xml:id="_adding_to_the_project">
 <title>Adding to the project</title>
+<important>
+<simpara>To ensure that your application name is properly displayed in Zipkin
+ set the <literal>spring.application.name</literal> property in <literal>bootstrap.yml</literal>.</simpara>
+</important>
 <section xml:id="_only_sleuth_log_correlation">
 <title>Only Sleuth (log correlation)</title>
 <simpara>If you want to profit only from Spring Cloud Sleuth without the Zipkin integration just add
