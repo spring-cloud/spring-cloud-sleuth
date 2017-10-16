@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 public class SleuthWebProperties {
 
 	public static final String DEFAULT_SKIP_PATTERN =
-			"/api-docs.*|/autoconfig|/configprops|/dump|/health|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream";
+			"/api-docs.*|/autoconfig|/configprops|/dump|/health|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream|/application/.*";
 
 	/**
 	 * When true enables instrumentation for web applications
