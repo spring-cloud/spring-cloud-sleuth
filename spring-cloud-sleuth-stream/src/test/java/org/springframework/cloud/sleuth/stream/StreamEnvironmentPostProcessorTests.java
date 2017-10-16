@@ -60,10 +60,10 @@ public class StreamEnvironmentPostProcessorTests {
 	@Test
 	public void should_append_tracing_headers_to_existing_ones_in_single_line() {
 		EnvironmentTestUtils.addEnvironment(this.environment,
-				"spring.cloud.stream.test.binder.headers=foo,bar");
+				"spring.cloud.stream.test.binder.HEADERS=foo,bar");
 		postProcess();
 		assertThat(this.environment
-				.getProperty("spring.cloud.stream.test.binder.headers[2]"))
+				.getProperty("spring.cloud.stream.test.binder.HEADERS[2]"))
 						.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
