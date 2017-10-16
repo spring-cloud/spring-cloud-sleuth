@@ -26,6 +26,7 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 	private static final String HTTP_COMPONENT = "http";
 
 	private final Pattern skipPattern;
+	private final Random random = new Random();
 
 	public ZipkinHttpSpanExtractor(Pattern skipPattern) {
 		this.skipPattern = skipPattern;
@@ -70,7 +71,7 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 
 	private void generateIdIfMissing(Map<String, String> carrier, String key) {
 		if (!carrier.containsKey(key)) {
-			carrier.put(key, Span.idToHex(new Random().nextLong()));
+			carrier.put(key, Span.idToHex(this.random.nextLong()));
 		}
 	}
 
