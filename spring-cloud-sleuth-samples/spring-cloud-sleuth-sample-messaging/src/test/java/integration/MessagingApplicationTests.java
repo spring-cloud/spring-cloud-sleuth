@@ -15,6 +15,10 @@
  */
 package integration;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -39,9 +43,6 @@ import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
 import zipkin.Constants;
 import zipkin.Span;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class },
@@ -102,14 +103,14 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenThereIsAtLeastOneBinaryAnnotationWithKey(String binaryAnnotationKey) {
-		then(this.integrationTestSpanCollector.hashedSpans.stream()
+		then(new ArrayList<>(this.integrationTestSpanCollector.hashedSpans).stream()
 				.map(s -> s.binaryAnnotations)
 				.flatMap(Collection::stream)
 				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
-		then(this.integrationTestSpanCollector.hashedSpans.stream()
+		then(new ArrayList<>(this.integrationTestSpanCollector.hashedSpans).stream()
 				.allMatch(span -> span.traceId == traceId)).describedAs("All spans have same trace id").isTrue();
 	}
 
@@ -120,53 +121,56 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		Optional<Span> eventReceivedSpan = findSpanWithAnnotation(Constants.CLIENT_RECV);
 		Optional<Span> lastHttpSpansParent = findLastHttpSpansParent();
 		// "http:/parent/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo" (SS)
-		Collections.sort(this.integrationTestSpanCollector.hashedSpans);
-		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, eventReceivedSpan);
-		then(this.integrationTestSpanCollector.hashedSpans).as("There were 4 spans").hasSize(4);
+		ArrayList<Span> spans = new ArrayList<>(
+				this.integrationTestSpanCollector.hashedSpans);
+		Collections.sort(spans);
+		thenAllSpansArePresent(spans, firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, eventReceivedSpan);
+		then(spans).as("There were 4 spans").hasSize(4);
 		log.info("Checking the parent child structure");
-		List<Optional<Span>> parentChild = this.integrationTestSpanCollector.hashedSpans.stream()
+		List<Optional<Span>> parentChild = spans.stream()
 				.filter(span -> span.parentId != null)
-				.map(span -> this.integrationTestSpanCollector.hashedSpans.stream().filter(span1 -> span1.id == span.parentId).findAny()
+				.map(span -> spans.stream().filter(span1 -> span1.id == span.parentId).findAny()
 		).collect(Collectors.toList());
 		log.info("List of parents and children " + parentChild);
 		then(parentChild.stream().allMatch(Optional::isPresent)).isTrue();
 	}
 
 	private Optional<Span> findLastHttpSpansParent() {
-		return this.integrationTestSpanCollector.hashedSpans.stream()
+		return new ArrayList<>(this.integrationTestSpanCollector.hashedSpans).stream()
 				.filter(span -> "http:/foo".equals(span.name) && !span.annotations.isEmpty()).findFirst();
 	}
 
 	private Optional<Span> findSpanWithAnnotation(String annotationName) {
-		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> span.annotations.stream().filter(annotation -> annotationName
+		return new ArrayList<>(this.integrationTestSpanCollector.hashedSpans).stream()
+				.filter(span -> span.annotations.stream()
+						.filter(annotation -> annotationName
 						.equals(annotation.value)).findFirst().isPresent())
 				.findFirst();
 	}
 
 	private List<Span> findAllEventRelatedSpans() {
-		return this.integrationTestSpanCollector.hashedSpans.stream()
+		return new ArrayList<>(this.integrationTestSpanCollector.hashedSpans).stream()
 				.filter(span -> "message:messages".equals(span.name) && span.parentId != null).collect(
 						Collectors.toList());
 	}
 
 	private Optional<Span> findFirstHttpRequestSpan() {
-		return this.integrationTestSpanCollector.hashedSpans.stream()
+		return new ArrayList<>(this.integrationTestSpanCollector.hashedSpans).stream()
 				// home is the name of the method
 				.filter(span -> span.binaryAnnotations.stream()
 						.anyMatch(binaryAnnotation -> new String(binaryAnnotation.value).equals("home"))).findFirst();
 	}
 
-	private void thenAllSpansArePresent(Optional<Span> firstHttpSpan,
-			List<Span> eventSpans, Optional<Span> lastHttpSpan,
-			Optional<Span> eventSentSpan, Optional<Span> eventReceivedSpan) {
+	private void thenAllSpansArePresent(ArrayList<Span> spans, Optional<Span> firstHttpSpan,
+			List<Span> eventSpans, Optional<Span> lastHttpSpan, Optional<Span> eventSentSpan,
+			Optional<Span> eventReceivedSpan) {
 		log.info("Found following spans");
 		log.info("First http span " + firstHttpSpan);
 		log.info("Event spans " + eventSpans);
 		log.info("Event sent span " + eventSentSpan);
 		log.info("Event received span " + eventReceivedSpan);
 		log.info("Last http span " + lastHttpSpan);
-		log.info("All found spans \n" + this.integrationTestSpanCollector.hashedSpans
+		log.info("All found spans \n" + spans
 				.stream().map(Span::toString).collect(Collectors.joining("\n")));
 		then(firstHttpSpan.isPresent()).isTrue();
 		then(eventSpans).isNotEmpty();
