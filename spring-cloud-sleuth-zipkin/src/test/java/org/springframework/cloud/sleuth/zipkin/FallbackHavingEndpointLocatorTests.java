@@ -13,7 +13,8 @@ import static org.mockito.BDDMockito.given;
 @RunWith(MockitoJUnitRunner.class)
 public class FallbackHavingEndpointLocatorTests {
 
-	@Mock DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
+	@Mock
+	ServiceInstanceEndpointLocator serviceInstanceEndpointLocator;
 	@Mock ServerPropertiesEndpointLocator serverPropertiesEndpointLocator;
 	Endpoint expectedEndpoint = Endpoint.builder()
 			.serviceName("my-tomcat").ipv4(127 << 24 | 1).port(8080).build();
@@ -31,9 +32,9 @@ public class FallbackHavingEndpointLocatorTests {
 
 	@Test
 	public void should_use_system_property_locator_if_discovery_client_locator_throws_an_exception() {
-		given(this.discoveryClientEndpointLocator.local()).willThrow(new RuntimeException());
+		given(this.serviceInstanceEndpointLocator.local()).willThrow(new RuntimeException());
 		given(this.serverPropertiesEndpointLocator.local()).willReturn(this.expectedEndpoint);
-		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(this.discoveryClientEndpointLocator,
+		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(this.serviceInstanceEndpointLocator,
 				this.serverPropertiesEndpointLocator);
 
 		Endpoint endpoint = sut.local();
@@ -43,8 +44,8 @@ public class FallbackHavingEndpointLocatorTests {
 
 	@Test
 	public void should_use_discovery_client_locator_by_default() {
-		given(this.discoveryClientEndpointLocator.local()).willReturn(this.expectedEndpoint);
-		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(this.discoveryClientEndpointLocator,
+		given(this.serviceInstanceEndpointLocator.local()).willReturn(this.expectedEndpoint);
+		FallbackHavingEndpointLocator sut = new FallbackHavingEndpointLocator(this.serviceInstanceEndpointLocator,
 				this.serverPropertiesEndpointLocator);
 
 		Endpoint endpoint = sut.local();

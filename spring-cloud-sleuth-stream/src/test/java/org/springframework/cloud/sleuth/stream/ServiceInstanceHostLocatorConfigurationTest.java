@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.zipkin;
+package org.springframework.cloud.sleuth.stream;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -12,61 +12,60 @@ import org.springframework.context.annotation.Configuration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author Marcin Wielgus
+ * @author Matcin Wielgus
  */
-public class DiscoveryClientEndpointLocatorConfigurationTest {
-
+public class ServiceInstanceHostLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
+		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				EmptyConfiguration.class).run("--spring.jmx.enabled=false",
-				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isInstanceOf(ServerPropertiesEndpointLocator.class);
-		ctxt.close();
+				"--spring.main.web_environment=false")) {
+			assertThat(ctxt.getBean(HostLocator.class))
+					.isInstanceOf(ServerPropertiesHostLocator.class);
+		}
 	}
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
+		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false",
-				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isInstanceOf(ServerPropertiesEndpointLocator.class);
-		ctxt.close();
+				"--spring.main.web_environment=false")) {
+			assertThat(ctxt.getBean(HostLocator.class))
+					.isInstanceOf(ServerPropertiesHostLocator.class);
+		}
 	}
 
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocator() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
+		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false",
-				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isSameAs(ConfigurationWithCustomLocator.locator);
-		ctxt.close();
+				"--spring.main.web_environment=false")) {
+			assertThat(ctxt.getBean(HostLocator.class))
+					.isSameAs(ConfigurationWithCustomLocator.locator);
+		}
 	}
 
 	@Test
 	public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
+		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false",
 				"--spring.zipkin.locator.discovery.enabled=true",
-				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isInstanceOf(FallbackHavingEndpointLocator.class);
-		ctxt.close();
+				"--spring.main.web_environment=false")) {
+			assertThat(ctxt.getBean(HostLocator.class))
+					.isInstanceOf(ServiceInstanceHostLocator.class);
+		}
 	}
 
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
+		try (ConfigurableApplicationContext ctxt = new SpringApplication(
 				ConfigurationWithRegistration.class,
 				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false",
 				"--spring.zipkin.locator.discovery.enabled=true",
-				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isSameAs(ConfigurationWithCustomLocator.locator);
-		ctxt.close();
+				"--spring.main.web_environment=false")) {
+			assertThat(ctxt.getBean(HostLocator.class))
+					.isSameAs(ConfigurationWithCustomLocator.locator);
+		}
 	}
 
 	@Configuration
@@ -85,11 +84,10 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Configuration
 	@EnableAutoConfiguration
 	public static class ConfigurationWithCustomLocator {
-		static EndpointLocator locator = Mockito.mock(EndpointLocator.class);
+		static HostLocator locator = Mockito.mock(HostLocator.class);
 
-		@Bean public EndpointLocator getEndpointLocator() {
+		@Bean public HostLocator getEndpointLocator() {
 			return locator;
 		}
 	}
-
 }

@@ -14,12 +14,12 @@ public class FallbackHavingEndpointLocator implements EndpointLocator {
 
 	private static final Log log = LogFactory.getLog(FallbackHavingEndpointLocator.class);
 
-	private final DiscoveryClientEndpointLocator discoveryClientEndpointLocator;
+	private final ServiceInstanceEndpointLocator serviceInstanceEndpointLocator;
 	private final ServerPropertiesEndpointLocator serverPropertiesEndpointLocator;
 
-	public FallbackHavingEndpointLocator(DiscoveryClientEndpointLocator discoveryClientEndpointLocator,
+	public FallbackHavingEndpointLocator(ServiceInstanceEndpointLocator serviceInstanceEndpointLocator,
 										ServerPropertiesEndpointLocator serverPropertiesEndpointLocator) {
-		this.discoveryClientEndpointLocator = discoveryClientEndpointLocator;
+		this.serviceInstanceEndpointLocator = serviceInstanceEndpointLocator;
 		this.serverPropertiesEndpointLocator = serverPropertiesEndpointLocator;
 	}
 
@@ -29,11 +29,11 @@ public class FallbackHavingEndpointLocator implements EndpointLocator {
 	}
 
 	private Endpoint endpoint() {
-		if (this.discoveryClientEndpointLocator == null) {
+		if (this.serviceInstanceEndpointLocator == null) {
 			return this.serverPropertiesEndpointLocator.local();
 		}
 		try {
-			return this.discoveryClientEndpointLocator.local();
+			return this.serviceInstanceEndpointLocator.local();
 		} catch (Exception e) {
 			log.warn("Exception occurred while trying to fetch the Zipkin process endpoint. Falling back to server properties endpoint locator.", e);
 			return this.serverPropertiesEndpointLocator.local();

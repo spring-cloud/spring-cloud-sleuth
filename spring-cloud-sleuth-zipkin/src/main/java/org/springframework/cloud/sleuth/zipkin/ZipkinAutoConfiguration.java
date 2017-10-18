@@ -194,9 +194,9 @@ public class ZipkinAutoConfiguration {
 							this.zipkinProperties));
 		}
 
-		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
+		private ServiceInstanceEndpointLocator discoveryClientEndpointLocator() {
 			if (this.registration != null) {
-				return new DiscoveryClientEndpointLocator(this.registration, this.zipkinProperties);
+				return new ServiceInstanceEndpointLocator(this.registration, this.zipkinProperties);
 			}
 			return null;
 		}

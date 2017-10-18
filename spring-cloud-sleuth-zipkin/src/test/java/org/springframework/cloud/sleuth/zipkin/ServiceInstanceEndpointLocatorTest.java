@@ -24,7 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.cloud.sleuth.zipkin.DiscoveryClientEndpointLocator.NoServiceInstanceAvailableException;
+import org.springframework.cloud.sleuth.zipkin.ServiceInstanceEndpointLocator.NoServiceInstanceAvailableException;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -34,25 +34,25 @@ import zipkin.Endpoint;
  * @author Marcin Grzejszczak
  */
 @RunWith(MockitoJUnitRunner.class)
-public class DiscoveryClientEndpointLocatorTest {
+public class ServiceInstanceEndpointLocatorTest {
 
 	@Test(expected = NoServiceInstanceAvailableException.class)
 	public void should_throw_exception_when_no_instances_are_available() throws Exception {
-		DiscoveryClientEndpointLocator endpointLocator = endpointLocator(null);
+		ServiceInstanceEndpointLocator endpointLocator = endpointLocator(null);
 		endpointLocator.local();
 	}
 
-	private DiscoveryClientEndpointLocator endpointLocator(ServiceInstance serviceInstance) {
+	private ServiceInstanceEndpointLocator endpointLocator(ServiceInstance serviceInstance) {
 		return endpointLocator(serviceInstance, new ZipkinProperties());
 	}
 
-	private DiscoveryClientEndpointLocator endpointLocator(ServiceInstance serviceInstance, ZipkinProperties zipkinProperties) {
-		return new DiscoveryClientEndpointLocator(serviceInstance, zipkinProperties);
+	private ServiceInstanceEndpointLocator endpointLocator(ServiceInstance serviceInstance, ZipkinProperties zipkinProperties) {
+		return new ServiceInstanceEndpointLocator(serviceInstance, zipkinProperties);
 	}
 
 	@Test
 	public void should_create_endpoint_with_0_ip_when_exception_occurs_on_resolving_host() throws Exception {
-		DiscoveryClientEndpointLocator endpointLocator = endpointLocator(serviceInstanceWithInvalidHost());
+		ServiceInstanceEndpointLocator endpointLocator = endpointLocator(serviceInstanceWithInvalidHost());
 
 		Endpoint local = endpointLocator.local();
 
@@ -63,7 +63,7 @@ public class DiscoveryClientEndpointLocatorTest {
 
 	@Test
 	public void should_create_valid_endpoint_when_proper_host_is_passed() throws Exception {
-		DiscoveryClientEndpointLocator endpointLocator = endpointLocator(serviceInstanceWithValidHost());
+		ServiceInstanceEndpointLocator endpointLocator = endpointLocator(serviceInstanceWithValidHost());
 
 		Endpoint local = endpointLocator.local();
 
@@ -76,7 +76,7 @@ public class DiscoveryClientEndpointLocatorTest {
 	public void should_create_endpoint_with_overridden_name() throws Exception {
 		ZipkinProperties zipkinProperties = new ZipkinProperties();
 		zipkinProperties.getService().setName("foo");
-		DiscoveryClientEndpointLocator locator = endpointLocator(serviceInstanceWithValidHost(), zipkinProperties);
+		ServiceInstanceEndpointLocator locator = endpointLocator(serviceInstanceWithValidHost(), zipkinProperties);
 
 		Endpoint local = locator.local();
 

@@ -70,11 +70,6 @@ class ZipkinDiscoveryClient implements DiscoveryClient {
 	}
 
 	@Override
-	public ServiceInstance getLocalServiceInstance() {
-		return null;
-	}
-
-	@Override
 	public List<ServiceInstance> getInstances(String s) {
 		if ("zipkin".equals(s)) {
 			return Collections.singletonList(new ServiceInstance() {

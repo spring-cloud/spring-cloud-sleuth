@@ -21,7 +21,6 @@ import java.lang.invoke.MethodHandles;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.util.StringUtils;
 
@@ -29,47 +28,40 @@ import zipkin.Endpoint;
 
 /**
  * An {@link EndpointLocator} that tries to find local service information from a
- * {@link DiscoveryClient}.
+ * {@link org.springframework.cloud.client.serviceregistry.Registration}.
  *
  * You can override the name using {@link ZipkinProperties.Service#setName(String)}
  *
  * @author Dave Syer
  * @since 1.0.0
  */
-public class DiscoveryClientEndpointLocator implements EndpointLocator {
+public class ServiceInstanceEndpointLocator implements EndpointLocator {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
-	private final ServiceInstance serviceInstance;
+	private final ServiceInstance localServiceInstance;
 	private final ZipkinProperties zipkinProperties;
 
-	@Deprecated
-	public DiscoveryClientEndpointLocator(DiscoveryClient client,
-			ZipkinProperties zipkinProperties) {
-		this.serviceInstance = client.getLocalServiceInstance();
-		this.zipkinProperties = zipkinProperties;
-	}
-
-	public DiscoveryClientEndpointLocator(ServiceInstance serviceInstance,
+	public ServiceInstanceEndpointLocator(ServiceInstance localServiceInstance,
 										ZipkinProperties zipkinProperties) {
-		this.serviceInstance = serviceInstance;
+		this.localServiceInstance = localServiceInstance;
 		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
 	public Endpoint local() {
-		if (this.serviceInstance == null) {
+		if (this.localServiceInstance == null) {
 			throw new NoServiceInstanceAvailableException();
 		}
 		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
-				this.zipkinProperties.getService().getName() : this.serviceInstance.getServiceId();
+				this.zipkinProperties.getService().getName() : this.localServiceInstance.getServiceId();
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");
 		}
 		return Endpoint.builder()
 				.serviceName(serviceName)
-				.ipv4(getIpAddress(this.serviceInstance))
-				.port(this.serviceInstance.getPort()).build();
+				.ipv4(getIpAddress(this.localServiceInstance))
+				.port(this.localServiceInstance.getPort()).build();
 	}
 
 	private int getIpAddress(ServiceInstance instance) {
