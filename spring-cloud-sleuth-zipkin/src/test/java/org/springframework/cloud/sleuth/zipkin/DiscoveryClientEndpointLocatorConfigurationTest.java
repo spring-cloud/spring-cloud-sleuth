@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +29,7 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false",
+				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false",
 				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
 		assertThat(ctxt.getBean(EndpointLocator.class))
 				.isInstanceOf(ServerPropertiesEndpointLocator.class);
@@ -49,7 +49,7 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false",
+				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false",
 				"--spring.zipkin.locator.discovery.enabled=true",
 				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
 		assertThat(ctxt.getBean(EndpointLocator.class))
@@ -60,7 +60,7 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithDiscoveryClient.class,
+				ConfigurationWithRegistration.class,
 				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false",
 				"--spring.zipkin.locator.discovery.enabled=true",
 				"--spring.cloud.discovery.client.composite-indicator.enabled=false");
@@ -76,9 +76,9 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 
 	@Configuration
 	@EnableAutoConfiguration
-	public static class ConfigurationWithDiscoveryClient {
-		@Bean public DiscoveryClient getDiscoveryClient() {
-			return Mockito.mock(DiscoveryClient.class);
+	public static class ConfigurationWithRegistration {
+		@Bean public Registration registration() {
+			return Mockito.mock(Registration.class);
 		}
 	}
 

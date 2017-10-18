@@ -33,6 +33,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -184,7 +185,7 @@ public class ZipkinAutoConfiguration {
 		private Environment environment;
 
 		@Autowired(required=false)
-		private DiscoveryClient client;
+		private Registration registration;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
@@ -194,8 +195,8 @@ public class ZipkinAutoConfiguration {
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
-			if (this.client!=null) {
-				return new DiscoveryClientEndpointLocator(this.client, this.zipkinProperties);
+			if (this.registration != null) {
+				return new DiscoveryClientEndpointLocator(this.registration, this.zipkinProperties);
 			}
 			return null;
 		}
