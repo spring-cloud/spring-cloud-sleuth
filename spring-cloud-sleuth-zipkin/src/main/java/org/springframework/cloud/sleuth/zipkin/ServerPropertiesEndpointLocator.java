@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
@@ -56,7 +57,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port;
-	private Environment environment;
+	private RelaxedPropertyResolver resolver;
 
 	@Deprecated
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
@@ -74,7 +75,7 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
 			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this(serverProperties, "", zipkinProperties, inetUtils);
-		this.environment = environment;
+		this.resolver = new RelaxedPropertyResolver(environment);
 	}
 
 	@Override
@@ -94,8 +95,8 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 		if (StringUtils.hasText(this.zipkinProperties.getService().getName())) {
 			return this.zipkinProperties.getService().getName();
 		}
-		if (this.environment != null) {
-			return this.environment.getProperty("spring.application.name", "unknown");
+		if (this.resolver != null) {
+			return this.resolver.getProperty("spring.application.name", "unknown");
 		}
 		return "unknown";
 	}
@@ -124,8 +125,8 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 			return ByteBuffer.wrap(this.serverProperties.getAddress().getAddress())
 					.getInt();
 		}
-		else if (this.environment != null) {
-			String ipAddress = this.environment
+		else if (this.resolver != null) {
+			String ipAddress = this.resolver
 					.getProperty(IP_ADDRESS_PROP_NAME, String.class);
 			return InetUtils.getIpAddressAsInt(ipAddress);
 		}
@@ -136,6 +137,6 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 
 	@Override
 	public void setEnvironment(Environment environment) {
-		this.environment = environment;
+		this.resolver = new RelaxedPropertyResolver(environment);
 	}
 }

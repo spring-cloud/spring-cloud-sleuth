@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandles;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
@@ -55,7 +56,7 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port; // Lazy assigned
-	private Environment environment;
+	private RelaxedPropertyResolver resolver;
 
 	@Deprecated
 	public ServerPropertiesHostLocator(ServerProperties serverProperties, String appName,
@@ -74,7 +75,7 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
 			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this(serverProperties, "", zipkinProperties, inetUtils);
-		this.environment = environment;
+		this.resolver = new RelaxedPropertyResolver(environment);
 	}
 
 	@Override
@@ -109,8 +110,8 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 		if (this.serverProperties != null && this.serverProperties.getAddress() != null) {
 			address = this.serverProperties.getAddress().getHostAddress();
 		}
-		else if (this.environment != null) {
-			address = this.environment.getProperty(IP_ADDRESS_PROP_NAME, String.class);
+		else if (this.resolver != null) {
+			address = this.resolver.getProperty(IP_ADDRESS_PROP_NAME, String.class);
 		}
 		else {
 			address = this.inetUtils.findFirstNonLoopbackAddress().getHostAddress();
@@ -119,14 +120,14 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 	}
 
 	private String getServiceName(Span span) {
-		String serviceName;
+		String serviceName = "unknown";
 		if (StringUtils.hasText(this.zipkinProperties.getService().getName())) {
 			serviceName = this.zipkinProperties.getService().getName();
 		} else if (span.getProcessId() != null) {
 			serviceName = span.getProcessId();
 		}
-		else {
-			serviceName = this.environment.getProperty("spring.application.name", "unknown");
+		else if (this.resolver != null) {
+			serviceName = this.resolver.getProperty("spring.application.name", "unknown");
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");
@@ -136,6 +137,6 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 
 	@Override
 	public void setEnvironment(Environment environment) {
-		this.environment = environment;
+		this.resolver = new RelaxedPropertyResolver(environment);
 	}
 }

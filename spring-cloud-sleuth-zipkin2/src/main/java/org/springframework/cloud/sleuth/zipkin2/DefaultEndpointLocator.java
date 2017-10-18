@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandles;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
@@ -51,22 +52,22 @@ public class DefaultEndpointLocator implements EndpointLocator {
 
 	private final Registration registration;
 	private final ServerProperties serverProperties;
-	private final Environment environment;
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
+	private final RelaxedPropertyResolver resolver;
 	private Integer port;
 
 	public DefaultEndpointLocator(Registration registration, ServerProperties serverProperties,
 			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.registration = registration;
 		this.serverProperties = serverProperties;
-		this.environment = environment;
 		this.zipkinProperties = zipkinProperties;
 		if (inetUtils == null) {
 			this.inetUtils = new InetUtils(new InetUtilsProperties());
 		} else {
 			this.inetUtils = inetUtils;
 		}
+		this.resolver = new RelaxedPropertyResolver(environment);
 	}
 
 	@Override
@@ -91,7 +92,7 @@ public class DefaultEndpointLocator implements EndpointLocator {
 				log.warn("error getting service name from registration", e);
 			}
 		}
-		return this.environment.getProperty("spring.application.name", "unknown");
+		return this.resolver.getProperty("spring.application.name", "unknown");
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)
@@ -118,8 +119,8 @@ public class DefaultEndpointLocator implements EndpointLocator {
 				&& builder.parseIp(this.serverProperties.getAddress())) {
 			return builder;
 		}
-		else if (this.environment != null && this.environment.containsProperty(IP_ADDRESS_PROP_NAME)
-				&& builder.parseIp(this.environment.getProperty(IP_ADDRESS_PROP_NAME, String.class))) {
+		else if (this.resolver.containsProperty(IP_ADDRESS_PROP_NAME)
+				&& builder.parseIp(this.resolver.getProperty(IP_ADDRESS_PROP_NAME, String.class))) {
 			return builder;
 		}
 		else {
