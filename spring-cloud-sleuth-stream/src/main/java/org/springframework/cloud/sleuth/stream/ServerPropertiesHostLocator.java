@@ -25,7 +25,6 @@ import org.springframework.boot.web.servlet.context.ServletWebServerInitializedE
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
@@ -44,7 +43,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAware {
+public class ServerPropertiesHostLocator implements HostLocator {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
@@ -52,8 +51,8 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 	private final ServerProperties serverProperties; // Nullable
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
+	private final Environment environment;
 	private Integer port; // Lazy assigned
-	private Environment environment;
 
 	public ServerPropertiesHostLocator(ServerProperties serverProperties,
 			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
@@ -123,10 +122,5 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 			log.debug("Span will contain serviceName [" + serviceName + "]");
 		}
 		return serviceName;
-	}
-
-	@Override
-	public void setEnvironment(Environment environment) {
-		this.environment = environment;
 	}
 }
