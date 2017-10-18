@@ -22,9 +22,12 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
 /**
@@ -35,9 +38,9 @@ import org.springframework.util.StringUtils;
  */
 class MessagingTextMap implements SpanTextMap {
 
-	private final MessageBuilder delegate;
+	private final MessageBuilder<?> delegate;
 
-	public MessagingTextMap(MessageBuilder delegate) {
+	public MessagingTextMap(MessageBuilder<?> delegate) {
 		this.delegate = delegate;
 	}
 
@@ -46,7 +49,9 @@ class MessagingTextMap implements SpanTextMap {
 		Map<String, String> map = new HashMap<>();
 		for (Map.Entry<String, Object> entry : this.delegate.build().getHeaders()
 				.entrySet()) {
-			map.put(entry.getKey(), String.valueOf(entry.getValue()));
+			if (!NativeMessageHeaderAccessor.NATIVE_HEADERS.equals(entry.getKey())) {
+				map.put(entry.getKey(), String.valueOf(entry.getValue()));
+			}
 		}
 		return map.entrySet().iterator();
 	}
@@ -61,9 +66,22 @@ class MessagingTextMap implements SpanTextMap {
 		MessageHeaderAccessor accessor = MessageHeaderAccessor
 				.getMutableAccessor(initialMessage);
 		accessor.setHeader(key, value);
-		if (accessor instanceof NativeMessageHeaderAccessor) {
-			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
+		if (accessor instanceof SimpMessageHeaderAccessor) {
+			SimpMessageHeaderAccessor nativeAccessor = (SimpMessageHeaderAccessor) accessor;
 			nativeAccessor.setNativeHeader(key, value);
+		}
+		else if (accessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS) != null) {
+			if (accessor.getHeader(
+					NativeMessageHeaderAccessor.NATIVE_HEADERS) instanceof MultiValueMap) {
+				MultiValueMap<String, String> map = (MultiValueMap<String, String>) accessor
+						.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
+				map.add(key, value);
+			}
+		}
+		else {
+			MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+			accessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS, map);
+			map.add(key, value);
 		}
 		this.delegate.copyHeaders(accessor.toMessageHeaders());
 	}

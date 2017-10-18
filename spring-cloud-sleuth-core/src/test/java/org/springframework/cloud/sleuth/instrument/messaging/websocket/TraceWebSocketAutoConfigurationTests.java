@@ -39,18 +39,21 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceWebSocketAutoConfigurationTest.Config.class)
-public class TraceWebSocketAutoConfigurationTest {
+@SpringBootTest(classes = TraceWebSocketAutoConfigurationTests.Config.class)
+public class TraceWebSocketAutoConfigurationTests {
 
 	@Autowired
 	DelegatingWebSocketMessageBrokerConfiguration delegatingWebSocketMessageBrokerConfiguration;
 
 	@Test
-	public void should_register_interceptors_for_inbound_and_outbound_channels() {
+	public void should_register_interceptors_for_all_channels() {
 		then(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannel()
 				.getInterceptors())
 						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
 		then(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannel()
+				.getInterceptors())
+						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
+		then(this.delegatingWebSocketMessageBrokerConfiguration.brokerChannel()
 				.getInterceptors())
 						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
 	}

@@ -27,8 +27,7 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 			if (spanIdMissing) {
 				carrier.put(TraceMessageHeaders.SPAN_ID_NAME, traceId);
 			}
-		} else if (!hasHeader(carrier, TraceMessageHeaders.SPAN_ID_NAME)
-				|| !hasHeader(carrier, TraceMessageHeaders.TRACE_ID_NAME)) {
+		} else if (spanIdMissing) {
 			return null;
 			// TODO: Consider throwing IllegalArgumentException;
 		}

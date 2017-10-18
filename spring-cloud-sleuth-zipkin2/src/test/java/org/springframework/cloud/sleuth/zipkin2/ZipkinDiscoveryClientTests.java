@@ -29,7 +29,9 @@ import zipkin.junit.ZipkinRule;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class,
 		properties = {"spring.zipkin.baseUrl=http://zipkin/",
-		"spring.cloud.discovery.client.composite-indicator.enabled=false"})
+		"spring.cloud.discovery.client.composite-indicator.enabled=false",
+		"spring.zipkin.sender.type=web" // override default priority which picks rabbit due to classpath
+})
 public class ZipkinDiscoveryClientTests {
 
 	@ClassRule public static ZipkinRule ZIPKIN_RULE = new ZipkinRule();

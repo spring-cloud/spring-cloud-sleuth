@@ -14,6 +14,7 @@ import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterce
 import org.springframework.cloud.sleuth.instrument.messaging.TraceSpanMessagingAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
@@ -51,6 +52,11 @@ public class TraceWebSocketAutoConfiguration
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		// The user must register their own endpoints
+	}
+
+	@Override
+	public void configureMessageBroker(MessageBrokerRegistry registry) {
+		registry.configureBrokerChannel().setInterceptors(new TraceChannelInterceptor(this.beanFactory));
 	}
 
 	@Override
