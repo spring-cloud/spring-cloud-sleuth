@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.stream;
 
+import java.lang.invoke.MethodHandles;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -26,10 +28,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import java.lang.invoke.MethodHandles;
 
 /**
  * A {@link HostLocator} that retrieves:
@@ -51,17 +50,15 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 
 	private final ServerProperties serverProperties; // Nullable
-	private final String appName;
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port; // Lazy assigned
 	private Environment environment;
 
-	public ServerPropertiesHostLocator(ServerProperties serverProperties, String appName,
-			ZipkinProperties zipkinProperties, InetUtils inetUtils) {
+	public ServerPropertiesHostLocator(ServerProperties serverProperties,
+			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.serverProperties = serverProperties;
-		this.appName = appName;
-		Assert.notNull(this.appName, "appName");
+		this.environment = environment;
 		this.zipkinProperties = zipkinProperties;
 		if (inetUtils == null) {
 			this.inetUtils = new InetUtils(new InetUtilsProperties());
@@ -102,7 +99,8 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 		if (this.serverProperties != null && this.serverProperties.getAddress() != null) {
 			address = this.serverProperties.getAddress().getHostAddress();
 		}
-		else if (this.environment != null) {
+		else if (this.environment != null &&
+				StringUtils.hasText(this.environment.getProperty(IP_ADDRESS_PROP_NAME, String.class))) {
 			address = this.environment.getProperty(IP_ADDRESS_PROP_NAME, String.class);
 		}
 		else {
@@ -119,7 +117,7 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 			serviceName = span.getProcessId();
 		}
 		else {
-			serviceName = this.appName;
+			serviceName = this.environment.getProperty("spring.application.name", "unknown");
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");

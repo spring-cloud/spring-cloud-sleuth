@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -122,12 +121,12 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private InetUtils inetUtils;
 
-		@Value("${spring.application.name:unknown}")
-		private String appName;
+		@Autowired
+		private Environment environment;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new DefaultEndpointLocator(null, this.serverProperties, this.appName,
+			return new DefaultEndpointLocator(null, this.serverProperties, this.environment,
 					this.zipkinProperties, this.inetUtils);
 		}
 
@@ -148,15 +147,15 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private InetUtils inetUtils;
 
-		@Value("${spring.application.name:unknown}")
-		private String appName;
+		@Autowired
+		private Environment environment;
 
 		@Autowired(required=false)
 		private Registration registration;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new DefaultEndpointLocator(this.registration, this.serverProperties, this.appName,
+			return new DefaultEndpointLocator(this.registration, this.serverProperties, this.environment,
 							this.zipkinProperties, this.inetUtils);
 		}
 	}

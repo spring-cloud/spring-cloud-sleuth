@@ -16,20 +16,18 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.lang.invoke.MethodHandles;
+import java.nio.ByteBuffer;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.cloud.commons.util.InetUtilsProperties;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import zipkin.Endpoint;
-
-import java.lang.invoke.MethodHandles;
-import java.nio.ByteBuffer;
 
 /**
  * {@link EndpointLocator} implementation that:
@@ -44,35 +42,26 @@ import java.nio.ByteBuffer;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class ServerPropertiesEndpointLocator implements EndpointLocator,
-		EnvironmentAware {
+public class ServerPropertiesEndpointLocator implements EndpointLocator {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 
 	private final ServerProperties serverProperties;
-	private final String appName;
-	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
+	private final Environment environment;
 	private Integer port;
-	private Environment environment;
 
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
-			String appName, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
+			Environment environment, ZipkinProperties zipkinProperties) {
 		this.serverProperties = serverProperties;
-		this.appName = appName;
+		this.environment = environment;
 		this.zipkinProperties = zipkinProperties;
-		if (inetUtils == null) {
-			this.inetUtils = new InetUtils(new InetUtilsProperties());
-		} else {
-			this.inetUtils = inetUtils;
-		}
 	}
 
 	@Override
 	public Endpoint local() {
-		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
-				this.zipkinProperties.getService().getName() : this.appName;
+		String serviceName = serviceName();
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");
 		}
@@ -81,6 +70,13 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 				.ipv4(getAddress())
 				.port(getPort())
 				.build();
+	}
+
+	private String serviceName() {
+		if (StringUtils.hasText(this.zipkinProperties.getService().getName())) {
+			return this.zipkinProperties.getService().getName();
+		}
+		return this.environment.getProperty("spring.application.name", "unknown");
 	}
 
 	@EventListener(ServletWebServerInitializedEvent.class)
@@ -107,18 +103,8 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 			return ByteBuffer.wrap(this.serverProperties.getAddress().getAddress())
 					.getInt();
 		}
-		else if (this.environment != null) {
-			String ipAddress = this.environment
-					.getProperty(IP_ADDRESS_PROP_NAME, String.class);
-			return InetUtils.getIpAddressAsInt(ipAddress);
-		}
-		else {
-			return ByteBuffer.wrap(this.inetUtils.findFirstNonLoopbackAddress().getAddress()).getInt();
-		}
-	}
-
-	@Override
-	public void setEnvironment(Environment environment) {
-		this.environment = environment;
+		String ipAddress = this.environment
+				.getProperty(IP_ADDRESS_PROP_NAME, String.class);
+		return InetUtils.getIpAddressAsInt(ipAddress);
 	}
 }

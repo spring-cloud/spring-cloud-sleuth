@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -34,7 +33,6 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -159,16 +157,13 @@ public class ZipkinAutoConfiguration {
 		@Autowired
 		private ZipkinProperties zipkinProperties;
 
-		@Autowired(required=false)
-		private InetUtils inetUtils;
-
-		@Value("${spring.application.name:unknown}")
-		private String appName;
+		@Autowired
+		private Environment environment;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
-					this.zipkinProperties, this.inetUtils);
+			return new ServerPropertiesEndpointLocator(this.serverProperties, this.environment,
+					this.zipkinProperties);
 		}
 
 	}
@@ -185,11 +180,8 @@ public class ZipkinAutoConfiguration {
 		@Autowired
 		private ZipkinProperties zipkinProperties;
 
-		@Autowired(required=false)
-		private InetUtils inetUtils;
-
-		@Value("${spring.application.name:unknown}")
-		private String appName;
+		@Autowired
+		private Environment environment;
 
 		@Autowired(required=false)
 		private DiscoveryClient client;
@@ -197,8 +189,8 @@ public class ZipkinAutoConfiguration {
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
-							this.zipkinProperties, this.inetUtils));
+					new ServerPropertiesEndpointLocator(this.serverProperties, this.environment,
+							this.zipkinProperties));
 		}
 
 		private DiscoveryClientEndpointLocator discoveryClientEndpointLocator() {
