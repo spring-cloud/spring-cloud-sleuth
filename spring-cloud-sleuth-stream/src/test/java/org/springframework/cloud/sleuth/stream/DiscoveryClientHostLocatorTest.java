@@ -20,32 +20,35 @@ import java.net.URI;
 import java.util.Map;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.BDDMockito.given;
 
 /**
  * @author Marcin Grzejszczak
  */
 public class DiscoveryClientHostLocatorTest {
-	DiscoveryClient discoveryClient = Mockito.mock(DiscoveryClient.class);
-	DiscoveryClientHostLocator discoveryClientHostLocator =
-			new DiscoveryClientHostLocator(this.discoveryClient, new ZipkinProperties());
 
 	@Test(expected = IllegalArgumentException.class)
-	public void should_throw_exception_when_no_discovery_client_is_present() throws Exception {
-		new DiscoveryClientHostLocator(null, new ZipkinProperties());
+	public void should_throw_exception_when_no_registration_is_present() throws Exception {
+		new DiscoveryClientHostLocator((Registration)null, new ZipkinProperties());
+	}
+
+	private DiscoveryClientHostLocator hostLocator(ServiceInstance serviceInstance) {
+		return hostLocator(serviceInstance, new ZipkinProperties());
+	}
+
+	private DiscoveryClientHostLocator hostLocator(ServiceInstance serviceInstance, ZipkinProperties zipkinProperties) {
+		return new DiscoveryClientHostLocator(serviceInstance, zipkinProperties);
 	}
 
 	@Test
 	public void should_create_Host_with_0_ip_when_exception_occurs_on_resolving_host() throws Exception {
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithInvalidHost());
+		DiscoveryClientHostLocator hostLocator = hostLocator(serviceInstanceWithInvalidHost());
 
-		Host host = this.discoveryClientHostLocator.locate(null);
+		Host host = hostLocator.locate(null);
 
 		then(host.getServiceName()).isEqualTo("serviceId");
 		then(host.getPort()).isEqualTo((short)8_000);
@@ -54,9 +57,9 @@ public class DiscoveryClientHostLocatorTest {
 
 	@Test
 	public void should_create_valid_Host_when_proper_host_is_passed() throws Exception {
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost());
+		DiscoveryClientHostLocator hostLocator = hostLocator(serviceInstanceWithValidHost());
 
-		Host host = this.discoveryClientHostLocator.locate(null);
+		Host host = hostLocator.locate(null);
 
 		then(host.getServiceName()).isEqualTo("serviceId");
 		then(host.getPort()).isEqualTo((short)8_000);
@@ -65,12 +68,11 @@ public class DiscoveryClientHostLocatorTest {
 
 	@Test
 	public void should_override_the_service_name_from_properties() throws Exception {
-		given(this.discoveryClient.getLocalServiceInstance()).willReturn(serviceInstanceWithValidHost());
 		ZipkinProperties zipkinProperties = new ZipkinProperties();
 		zipkinProperties.getService().setName("foo");
-		this.discoveryClientHostLocator = new DiscoveryClientHostLocator(this.discoveryClient, zipkinProperties);
+		DiscoveryClientHostLocator hostLocator = new DiscoveryClientHostLocator(serviceInstanceWithValidHost(), zipkinProperties);
 
-		Host host = this.discoveryClientHostLocator.locate(null);
+		Host host = hostLocator.locate(null);
 
 		then(host.getServiceName()).isEqualTo("foo");
 		then(host.getPort()).isEqualTo((short)8_000);

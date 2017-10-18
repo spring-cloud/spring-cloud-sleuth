@@ -35,22 +35,28 @@ import org.springframework.util.StringUtils;
  */
 public class DiscoveryClientHostLocator implements HostLocator {
 
-	private final DiscoveryClient client;
+	private final ServiceInstance localServiceInstance;
 	private final ZipkinProperties zipkinProperties;
 
+	@Deprecated
 	public DiscoveryClientHostLocator(DiscoveryClient client, ZipkinProperties zipkinProperties) {
-		this.client = client;
-		Assert.notNull(this.client, "client");
+		Assert.notNull(client, "client");
+		this.localServiceInstance = client.getLocalServiceInstance();
+		this.zipkinProperties = zipkinProperties;
+	}
+
+	public DiscoveryClientHostLocator(ServiceInstance localServiceInstance, ZipkinProperties zipkinProperties) {
+		Assert.notNull(localServiceInstance, "localServiceInstance");
+		this.localServiceInstance = localServiceInstance;
 		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
 	public Host locate(Span span) {
-		ServiceInstance instance = this.client.getLocalServiceInstance();
 		String serviceId = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
-				this.zipkinProperties.getService().getName() : instance.getServiceId();
-		return new Host(serviceId, getIpAddress(instance),
-				instance.getPort());
+				this.zipkinProperties.getService().getName() : this.localServiceInstance.getServiceId();
+		return new Host(serviceId, getIpAddress(this.localServiceInstance),
+				this.localServiceInstance.getPort());
 	}
 
 	private String getIpAddress(ServiceInstance instance) {
