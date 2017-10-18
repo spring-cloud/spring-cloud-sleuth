@@ -46,11 +46,14 @@ public class TraceWebSocketAutoConfigurationTest {
 	DelegatingWebSocketMessageBrokerConfiguration delegatingWebSocketMessageBrokerConfiguration;
 
 	@Test
-	public void should_register_interceptors_for_inbound_and_outbound_channels() {
+	public void should_register_interceptors_for_all_channels() {
 		then(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannel()
 				.getInterceptors())
 						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
 		then(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannel()
+				.getInterceptors())
+						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
+		then(this.delegatingWebSocketMessageBrokerConfiguration.brokerChannel()
 				.getInterceptors())
 						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
 	}
