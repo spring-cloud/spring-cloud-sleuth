@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +28,7 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
 		try (ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false",
+				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false",
 				"--spring.main.web_environment=false")) {
 			assertThat(ctxt.getBean(HostLocator.class))
 					.isInstanceOf(ServerPropertiesHostLocator.class);
@@ -48,7 +48,7 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldBeFallbackHavingEndpointLocatorWhenAskedTo() {
 		try (ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithDiscoveryClient.class).run("--spring.jmx.enabled=false",
+				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false",
 				"--spring.zipkin.locator.discovery.enabled=true",
 				"--spring.main.web_environment=false")) {
 			assertThat(ctxt.getBean(HostLocator.class))
@@ -59,7 +59,7 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
 		try (ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithDiscoveryClient.class,
+				ConfigurationWithRegistration.class,
 				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false",
 				"--spring.zipkin.locator.discovery.enabled=true",
 				"--spring.main.web_environment=false")) {
@@ -75,9 +75,9 @@ public class DiscoveryClientEndpointLocatorConfigurationTest {
 
 	@Configuration
 	@EnableAutoConfiguration
-	public static class ConfigurationWithDiscoveryClient {
-		@Bean public DiscoveryClient getDiscoveryClient() {
-			return Mockito.mock(DiscoveryClient.class);
+	public static class ConfigurationWithRegistration {
+		@Bean public Registration registration() {
+			return Mockito.mock(Registration.class);
 		}
 	}
 

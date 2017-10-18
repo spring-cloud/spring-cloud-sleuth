@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfigu
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanAdjuster;
@@ -143,12 +144,12 @@ public class SleuthStreamAutoConfiguration {
 		private Environment environment;
 
 		@Autowired(required = false)
-		private DiscoveryClient client;
+		private Registration registration;
 
 		@Bean
 		public HostLocator zipkinEndpointLocator() {
-			if (this.client != null) {
-				return new DiscoveryClientHostLocator(this.client, this.zipkinProperties);
+			if (this.registration != null) {
+				return new DiscoveryClientHostLocator(this.registration, this.zipkinProperties);
 			}
 			return new ServerPropertiesHostLocator(this.serverProperties, this.environment, this.zipkinProperties,
 					this.inetUtils);
