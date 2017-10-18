@@ -24,6 +24,7 @@ import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
+import org.springframework.mock.env.MockEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +35,7 @@ public class ServerPropertiesEndpointLocatorTests {
 	@Test
 	public void portDefaultsTo8080() throws UnknownHostException {
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				new ServerProperties(), "unknown", new ZipkinProperties(),
+				new ServerProperties(), new MockEnvironment(), new ZipkinProperties(),
 				localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port).isEqualTo((short) 8080);
@@ -46,7 +47,7 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setPort(1234);
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", new ZipkinProperties(),localAddress(ADDRESS1234));
+				properties, new MockEnvironment(), new ZipkinProperties(),localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port).isEqualTo((short) 1234);
 	}
@@ -65,7 +66,7 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setAddress(InetAddress.getByAddress(ADDRESS1234));
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", new ZipkinProperties(),
+				properties, new MockEnvironment(), new ZipkinProperties(),
 				localAddress(new byte[] { 4, 4, 4, 4 }));
 
 		assertThat(locator.local().ipv4).isEqualTo(1 << 24 | 2 << 16 | 3 << 8 | 4);
@@ -78,7 +79,7 @@ public class ServerPropertiesEndpointLocatorTests {
 		zipkinProperties.getService().setName("foo");
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", zipkinProperties,localAddress(ADDRESS1234));
+				properties, new MockEnvironment(), zipkinProperties,localAddress(ADDRESS1234));
 
 		assertThat(locator.local().serviceName).isEqualTo("foo");
 	}
@@ -89,7 +90,7 @@ public class ServerPropertiesEndpointLocatorTests {
 		properties.setPort(-1);
 
 		ServerPropertiesEndpointLocator locator = new ServerPropertiesEndpointLocator(
-				properties, "unknown", new ZipkinProperties(),localAddress(ADDRESS1234));
+				properties, new MockEnvironment(), new ZipkinProperties(),localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port).isEqualTo((short) 8080);
 	}

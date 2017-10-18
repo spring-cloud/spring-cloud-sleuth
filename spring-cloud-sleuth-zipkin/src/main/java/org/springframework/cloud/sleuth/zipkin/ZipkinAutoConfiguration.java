@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -162,12 +161,12 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private InetUtils inetUtils;
 
-		@Value("${spring.application.name:unknown}")
-		private String appName;
+		@Autowired
+		private Environment environment;
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
+			return new ServerPropertiesEndpointLocator(this.serverProperties, this.environment,
 					this.zipkinProperties, this.inetUtils);
 		}
 
@@ -188,8 +187,8 @@ public class ZipkinAutoConfiguration {
 		@Autowired(required=false)
 		private InetUtils inetUtils;
 
-		@Value("${spring.application.name:unknown}")
-		private String appName;
+		@Autowired
+		private Environment environment;
 
 		@Autowired(required=false)
 		private DiscoveryClient client;
@@ -197,7 +196,7 @@ public class ZipkinAutoConfiguration {
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
 			return new FallbackHavingEndpointLocator(discoveryClientEndpointLocator(),
-					new ServerPropertiesEndpointLocator(this.serverProperties, this.appName,
+					new ServerPropertiesEndpointLocator(this.serverProperties, this.environment,
 							this.zipkinProperties, this.inetUtils));
 		}
 

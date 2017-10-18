@@ -25,7 +25,6 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerInitial
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
@@ -45,24 +44,23 @@ import zipkin2.Endpoint;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class DefaultEndpointLocator implements EndpointLocator, EnvironmentAware {
+public class DefaultEndpointLocator implements EndpointLocator {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 
 	private final Registration registration;
 	private final ServerProperties serverProperties;
-	private final String appName;
+	private final Environment environment;
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port;
-	private Environment environment;
 
 	public DefaultEndpointLocator(Registration registration, ServerProperties serverProperties,
-			String appName, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
+			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.registration = registration;
 		this.serverProperties = serverProperties;
-		this.appName = appName;
+		this.environment = environment;
 		this.zipkinProperties = zipkinProperties;
 		if (inetUtils == null) {
 			this.inetUtils = new InetUtils(new InetUtilsProperties());
@@ -93,7 +91,7 @@ public class DefaultEndpointLocator implements EndpointLocator, EnvironmentAware
 				log.warn("error getting service name from registration", e);
 			}
 		}
-		return this.appName;
+		return this.environment.getProperty("spring.application.name", "unknown");
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)
@@ -127,10 +125,5 @@ public class DefaultEndpointLocator implements EndpointLocator, EnvironmentAware
 		else {
 			return builder.ip(this.inetUtils.findFirstNonLoopbackAddress());
 		}
-	}
-
-	@Override
-	public void setEnvironment(Environment environment) {
-		this.environment = environment;
 	}
 }

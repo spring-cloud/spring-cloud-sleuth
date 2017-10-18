@@ -57,6 +57,7 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 	private Integer port; // Lazy assigned
 	private Environment environment;
 
+	@Deprecated
 	public ServerPropertiesHostLocator(ServerProperties serverProperties, String appName,
 			ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.serverProperties = serverProperties;
@@ -68,6 +69,12 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 		} else {
 			this.inetUtils = inetUtils;
 		}
+	}
+
+	public ServerPropertiesHostLocator(ServerProperties serverProperties,
+			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
+		this(serverProperties, "", zipkinProperties, inetUtils);
+		this.environment = environment;
 	}
 
 	@Override
@@ -119,7 +126,7 @@ public class ServerPropertiesHostLocator implements HostLocator, EnvironmentAwar
 			serviceName = span.getProcessId();
 		}
 		else {
-			serviceName = this.appName;
+			serviceName = this.environment.getProperty("spring.application.name", "unknown");
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");

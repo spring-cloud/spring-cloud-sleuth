@@ -1,5 +1,10 @@
 package org.springframework.cloud.sleuth.zipkin;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -14,16 +19,12 @@ import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.web.client.RestTemplate;
-import zipkin.reporter.Encoding;
 import zipkin.Span;
 import zipkin.junit.HttpFailure;
 import zipkin.junit.ZipkinRule;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
+import zipkin.reporter.Encoding;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -133,7 +134,7 @@ public class HttpZipkinSpanReporterTest {
 		AtomicReference<Span> receivedSpan = new AtomicReference<>();
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
 				new NoOpSpanLogger(), new ZipkinSpanListener(receivedSpan::set,
-				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo",
+				new ServerPropertiesEndpointLocator(new ServerProperties(), new MockEnvironment(),
 						new ZipkinProperties(), new InetUtils(new InetUtilsProperties())),
 				null, new ArrayList<>()), new TraceKeys());
 		// tag::service_name[]
@@ -171,7 +172,7 @@ public class HttpZipkinSpanReporterTest {
 
 		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(), new DefaultSpanNamer(),
 				new NoOpSpanLogger(),new ZipkinSpanListener(httpZipkinSpanReporter,
-				new ServerPropertiesEndpointLocator(new ServerProperties(), "foo",
+				new ServerPropertiesEndpointLocator(new ServerProperties(), new MockEnvironment(),
 						zipkinProperties, new InetUtils(new InetUtilsProperties())),
 				null, Collections.emptyList()), new TraceKeys());
 

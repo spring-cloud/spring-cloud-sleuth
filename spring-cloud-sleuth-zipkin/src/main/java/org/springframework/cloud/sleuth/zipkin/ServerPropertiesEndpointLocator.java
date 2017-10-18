@@ -51,12 +51,14 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 
 	private final ServerProperties serverProperties;
+	// TODO: Remove this in Finchley
 	private final String appName;
 	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port;
 	private Environment environment;
 
+	@Deprecated
 	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
 			String appName, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.serverProperties = serverProperties;
@@ -69,10 +71,15 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 		}
 	}
 
+	public ServerPropertiesEndpointLocator(ServerProperties serverProperties,
+			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
+		this(serverProperties, "", zipkinProperties, inetUtils);
+		this.environment = environment;
+	}
+
 	@Override
 	public Endpoint local() {
-		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
-				this.zipkinProperties.getService().getName() : this.appName;
+		String serviceName = serviceName();
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");
 		}
@@ -81,6 +88,16 @@ public class ServerPropertiesEndpointLocator implements EndpointLocator,
 				.ipv4(getAddress())
 				.port(getPort())
 				.build();
+	}
+
+	private String serviceName() {
+		if (StringUtils.hasText(this.zipkinProperties.getService().getName())) {
+			return this.zipkinProperties.getService().getName();
+		}
+		if (this.environment != null) {
+			return this.environment.getProperty("spring.application.name", "unknown");
+		}
+		return "unknown";
 	}
 
 	@EventListener(EmbeddedServletContainerInitializedEvent.class)
