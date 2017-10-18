@@ -40,30 +40,36 @@ public class DiscoveryClientEndpointLocator implements EndpointLocator {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
-	private final DiscoveryClient client;
+	private final ServiceInstance serviceInstance;
 	private final ZipkinProperties zipkinProperties;
 
+	@Deprecated
 	public DiscoveryClientEndpointLocator(DiscoveryClient client,
 			ZipkinProperties zipkinProperties) {
-		this.client = client;
+		this.serviceInstance = client.getLocalServiceInstance();
+		this.zipkinProperties = zipkinProperties;
+	}
+
+	public DiscoveryClientEndpointLocator(ServiceInstance serviceInstance,
+										ZipkinProperties zipkinProperties) {
+		this.serviceInstance = serviceInstance;
 		this.zipkinProperties = zipkinProperties;
 	}
 
 	@Override
 	public Endpoint local() {
-		ServiceInstance instance = this.client.getLocalServiceInstance();
-		if (instance == null) {
+		if (this.serviceInstance == null) {
 			throw new NoServiceInstanceAvailableException();
 		}
 		String serviceName = StringUtils.hasText(this.zipkinProperties.getService().getName()) ?
-				this.zipkinProperties.getService().getName() : instance.getServiceId();
+				this.zipkinProperties.getService().getName() : this.serviceInstance.getServiceId();
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");
 		}
 		return Endpoint.builder()
 				.serviceName(serviceName)
-				.ipv4(getIpAddress(instance))
-				.port(instance.getPort()).build();
+				.ipv4(getIpAddress(this.serviceInstance))
+				.port(this.serviceInstance.getPort()).build();
 	}
 
 	private int getIpAddress(ServiceInstance instance) {

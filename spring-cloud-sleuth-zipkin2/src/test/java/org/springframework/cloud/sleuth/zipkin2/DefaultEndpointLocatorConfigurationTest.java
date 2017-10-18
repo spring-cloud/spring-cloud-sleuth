@@ -1,7 +1,9 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -92,7 +94,37 @@ public class DefaultEndpointLocatorConfigurationTest {
 	@EnableAutoConfiguration
 	public static class ConfigurationWithRegistration {
 		@Bean public Registration getRegistration() {
-			return () -> "from-registration";
+			return new Registration() {
+				@Override
+				public String getServiceId() {
+					return "from-registration";
+				}
+
+				@Override
+				public String getHost() {
+					return null;
+				}
+
+				@Override
+				public int getPort() {
+					return 0;
+				}
+
+				@Override
+				public boolean isSecure() {
+					return false;
+				}
+
+				@Override
+				public URI getUri() {
+					return null;
+				}
+
+				@Override
+				public Map<String, String> getMetadata() {
+					return null;
+				}
+			};
 		}
 	}
 
