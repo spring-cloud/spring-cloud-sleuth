@@ -39,8 +39,8 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceWebSocketAutoConfigurationTest.Config.class)
-public class TraceWebSocketAutoConfigurationTest {
+@SpringBootTest(classes = TraceWebSocketAutoConfigurationTests.Config.class)
+public class TraceWebSocketAutoConfigurationTests {
 
 	@Autowired
 	DelegatingWebSocketMessageBrokerConfiguration delegatingWebSocketMessageBrokerConfiguration;

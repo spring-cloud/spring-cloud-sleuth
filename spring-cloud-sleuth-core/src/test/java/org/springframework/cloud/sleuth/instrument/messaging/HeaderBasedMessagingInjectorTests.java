@@ -6,11 +6,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.junit.Test;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.TraceKeys;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -19,7 +20,6 @@ public class HeaderBasedMessagingInjectorTests {
 
 	HeaderBasedMessagingInjector injector = new HeaderBasedMessagingInjector(new TraceKeys());
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void should_not_override_already_existing_headers() throws Exception {
 		Span span = Span.builder()
