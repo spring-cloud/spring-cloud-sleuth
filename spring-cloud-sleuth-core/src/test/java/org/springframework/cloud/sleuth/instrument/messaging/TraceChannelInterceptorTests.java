@@ -18,6 +18,9 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -41,6 +44,7 @@ import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.ExecutorChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -74,6 +78,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	private DirectChannel tracedChannel;
 
 	@Autowired
+	@Qualifier("tracedExecutorChannel")
+	private ExecutorChannel executorChannel;
+
+	@Autowired
 	@Qualifier("ignoredChannel")
 	private DirectChannel ignoredChannel;
 
@@ -89,9 +97,12 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	private Message<?> message;
 
 	private Span span;
+	
+	private CountDownLatch latch = new CountDownLatch(1);
 
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
+		this.latch.countDown();
 		this.message = message;
 		this.span = TestSpanContextHolder.getCurrentSpan();
 		if (message.getHeaders().containsKey("THROW_EXCEPTION")) {
@@ -102,6 +113,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Before
 	public void init() {
 		this.tracedChannel.subscribe(this);
+		this.executorChannel.subscribe(this);
 		this.ignoredChannel.subscribe(this);
 		this.accumulator.getSpans().clear();
 	}
@@ -111,6 +123,7 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(ExceptionUtils.getLastException()).isNull();
 		TestSpanContextHolder.removeCurrentSpan();
 		this.tracedChannel.unsubscribe(this);
+		this.executorChannel.unsubscribe(this);
 		this.ignoredChannel.unsubscribe(this);
 		this.accumulator.getSpans().clear();
 	}
@@ -119,6 +132,19 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	public void nonExportableSpanCreation() {
 		this.tracedChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader(TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
+		assertNotNull("message was null", this.message);
+
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		then(spanId).isNotNull();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(this.span.isExportable()).isFalse();
+	}
+
+	@Test
+	public void executableSpanCreation() throws Exception {
+		this.executorChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader(TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
+		this.latch.await(1, TimeUnit.SECONDS);
 		assertNotNull("message was null", this.message);
 
 		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
@@ -350,6 +376,11 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		@Bean
 		ArrayListSpanAccumulator arrayListSpanAccumulator() {
 			return new ArrayListSpanAccumulator();
+		}
+
+		@Bean
+		public ExecutorChannel tracedExecutorChannel() {
+			return new ExecutorChannel(Executors.newSingleThreadExecutor());
 		}
 
 		@Bean
