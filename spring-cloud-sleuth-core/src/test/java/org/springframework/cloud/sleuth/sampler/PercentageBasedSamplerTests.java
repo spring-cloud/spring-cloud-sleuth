@@ -1,9 +1,12 @@
 package org.springframework.cloud.sleuth.sampler;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 
@@ -60,8 +63,50 @@ public class PercentageBasedSamplerTests {
 		then(numberOfSampledElements).isEqualTo(threshold);
 	}
 
+	@Test
+	public void should_pass_given_percent_of_samples_with_fractional_element_after_percentage_got_updated() throws Exception {
+		float percentage = 0.35f;
+		this.samplerConfiguration.setPercentage(percentage);
+		PercentageBasedSampler sampler = new PercentageBasedSampler(this.samplerConfiguration);
+		int numberOfIterations = 1000;
+		int numberOfSampledElements = countNumberOfSampledElements(sampler, numberOfIterations);
+		int threshold = (int) (numberOfIterations * percentage);
+		then(numberOfSampledElements).isEqualTo(threshold);
+
+		numberOfIterations = 1000;
+		percentage = 0.65f;
+		this.samplerConfiguration.setPercentage(percentage);
+		sampler.onApplicationEvent(new EnvironmentChangeEvent(new HashSet<>(Collections.singletonList("spring.sleuth.sampler.percentage"))));
+		numberOfSampledElements = countNumberOfSampledElements(sampler, numberOfIterations);
+		threshold = (int) (numberOfIterations * percentage);
+		then(numberOfSampledElements).isEqualTo(threshold);
+	}
+
+	@Test
+	public void should_pass_given_percent_of_samples_with_fractional_element_after_context_got_refreshed_with_not_matching_keys() throws Exception {
+		float percentage = 0.35f;
+		this.samplerConfiguration.setPercentage(percentage);
+		PercentageBasedSampler sampler = new PercentageBasedSampler(this.samplerConfiguration);
+		int numberOfIterations = 1000;
+		int numberOfSampledElements = countNumberOfSampledElements(sampler, numberOfIterations);
+		int originalThreshold = (int) (numberOfIterations * percentage);
+		then(numberOfSampledElements).isEqualTo(originalThreshold);
+
+		numberOfIterations = 1000;
+		percentage = 0.65f;
+		this.samplerConfiguration.setPercentage(percentage);
+		sampler.onApplicationEvent(new EnvironmentChangeEvent(new HashSet<>(Collections.emptyList())));
+		numberOfSampledElements = countNumberOfSampledElements(sampler, numberOfIterations);
+		// cause there was no EnvironmentChangeEvent with percentage key
+		then(numberOfSampledElements).isEqualTo(originalThreshold);
+	}
+
 	private int countNumberOfSampledElements(int numberOfIterations) {
 		Sampler sampler = new PercentageBasedSampler(this.samplerConfiguration);
+		return countNumberOfSampledElements(sampler, numberOfIterations);
+	}
+
+	private int countNumberOfSampledElements(Sampler sampler, int numberOfIterations) {
 		int passedCounter = 0;
 		for (int i = 0; i < numberOfIterations; i++) {
 			boolean passed = sampler.isSampled(newSpan());

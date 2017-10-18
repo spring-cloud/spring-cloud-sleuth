@@ -1,11 +1,14 @@
 package org.springframework.cloud.sleuth.sampler;
 
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-
 import java.util.BitSet;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
+import org.springframework.cloud.sleuth.Sampler;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.context.ApplicationListener;
 
 /**
  * This sampler is appropriate for low-traffic instrumentation (ex servers that each receive <100K
@@ -23,16 +26,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Adrian Cole
  * @since 1.0.0
  */
-public class PercentageBasedSampler implements Sampler {
+public class PercentageBasedSampler implements Sampler,
+		ApplicationListener<EnvironmentChangeEvent> {
 
 	private final AtomicInteger counter = new AtomicInteger(0);
-	private final BitSet sampleDecisions;
+	private final AtomicReference<BitSet> sampleDecisions;
 	private final SamplerProperties configuration;
 
 	public PercentageBasedSampler(SamplerProperties configuration) {
-		int outOf100 = (int) (configuration.getPercentage() * 100.0f);
-		this.sampleDecisions = randomBitSet(100, outOf100, new Random());
 		this.configuration = configuration;
+		this.sampleDecisions = new AtomicReference<>(bitSet());
 	}
 
 	@Override
@@ -44,7 +47,7 @@ public class PercentageBasedSampler implements Sampler {
 		}
 		synchronized (this) {
 			final int i = this.counter.getAndIncrement();
-			boolean result = this.sampleDecisions.get(i);
+			boolean result = this.sampleDecisions.get().get(i);
 			if (i == 99) {
 				this.counter.set(0);
 			}
@@ -74,5 +77,17 @@ public class PercentageBasedSampler implements Sampler {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public void onApplicationEvent(EnvironmentChangeEvent event) {
+		if (event.getKeys().contains("spring.sleuth.sampler.percentage")) {
+			this.sampleDecisions.set(bitSet());
+		}
+	}
+
+	private BitSet bitSet() {
+		int outOf100 = (int) (this.configuration.getPercentage() * 100.0f);
+		return randomBitSet(100, outOf100, new Random());
 	}
 }
