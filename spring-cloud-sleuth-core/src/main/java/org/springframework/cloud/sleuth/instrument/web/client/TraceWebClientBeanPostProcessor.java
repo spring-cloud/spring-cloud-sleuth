@@ -5,9 +5,14 @@ import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import reactor.core.Scannable;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -25,7 +30,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into
@@ -62,6 +66,8 @@ class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 
 class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
+	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
+
 	private static final Log log = LogFactory.getLog(TraceExchangeFilterFunction.class);
 
 	private Tracer tracer;
@@ -76,43 +82,63 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	@Override public Mono<ClientResponse> filter(ClientRequest request,
 			ExchangeFunction next) {
-		if (log.isDebugEnabled()) {
-			log.debug("Creating a client span for the RPC");
-		}
-		final Span clientSpan = createNewSpan(request);
-		ClientRequest.Builder builder = ClientRequest.from(request);
-		httpSpanInjector().inject(clientSpan, new ClientRequestTextMap(request, builder));
-		if (log.isDebugEnabled()) {
-			log.debug("Headers got injected to the client span " + clientSpan);
-		}
+		final ClientRequest.Builder builder = ClientRequest.from(request);
+
 		Mono<ClientResponse> exchange = next.exchange(builder.build())
-				.doOnError(throwable -> {
+				.cast(Object.class)
+				.onErrorResume(Mono::just)
+				.zipWith(Mono.subscriberContext())
+				.flatMap(anyAndContext -> {
+					Object any = anyAndContext.getT1();
+					Span clientSpan = anyAndContext.getT2().get(CLIENT_SPAN_KEY);
+
 					tracer().continueSpan(clientSpan);
-					errorParser().parseErrorTags(clientSpan, throwable);
-				}).doOnSuccess(response -> {
-					tracer().continueSpan(clientSpan);
-					boolean error = response.statusCode().is4xxClientError() || response
-							.statusCode().is5xxServerError();
-					if (error) {
-						if (log.isDebugEnabled()) {
-							log.debug(
-									"Non positive status code was returned from the call. Will close the span ["
-											+ clientSpan + "]");
+
+					Mono<ClientResponse> continuation;
+					if (any instanceof Throwable) {
+						Throwable throwable = (Throwable) any;
+						errorParser().parseErrorTags(clientSpan, throwable);
+						continuation = Mono.error(throwable);
+					} else {
+						ClientResponse response = (ClientResponse) any;
+						boolean error = response.statusCode().is4xxClientError() || response
+								.statusCode().is5xxServerError();
+						if (error) {
+							if (log.isDebugEnabled()) {
+								log.debug(
+										"Non positive status code was returned from the call. Will close the span ["
+												+ clientSpan + "]");
+							}
+							errorParser().parseErrorTags(clientSpan, new RestClientException(
+									"Status code of the response is [" + response.statusCode()
+											.value() + "] and the reason is [" + response
+											.statusCode().getReasonPhrase() + "]"));
 						}
-						errorParser().parseErrorTags(clientSpan, new RestClientException(
-								"Status code of the response is [" + response.statusCode()
-										.value() + "] and the reason is [" + response
-										.statusCode().getReasonPhrase() + "]"));
+						continuation = Mono.just(response);
 					}
-				}).doFinally(signalType -> finish(clientSpan));
-		if (log.isDebugEnabled()) {
-			log.debug("Will detach the client span " + clientSpan);
-		}
-		Span detachedSpan = tracer().detach(clientSpan);
-		tracer().continueSpan(detachedSpan);
-		if (log.isDebugEnabled()) {
-			log.debug("Client span detached");
-		}
+					finish(clientSpan);
+					return continuation;
+				})
+				.subscriberContext(c -> {
+					if (log.isDebugEnabled()) {
+						log.debug("Creating a client span for the WebClient");
+					}
+					Span parent = c.getOrDefault(Span.class, null);
+					Span clientSpan = createNewSpan(request, parent);
+
+					httpSpanInjector().inject(clientSpan, new ClientRequestTextMap(request, builder));
+					if (log.isDebugEnabled()) {
+						log.debug("Headers got injected to the client span " + clientSpan);
+					}
+
+					if (parent == null) {
+						c = c.put(Span.class, clientSpan);
+						if (log.isDebugEnabled()) {
+							log.debug("Reactor Context got injected with the client span " + clientSpan);
+						}
+					}
+					return c.put(CLIENT_SPAN_KEY, clientSpan);
+				});
 		return exchange;
 	}
 
@@ -120,10 +146,15 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 	 * Enriches the request with proper headers and publishes
 	 * the client sent event
 	 */
-	private Span createNewSpan(ClientRequest request) {
+	private Span createNewSpan(ClientRequest request, Span optionalParent) {
 		URI uri = request.url();
 		String spanName = getName(uri);
-		Span newSpan = tracer().createSpan(spanName);
+		Span newSpan;
+		if (optionalParent == null) {
+			newSpan = tracer().createSpan(spanName);
+		} else {
+			newSpan = tracer().createSpan(spanName, optionalParent);
+		}
 		addRequestTags(request);
 		newSpan.logEvent(Span.CLIENT_SEND);
 		if (log.isDebugEnabled()) {
