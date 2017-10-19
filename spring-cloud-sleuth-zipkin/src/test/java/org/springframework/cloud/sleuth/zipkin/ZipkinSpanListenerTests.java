@@ -20,6 +20,7 @@ import org.assertj.core.api.Condition;
 import zipkin.Constants;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -305,12 +306,14 @@ public class ZipkinSpanListenerTests {
 	public void should_adjust_span_before_reporting_it() {
 		this.parent.logEvent(Span.CLIENT_RECV);
 		ZipkinSpanListener spanListener = new ZipkinSpanListener(this.spanReporter,
-				this.endpointLocator, null, Collections.<SpanAdjuster>singletonList(
-						span -> Span.builder().from(span).name("foo").build()));
+				this.endpointLocator, null, Arrays.asList(
+						(SpanAdjuster) span -> Span.builder().from(span).name("foo").build(),
+						(SpanAdjuster) span -> Span.builder().from(span).name(span.getName() + "bar").build()
+				));
 
 		zipkin.Span result = spanListener.convert(this.parent);
 
-		assertThat(result.name).isEqualTo("foo");
+		assertThat(result.name).isEqualTo("foobar");
 	}
 
 	@Test
