@@ -232,6 +232,7 @@ public class DefaultTracerTests {
 		tracer.close(span);
 	}
 
+
   /**
    * To support conversion to Amazon trace IDs, the first 32 bits of the trace ID are epoch seconds.
    */
