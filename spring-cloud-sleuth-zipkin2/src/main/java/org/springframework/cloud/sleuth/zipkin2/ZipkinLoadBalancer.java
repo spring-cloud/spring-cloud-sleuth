@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.zipkin;
+package org.springframework.cloud.sleuth.zipkin2;
 
 import java.net.URI;
 
