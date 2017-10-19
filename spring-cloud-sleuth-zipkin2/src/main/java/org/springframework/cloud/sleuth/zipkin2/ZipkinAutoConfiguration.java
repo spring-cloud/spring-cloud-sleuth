@@ -19,15 +19,18 @@ package org.springframework.cloud.sleuth.zipkin2;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -95,10 +98,25 @@ public class ZipkinAutoConfiguration {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
-	@Bean
-	@ConditionalOnMissingBean
-	public Sampler defaultTraceSampler(SamplerProperties config) {
-		return new PercentageBasedSampler(config);
+	@Configuration
+	@ConditionalOnClass(RefreshScope.class)
+	protected static class RefreshScopedPercentageBasedSamplerConfiguration {
+		@Bean
+		@RefreshScope
+		@ConditionalOnMissingBean
+		public Sampler defaultTraceSampler(SamplerProperties config) {
+			return new PercentageBasedSampler(config);
+		}
+	}
+
+	@Configuration
+	@ConditionalOnMissingClass("org.springframework.cloud.context.config.annotation.RefreshScope")
+	protected static class NonRefreshScopePercentageBasedSamplerConfiguration {
+		@Bean
+		@ConditionalOnMissingBean
+		public Sampler defaultTraceSampler(SamplerProperties config) {
+			return new PercentageBasedSampler(config);
+		}
 	}
 
 	@Bean

@@ -35,6 +35,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -136,10 +137,25 @@ public class ZipkinAutoConfiguration {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
-	@Bean
-	@ConditionalOnMissingBean
-	public Sampler defaultTraceSampler(SamplerProperties config) {
-		return new PercentageBasedSampler(config);
+	@Configuration
+	@ConditionalOnClass(RefreshScope.class)
+	protected static class RefreshScopedPercentageBasedSamplerConfiguration {
+		@Bean
+		@RefreshScope
+		@ConditionalOnMissingBean
+		public Sampler defaultTraceSampler(SamplerProperties config) {
+			return new PercentageBasedSampler(config);
+		}
+	}
+
+	@Configuration
+	@ConditionalOnMissingClass("org.springframework.cloud.context.config.annotation.RefreshScope")
+	protected static class NonRefreshScopePercentageBasedSamplerConfiguration {
+		@Bean
+		@ConditionalOnMissingBean
+		public Sampler defaultTraceSampler(SamplerProperties config) {
+			return new PercentageBasedSampler(config);
+		}
 	}
 
 	@Bean
