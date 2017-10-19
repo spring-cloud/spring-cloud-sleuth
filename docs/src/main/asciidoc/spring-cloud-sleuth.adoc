@@ -833,6 +833,10 @@ Here you can see an example of how to pass tracing information with `TraceableEx
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/TraceableExecutorServiceTests.java[tags=completablefuture,indent=0]
 ----
 
+IMPORTANT: Sleuth doesn't work with `parallelStream()` out of the box. If you want
+to have the tracing information propagated through the stream you have to use the
+approach with `supplyAsync(...)` as presented above.
+
 ===== Customization of Executors
 
 Sometimes you need to set up a custom instance of the `AsyncExecutor`. In the following snippet you
