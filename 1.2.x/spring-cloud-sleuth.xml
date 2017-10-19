@@ -1738,6 +1738,11 @@ are creating Spans each time a new task is submitted, invoked or scheduled.</sim
 }, new TraceableExecutorService(executorService,
 		// 'calculateTax' explicitly names the span - this param is optional
 		tracer, traceKeys, spanNamer, "calculateTax"));</programlisting>
+<important>
+<simpara>Sleuth doesn&#8217;t work with <literal>parallelStream()</literal> out of the box. If you want
+to have the tracing information propagated through the stream you have to use the
+approach with <literal>supplyAsync(...)</literal> as presented above.</simpara>
+</important>
 <section xml:id="_customization_of_executors">
 <title>Customization of Executors</title>
 <simpara>Sometimes you need to set up a custom instance of the <literal>AsyncExecutor</literal>. In the following snippet you
