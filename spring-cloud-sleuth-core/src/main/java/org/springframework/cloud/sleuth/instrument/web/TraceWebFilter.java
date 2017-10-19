@@ -20,6 +20,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.reactive.resource.ResourceWebHandler;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -88,9 +89,13 @@ public class TraceWebFilter implements WebFilter, Ordered {
 			errorParser().parseErrorTags(tracer().getCurrentSpan(), t);
 			addResponseTags(response, t);
 		}).doFinally(t -> {
-			HandlerMethod handlerMethod = exchange.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
-			addClassMethodTag(handlerMethod, span);
-			addClassNameTag(handlerMethod, span);
+			Object attribute = exchange
+					.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+			if (attribute instanceof HandlerMethod) {
+				HandlerMethod handlerMethod = (HandlerMethod) attribute;
+				addClassMethodTag(handlerMethod, span);
+				addClassNameTag(handlerMethod, span);
+			}
 			addResponseTagsForSpanWithoutParent(exchange, response);
 			detachOrCloseSpans(span);
 		}));
