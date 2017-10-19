@@ -2,15 +2,15 @@ package org.springframework.cloud.sleuth.zipkin2.sender;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.sleuth.zipkin2.ZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -39,13 +39,15 @@ class ZipkinRestTemplateSenderConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnMissingClass("org.springframework.cloud.client.discovery.DiscoveryClient")
+	@ConditionalOnMissingClass("org.springframework.cloud.client.loadbalancer.LoadBalancerClient")
 	static class DefaultZipkinUrlExtractorConfiguration {
+		@Autowired(required = false) LoadBalancerClient client;
+
 		@Bean
-		ZipkinUrlExtractor zipkinUrlExtractor() {
-			return new ZipkinUrlExtractor() {
-				@Override
-				public URI zipkinUrl(ZipkinProperties zipkinProperties) {
+		@ConditionalOnMissingBean
+		ZipkinLoadBalancer noOpLoadBalancer(final ZipkinProperties zipkinProperties) {
+			return new ZipkinLoadBalancer() {
+				@Override public URI instance() {
 					return URI.create(zipkinProperties.getBaseUrl());
 				}
 			};
@@ -53,29 +55,26 @@ class ZipkinRestTemplateSenderConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass(DiscoveryClient.class)
+	@ConditionalOnClass(LoadBalancerClient.class)
 	static class DiscoveryClientZipkinUrlExtractorConfiguration {
 
-		@Autowired(required = false) DiscoveryClient discoveryClient;
+		@Autowired(required = false) LoadBalancerClient client;
 
 		@Bean
-		ZipkinUrlExtractor zipkinUrlExtractor() {
-			final DiscoveryClient discoveryClient = this.discoveryClient;
-			return new ZipkinUrlExtractor() {
-				@Override
-				public URI zipkinUrl(ZipkinProperties zipkinProperties) {
-					if (discoveryClient != null) {
-						URI uri = URI.create(zipkinProperties.getBaseUrl());
-						String host = uri.getHost();
-						List<ServiceInstance> instances = discoveryClient.getInstances(host);
-						if (!instances.isEmpty()) {
-							return instances.get(0).getUri();
-						}
-					}
-					return URI.create(zipkinProperties.getBaseUrl());
-				}
-			};
+		@ConditionalOnMissingBean
+		ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(ZipkinProperties zipkinProperties) {
+			return new LoadBalancerClientZipkinLoadBalancer(this.client, zipkinProperties);
 		}
+	}
+
+	@Bean
+	ZipkinUrlExtractor zipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
+		return new ZipkinUrlExtractor() {
+			@Override
+			public URI zipkinUrl(ZipkinProperties zipkinProperties) {
+				return zipkinLoadBalancer.instance();
+			}
+		};
 	}
 }
 
