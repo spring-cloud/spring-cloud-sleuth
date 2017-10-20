@@ -60,12 +60,6 @@
 		<dependency>
 			<groupId>io.zipkin.java</groupId>
 			<artifactId>zipkin-server</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>io.zipkin.java</groupId>
-					<artifactId>zipkin</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.java</groupId>
