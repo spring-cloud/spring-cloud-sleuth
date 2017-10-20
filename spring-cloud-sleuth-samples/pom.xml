@@ -24,8 +24,6 @@
 		<module>spring-cloud-sleuth-sample-feign</module>
 		<module>spring-cloud-sleuth-sample-ribbon</module>
 		<module>spring-cloud-sleuth-sample-zipkin2</module>
-		<module>spring-cloud-sleuth-sample-stream</module>
-		<module>spring-cloud-sleuth-sample-zipkin-stream</module>
 	</modules>
 
 	<build>
