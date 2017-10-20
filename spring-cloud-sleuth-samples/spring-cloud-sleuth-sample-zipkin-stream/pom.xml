@@ -90,11 +90,6 @@
 			<artifactId>spring-cloud-sleuth-sample-test-core</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>io.zipkin.zipkin2</groupId>
-			<artifactId>zipkin</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
 	<build>

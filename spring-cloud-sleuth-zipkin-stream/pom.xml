@@ -65,10 +65,6 @@
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>*</artifactId>
 				</exclusion>
-				<exclusion>
-					<groupId>io.zipkin.zipkin2</groupId>
-					<artifactId>zipkin</artifactId>
-				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -99,11 +95,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.zipkin2</groupId>
-			<artifactId>zipkin</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
