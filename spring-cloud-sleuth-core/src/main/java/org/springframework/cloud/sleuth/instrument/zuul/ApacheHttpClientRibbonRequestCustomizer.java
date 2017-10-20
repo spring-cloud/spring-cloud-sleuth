@@ -54,7 +54,7 @@ class ApacheHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequest
 			}
 
 			@Override public void put(String key, String value) {
-				context.addHeader(key, value);
+				context.setHeader(key, value);
 			}
 		};
 	}
