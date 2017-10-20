@@ -71,7 +71,22 @@ public class ApacheHttpClientRibbonRequestCustomizerTests {
 		thenThereIsAHeaderWithNameAndValue(request, Span.PROCESS_ID_NAME, "processId");
 	}
 
+	@Test
+	public void should_not_set_duplicate_tracing_headers_on_the_context_when_there_is_a_span() throws Exception {
+		RequestBuilder requestBuilder = RequestBuilder.create("GET");
+
+		this.customizer.inject(this.span, this.customizer.toSpanTextMap(requestBuilder));
+		this.customizer.inject(this.span, this.customizer.toSpanTextMap(requestBuilder));
+
+		HttpUriRequest request = requestBuilder.build();
+		thenThereIsAHeaderWithNameAndValue(request, Span.SPAN_ID_NAME, "0000000000000001");
+		thenThereIsAHeaderWithNameAndValue(request, Span.TRACE_ID_NAME, "0000000000000002");
+		thenThereIsAHeaderWithNameAndValue(request, Span.PARENT_ID_NAME, "0000000000000003");
+		thenThereIsAHeaderWithNameAndValue(request, Span.PROCESS_ID_NAME, "processId");
+	}
+
 	private void thenThereIsAHeaderWithNameAndValue(HttpUriRequest request, String name, String value) {
+		then(request.getHeaders(name)).hasSize(1);
 		Header header = request.getFirstHeader(name);
 		then(header.getName()).isEqualTo(name);
 		then(header.getValue()).isEqualTo(value);

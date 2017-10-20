@@ -57,7 +57,7 @@ class OkHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCust
 			}
 
 			@Override public void put(String key, String value) {
-				context.addHeader(key, value);
+				context.header(key, value);
 			}
 		};
 	}
