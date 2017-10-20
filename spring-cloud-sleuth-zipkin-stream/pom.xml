@@ -62,7 +62,7 @@
 			<artifactId>zipkin-server</artifactId>
 			<exclusions>
 				<exclusion>
-					<groupId>io.zipkin.zipkin2</groupId>
+					<groupId>io.zipkin.java</groupId>
 					<artifactId>zipkin</artifactId>
 				</exclusion>
 			</exclusions>
