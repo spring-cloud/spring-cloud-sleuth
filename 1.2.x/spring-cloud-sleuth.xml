@@ -648,21 +648,7 @@ the Spring BOM</para>
 </callout>
 </calloutlist>
 <simpara>and then just annotate your main class with <literal>@EnableZipkinStreamServer</literal> annotation:</simpara>
-<programlisting language="java" linenumbering="unnumbered">package example;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.sleuth.zipkin.stream.EnableZipkinStreamServer;
-
-@SpringBootApplication
-@EnableZipkinStreamServer
-public class ZipkinStreamServerApplication {
-
-	public static void main(String[] args) throws Exception {
-		SpringApplication.run(ZipkinStreamServerApplication.class, args);
-	}
-
-}</programlisting>
+<programlisting language="java" linenumbering="unnumbered">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/src/main/java/example/ZipkinStreamServerApplication.java[]</programlisting>
 </section>
 </section>
 </chapter>
