@@ -1313,13 +1313,7 @@ type <literal>Spans</literal>.</simpara>
 <title>Zipkin Consumer</title>
 <simpara>There is a special convenience annotation for setting up a message consumer
 for the Span data and pushing it into a Zipkin <literal>SpanStore</literal>. This application</simpara>
-<programlisting language="java" linenumbering="unnumbered">@SpringBootApplication
-@EnableZipkinStreamServer
-public class Consumer {
-	public static void main(String[] args) {
-		SpringApplication.run(Consumer.class, args);
-	}
-}</programlisting>
+<programlisting language="java" linenumbering="unnumbered">Unresolved directive in spring-cloud-sleuth.adoc - include::../../../../spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/documentation/Consumer.java[tags=zipkin_consumer,indent=0]</programlisting>
 <simpara>will listen for the Span data on whatever transport you provide via a
 Spring Cloud Stream <literal>Binder</literal> (e.g. include
 <literal>spring-cloud-starter-stream-rabbit</literal> for RabbitMQ, and similar

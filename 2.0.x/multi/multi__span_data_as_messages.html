@@ -8,13 +8,7 @@ adding a Channel Binder implementation
 <code class="literal">spring-cloud-starter-stream-kafka</code> for Kafka). This will
 automatically turn your app into a producer of messages with payload
 type <code class="literal">Spans</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_zipkin_consumer" href="#_zipkin_consumer"></a>11.1&nbsp;Zipkin Consumer</h2></div></div></div><p>There is a special convenience annotation for setting up a message consumer
-for the Span data and pushing it into a Zipkin <code class="literal">SpanStore</code>. This application</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@SpringBootApplication</span></em>
-<em><span class="hl-annotation" style="color: gray">@EnableZipkinStreamServer</span></em>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> Consumer {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> main(String[] args) {
-		SpringApplication.run(Consumer.<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span>, args);
-	}
-}</pre><p>will listen for the Span data on whatever transport you provide via a
+for the Span data and pushing it into a Zipkin <code class="literal">SpanStore</code>. This application</p><pre class="programlisting">Unresolved directive in spring-cloud-sleuth.adoc - include::../../../../spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/documentation/Consumer.java[tags=zipkin_consumer,indent=<span class="hl-number">0</span>]</pre><p>will listen for the Span data on whatever transport you provide via a
 Spring Cloud Stream <code class="literal">Binder</code> (e.g. include
 <code class="literal">spring-cloud-starter-stream-rabbit</code> for RabbitMQ, and similar
 starters exist for Redis and Kafka). If you add the following UI dependency</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;groupId&gt;</span>io.zipkin.java<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/groupId&gt;</span>
