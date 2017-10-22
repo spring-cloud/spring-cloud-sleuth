@@ -26,3 +26,4 @@ NOTE: You can see the zipkin spans without the UI (in logs) if you run the sampl
 image::{github-raw}/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Sample Zipkin Screenshot]
 
 > The fact that the first trace in says "testSleuthMessaging" seems to be a bug in the UI (it has some annotations from that service, but it originates in the "testSleuthRibbon" service).
+
