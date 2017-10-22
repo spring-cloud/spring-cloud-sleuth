@@ -24,7 +24,9 @@ import org.springframework.cloud.sleuth.Span;
  *
  * @author Dave Syer
  * @since 1.0.0
+ * @deprecated Please use spring-cloud-sleuth-zipkin2 to report spans to Zipkin
  */
+@Deprecated
 public interface HostLocator {
 
 	Host locate(Span span);

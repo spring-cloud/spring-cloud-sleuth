@@ -7,7 +7,9 @@ import java.net.URI;
  *
  * @author Marcin Grzejszczak
  * @since 1.3.0
+ * @deprecated Please use spring-cloud-sleuth-zipkin2 to report spans to Zipkin
  */
+@Deprecated
 public interface ZipkinLoadBalancer {
 
 	/**

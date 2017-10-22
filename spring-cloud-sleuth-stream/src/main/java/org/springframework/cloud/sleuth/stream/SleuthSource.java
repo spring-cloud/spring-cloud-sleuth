@@ -29,7 +29,9 @@ import org.springframework.messaging.MessageChannel;
  * @since 1.0.0
  *
  * @see SleuthSink
+ * @deprecated Please use spring-cloud-sleuth-zipkin2 to report spans to Zipkin
  */
+@Deprecated
 public interface SleuthSource {
 
 	String OUTPUT = "sleuth";
