@@ -1,9 +1,0 @@
-server:
-  port: 3379
-
-spring:
-  application:
-    name: testSleuthApp
-  sleuth:
-    sampler:
-      percentage: 1.0

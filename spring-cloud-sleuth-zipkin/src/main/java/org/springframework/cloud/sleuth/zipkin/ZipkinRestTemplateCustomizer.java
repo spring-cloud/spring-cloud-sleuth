@@ -28,7 +28,9 @@ import org.springframework.web.client.RestTemplate;
  * @author Marcin Grzejszczak
  *
  * @since 1.1.0
+ * @deprecated Please use spring-cloud-sleuth-zipkin2 to report spans to Zipkin
  */
+@Deprecated
 public interface ZipkinRestTemplateCustomizer {
 
 	void customize(RestTemplate restTemplate);
