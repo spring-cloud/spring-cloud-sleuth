@@ -434,7 +434,7 @@ the Spring BOM</para>
 </section>
 <section xml:id="_sleuth_with_zipkin_via_http">
 <title>Sleuth with Zipkin via HTTP</title>
-<simpara>If you want both Sleuth and Zipkin just add the <literal>spring-cloud-starter-zipkin</literal> dependency.</simpara>
+<simpara>If you want both Sleuth and Zipkin just add the <literal>spring-cloud-starter-zipkin2</literal> dependency.</simpara>
 <formalpara role="primary">
 <title>Maven</title>
 <para>
@@ -452,7 +452,7 @@ the Spring BOM</para>
 
    &lt;dependency&gt; <co xml:id="CO3-2"/>
        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+       &lt;artifactId&gt;spring-cloud-starter-zipkin2&lt;/artifactId&gt;
    &lt;/dependency&gt;</programlisting>
 </para>
 </formalpara>
@@ -462,7 +462,7 @@ the Spring BOM</para>
 the Spring BOM</para>
 </callout>
 <callout arearefs="CO3-2">
-<para>Add the dependency to <literal>spring-cloud-starter-zipkin</literal></para>
+<para>Add the dependency to <literal>spring-cloud-starter-zipkin2</literal></para>
 </callout>
 </calloutlist>
 <formalpara role="secondary">
@@ -475,7 +475,7 @@ the Spring BOM</para>
 }
 
 dependencies { <co xml:id="CO4-2"/>
-    compile "org.springframework.cloud:spring-cloud-starter-zipkin"
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin2"
 }</programlisting>
 </para>
 </formalpara>
@@ -485,13 +485,17 @@ dependencies { <co xml:id="CO4-2"/>
 the Spring BOM</para>
 </callout>
 <callout arearefs="CO4-2">
-<para>Add the dependency to <literal>spring-cloud-starter-zipkin</literal></para>
+<para>Add the dependency to <literal>spring-cloud-starter-zipkin2</literal></para>
 </callout>
 </calloutlist>
 </section>
-<section xml:id="_sleuth_with_zipkin_via_spring_cloud_stream">
-<title>Sleuth with Zipkin via Spring Cloud Stream</title>
-<simpara>If you want both Sleuth and Zipkin just add the <literal>spring-cloud-sleuth-stream</literal> dependency.</simpara>
+<section xml:id="_sleuth_with_zipkin_via_rabbitmq_or_kafka">
+<title>Sleuth with Zipkin via RabbitMQ or Kafka</title>
+<simpara>If you want to use RabbitMQ or Kafka instead of http, add the <literal>spring-rabbit</literal> or <literal>spring-kafka</literal>
+dependencies. The default destination name is <literal>zipkin</literal>.</simpara>
+<simpara><emphasis>Note: <literal>spring-cloud-sleuth-stream</literal> is deprecated and incompatible with these destinations</emphasis></simpara>
+<simpara>If you want Sleuth over RabbitMQ add the <literal>spring-cloud-sleuth-starter-zipkin2</literal> and <literal>spring-rabbit</literal>
+dependencies.</simpara>
 <formalpara role="primary">
 <title>Maven</title>
 <para>
@@ -509,16 +513,11 @@ the Spring BOM</para>
 
    &lt;dependency&gt; <co xml:id="CO5-2"/>
        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-sleuth-stream&lt;/artifactId&gt;
+       &lt;artifactId&gt;spring-cloud-sleuth-starter-zipkin2&lt;/artifactId&gt;
    &lt;/dependency&gt;
    &lt;dependency&gt; <co xml:id="CO5-3"/>
-       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
-   &lt;/dependency&gt;
-   &lt;!-- EXAMPLE FOR RABBIT BINDING --&gt;
-   &lt;dependency&gt; <co xml:id="CO5-4"/>
-       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-stream-binder-rabbit&lt;/artifactId&gt;
+       &lt;groupId&gt;org.springframework.amqp&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-rabbit&lt;/artifactId&gt;
    &lt;/dependency&gt;</programlisting>
 </para>
 </formalpara>
@@ -528,13 +527,10 @@ the Spring BOM</para>
 the Spring BOM</para>
 </callout>
 <callout arearefs="CO5-2">
-<para>Add the dependency to <literal>spring-cloud-sleuth-stream</literal></para>
+<para>Add the dependency to <literal>spring-cloud-starter-sleuth-zipkin2</literal> - that way all dependent dependencies will be downloaded</para>
 </callout>
 <callout arearefs="CO5-3">
-<para>Add the dependency to <literal>spring-cloud-starter-sleuth</literal> - that way all dependant dependencies will be downloaded</para>
-</callout>
-<callout arearefs="CO5-4">
-<para>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</para>
+<para>To automatically configure rabbit, simply add the spring-rabbit dependency</para>
 </callout>
 </calloutlist>
 <formalpara role="secondary">
@@ -547,10 +543,8 @@ the Spring BOM</para>
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-sleuth-stream" <co xml:id="CO6-2"/>
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth" <co xml:id="CO6-3"/>
-    // Example for Rabbit binding
-    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <co xml:id="CO6-4"/>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth-zipkin2" <co xml:id="CO6-2"/>
+    compile "org.springframework.amqp:spring-rabbit" <co xml:id="CO6-3"/>
 }</programlisting>
 </para>
 </formalpara>
@@ -560,113 +554,12 @@ dependencies {
 the Spring BOM</para>
 </callout>
 <callout arearefs="CO6-2">
-<para>Add the dependency to <literal>spring-cloud-sleuth-stream</literal></para>
+<para>Add the dependency to <literal>spring-cloud-starter-sleuth-zipkin2</literal> - that way all dependent dependencies will be downloaded</para>
 </callout>
 <callout arearefs="CO6-3">
-<para>Add the dependency to <literal>spring-cloud-starter-sleuth</literal> - that way all dependant dependencies will be downloaded</para>
-</callout>
-<callout arearefs="CO6-4">
-<para>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</para>
+<para>To automatically configure rabbit, simply add the spring-rabbit dependency</para>
 </callout>
 </calloutlist>
-</section>
-<section xml:id="_spring_cloud_sleuth_stream_zipkin_collector">
-<title>Spring Cloud Sleuth Stream Zipkin Collector</title>
-<simpara>If you want to start a Spring Cloud Sleuth Stream Zipkin collector just add the <literal>spring-cloud-sleuth-zipkin-stream</literal>
-dependency</simpara>
-<formalpara role="primary">
-<title>Maven</title>
-<para>
-<programlisting language="xml" linenumbering="unnumbered">&lt;dependencyManagement&gt; <co xml:id="CO7-1"/>
-         &lt;dependencies&gt;
-             &lt;dependency&gt;
-                 &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-                 &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
-                 &lt;version&gt;${release.train.version}&lt;/version&gt;
-                 &lt;type&gt;pom&lt;/type&gt;
-                 &lt;scope&gt;import&lt;/scope&gt;
-             &lt;/dependency&gt;
-         &lt;/dependencies&gt;
-   &lt;/dependencyManagement&gt;
-
-   &lt;dependency&gt; <co xml:id="CO7-2"/>
-       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-sleuth-zipkin-stream&lt;/artifactId&gt;
-   &lt;/dependency&gt;
-   &lt;dependency&gt; <co xml:id="CO7-3"/>
-       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
-   &lt;/dependency&gt;
-   &lt;!-- EXAMPLE FOR RABBIT BINDING --&gt;
-   &lt;dependency&gt; <co xml:id="CO7-4"/>
-       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-stream-binder-rabbit&lt;/artifactId&gt;
-   &lt;/dependency&gt;</programlisting>
-</para>
-</formalpara>
-<calloutlist>
-<callout arearefs="CO7-1">
-<para>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
-the Spring BOM</para>
-</callout>
-<callout arearefs="CO7-2">
-<para>Add the dependency to <literal>spring-cloud-sleuth-zipkin-stream</literal></para>
-</callout>
-<callout arearefs="CO7-3">
-<para>Add the dependency to <literal>spring-cloud-starter-sleuth</literal> - that way all dependant dependencies will be downloaded</para>
-</callout>
-<callout arearefs="CO7-4">
-<para>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</para>
-</callout>
-</calloutlist>
-<formalpara role="secondary">
-<title>Gradle</title>
-<para>
-<programlisting language="groovy" linenumbering="unnumbered">dependencyManagement { <co xml:id="CO8-1"/>
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies {
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin-stream" <co xml:id="CO8-2"/>
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth" <co xml:id="CO8-3"/>
-    // Example for Rabbit binding
-    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <co xml:id="CO8-4"/>
-}</programlisting>
-</para>
-</formalpara>
-<calloutlist>
-<callout arearefs="CO8-1">
-<para>In order not to pick versions by yourself it&#8217;s much better if you add the dependency management via
-the Spring BOM</para>
-</callout>
-<callout arearefs="CO8-2">
-<para>Add the dependency to <literal>spring-cloud-sleuth-zipkin-stream</literal></para>
-</callout>
-<callout arearefs="CO8-3">
-<para>Add the dependency to <literal>spring-cloud-starter-sleuth</literal> - that way all dependant dependencies will be downloaded</para>
-</callout>
-<callout arearefs="CO8-4">
-<para>Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to</para>
-</callout>
-</calloutlist>
-<simpara>and then just annotate your main class with <literal>@EnableZipkinStreamServer</literal> annotation:</simpara>
-<programlisting language="java" linenumbering="unnumbered">package example;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.sleuth.zipkin.stream.EnableZipkinStreamServer;
-
-@SpringBootApplication
-@EnableZipkinStreamServer
-public class ZipkinStreamServerApplication {
-
-	public static void main(String[] args) throws Exception {
-		SpringApplication.run(ZipkinStreamServerApplication.class, args);
-	}
-
-}</programlisting>
 </section>
 </section>
 </chapter>
@@ -744,18 +637,21 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 <simpara>Provides simple metrics of accepted / dropped spans.</simpara>
 </listitem>
 <listitem>
-<simpara>If <literal>spring-cloud-sleuth-zipkin</literal> then the app will generate and collect Zipkin-compatible traces.
+<simpara>If <literal>spring-cloud-sleuth-zipkin2</literal> then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using <literal>spring.zipkin.baseUrl</literal>.</simpara>
+<itemizedlist>
+<listitem>
+<simpara>If you depend on <literal>spring-rabbit</literal> or <literal>spring-kafka</literal> your app will send traces to a broker instead of http.</simpara>
 </listitem>
 <listitem>
-<simpara>If <literal>spring-cloud-sleuth-stream</literal> then the app will generate and collect traces via <link xl:href="https://github.com/spring-cloud/spring-cloud-stream">Spring Cloud Stream</link>.
-Your app automatically becomes a producer of tracer messages that are sent over your broker of choice
-(e.g. RabbitMQ, Apache Kafka, Redis).</simpara>
+<simpara>Note: <literal>spring-cloud-sleuth-stream</literal> is deprecated and should no longer be used.</simpara>
+</listitem>
+</itemizedlist>
 </listitem>
 </itemizedlist>
 <important>
-<simpara>If using Zipkin or Stream, configure the percentage of spans exported using <literal>spring.sleuth.sampler.percentage</literal>
+<simpara>If using Zipkin, configure the percentage of spans exported using <literal>spring.sleuth.sampler.percentage</literal>
 (default 0.1, i.e. 10%). <emphasis role="strong">Otherwise you might think that Sleuth is not working cause it&#8217;s omitting some spans.</emphasis></simpara>
 </important>
 <note>
