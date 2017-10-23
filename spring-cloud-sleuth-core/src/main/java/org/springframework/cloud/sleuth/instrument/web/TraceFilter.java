@@ -240,10 +240,9 @@ public class TraceFilter extends GenericFilterBean {
 					log.debug(
 							"Won't detach the span " + span + " since error has already been handled");
 				}
-			}  else if (shouldCloseSpan(request) && tracer().isTracing() && stillTracingCurrentSapn(span)) {
+			}  else if ((shouldCloseSpan(request) || isRootSpan(span)) && tracer().isTracing() && stillTracingCurrentSpan(span)) {
 				if (log.isDebugEnabled()) {
-					log.debug(
-							"Will close span " + span + " since some component marked it for closure");
+					log.debug("Will close span " + span + " since " + (shouldCloseSpan(request) ? "some component marked it for closure" : "response was unsuccessful for the root span"));
 				}
 				tracer().close(span);
 				clearTraceAttribute(request);
@@ -269,7 +268,11 @@ public class TraceFilter extends GenericFilterBean {
 		return request.getAttribute(TRACE_SPAN_WITHOUT_PARENT) != null;
 	}
 
-	private boolean stillTracingCurrentSapn(Span span) {
+	private boolean isRootSpan(Span span) {
+		return span.getTraceId() == span.getSpanId();
+	}
+
+	private boolean stillTracingCurrentSpan(Span span) {
 		return tracer().getCurrentSpan().equals(span);
 	}
 

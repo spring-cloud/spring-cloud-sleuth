@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static org.assertj.core.api.Assertions.fail;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.io.IOException;
 
 import org.junit.After;
@@ -36,14 +39,15 @@ import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -63,6 +67,7 @@ public class TraceFilterWebIntegrationTests {
 	public void cleanup() {
 		ExceptionUtils.setFail(true);
 		TestSpanContextHolder.removeCurrentSpan();
+		this.accumulator.clear();
 	}
 
 	@Test
@@ -78,6 +83,20 @@ public class TraceFilterWebIntegrationTests {
 				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
 				.hasRpcTagsInProperOrder();
+	}
+
+	@Test
+	public void should_create_spans_for_endpoint_returning_unsuccessful_result() {
+		try {
+			new RestTemplate().getForObject("http://localhost:" + port() + "/test_bad_request", String.class);
+			fail("should throw exception");
+		} catch (HttpClientErrorException e) {
+		}
+
+		then(this.tracer.getCurrentSpan()).isNull();
+		then(ExceptionUtils.getLastException()).isNull();
+		then(new ListOfSpans(this.accumulator.getSpans()))
+				.hasServerSideSpansInProperOrder();
 	}
 
 	private int port() {
@@ -118,6 +137,11 @@ public class TraceFilterWebIntegrationTests {
 		@RequestMapping("/")
 		public void throwException() {
 			throw new RuntimeException("Throwing exception");
+		}
+
+		@RequestMapping(path = "/test_bad_request", method = RequestMethod.GET)
+		public ResponseEntity<?> processFail() {
+			return ResponseEntity.badRequest().build();
 		}
 	}
 }
