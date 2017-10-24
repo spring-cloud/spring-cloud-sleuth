@@ -401,7 +401,7 @@ the Spring BOM
 
 ==== Sleuth with Zipkin via HTTP
 
-If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` dependency.
+If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin2` dependency.
 
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
@@ -420,12 +420,12 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` de
 
     <dependency> <2>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-zipkin</artifactId>
+        <artifactId>spring-cloud-starter-zipkin2</artifactId>
     </dependency>
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
-<2> Add the dependency to `spring-cloud-starter-zipkin`
+<2> Add the dependency to `spring-cloud-starter-zipkin2`
 
 [source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
@@ -437,16 +437,22 @@ dependencyManagement { <1>
 }
 
 dependencies { <2>
-    compile "org.springframework.cloud:spring-cloud-starter-zipkin"
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin2"
 }
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
-<2> Add the dependency to `spring-cloud-starter-zipkin`
+<2> Add the dependency to `spring-cloud-starter-zipkin2`
 
-==== Sleuth with Zipkin via Spring Cloud Stream
+==== Sleuth with Zipkin via RabbitMQ or Kafka
 
-If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dependency.
+If you want to use RabbitMQ or Kafka instead of http, add the `spring-rabbit` or `spring-kafka`
+dependencies. The default destination name is `zipkin`.
+
+_Note: `spring-cloud-sleuth-stream` is deprecated and incompatible with these destinations_
+
+If you want Sleuth over RabbitMQ add the `spring-cloud-sleuth-starter-zipkin2` and `spring-rabbit`
+dependencies.
 
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
@@ -465,23 +471,17 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-sleuth-stream` dep
 
     <dependency> <2>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-stream</artifactId>
+        <artifactId>spring-cloud-sleuth-starter-zipkin2</artifactId>
     </dependency>
     <dependency> <3>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-    </dependency>
-    <!-- EXAMPLE FOR RABBIT BINDING -->
-    <dependency> <4>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+        <groupId>org.springframework.amqp</groupId>
+        <artifactId>spring-rabbit</artifactId>
     </dependency>
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
-<2> Add the dependency to `spring-cloud-sleuth-stream`
-<3> Add the dependency to `spring-cloud-starter-sleuth` - that way all dependant dependencies will be downloaded
-<4> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
+<2> Add the dependency to `spring-cloud-starter-sleuth-zipkin2` - that way all dependent dependencies will be downloaded
+<3> To automatically configure rabbit, simply add the spring-rabbit dependency
 
 [source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
@@ -493,100 +493,14 @@ dependencyManagement { <1>
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-sleuth-stream" <2>
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth" <3>
-    // Example for Rabbit binding
-    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <4>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth-zipkin2" <2>
+    compile "org.springframework.amqp:spring-rabbit" <3>
 }
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
-<2> Add the dependency to `spring-cloud-sleuth-stream`
-<3> Add the dependency to `spring-cloud-starter-sleuth` - that way all dependant dependencies will be downloaded
-<4> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
-
-==== Spring Cloud Sleuth Stream Zipkin Collector
-
-If you want to start a Spring Cloud Sleuth Stream Zipkin collector just add the `spring-cloud-sleuth-zipkin-stream`
-dependency
-
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-	<dependencyManagement> <1>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train.version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency> <2>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-zipkin-stream</artifactId>
-    </dependency>
-    <dependency> <3>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-    </dependency>
-    <!-- EXAMPLE FOR RABBIT BINDING -->
-    <dependency> <4>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-stream-binder-rabbit</artifactId>
-    </dependency>
-----
-<1> In order not to pick versions by yourself it's much better if you add the dependency management via
-the Spring BOM
-<2> Add the dependency to `spring-cloud-sleuth-zipkin-stream`
-<3> Add the dependency to `spring-cloud-starter-sleuth` - that way all dependant dependencies will be downloaded
-<4> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
-
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-.Gradle
-----
-dependencyManagement { <1>
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies {
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin-stream" <2>
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth" <3>
-    // Example for Rabbit binding
-    compile "org.springframework.cloud:spring-cloud-stream-binder-rabbit" <4>
-}
-----
-<1> In order not to pick versions by yourself it's much better if you add the dependency management via
-the Spring BOM
-<2> Add the dependency to `spring-cloud-sleuth-zipkin-stream`
-<3> Add the dependency to `spring-cloud-starter-sleuth` - that way all dependant dependencies will be downloaded
-<4> Add a binder (e.g. Rabbit binder) to tell Spring Cloud Stream what it should bind to
-
-and then just annotate your main class with `@EnableZipkinStreamServer` annotation:
-
-[source,java]
-----
-package example;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.sleuth.zipkin.stream.EnableZipkinStreamServer;
-
-@SpringBootApplication
-@EnableZipkinStreamServer
-public class ZipkinStreamServerApplication {
-
-	public static void main(String[] args) throws Exception {
-		SpringApplication.run(ZipkinStreamServerApplication.class, args);
-	}
-
-}
-----
+<2> Add the dependency to `spring-cloud-starter-sleuth-zipkin2` - that way all dependent dependencies will be downloaded
+<3> To automatically configure rabbit, simply add the spring-rabbit dependency
 
 == Additional resources
 
@@ -639,15 +553,13 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 
 * Provides simple metrics of accepted / dropped spans.
 
-* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces.
+* If `spring-cloud-sleuth-zipkin2` then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using `spring.zipkin.baseUrl`.
+  - If you depend on `spring-rabbit` or `spring-kafka` your app will send traces to a broker instead of http.
+  - Note: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
 
-* If `spring-cloud-sleuth-stream` then the app will generate and collect traces via https://github.com/spring-cloud/spring-cloud-stream[Spring Cloud Stream].
-Your app automatically becomes a producer of tracer messages that are sent over your broker of choice
-(e.g. RabbitMQ, Apache Kafka, Redis).
-
-IMPORTANT: If using Zipkin or Stream, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
+IMPORTANT: If using Zipkin, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
 (default 0.1, i.e. 10%). *Otherwise you might think that Sleuth is not working cause it's omitting some spans.*
 
 NOTE: the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example
