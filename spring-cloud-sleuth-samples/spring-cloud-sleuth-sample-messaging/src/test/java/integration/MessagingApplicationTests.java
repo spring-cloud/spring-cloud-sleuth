@@ -15,8 +15,6 @@
  */
 package integration;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -27,7 +25,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -37,8 +34,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
-import zipkin.Constants;
-import zipkin.Span;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -81,7 +78,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId).run()
 		);
 
-		await().atMost(5, SECONDS).untilAsserted(() -> {
+		await().atMost(10, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenTheSpansHaveProperParentStructure();
 		});
@@ -97,36 +94,36 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
-			thenThereIsAtLeastOneBinaryAnnotationWithKey("background-sleep-millis");
+			thenThereIsAtLeastOneTagWithKey("background-sleep-millis");
 		});
 	}
 
-	private void thenThereIsAtLeastOneBinaryAnnotationWithKey(String binaryAnnotationKey) {
+	private void thenThereIsAtLeastOneTagWithKey(String key) {
 		then(this.integrationTestSpanCollector.hashedSpans.stream()
-				.map(s -> s.binaryAnnotations)
-				.flatMap(Collection::stream)
-				.anyMatch(b -> b.key.equals(binaryAnnotationKey))).isTrue();
+				.map(Span::tags)
+				.flatMap(m -> m.keySet().stream())
+				.anyMatch(b -> b.equals(key))).isTrue();
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
+		String traceIdHex = Long.toHexString(traceId);
 		then(this.integrationTestSpanCollector.hashedSpans.stream()
-				.allMatch(span -> span.traceId == traceId)).describedAs("All spans have same trace id").isTrue();
+				.allMatch(span -> span.traceId().equals(traceIdHex))).describedAs("All spans have same trace id").isTrue();
 	}
 
 	private void thenTheSpansHaveProperParentStructure() {
 		Optional<Span> firstHttpSpan = findFirstHttpRequestSpan();
 		List<Span> eventSpans = findAllEventRelatedSpans();
-		Optional<Span> eventSentSpan = findSpanWithAnnotation(Constants.SERVER_SEND);
-		Optional<Span> eventReceivedSpan = findSpanWithAnnotation(Constants.CLIENT_RECV);
+		Optional<Span> eventSentSpan = findSpanWithKind(Span.Kind.SERVER);
+		Optional<Span> eventReceivedSpan = findSpanWithKind(Span.Kind.CLIENT);
 		Optional<Span> lastHttpSpansParent = findLastHttpSpansParent();
 		// "http:/parent/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo" (SS)
-		Collections.sort(this.integrationTestSpanCollector.hashedSpans);
 		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, eventReceivedSpan);
 		then(this.integrationTestSpanCollector.hashedSpans).as("There were 4 spans").hasSize(4);
 		log.info("Checking the parent child structure");
 		List<Optional<Span>> parentChild = this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> span.parentId != null)
-				.map(span -> this.integrationTestSpanCollector.hashedSpans.stream().filter(span1 -> span1.id == span.parentId).findAny()
+				.filter(span -> span.parentId() != null)
+				.map(span -> this.integrationTestSpanCollector.hashedSpans.stream().filter(span1 -> span1.id().equals(span.parentId())).findAny()
 		).collect(Collectors.toList());
 		log.info("List of parents and children " + parentChild);
 		then(parentChild.stream().allMatch(Optional::isPresent)).isTrue();
@@ -134,27 +131,26 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private Optional<Span> findLastHttpSpansParent() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "http:/foo".equals(span.name) && !span.annotations.isEmpty()).findFirst();
+				.filter(span -> "http:/foo".equals(span.name()) && span.kind() != null).findFirst();
 	}
 
-	private Optional<Span> findSpanWithAnnotation(String annotationName) {
+	private Optional<Span> findSpanWithKind(Span.Kind kind) {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> span.annotations.stream().filter(annotation -> annotationName
-						.equals(annotation.value)).findFirst().isPresent())
+				.filter(span -> kind.equals(span.kind()))
 				.findFirst();
 	}
 
 	private List<Span> findAllEventRelatedSpans() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "message:messages".equals(span.name) && span.parentId != null).collect(
+				.filter(span -> "message:messages".equals(span.name()) && span.parentId() != null).collect(
 						Collectors.toList());
 	}
 
 	private Optional<Span> findFirstHttpRequestSpan() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
 				// home is the name of the method
-				.filter(span -> span.binaryAnnotations.stream()
-						.anyMatch(binaryAnnotation -> new String(binaryAnnotation.value).equals("home"))).findFirst();
+				.filter(span -> span.tags().values().stream()
+						.anyMatch("home"::equals)).findFirst();
 	}
 
 	private void thenAllSpansArePresent(Optional<Span> firstHttpSpan,
@@ -178,9 +174,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	@Configuration
 	public static class IntegrationSpanCollectorConfig {
 		@Bean
-		ZipkinSpanReporter integrationTestZipkinSpanReporter() {
+		Reporter<Span> integrationTestZipkinSpanReporter() {
 			return new IntegrationTestZipkinSpanReporter();
 		}
 	}
-
 }

@@ -20,16 +20,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
-import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 
-import zipkin.Span;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 
 /**
  * Span Collector that logs spans and adds Spans to a list
  *
  * @author Marcin Grzejszczak
  */
-public class IntegrationTestZipkinSpanReporter implements ZipkinSpanReporter {
+public class IntegrationTestZipkinSpanReporter implements Reporter<Span> {
 
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(IntegrationTestZipkinSpanReporter.class);
