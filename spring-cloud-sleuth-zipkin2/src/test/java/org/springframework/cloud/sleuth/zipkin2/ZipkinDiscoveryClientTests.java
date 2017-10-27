@@ -1,14 +1,12 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.zipkin2.ZipkinDiscoveryClientTests.ZIPKIN_RULE;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
+import okhttp3.mockwebserver.MockWebServer;
 import org.awaitility.Awaitility;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -17,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerRequest;
 import org.springframework.cloud.sleuth.Span;
@@ -26,8 +23,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import zipkin.junit.ZipkinRule;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class, properties = {
 		"spring.zipkin.baseUrl=http://zipkin/",
@@ -35,7 +30,7 @@ import zipkin.junit.ZipkinRule;
 })
 public class ZipkinDiscoveryClientTests {
 
-	@ClassRule public static ZipkinRule ZIPKIN_RULE = new ZipkinRule();
+	@ClassRule public static MockWebServer ZIPKIN_RULE = new MockWebServer();
 
 	@Autowired SpanReporter spanReporter;
 
@@ -46,7 +41,7 @@ public class ZipkinDiscoveryClientTests {
 
 		this.spanReporter.report(span);
 
-		Awaitility.await().untilAsserted(() -> then(ZIPKIN_RULE.httpRequestCount()).isGreaterThan(0));
+		Awaitility.await().untilAsserted(() -> then(ZIPKIN_RULE.getRequestCount()).isGreaterThan(0));
 	}
 
 	@Configuration
@@ -85,7 +80,7 @@ public class ZipkinDiscoveryClientTests {
 
 						@Override
 						public int getPort() {
-							return URI.create(ZIPKIN_RULE.httpUrl()).getPort();
+							return ZIPKIN_RULE.url("/").port();
 						}
 
 						@Override
@@ -95,7 +90,7 @@ public class ZipkinDiscoveryClientTests {
 
 						@Override
 						public URI getUri() {
-							return URI.create(ZIPKIN_RULE.httpUrl());
+							return ZIPKIN_RULE.url("/").uri();
 						}
 
 						@Override
