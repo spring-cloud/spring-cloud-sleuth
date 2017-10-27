@@ -16,10 +16,17 @@
 package integration;
 
 import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
-import zipkin.junit.ZipkinRule;
-import zipkin.server.EnableZipkinServer;
 
 import java.net.URI;
 import java.util.Random;
@@ -29,8 +36,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 import org.springframework.context.annotation.Bean;
@@ -38,16 +43,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import zipkin2.Span;
+import zipkin2.codec.SpanBytesDecoder;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = { WaitUntilZipkinIsUpConfig.class, SampleZipkinApplication.class },
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = {"sample.zipkin.enabled=true"})
 public class ZipkinTests extends AbstractIntegrationTest {
-
-	@ClassRule public static final ZipkinRule zipkin = new ZipkinRule();
+	@ClassRule public static final MockWebServer zipkin = new MockWebServer();
 
 	private static final String APP_NAME = "testsleuthzipkin";
 	@Value("${local.server.port}")
@@ -55,7 +62,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	private String sampleAppUrl = "http://localhost:" + this.port;
 	@Autowired ZipkinProperties zipkinProperties;
 
-	@Override protected int getZipkinServerPort() {
+	int getZipkinServerPort() {
 		return getPortFromProps();
 	}
 
@@ -64,21 +71,20 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	}
 
 	@Test
-	public void should_propagate_spans_to_zipkin() {
+	public void should_propagate_spans_to_zipkin() throws Exception {
+		zipkin.enqueue(new MockResponse());
+
 		long traceId = new Random().nextLong();
 
 		await().atMost(10, SECONDS).untilAsserted(() ->
 				httpMessageWithTraceIdInHeadersIsSuccessfullySent(
-				this.sampleAppUrl + "/hi2", traceId).run()
+						this.sampleAppUrl + "/hi2", traceId).run()
 		);
 
-		await().atMost(10, SECONDS).untilAsserted(() ->
-				allSpansWereRegisteredInZipkinWithTraceIdEqualTo(traceId).run()
-		);
+		spansSentToZipkin(zipkin, traceId);
 	}
 
-	@Override
-	protected String getAppName() {
+  String getAppName() {
 		return APP_NAME;
 	}
 
@@ -89,16 +95,63 @@ public class ZipkinTests extends AbstractIntegrationTest {
 		@Primary
 		ZipkinProperties testZipkinProperties() {
 			ZipkinProperties zipkinProperties = new ZipkinProperties();
-			zipkinProperties.setBaseUrl(zipkin.httpUrl());
+			zipkinProperties.setBaseUrl(zipkin.url("/").toString());
 			return zipkinProperties;
 		}
 	}
 
-	@SpringBootApplication
-	@EnableZipkinServer
-	protected static class ZipkinServer {
-		public static void main(String[] args) {
-			SpringApplication.run(ZipkinServer.class, args);
-		}
+	void spansSentToZipkin(MockWebServer zipkin, long traceId)
+			throws InterruptedException {
+		RecordedRequest request = zipkin.takeRequest();
+		List<Span> spans = SpanBytesDecoder.JSON_V2.decodeList(request.getBody().readByteArray());
+		List<String> traceIdsNotFoundInZipkin = traceIdsNotFoundInZipkin(spans, traceId);
+		List<String> serviceNamesNotFoundInZipkin = serviceNamesNotFoundInZipkin(spans);
+		List<String> tagsNotFoundInZipkin = hasRequiredTag(spans);
+		log.info(String.format("The following trace IDs were not found in Zipkin [%s]", traceIdsNotFoundInZipkin));
+		log.info(String.format("The following services were not found in Zipkin [%s]", serviceNamesNotFoundInZipkin));
+		log.info(String.format("The following tags were not found in Zipkin [%s]", tagsNotFoundInZipkin));
+		then(traceIdsNotFoundInZipkin).isEmpty();
+		then(serviceNamesNotFoundInZipkin).isEmpty();
+		then(tagsNotFoundInZipkin).isEmpty();
+		log.info("Zipkin tracing is working! Sleuth is working! Let's be happy!");
+	}
+
+	List<String> traceIdsNotFoundInZipkin(List<Span> spans, long traceId) {
+		String traceIdString = Long.toHexString(traceId);
+		Optional<String> traceIds = spans.stream()
+				.map(Span::traceId)
+				.filter(traceIdString::equals)
+				.findFirst();
+		return traceIds.isPresent() ? Collections.emptyList() : Collections.singletonList(traceIdString);
+	}
+
+	List<String> serviceNamesNotFoundInZipkin(List<Span> spans) {
+		List<String> localServiceNames = spans.stream()
+				.map(Span::localServiceName)
+				.filter(Objects::nonNull)
+				.distinct()
+				.collect(Collectors.toList());
+		List<String> remoteServiceNames = spans.stream()
+				.map(Span::remoteServiceName)
+				.filter(Objects::nonNull)
+				.distinct()
+				.collect(Collectors.toList());
+		List<String> names = new ArrayList<>();
+		names.addAll(localServiceNames);
+		names.addAll(remoteServiceNames);
+		return names.contains(getAppName()) ? Collections.emptyList() : names;
+	}
+
+	List<String> hasRequiredTag(List<Span> spans) {
+		String key = getRequiredTagKey();
+		Optional<String> keys = spans.stream()
+				.flatMap(span -> span.tags().keySet().stream())
+				.filter(key::equals)
+				.findFirst();
+		return keys.isPresent() ? Collections.emptyList() : Collections.singletonList(key);
+	}
+
+	String getRequiredTagKey() {
+		return "random-sleep-millis";
 	}
 }
