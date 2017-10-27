@@ -1,9 +1,12 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
+import static org.assertj.core.api.BDDAssertions.then;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
+import okhttp3.mockwebserver.MockWebServer;
 import org.awaitility.Awaitility;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -19,19 +22,15 @@ import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
-import zipkin.junit.ZipkinRule;
-
-import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class,
-		properties = {"spring.zipkin.baseUrl=http://zipkin/",
-		"spring.cloud.discovery.client.composite-indicator.enabled=false",
+@SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class, properties = {
+		"spring.zipkin.baseUrl=http://zipkin/",
 		"spring.zipkin.sender.type=web" // override default priority which picks rabbit due to classpath
 })
 public class ZipkinDiscoveryClientTests {
 
-	@ClassRule public static ZipkinRule ZIPKIN_RULE = new ZipkinRule();
+	@ClassRule public static MockWebServer ZIPKIN_RULE = new MockWebServer();
 
 	@Autowired SpanReporter spanReporter;
 
@@ -42,7 +41,7 @@ public class ZipkinDiscoveryClientTests {
 
 		this.spanReporter.report(span);
 
-		Awaitility.await().untilAsserted(() -> then(ZIPKIN_RULE.httpRequestCount()).isGreaterThan(0));
+		Awaitility.await().untilAsserted(() -> then(ZIPKIN_RULE.getRequestCount()).isGreaterThan(0));
 	}
 
 	@Configuration
@@ -81,7 +80,7 @@ public class ZipkinDiscoveryClientTests {
 
 						@Override
 						public int getPort() {
-							return URI.create(ZIPKIN_RULE.httpUrl()).getPort();
+							return ZIPKIN_RULE.url("/").port();
 						}
 
 						@Override
@@ -91,7 +90,7 @@ public class ZipkinDiscoveryClientTests {
 
 						@Override
 						public URI getUri() {
-							return URI.create(ZIPKIN_RULE.httpUrl());
+							return ZIPKIN_RULE.url("/").uri();
 						}
 
 						@Override

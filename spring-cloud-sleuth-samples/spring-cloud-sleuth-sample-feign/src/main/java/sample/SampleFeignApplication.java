@@ -22,10 +22,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
-import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
 import org.springframework.context.annotation.Bean;
 
-import zipkin.Span;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 
 /**
  * @author Spencer Gibb
@@ -43,8 +43,8 @@ public class SampleFeignApplication {
 	// Use this for debugging (or if there is no Zipkin server running on port 9411)
 	@Bean
 	@ConditionalOnProperty(value = "sample.zipkin.enabled", havingValue = "false")
-	public ZipkinSpanReporter spanCollector() {
-		return new ZipkinSpanReporter() {
+	public Reporter<Span> spanReporter() {
+		return new Reporter<Span>() {
 			@Override
 			public void report(Span span) {
 				logger.info(span);

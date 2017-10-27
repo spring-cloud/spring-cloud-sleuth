@@ -98,19 +98,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin.java</groupId>
-			<artifactId>zipkin-server</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.java</groupId>
-			<artifactId>zipkin-junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- otherwise spring boot's version of okhttp kicks zipkin-junit's deps out of alignment -->
-		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>okhttp</artifactId>
+			<artifactId>mockwebserver</artifactId>
 			<version>3.9.0</version>
 			<scope>test</scope>
 		</dependency>
