@@ -98,16 +98,18 @@ public class ZipkinAutoConfiguration {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
-//	@Configuration
-//	@ConditionalOnClass(RefreshScope.class)
-//	protected static class RefreshScopedPercentageBasedSamplerConfiguration {
-//		@Bean
-//		@RefreshScope
-//		@ConditionalOnMissingBean
-//		public Sampler defaultTraceSampler(SamplerProperties config) {
-//			return new PercentageBasedSampler(config);
-//		}
-//	}
+	@Configuration
+	// Commented out as running tests results in
+	// Invocation of init method failed; nested exception is java.lang.ArrayStoreException: sun.reflect.annotation.TypeNotPresentExceptionProxy
+	//@ConditionalOnClass(RefreshScope.class)
+	protected static class RefreshScopedPercentageBasedSamplerConfiguration {
+		@Bean
+		//@RefreshScope
+		@ConditionalOnMissingBean
+		public Sampler defaultTraceSampler(SamplerProperties config) {
+			return new PercentageBasedSampler(config);
+		}
+	}
 
 	@Configuration
 	@ConditionalOnMissingClass("org.springframework.cloud.context.config.annotation.RefreshScope")
