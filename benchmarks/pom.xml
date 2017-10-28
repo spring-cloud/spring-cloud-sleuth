@@ -242,7 +242,7 @@
 					<plugin>
 						<groupId>org.springframework.boot</groupId>
 						<artifactId>spring-boot-maven-plugin</artifactId>
-						<version>2.0.0.BUILD-SNAPSHOT</version>
+						<version>${spring-boot.version}</version>
 						<executions>
 							<execution>
 								<goals>
