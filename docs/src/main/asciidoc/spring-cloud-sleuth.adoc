@@ -522,6 +522,11 @@ spring.zipkin.baseUrl: http://zipkinserver/
 
 == Span Data as Messages
 
+IMPORTANT: The suggested approach is to use the Zipkin's
+native support for message based span sending. Starting from
+Edgware Zipkin Stream server is deprecated and in Finchley
+it got removed.
+
 You can accumulate and send span data over
 http://cloud.spring.io/spring-cloud-stream[Spring Cloud Stream] by
 including the `spring-cloud-sleuth-stream` jar as a dependency, and
@@ -533,59 +538,9 @@ type `Spans`.
 
 === Zipkin Consumer
 
-There is a special convenience annotation for setting up a message consumer
-for the Span data and pushing it into a Zipkin `SpanStore`. This application
-
-[source,java]
-----
-include::../../../../spring-cloud-sleuth-zipkin-stream/src/test/java/org/springframework/cloud/sleuth/zipkin/stream/documentation/Consumer.java[tags=zipkin_consumer,indent=0]
-----
-
-will listen for the Span data on whatever transport you provide via a
-Spring Cloud Stream `Binder` (e.g. include
-`spring-cloud-starter-stream-rabbit` for RabbitMQ, and similar
-starters exist for Redis and Kafka). If you add the following UI dependency
-
-[source,xml]
-----
-<groupId>io.zipkin.java</groupId>
-<artifactId>zipkin-autoconfigure-ui</artifactId>
-----
-
-Then you'll have your app a
-https://github.com/openzipkin/zipkin[Zipkin server], which hosts
-the UI and api on port 9411.
-
-
-The default `SpanStore` is in-memory (good for demos and getting
-started quickly). For a more robust solution you can add MySQL and
-`spring-boot-starter-jdbc` to your classpath and enable the JDBC
-`SpanStore` via configuration, e.g.:
-
-[source,yaml]
-----
-spring:
-  rabbitmq:
-    host: ${RABBIT_HOST:localhost}
-  datasource:
-    schema: classpath:/mysql.sql
-    url: jdbc:mysql://${MYSQL_HOST:localhost}/test
-    username: root
-    password: root
-# Switch this on to create the schema on startup:
-    initialize: true
-    continueOnError: true
-  sleuth:
-    enabled: false
-zipkin:
-  storage:
-    type: mysql
-----
-
-NOTE: The `@EnableZipkinStreamServer` is also annotated with
-`@EnableZipkinServer` so the process will also expose the standard
-Zipkin server endpoints for collecting spans over HTTP, and for
-querying in the Zipkin Web UI.
+Please refer to the http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer[Dalston Documentaion]
+on how to create a Stream Zipkin server. That approach has been
+deprecated in Edgware and removed in Finchley release.
 
 === Custom Consumer
 
