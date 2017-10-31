@@ -1,18 +1,15 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import reactor.core.publisher.Mono;
+
 import java.net.URI;
 import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import reactor.core.Scannable;
-import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
