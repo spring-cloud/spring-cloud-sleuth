@@ -40,15 +40,17 @@ import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
+import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.test.annotation.DirtiesContext;
@@ -340,6 +342,35 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		then(this.accumulator.getSpans()).hasSize(1);
+	}
+
+	@Test
+	public void errorMessageHeadersRetained() {
+		QueueChannel deadReplyChannel = new QueueChannel();
+		QueueChannel errorsReplyChannel = new QueueChannel();
+		Map<String, Object> errorChannelHeaders = new HashMap<>();
+		errorChannelHeaders.put(MessageHeaders.REPLY_CHANNEL, errorsReplyChannel);
+		errorChannelHeaders.put(MessageHeaders.ERROR_CHANNEL, errorsReplyChannel);
+
+		this.tracedChannel.send(new ErrorMessage(
+				new MessagingException(MessageBuilder.withPayload("hi")
+						.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+						.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L))
+						.setReplyChannel(deadReplyChannel)
+						.setErrorChannel(deadReplyChannel)
+						.build()	),
+				errorChannelHeaders));
+		then(this.message).isNotNull();
+
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		then(spanId).isNotNull();
+		long traceId = Span
+				.hexToId(this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class));
+		then(traceId).isEqualTo(10L);
+		then(spanId).isNotEqualTo(20L);
+		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.message.getHeaders().getReplyChannel()).isSameAs(errorsReplyChannel);
+		then(this.message.getHeaders().getErrorChannel()).isSameAs(errorsReplyChannel);
 	}
 
 	@Configuration
