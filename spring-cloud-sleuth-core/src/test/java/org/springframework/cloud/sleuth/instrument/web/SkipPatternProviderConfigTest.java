@@ -45,7 +45,7 @@ public class SkipPatternProviderConfigTest {
 
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), sleuthWebProperties);
 
-		then(pattern.pattern()).isEqualTo("foo.*|bar.*|/application.*");
+		then(pattern.pattern()).isEqualTo("foo.*|bar.*");
 	}
 
 	@Test
