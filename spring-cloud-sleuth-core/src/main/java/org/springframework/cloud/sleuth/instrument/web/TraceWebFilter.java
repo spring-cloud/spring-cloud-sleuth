@@ -5,6 +5,9 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import reactor.core.Scannable;
+import reactor.core.publisher.Mono;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Span;
@@ -23,7 +26,6 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Mono;
 
 /**
  * A {@link WebFilter} that creates / continues / closes and detaches spans
@@ -81,23 +83,51 @@ public class TraceWebFilter implements WebFilter, Ordered {
 			continueSpan(exchange, spanFromAttribute);
 		}
 		String name = HTTP_COMPONENT + ":" + uri;
-		Span span = createSpan(request, exchange, skip, spanFromAttribute, name);
-		return chain.filter(exchange).compose(f -> f.doOnSuccess(t -> {
-			addResponseTags(response, null);
-		}).doOnError(t -> {
-			errorParser().parseErrorTags(tracer().getCurrentSpan(), t);
-			addResponseTags(response, t);
-		}).doFinally(t -> {
-			Object attribute = exchange
-					.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
-			if (attribute instanceof HandlerMethod) {
-				HandlerMethod handlerMethod = (HandlerMethod) attribute;
-				addClassMethodTag(handlerMethod, span);
-				addClassNameTag(handlerMethod, span);
-			}
-			addResponseTagsForSpanWithoutParent(exchange, response);
-			detachOrCloseSpans(span);
-		}));
+		final String CONTEXT_ERROR = "sleuth.webfilter.context.error";
+		return chain
+				.filter(exchange)
+				.compose(f -> f.then(Mono.subscriberContext())
+						.onErrorResume(t -> Mono.subscriberContext().map(c -> c.put(CONTEXT_ERROR, t)))
+						.flatMap(c -> {
+							//reactivate span from context
+							Span span = c.getOrDefault(Span.class, null);
+							if (span != null) {
+								tracer().continueSpan(span);
+							}
+							Mono<Void> continuation;
+
+							if (c.hasKey(CONTEXT_ERROR)) {
+								Throwable t = c.get(CONTEXT_ERROR);
+								errorParser().parseErrorTags(tracer().getCurrentSpan(), t);
+								addResponseTags(response, t);
+								continuation = Mono.error(t);
+							} else {
+								addResponseTags(response, null);
+								continuation = Mono.empty();
+							}
+							Object attribute = exchange
+									.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+							if (attribute instanceof HandlerMethod) {
+								HandlerMethod handlerMethod = (HandlerMethod) attribute;
+								addClassMethodTag(handlerMethod, span);
+								addClassNameTag(handlerMethod, span);
+							}
+							addResponseTagsForSpanWithoutParent(exchange, response);
+							detachOrCloseSpans(span);
+
+							return continuation;
+						})
+						.subscriberContext(c -> {
+							Span span;
+							if (c.hasKey(Span.class)) {
+								Span parent = c.get(Span.class);
+								span = createSpan(request, exchange, skip, parent, name);
+							} else {
+								span = createSpan(request, exchange, skip, spanFromAttribute, name);
+							}
+
+							return c.put(Span.class, span);
+						}));
 	}
 
 	private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange,
