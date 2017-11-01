@@ -28,9 +28,8 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.support.ErrorMessage;
+import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -128,12 +127,17 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		}
 		getSpanInjector().inject(span, new MessagingTextMap(messageBuilder));
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
+		appendHeaders(message, messageBuilder, headers);
+		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
+	}
+
+	private void appendHeaders(Message<?> message, MessageBuilder<?> messageBuilder,
+			MessageHeaderAccessor headers) {
 		if (message.getPayload() instanceof MessagingException) {
 			headers.copyHeaders(sleuthHeaders(messageBuilder.build().getHeaders()));
-			return new ErrorMessage((MessagingException) message.getPayload(), headers.getMessageHeaders());
+		} else {
+			headers.copyHeaders(messageBuilder.build().getHeaders());
 		}
-		headers.copyHeaders(messageBuilder.build().getHeaders());
-		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
 	}
 
 	private Map<String, ?> sleuthHeaders(Map<String, ?> headers) {
