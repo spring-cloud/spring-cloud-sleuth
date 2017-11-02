@@ -451,7 +451,7 @@ dependencies. The default destination name is `zipkin`.
 
 _Note: `spring-cloud-sleuth-stream` is deprecated and incompatible with these destinations_
 
-If you want Sleuth over RabbitMQ add the `spring-cloud-sleuth-starter-zipkin2` and `spring-rabbit`
+If you want Sleuth over RabbitMQ add the `spring-cloud-starter-zipkin2` and `spring-rabbit`
 dependencies.
 
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
@@ -471,7 +471,7 @@ dependencies.
 
     <dependency> <2>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-starter-zipkin2</artifactId>
+        <artifactId>spring-cloud-starter-zipkin2</artifactId>
     </dependency>
     <dependency> <3>
         <groupId>org.springframework.amqp</groupId>

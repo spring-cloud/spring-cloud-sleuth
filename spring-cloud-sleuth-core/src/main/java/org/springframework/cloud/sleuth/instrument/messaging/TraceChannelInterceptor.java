@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -25,6 +28,7 @@ import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
@@ -126,8 +130,22 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		}
 		getSpanInjector().inject(span, new MessagingTextMap(messageBuilder));
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
+		if (message instanceof ErrorMessage) {
+			headers.copyHeaders(sleuthHeaders(messageBuilder.build().getHeaders()));
+			return new ErrorMessage((Throwable) message.getPayload(), headers.getMessageHeaders());
+		}
 		headers.copyHeaders(messageBuilder.build().getHeaders());
 		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
+	}
+
+	private Map<String, ?> sleuthHeaders(Map<String, ?> headers) {
+		Map<String, Object> headersToCopy = new HashMap<>();
+		for (Map.Entry<String, ?> entry : headers.entrySet()) {
+			if (TraceMessageHeaders.ALL_HEADERS.contains(entry.getKey())) {
+				headersToCopy.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return headersToCopy;
 	}
 
 	private Message<?> getMessage(Message<?> message) {
