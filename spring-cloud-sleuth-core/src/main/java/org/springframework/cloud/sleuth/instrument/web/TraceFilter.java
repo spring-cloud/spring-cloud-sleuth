@@ -165,6 +165,9 @@ public class TraceFilter extends GenericFilterBean {
 		} catch (Throwable e) {
 			exception = e;
 			errorParser().parseErrorTags(tracer().getCurrentSpan(), e);
+			if (log.isErrorEnabled()) {
+				log.error("Uncaught exception thrown", e);
+			}
 			throw e;
 		} finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {

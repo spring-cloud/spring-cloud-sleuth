@@ -16,18 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.Assertions.fail;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -49,6 +51,9 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.assertj.core.api.Assertions.fail;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 /**
  * @author Marcin Grzejszczak
  */
@@ -61,6 +66,7 @@ public class TraceFilterWebIntegrationTests {
 	@Autowired ArrayListSpanAccumulator accumulator;
 	@Autowired RestTemplate restTemplate;
 	@Autowired Environment environment;
+	@Rule  public OutputCapture capture = new OutputCapture();
 
 	@Before
 	@After
@@ -82,7 +88,15 @@ public class TraceFilterWebIntegrationTests {
 		then(new ListOfSpans(this.accumulator.getSpans()))
 				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
-				.hasRpcTagsInProperOrder();
+				.hasRpcTagsInProperOrder();// issue#714
+		Span span = this.accumulator.getSpans().get(0);
+		String hex = Span.idToHex(span.getTraceId());
+		String[] split = capture.toString().split("\n");
+		List<String> list = Arrays.stream(split).filter(s -> s.contains(
+				"Uncaught exception thrown"))
+				.filter(s -> s.contains("[bootstrap," + hex + "," + hex + ",true]"))
+				.collect(Collectors.toList());
+		then(list).isNotEmpty();
 	}
 
 	@Test
