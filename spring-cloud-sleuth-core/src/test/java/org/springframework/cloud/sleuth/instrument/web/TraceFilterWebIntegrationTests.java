@@ -59,8 +59,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = "spring.application.name=bootstrap")
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TraceFilterWebIntegrationTests {
 
 	@Autowired Tracer tracer;
@@ -96,7 +95,7 @@ public class TraceFilterWebIntegrationTests {
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split).filter(s -> s.contains(
 				"Uncaught exception thrown"))
-				.filter(s -> s.contains("[bootstrap," + hex + "," + hex + ",true]"))
+				.filter(s -> s.contains(hex + "," + hex + ",true]"))
 				.collect(Collectors.toList());
 		then(list).isNotEmpty();
 	}
