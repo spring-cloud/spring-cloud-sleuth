@@ -6,8 +6,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.internal.MeterId;
-import io.micrometer.core.instrument.simple.SimpleCounter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -35,15 +33,11 @@ import static org.awaitility.Awaitility.await;
 public class HttpZipkinSpanReporterTest {
 
 	@Rule public final ZipkinRule zipkin = new ZipkinRule();
-	Counter accepted = new SimpleCounter(
-			new MeterId("accepted", Collections.emptyList(), "", "")
-	);
-	Counter dropped = new SimpleCounter(
-			new MeterId("dropped", Collections.emptyList(), "", "")
-	);
+	Counter accepted = counter("accepted");
+	Counter dropped = counter("dropped");
+
 	SpanMetricReporter spanMetricReporter = new CounterServiceBasedSpanMetricReporter(this.accepted, this.dropped);
 	RestTemplate restTemplate = defaultRestTemplate();
-
 	HttpZipkinSpanReporter reporter = new HttpZipkinSpanReporter(restTemplate, this.zipkin.httpUrl(),
 			0, // so that tests can drive flushing explicitly
 			this.spanMetricReporter
@@ -206,5 +200,22 @@ public class HttpZipkinSpanReporterTest {
 		ZipkinProperties zipkinProperties = new ZipkinProperties();
 		zipkinProperties.getCompression().setEnabled(true);
 		return restTemplate(zipkinProperties);
+	}
+
+	private Counter counter(final String name) {
+		return new Counter() {
+			private double counter;
+			@Override public void increment(double amount) {
+				this.counter = this.counter + amount;
+			}
+
+			@Override public double count() {
+				return this.counter;
+			}
+
+			@Override public Id getId() {
+				return new Id(name, Collections.emptyList(), "unit", "description");
+			}
+		};
 	}
 }
