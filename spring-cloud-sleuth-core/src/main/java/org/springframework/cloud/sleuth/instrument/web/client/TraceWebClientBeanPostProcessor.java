@@ -1,7 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import reactor.core.publisher.Mono;
-
 import java.net.URI;
 import java.util.AbstractMap;
 import java.util.Iterator;
@@ -27,6 +25,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into
@@ -56,6 +55,9 @@ class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 					.mutate()
 					.filter(new TraceExchangeFilterFunction(this.beanFactory))
 					.build();
+		} else if (bean instanceof WebClient.Builder) {
+			WebClient.Builder webClientBuilder = (WebClient.Builder) bean;
+			return webClientBuilder.filter(new TraceExchangeFilterFunction(this.beanFactory));
 		}
 		return bean;
 	}
