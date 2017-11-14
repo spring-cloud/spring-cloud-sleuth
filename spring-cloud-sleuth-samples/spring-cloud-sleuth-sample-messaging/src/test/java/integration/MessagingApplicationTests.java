@@ -107,6 +107,10 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
 		String traceIdHex = Long.toHexString(traceId);
+		log.info("Stored spans: [\n" + this.integrationTestSpanCollector.hashedSpans
+				.stream()
+				.map(Span::toString)
+		.collect(Collectors.joining("\n")) + "\n]");
 		then(this.integrationTestSpanCollector.hashedSpans.stream()
 				.allMatch(span -> span.traceId().equals(traceIdHex))).describedAs("All spans have same trace id").isTrue();
 	}
