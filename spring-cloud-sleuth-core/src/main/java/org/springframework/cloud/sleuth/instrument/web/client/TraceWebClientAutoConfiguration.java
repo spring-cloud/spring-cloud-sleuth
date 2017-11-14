@@ -21,12 +21,15 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.PostConstruct;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
@@ -82,6 +85,33 @@ public class TraceWebClientAutoConfiguration {
 						restTemplate.setInterceptors(interceptors);
 					}
 				}
+			}
+		}
+
+		@Bean
+		public BeanPostProcessor traceRestTemplateBuilderBPP(BeanFactory beanFactory) {
+			return new TraceRestTemplateBuilderBPP(beanFactory);
+		}
+
+		private static class TraceRestTemplateBuilderBPP implements BeanPostProcessor {
+			private final BeanFactory beanFactory;
+
+			private TraceRestTemplateBuilderBPP(BeanFactory beanFactory) {
+				this.beanFactory = beanFactory;
+			}
+
+			@Override public Object postProcessBeforeInitialization(Object o, String s)
+					throws BeansException {
+				return o;
+			}
+
+			@Override public Object postProcessAfterInitialization(Object o, String s)
+					throws BeansException {
+				if (o instanceof RestTemplateBuilder) {
+					RestTemplateBuilder builder = (RestTemplateBuilder) o;
+					return builder.additionalInterceptors(this.beanFactory.getBean(TraceRestTemplateInterceptor.class));
+				}
+				return o;
 			}
 		}
 	}

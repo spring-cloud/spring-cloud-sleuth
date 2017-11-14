@@ -34,6 +34,7 @@ import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.apache.commons.logging.LogFactory;
+import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.ClassRule;
@@ -46,6 +47,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
@@ -95,6 +98,9 @@ public class WebClientTests {
 	@Autowired ArrayListSpanAccumulator listener;
 	@Autowired Tracer tracer;
 	@Autowired TestErrorController testErrorController;
+	@Autowired RestTemplateBuilder restTemplateBuilder;
+	@LocalServerPort int port;
+	@Autowired FooController fooController;
 
 	@After
 	public void close() {
@@ -267,6 +273,23 @@ public class WebClientTests {
 		then(this.testErrorController.getSpan()).isNull();
 	}
 
+	@Test
+	public void should_wrap_rest_template_builders() {
+		Span span = this.tracer.createSpan("foo");
+		try {
+			RestTemplate template = this.restTemplateBuilder.build();
+
+			template.getForObject("http://localhost:" + this.port + "/traceid", String.class);
+
+			Span spanInController = this.fooController.getSpan();
+			BDDAssertions.then(spanInController).isNotNull();
+			then(spanInController.getTraceId()).isEqualTo(span.getTraceId());
+		} finally {
+			this.tracer.close(span);
+		}
+		then(this.tracer.getCurrentSpan()).isNull();
+	}
+
 	private void thenRegisteredClientSentAndReceivedEvents(Span span) {
 		then(span).hasLoggedAnEvent(Span.CLIENT_RECV);
 		then(span).hasLoggedAnEvent(Span.CLIENT_SEND);
@@ -361,6 +384,8 @@ public class WebClientTests {
 		@Autowired
 		Tracer tracer;
 
+		Span span;
+
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
 				@RequestHeader(name = Span.TRACE_ID_NAME, required = false) String traceId) {
@@ -375,6 +400,7 @@ public class WebClientTests {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
+			this.span = this.tracer.getCurrentSpan();
 			return traceId;
 		}
 
@@ -398,6 +424,10 @@ public class WebClientTests {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
+		}
+
+		public Span getSpan() {
+			return this.span;
 		}
 	}
 
