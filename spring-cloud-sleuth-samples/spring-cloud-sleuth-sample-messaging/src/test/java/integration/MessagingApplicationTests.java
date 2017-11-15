@@ -110,7 +110,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		log.info("Stored spans: [\n" + this.integrationTestSpanCollector.hashedSpans
 				.stream()
 				.map(Span::toString)
-		.collect(Collectors.joining("\n")) + "\n]");
+				.collect(Collectors.joining("\n")) + "\n]");
 		then(this.integrationTestSpanCollector.hashedSpans
 				.stream()
 				.filter(span -> !span.traceId().equals(traceIdHex))
