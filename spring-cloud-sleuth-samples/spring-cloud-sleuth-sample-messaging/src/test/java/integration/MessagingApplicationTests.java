@@ -60,11 +60,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).untilAsserted(() ->
+		await().atMost(15, SECONDS).untilAsserted(() ->
 				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId).run()
 		);
 
-		await().atMost(5, SECONDS).untilAsserted(() ->
+		await().atMost(15, SECONDS).untilAsserted(() ->
 			thenAllSpansHaveTraceIdEqualTo(traceId)
 		);
 	}
@@ -74,11 +74,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		long traceId = new Random().nextLong();
 		long spanId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).untilAsserted(() ->
+		await().atMost(15, SECONDS).untilAsserted(() ->
 				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId).run()
 		);
 
-		await().atMost(10, SECONDS).untilAsserted(() -> {
+		await().atMost(15, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenTheSpansHaveProperParentStructure();
 		});
@@ -88,11 +88,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_with_annotations_in_async_thread_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).untilAsserted(() ->
+		await().atMost(15, SECONDS).untilAsserted(() ->
 				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId).run()
 		);
 
-		await().atMost(5, SECONDS).untilAsserted(() -> {
+		await().atMost(15, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenThereIsAtLeastOneTagWithKey("background-sleep-millis");
 		});
