@@ -527,7 +527,7 @@ dependencies.</simpara>
 the Spring BOM</para>
 </callout>
 <callout arearefs="CO5-2">
-<para>Add the dependency to <literal>spring-cloud-starter-sleuth-zipkin2</literal> - that way all dependent dependencies will be downloaded</para>
+<para>Add the dependency to <literal>spring-cloud-starter-zipkin2</literal> - that way all dependent dependencies will be downloaded</para>
 </callout>
 <callout arearefs="CO5-3">
 <para>To automatically configure rabbit, simply add the spring-rabbit dependency</para>
@@ -543,7 +543,7 @@ the Spring BOM</para>
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth-zipkin2" <co xml:id="CO6-2"/>
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin2" <co xml:id="CO6-2"/>
     compile "org.springframework.amqp:spring-rabbit" <co xml:id="CO6-3"/>
 }</programlisting>
 </para>
@@ -554,7 +554,7 @@ dependencies {
 the Spring BOM</para>
 </callout>
 <callout arearefs="CO6-2">
-<para>Add the dependency to <literal>spring-cloud-starter-sleuth-zipkin2</literal> - that way all dependent dependencies will be downloaded</para>
+<para>Add the dependency to <literal>spring-cloud-starter-zipkin2</literal> - that way all dependent dependencies will be downloaded</para>
 </callout>
 <callout arearefs="CO6-3">
 <para>To automatically configure rabbit, simply add the spring-rabbit dependency</para>
