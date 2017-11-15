@@ -111,8 +111,12 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 				.stream()
 				.map(Span::toString)
 		.collect(Collectors.joining("\n")) + "\n]");
-		then(this.integrationTestSpanCollector.hashedSpans.stream()
-				.allMatch(span -> span.traceId().equals(traceIdHex))).describedAs("All spans have same trace id").isTrue();
+		then(this.integrationTestSpanCollector.hashedSpans
+				.stream()
+				.filter(span -> !span.traceId().equals(traceIdHex))
+				.collect(Collectors.toList()))
+				.describedAs("All spans have same trace id [" + traceIdHex + "]")
+				.isEmpty();
 	}
 
 	private void thenTheSpansHaveProperParentStructure() {

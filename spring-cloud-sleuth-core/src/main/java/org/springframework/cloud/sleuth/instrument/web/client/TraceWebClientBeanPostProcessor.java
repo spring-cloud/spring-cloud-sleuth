@@ -83,7 +83,8 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			ExchangeFunction next) {
 		final ClientRequest.Builder builder = ClientRequest.from(request);
 
-		Mono<ClientResponse> exchange = next.exchange(builder.build())
+		Mono<ClientResponse> exchange = Mono
+				.defer(() -> next.exchange(builder.build()))
 				.cast(Object.class)
 				.onErrorResume(Mono::just)
 				.zipWith(Mono.subscriberContext())
@@ -124,10 +125,11 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					}
 					Span parent = c.getOrDefault(Span.class, null);
 					Span clientSpan = createNewSpan(request, parent);
+					tracer().continueSpan(clientSpan);
 
 					httpSpanInjector().inject(clientSpan, new ClientRequestTextMap(request, builder));
 					if (log.isDebugEnabled()) {
-						log.debug("Headers got injected to the client span " + clientSpan);
+						log.debug("Headers got injected from the client span " + clientSpan);
 					}
 
 					if (parent == null) {
@@ -135,6 +137,9 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 						if (log.isDebugEnabled()) {
 							log.debug("Reactor Context got injected with the client span " + clientSpan);
 						}
+					}
+					if (clientSpan != null && clientSpan.equals(tracer().getCurrentSpan())) {
+						tracer().continueSpan(tracer().detach(clientSpan));
 					}
 					return c.put(CLIENT_SPAN_KEY, clientSpan);
 				});
