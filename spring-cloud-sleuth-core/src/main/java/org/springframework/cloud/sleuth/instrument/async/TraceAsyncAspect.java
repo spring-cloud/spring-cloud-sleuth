@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.lang.reflect.Method;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -27,8 +29,6 @@ import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.util.ReflectionUtils;
-
-import java.lang.reflect.Method;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
@@ -49,17 +49,26 @@ public class TraceAsyncAspect {
 	private final BeanFactory beanFactory;
 	private SpanNamer spanNamer;
 
+	@Deprecated
 	public TraceAsyncAspect(Tracer tracer, TraceKeys traceKeys, BeanFactory beanFactory) {
 		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.beanFactory = beanFactory;
 	}
 
+	public TraceAsyncAspect(Tracer tracer, TraceKeys traceKeys, SpanNamer spanNamer) {
+		this.tracer = tracer;
+		this.traceKeys = traceKeys;
+		this.spanNamer = spanNamer;
+		this.beanFactory = null;
+	}
+
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
 		String spanName = spanNamer().name(getMethod(pjp, pjp.getTarget()),
 				SpanNameUtil.toLowerHyphen(pjp.getSignature().getName()));
-		Span span = this.tracer.createSpan(spanName);
+		Span span = span(spanName);
+		this.tracer.addTag("asyncName", spanName);
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
 		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
 				this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
@@ -72,6 +81,13 @@ public class TraceAsyncAspect {
 		}
 	}
 
+	private Span span(String spanName) {
+		if (this.tracer.isTracing()) {
+			return this.tracer.getCurrentSpan();
+		}
+		return this.tracer.createSpan(spanName);
+	}
+
 	private Method getMethod(ProceedingJoinPoint pjp, Object object) {
 		MethodSignature signature = (MethodSignature) pjp.getSignature();
 		Method method = signature.getMethod();
@@ -80,7 +96,7 @@ public class TraceAsyncAspect {
 	}
 
 	SpanNamer spanNamer() {
-		if (this.spanNamer == null) {
+		if (this.spanNamer == null && this.beanFactory != null) {
 			this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 		}
 		return this.spanNamer;

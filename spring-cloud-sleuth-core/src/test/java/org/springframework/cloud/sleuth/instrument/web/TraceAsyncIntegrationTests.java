@@ -44,6 +44,20 @@ public class TraceAsyncIntegrationTests {
 
 	@Test
 	public void should_set_span_on_an_async_annotated_method() {
+		whenAsyncProcessingTakesPlace();
+
+		thenANewAsyncSpanGetsCreated();
+	}
+
+	@Test
+	public void should_set_span_with_custom_method_on_an_async_annotated_method() {
+		whenAsyncProcessingTakesPlaceWithCustomSpanName();
+
+		thenAsyncSpanHasCustomName();
+	}
+
+	@Test
+	public void should_continue_a_span_on_an_async_annotated_method() {
 		Span span = givenASpanInCurrentThread();
 
 		whenAsyncProcessingTakesPlace();
@@ -53,7 +67,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	@Test
-	public void should_set_span_with_custom_method_on_an_async_annotated_method() {
+	public void should_continue_a_span_with_custom_method_on_an_async_annotated_method() {
 		Span span = givenASpanInCurrentThread();
 
 		whenAsyncProcessingTakesPlaceWithCustomSpanName();
@@ -78,6 +92,15 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(
 				() -> then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())
 					.hasTraceIdEqualTo(span.getTraceId())
+					.hasNameEqualTo("http:existing")
+					.isALocalComponentSpan()
+					.hasATag("class", "ClassPerformingAsyncLogic")
+					.hasATag("method", "invokeAsynchronousLogic"));
+	}
+
+	private void thenANewAsyncSpanGetsCreated() {
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(
+				() -> then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())
 					.hasNameEqualTo("invoke-asynchronous-logic")
 					.isALocalComponentSpan()
 					.hasATag("class", "ClassPerformingAsyncLogic")
@@ -88,6 +111,15 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(
 				() -> then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())
 					.hasTraceIdEqualTo(span.getTraceId())
+					.hasNameEqualTo("http:existing")
+					.isALocalComponentSpan()
+					.hasATag("class", "ClassPerformingAsyncLogic")
+					.hasATag("method", "customNameInvokeAsynchronousLogic"));
+	}
+
+	private void thenAsyncSpanHasCustomName() {
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(
+				() -> then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan())
 					.hasNameEqualTo("foo")
 					.isALocalComponentSpan()
 					.hasATag("class", "ClassPerformingAsyncLogic")

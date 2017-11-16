@@ -7,7 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
