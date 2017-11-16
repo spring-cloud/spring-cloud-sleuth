@@ -366,7 +366,7 @@ public class WebClientTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(exclude = TraceReactorAutoConfiguration.class)
+	@EnableAutoConfiguration
 	@EnableFeignClients
 	@RibbonClient(value = "fooservice", configuration = SimpleRibbonClientConfiguration.class)
 	public static class TestConfiguration {
