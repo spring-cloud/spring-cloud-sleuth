@@ -143,7 +143,7 @@ public class Span implements SpanContext {
 
 	private final long begin;
 	private long end = 0;
-	private final String name;
+	volatile String name;
 	private final long traceIdHigh;
 	private final long traceId;
 	private List<Long> parents = new ArrayList<>();

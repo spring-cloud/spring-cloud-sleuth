@@ -69,7 +69,6 @@ public class SpanSubscriberTests {
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
-	@Ignore("Ignored until fixed in Reactor")
 	@Test public void should_support_reactor_fusion_optimization() {
 		Span span = this.tracer.createSpan("foo");
 		final AtomicReference<Span> spanInOperation = new AtomicReference<>();
