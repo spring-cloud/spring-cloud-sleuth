@@ -15,22 +15,18 @@
  */
 package integration;
 
-import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
+
+import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import sample.SampleZipkinApplication;
-import tools.AbstractIntegrationTest;
-
-import java.net.URI;
-import java.util.Random;
-
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +39,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import sample.SampleZipkinApplication;
+import tools.AbstractIntegrationTest;
 import zipkin2.Span;
 import zipkin2.codec.SpanBytesDecoder;
 
@@ -61,14 +59,6 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	private int port = 3380;
 	private String sampleAppUrl = "http://localhost:" + this.port;
 	@Autowired ZipkinProperties zipkinProperties;
-
-	int getZipkinServerPort() {
-		return getPortFromProps();
-	}
-
-	private int getPortFromProps() {
-		return URI.create(this.zipkinProperties.getBaseUrl()).getPort();
-	}
 
 	@Test
 	public void should_propagate_spans_to_zipkin() throws Exception {

@@ -113,7 +113,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 				.collect(Collectors.joining("\n")) + "\n]");
 		then(this.integrationTestSpanCollector.hashedSpans
 				.stream()
-				.filter(span -> !span.traceId().equals(traceIdHex))
+				.filter(span ->
+						org.springframework.cloud.sleuth.Span.hexToId(span.traceId()) != traceId)
 				.collect(Collectors.toList()))
 				.describedAs("All spans have same trace id [" + traceIdHex + "]")
 				.isEmpty();
