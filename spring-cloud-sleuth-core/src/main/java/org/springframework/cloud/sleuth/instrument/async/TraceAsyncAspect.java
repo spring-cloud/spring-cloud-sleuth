@@ -23,6 +23,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.InternalApi;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -68,7 +69,7 @@ public class TraceAsyncAspect {
 		String spanName = spanNamer().name(getMethod(pjp, pjp.getTarget()),
 				SpanNameUtil.toLowerHyphen(pjp.getSignature().getName()));
 		Span span = span(spanName);
-		this.tracer.addTag("asyncName", spanName);
+		renameAsyncSpan(spanName, span);
 		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
 		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
 				this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
@@ -78,6 +79,15 @@ public class TraceAsyncAspect {
 			return pjp.proceed();
 		} finally {
 			this.tracer.close(span);
+		}
+	}
+
+	private void renameAsyncSpan(String spanName, Span span) {
+		// if there's a tag "lc" -> "async", that means the span came from
+		// a LazyTraceExecutor component that creates a span that contains very few
+		// information. If that's the case we want to rename it to have a different name
+		if (ASYNC_COMPONENT.equals(span.tags().get(Span.SPAN_LOCAL_COMPONENT_TAG_NAME))) {
+			InternalApi.renameSpan(span, spanName);
 		}
 	}
 
