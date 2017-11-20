@@ -28,9 +28,12 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import zipkin2.reporter.amqp.RabbitMQSender;
 
@@ -75,6 +78,19 @@ public class ZipkinAutoConfigurationTests {
 		RecordedRequest request = server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v2/spans");
 		then(request.getBody().readUtf8()).contains("localEndpoint");
+	}
+
+	@Test
+	public void propertyConfiguredSampler() throws Exception {
+		context = new AnnotationConfigApplicationContext();
+		addEnvironment(context, "spring.sleuth.sampler.percentage:0.9");
+		context.register(
+				PropertyPlaceholderAutoConfiguration.class,
+				TraceMetricsAutoConfiguration.class,
+				ZipkinAutoConfiguration.class);
+		context.refresh();
+
+		then(context.getBean(Sampler.class)).isInstanceOf(PercentageBasedSampler.class);
 	}
 
 	@Test
