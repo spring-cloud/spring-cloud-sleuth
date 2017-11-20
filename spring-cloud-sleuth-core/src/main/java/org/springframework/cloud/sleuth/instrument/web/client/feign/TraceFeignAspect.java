@@ -28,6 +28,7 @@ import feign.Request;
  * Aspect for Feign clients so that you can autowire your custom components
  *
  * @author Marcin Grzejszczak
+ * @author ScienJus
  * @since 1.1.2
  */
 @Aspect
@@ -45,8 +46,9 @@ class TraceFeignAspect {
 		Request request = (Request) args[0];
 		Request.Options options = (Request.Options) args[1];
 		Object bean = pjp.getTarget();
-		if (!(bean instanceof TraceFeignClient)) {
-			return new TraceFeignClient(this.beanFactory, (Client) bean).execute(request, options);
+		Object wrapped = new TraceFeignObjectWrapper(beanFactory).wrap(bean);
+		if (wrapped != bean) {
+			return ((Client) wrapped).execute(request, options);
 		}
 		return pjp.proceed();
 	}
