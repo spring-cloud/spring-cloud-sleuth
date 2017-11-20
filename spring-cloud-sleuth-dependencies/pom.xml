@@ -32,12 +32,12 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-sleuth-zipkin</artifactId>
+				<artifactId>spring-cloud-sleuth-zipkin-legacy</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-sleuth-zipkin2</artifactId>
+				<artifactId>spring-cloud-sleuth-zipkin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -52,12 +52,12 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-zipkin</artifactId>
+				<artifactId>spring-cloud-starter-zipkin-legacy</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-zipkin2</artifactId>
+				<artifactId>spring-cloud-starter-zipkin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

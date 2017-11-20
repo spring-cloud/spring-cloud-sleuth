@@ -8,9 +8,9 @@
 		<version>1.3.0.BUILD-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
-	<artifactId>spring-cloud-starter-zipkin2</artifactId>
-	<name>spring-cloud-starter-zipkin2</name>
-	<description>Spring Cloud Starter Zipkin v2</description>
+	<artifactId>spring-cloud-starter-zipkin-legacy</artifactId>
+	<name>Spring Cloud Starter Zipkin Legacy</name>
+	<description>Spring Cloud Starter Zipkin Legacy</description>
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
 	</properties>
@@ -21,7 +21,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-zipkin2</artifactId>
+			<artifactId>spring-cloud-sleuth-zipkin-legacy</artifactId>
 		</dependency>
 	</dependencies>
 </project>
