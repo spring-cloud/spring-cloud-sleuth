@@ -84,6 +84,11 @@
 			<artifactId>rxjava</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-mongodb</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- Instrumentation of the custom Spring Data REST HandlerInterceptors -->
 		<dependency>
 			<groupId>org.springframework.data</groupId>
