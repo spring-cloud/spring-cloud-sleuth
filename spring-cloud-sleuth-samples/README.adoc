@@ -6,7 +6,7 @@ There are a few samples with slightly different features. You can run all of the
 
 * `spring-cloud-sleuth-sample`: vanilla (no zipkin) web app that calls back to itself on various endpoints ("/", "/call", "/async")
 
-* `spring-cloud-sleuth-sample-zipkin2`: same as vanilla sample but with zipkin (set `sample.zipkin.enabled=true` if you have a collector running)
+* `spring-cloud-sleuth-sample-zipkin`: same as vanilla sample but with zipkin (set `sample.zipkin.enabled=true` if you have a collector running)
 
 * `spring-cloud-sleuth-sample-messaging`: a Spring Integration application with two HTTP endpoints ("/" and "/xform")
 
@@ -16,7 +16,7 @@ The Ribbon sample makes an interesting demo or playground for learning about zip
 
 === Running samples with Zipkin
 
-1. Optionally run the https://github.com/openzipkin/zipkin[Zipkin] Server, e.g. via docker compose (there's a `docker-compose.yml` in https://github.com/spring-cloud/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin2[Spring Cloud Sleuth], or in https://github.com/openzipkin/docker-zipkin[Docker Zipkin]
+1. Optionally run the https://github.com/openzipkin/zipkin[Zipkin] Server, e.g. via docker compose (there's a `docker-compose.yml` in https://github.com/spring-cloud/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin[Spring Cloud Sleuth], or in https://github.com/openzipkin/docker-zipkin[Docker Zipkin]
 7. Run the zipkin sample application (set `sample.zipkin.enabled=false` if you have no Zipkin running). If you are using a VM to run docker you might need to tunnel port 9411 to localhost, or change the `spring.zipkin.baseUrl`.
 8. Hit `http://localhost:3380`, `http://localhost:3380/call`, `http://localhost:3380/async` for some interesting sample traces (the app callas back to itself).
 9. Go to `http://localhost:9411` for Zipkin's UI (if you are using boot2docker the host will be different)

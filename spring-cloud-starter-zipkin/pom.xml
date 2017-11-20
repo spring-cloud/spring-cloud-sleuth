@@ -9,8 +9,8 @@
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>spring-cloud-starter-zipkin</artifactId>
-	<name>spring-cloud-starter-zipkin</name>
-	<description>Spring Cloud Starter</description>
+	<name>Spring Cloud Starter Zipkin</name>
+	<description>Spring Cloud Starter Zipkin</description>
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
 	</properties>
