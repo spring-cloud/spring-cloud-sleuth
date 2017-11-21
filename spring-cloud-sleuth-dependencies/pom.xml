@@ -16,12 +16,23 @@
 	<properties>
 		<zipkin.version>2.2.2</zipkin.version>
 		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
+		<zipkin-reporter2.version>2.1.4</zipkin-reporter2.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-reactor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-zipkin-legacy</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -37,6 +48,11 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-zipkin-stream</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-zipkin-legacy</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -84,6 +100,35 @@
 				<groupId>io.zipkin.reporter</groupId>
 				<artifactId>zipkin-reporter</artifactId>
 				<version>${zipkin-reporter.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.reporter2</groupId>
+				<artifactId>zipkin-reporter</artifactId>
+				<version>${zipkin-reporter2.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.reporter2</groupId>
+				<artifactId>zipkin-sender-kafka11</artifactId>
+				<version>${zipkin-reporter2.version}</version>
+				<exclusions>
+					<!-- assigned with spring-kafka -->
+					<exclusion>
+						<groupId>org.apache.kafka</groupId>
+						<artifactId>kafka-clients</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.reporter2</groupId>
+				<artifactId>zipkin-sender-amqp-client</artifactId>
+				<version>${zipkin-reporter2.version}</version>
+				<exclusions>
+					<!-- assigned with spring-rabbit -->
+					<exclusion>
+						<groupId>com.rabbitmq</groupId>
+						<artifactId>amqp-client</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
