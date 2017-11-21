@@ -401,7 +401,7 @@ the Spring BOM
 
 ==== Sleuth with Zipkin via HTTP
 
-If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin2` dependency.
+If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` dependency.
 
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
@@ -420,12 +420,12 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin2` d
 
     <dependency> <2>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-zipkin2</artifactId>
+        <artifactId>spring-cloud-starter-zipkin</artifactId>
     </dependency>
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
-<2> Add the dependency to `spring-cloud-starter-zipkin2`
+<2> Add the dependency to `spring-cloud-starter-zipkin`
 
 [source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
@@ -437,12 +437,12 @@ dependencyManagement { <1>
 }
 
 dependencies { <2>
-    compile "org.springframework.cloud:spring-cloud-starter-zipkin2"
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin"
 }
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
-<2> Add the dependency to `spring-cloud-starter-zipkin2`
+<2> Add the dependency to `spring-cloud-starter-zipkin`
 
 ==== Sleuth with Zipkin via RabbitMQ or Kafka
 
@@ -451,7 +451,7 @@ dependencies. The default destination name is `zipkin`.
 
 _Note: `spring-cloud-sleuth-stream` is deprecated and incompatible with these destinations_
 
-If you want Sleuth over RabbitMQ add the `spring-cloud-starter-zipkin2` and `spring-rabbit`
+If you want Sleuth over RabbitMQ add the `spring-cloud-starter-zipkin` and `spring-rabbit`
 dependencies.
 
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
@@ -471,7 +471,7 @@ dependencies.
 
     <dependency> <2>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-zipkin2</artifactId>
+        <artifactId>spring-cloud-starter-zipkin</artifactId>
     </dependency>
     <dependency> <3>
         <groupId>org.springframework.amqp</groupId>
@@ -480,7 +480,7 @@ dependencies.
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
-<2> Add the dependency to `spring-cloud-starter-zipkin2` - that way all dependent dependencies will be downloaded
+<2> Add the dependency to `spring-cloud-starter-zipkin` - that way all dependent dependencies will be downloaded
 <3> To automatically configure rabbit, simply add the spring-rabbit dependency
 
 [source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
@@ -493,13 +493,13 @@ dependencyManagement { <1>
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-zipkin2" <2>
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin" <2>
     compile "org.springframework.amqp:spring-rabbit" <3>
 }
 ----
 <1> In order not to pick versions by yourself it's much better if you add the dependency management via
 the Spring BOM
-<2> Add the dependency to `spring-cloud-starter-zipkin2` - that way all dependent dependencies will be downloaded
+<2> Add the dependency to `spring-cloud-starter-zipkin` - that way all dependent dependencies will be downloaded
 <3> To automatically configure rabbit, simply add the spring-rabbit dependency
 
 == Additional resources
@@ -553,7 +553,7 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 
 * Provides simple metrics of accepted / dropped spans.
 
-* If `spring-cloud-sleuth-zipkin2` then the app will generate and collect Zipkin-compatible traces.
+* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using `spring.zipkin.baseUrl`.
   - If you depend on `spring-rabbit` or `spring-kafka` your app will send traces to a broker instead of http.
