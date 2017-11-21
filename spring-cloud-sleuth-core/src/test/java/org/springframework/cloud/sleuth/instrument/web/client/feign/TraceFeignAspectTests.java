@@ -32,19 +32,11 @@ public class TraceFeignAspectTests {
 	
 	@Before
 	public void setup() {
-		stubPjp();
 		this.traceFeignAspect = new TraceFeignAspect(this.beanFactory) {
 			@Override Object executeTraceFeignClient(Object bean, ProceedingJoinPoint pjp) throws IOException {
 				return null;
 			}
 		};
-	}
-
-	private void stubPjp() {
-		Request request = Request.create("foo", "bar", new HashMap<>(), new byte[] {}, Charset
-				.defaultCharset());
-		Request.Options options = new Request.Options();
-		given(this.pjp.getArgs()).willReturn(new Object[] {request, options} );
 	}
 
 	@Test 
