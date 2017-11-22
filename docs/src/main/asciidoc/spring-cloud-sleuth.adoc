@@ -444,7 +444,7 @@ Below you can see an example of a call to Redis that is wrapped in such a span.
 
 [source,java]
 ----
-include::../../../..//spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin/HttpZipkinSpanReporterTest.java[tags=service_name,indent=0]
+include::../../../..//spring-cloud-sleuth-zipkin-legacy/src/test/java/org/springframework/cloud/sleuth/zipkin/HttpZipkinSpanReporterTest.java[tags=service_name,indent=0]
 ----
 
 IMPORTANT: Remember not to add both `peer.service` tag and the `SA` tag! You have to add only `peer.service`.
