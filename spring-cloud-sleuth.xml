@@ -1233,7 +1233,20 @@ TraceFilter myTraceFilter(BeanFactory beanFactory, final Tracer tracer) {
 <simpara>Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
 What you can do is to create a span with the <literal>peer.service</literal> tag that will contain a value of the service that you want to call.
 Below you can see an example of a call to Redis that is wrapped in such a span.</simpara>
-<programlisting language="java" linenumbering="unnumbered">Unresolved directive in spring-cloud-sleuth.adoc - include::../../../..//spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin/HttpZipkinSpanReporterTest.java[tags=service_name,indent=0]</programlisting>
+<programlisting language="java" linenumbering="unnumbered">org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
+try {
+	newSpan.tag("redis.op", "get");
+	newSpan.tag("lc", "redis");
+	newSpan.logEvent(org.springframework.cloud.sleuth.Span.CLIENT_SEND);
+	// call redis service e.g
+	// return (SomeObj) redisTemplate.opsForHash().get("MYHASH", someObjKey);
+} finally {
+	newSpan.tag("peer.service", "redisService");
+	newSpan.tag("peer.ipv4", "1.2.3.4");
+	newSpan.tag("peer.port", "1234");
+	newSpan.logEvent(org.springframework.cloud.sleuth.Span.CLIENT_RECV);
+	tracer.close(newSpan);
+}</programlisting>
 <important>
 <simpara>Remember not to add both <literal>peer.service</literal> tag and the <literal>SA</literal> tag! You have to add only <literal>peer.service</literal>.</simpara>
 </important>
