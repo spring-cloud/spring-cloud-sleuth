@@ -44,7 +44,8 @@ class TraceFeignAspect {
 	@Around("execution (* feign.Client.*(..)) && !within(is(FinalType))")
 	public Object feignClientWasCalled(final ProceedingJoinPoint pjp) throws Throwable {
 		Object bean = pjp.getTarget();
-		if (!(bean instanceof TraceFeignClient) && !(bean instanceof TraceLoadBalancerFeignClient)) {
+		Object wrappedBean = new TraceFeignObjectWrapper(this.beanFactory).wrap(bean);
+		if (bean != wrappedBean) {
 			return executeTraceFeignClient(bean, pjp);
 		}
 		return pjp.proceed();
@@ -54,6 +55,6 @@ class TraceFeignAspect {
 		Object[] args = pjp.getArgs();
 		Request request = (Request) args[0];
 		Request.Options options = (Request.Options) args[1];
-		return new TraceFeignClient(this.beanFactory, (Client) bean).execute(request, options);
+		return ((Client) bean).execute(request, options);
 	}
 }
