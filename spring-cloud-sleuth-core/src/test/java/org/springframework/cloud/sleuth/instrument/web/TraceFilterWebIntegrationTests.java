@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static org.assertj.core.api.Assertions.fail;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -50,9 +53,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import static org.assertj.core.api.Assertions.fail;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -94,7 +94,7 @@ public class TraceFilterWebIntegrationTests {
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split).filter(s -> s.contains(
 				"Uncaught exception thrown"))
-				.filter(s -> s.contains("[bootstrap," + hex + "," + hex + ",true]"))
+				.filter(s -> s.contains(hex + "," + hex + ",true]"))
 				.collect(Collectors.toList());
 		then(list).isNotEmpty();
 	}
