@@ -14,7 +14,7 @@
 </info>
 <preface>
 <title></title>
-<simpara><emphasis role="strong">1.3.1.BUILD-SNAPSHOT</emphasis></simpara>
+<simpara><emphasis role="strong">2.0.0.BUILD-SNAPSHOT</emphasis></simpara>
 </preface>
 <chapter xml:id="_introduction">
 <title>Introduction</title>
@@ -1233,20 +1233,7 @@ TraceFilter myTraceFilter(BeanFactory beanFactory, final Tracer tracer) {
 <simpara>Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
 What you can do is to create a span with the <literal>peer.service</literal> tag that will contain a value of the service that you want to call.
 Below you can see an example of a call to Redis that is wrapped in such a span.</simpara>
-<programlisting language="java" linenumbering="unnumbered">org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan("redis");
-try {
-	newSpan.tag("redis.op", "get");
-	newSpan.tag("lc", "redis");
-	newSpan.logEvent(org.springframework.cloud.sleuth.Span.CLIENT_SEND);
-	// call redis service e.g
-	// return (SomeObj) redisTemplate.opsForHash().get("MYHASH", someObjKey);
-} finally {
-	newSpan.tag("peer.service", "redisService");
-	newSpan.tag("peer.ipv4", "1.2.3.4");
-	newSpan.tag("peer.port", "1234");
-	newSpan.logEvent(org.springframework.cloud.sleuth.Span.CLIENT_RECV);
-	tracer.close(newSpan);
-}</programlisting>
+<programlisting language="java" linenumbering="unnumbered">Unresolved directive in spring-cloud-sleuth.adoc - include::../../../..//spring-cloud-sleuth-zipkin-legacy/src/test/java/org/springframework/cloud/sleuth/zipkin/HttpZipkinSpanReporterTest.java[tags=service_name,indent=0]</programlisting>
 <important>
 <simpara>Remember not to add both <literal>peer.service</literal> tag and the <literal>SA</literal> tag! You have to add only <literal>peer.service</literal>.</simpara>
 </important>
@@ -1301,6 +1288,12 @@ Zipkin&#8217;s service id inside the URL (example for <literal>zipkinserver</lit
 </chapter>
 <chapter xml:id="_span_data_as_messages">
 <title>Span Data as Messages</title>
+<important>
+<simpara>The suggested approach is to use the Zipkin&#8217;s
+native support for message based span sending. Starting from
+Edgware Zipkin Stream server is deprecated and in Finchley
+it got removed.</simpara>
+</important>
 <simpara>You can accumulate and send span data over
 <link xl:href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</link> by
 including the <literal>spring-cloud-sleuth-stream</literal> jar as a dependency, and
@@ -1311,50 +1304,9 @@ automatically turn your app into a producer of messages with payload
 type <literal>Spans</literal>.</simpara>
 <section xml:id="_zipkin_consumer">
 <title>Zipkin Consumer</title>
-<simpara>There is a special convenience annotation for setting up a message consumer
-for the Span data and pushing it into a Zipkin <literal>SpanStore</literal>. This application</simpara>
-<programlisting language="java" linenumbering="unnumbered">@SpringBootApplication
-@EnableZipkinStreamServer
-public class Consumer {
-	public static void main(String[] args) {
-		SpringApplication.run(Consumer.class, args);
-	}
-}</programlisting>
-<simpara>will listen for the Span data on whatever transport you provide via a
-Spring Cloud Stream <literal>Binder</literal> (e.g. include
-<literal>spring-cloud-starter-stream-rabbit</literal> for RabbitMQ, and similar
-starters exist for Redis and Kafka). If you add the following UI dependency</simpara>
-<programlisting language="xml" linenumbering="unnumbered">&lt;groupId&gt;io.zipkin.java&lt;/groupId&gt;
-&lt;artifactId&gt;zipkin-autoconfigure-ui&lt;/artifactId&gt;</programlisting>
-<simpara>Then you&#8217;ll have your app a
-<link xl:href="https://github.com/openzipkin/zipkin">Zipkin server</link>, which hosts
-the UI and api on port 9411.</simpara>
-<simpara>The default <literal>SpanStore</literal> is in-memory (good for demos and getting
-started quickly). For a more robust solution you can add MySQL and
-<literal>spring-boot-starter-jdbc</literal> to your classpath and enable the JDBC
-<literal>SpanStore</literal> via configuration, e.g.:</simpara>
-<programlisting language="yaml" linenumbering="unnumbered">spring:
-  rabbitmq:
-    host: ${RABBIT_HOST:localhost}
-  datasource:
-    schema: classpath:/mysql.sql
-    url: jdbc:mysql://${MYSQL_HOST:localhost}/test
-    username: root
-    password: root
-# Switch this on to create the schema on startup:
-    initialize: true
-    continueOnError: true
-  sleuth:
-    enabled: false
-zipkin:
-  storage:
-    type: mysql</programlisting>
-<note>
-<simpara>The <literal>@EnableZipkinStreamServer</literal> is also annotated with
-<literal>@EnableZipkinServer</literal> so the process will also expose the standard
-Zipkin server endpoints for collecting spans over HTTP, and for
-querying in the Zipkin Web UI.</simpara>
-</note>
+<simpara>Please refer to the <link xl:href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentaion</link>
+on how to create a Stream Zipkin server. That approach has been
+deprecated in Edgware and removed in Finchley release.</simpara>
 </section>
 <section xml:id="_custom_consumer">
 <title>Custom Consumer</title>
@@ -1500,6 +1452,13 @@ of regular expressions in the <literal>spring.sleuth.rxjava.schedulers.ignoredth
 <title>Async Servlet support</title>
 <simpara>If your controller returns a <literal>Callable</literal> or a <literal>WebAsyncTask</literal> Spring Cloud Sleuth will continue the existing span instead of creating a new one.</simpara>
 </section>
+<section xml:id="_webflux_support">
+<title>WebFlux support</title>
+<simpara>Via the <literal>TraceWebFilter</literal> all sampled incoming requests result in creation of a Span. That Span&#8217;s name is <literal>http:</literal> + the path to which
+ the request was sent. E.g. if the request was sent to <literal>/foo/bar</literal> then the name will be <literal>http:/foo/bar</literal>. You can configure which URIs you would
+ like to skip via the <literal>spring.sleuth.web.skipPattern</literal> property. If you have <literal>ManagementServerProperties</literal> on classpath then
+ its value of <literal>contextPath</literal> gets appended to the provided skip pattern.</simpara>
+</section>
 </section>
 <section xml:id="_http_client_integration">
 <title>HTTP client integration</title>
@@ -1580,6 +1539,15 @@ static class Config {
 	}
 }</programlisting>
 </section>
+</section>
+<section xml:id="_webclient">
+<title>WebClient</title>
+<simpara>We inject a <literal>ExchangeFilterFunction</literal> implementation that creates a span and via on success and on
+error callbacks takes care of closing client side spans.</simpara>
+<important>
+<simpara>You have to register <literal>WebClient</literal> as a bean so that the tracing instrumention gets applied.
+If you create a <literal>WebClient</literal> instance with a <literal>new</literal> keyword then the instrumentation WILL NOT work.</simpara>
+</important>
 </section>
 <section xml:id="_traverson">
 <title>Traverson</title>
