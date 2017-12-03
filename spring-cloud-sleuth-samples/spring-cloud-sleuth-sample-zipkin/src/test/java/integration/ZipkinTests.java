@@ -107,7 +107,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	}
 
 	List<String> traceIdsNotFoundInZipkin(List<Span> spans, long traceId) {
-		String traceIdString = Long.toHexString(traceId);
+		String traceIdString = org.springframework.cloud.sleuth.Span.idToHex(traceId);
 		Optional<String> traceIds = spans.stream()
 				.map(Span::traceId)
 				.filter(traceIdString::equals)
