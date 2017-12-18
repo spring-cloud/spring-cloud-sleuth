@@ -152,6 +152,22 @@ public class SleuthSpanCreatorAspectTests {
 	}
 
 	@Test
+	public void shouldContinueSpanWhenKeyIsUsedOnSpanTagWhenAnnotationOnInterfaceMethod() {
+		Span span = this.tracer.createSpan("foo");
+
+		this.testBean.testMethod10_v2("test");
+
+		this.tracer.close(span);
+		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
+		then(new ListOfSpans(spans)).hasSize(1)
+				.hasASpanWithName("foo")
+				.hasASpanWithTagEqualTo("customTestTag10", "test")
+				.hasASpanWithLogEqualTo("customTest.before")
+				.hasASpanWithLogEqualTo("customTest.after");
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	@Test
 	public void shouldContinueSpanWithLogWhenAnnotationOnClassMethod() {
 		Span span = this.tracer.createSpan("foo");
 
@@ -248,7 +264,10 @@ public class SleuthSpanCreatorAspectTests {
 		void testMethod9(String param);
 
 		@ContinueSpan(log = "customTest")
-		void testMethod10(@SpanTag("testTag10") String param);
+		void testMethod10(@SpanTag(value = "testTag10") String param);
+
+		@ContinueSpan(log = "customTest")
+		void testMethod10_v2(@SpanTag(key = "testTag10") String param);
 
 		// tag::continue_span[]
 		@ContinueSpan(log = "testMethod11")
@@ -310,7 +329,12 @@ public class SleuthSpanCreatorAspectTests {
 		}
 
 		@Override
-		public void testMethod10(@SpanTag("customTestTag10") String param) {
+		public void testMethod10(@SpanTag(value = "customTestTag10") String param) {
+
+		}
+
+		@Override
+		public void testMethod10_v2(@SpanTag(key = "customTestTag10") String param) {
 
 		}
 
