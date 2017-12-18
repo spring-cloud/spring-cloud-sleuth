@@ -1308,7 +1308,8 @@ adding a Channel Binder implementation
 (e.g. <literal>spring-cloud-starter-stream-rabbit</literal> for RabbitMQ or
 <literal>spring-cloud-starter-stream-kafka</literal> for Kafka). This will
 automatically turn your app into a producer of messages with payload
-type <literal>Spans</literal>.</simpara>
+type <literal>Spans</literal>. The channel name to which the spans will be sent
+is called <literal>sleuth</literal>.</simpara>
 <section xml:id="_zipkin_consumer">
 <title>Zipkin Consumer</title>
 <simpara>There is a special convenience annotation for setting up a message consumer
