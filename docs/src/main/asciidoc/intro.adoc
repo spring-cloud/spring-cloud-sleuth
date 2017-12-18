@@ -447,7 +447,7 @@ and then just annotate your main class with `@EnableZipkinStreamServer` annotati
 
 [source,java]
 ----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/src/main/java/example/ZipkinStreamServerApplication.java[]
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/v1.2.4.RELEASE/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin-stream/src/main/java/example/ZipkinStreamServerApplication.java[]
 ----
 
 == Additional resources
