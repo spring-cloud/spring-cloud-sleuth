@@ -121,8 +121,14 @@ class SpanTagAnnotationHandler {
 	private void addAnnotatedArguments(List<SleuthAnnotatedParameter> toBeAdded) {
 		for (SleuthAnnotatedParameter container : toBeAdded) {
 			String tagValue = resolveTagValue(container.annotation, container.argument);
-			tracer().addTag(container.annotation.value(), tagValue);
+			String tagKey = resolveTagKey(container);
+			tracer().addTag(tagKey, tagValue);
 		}
+	}
+
+	private String resolveTagKey(SleuthAnnotatedParameter container) {
+		return StringUtils.hasText(container.annotation.value()) ?
+				container.annotation.value() : container.annotation.key();
 	}
 
 	String resolveTagValue(SpanTag annotation, Object argument) {
