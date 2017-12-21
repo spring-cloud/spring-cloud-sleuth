@@ -11,11 +11,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -37,15 +39,34 @@ public class TraceReactorAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnBean(Tracer.class)
-	@ConditionalOnNotWebApplication
 	static class TraceReactorConfiguration {
 		@Autowired Tracer tracer;
 		@Autowired TraceKeys traceKeys;
 		@Autowired SpanNamer spanNamer;
+		@Autowired LastOperatorWrapper lastOperatorWrapper;
+
+		@Bean
+		@ConditionalOnNotWebApplication
+		LastOperatorWrapper spanOperator() {
+			return new LastOperatorWrapper() {
+				@Override public void wrapLastOperator(Tracer tracer) {
+					Hooks.onLastOperator(ReactorSleuth.spanOperator(tracer));
+				}
+			};
+		}
+
+		@Bean
+		@ConditionalOnWebApplication
+		LastOperatorWrapper noOpLastOperatorWrapper() {
+			return new LastOperatorWrapper() {
+				@Override public void wrapLastOperator(Tracer tracer) {
+				}
+			};
+		}
 
 		@PostConstruct
 		public void setupHooks() {
-			Hooks.onLastOperator(ReactorSleuth.spanOperator(this.tracer));
+			this.lastOperatorWrapper.wrapLastOperator(this.tracer);
 			Schedulers.setFactory(new Schedulers.Factory() {
 				@Override public ScheduledExecutorService decorateExecutorService(String schedulerType,
 						Supplier<? extends ScheduledExecutorService> actual) {
@@ -63,4 +84,8 @@ public class TraceReactorAutoConfiguration {
 			Schedulers.resetFactory();
 		}
 	}
+}
+
+interface LastOperatorWrapper {
+	void wrapLastOperator(Tracer tracer);
 }
