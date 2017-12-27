@@ -30,7 +30,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
-//import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -99,12 +99,10 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Configuration
-	// Commented out as running tests results in
-	// Invocation of init method failed; nested exception is java.lang.ArrayStoreException: sun.reflect.annotation.TypeNotPresentExceptionProxy
-	//@ConditionalOnClass(RefreshScope.class)
+	@ConditionalOnClass(RefreshScope.class)
 	protected static class RefreshScopedPercentageBasedSamplerConfiguration {
 		@Bean
-		//@RefreshScope
+		@RefreshScope
 		@ConditionalOnMissingBean
 		public Sampler defaultTraceSampler(SamplerProperties config) {
 			return new PercentageBasedSampler(config);
