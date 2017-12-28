@@ -18,12 +18,15 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPOutputStream;
 
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.Base64Utils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -47,6 +50,11 @@ public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCu
 		if (this.zipkinProperties.getCompression().isEnabled()) {
 			restTemplate.getInterceptors().add(0, new GZipInterceptor());
 		}
+		if(this.zipkinProperties.getUser() != null){
+			String username = this.zipkinProperties.getUser().getName();
+			string password = this.zipkinProperties.getUser().getPassword();
+			restTemplate.getInterceptors().add(1, new BasicAuthorizationInterceptor(username, password));
+		}
 	}
 
 	private class GZipInterceptor implements ClientHttpRequestInterceptor {
@@ -59,6 +67,25 @@ public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCu
 				compressor.write(body);
 			}
 			return execution.execute(request, gzipped.toByteArray());
+		}
+	}
+
+	private class BasicAuthorizationInterceptor implements ClientHttpRequestInterceptor {
+		private final String authCredentials;
+
+		public BasicAuthorizationInterceptor(String username, String password){
+			if(StringUtils.hasText(username) && StringUtils.hasText(password)){
+				this.authCredentials = username + ":" + password;
+			}
+		}
+
+		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws
+				IOException {
+			if(this.authCredentials != null){
+				String base64Credentials = Base64Utils.encodeToString(authCredentials.getBytes(StandardCharsets.UTF_8));
+				request.getHeaders().add("Authorization", "Basic " + base64Credentials);
+			}
+			return execution.execute(request, body);
 		}
 	}
 }
