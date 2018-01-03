@@ -21,10 +21,10 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.boot.autoconfigure.web.ErrorController;
+import org.springframework.boot.web.servlet.error.ErrorController;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;

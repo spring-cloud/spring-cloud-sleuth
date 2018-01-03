@@ -11,14 +11,12 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfigurati
 import org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.messaging.websocket.TraceWebSocketAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @EnableAutoConfiguration(exclude = { LoadBalancerAutoConfiguration.class,
 		JmxAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class,
 		TraceWebSocketAutoConfiguration.class })
-@EnableAspectJAutoProxy(proxyTargetClass = true)
 @Configuration
 public @interface DefaultTestAutoConfiguration {
 }

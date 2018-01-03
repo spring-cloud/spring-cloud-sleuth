@@ -18,10 +18,11 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.assertj.core.api.BDDAssertions;
+import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -101,11 +102,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 
 	private Span span;
 
-	private CountDownLatch latch = new CountDownLatch(1);
-
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
-		this.latch.countDown();
 		this.message = message;
 		this.span = TestSpanContextHolder.getCurrentSpan();
 		if (message.getHeaders().containsKey("THROW_EXCEPTION")) {
@@ -147,8 +145,8 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	public void executableSpanCreation() throws Exception {
 		this.executorChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader(TraceMessageHeaders.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED).build());
-		this.latch.await(1, TimeUnit.SECONDS);
-		assertNotNull("message was null", this.message);
+		Awaitility.await()
+				.untilAsserted(() -> BDDAssertions.assertThat(this.message).isNotNull());
 
 		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(spanId).isNotNull();

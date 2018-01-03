@@ -50,7 +50,7 @@ public abstract class AbstractIntegrationTest {
 
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId) {
-		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, null);
+		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, traceId);
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId, Long spanId) {

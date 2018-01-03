@@ -1,12 +1,5 @@
 package org.springframework.cloud.sleuth.stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,6 +21,13 @@ import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
 import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.scheduling.support.SimpleTriggerContext;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SleuthStreamAutoConfigurationTest {
 

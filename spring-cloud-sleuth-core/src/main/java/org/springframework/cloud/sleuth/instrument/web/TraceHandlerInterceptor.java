@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.boot.autoconfigure.web.ErrorController;
+import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;

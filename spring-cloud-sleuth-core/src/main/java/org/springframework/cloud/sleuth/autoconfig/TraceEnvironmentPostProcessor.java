@@ -30,11 +30,6 @@ import org.springframework.core.env.PropertySource;
  * Adds default properties for the application:
  * <ul>
  *     <li>logging pattern level that prints trace information (e.g. trace ids)</li>
- *     <li>enables usage of subclass-based (CGLIB) proxies are to be created as opposed
- * to standard Java interface-based proxies</li>
- *     It's required for the tracing aspects like
- *     {@link org.springframework.cloud.sleuth.instrument.async.TraceAsyncAspect TraceAsyncAspect} or
- *     {@link org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAspect TraceSchedulingAspect}.
  * </ul>
  *
  * @author Dave Syer
@@ -43,7 +38,6 @@ import org.springframework.core.env.PropertySource;
 public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
-	private static final String SPRING_AOP_PROXY_TARGET_CLASS = "spring.aop.proxyTargetClass";
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment,
@@ -54,10 +48,6 @@ public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		if (Boolean.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
 			map.put("logging.pattern.level",
 					"%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]");
-		}
-		// TODO: Remove this in 2.0.x. For compatibility we always set to true
-		if (!environment.containsProperty(SPRING_AOP_PROXY_TARGET_CLASS)) {
-			map.put(SPRING_AOP_PROXY_TARGET_CLASS, "true");
 		}
 		addOrReplace(environment.getPropertySources(), map);
 	}

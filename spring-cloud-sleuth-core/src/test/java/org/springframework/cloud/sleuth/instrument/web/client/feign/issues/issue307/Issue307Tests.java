@@ -19,10 +19,11 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issu
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,8 +43,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -70,7 +69,7 @@ public class Issue307Tests {
 @EnableCircuitBreaker
 class SleuthSampleApplication {
 
-	private static final Logger LOG = Logger.getLogger(SleuthSampleApplication.class.getName());
+	private static final Logger LOG = LoggerFactory.getLogger(SleuthSampleApplication.class.getName());
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -93,13 +92,13 @@ class SleuthSampleApplication {
 
 	@RequestMapping("/")
 	public String home() {
-		LOG.log(Level.INFO, "you called home");
+		LOG.info("you called home");
 		return "Hello World";
 	}
 
 	@RequestMapping("/callhome")
 	public String callHome() {
-		LOG.log(Level.INFO, "calling home");
+		LOG.info("calling home");
 		return restTemplate.getForObject("http://localhost:" + port(), String.class);
 	}
 

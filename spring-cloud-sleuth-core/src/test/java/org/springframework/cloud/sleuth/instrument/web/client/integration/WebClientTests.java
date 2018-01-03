@@ -28,8 +28,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.apache.commons.logging.LogFactory;
+import org.assertj.core.api.BDDAssertions;
+import org.awaitility.Awaitility;
 import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,10 +46,12 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.BasicErrorController;
-import org.springframework.boot.autoconfigure.web.ErrorAttributes;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -51,9 +62,11 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -68,14 +81,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import org.awaitility.Awaitility;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Hooks;
+import reactor.core.scheduler.Schedulers;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
@@ -83,7 +91,9 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @RunWith(JUnitParamsRunner.class)
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = { "spring.application.name=fooservice", "feign.hystrix.enabled=false" })
+@TestPropertySource(properties = {
+		"spring.application.name=fooservice",
+		"feign.hystrix.enabled=false" })
 @DirtiesContext
 public class WebClientTests {
 
@@ -94,15 +104,28 @@ public class WebClientTests {
 
 	@Autowired TestFeignInterface testFeignInterface;
 	@Autowired @LoadBalanced RestTemplate template;
+	@Autowired WebClient webClient;
+	@Autowired WebClient.Builder webClientBuilder;
 	@Autowired ArrayListSpanAccumulator listener;
 	@Autowired Tracer tracer;
 	@Autowired TestErrorController testErrorController;
+	@Autowired RestTemplateBuilder restTemplateBuilder;
+	@LocalServerPort int port;
+	@Autowired FooController fooController;
 
 	@After
 	public void close() {
+		ExceptionUtils.setFail(true);
 		TestSpanContextHolder.removeCurrentSpan();
 		this.listener.getSpans().clear();
 		this.testErrorController.clear();
+		this.fooController.clear();
+	}
+
+	@BeforeClass
+	public static void cleanup() {
+		Hooks.resetOnLastOperator();
+		Schedulers.resetFactory();
 	}
 
 	@Test
@@ -124,7 +147,7 @@ public class WebClientTests {
 			// TODO: matches cause there is an issue with Feign not providing the full URL at the interceptor level
 			then(noTraceSpan.get()).matchesATag("http.url", ".*/notrace")
 					.hasATag("http.path", "/notrace").hasATag("http.method", "GET");
-			then(new ListOfSpans(spans)).hasRpcTagsInProperOrder();
+			then(new ListOfSpans(spans)).hasRpcLogsInProperOrder();
 		});
 	}
 
@@ -177,11 +200,7 @@ public class WebClientTests {
 	@SuppressWarnings("unchecked")
 	public void shouldAttachTraceIdWhenCallingAnotherService(
 			ResponseEntityProvider provider) {
-		Long currentTraceId = 1L;
-		Long currentParentId = 2L;
-		Long currentSpanId = 100L;
-		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
-				.spanId(currentSpanId).parent(currentParentId).build());
+		spanContinued();
 
 		ResponseEntity<String> response = provider.get(this);
 
@@ -190,6 +209,33 @@ public class WebClientTests {
 		then(getHeader(response, Span.SAMPLED_NAME)).isNull();
 		then(getHeader(response, Span.TRACE_ID_NAME)).isNull();
 		thenRegisteredClientSentAndReceivedEvents(spanWithClientEvents());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldAttachTraceIdWhenCallingAnotherServiceViaWebClient() {
+		Span span = this.tracer.createSpan("foo");
+		try {
+			this.webClient.get()
+					.uri("http://localhost:" + this.port + "/traceid")
+					.retrieve()
+					.bodyToMono(String.class)
+					.block();
+
+			assertThatSpanGotContinued(span);
+		} finally {
+			this.tracer.close(span);
+		}
+		then(this.tracer.getCurrentSpan()).isNull();
+		thenRegisteredClientSentAndReceivedEvents(spanWithClientEvents());
+	}
+
+	private void spanContinued() {
+		Long currentTraceId = 1L;
+		Long currentParentId = 2L;
+		Long currentSpanId = 100L;
+		this.tracer.continueSpan(Span.builder().traceId(currentTraceId)
+				.spanId(currentSpanId).parent(currentParentId).build());
 	}
 
 	private Span spanWithClientEvents() {
@@ -269,6 +315,27 @@ public class WebClientTests {
 		then(this.testErrorController.getSpan()).isNull();
 	}
 
+	@Test
+	public void should_wrap_rest_template_builders() {
+		Span span = this.tracer.createSpan("foo");
+		try {
+			RestTemplate template = this.restTemplateBuilder.build();
+
+			template.getForObject("http://localhost:" + this.port + "/traceid", String.class);
+
+			assertThatSpanGotContinued(span);
+		} finally {
+			this.tracer.close(span);
+		}
+		then(this.tracer.getCurrentSpan()).isNull();
+	}
+
+	private void assertThatSpanGotContinued(Span span) {
+		Span spanInController = this.fooController.getSpan();
+		BDDAssertions.then(spanInController).isNotNull();
+		then(spanInController.getTraceId()).isEqualTo(span.getTraceId());
+	}
+
 	private void thenRegisteredClientSentAndReceivedEvents(Span span) {
 		then(span).hasLoggedAnEvent(Span.CLIENT_RECV);
 		then(span).hasLoggedAnEvent(Span.CLIENT_SEND);
@@ -329,6 +396,16 @@ public class WebClientTests {
 		SpanReporter spanReporter() {
 			return new ArrayListSpanAccumulator();
 		}
+
+		@Bean
+		WebClient webClient() {
+			return WebClient.builder().build();
+		}
+
+		@Bean
+		WebClient.Builder webClientBuilder() {
+			return WebClient.builder();
+		}
 	}
 
 	public static class TestErrorController extends BasicErrorController {
@@ -363,6 +440,8 @@ public class WebClientTests {
 		@Autowired
 		Tracer tracer;
 
+		Span span;
+
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
 				@RequestHeader(name = Span.TRACE_ID_NAME, required = false) String traceId) {
@@ -377,6 +456,7 @@ public class WebClientTests {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
+			this.span = this.tracer.getCurrentSpan();
 			return traceId;
 		}
 
@@ -400,6 +480,14 @@ public class WebClientTests {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
+		}
+
+		public Span getSpan() {
+			return this.span;
+		}
+
+		public void clear() {
+			this.span = null;
 		}
 	}
 

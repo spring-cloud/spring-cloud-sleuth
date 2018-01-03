@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.NoOpSpanReporter;
 import org.springframework.cloud.sleuth.Span;

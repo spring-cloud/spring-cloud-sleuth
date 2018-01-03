@@ -15,7 +15,6 @@ ribbon.eureka.enabled: false
 spring.sleuth.scheduled.skipPattern: "^org.*TestBeanWithScheduledMethodToBeIgnored$"
 # comma separated list of matchers
 spring.sleuth.rxjava.schedulers.ignoredthreads: HystixMetricPoller,^MyCustomThread.*$,^RxComputation.*$
-security.ignored: /**
 
 #disable hibernate by default
-spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration, org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration

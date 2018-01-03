@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 
@@ -27,8 +27,8 @@ import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 
 /**

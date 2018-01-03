@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +29,7 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -45,38 +46,49 @@ public class TracingOnScheduledTests {
 	@Autowired
 	TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
 
+	@Before
+	public void setup() {
+		this.beanWithScheduledMethod.clear();
+		this.beanWithScheduledMethodToBeIgnored.clear();
+	}
+
 	@Test
 	public void should_have_span_set_after_scheduled_method_has_been_executed() {
-		await().atMost(5, SECONDS).untilAsserted(this::spanIsSetOnAScheduledMethod);
+		await().atMost(	10, SECONDS).untilAsserted(() -> {
+			then(this.beanWithScheduledMethod.isExecuted()).isTrue();
+			spanIsSetOnAScheduledMethod();
+		});
 	}
 
 	@Test
 	public void should_have_a_new_span_set_each_time_a_scheduled_method_has_been_executed() {
 		final Span firstSpan = this.beanWithScheduledMethod.getSpan();
-		await().atMost(5, SECONDS).untilAsserted(() -> differentSpanHasBeenSetThan(firstSpan));
+		await().atMost(5, SECONDS).untilAsserted(() -> {
+			then(this.beanWithScheduledMethod.isExecuted()).isTrue();
+			differentSpanHasBeenSetThan(firstSpan);
+		});
 	}
 
 	@Test
-	public void should_not_span_in_the_scheduled_class_that_matches_skip_pattern()
+	public void should_not_create_span_in_the_scheduled_class_that_matches_skip_pattern()
 			throws Exception {
-		await().atMost(5, SECONDS).untilAtomic(
-				this.beanWithScheduledMethodToBeIgnored.isExecuted(), Matchers.is(true));
-		then(this.beanWithScheduledMethodToBeIgnored.getSpan()).isNull();
+		await().atMost(5, SECONDS).untilAsserted(() -> {
+			then(this.beanWithScheduledMethodToBeIgnored.isExecuted()).isTrue();
+			then(this.beanWithScheduledMethodToBeIgnored.getSpan()).isNull();
+		});
 	}
 
-	private Runnable spanIsSetOnAScheduledMethod() {
-		return () -> {
-			Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod
-					.getSpan();
-			then(storedSpan).isNotNull();
-			then(storedSpan.getTraceId()).isNotNull();
-			then(storedSpan).hasATag("class", "TestBeanWithScheduledMethod");
-			then(storedSpan).hasATag("method", "scheduledMethod");
-		};
+	private void spanIsSetOnAScheduledMethod() {
+		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod
+				.getSpan();
+		then(storedSpan).isNotNull();
+		then(storedSpan.getTraceId()).isNotNull();
+		then(storedSpan).hasATag("class", "TestBeanWithScheduledMethod");
+		then(storedSpan).hasATag("method", "scheduledMethod");
 	}
 
-	private Runnable differentSpanHasBeenSetThan(final Span spanToCompare) {
-		return () -> then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan())
+	private void differentSpanHasBeenSetThan(final Span spanToCompare) {
+		then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan())
 				.isNotEqualTo(spanToCompare);
 	}
 
@@ -84,6 +96,7 @@ public class TracingOnScheduledTests {
 
 @Configuration
 @DefaultTestAutoConfiguration
+@EnableScheduling
 class ScheduledTestConfiguration {
 
 	@Bean
@@ -107,13 +120,24 @@ class TestBeanWithScheduledMethod {
 
 	Span span;
 
+	AtomicBoolean executed = new AtomicBoolean(false);
+
 	@Scheduled(fixedDelay = 1L)
 	public void scheduledMethod() {
 		this.span = TestSpanContextHolder.getCurrentSpan();
+		this.executed.set(true);
 	}
 
 	public Span getSpan() {
 		return this.span;
+	}
+
+	public AtomicBoolean isExecuted() {
+		return this.executed;
+	}
+
+	public void clear() {
+		this.executed.set(false);
 	}
 }
 
@@ -134,5 +158,9 @@ class TestBeanWithScheduledMethodToBeIgnored {
 
 	public AtomicBoolean isExecuted() {
 		return this.executed;
+	}
+
+	public void clear() {
+		this.executed.set(false);
 	}
 }

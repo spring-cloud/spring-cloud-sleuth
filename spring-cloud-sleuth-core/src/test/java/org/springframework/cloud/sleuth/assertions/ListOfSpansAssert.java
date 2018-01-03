@@ -272,7 +272,7 @@ public class ListOfSpansAssert extends AbstractAssert<ListOfSpansAssert, ListOfS
 		return this;
 	}
 
-	public ListOfSpansAssert hasRpcTagsInProperOrder() {
+	public ListOfSpansAssert hasRpcLogsInProperOrder() {
 		isNotNull();
 		printSpans();
 		RpcLogKeeper rpcLogKeeper = findRpcLogs();

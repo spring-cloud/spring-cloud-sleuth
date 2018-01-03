@@ -3,7 +3,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
@@ -15,7 +14,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
+import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
@@ -30,6 +29,7 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -286,6 +286,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		@Configuration
 		static class ManagementServer {
 			@Bean
+			@Primary
 			ManagementServerProperties managementServerProperties() {
 				ManagementServerProperties managementServerProperties = new ManagementServerProperties();
 				managementServerProperties.setContextPath("/additionalContextPath");

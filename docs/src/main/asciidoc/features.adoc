@@ -41,11 +41,11 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 
 * Provides simple metrics of accepted / dropped spans.
 
-* If `spring-cloud-sleuth-zipkin2` then the app will generate and collect Zipkin-compatible traces.
+* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using `spring.zipkin.baseUrl`.
   - If you depend on `spring-rabbit` or `spring-kafka` your app will send traces to a broker instead of http.
-  - Note: `spring-cloud-sleuth-stream` is deprecated and should no longer be used. 
+  - Note: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
 
 IMPORTANT: If using Zipkin, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
 (default 0.1, i.e. 10%). *Otherwise you might think that Sleuth is not working cause it's omitting some spans.*

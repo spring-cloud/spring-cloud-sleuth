@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 import org.springframework.core.annotation.AliasFor;
 
 /**
- * Allows to create a new span around a public method or a class. The new span
+ * Allows to create a new span around a public method. The new span
  * will be either a child of an existing span if a trace is already in progress
  * or a new span will be created if there was no previous trace.
  * <p>
@@ -38,7 +38,7 @@ import org.springframework.core.annotation.AliasFor;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-@Target(value = { ElementType.METHOD, ElementType.TYPE })
+@Target(value = { ElementType.METHOD })
 public @interface NewSpan {
 
 	/**

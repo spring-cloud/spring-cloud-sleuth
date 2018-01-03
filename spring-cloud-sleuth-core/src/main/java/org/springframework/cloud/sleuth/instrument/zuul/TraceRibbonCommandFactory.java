@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
-import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -50,4 +50,5 @@ class TraceRibbonCommandFactory implements RibbonCommandFactory {
 		this.httpTraceKeysInjector.addRequestTags(span, context.uri(), context.getMethod());
 		return ribbonCommand;
 	}
+
 }

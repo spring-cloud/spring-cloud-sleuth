@@ -9,8 +9,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -99,12 +99,12 @@ public class MultipleHopsIntegrationTests {
 	@Configuration
 	@SpringBootApplication(exclude = JmxAutoConfiguration.class)
 	public static class Config implements
-			ApplicationListener<EmbeddedServletContainerInitializedEvent> {
+			ApplicationListener<ServletWebServerInitializedEvent> {
 		int port;
 
 		@Override
-		public void onApplicationEvent(EmbeddedServletContainerInitializedEvent event) {
-			this.port = event.getEmbeddedServletContainer().getPort();
+		public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+			this.port = event.getSource().getPort();
 		}
 
 		@Bean

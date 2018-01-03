@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import java.io.IOException;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -41,13 +43,18 @@ class TraceFeignAspect {
 
 	@Around("execution (* feign.Client.*(..)) && !within(is(FinalType))")
 	public Object feignClientWasCalled(final ProceedingJoinPoint pjp) throws Throwable {
+		Object bean = pjp.getTarget();
+		Object wrappedBean = new TraceFeignObjectWrapper(this.beanFactory).wrap(bean);
+		if (bean != wrappedBean) {
+			return executeTraceFeignClient(bean, pjp);
+		}
+		return pjp.proceed();
+	}
+
+	Object executeTraceFeignClient(Object bean, ProceedingJoinPoint pjp) throws IOException {
 		Object[] args = pjp.getArgs();
 		Request request = (Request) args[0];
 		Request.Options options = (Request.Options) args[1];
-		Object bean = pjp.getTarget();
-		if (!(bean instanceof TraceFeignClient)) {
-			return new TraceFeignClient(this.beanFactory, (Client) bean).execute(request, options);
-		}
-		return pjp.proceed();
+		return ((Client) bean).execute(request, options);
 	}
 }

@@ -26,7 +26,7 @@ import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
@@ -49,7 +49,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(AsyncRestTemplate.class)
 @ConditionalOnBean(HttpTraceKeysInjector.class)
-@AutoConfigureAfter(TraceWebAutoConfiguration.class)
+@AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceWebAsyncClientAutoConfiguration {
 
 	@Autowired Tracer tracer;

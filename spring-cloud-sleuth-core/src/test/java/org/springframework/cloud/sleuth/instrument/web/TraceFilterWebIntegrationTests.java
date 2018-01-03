@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import static org.assertj.core.api.Assertions.fail;
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -51,9 +54,6 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import static org.assertj.core.api.Assertions.fail;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 /**
  * @author Marcin Grzejszczak
  */
@@ -88,13 +88,14 @@ public class TraceFilterWebIntegrationTests {
 		then(new ListOfSpans(this.accumulator.getSpans()))
 				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
-				.hasRpcTagsInProperOrder();// issue#714
+				.hasRpcLogsInProperOrder();
+		// issue#714
 		Span span = this.accumulator.getSpans().get(0);
 		String hex = Span.idToHex(span.getTraceId());
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split).filter(s -> s.contains(
 				"Uncaught exception thrown"))
-				.filter(s -> s.contains("[bootstrap," + hex + "," + hex + ",true]"))
+				.filter(s -> s.contains(hex + "," + hex + ",true]"))
 				.collect(Collectors.toList());
 		then(list).isNotEmpty();
 	}

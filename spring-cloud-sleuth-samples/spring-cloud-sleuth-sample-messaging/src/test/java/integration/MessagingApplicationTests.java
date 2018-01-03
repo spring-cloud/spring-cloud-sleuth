@@ -60,11 +60,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).untilAsserted(() ->
+		await().atMost(15, SECONDS).untilAsserted(() ->
 				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId).run()
 		);
 
-		await().atMost(5, SECONDS).untilAsserted(() ->
+		await().atMost(15, SECONDS).untilAsserted(() ->
 			thenAllSpansHaveTraceIdEqualTo(traceId)
 		);
 	}
@@ -74,11 +74,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		long traceId = new Random().nextLong();
 		long spanId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).untilAsserted(() ->
+		await().atMost(15, SECONDS).untilAsserted(() ->
 				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId).run()
 		);
 
-		await().atMost(10, SECONDS).untilAsserted(() -> {
+		await().atMost(15, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenTheSpansHaveProperParentStructure();
 		});
@@ -88,11 +88,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_with_annotations_in_async_thread_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(5, SECONDS).untilAsserted(() ->
+		await().atMost(15, SECONDS).untilAsserted(() ->
 				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId).run()
 		);
 
-		await().atMost(5, SECONDS).untilAsserted(() -> {
+		await().atMost(15, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenThereIsAtLeastOneTagWithKey("background-sleep-millis");
 		});
@@ -107,8 +107,17 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
 		String traceIdHex = Long.toHexString(traceId);
-		then(this.integrationTestSpanCollector.hashedSpans.stream()
-				.allMatch(span -> span.traceId().equals(traceIdHex))).describedAs("All spans have same trace id").isTrue();
+		log.info("Stored spans: [\n" + this.integrationTestSpanCollector.hashedSpans
+				.stream()
+				.map(Span::toString)
+				.collect(Collectors.joining("\n")) + "\n]");
+		then(this.integrationTestSpanCollector.hashedSpans
+				.stream()
+				.filter(span ->
+						org.springframework.cloud.sleuth.Span.hexToId(span.traceId()) != traceId)
+				.collect(Collectors.toList()))
+				.describedAs("All spans have same trace id [" + traceIdHex + "]")
+				.isEmpty();
 	}
 
 	private void thenTheSpansHaveProperParentStructure() {

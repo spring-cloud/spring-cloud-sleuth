@@ -16,21 +16,22 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Vector;
-import java.util.regex.Pattern;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Random;
+import java.util.Vector;
+import java.util.regex.Pattern;
+
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HttpServletRequestExtractorTests {
@@ -43,6 +44,9 @@ public class HttpServletRequestExtractorTests {
 	public void setup() {
 		BDDMockito.given(this.request.getRequestURI()).willReturn("http://foo.com");
 		BDDMockito.given(this.request.getContextPath()).willReturn("/");
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList("invalid", Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME, Span.PARENT_ID_NAME)).elements());
 	}
 
 	@Test
@@ -52,6 +56,8 @@ public class HttpServletRequestExtractorTests {
 
 	@Test
 	public void should_set_random_traceid_if_header_value_is_invalid() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Collections.singletonList(Span.TRACE_ID_NAME)).elements());
 		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
 				.willReturn("invalid");
 
@@ -60,6 +66,9 @@ public class HttpServletRequestExtractorTests {
 
 	@Test
 	public void should_set_random_spanid_if_header_value_is_invalid() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME)).elements());
 		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
 				.willReturn(String.valueOf(new Random().nextLong()));
 		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
@@ -70,6 +79,9 @@ public class HttpServletRequestExtractorTests {
 
 	@Test
 	public void should_not_throw_exception_if_parent_id_is_invalid() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME, Span.PARENT_ID_NAME)).elements());
 		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
 				.willReturn(String.valueOf(new Random().nextLong()));
 		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
