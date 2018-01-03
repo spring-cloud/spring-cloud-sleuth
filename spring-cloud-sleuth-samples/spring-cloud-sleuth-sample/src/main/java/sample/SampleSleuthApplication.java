@@ -16,6 +16,7 @@
 
 package sample;
 
+import brave.sampler.Sampler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +27,6 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @SpringBootApplication
-
 @EnableAsync
 public class SampleSleuthApplication {
 
@@ -38,6 +38,11 @@ public class SampleSleuthApplication {
 	@Bean
 	public SampleController sampleController() {
 		return new SampleController();
+	}
+
+	@Bean
+	public Sampler sampler() {
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 	public static void main(String[] args) {

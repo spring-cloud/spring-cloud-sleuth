@@ -1,27 +1,35 @@
 # Auto Configuration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
-org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration,\
-org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.messaging.TraceSpanMessagingAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.messaging.websocket.TraceWebSocketAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.zuul.TraceZuulAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.rxjava.RxJavaAutoConfiguration,\
-org.springframework.cloud.sleuth.annotation.SleuthAnnotationAutoConfiguration
+org.springframework.cloud.brave.autoconfig.TraceAutoConfiguration,\
+org.springframework.cloud.brave.instrument.log.SleuthLogAutoConfiguration,\
+org.springframework.cloud.brave.instrument.web.TraceHttpAutoConfiguration,\
+org.springframework.cloud.brave.instrument.web.TraceWebServletAutoConfiguration,\
+org.springframework.cloud.brave.instrument.web.client.TraceWebClientAutoConfiguration
+
+# org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
+# org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration,\
+# org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.messaging.TraceSpanMessagingAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.messaging.websocket.TraceWebSocketAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.zuul.TraceZuulAutoConfiguration,\
+# org.springframework.cloud.sleuth.instrument.rxjava.RxJavaAutoConfiguration,\
+# org.springframework.cloud.sleuth.annotation.SleuthAnnotationAutoConfiguration
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor
+org.springframework.cloud.brave.autoconfig.TraceEnvironmentPostProcessor
+
+#org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor

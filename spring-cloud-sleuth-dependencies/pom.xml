@@ -17,6 +17,7 @@
 		<zipkin.version>2.4.1</zipkin.version>
 		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
 		<zipkin-reporter2.version>2.2.0</zipkin-reporter2.version>
+		<brave.version>4.13.1</brave.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -65,6 +66,28 @@
 				<artifactId>spring-cloud-starter-sleuth</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<!-- BRAVE -->
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-context-log4j2</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-instrumentation-spring-web</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-instrumentation-spring-webmvc</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<!-- BRAVE -->
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin</artifactId>
