@@ -109,7 +109,8 @@ public class SleuthRxJava2Tests {
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.getCurrentSpan()).isNotNull();
 		// making sure here that no new spans were created or reported as closed
-		then(this.listener.getEvents()).isEmpty();
+		await().atMost(2, SECONDS)
+				.untilAsserted(() -> then(this.listener.getEvents()).isEmpty());
 		then(spanInCurrentThread).hasNameEqualTo(spanInCurrentThread.getName());
 		then(spanInCurrentThread).isExportable();
 		then(spanInCurrentThread).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME,

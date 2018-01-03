@@ -1,6 +1,5 @@
 package org.springframework.cloud.sleuth.instrument.rxjava2;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -9,9 +8,9 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.plugins.RxJavaPlugins;
+import io.reactivex.schedulers.SchedulerRunnableIntrospection;
 
 /**
  * {@link RxJavaPlugins} setup schedule handler into tracing for all schedulers
@@ -41,7 +40,7 @@ class SleuthRxJava2SchedulersHandler {
 					new ScheduleHandler(tracer, traceKeys, threadsToSample, delegate));
 		}
 		catch (Exception e) {
-			log.error("Failed to register Sleuth RxJava SchedulersHook", e);
+			log.error("Failed to register Sleuth RxJava2 SchedulersHook", e);
 		}
 	}
 
@@ -79,18 +78,14 @@ class SleuthRxJava2SchedulersHandler {
 		}
 
 		private boolean isTraceActionDecoratedByRxWorker(Runnable action) {
-			try {
-				if (action instanceof Disposable) {
-					Field modifiersField = action.getClass()
-							.getDeclaredField("decoratedRun");
-					modifiersField.setAccessible(true);
-					return modifiersField.get(action) instanceof TraceAction;
-				}
-				return false;
+			if (action instanceof TraceAction) {
+				return true;
 			}
-			catch (Exception e) {
-				return false;
+			else if (action instanceof SchedulerRunnableIntrospection) {
+				SchedulerRunnableIntrospection runnableIntrospection = (SchedulerRunnableIntrospection) action;
+				return runnableIntrospection.getWrappedRunnable() instanceof TraceAction;
 			}
+			return false;
 		}
 	}
 

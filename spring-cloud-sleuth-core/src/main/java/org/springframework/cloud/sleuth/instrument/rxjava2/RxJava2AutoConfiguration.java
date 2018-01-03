@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.reactivex.plugins.RxJavaPlugins;
+import io.reactivex.schedulers.SchedulerRunnableIntrospection;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -27,7 +28,7 @@ import io.reactivex.plugins.RxJavaPlugins;
 @Configuration
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnBean(Tracer.class)
-@ConditionalOnClass(RxJavaPlugins.class)
+@ConditionalOnClass(SchedulerRunnableIntrospection.class)
 @ConditionalOnProperty(value = "spring.sleuth.rxjava2.schedulers.hook.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthRxJava2SchedulersProperties.class)
 public class RxJava2AutoConfiguration {

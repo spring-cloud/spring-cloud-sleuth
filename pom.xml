@@ -252,7 +252,7 @@
 		<spring-cloud-netflix.version>1.4.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<reactor.version>3.1.0.RELEASE</reactor.version>
 		<reactive-streams.version>1.0.0</reactive-streams.version>
-		<rxjava2-version>2.1.6</rxjava2-version>
+		<rxjava2-version>2.1.8</rxjava2-version>
 	</properties>
 
 	<profiles>
