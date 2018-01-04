@@ -19,6 +19,8 @@ package sample;
 import java.util.Random;
 
 import brave.Tracing;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class SampleBackground {
+	private static final Log log = LogFactory.getLog(SampleBackground.class);
 
 	@Autowired
 	private Tracing tracing;
@@ -35,6 +38,7 @@ public class SampleBackground {
 
 	@Async
 	public void background() throws InterruptedException {
+		log.info("background");
 		int millis = this.random.nextInt(1000);
 		Thread.sleep(millis);
 		this.tracing.tracer().currentSpan().tag("background-sleep-millis", String.valueOf(millis));
