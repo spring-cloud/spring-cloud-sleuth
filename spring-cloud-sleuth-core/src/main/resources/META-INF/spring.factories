@@ -4,7 +4,10 @@ org.springframework.cloud.brave.autoconfig.TraceAutoConfiguration,\
 org.springframework.cloud.brave.instrument.log.SleuthLogAutoConfiguration,\
 org.springframework.cloud.brave.instrument.web.TraceHttpAutoConfiguration,\
 org.springframework.cloud.brave.instrument.web.TraceWebServletAutoConfiguration,\
-org.springframework.cloud.brave.instrument.web.client.TraceWebClientAutoConfiguration
+org.springframework.cloud.brave.instrument.web.client.TraceWebClientAutoConfiguration,\
+org.springframework.cloud.brave.instrument.async.AsyncCustomAutoConfiguration,\
+org.springframework.cloud.brave.instrument.async.AsyncDefaultAutoConfiguration,\
+org.springframework.cloud.brave.instrument.scheduling.TraceSchedulingAutoConfiguration
 
 # org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
 # org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration,\

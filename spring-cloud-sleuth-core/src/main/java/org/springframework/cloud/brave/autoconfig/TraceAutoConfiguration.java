@@ -8,10 +8,10 @@ import brave.sampler.Sampler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.brave.DefaultSpanNamer;
 import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.ExceptionMessageErrorParser;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.brave.SpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import zipkin2.reporter.Reporter;
@@ -75,7 +75,7 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public ErrorParser defaultErrorParser() {
+	ErrorParser defaultErrorParser() {
 		return new ExceptionMessageErrorParser();
 	}
 }
