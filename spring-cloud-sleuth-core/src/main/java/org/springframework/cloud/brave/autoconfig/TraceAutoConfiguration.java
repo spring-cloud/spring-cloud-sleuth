@@ -8,10 +8,12 @@ import brave.sampler.Sampler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.brave.DefaultSpanNamer;
 import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.ExceptionMessageErrorParser;
 import org.springframework.cloud.brave.SpanNamer;
+import org.springframework.cloud.brave.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import zipkin2.reporter.Reporter;
@@ -26,6 +28,7 @@ import zipkin2.reporter.Reporter;
  */
 @Configuration
 @ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
+@EnableConfigurationProperties({ TraceKeys.class, SleuthProperties.class })
 public class TraceAutoConfiguration {
 
 	@Bean
@@ -50,8 +53,7 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
-	SpanNamer sleuthSpanNamer() {
+	@ConditionalOnMissingBean SpanNamer sleuthSpanNamer() {
 		return new DefaultSpanNamer();
 	}
 

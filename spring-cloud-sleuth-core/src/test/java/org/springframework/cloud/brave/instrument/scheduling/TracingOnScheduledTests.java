@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.brave.instrument.scheduling;
 
+import java.util.AbstractMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import brave.Span;
@@ -45,10 +46,9 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest(classes = { ScheduledTestConfiguration.class })
 public class TracingOnScheduledTests {
 
-	private static final Log log = LogFactory.getLog(TracingOnScheduledTests.class);
-
 	@Autowired TestBeanWithScheduledMethod beanWithScheduledMethod;
 	@Autowired TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
+	@Autowired ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
@@ -86,10 +86,10 @@ public class TracingOnScheduledTests {
 		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod
 				.getSpan();
 		then(storedSpan).isNotNull();
-		//TODO: What do we do about TraceKeys
-//		then(storedSpan.getTraceId()).isNotNull();
-//		then(storedSpan).hasATag("class", "TestBeanWithScheduledMethod");
-//		then(storedSpan).hasATag("method", "scheduledMethod");
+		then(storedSpan.context().traceId()).isNotNull();
+		then(this.reporter.getSpans().get(0).tags())
+				.contains(new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
+						new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
 	}
 
 	private void differentSpanHasBeenSetThan(final Span spanToCompare) {

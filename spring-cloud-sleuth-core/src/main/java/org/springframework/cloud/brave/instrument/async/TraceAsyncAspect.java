@@ -26,6 +26,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.cloud.brave.SpanNamer;
+import org.springframework.cloud.brave.TraceKeys;
 import org.springframework.cloud.brave.util.SpanNameUtil;
 import org.springframework.util.ReflectionUtils;
 
@@ -43,10 +44,12 @@ public class TraceAsyncAspect {
 
 	private final Tracing tracing;
 	private final SpanNamer spanNamer;
+	private final TraceKeys traceKeys;
 
-	public TraceAsyncAspect(Tracing tracing, SpanNamer spanNamer) {
+	public TraceAsyncAspect(Tracing tracing, SpanNamer spanNamer, TraceKeys traceKeys) {
 		this.tracing = tracing;
 		this.spanNamer = spanNamer;
+		this.traceKeys = traceKeys;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
@@ -55,6 +58,10 @@ public class TraceAsyncAspect {
 				SpanNameUtil.toLowerHyphen(pjp.getSignature().getName()));
 		Span span = this.tracing.tracer().currentSpan().name(spanName);
 		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			span.tag(this.traceKeys.getAsync().getPrefix() +
+					this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
+			span.tag(this.traceKeys.getAsync().getPrefix() +
+					this.traceKeys.getAsync().getMethodNameKey(), pjp.getSignature().getName());
 			return pjp.proceed();
 		} finally {
 			span.finish();

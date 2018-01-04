@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.brave.SpanNamer;
+import org.springframework.cloud.brave.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
@@ -64,8 +65,8 @@ public class AsyncDefaultAutoConfiguration {
 	}
 
 	@Bean
-	public TraceAsyncAspect traceAsyncAspect(Tracing tracing, SpanNamer spanNamer) {
-		return new TraceAsyncAspect(tracing, spanNamer);
+	public TraceAsyncAspect traceAsyncAspect(Tracing tracing, SpanNamer spanNamer, TraceKeys traceKeys) {
+		return new TraceAsyncAspect(tracing, spanNamer, traceKeys);
 	}
 
 	@Bean
