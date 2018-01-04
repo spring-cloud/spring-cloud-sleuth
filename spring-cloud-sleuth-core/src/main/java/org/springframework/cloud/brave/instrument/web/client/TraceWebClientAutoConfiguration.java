@@ -114,7 +114,6 @@ public class TraceWebClientAutoConfiguration {
 	@ConditionalOnClass(WebClient.class)
 	static class WebClientConfig {
 
-		// TODO: Add TraceWebClient support
 //		@Bean
 //		TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(BeanFactory beanFactory) {
 //			return new TraceWebClientBeanPostProcessor(beanFactory);
