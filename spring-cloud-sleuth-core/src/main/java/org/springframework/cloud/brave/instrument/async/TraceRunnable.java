@@ -19,6 +19,7 @@ package org.springframework.cloud.brave.instrument.async;
 import brave.Span;
 import brave.Tracer.SpanInScope;
 import brave.Tracing;
+import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.SpanNamer;
 
 /**
@@ -41,16 +42,18 @@ public class TraceRunnable implements Runnable {
 	private final Tracing tracing;
 	private final Runnable delegate;
 	private final Span span;
+	private final ErrorParser errorParser;
 
-	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate) {
-		this(tracing, spanNamer, delegate, null);
+	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser, Runnable delegate) {
+		this(tracing, spanNamer, errorParser, delegate, null);
 	}
 
-	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate, String name) {
+	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser, Runnable delegate, String name) {
 		this.tracing = tracing;
 		this.delegate = delegate;
 		String spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
 		this.span = this.tracing.tracer().nextSpan().name(spanName);
+		this.errorParser = errorParser;
 	}
 
 	@Override
@@ -62,11 +65,7 @@ public class TraceRunnable implements Runnable {
 				error = e;
 				throw e;
 			} finally {
-				if (error != null) {
-					String message = error.getMessage();
-					if (message == null) message = error.getClass().getSimpleName();
-					this.span.tag("error", message);
-				}
+				this.errorParser.parseErrorTags(this.span, error);
 				this.span.finish();
 			}
 	}

@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.SpanNamer;
 
 import static org.springframework.cloud.brave.instrument.async.TraceRunnable.DEFAULT_SPAN_NAME;
@@ -39,16 +40,18 @@ public class TraceCallable<V> implements Callable<V> {
 	private final Tracing tracing;
 	private final Callable<V> delegate;
 	private final Span span;
+	private final ErrorParser errorParser;
 
-	public TraceCallable(Tracing tracing,  SpanNamer spanNamer, Callable<V> delegate) {
-		this(tracing, spanNamer, delegate, null);
+	public TraceCallable(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser, Callable<V> delegate) {
+		this(tracing, spanNamer, errorParser, delegate, null);
 	}
 
-	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate, String name) {
+	public TraceCallable(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser, Callable<V> delegate, String name) {
 		this.tracing = tracing;
 		this.delegate = delegate;
 		String spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
 		this.span = this.tracing.tracer().nextSpan().name(spanName);
+		this.errorParser = errorParser;
 	}
 
 	@Override public V call() throws Exception {
@@ -59,11 +62,7 @@ public class TraceCallable<V> implements Callable<V> {
 			error = e;
 			throw e;
 		} finally {
-			if (error != null) {
-				String message = error.getMessage();
-				if (message == null) message = error.getClass().getSimpleName();
-				this.span.tag("error", message);
-			}
+			this.errorParser.parseErrorTags(this.span, error);
 			this.span.finish();
 		}
 	}

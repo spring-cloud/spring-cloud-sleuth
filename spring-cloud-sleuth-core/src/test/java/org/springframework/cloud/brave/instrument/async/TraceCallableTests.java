@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.brave.DefaultSpanNamer;
+import org.springframework.cloud.brave.ExceptionMessageErrorParser;
 import org.springframework.cloud.brave.SpanName;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 
@@ -115,13 +116,13 @@ public class TraceCallableTests {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(), callable))
-				.get();
+		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
+				new ExceptionMessageErrorParser(), callable)).get();
 	}
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
 		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
-				new TraceKeepingCallable())).get();
+				new ExceptionMessageErrorParser(), new TraceKeepingCallable())).get();
 	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)

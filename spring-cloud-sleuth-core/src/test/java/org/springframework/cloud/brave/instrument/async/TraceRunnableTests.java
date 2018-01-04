@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.brave.DefaultSpanNamer;
+import org.springframework.cloud.brave.ExceptionMessageErrorParser;
 import org.springframework.cloud.brave.SpanName;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 
@@ -104,7 +105,8 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(), runnable)).get();
+		this.executor.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(),
+				new ExceptionMessageErrorParser(), runnable)).get();
 	}
 
 	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable)
