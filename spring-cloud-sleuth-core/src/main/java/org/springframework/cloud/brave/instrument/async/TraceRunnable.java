@@ -17,7 +17,7 @@
 package org.springframework.cloud.brave.instrument.async;
 
 import brave.Span;
-import brave.Tracer;
+import brave.Tracer.SpanInScope;
 import brave.Tracing;
 import org.springframework.cloud.brave.SpanNamer;
 
@@ -36,13 +36,11 @@ public class TraceRunnable implements Runnable {
 	 * Since we don't know the exact operation name we provide a default
 	 * name for the Span
 	 */
-	private static final String DEFAULT_SPAN_NAME = "async";
+	static final String DEFAULT_SPAN_NAME = "async";
 
 	private final Tracing tracing;
-	private final SpanNamer spanNamer;
 	private final Runnable delegate;
-	private final String name;
-	private final Span parent;
+	private final Span span;
 
 	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate) {
 		this(tracing, spanNamer, delegate, null);
@@ -50,73 +48,26 @@ public class TraceRunnable implements Runnable {
 
 	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate, String name) {
 		this.tracing = tracing;
-		this.spanNamer = spanNamer;
 		this.delegate = delegate;
-		this.name = name;
-		this.parent = tracing.tracer().currentSpan();
+		String spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
+		this.span = this.tracing.tracer().nextSpan().name(spanName);
 	}
 
 	@Override
-	public void run()  {
-		Span span = startSpan();
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
-			this.getDelegate().run();
-		}
-		finally {
-			close(span);
-		}
-	}
-
-	protected Span startSpan() {
-		if (this.parent != null) {
-			return this.tracing.tracer().newChild(this.parent.context()).name(getSpanName());
-		}
-		return this.tracing.tracer().nextSpan().name(getSpanName());
-	}
-
-	protected String getSpanName() {
-		if (this.name != null) {
-			return this.name;
-		}
-		return this.spanNamer.name(this.delegate, DEFAULT_SPAN_NAME);
-	}
-
-	protected void close(Span span) {
-		// race conditions - check #447
-		if (!isTracing(span)) {
-			this.tracing.tracer().joinSpan(span.context());
-		}
-		span.finish();
-	}
-
-	protected Span continueSpan(Span span) {
-		return this.tracing.tracer().joinSpan(span.context());
-	}
-
-	protected void detachSpan(Span span) {
-		if (isTracing(span)) {
-			span.abandon();
-		}
-	}
-
-	private boolean isTracing(Span span) {
-		Span currentSpan = this.tracing.tracer().currentSpan();
-		return currentSpan != null && currentSpan.equals(span);
-	}
-
-	public Tracing getTracing() {
-		return this.tracing;
-	}
-
-	public Runnable getDelegate() {
-		return this.delegate;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public Span getParent() {
-		return this.parent;
+	public void run() {
+		  Throwable error = null;
+			try (SpanInScope ws = this.tracing.tracer().withSpanInScope(this.span.start())) {
+				this.delegate.run();
+			} catch (RuntimeException | Error e) {
+				error = e;
+				throw e;
+			} finally {
+				if (error != null) {
+					String message = error.getMessage();
+					if (message == null) message = error.getClass().getSimpleName();
+					this.span.tag("error", message);
+				}
+				this.span.finish();
+			}
 	}
 }

@@ -68,6 +68,6 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Reporter<zipkin2.Span> noOpSpanReporter() {
-		return new NoOpReporter();
+		return Reporter.NOOP;
 	}
 }

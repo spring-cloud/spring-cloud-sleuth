@@ -23,6 +23,8 @@ import brave.Tracer;
 import brave.Tracing;
 import org.springframework.cloud.brave.SpanNamer;
 
+import static org.springframework.cloud.brave.instrument.async.TraceRunnable.DEFAULT_SPAN_NAME;
+
 /**
  * Callable that passes Span between threads. The Span name is
  * taken either from the passed value or from the {@link SpanNamer}
@@ -35,10 +37,8 @@ import org.springframework.cloud.brave.SpanNamer;
 public class TraceCallable<V> implements Callable<V> {
 
 	private final Tracing tracing;
-	private final SpanNamer spanNamer;
 	private final Callable<V> delegate;
-	private final String name;
-	private final Span parent;
+	private final Span span;
 
 	public TraceCallable(Tracing tracing,  SpanNamer spanNamer, Callable<V> delegate) {
 		this(tracing, spanNamer, delegate, null);
@@ -46,63 +46,25 @@ public class TraceCallable<V> implements Callable<V> {
 
 	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate, String name) {
 		this.tracing = tracing;
-		this.spanNamer = spanNamer;
 		this.delegate = delegate;
-		this.name = name;
-		this.parent = tracing.tracer().currentSpan();
+		String spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
+		this.span = this.tracing.tracer().nextSpan().name(spanName);
 	}
 
-	@Override
-	public V call() throws Exception {
-		Span span = startSpan();
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
-			return this.getDelegate().call();
+	@Override public V call() throws Exception {
+		Throwable error = null;
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(this.span.start())) {
+			return this.delegate.call();
+		} catch (Exception | Error e) {
+			error = e;
+			throw e;
+		} finally {
+			if (error != null) {
+				String message = error.getMessage();
+				if (message == null) message = error.getClass().getSimpleName();
+				this.span.tag("error", message);
+			}
+			this.span.finish();
 		}
-		finally {
-			close(span);
-		}
 	}
-
-	protected Span startSpan() {
-		if (this.parent != null) {
-			return this.tracing.tracer().newChild(this.parent.context()).name(getSpanName()).start();
-		}
-		return this.tracing.tracer().nextSpan().name(getSpanName()).start();
-	}
-
-	protected String getSpanName() {
-		if (this.name != null) {
-			return this.name;
-		}
-		return this.spanNamer.name(this.delegate, "async");
-	}
-
-	protected void close(Span span) {
-		span.finish();
-	}
-
-	protected Span continueSpan(Span span) {
-		return this.tracing.tracer().joinSpan(span.context());
-	}
-
-	protected void detachSpan(Span span) {
-		span.abandon();
-	}
-
-	public Tracing getTracing() {
-		return this.tracing;
-	}
-
-	public Callable<V> getDelegate() {
-		return this.delegate;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public Span getParent() {
-		return this.parent;
-	}
-
 }
