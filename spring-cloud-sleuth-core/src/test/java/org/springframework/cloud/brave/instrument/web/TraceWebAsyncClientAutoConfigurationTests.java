@@ -79,7 +79,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 			initialSpan.finish();
 		}
 
-		then(new ArrayList<>(this.accumulator.getSpans()).stream()
+		then(this.accumulator.getSpans().stream()
 				.filter(span -> Span.Kind.CLIENT == span.kind()).findFirst().get())
 				.matches(span -> span.duration() >= TimeUnit.MILLISECONDS.toMicros(100));
 		then(this.tracer.tracer().currentSpan()).isNull();
@@ -111,7 +111,11 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
 
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(
+			// spring boot test will otherwise instrument the client and server with the same bean factory
+			// which isn't expected
+			excludeName = "org.springframework.cloud.brave.instrument.web.TraceWebServletAutoConfiguration"
+	)
 	@Configuration
 	public static class TestConfiguration {
 
