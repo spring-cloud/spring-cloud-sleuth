@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import zipkin2.reporter.Reporter;
 
@@ -44,6 +45,7 @@ import static org.awaitility.Awaitility.await;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { ScheduledTestConfiguration.class })
+@DirtiesContext
 public class TracingOnScheduledTests {
 
 	@Autowired TestBeanWithScheduledMethod beanWithScheduledMethod;

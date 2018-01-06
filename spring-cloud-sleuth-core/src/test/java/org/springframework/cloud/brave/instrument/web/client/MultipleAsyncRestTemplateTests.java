@@ -29,6 +29,7 @@ import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.awaitility.Awaitility;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.BeanFactory;
@@ -51,6 +52,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,14 +69,21 @@ import static org.assertj.core.api.BDDAssertions.then;
 				MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
 				MultipleAsyncRestTemplateTests.ControllerConfig.class },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext
 public class MultipleAsyncRestTemplateTests {
 
 	private static final Log log = LogFactory.getLog(MultipleAsyncRestTemplateTests.class);
 
 	@Autowired @Qualifier("customAsyncRestTemplate") AsyncRestTemplate asyncRestTemplate;
 	@Autowired AsyncConfigurer executor;
+	Executor wrappedExecutor;
 	@Autowired Tracing tracing;
 	@LocalServerPort int port;
+
+	@Before
+	public void setup() {
+		this.wrappedExecutor = this.executor.getAsyncExecutor();
+	}
 
 	@Test
 	public void should_start_context_with_custom_async_client() throws Exception {
@@ -96,7 +105,7 @@ public class MultipleAsyncRestTemplateTests {
 	@Test
 	public void should_start_context_with_custom_executor() throws Exception {
 		then(this.executor).isNotNull();
-		then(this.executor.getAsyncExecutor()).isInstanceOf(LazyTraceExecutor.class);
+		then(this.wrappedExecutor).isInstanceOf(LazyTraceExecutor.class);
 	}
 
 	@Test
@@ -104,19 +113,22 @@ public class MultipleAsyncRestTemplateTests {
 		Span span = this.tracing.tracer().nextSpan().name("foo");
 		AtomicBoolean executed = new AtomicBoolean(false);
 		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
-			log.info("Hello from test");
-			this.executor.getAsyncExecutor().execute(new Runnable() {
-				@Override public void run() {
-					then(Tracing.currentTracer().currentSpan().context().traceId()).isEqualTo(span.context().traceId());
-					executed.set(true);
-					log.info("Hello from runnable");
-				}
+			this.wrappedExecutor.execute(() -> {
+				Span currentSpan = this.tracing.tracer().currentSpan();
+				log.info("Current span " + currentSpan);
+				then(currentSpan).isNotNull();
+				long currentTraceId = currentSpan.context().traceId();
+				long initialTraceId = span.context().traceId();
+				log.info("Hello from runnable before trace id check. Initial [" + initialTraceId + "] current [" + currentTraceId + "]");
+				then(currentTraceId).isEqualTo(initialTraceId);
+				executed.set(true);
+				log.info("Hello from runnable");
 			});
 		} finally {
 			span.finish();
 		}
 
-		Awaitility.await().atMost(5L, TimeUnit.SECONDS)
+		Awaitility.await().atMost(10L, TimeUnit.SECONDS)
 				.untilAsserted(() -> {
 					then(executed.get()).isTrue();
 				});

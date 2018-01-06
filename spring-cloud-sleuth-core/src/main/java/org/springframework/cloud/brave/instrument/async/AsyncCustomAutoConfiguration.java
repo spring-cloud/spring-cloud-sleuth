@@ -54,7 +54,7 @@ public class AsyncCustomAutoConfiguration implements BeanPostProcessor {
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof AsyncConfigurer) {
+		if (bean instanceof AsyncConfigurer && !(bean instanceof LazyTraceAsyncCustomizer)) {
 			AsyncConfigurer configurer = (AsyncConfigurer) bean;
 			return new LazyTraceAsyncCustomizer(this.beanFactory, configurer);
 		}
