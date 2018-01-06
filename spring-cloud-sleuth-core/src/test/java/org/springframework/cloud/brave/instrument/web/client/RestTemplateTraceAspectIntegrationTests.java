@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import brave.Tracing;
 import brave.sampler.Sampler;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.async.WebAsyncTask;
+
 import zipkin2.Span;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -45,8 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = RestTemplateTraceAspectIntegrationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@DirtiesContext
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) @DirtiesContext
 public class RestTemplateTraceAspectIntegrationTests {
 
 	@Autowired WebApplicationContext context;
@@ -56,20 +57,16 @@ public class RestTemplateTraceAspectIntegrationTests {
 
 	private MockMvc mockMvc;
 
-	@Before
-	public void init() {
+	@Before public void init() {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 		this.controller.reset();
 	}
 
-	@Before
-	@After
-	public void verify() {
+	@Before @After public void verify() {
 		then(this.tracer.tracer().currentSpan()).isNull();
 	}
 
-	@Test
-	public void should_set_span_data_on_headers_via_aspect_in_synchronous_call()
+	@Test public void should_set_span_data_on_headers_via_aspect_in_synchronous_call()
 			throws Exception {
 		whenARequestIsSentToASyncEndpoint();
 
@@ -134,11 +131,9 @@ public class RestTemplateTraceAspectIntegrationTests {
 				.andExpect(status().isOk());
 	}
 
-	@DefaultTestAutoConfiguration
-	@Import(AspectTestingController.class)
+	@DefaultTestAutoConfiguration @Import(AspectTestingController.class)
 	public static class Config {
-		@Bean
-		public RestTemplate restTemplate() {
+		@Bean public RestTemplate restTemplate() {
 			return new RestTemplate();
 		}
 
@@ -146,82 +141,76 @@ public class RestTemplateTraceAspectIntegrationTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean
-		public AsyncRestTemplate asyncRestTemplate(Tracing tracing) {
+		@Bean public AsyncRestTemplate asyncRestTemplate(Tracing tracing) {
 			AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate();
 			asyncRestTemplate.setInterceptors(Collections.singletonList(
-					AsyncTracingClientHttpRequestInterceptor.create(tracing))
-			);
+					AsyncTracingClientHttpRequestInterceptor.create(tracing)));
 			return asyncRestTemplate;
 		}
 
-		@Bean
-		ArrayListSpanReporter reporter() {
+		@Bean ArrayListSpanReporter reporter() {
 			return new ArrayListSpanReporter();
 		}
 	}
 
-	@RestController
-	public static class AspectTestingController {
+	@RestController public static class AspectTestingController {
 
-		@Autowired
-		Tracing tracer;
-		@Autowired
-		RestTemplate restTemplate;
-		@Autowired
-		Environment environment;
-		@Autowired
-		AsyncRestTemplate asyncRestTemplate;
+		@Autowired Tracing tracer;
+		@Autowired RestTemplate restTemplate;
+		@Autowired Environment environment;
+		@Autowired AsyncRestTemplate asyncRestTemplate;
 		private String traceId;
 
 		public void reset() {
 			this.traceId = null;
 		}
 
-		@RequestMapping(value = "/", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
-		public String home(
+		@RequestMapping(value = "/", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE) public String home(
 				@RequestHeader(value = "X-B3-SpanId", required = false) String traceId) {
 			this.traceId = traceId == null ? "UNKNOWN" : traceId;
 			return "trace=" + this.getTraceId();
 		}
 
-		@RequestMapping(value = "/customTag", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
-		public String customTag(
+		@RequestMapping(value = "/customTag", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE) public String customTag(
 				@RequestHeader(value = "X-B3-TraceId", required = false) String traceId) {
 			this.traceId = traceId == null ? "UNKNOWN" : traceId;
 			return "trace=" + this.getTraceId();
 		}
 
-		@RequestMapping(value = "/asyncRestTemplate", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
-		public String asyncRestTemplate()
+		@RequestMapping(value = "/asyncRestTemplate", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE) public String asyncRestTemplate()
 				throws ExecutionException, InterruptedException {
 			return callViaAsyncRestTemplateAndReturnOk();
 		}
 
-		@RequestMapping(value = "/syncPing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
-		public String syncPing() {
+		@RequestMapping(value = "/syncPing", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE) public String syncPing() {
 			return callAndReturnOk();
 		}
 
-		@RequestMapping(value = "/callablePing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/callablePing", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public Callable<String> asyncPing() {
 			return new Callable<String>() {
-				@Override
-				public String call() throws Exception {
+				@Override public String call() throws Exception {
 					return callAndReturnOk();
 				}
 			};
 		}
 
-		@RequestMapping(value = "/webAsyncTaskPing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/webAsyncTaskPing", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public WebAsyncTask<String> webAsyncTaskPing() {
 			return new WebAsyncTask<>(new Callable<String>() {
-				@Override
-				public String call() throws Exception {
+				@Override public String call() throws Exception {
 					return callAndReturnOk();
 				}
 			});
-		};
+		}
+
+		;
 
 		private String callAndReturnOk() {
 			this.restTemplate.getForObject("http://localhost:" + port(), String.class);

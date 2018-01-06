@@ -1,10 +1,5 @@
 package org.springframework.cloud.brave.autoconfig;
 
-import brave.Tracing;
-import brave.context.log4j2.ThreadContextCurrentTraceContext;
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.Propagation;
-import brave.sampler.Sampler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,6 +11,13 @@ import org.springframework.cloud.brave.SpanNamer;
 import org.springframework.cloud.brave.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import brave.CurrentSpanCustomizer;
+import brave.Tracing;
+import brave.context.log4j2.ThreadContextCurrentTraceContext;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.Propagation;
+import brave.sampler.Sampler;
 import zipkin2.reporter.Reporter;
 
 /**
@@ -48,7 +50,7 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Sampler defaultTraceSampler() {
+	Sampler sleuthTraceSampler() {
 		return Sampler.NEVER_SAMPLE;
 	}
 
@@ -77,7 +79,13 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	ErrorParser defaultErrorParser() {
+	ErrorParser sleuthErrorParser() {
 		return new ExceptionMessageErrorParser();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	CurrentSpanCustomizer sleuthCurrentSpanCustomizer(Tracing tracing) {
+		return CurrentSpanCustomizer.create(tracing);
 	}
 }

@@ -16,13 +16,11 @@
 
 package org.springframework.cloud.brave.instrument.web;
 
-import java.lang.reflect.Field;
-import java.util.concurrent.Callable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Field;
+import java.util.concurrent.Callable;
 
-import brave.Span;
-import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -32,6 +30,9 @@ import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.SpanNamer;
 import org.springframework.cloud.brave.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
+
+import brave.Span;
+import brave.Tracing;
 
 /**
  * Aspect that adds tracing to
@@ -63,8 +64,6 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * @see org.springframework.stereotype.Controller
  * @see org.springframework.web.client.RestOperations
  * @see org.springframework.cloud.sleuth.TraceCallable
- * @see Tracer
- * @see TraceFilter
  */
 @SuppressWarnings("ArgNamesWarningsInspection")
 @Aspect
