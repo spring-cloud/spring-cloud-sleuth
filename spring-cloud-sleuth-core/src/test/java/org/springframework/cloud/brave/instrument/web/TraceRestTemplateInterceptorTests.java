@@ -16,13 +16,18 @@
 
 package org.springframework.cloud.brave.instrument.web;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
+import brave.sampler.Sampler;
+import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -41,13 +46,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
-import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
-import brave.sampler.Sampler;
-import brave.spring.web.TracingClientHttpRequestInterceptor;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Dave Syer

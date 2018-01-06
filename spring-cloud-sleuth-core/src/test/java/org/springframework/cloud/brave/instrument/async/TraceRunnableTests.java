@@ -16,7 +16,7 @@ import org.springframework.cloud.brave.ExceptionMessageErrorParser;
 import org.springframework.cloud.brave.SpanName;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRunnableTests {

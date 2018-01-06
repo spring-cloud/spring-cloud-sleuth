@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.brave.instrument.web.client;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import javax.annotation.PostConstruct;
 
 import brave.http.HttpTracing;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.brave.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;

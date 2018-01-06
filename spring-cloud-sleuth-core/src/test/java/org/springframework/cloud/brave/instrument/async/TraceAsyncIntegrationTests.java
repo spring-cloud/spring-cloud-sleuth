@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
