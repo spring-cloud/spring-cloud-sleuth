@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.brave.instrument.web.client.feign;
 
-import brave.Tracing;
+import brave.http.HttpTracing;
 import feign.Client;
 import feign.Feign;
 import feign.okhttp.OkHttpClient;
@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.brave.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.brave.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,10 +43,10 @@ import org.springframework.context.annotation.Scope;
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass(Client.class)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(HttpTracing.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
 //@AutoConfigureAfter({SleuthHystrixAutoConfiguration.class, TraceWebServletAutoConfiguration.class})
-@AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
+@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
 public class TraceFeignClientAutoConfiguration {
 
 	@Bean
@@ -62,8 +62,7 @@ public class TraceFeignClientAutoConfiguration {
 	@Scope("prototype")
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", havingValue = "false", matchIfMissing = true)
 	Feign.Builder feignBuilder(BeanFactory beanFactory) {
-		return SleuthFeignBuilder
-				.builder(beanFactory);
+		return SleuthFeignBuilder.builder(beanFactory);
 	}
 
 	@Configuration

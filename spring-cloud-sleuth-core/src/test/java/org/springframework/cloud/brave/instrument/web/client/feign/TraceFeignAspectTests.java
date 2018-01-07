@@ -51,7 +51,6 @@ public class TraceFeignAspectTests {
 	@Test 
 	public void should_wrap_feign_client_in_trace_representation() throws Throwable {
 		given(this.pjp.getTarget()).willReturn(this.client);
-		given(this.beanFactory.getBean(HttpTracing.class)).willReturn(this.httpTracing);
 
 		this.traceFeignAspect.feignClientWasCalled(this.pjp);
 

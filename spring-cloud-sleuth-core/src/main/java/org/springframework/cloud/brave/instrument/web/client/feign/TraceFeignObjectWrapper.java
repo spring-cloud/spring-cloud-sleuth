@@ -1,6 +1,5 @@
 package org.springframework.cloud.brave.instrument.web.client.feign;
 
-import brave.http.HttpTracing;
 import feign.Client;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.feign.ribbon.CachingSpringLoadBalancerFactory;
@@ -19,7 +18,6 @@ final class TraceFeignObjectWrapper {
 
 	private CachingSpringLoadBalancerFactory cachingSpringLoadBalancerFactory;
 	private SpringClientFactory springClientFactory;
-	private HttpTracing httpTracing;
 
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -30,12 +28,13 @@ final class TraceFeignObjectWrapper {
 			if (bean instanceof LoadBalancerFeignClient && !(bean instanceof TraceLoadBalancerFeignClient)) {
 				LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
 				return new TraceLoadBalancerFeignClient(
-						(Client) new TraceFeignObjectWrapper(beanFactory).wrap(client.getDelegate()),
+						(Client) new TraceFeignObjectWrapper(this.beanFactory)
+								.wrap(client.getDelegate()),
 						factory(), clientFactory(), this.beanFactory);
 			} else if (bean instanceof TraceLoadBalancerFeignClient) {
 				return bean;
 			}
-			return TracingFeignClient.create(httpTracing(), (Client) bean);
+			return new LazyTracingFeignClient(this.beanFactory, (Client) bean);
 		}
 		return bean;
 	}
@@ -56,10 +55,4 @@ final class TraceFeignObjectWrapper {
 		return this.springClientFactory;
 	}
 
-	private HttpTracing httpTracing() {
-		if (this.httpTracing == null) {
-			this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
-		}
-		return this.httpTracing;
-	}
 }

@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.brave.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
@@ -72,11 +73,11 @@ public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;
 	@Autowired TestFeignWithCustomConfInterface customConfFeignInterface;
-	@Autowired ArrayListSpanReporter listener;
+	@Autowired ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
-		this.listener.clear();
+		this.reporter.clear();
 	}
 
 	@Test
@@ -87,12 +88,13 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			List<Span> spans = this.listener.getSpans();
+			List<Span> spans = this.reporter.getSpans();
 			Optional<Span> spanWithError = spans.stream()
 					.filter(span -> span.tags().containsKey("error")).findFirst();
 			then(spanWithError.isPresent()).isTrue();
-			then(spanWithError.get().tags()).containsEntry("error",
-							"Internal Error");
+			then(spanWithError.get().tags())
+					.containsEntry("error", "500")
+					.containsEntry("http.status_code", "500");
 		});
 	}
 
@@ -104,6 +106,12 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
+			List<Span> spans = this.reporter.getSpans();
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("http.status_code")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("http.status_code", "404");
 		});
 	}
 
@@ -115,6 +123,13 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
+			List<Span> spans = this.reporter.getSpans();
+			then(spans).hasSize(2);
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("http.method")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("http.method", "GET");
 		});
 	}
 
@@ -126,6 +141,13 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
+			List<Span> spans = this.reporter.getSpans();
+			then(spans).hasSize(2);
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("http.method")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("http.method", "GET");
 		});
 	}
 
@@ -137,11 +159,18 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
+			List<Span> spans = this.reporter.getSpans();
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("error")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("error", "404")
+					.containsEntry("http.status_code", "404");
 		});
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
 	@EnableFeignClients
 	@RibbonClients({@RibbonClient(value = "fooservice",
 			configuration = SimpleRibbonClientConfiguration.class),

@@ -3,10 +3,8 @@ package org.springframework.cloud.brave.instrument.web.client.feign;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import feign.Client;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -26,15 +24,9 @@ public class TracingFeignObjectWrapperTests {
 	@Mock BeanFactory beanFactory;
 	@InjectMocks TraceFeignObjectWrapper traceFeignObjectWrapper;
 
-	@Before
-	public void setup() {
-		BDDMockito.given(this.beanFactory.getBean(HttpTracing.class))
-				.willReturn(this.httpTracing);
-	}
-
 	@Test
-	public void should_wrap_a_client_into_trace_client() throws Exception {
-		then(this.traceFeignObjectWrapper.wrap(mock(Client.class))).isExactlyInstanceOf(TracingFeignClient.class);
+	public void should_wrap_a_client_into_lazy_trace_client() throws Exception {
+		then(this.traceFeignObjectWrapper.wrap(mock(Client.class))).isExactlyInstanceOf(LazyTracingFeignClient.class);
 	}
 
 	@Test
