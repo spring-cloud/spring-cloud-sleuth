@@ -10,7 +10,8 @@ org.springframework.cloud.brave.instrument.async.AsyncCustomAutoConfiguration,\
 org.springframework.cloud.brave.instrument.async.AsyncDefaultAutoConfiguration,\
 org.springframework.cloud.brave.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.brave.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
-org.springframework.cloud.brave.instrument.hystrix.SleuthHystrixAutoConfiguration
+org.springframework.cloud.brave.instrument.hystrix.SleuthHystrixAutoConfiguration,\
+org.springframework.cloud.brave.annotation.SleuthAnnotationAutoConfiguration
 
 # org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
 # org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration,\
