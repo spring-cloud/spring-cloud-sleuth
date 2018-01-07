@@ -37,7 +37,7 @@ public class TraceRunnable implements Runnable {
 	 * Since we don't know the exact operation name we provide a default
 	 * name for the Span
 	 */
-	static final String DEFAULT_SPAN_NAME = "async";
+	private static final String DEFAULT_SPAN_NAME = "async";
 
 	private final Tracing tracing;
 	private final Runnable delegate;

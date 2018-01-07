@@ -24,8 +24,6 @@ import brave.Tracing;
 import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.SpanNamer;
 
-import static org.springframework.cloud.brave.instrument.async.TraceRunnable.DEFAULT_SPAN_NAME;
-
 /**
  * Callable that passes Span between threads. The Span name is
  * taken either from the passed value or from the {@link SpanNamer}
@@ -36,6 +34,12 @@ import static org.springframework.cloud.brave.instrument.async.TraceRunnable.DEF
  * @since 1.0.0
  */
 public class TraceCallable<V> implements Callable<V> {
+
+	/**
+	 * Since we don't know the exact operation name we provide a default
+	 * name for the Span
+	 */
+	private static final String DEFAULT_SPAN_NAME = "async";
 
 	private final Tracing tracing;
 	private final Callable<V> delegate;
