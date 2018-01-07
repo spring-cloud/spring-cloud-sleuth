@@ -2,19 +2,26 @@ package org.springframework.cloud.brave.instrument.web;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.spring.webmvc.TracingHandlerInterceptor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.SpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import static javax.servlet.DispatcherType.ASYNC;
+import static javax.servlet.DispatcherType.ERROR;
+import static javax.servlet.DispatcherType.FORWARD;
+import static javax.servlet.DispatcherType.INCLUDE;
+import static javax.servlet.DispatcherType.REQUEST;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -29,21 +36,36 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
-public class TraceWebServletAutoConfiguration implements WebMvcConfigurer {
+public class TraceWebServletAutoConfiguration {
 
-	@Autowired
-	private HttpTracing httpTracing;
-
-	private HandlerInterceptor tracingHandlerInterceptor(HttpTracing httpTracing) {
-		return TracingHandlerInterceptor.create(httpTracing);
-	}
-
-	@Override public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(tracingHandlerInterceptor(this.httpTracing));
+	/**
+	 * Nested config that configures Web MVC if it's present (without adding a runtime
+	 * dependency to it)
+	 */
+	@Configuration
+	@ConditionalOnClass(WebMvcConfigurer.class)
+	@Import(TraceWebMvcConfigurer.class)
+	protected static class TraceWebMvcAutoConfiguration {
 	}
 
 	@Bean
 	TraceWebAspect traceWebAspect(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser) {
 		return new TraceWebAspect(tracing, spanNamer, errorParser);
+	}
+	
+	@Bean
+	public FilterRegistrationBean traceWebFilter(
+			TraceFilter traceFilter) {
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(traceFilter);
+		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
+		filterRegistrationBean.setOrder(TraceFilter.ORDER);
+		return filterRegistrationBean;
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public TraceFilter traceFilter(BeanFactory beanFactory,
+			SkipPatternProvider skipPatternProvider) {
+		return new TraceFilter(beanFactory, skipPatternProvider.skipPattern());
 	}
 }
