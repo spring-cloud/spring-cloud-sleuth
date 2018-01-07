@@ -47,7 +47,7 @@ import org.springframework.cloud.brave.instrument.web.SleuthHttpClientParserAcce
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak

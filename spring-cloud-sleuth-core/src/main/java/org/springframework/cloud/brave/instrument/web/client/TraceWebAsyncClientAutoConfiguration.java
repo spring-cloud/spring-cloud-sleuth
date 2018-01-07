@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 import brave.http.HttpTracing;
+import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -54,8 +55,8 @@ public class TraceWebAsyncClientAutoConfiguration {
 	static class AsyncRestTemplateConfig {
 
 		@Bean
-		public AsyncTracingClientHttpRequestInterceptor asyncTracingClientHttpRequestInterceptor(HttpTracing httpTracing) {
-			return (AsyncTracingClientHttpRequestInterceptor) AsyncTracingClientHttpRequestInterceptor.create(httpTracing);
+		public TracingAsyncClientHttpRequestInterceptor asyncTracingClientHttpRequestInterceptor(HttpTracing httpTracing) {
+			return (TracingAsyncClientHttpRequestInterceptor) TracingAsyncClientHttpRequestInterceptor.create(httpTracing);
 		}
 
 		@Configuration
@@ -65,7 +66,7 @@ public class TraceWebAsyncClientAutoConfiguration {
 			private Collection<AsyncRestTemplate> restTemplates;
 
 			@Autowired
-			private AsyncTracingClientHttpRequestInterceptor clientInterceptor;
+			private TracingAsyncClientHttpRequestInterceptor clientInterceptor;
 
 			@PostConstruct
 			public void init() {

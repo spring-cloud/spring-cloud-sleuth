@@ -39,7 +39,7 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.strategy.HystrixPlugins;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { HystrixAnnotationsIntegrationTests.TestConfig.class })

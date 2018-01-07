@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import brave.CurrentSpanCustomizer;
 import brave.Tracing;
 import brave.context.log4j2.ThreadContextCurrentTraceContext;
+import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.Propagation;
 import brave.sampler.Sampler;
@@ -62,7 +63,7 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Propagation.Factory sleuthPropagation() {
-		return Propagation.Factory.B3;
+		return B3Propagation.FACTORY;
 	}
 
 	@Bean

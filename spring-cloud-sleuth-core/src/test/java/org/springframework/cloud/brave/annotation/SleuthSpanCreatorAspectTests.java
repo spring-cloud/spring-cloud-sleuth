@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectTests.TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -59,7 +59,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
-		BDDAssertions.then(spans.get(0).name()).isEqualTo("test-method");
+		then(spans.get(0).name()).isEqualTo("test-method");
 	}
 	
 	@Test

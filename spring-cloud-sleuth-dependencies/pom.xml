@@ -17,7 +17,7 @@
 		<zipkin.version>2.4.1</zipkin.version>
 		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
 		<zipkin-reporter2.version>2.2.0</zipkin-reporter2.version>
-		<brave.version>4.13.1</brave.version>
+		<brave.version>4.13.3-SNAPSHOT</brave.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>

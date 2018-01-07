@@ -18,12 +18,11 @@ package org.springframework.cloud.brave.instrument.web;
 
 import java.net.URI;
 
-import org.springframework.cloud.brave.TraceKeys;
-import org.springframework.cloud.sleuth.util.SpanNameUtil;
-
 import brave.SpanCustomizer;
 import brave.http.HttpAdapter;
 import brave.http.HttpClientParser;
+import org.springframework.cloud.brave.TraceKeys;
+import org.springframework.cloud.brave.util.SpanNameUtil;
 
 /**
  * An {@link HttpClientParser} that behaves like Sleuth in versions 1.x

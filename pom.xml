@@ -253,6 +253,18 @@
 						<enabled>false</enabled>
 					</releases>
 				</repository>
+				<!-- TODO: REMOVE ME - ONLY FOR BRAVE SNAPSHOTS -->
+				<repository>
+					<id>jfrog-snapshots</id>
+					<name>JFrog Snapshots</name>
+					<url>https://oss.jfrog.org/oss-snapshot-local/</url>
+					<snapshots>
+						<enabled>true</enabled>
+					</snapshots>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
+				</repository>
 				<repository>
 					<id>spring-milestones</id>
 					<name>Spring Milestones</name>

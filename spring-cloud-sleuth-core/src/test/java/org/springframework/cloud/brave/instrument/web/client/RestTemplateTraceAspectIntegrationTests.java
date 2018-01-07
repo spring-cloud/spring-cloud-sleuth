@@ -7,7 +7,8 @@ import java.util.stream.Collectors;
 
 import brave.Tracing;
 import brave.sampler.Sampler;
-
+import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
+import zipkin2.Span;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,8 +35,6 @@ import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.async.WebAsyncTask;
-
-import zipkin2.Span;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -131,7 +130,8 @@ public class RestTemplateTraceAspectIntegrationTests {
 				.andExpect(status().isOk());
 	}
 
-	@DefaultTestAutoConfiguration @Import(AspectTestingController.class)
+	@DefaultTestAutoConfiguration
+	@Import(AspectTestingController.class)
 	public static class Config {
 		@Bean public RestTemplate restTemplate() {
 			return new RestTemplate();
@@ -144,7 +144,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 		@Bean public AsyncRestTemplate asyncRestTemplate(Tracing tracing) {
 			AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate();
 			asyncRestTemplate.setInterceptors(Collections.singletonList(
-					AsyncTracingClientHttpRequestInterceptor.create(tracing)));
+					TracingAsyncClientHttpRequestInterceptor.create(tracing)));
 			return asyncRestTemplate;
 		}
 
