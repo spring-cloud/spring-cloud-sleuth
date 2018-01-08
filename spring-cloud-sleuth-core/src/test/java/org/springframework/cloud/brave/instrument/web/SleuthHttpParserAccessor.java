@@ -7,8 +7,8 @@ import org.springframework.cloud.brave.TraceKeys;
  * @author Marcin Grzejszczak
  * @since
  */
-public class SleuthHttpClientParserAccessor {
-	public static HttpClientParser get(TraceKeys traceKeys) {
+public class SleuthHttpParserAccessor {
+	public static HttpClientParser getClient(TraceKeys traceKeys) {
 		return new SleuthHttpClientParser(traceKeys);
 	}
 }

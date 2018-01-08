@@ -1,6 +1,6 @@
 package org.springframework.cloud.brave;
 
-import brave.Span;
+import brave.SpanCustomizer;
 
 /**
  * Contract for hooking into process of adding error response tags.
@@ -18,5 +18,5 @@ public interface ErrorParser {
 	 * @param span - current span in context
 	 * @param error - error that was thrown upon receiving a response
 	 */
-	void parseErrorTags(Span span, Throwable error);
+	void parseErrorTags(SpanCustomizer span, Throwable error);
 }

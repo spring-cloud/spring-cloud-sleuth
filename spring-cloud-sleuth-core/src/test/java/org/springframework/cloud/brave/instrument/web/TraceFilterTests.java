@@ -21,6 +21,7 @@ import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -51,27 +52,28 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  */
 public class TraceFilterTests {
 
-	static final long PARENT_ID = 10L;
+	static final String PARENT_ID = SpanUtil.idToHex(10L);
 	static final String TRACE_ID_NAME = "X-B3-TraceId";
 	static final String SPAN_ID_NAME = "X-B3-SpanId";
 	static final String PARENT_SPAN_ID_NAME = "X-B3-ParentSpanId";
 	static final String SPAN_FLAGS = "X-B3-Flags";
-
-	ArrayListSpanReporter spanReporter = new ArrayListSpanReporter();
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
-	HttpTracing httpTracing = HttpTracing.create(this.tracing);
 	TraceKeys traceKeys = new TraceKeys();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
+			.clientParser(new SleuthHttpClientParser(this.traceKeys))
+			.serverParser(new SleuthHttpServerParser(this.traceKeys,
+					new ExceptionMessageErrorParser()))
+			.build();
 	SleuthProperties properties = new SleuthProperties();
 
 	MockHttpServletRequest request;
 	MockHttpServletResponse response;
 	MockFilterChain filterChain;
-	Sampler sampler = Sampler.ALWAYS_SAMPLE;
 	BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
 
 	@Before
@@ -87,22 +89,36 @@ public class TraceFilterTests {
 				"MockMvc");
 	}
 
-	@Before
+	@After
 	public void cleanup() {
-		this.spanReporter.clear();
+		Tracing.current().close();
 	}
 
 	@Test
 	public void notTraced() throws Exception {
-		this.sampler = Sampler.NEVER_SAMPLE;
-		TraceFilter filter = new TraceFilter(beanFactory());
+		BeanFactory beanFactory = neverSampleTracing();
+		TraceFilter filter = new TraceFilter(beanFactory);
 
 		this.request = get("/favicon.ico").accept(MediaType.ALL)
 				.buildRequest(new MockServletContext());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
+		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).isEmpty();
+	}
+
+	private BeanFactory neverSampleTracing() {
+		Tracing tracing = Tracing.newBuilder()
+				.currentTraceContext(CurrentTraceContext.Default.create())
+				.spanReporter(this.reporter)
+				.sampler(Sampler.NEVER_SAMPLE)
+				.supportsJoin(false)
+				.build();
+		HttpTracing httpTracing = HttpTracing.create(tracing);
+		BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(HttpTracing.class)).willReturn(httpTracing);
+		return beanFactory;
 	}
 
 	@Test
@@ -110,9 +126,9 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 		
-		then(this.spanReporter.getSpans())
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).tags())
+		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("http.url", "http://localhost/?foo=bar")
 				.containsEntry("http.host", "localhost")
 				.containsEntry("http.path", "/")
@@ -131,9 +147,10 @@ public class TraceFilterTests {
 					tracing.tracer().currentSpan());
 		});
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).tags())
+		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("http.url", "http://localhost/?foo=bar")
 				.containsEntry("http.host", "localhost")
 				.containsEntry("http.path", "/")
@@ -147,16 +164,17 @@ public class TraceFilterTests {
 		this.response.setStatus(0);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).tags())
+		then(this.reporter.getSpans().get(0).tags())
 				.doesNotContainKey("http.status_code");
 	}
 
 	@Test
 	public void startsNewTraceWithParentIdInHeaders() throws Exception {
 		this.request = builder()
-				.header(SPAN_ID_NAME, SpanUtil.idToHex(PARENT_ID))
+				.header(SPAN_ID_NAME, PARENT_ID)
 				.header(TRACE_ID_NAME, SpanUtil.idToHex(2L))
 				.header(PARENT_SPAN_ID_NAME, SpanUtil.idToHex(3L))
 				.buildRequest(new MockServletContext());
@@ -165,10 +183,11 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(beanFactory);
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).id()).isEqualTo(PARENT_ID);
-		then(this.spanReporter.getSpans().get(0).tags())
+		then(this.reporter.getSpans().get(0).id()).isEqualTo(PARENT_ID);
+		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("http.url", "http://localhost/?foo=bar")
 				.containsEntry("http.host", "localhost")
 				.containsEntry("http.path", "/")
@@ -183,6 +202,7 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 
+		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.request.getAttribute(TraceFilter.TRACE_ERROR_HANDLED_REQUEST_ATTR)).isNull();
 	}
 
@@ -195,8 +215,9 @@ public class TraceFilterTests {
 		TraceFilter filter = new TraceFilter(beanFactory());
 		filter.doFilter(this.request, this.response, this.filterChain);
 
+		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.request.getAttribute(TraceFilter.TRACE_ERROR_HANDLED_REQUEST_ATTR)).isNotNull();
-		then(this.spanReporter.getSpans())
+		then(this.reporter.getSpans())
 				.hasSize(1);
 	}
 
@@ -208,78 +229,96 @@ public class TraceFilterTests {
 		this.response.setStatus(404);
 
 		TraceFilter filter = new TraceFilter(beanFactory());
+
+		then(Tracing.current().tracer().currentSpan()).isNull();
 		filter.doFilter(this.request, this.response, this.filterChain);
 	}
 
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		BeanFactory beanFactory = beanFactory();
-
 		TraceFilter filter = new TraceFilter(beanFactory);
+
 		filter.doFilter(this.request, this.response, this.filterChain);
 
+		then(Tracing.current().tracer().currentSpan()).isNull();
 		verifyParentSpanHttpTags();
 	}
 
 	@Test
 	public void createsChildFromHeadersWhenJoinUnsupported() throws Exception {
+		Tracing tracing = Tracing.newBuilder()
+				.currentTraceContext(CurrentTraceContext.Default.create())
+				.spanReporter(this.reporter)
+				.supportsJoin(false)
+				.build();
+		HttpTracing httpTracing = HttpTracing.create(tracing);
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		BeanFactory beanFactory = beanFactory();
-
+		BDDMockito.given(beanFactory.getBean(HttpTracing.class)).willReturn(httpTracing);
 		TraceFilter filter = new TraceFilter(beanFactory);
+
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).parentId())
+		then(this.reporter.getSpans().get(0).parentId())
 				.isEqualTo(SpanUtil.idToHex(16));
 	}
 
 	@Test
 	public void addsAdditionalHeaders() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		BeanFactory beanFactory = beanFactory();
-
 		TraceFilter filter = new TraceFilter(beanFactory);
 		this.request.addHeader("X-Foo", "bar");
+
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).tags())
+		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("http.x-foo", "bar");
 	}
 
 	@Test
 	public void additionalMultiValuedHeader() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		this.traceKeys.getHttp().getHeaders().add("x-foo");BeanFactory beanFactory = beanFactory();
-
 		TraceFilter filter = new TraceFilter(beanFactory);
 		this.request.addHeader("X-Foo", "bar");
 		this.request.addHeader("X-Foo", "spam");
+
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).tags())
-				.containsEntry("http.x-foo", "'bar','spam'");
-
+		// We no longer support multi value headers
+		then(this.reporter.getSpans().get(0).tags())
+				.containsEntry("http.x-foo", "bar");
 	}
 
 	@Test
 	public void shouldAnnotateSpanWithErrorWhenExceptionIsThrown() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		BeanFactory beanFactory = beanFactory();
-
 		TraceFilter filter = new TraceFilter(beanFactory);
+
 		this.filterChain = new MockFilterChain() {
 			@Override
 			public void doFilter(javax.servlet.ServletRequest request,
@@ -294,60 +333,69 @@ public class TraceFilterTests {
 		catch (RuntimeException e) {
 			assertEquals("Planned", e.getMessage());
 		}
-		verifyParentSpanHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		verifyParentSpanHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).tags())
+		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("error", "Planned");
 	}
 
 	@Test
 	public void detachesSpanWhenResponseStatusIsNot2xx() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(beanFactory());
+
 		this.response.setStatus(404);
 
+		then(Tracing.current().tracer().currentSpan()).isNull();
 		filter.doFilter(this.request, this.response, this.filterChain);
-
 	}
 
 	@Test
 	public void closesSpanWhenResponseStatusIs2xx() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(beanFactory());
 		this.response.setStatus(200);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
 	}
 
 	@Test
 	public void closesSpanWhenResponseStatusIs3xx() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(beanFactory());
 		this.response.setStatus(302);
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
 	}
 
 	@Test
 	public void returns400IfSpanIsMalformedAndCreatesANewSpan() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, "asd")
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(beanFactory());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans()).isNotEmpty();
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
 		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
 	}
 
@@ -355,12 +403,14 @@ public class TraceFilterTests {
 	public void returns200IfSpanParentIsMalformedAndCreatesANewSpan() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
 				.header(PARENT_SPAN_ID_NAME, "-")
-				.header(TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+				.buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(beanFactory());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans()).isNotEmpty();
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
 		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
 	}
 
@@ -369,12 +419,12 @@ public class TraceFilterTests {
 		this.request = builder()
 				.header(SPAN_FLAGS, 1)
 				.buildRequest(new MockServletContext());
-		this.sampler = Sampler.NEVER_SAMPLE;
-		TraceFilter filter = new TraceFilter(beanFactory());
+		TraceFilter filter = new TraceFilter(neverSampleTracing());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans()).isNotEmpty();
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
 	@Test
@@ -382,47 +432,48 @@ public class TraceFilterTests {
 		this.request = builder()
 				.header(SPAN_FLAGS, 0)
 				.buildRequest(new MockServletContext());
-		this.sampler = Sampler.ALWAYS_SAMPLE;
 		TraceFilter filter = new TraceFilter(beanFactory());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans()).isNotEmpty();
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
+	@SuppressWarnings("Duplicates")
 	@Test
 	public void samplesWhenDebugFlagIsSetTo1AndOnlySpanIdIsSet() throws Exception {
 		this.request = builder()
 				.header(SPAN_FLAGS, 1)
-				.header(SPAN_ID_NAME, 10L)
+				.header(SPAN_ID_NAME, SpanUtil.idToHex(10L))
 				.buildRequest(new MockServletContext());
-		this.sampler = Sampler.NEVER_SAMPLE;
-		BeanFactory beanFactory = beanFactory();
 
-		TraceFilter filter = new TraceFilter(beanFactory);
+		TraceFilter filter = new TraceFilter(neverSampleTracing());
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
-				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).id())
-				.isEqualTo(SpanUtil.idToHex(10L));
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		// Brave doesn't work like Sleuth. No trace will be created for an invalid span
+		// where invalid means that there is no trace id
+		then(this.reporter.getSpans()).isEmpty();
 	}
 
+	@SuppressWarnings("Duplicates")
 	@Test
 	public void samplesWhenDebugFlagIsSetTo1AndTraceIdIsAlsoSet() throws Exception {
 		this.request = builder()
 				.header(SPAN_FLAGS, 1)
-				.header(TRACE_ID_NAME, 10L)
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(10L))
 				.buildRequest(new MockServletContext());
-		this.sampler = Sampler.NEVER_SAMPLE;
-		TraceFilter filter = new TraceFilter(beanFactory());
+		TraceFilter filter = new TraceFilter(neverSampleTracing());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).traceId())
-				.isEqualTo(SpanUtil.idToHex(10L));
+		// Brave creates a new trace if there was no span id
+		then(this.reporter.getSpans().get(0).traceId())
+				.isNotEqualTo(SpanUtil.idToHex(10L));
 	}
 
 	// #668
@@ -436,9 +487,10 @@ public class TraceFilterTests {
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).tags())
+		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("http.url", "http://localhost/?foo=bar")
 				.containsEntry("http.host", "localhost")
 				.containsEntry("http.path", "/")
@@ -451,15 +503,14 @@ public class TraceFilterTests {
 		this.request = builder()
 				.header(SPAN_FLAGS, 1)
 				.buildRequest(new MockServletContext());
-		this.sampler = Sampler.NEVER_SAMPLE;
-		TraceFilter filter = new TraceFilter(beanFactory());
+		TraceFilter filter = new TraceFilter(neverSampleTracing());
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
-
-		then(this.spanReporter.getSpans())
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).name()).isEqualTo("http:/");
+		then(this.reporter.getSpans().get(0).name()).isEqualTo("http:/");
 	}
 
 	public void verifyParentSpanHttpTags() {
@@ -471,9 +522,9 @@ public class TraceFilterTests {
 	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
 	 */
 	public void verifyParentSpanHttpTags(HttpStatus status) {
-		then(this.spanReporter.getSpans())
+		then(this.reporter.getSpans())
 				.hasSize(1);
-		then(this.spanReporter.getSpans().get(0).tags())
+		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("http.url", "http://localhost/?foo=bar")
 				.containsEntry("http.host", "localhost")
 				.containsEntry("http.path", "/")
@@ -486,15 +537,15 @@ public class TraceFilterTests {
 		// Status is only interesting in non-success case. Omitting it saves at least
 		// 20bytes per span.
 		if (status.is2xxSuccessful()) {
-			then(this.spanReporter.getSpans())
+			then(this.reporter.getSpans())
 					.hasSize(1);
-			then(this.spanReporter.getSpans().get(0).tags())
+			then(this.reporter.getSpans().get(0).tags())
 					.doesNotContainKey("http.status_code");
 		}
 		else {
-			then(this.spanReporter.getSpans())
+			then(this.reporter.getSpans())
 					.hasSize(1);
-			then(this.spanReporter.getSpans().get(0).tags())
+			then(this.reporter.getSpans().get(0).tags())
 					.containsEntry("http.status_code", status.toString());
 		}
 	}
@@ -504,8 +555,6 @@ public class TraceFilterTests {
 				.willThrow(new NoSuchBeanDefinitionException("foo"));
 		BDDMockito.given(beanFactory.getBean(SleuthProperties.class))
 				.willReturn(this.properties);
-		BDDMockito.given(beanFactory.getBean(Tracing.class))
-				.willReturn(this.tracing);
 		BDDMockito.given(beanFactory.getBean(HttpTracing.class))
 				.willReturn(this.httpTracing);
 		BDDMockito.given(beanFactory.getBean(TraceKeys.class))

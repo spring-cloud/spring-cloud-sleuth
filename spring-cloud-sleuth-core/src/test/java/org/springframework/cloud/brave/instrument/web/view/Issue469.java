@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.brave.instrument.web.view;
 
+import brave.sampler.Sampler;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
@@ -33,5 +34,9 @@ public class Issue469 extends WebMvcConfigurerAdapter {
 
 	@Bean ArrayListSpanReporter reporter() {
 		return new ArrayListSpanReporter();
+	}
+
+	@Bean Sampler sampler() {
+		return Sampler.ALWAYS_SAMPLE;
 	}
 }

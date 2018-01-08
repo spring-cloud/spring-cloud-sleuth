@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.brave.TraceKeys;
-import org.springframework.cloud.brave.instrument.web.SleuthHttpClientParserAccessor;
+import org.springframework.cloud.brave.instrument.web.SleuthHttpParserAccessor;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -35,7 +35,7 @@ public class TraceFeignAspectTests {
 			.build();
 	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpClientParserAccessor.get(this.traceKeys))
+			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
 			.build();
 	TraceFeignAspect traceFeignAspect;
 	

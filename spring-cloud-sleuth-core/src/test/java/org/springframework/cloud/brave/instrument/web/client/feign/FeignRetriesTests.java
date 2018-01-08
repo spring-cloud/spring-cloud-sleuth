@@ -43,7 +43,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.ExceptionMessageErrorParser;
-import org.springframework.cloud.brave.instrument.web.SleuthHttpClientParserAccessor;
+import org.springframework.cloud.brave.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -67,7 +67,7 @@ public class FeignRetriesTests {
 			.build();
 	org.springframework.cloud.brave.TraceKeys traceKeys = new org.springframework.cloud.brave.TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpClientParserAccessor.get(this.traceKeys))
+			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
 			.build();
 
 	@Before

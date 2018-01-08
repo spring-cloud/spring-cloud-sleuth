@@ -1,16 +1,16 @@
 package org.springframework.cloud.brave.instrument.web;
 
+import brave.Tracing;
+import brave.http.HttpTracing;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.brave.ErrorParser;
 import org.springframework.cloud.brave.TraceKeys;
 import org.springframework.cloud.brave.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import brave.Tracing;
-import brave.http.HttpTracing;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -35,9 +35,10 @@ public class TraceHttpAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "true")
-	HttpTracing legacySleuthHttpTracing(Tracing tracing, TraceKeys traceKeys) {
+	HttpTracing legacySleuthHttpTracing(Tracing tracing, TraceKeys traceKeys, ErrorParser errorParser) {
 		return HttpTracing.newBuilder(tracing)
 				.clientParser(new SleuthHttpClientParser(traceKeys))
+				.serverParser(new SleuthHttpServerParser(traceKeys, errorParser))
 				.build();
 	}
 }

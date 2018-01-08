@@ -1,6 +1,6 @@
 package org.springframework.cloud.brave;
 
-import brave.Span;
+import brave.SpanCustomizer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -15,7 +15,7 @@ public class ExceptionMessageErrorParser implements ErrorParser {
 	private static final Log log = LogFactory.getLog(ExceptionMessageErrorParser.class);
 
 	@Override
-	public void parseErrorTags(Span span, Throwable error) {
+	public void parseErrorTags(SpanCustomizer span, Throwable error) {
 		if (span != null && error != null) {
 			String errorMsg = getExceptionMessage(error);
 			if (log.isDebugEnabled()) {

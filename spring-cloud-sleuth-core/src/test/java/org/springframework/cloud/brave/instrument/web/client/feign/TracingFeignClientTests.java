@@ -36,7 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.brave.TraceKeys;
-import org.springframework.cloud.brave.instrument.web.SleuthHttpClientParserAccessor;
+import org.springframework.cloud.brave.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -55,7 +55,7 @@ public class TracingFeignClientTests {
 			.build();
 	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpClientParserAccessor.get(this.traceKeys))
+			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
 			.build();
 	@Mock Client client;
 	Client traceFeignClient;

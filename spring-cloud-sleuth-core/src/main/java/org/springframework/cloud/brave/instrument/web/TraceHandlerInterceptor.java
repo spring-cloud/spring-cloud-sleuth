@@ -23,7 +23,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
+import brave.http.HttpServerHandler;
+import brave.http.HttpTracing;
+import brave.servlet.HttpServletAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -54,10 +56,11 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 
 	private final BeanFactory beanFactory;
 
-	private Tracing tracing;
+	private HttpTracing tracing;
 	private TraceKeys traceKeys;
 	private ErrorParser errorParser;
 	private AtomicReference<ErrorController> errorController;
+	private HttpServerHandler<HttpServletRequest, HttpServletResponse> handler;
 
 	public TraceHandlerInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -69,8 +72,8 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		String spanName = spanName(handler);
 		boolean continueSpan = getRootSpanFromAttribute(request) != null;
 		Span span = continueSpan ? getRootSpanFromAttribute(request) :
-				tracing().tracer().nextSpan().name(spanName).start();
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span)) {
+				httpTracing().tracing().tracer().nextSpan().name(spanName).start();
+		try (Tracer.SpanInScope ws = httpTracing().tracing().tracer().withSpanInScope(span)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Handling span " + span);
 			}
@@ -125,7 +128,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	public void afterConcurrentHandlingStarted(HttpServletRequest request,
 			HttpServletResponse response, Object handler) throws Exception {
 		Span spanFromRequest = getNewSpanFromAttribute(request);
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(spanFromRequest)) {
+		try (Tracer.SpanInScope ws = httpTracing().tracing().tracer().withSpanInScope(spanFromRequest)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Closing the span " + spanFromRequest);
 			}
@@ -152,7 +155,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 				log.debug("Closing span " + span);
 			}
 			Span newSpan = getNewSpanFromAttribute(request);
-			newSpan.finish();
+			handler().handleSend(response, ex, newSpan);
 			clearNewSpanCreatedAttribute(request);
 		}
 	}
@@ -177,9 +180,9 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		request.removeAttribute(TraceRequestAttributes.NEW_SPAN_REQUEST_ATTR);
 	}
 
-	private Tracing tracing() {
+	private HttpTracing httpTracing() {
 		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+			this.tracing = this.beanFactory.getBean(HttpTracing.class);
 		}
 		return this.tracing;
 	}
@@ -189,6 +192,15 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
 		}
 		return this.traceKeys;
+	}
+
+	@SuppressWarnings("unchecked")
+	HttpServerHandler<HttpServletRequest, HttpServletResponse> handler() {
+		if (this.handler == null) {
+			this.handler = HttpServerHandler.create(this.beanFactory.getBean(HttpTracing.class),
+					new HttpServletAdapter());
+		}
+		return this.handler;
 	}
 
 	private ErrorParser errorParser() {

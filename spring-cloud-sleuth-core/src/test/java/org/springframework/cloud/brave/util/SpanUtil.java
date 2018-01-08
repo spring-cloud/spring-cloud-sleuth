@@ -1,7 +1,5 @@
 package org.springframework.cloud.brave.util;
 
-import org.springframework.util.Assert;
-
 /**
  * @author Marcin Grzejszczak
  * @since
