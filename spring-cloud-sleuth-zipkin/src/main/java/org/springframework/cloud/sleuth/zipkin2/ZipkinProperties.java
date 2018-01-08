@@ -56,6 +56,12 @@ public class ZipkinProperties {
 
 	private Locator locator = new Locator();
 
+	private User user = null;
+
+	public User getUser(){
+		return this.user;
+	}
+
 	public Locator getLocator() {
 		return this.locator;
 	}
@@ -104,12 +110,40 @@ public class ZipkinProperties {
 		this.locator = locator;
 	}
 
+	public void setUser(User user){
+		this.user = user;
+	}
+
 	public SpanBytesEncoder getEncoder() {
 		return this.encoder;
 	}
 
 	public void setEncoder(SpanBytesEncoder encoder) {
 		this.encoder = encoder;
+	}
+
+	/** Configuration related to the Basic Authorization of {@link ZipkinProperties#baseUrl}
+	 *  if the zipkin server need Basic Access Authorization.
+	 */
+	public static class User {
+		private String name;
+		private String password;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public void setPassword(String password) {
+			this.password = password;
+		}
 	}
 
 	/** When enabled, spans are gzipped before sent to the zipkin server */
