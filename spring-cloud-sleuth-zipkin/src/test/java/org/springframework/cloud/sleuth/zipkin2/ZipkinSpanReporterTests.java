@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -265,16 +266,17 @@ public class ZipkinSpanReporterTests {
 	public void should_adjust_span_before_reporting_it() {
 		this.parent.logEvent(Span.CLIENT_RECV);
 		ZipkinSpanReporter spanListener = new ZipkinSpanReporter(this.zipkinReporter,
-				this.endpointLocator, null, Collections.<SpanAdjuster>singletonList(
-						span -> Span.builder().from(span).name("foo").build())) {
+				this.endpointLocator, null, Arrays.asList(
+						span -> Span.builder().from(span).name("foo").build(),
+						span -> Span.builder().from(span).name(span.getName() + "bar").build())) {
 			@Override String defaultInstanceId() {
-				return "foo";
+				return "foobar";
 			}
 		};
 
 		zipkin2.Span result = spanListener.convert(this.parent);
 
-		assertThat(result.name()).isEqualTo("foo");
+		assertThat(result.name()).isEqualTo("foobar");
 	}
 
 	/** Zipkin will take care of processing the shared flag wrt timestamp authority */
