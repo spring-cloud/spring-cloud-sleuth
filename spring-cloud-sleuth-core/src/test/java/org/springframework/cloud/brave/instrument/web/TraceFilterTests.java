@@ -275,7 +275,7 @@ public class TraceFilterTests {
 		then(this.reporter.getSpans())
 				.hasSize(1);
 		then(this.reporter.getSpans().get(0).parentId())
-				.isEqualTo(SpanUtil.idToHex(16));
+				.isEqualTo(PARENT_ID);
 	}
 
 	@Test
