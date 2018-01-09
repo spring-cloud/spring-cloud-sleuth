@@ -92,6 +92,8 @@ public class Issue410Tests {
 		finally {
 			span.finish();
 		}
+
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
@@ -112,6 +114,8 @@ public class Issue410Tests {
 		finally {
 			span.finish();
 		}
+
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	/**
@@ -135,6 +139,8 @@ public class Issue410Tests {
 		finally {
 			span.finish();
 		}
+
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	/**
@@ -158,6 +164,8 @@ public class Issue410Tests {
 		finally {
 			span.finish();
 		}
+
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	private int port() {

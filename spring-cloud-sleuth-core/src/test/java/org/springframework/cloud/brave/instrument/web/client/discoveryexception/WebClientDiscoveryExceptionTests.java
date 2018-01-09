@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.brave.instrument.web.discoveryexception;
+package org.springframework.cloud.brave.instrument.web.client.discoveryexception;
 
 import java.io.IOException;
 import java.util.List;

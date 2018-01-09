@@ -22,7 +22,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.regex.Pattern;
 
 import brave.Span;
@@ -67,7 +66,7 @@ import org.springframework.web.util.UrlPathHelper;
 @Order(TraceFilter.ORDER)
 public class TraceFilter extends GenericFilterBean {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(TraceFilter.class);
 
 	private static final String HTTP_COMPONENT = "http";
 
@@ -91,10 +90,10 @@ public class TraceFilter extends GenericFilterBean {
 			+ ".SPAN_WITH_NO_PARENT";
 
 	private static final String TRACE_EXCEPTION_REQUEST_ATTR = TraceFilter.class.getName()
-			+ ".SPAN_WITH_NO_PARENT";
+			+ ".EXCEPTION";
 
 	private static final String SAMPLED_NAME = "X-B3-Sampled";
-	private static final String SPAN_NOT_SAMPLED = "1";
+	private static final String SPAN_NOT_SAMPLED = "0";
 
 	private HttpTracing tracing;
 	private TraceKeys traceKeys;
@@ -171,12 +170,12 @@ public class TraceFilter extends GenericFilterBean {
 		} finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
 				if (log.isDebugEnabled()) {
-					log.debug("The span " + spanFromRequest + " will get detached by a HandleInterceptor");
+					log.debug("The span " + spanFromRequest + " was created for async");
 				}
 				// TODO: how to deal with response annotations and async?
-				return;
+			} else {
+				detachOrCloseSpans(request, response, spanAndScope, exception);
 			}
-			detachOrCloseSpans(request, response, spanAndScope, exception);
 			if (spanAndScope.scope != null) {
 				spanAndScope.scope.close();
 			}
@@ -246,8 +245,12 @@ public class TraceFilter extends GenericFilterBean {
 				if (log.isDebugEnabled()) {
 					log.debug("Detaching the span " + span + " since the response was unsuccessful");
 				}
-				span.abandon();
 				clearTraceAttribute(request);
+				if (exception == null || !hasErrorController()) {
+					handler().handleSend(response, exception, span);
+				} else {
+					span.abandon();
+				}
 			}
 		}
 	}
@@ -315,8 +318,13 @@ public class TraceFilter extends GenericFilterBean {
 			return new SpanAndScope(spanFromRequest, ws);
 		}
 		try {
-			spanFromRequest = handler().handleReceive(httpTracing().tracing()
-					.propagation().extractor(HttpServletRequest::getHeader), request);
+			// TODO: Try to use Brave's mechanism for sampling
+			if (skip) {
+				spanFromRequest = unsampledSpan(name);
+			} else {
+				spanFromRequest = handler().handleReceive(httpTracing().tracing()
+						.propagation().extractor(HttpServletRequest::getHeader), request);
+			}
 			if (log.isDebugEnabled()) {
 				log.debug("Found a parent span " + spanFromRequest.context() + " in the request");
 			}
@@ -325,17 +333,15 @@ public class TraceFilter extends GenericFilterBean {
 				log.debug("Parent span is " + spanFromRequest + "");
 			}
 		} catch (Exception e) {
-			log.error("Exception occurred while trying to extract tracing context from request", e);
+			log.error("Exception occurred while trying to extract tracing context from request. "
+					+ "Falling back to manual span creation", e);
 			if (skip) {
-				spanFromRequest = httpTracing().tracing().tracer()
-						.nextSpan(TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED))
-						.kind(Span.Kind.SERVER)
-						.name(name);
+				spanFromRequest = unsampledSpan(name);
 			}
 			else {
 				spanFromRequest = httpTracing().tracing().tracer().nextSpan()
 						.kind(Span.Kind.SERVER)
-						.name(name);
+						.name(name).start();
 				request.setAttribute(TRACE_SPAN_WITHOUT_PARENT, spanFromRequest);
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
@@ -343,9 +349,15 @@ public class TraceFilter extends GenericFilterBean {
 				log.debug("No parent span present - creating a new span");
 			}
 		}
-		spanFromRequest = spanFromRequest.start();
 		return new SpanAndScope(spanFromRequest, httpTracing().tracing()
 				.tracer().withSpanInScope(spanFromRequest));
+	}
+
+	private Span unsampledSpan(String name) {
+		return httpTracing().tracing().tracer()
+				.nextSpan(TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED))
+				.kind(Span.Kind.SERVER)
+				.name(name).start();
 	}
 
 	class SpanAndScope {

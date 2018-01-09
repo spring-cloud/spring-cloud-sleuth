@@ -52,6 +52,13 @@ public class TraceWebServletAutoConfiguration {
 	TraceWebAspect traceWebAspect(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser) {
 		return new TraceWebAspect(tracing, spanNamer, errorParser);
 	}
+
+	@Bean
+	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
+	public TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
+			BeanFactory beanFactory) {
+		return new TraceSpringDataBeanPostProcessor(beanFactory);
+	}
 	
 	@Bean
 	public FilterRegistrationBean traceWebFilter(

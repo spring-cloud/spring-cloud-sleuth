@@ -18,7 +18,6 @@ package org.springframework.cloud.brave.instrument.web;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.invoke.MethodHandles;
 import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
@@ -52,7 +51,7 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
  */
 public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(TraceHandlerInterceptor.class);
 
 	private final BeanFactory beanFactory;
 
@@ -126,12 +125,14 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	public void afterConcurrentHandlingStarted(HttpServletRequest request,
 			HttpServletResponse response, Object handler) throws Exception {
 		Span spanFromRequest = getNewSpanFromAttribute(request);
-		try (Tracer.SpanInScope ws = httpTracing().tracing().tracer().withSpanInScope(spanFromRequest)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Closing the span " + spanFromRequest);
+		if (spanFromRequest != null) {
+			try (Tracer.SpanInScope ws = httpTracing().tracing().tracer().withSpanInScope(spanFromRequest)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Closing the span " + spanFromRequest);
+				}
+			} finally {
+				spanFromRequest.finish();
 			}
-		} finally {
-			spanFromRequest.finish();
 		}
 	}
 

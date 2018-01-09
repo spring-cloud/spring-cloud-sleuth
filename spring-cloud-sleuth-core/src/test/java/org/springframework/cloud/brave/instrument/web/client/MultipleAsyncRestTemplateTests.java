@@ -100,12 +100,16 @@ public class MultipleAsyncRestTemplateTests {
 		} finally {
 			span.finish();
 		}
+
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
 	public void should_start_context_with_custom_executor() throws Exception {
 		then(this.executor).isNotNull();
 		then(this.wrappedExecutor).isInstanceOf(LazyTraceExecutor.class);
+
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
@@ -132,6 +136,7 @@ public class MultipleAsyncRestTemplateTests {
 				.untilAsserted(() -> {
 					then(executed.get()).isTrue();
 				});
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	//tag::custom_async_rest_template[]
