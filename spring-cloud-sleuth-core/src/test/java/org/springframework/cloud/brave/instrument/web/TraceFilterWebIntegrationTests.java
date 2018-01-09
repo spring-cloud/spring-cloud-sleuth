@@ -105,8 +105,8 @@ public class TraceFilterWebIntegrationTests {
 
 		//TODO: Check if it should be 1 or 2 spans
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(2);
-		then(this.accumulator.getSpans().get(1).kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
+		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.accumulator.getSpans().get(0).kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
 	}
 
 	private int port() {

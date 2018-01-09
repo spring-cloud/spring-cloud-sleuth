@@ -83,8 +83,6 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 			if (!continueSpan) {
 				setNewSpanCreatedAttribute(request, span);
 			}
-		} finally {
-			span.abandon();
 		}
 		return true;
 	}

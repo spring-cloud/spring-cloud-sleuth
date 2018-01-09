@@ -180,10 +180,6 @@ public class TraceFilter extends GenericFilterBean {
 			if (spanAndScope.scope != null) {
 				spanAndScope.scope.close();
 			}
-			if (spanAndScope.span != null) {
-				// need to manually start it to make finish work. Don't know why
-				spanAndScope.span.kind(Span.Kind.SERVER).finish();
-			}
 		}
 	}
 
@@ -244,14 +240,13 @@ public class TraceFilter extends GenericFilterBean {
 				if (log.isDebugEnabled()) {
 					log.debug("Will close span " + span + " since " + (shouldCloseSpan(request) ? "some component marked it for closure" : "response was unsuccessful for the root span"));
 				}
-				handler().handleSend(response, exception, spanFromRequest.span);
+				handler().handleSend(response, exception, span);
 				clearTraceAttribute(request);
-			} else if (httpTracing().tracing().tracer().currentSpan() != null ||
-					requestHasAlreadyBeenHandled(request)) {
+			} else if (span != null || requestHasAlreadyBeenHandled(request)) {
 				if (log.isDebugEnabled()) {
 					log.debug("Detaching the span " + span + " since the response was unsuccessful");
 				}
-				httpTracing().tracing().tracer().currentSpan().abandon();
+				span.abandon();
 				clearTraceAttribute(request);
 			}
 		}
@@ -334,8 +329,8 @@ public class TraceFilter extends GenericFilterBean {
 			if (skip) {
 				spanFromRequest = httpTracing().tracing().tracer()
 						.nextSpan(TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED))
-						.name(name)
-						.kind(Span.Kind.SERVER);
+						.kind(Span.Kind.SERVER)
+						.name(name);
 			}
 			else {
 				spanFromRequest = httpTracing().tracing().tracer().nextSpan()

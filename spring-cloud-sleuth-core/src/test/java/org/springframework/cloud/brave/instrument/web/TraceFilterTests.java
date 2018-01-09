@@ -342,7 +342,7 @@ public class TraceFilterTests {
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		verifyParentSpanHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 		then(this.reporter.getSpans())
-				.hasSize(2);
+				.hasSize(1);
 		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("error", "Planned");
 	}
