@@ -105,8 +105,8 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 							continuation = Mono.error(throwable);
 						} else {
 							response = (ClientResponse) any;
-							boolean error = response.statusCode().is4xxClientError() || response
-									.statusCode().is5xxServerError();
+							boolean error = response.statusCode().is4xxClientError() ||
+									response.statusCode().is5xxServerError();
 							if (error) {
 								if (log.isDebugEnabled()) {
 									log.debug(

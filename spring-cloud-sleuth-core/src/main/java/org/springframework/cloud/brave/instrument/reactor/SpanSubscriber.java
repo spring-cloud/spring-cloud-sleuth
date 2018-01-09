@@ -46,8 +46,8 @@ final class SpanSubscriber<T> extends AtomicBoolean implements Subscription,
 			log.trace("Stored context root span [{}]", this.rootSpan);
 		}
 		this.span = root != null ?
-				this.tracer.nextSpan(TraceContextOrSamplingFlags.create(root.context())).name(name) :
-				this.tracer.nextSpan().name(name);
+				this.tracer.nextSpan(TraceContextOrSamplingFlags.create(root.context()))
+						.name(name) : this.tracer.nextSpan().name(name);
 		if (log.isTraceEnabled()) {
 			log.trace("Created span [{}], with name [{}]", this.span, name);
 		}

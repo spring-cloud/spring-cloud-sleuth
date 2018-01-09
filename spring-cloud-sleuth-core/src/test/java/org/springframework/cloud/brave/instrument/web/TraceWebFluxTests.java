@@ -1,8 +1,5 @@
 package org.springframework.cloud.brave.instrument.web;
 
-import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
@@ -14,7 +11,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.brave.instrument.web.client.TraceWebClientAutoConfiguration;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -36,27 +35,20 @@ public class TraceWebFluxTests {
 
 	@Test public void should_instrument_web_filter() throws Exception {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				TraceWebFluxTests.Config.class)
-				.web(WebApplicationType.REACTIVE).properties("server.port=0", "spring.jmx.enabled=false",
-						"spring.application.name=TraceWebFluxTests").run();
-		Tracing tracing = context.getBean(Tracing.class);
-		Span span = tracing.tracer().nextSpan().name("foo");
+				TraceWebFluxTests.Config.class).web(WebApplicationType.REACTIVE)
+				.properties("server.port=0", "spring.jmx.enabled=false",
+						"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
+								"management.security.enabled=false").run();
 		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
+		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
 
-		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
-			int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
+		Mono<ClientResponse> exchange = WebClient.create().get()
+				.uri("http://localhost:" + port + "/api/c2/10").exchange();
 
-			Mono<ClientResponse> exchange = context.getBean(WebClient.class).get()
-					.uri("http://localhost:" + port + "/api/c2/10").exchange();
-
-			Awaitility.await().untilAsserted(() -> {
-				ClientResponse response = exchange.block();
-				BDDAssertions.then(response.statusCode().value()).isEqualTo(200);
-			});
-		} finally {
-			span.finish();
-		}
-
+		Awaitility.await().untilAsserted(() -> {
+			ClientResponse response = exchange.block();
+			BDDAssertions.then(response.statusCode().value()).isEqualTo(200);
+		});
 		BDDAssertions.then(accumulator.getSpans()).hasSize(1);
 		BDDAssertions.then(accumulator.getSpans().get(0).tags())
 				.containsEntry("mvc.controller.method", "successful")
@@ -64,7 +56,9 @@ public class TraceWebFluxTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
+	@EnableAutoConfiguration(
+			exclude = { TraceWebClientAutoConfiguration.class,
+					ReactiveSecurityAutoConfiguration.class })
 	static class Config {
 
 		@Bean WebClient webClient() {
@@ -79,8 +73,7 @@ public class TraceWebFluxTests {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean
-		Controller2 controller2() {
+		@Bean Controller2 controller2() {
 			return new Controller2();
 		}
 	}
