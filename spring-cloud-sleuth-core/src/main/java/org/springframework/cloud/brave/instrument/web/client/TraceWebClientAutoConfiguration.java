@@ -114,9 +114,9 @@ public class TraceWebClientAutoConfiguration {
 	@ConditionalOnClass(WebClient.class)
 	static class WebClientConfig {
 
-//		@Bean
-//		TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(BeanFactory beanFactory) {
-//			return new TraceWebClientBeanPostProcessor(beanFactory);
-//		}
+		@Bean
+		TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(BeanFactory beanFactory) {
+			return new TraceWebClientBeanPostProcessor(beanFactory);
+		}
 	}
 }

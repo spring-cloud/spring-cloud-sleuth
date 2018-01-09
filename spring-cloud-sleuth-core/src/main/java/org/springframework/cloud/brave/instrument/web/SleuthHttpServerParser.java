@@ -61,6 +61,10 @@ class SleuthHttpServerParser extends HttpServerParser {
 	@Override
 	public <Resp> void response(HttpAdapter<?, Resp> adapter, Resp res, Throwable error,
 			SpanCustomizer customizer) {
+		if (res == null) {
+			error(null, error, customizer);
+			return;
+		}
 		int httpStatus = adapter.statusCode(res);
 		if (httpStatus == HttpServletResponse.SC_OK && error != null) {
 			// Filter chain threw exception but the response status may not have been set
