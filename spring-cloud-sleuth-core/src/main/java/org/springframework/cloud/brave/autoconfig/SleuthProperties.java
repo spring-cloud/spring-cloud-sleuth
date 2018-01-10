@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.brave.autoconfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -27,9 +30,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthProperties {
 
 	private boolean enabled = true;
-	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
-	// TODO: It comes from Brave now?
-	private boolean traceId128 = false;
+
+	/**
+	 * List of baggage key names that should be propagated out of process
+	 */
+	private List<String> baggageKeys = new ArrayList<>();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -39,11 +44,11 @@ public class SleuthProperties {
 		this.enabled = enabled;
 	}
 
-	public boolean isTraceId128() {
-		return this.traceId128;
+	public List<String> getBaggageKeys() {
+		return this.baggageKeys;
 	}
 
-	public void setTraceId128(boolean traceId128) {
-		this.traceId128 = traceId128;
+	public void setBaggageKeys(List<String> baggageKeys) {
+		this.baggageKeys = baggageKeys;
 	}
 }

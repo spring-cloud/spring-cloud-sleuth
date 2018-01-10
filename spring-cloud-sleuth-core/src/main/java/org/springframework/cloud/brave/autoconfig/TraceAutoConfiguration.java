@@ -17,6 +17,7 @@ import brave.Tracing;
 import brave.context.log4j2.ThreadContextCurrentTraceContext;
 import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.sampler.Sampler;
 import zipkin2.reporter.Reporter;
@@ -62,8 +63,11 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Propagation.Factory sleuthPropagation() {
-		return B3Propagation.FACTORY;
+	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
+		if (sleuthProperties.getBaggageKeys().isEmpty()) {
+			return B3Propagation.FACTORY;
+		}
+		return ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, sleuthProperties.getBaggageKeys());
 	}
 
 	@Bean
