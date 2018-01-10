@@ -62,9 +62,9 @@ public class TracePreZuulFilter extends AbstractTraceZuulFilter {
 
 	@Override public ZuulFilterResult runFilter() {
 		RequestContext ctx = RequestContext.getCurrentContext();
-		Span span = handler.handleSend(injector, ctx);
+		Span span = this.handler.handleSend(this.injector, ctx);
 		ZuulFilterResult result = null;
-		try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			markRequestAsHandled(ctx, span);
 			if (log.isDebugEnabled()) {
 				log.debug("New Zuul Span is " + span + "");

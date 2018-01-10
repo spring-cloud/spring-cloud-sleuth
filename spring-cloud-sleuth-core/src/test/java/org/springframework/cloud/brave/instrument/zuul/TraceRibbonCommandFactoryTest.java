@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 
 package org.springframework.cloud.brave.instrument.zuul;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.List;
+import java.util.ArrayList;
 
 import brave.Span;
 import brave.Tracer;
@@ -29,29 +27,27 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.brave.ExceptionMessageErrorParser;
 import org.springframework.cloud.brave.TraceKeys;
 import org.springframework.cloud.brave.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.brave.util.ArrayListSpanReporter;
-import org.springframework.cloud.netflix.zuul.metrics.EmptyTracerFactory;
+import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
+import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.util.LinkedMultiValueMap;
 
 import com.netflix.zuul.context.RequestContext;
-import com.netflix.zuul.monitoring.TracerFactory;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
- * @author Dave Syer
- *
+ * @author Marcin Grzejszczak
  */
 @RunWith(MockitoJUnitRunner.class)
-public class TracePostZuulFilterTests {
+public class TraceRibbonCommandFactoryTest {
 
-	@Mock HttpServletRequest httpServletRequest;
-	@Mock HttpServletResponse httpServletResponse;
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
@@ -63,44 +59,40 @@ public class TracePostZuulFilterTests {
 			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
 			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
 			.build();
-	private TracePostZuulFilter filter = new TracePostZuulFilter(this.httpTracing);
-	RequestContext requestContext = new RequestContext();
-
-	@After
-	public void clean() {
-		RequestContext.getCurrentContext().unset();
-		this.httpTracing.tracing().close();
-		RequestContext.testSetCurrentContext(null);
-	}
+	@Mock RibbonCommandFactory ribbonCommandFactory;
+	TraceRibbonCommandFactory traceRibbonCommandFactory;
+	Span span = this.tracing.tracer().nextSpan().name("name");
 
 	@Before
+	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void setup() {
-		BDDMockito.given(this.httpServletResponse.getStatus()).willReturn(200);
-		this.requestContext.setRequest(this.httpServletRequest);
-		this.requestContext.setResponse(this.httpServletResponse);
-		RequestContext.testSetCurrentContext(this.requestContext);
-		TracerFactory.initialize(new EmptyTracerFactory());
+		this.traceRibbonCommandFactory = new TraceRibbonCommandFactory(
+				this.ribbonCommandFactory, this.httpTracing);
+	}
+
+	@After
+	public void cleanup() {
+		RequestContext.getCurrentContext().unset();
+		this.tracing.close();
 	}
 
 	@Test
-	public void filterPublishesEventAndClosesSpan() throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("http:start").start();
-		BDDMockito.given(this.httpServletRequest
-				.getAttribute(TracePostZuulFilter.ZUUL_CURRENT_SPAN)).willReturn(span);
-		BDDMockito.given(this.httpServletResponse.getStatus()).willReturn(456);
-
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
-			this.filter.runFilter();
+	public void should_attach_trace_headers_to_the_span() throws Exception {
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(this.span)) {
+			this.traceRibbonCommandFactory.create(ribbonCommandContext());
 		} finally {
-			span.finish();
+			this.span.finish();
 		}
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(1);
-		// initial span
-		then(spans.get(0).tags())
-				.containsEntry("http.status_code", "456");
-		then(spans.get(0).name()).isEqualTo("http:start");
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans()).hasSize(1);
+		zipkin2.Span span = this.reporter.getSpans().get(0);
+		then(span.tags())
+				.containsEntry("http.method", "GET")
+				.containsEntry("http.url", "http://localhost:1234/foo");
+	}
+
+	private RibbonCommandContext ribbonCommandContext() {
+		return new RibbonCommandContext("serviceId", "GET", "http://localhost:1234/foo",
+				false, new HttpHeaders(), new LinkedMultiValueMap<>(), null, new ArrayList<>());
 	}
 }
