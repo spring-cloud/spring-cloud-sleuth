@@ -15,7 +15,8 @@ org.springframework.cloud.brave.instrument.hystrix.SleuthHystrixAutoConfiguratio
 org.springframework.cloud.brave.annotation.SleuthAnnotationAutoConfiguration,\
 org.springframework.cloud.brave.instrument.rxjava.RxJavaAutoConfiguration,\
 org.springframework.cloud.brave.instrument.reactor.TraceReactorAutoConfiguration,\
-org.springframework.cloud.brave.instrument.web.TraceWebFluxAutoConfiguration
+org.springframework.cloud.brave.instrument.web.TraceWebFluxAutoConfiguration,\
+org.springframework.cloud.brave.instrument.zuul.TraceZuulAutoConfiguration
 
 # org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
 # org.springframework.cloud.sleuth.metric.TraceMetricsAutoConfiguration,\
