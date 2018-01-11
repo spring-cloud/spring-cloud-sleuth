@@ -80,8 +80,6 @@ public class MultipleHopsIntegrationTests {
 
 	// issue #237 - baggage
 	@Test
-	// TODO: Fix baggage
-	@Ignore
 	public void should_propagate_the_baggage() throws Exception {
 		//tag::baggage[]
 		Span initialSpan = this.tracing.tracer().nextSpan().name("span").start();

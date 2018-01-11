@@ -44,6 +44,7 @@ import org.springframework.util.StringUtils;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.ANY)
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
+@EnableConfigurationProperties(SleuthWebProperties.class)
 public class TraceWebAutoConfiguration {
 
 	@Configuration
@@ -69,7 +70,7 @@ public class TraceWebAutoConfiguration {
 		}
 
 		/**
-		 * Sets or appends {@link ManagementServerProperties.Servlet#getContextPath()} to the skip
+		 * Sets or appends {@link ManagementServerProperties#getServlet()#getContextPath()} to the skip
 		 * pattern. If neither is available then sets the default one
 		 */
 		static Pattern getPatternForManagementServerProperties(

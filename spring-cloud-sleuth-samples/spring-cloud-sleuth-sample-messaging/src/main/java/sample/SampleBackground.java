@@ -31,8 +31,7 @@ public class SampleBackground {
 
 	@Autowired
 	private Tracing tracing;
-	@Autowired
-	private Random random;
+	private Random random = new Random();
 
 	@Async
 	public void background() throws InterruptedException {

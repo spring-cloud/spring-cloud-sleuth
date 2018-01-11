@@ -23,12 +23,14 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import brave.sampler.Sampler;
 import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
+import tools.SpanUtil;
 import zipkin2.Span;
 import zipkin2.codec.SpanBytesDecoder;
 import org.junit.ClassRule;
@@ -88,6 +90,10 @@ public class ZipkinTests extends AbstractIntegrationTest {
 			zipkinProperties.setBaseUrl(zipkin.url("/").toString());
 			return zipkinProperties;
 		}
+
+		@Bean Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
 	}
 
 	void spansSentToZipkin(MockWebServer zipkin, long traceId)
@@ -107,7 +113,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	}
 
 	List<String> traceIdsNotFoundInZipkin(List<Span> spans, long traceId) {
-		String traceIdString = org.springframework.cloud.sleuth.Span.idToHex(traceId);
+		String traceIdString = SpanUtil.idToHex(traceId);
 		Optional<String> traceIds = spans.stream()
 				.map(Span::traceId)
 				.filter(traceIdString::equals)

@@ -32,8 +32,7 @@ public class SampleController  {
 
 	@Autowired
 	private RestTemplate restTemplate;
-	@Autowired
-	private Random random;
+	private Random random = new Random();
 
 	@RequestMapping("/")
 	public String hi() throws InterruptedException {

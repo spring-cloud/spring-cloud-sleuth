@@ -16,6 +16,11 @@
 
 package sample;
 
+import java.util.Random;
+import java.util.concurrent.Callable;
+
+import brave.Span;
+import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +29,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Random;
-import java.util.concurrent.Callable;
-
-import brave.Span;
-import brave.Tracing;
 
 /**
  * @author Spencer Gibb
@@ -46,8 +45,7 @@ ApplicationListener<ServletWebServerInitializedEvent> {
 	private Tracing tracing;
 	@Autowired
 	private SampleBackground controller;
-	@Autowired
-	private Random random;
+	private Random random = new Random();
 	private int port;
 
 	@RequestMapping("/")

@@ -20,7 +20,6 @@ import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -37,6 +36,8 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 public class RequestSendingRunnable implements Runnable {
+	static final String TRACE_ID_NAME = "X-B3-TraceId";
+	static final String SPAN_ID_NAME = "X-B3-SpanId";
 
 	private static final Log log = LogFactory.getLog(RequestSendingRunnable.class);
 
@@ -65,8 +66,8 @@ public class RequestSendingRunnable implements Runnable {
 
 	private RequestEntity<Void> requestWithTraceId() {
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(Span.TRACE_ID_NAME, Span.idToHex(this.traceId));
-		headers.add(Span.SPAN_ID_NAME, Span.idToHex(this.spanId));
+		headers.add(TRACE_ID_NAME,SpanUtil.idToHex(this.traceId));
+		headers.add(SPAN_ID_NAME, SpanUtil.idToHex(this.spanId));
 		URI uri = URI.create(this.url);
 		RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
 		log.info("Request [" + requestEntity + "] is ready");

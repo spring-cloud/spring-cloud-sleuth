@@ -63,12 +63,11 @@ public class SkipPatternProviderConfigTest {
 	public void should_pick_default_pattern_when_both_management_context_and_skip_patterns_are_empty() throws Exception {
 		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
 		sleuthWebProperties.setSkipPattern("");
-
-		ManagementServerProperties properties = new ManagementServerProperties();
-		properties.getServlet().setContextPath("");
+		ManagementServerProperties managementServerProperties = new ManagementServerProperties();
+		managementServerProperties.getServlet().setContextPath("");
 
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				properties, sleuthWebProperties);
+				managementServerProperties, sleuthWebProperties);
 
 		then(pattern.pattern()).isEqualTo(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 	}

@@ -20,7 +20,6 @@ import java.util.Random;
 
 import brave.Tracing;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -32,8 +31,7 @@ public class SampleBackground {
 
 	@Autowired
 	private Tracing tracing;
-	@Autowired
-	private Random random;
+	private Random random = new Random();
 
 	@Async
 	public void background() throws InterruptedException {
