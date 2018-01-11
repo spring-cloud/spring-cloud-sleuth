@@ -17,6 +17,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.regex.Pattern;
 
+import brave.Tracing;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -26,7 +27,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -42,13 +42,14 @@ import org.springframework.util.StringUtils;
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.ANY)
-@ConditionalOnBean(Tracer.class)
+@ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
 public class TraceWebAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(ManagementServerProperties.class)
-	@ConditionalOnMissingBean(SkipPatternProvider.class)
+	@ConditionalOnMissingBean(
+			SkipPatternProvider.class)
 	@EnableConfigurationProperties(SleuthWebProperties.class)
 	protected static class SkipPatternProviderConfig {
 
@@ -95,7 +96,8 @@ public class TraceWebAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingClass("org.springframework.boot.actuate.autoconfigure.ManagementServerProperties")
-	@ConditionalOnMissingBean(SkipPatternProvider.class)
+	@ConditionalOnMissingBean(
+			SkipPatternProvider.class)
 	public SkipPatternProvider defaultSkipPatternBean(SleuthWebProperties sleuthWebProperties) {
 		return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern());
 	}

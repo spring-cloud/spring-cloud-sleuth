@@ -16,15 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import brave.http.HttpTracing;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 
 /**
- * Post processor that wraps a {@link org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory}
+ * Post processor that wraps a {@link RibbonCommandFactory}
  * in its trace representation.
  *
  * @author Marcin Grzejszczak
@@ -34,8 +33,7 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 final class TraceRibbonCommandFactoryBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
-	private Tracer tracer;
-	private HttpTraceKeysInjector httpTraceKeysInjector;
+	private HttpTracing tracing;
 
 	TraceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -45,7 +43,7 @@ final class TraceRibbonCommandFactoryBeanPostProcessor implements BeanPostProces
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
 		if (bean instanceof RibbonCommandFactory) {
-			return new TraceRibbonCommandFactory((RibbonCommandFactory) bean, getTracer(), getHttpTraceKeysInjector());
+			return new TraceRibbonCommandFactory((RibbonCommandFactory) bean, tracing());
 		}
 		return bean;
 	}
@@ -56,17 +54,10 @@ final class TraceRibbonCommandFactoryBeanPostProcessor implements BeanPostProces
 		return bean;
 	}
 
-	Tracer getTracer() {
-		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
+	HttpTracing tracing() {
+		if (this.tracing == null) {
+			this.tracing = this.beanFactory.getBean(HttpTracing.class);
 		}
-		return this.tracer;
-	}
-
-	HttpTraceKeysInjector getHttpTraceKeysInjector() {
-		if (this.httpTraceKeysInjector == null) {
-			this.httpTraceKeysInjector = this.beanFactory.getBean(HttpTraceKeysInjector.class);
-		}
-		return this.httpTraceKeysInjector;
+		return this.tracing;
 	}
 }

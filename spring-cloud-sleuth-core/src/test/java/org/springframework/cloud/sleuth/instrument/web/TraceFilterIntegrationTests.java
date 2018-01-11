@@ -1,10 +1,19 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import javax.servlet.http.HttpServletResponse;
 
+import brave.Span;
+import brave.Tracing;
+import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -12,26 +21,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -39,40 +42,44 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
+import org.springframework.web.filter.GenericFilterBean;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TraceFilterIntegrationTests.Config.class)
 public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
+	static final String TRACE_ID_NAME = "X-B3-TraceId";
+	static final String SPAN_ID_NAME = "X-B3-SpanId";
+	static final String SAMPLED_NAME = "X-B3-Sampled";
 
-	private static Log logger = LogFactory.getLog(TraceFilterIntegrationTests.class);
+	private static Log logger = LogFactory.getLog(
+			TraceFilterIntegrationTests.class);
 
 	@Autowired TraceFilter traceFilter;
-	@Autowired ArrayListSpanAccumulator spanAccumulator;
+	@Autowired MyFilter myFilter;
+	@Autowired ArrayListSpanReporter reporter;
 
 	private static Span span;
 
 	@Before
 	@After
 	public void clearSpans() {
-		this.spanAccumulator.getSpans().clear();
+		this.reporter.clear();
 	}
 
 	@Test
 	public void should_create_a_trace() throws Exception {
 		whenSentPingWithoutTracingData();
 
-		then(this.spanAccumulator.getSpans()).hasSize(1);
-		Span span = this.spanAccumulator.getSpans().get(0);
-		then(span).hasLoggedAnEvent(Span.SERVER_RECV)
-				.hasATagWithKey(new TraceKeys().getMvc().getControllerClass())
-				.hasATagWithKey(new TraceKeys().getMvc().getControllerMethod())
-				.hasLoggedAnEvent(Span.SERVER_SEND);
-		then(ExceptionUtils.getLastException()).isNull();
-		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
+		then(this.reporter.getSpans()).hasSize(1);
+		zipkin2.Span span = this.reporter.getSpans().get(0);
+		then(span.tags())
+				.containsKey(new TraceKeys().getMvc().getControllerClass())
+				.containsKey(new TraceKeys().getMvc().getControllerMethod());
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
@@ -83,7 +90,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
 		// we don't want to respond with any tracing data
 		then(notSampledHeaderIsPresent(mvcResult)).isEqualTo(false);
-		then(ExceptionUtils.getLastException()).isNull();
+		then(this.reporter.getSpans()).isEmpty();
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
@@ -91,9 +99,11 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
-		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
+		whenSentPingWithTraceId(expectedTraceId);
 
-		then(ExceptionUtils.getLastException()).isNull();
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.tracing.tracer().currentSpan()).isNull();
+
 	}
 
 	@Test
@@ -103,7 +113,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		whenSentPingWithTraceId(expectedTraceId);
 
 		then(MDC.getCopyOfContextMap()).isEmpty();
-		then(ExceptionUtils.getLastException()).isNull();
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
@@ -114,8 +125,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		this.mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().isOk()).andReturn();
 
-		then(this.tracer.getCurrentSpan()).isNull();
-		then(ExceptionUtils.getLastException()).isNull();
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
@@ -126,24 +136,24 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		this.mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().isOk()).andReturn();
 
-		Optional<Span> taggedSpan = this.spanAccumulator.getSpans().stream()
+		Optional<zipkin2.Span> taggedSpan = this.reporter.getSpans().stream()
 				.filter(span -> span.tags().containsKey("tag")).findFirst();
 		then(taggedSpan.isPresent()).isTrue();
-		then(taggedSpan.get()).hasATag("tag", "value");
-		then(taggedSpan.get()).hasATag("mvc.controller.method", "deferredMethod");
-		then(taggedSpan.get()).hasATag("mvc.controller.class", "TestController");
-		then(ExceptionUtils.getLastException()).isNull();
-		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
+		then(taggedSpan.get().tags())
+				.containsEntry("tag", "value")
+				.containsEntry("mvc.controller.method", "deferredMethod")
+				.containsEntry("mvc.controller.class", "TestController");
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
 	public void should_log_tracing_information_when_exception_was_thrown() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
-		MvcResult mvcResult = whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
+		whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
 
-		then(this.tracer.getCurrentSpan()).isNull();
-		then(ExceptionUtils.getLastException()).isNull();
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
@@ -153,11 +163,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		whenSentRequestWithTraceIdAndNoSpanId(expectedTraceId);
 		whenSentRequestWithTraceIdAndNoSpanId(expectedTraceId);
 
-		then(this.spanAccumulator.getSpans().stream().filter(span ->
-				span.getSpanId() == span.getTraceId()).findAny().isPresent()).as("a root span exists").isTrue();
-		then(this.tracer.getCurrentSpan()).isNull();
-		then(ExceptionUtils.getLastException()).isNull();
-		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
+		then(this.reporter.getSpans().stream().filter(span ->
+				span.id().equals(span.traceId()))
+				.findAny().isPresent()).as("a root span exists").isTrue();
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
@@ -166,14 +175,15 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
-		then(ExceptionUtils.getLastException()).isNull();
-		then(mvcResult.getResponse().getHeader("ZIPKIN-TRACE-ID")).isEqualTo(Span.idToHex(expectedTraceId));
-		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasASpanWithTagEqualTo("custom", "tag");
+		then(mvcResult.getResponse().getHeader("ZIPKIN-TRACE-ID"))
+				.isEqualTo(SpanUtil.idToHex(expectedTraceId));
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("custom", "tag");
 	}
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(this.traceFilter);
+		mockMvcBuilder.addFilters(this.traceFilter, this.myFilter);
 	}
 
 	private MvcResult whenSentPingWithoutTracingData() throws Exception {
@@ -183,24 +193,24 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	private MvcResult whenSentPingWithTraceId(Long passedTraceId) throws Exception {
-		return sendPingWithTraceId(Span.TRACE_ID_NAME, passedTraceId);
+		return sendPingWithTraceId(TRACE_ID_NAME, passedTraceId);
 	}
 
 	private MvcResult whenSentInfoWithTraceId(Long passedTraceId) throws Exception {
-		return sendRequestWithTraceId("/additionalContextPath/info", Span.TRACE_ID_NAME,
+		return sendRequestWithTraceId("/additionalContextPath/info", TRACE_ID_NAME,
 				passedTraceId);
 	}
 
 	private MvcResult whenSentFutureWithTraceId(Long passedTraceId) throws Exception {
-		return sendRequestWithTraceId("/future", Span.TRACE_ID_NAME, passedTraceId);
+		return sendRequestWithTraceId("/future", TRACE_ID_NAME, passedTraceId);
 	}
 
 	private MvcResult whenSentDeferredWithTraceId(Long passedTraceId) throws Exception {
-		return sendDeferredWithTraceId(Span.TRACE_ID_NAME, passedTraceId);
+		return sendDeferredWithTraceId(TRACE_ID_NAME, passedTraceId);
 	}
 
 	private MvcResult whenSentToNonExistentEndpointWithTraceId(Long passedTraceId) throws Exception {
-		return sendRequestWithTraceId("/exception/nonExistent", Span.TRACE_ID_NAME, passedTraceId, HttpStatus.NOT_FOUND);
+		return sendRequestWithTraceId("/exception/nonExistent", TRACE_ID_NAME, passedTraceId, HttpStatus.NOT_FOUND);
 	}
 
 	private MvcResult sendPingWithTraceId(String headerName, Long traceId)
@@ -217,8 +227,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
-						.header(headerName, Span.idToHex(traceId))
-						.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong())))
+						.header(headerName, SpanUtil.idToHex(traceId))
+						.header(SPAN_ID_NAME, SpanUtil.idToHex(new Random().nextLong())))
 				.andReturn();
 	}
 
@@ -226,7 +236,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
-						.header(Span.TRACE_ID_NAME, Span.idToHex(traceId)))
+						.header(TRACE_ID_NAME, SpanUtil.idToHex(traceId)))
 				.andReturn();
 	}
 
@@ -234,15 +244,14 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
-						.header(headerName, Span.idToHex(traceId))
-						.header(Span.SPAN_ID_NAME, Span.idToHex(new Random().nextLong())))
+						.header(headerName, SpanUtil.idToHex(traceId))
+						.header(SPAN_ID_NAME, SpanUtil.idToHex(new Random().nextLong())))
 				.andExpect(status().is(status.value()))
 				.andReturn();
 	}
 
 	private boolean notSampledHeaderIsPresent(MvcResult mvcResult) {
-		return Span.SPAN_NOT_SAMPLED
-				.equals(mvcResult.getResponse().getHeader(Span.SAMPLED_NAME));
+		return "0".equals(mvcResult.getResponse().getHeader(SAMPLED_NAME));
 	}
 
 	@DefaultTestAutoConfiguration
@@ -252,12 +261,12 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		@RestController
 		public static class TestController {
 			@Autowired
-			private Tracer tracer;
+			private Tracing tracing;
 
 			@RequestMapping("/ping")
 			public String ping() {
 				logger.info("ping");
-				span = this.tracer.getCurrentSpan();
+				span = this.tracing.tracer().currentSpan();
 				return "ping";
 			}
 
@@ -269,8 +278,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			@RequestMapping("/deferred")
 			public DeferredResult<String> deferredMethod() {
 				logger.info("deferred");
-				this.tracer.addTag("tag", "value");
-				span = this.tracer.getCurrentSpan();
+				span = this.tracing.tracer().currentSpan();
+				span.tag("tag", "value");
 				DeferredResult<String> result = new DeferredResult<>();
 				result.setResult("deferred");
 				return result;
@@ -295,31 +304,43 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		}
 
 		@Bean
-		public SpanReporter testSpanReporter() {
-			return new ArrayListSpanAccumulator();
+		public ArrayListSpanReporter testSpanReporter() {
+			return new ArrayListSpanReporter();
+		}
+
+		@Bean Sampler alwaysSampler() {
+			return Sampler.ALWAYS_SAMPLE;
 		}
 
 		@Bean
-		Sampler alwaysSampler() {
-			return new AlwaysSampler();
+		@Order(TraceFilter.ORDER + 1)
+		Filter myTraceFilter(final Tracing tracing) {
+			return new MyFilter(tracing);
 		}
-
-		//tag::response_headers[]
-		@Bean
-		TraceFilter myTraceFilter(BeanFactory beanFactory, final Tracer tracer) {
-			return new TraceFilter(beanFactory) {
-				@Override protected void addResponseTags(HttpServletResponse response,
-						Throwable e) {
-					// execute the default behaviour
-					super.addResponseTags(response, e);
-					// for readability we're returning trace id in a hex form
-					response.addHeader("ZIPKIN-TRACE-ID",
-							Span.idToHex(tracer.getCurrentSpan().getTraceId()));
-					// we can also add some custom tags
-					tracer.addTag("custom", "tag");
-				}
-			};
-		}
-		//end::response_headers[]
 	}
 }
+
+//tag::response_headers[]
+@Component
+@Order(TraceFilter.ORDER + 1)
+class MyFilter extends GenericFilterBean {
+
+	private final Tracing tracing;
+
+	MyFilter(Tracing tracing) {
+		this.tracing = tracing;
+	}
+
+	@Override public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain chain) throws IOException, ServletException {
+		Span currentSpan = this.tracing.tracer().currentSpan();
+		then(currentSpan).isNotNull();
+		// for readability we're returning trace id in a hex form
+		((HttpServletResponse) response)
+				.addHeader("ZIPKIN-TRACE-ID", currentSpan.context().traceIdString());
+		// we can also add some custom tags
+		currentSpan.tag("custom", "tag");
+		chain.doFilter(request, response);
+	}
+}
+//end::response_headers[]

@@ -18,12 +18,13 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import java.util.regex.Pattern;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 /**
@@ -39,21 +40,20 @@ import org.springframework.cloud.sleuth.util.SpanNameUtil;
  * @author Spencer Gibb
  * @since 1.0.0
  *
- * @see Tracer
+ * @see Tracing
  */
 @Aspect
 public class TraceSchedulingAspect {
 
-	private static final String SCHEDULED_COMPONENT = "scheduled";
-
-	private final Tracer tracer;
-	private final TraceKeys traceKeys;
+	private final Tracing tracing;
 	private final Pattern skipPattern;
+	private final TraceKeys traceKeys;
 
-	public TraceSchedulingAspect(Tracer tracer, TraceKeys traceKeys, Pattern skipPattern) {
-		this.tracer = tracer;
-		this.traceKeys = traceKeys;
+	public TraceSchedulingAspect(Tracing tracing, Pattern skipPattern,
+			TraceKeys traceKeys) {
+		this.tracing = tracing;
 		this.skipPattern = skipPattern;
+		this.traceKeys = traceKeys;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
@@ -62,18 +62,24 @@ public class TraceSchedulingAspect {
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
-		Span span = this.tracer.createSpan(spanName);
-		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, SCHEDULED_COMPONENT);
-		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
-				this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
-		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
-				this.traceKeys.getAsync().getMethodNameKey(), pjp.getSignature().getName());
-		try {
+		Span span = startOrContinueRenamedSpan(spanName);
+		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			span.tag(this.traceKeys.getAsync().getPrefix() +
+					this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
+			span.tag(this.traceKeys.getAsync().getPrefix() +
+					this.traceKeys.getAsync().getMethodNameKey(), pjp.getSignature().getName());
 			return pjp.proceed();
+		} finally {
+			span.finish();
 		}
-		finally {
-			this.tracer.close(span);
+	}
+
+	private Span startOrContinueRenamedSpan(String spanName) {
+		Span currentSpan = this.tracing.tracer().currentSpan();
+		if (currentSpan != null) {
+			return currentSpan.name(spanName);
 		}
+		return this.tracing.tracer().nextSpan().name(spanName);
 	}
 
 }

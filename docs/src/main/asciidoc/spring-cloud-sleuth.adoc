@@ -19,6 +19,9 @@ include::intro.adoc[]
 
 include::features.adoc[]
 
+// TODO: Add info about Sleuth legacy, injection of SpanCustomizer
+// Introduction to Brave, removal of sleuth stream, span adjusting
+
 == Sampling
 
 In distributed tracing the data volumes can be very high so sampling
@@ -33,13 +36,13 @@ non-exportable. If all your apps run with this sampler you will see
 traces in logs, but not in any remote store. For testing the default
 is often enough, and it probably is all you need if you are only using
 the logs (e.g. with an ELK aggregator). If you are exporting span data
-to Zipkin or Spring Cloud Stream, there is also an `AlwaysSampler`
-that exports everything and a `PercentageBasedSampler` that samples a
+to Zipkin, there is also an `AlwaysSampler`
+that exports everything and a `ProbabilityBasedSampler` that samples a
 fixed fraction of spans.
 
-NOTE: the `PercentageBasedSampler` is the default if you are using
-`spring-cloud-sleuth-zipkin` or `spring-cloud-sleuth-stream`. You can
-configure the exports using `spring.sleuth.sampler.percentage`. The passed
+NOTE: the `ProbabilityBasedSampler` is the default if you are using
+`spring-cloud-sleuth-zipkin`. You can
+configure the exports using `spring.sleuth.sampler.probability`. The passed
 value needs to be a double from `0.0` to `1.0` so it's not a percentage.
 For backwards compatibility reasons we're not changing the property name.
 
@@ -47,7 +50,7 @@ A sampler can be installed just by creating a bean definition, e.g:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
 ----
 
 TIP: You can set the HTTP header `X-B3-Flags` to `1` or when doing messaging you can
@@ -74,10 +77,8 @@ NOTE: Remember that tags are only collected and exported if there is a
 danger of accidentally collecting too much data without configuring
 something).
 
-NOTE: Currently the instrumentation in Spring Cloud Sleuth is eager - it means that
-we're actively trying to pass the tracing context between threads. Also timing events
-are captured even when sleuth isn't exporting data to a tracing system.
-This approach may change in the future towards being lazy on this matter.
+IMPORTANT: Starting with version `2.0.0` Spring Cloud Sleuth uses
+https://github.com/openzipkin/brave[Brave] as the tracing library.
 
 == Span lifecycle
 
@@ -100,7 +101,7 @@ You can manually create spans by using the *Tracer* interface.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_creation,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_creation,indent=0]
 ----
 
 In this example we could see how to create a new instance of span. Assuming that there already
@@ -122,23 +123,20 @@ situation might be (of course it all depends on the use-case):
     only a technical implementation detail that you wouldn't necessarily want to reflect in tracing as a separate being.
 
 The continued instance of span is equal to the one that it continues:
+
 [source,java]
 ----
-Span continuedSpan = this.tracer.continueSpan(spanToContinue);
+Span continuedSpan = this.tracing.tracer().joinSpan(spanToContinue);
 assertThat(continuedSpan).isEqualTo(spanToContinue);
 ----
 
-To continue a span you can use the *Tracer* interface.
+To continue a span you can use the *brave.Tracer* interface.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_continuation,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_continuation,indent=0]
 ----
 
-IMPORTANT: Always clean after you create a span! Don't forget to detach a span if some work was done started in one
- thread (e.g. thread X) and it's waiting for other threads (e.g. Y, Z) to finish.
- Then the spans in the threads Y, Z should be detached at the end of their work. When the results are collected
- the span in thread X should be closed.
 
 === Creating spans with an explicit parent [[creating-spans-with-explicit-parent]]
 
@@ -148,7 +146,7 @@ Let's assume that the parent of a span is in one thread and you want to start a 
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_joining,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_joining,indent=0]
 ----
 
 IMPORTANT: After having created such a span remember to close it. Otherwise you will see a lot of warnings in your logs
@@ -175,14 +173,14 @@ You can name the span explicitly via the `@SpanName` annotation.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]
 ----
 
 In this case, when processed in the following manner:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]
 ----
 
 The span will be named `calculateTax`.
@@ -197,7 +195,7 @@ So executing such code:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]
 ----
 
 will lead in creating a span named `calculateTax`.
@@ -230,7 +228,7 @@ Let's look at some examples of usage.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=annotated_method,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SleuthSpanCreatorAspectTests.java[tags=annotated_method,indent=0]
 ----
 
 Annotating the method without any parameter will lead to a creation of a new span whose name
@@ -238,7 +236,7 @@ will be equal to annotated method name.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_on_annotated_method,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_on_annotated_method,indent=0]
 ----
 
 If you provide the value in the annotation (either directly or via the `name` parameter) then
@@ -247,10 +245,10 @@ the created span will have the name as the provided value.
 [source,java]
 ----
 // method declaration
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_and_tag_on_annotated_method,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_and_tag_on_annotated_method,indent=0]
 
 // and method execution
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=execution,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SleuthSpanCreatorAspectTests.java[tags=execution,indent=0]
 ----
 
 You can combine both the name and a tag. Let's focus on the latter. In this case whatever the value of
@@ -259,7 +257,7 @@ the tag key will be `testTag` and the tag value will be `test`.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=name_on_implementation,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SleuthSpanCreatorAspectTests.java[tags=name_on_implementation,indent=0]
 ----
 
 You can place the `@NewSpan` annotation on both the class and an interface. If you override the
@@ -275,10 +273,10 @@ with the `@NewSpan` annotation you can also add logs via the `log` parameter:
 [source,java]
 ----
 // method declaration
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span,indent=0]
 
 // method execution
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span_execution,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span_execution,indent=0]
 ----
 
 That way the span will get continued and:
@@ -306,14 +304,14 @@ Having such an annotated method:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=resolver_bean,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SpanTagAnnotationHandlerTests.java[tags=resolver_bean,indent=0]
 ----
 
 and such a `TagValueResolver` bean implementation
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=custom_resolver,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SpanTagAnnotationHandlerTests.java[tags=custom_resolver,indent=0]
 ----
 
 Will lead to setting of a tag value equal to `Value from myCustomTagValueResolver`.
@@ -324,7 +322,7 @@ Having such an annotated method:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]
 ----
 
 and no custom implementation of a `TagValueExpressionResolver` will lead to evaluation of the SPEL expression and a tag with value `4 characters` will be set on the span.
@@ -337,33 +335,14 @@ Having such an annotated method:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=toString,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/annotation/SpanTagAnnotationHandlerTests.java[tags=toString,indent=0]
 ----
 
 if executed with a value of `15` will lead to setting of a tag with a String value of `"15"`.
 
 == Customizations
 
-Thanks to the `SpanInjector` and `SpanExtractor` you can customize the way spans
-are created and propagated.
-
-There are currently two built-in ways to pass tracing information between processes:
-
- * via Spring Integration
- * via HTTP
-
-Span ids are extracted from Zipkin-compatible (B3) headers (either `Message`
-or HTTP headers), to start or join an existing trace. Trace information is
-injected into any outbound requests so the next hop can extract them.
-
-The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
-the Open Tracing's `TextMap` notion. In Sleuth it's called `SpanTextMap`. Basically the idea
-is that any means of communication (e.g. message, http request, etc.) can be abstracted via
-a `SpanTextMap`. This abstraction defines how one can insert data into the carrier and
-how to retrieve it from there. Thanks to this if you want to instrument a new HTTP library
-that uses a `FooRequest` as a mean of sending HTTP requests then you have to create an
-implementation of  a `SpanTextMap` that delegates calls to `FooRequest` in terms of retrieval
-and insertion of HTTP headers.
+// TODO: Update this
 
 === Spring Integration
 
@@ -377,49 +356,7 @@ You can override them by providing your own implementation.
 
 === HTTP
 
-For HTTP there are 2 interfaces responsible for creation of a Span from a `Message`.
-These are:
-
-- `HttpSpanExtractor`
-- `HttpSpanInjector`
-
-You can override them by providing your own implementation.
-
-=== Example
-
-Let's assume that instead of the standard Zipkin compatible tracing HTTP header names
-you have
-
-* for trace id - `correlationId`
-* for span id - `mySpanId`
-
-This is a an example of a `SpanExtractor`
-
-[source,java]
-----
-include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=extractor,indent=0]
-----
-
-And you could register it like this:
-
-[source,java]
-----
-include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterCustomExtractorTests.java[tags=configuration,indent=0]
-----
-
-Spring Cloud Sleuth does not add trace/span related headers to the Http Response for security reasons. If you need the headers then a custom `SpanInjector`
-that injects the headers into the Http Response and a Servlet filter which makes use of this can be added the following way:
-
-[source,java]
-----
-include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceCustomFilterResponseInjectorTests.java[tags=injector,indent=0]
-----
-
-And you could register them like this:
-[source,java]
-----
-include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceCustomFilterResponseInjectorTests.java[tags=configuration,indent=0]
-----
+// TODO: Update this
 
 === TraceFilter
 
@@ -433,7 +370,7 @@ add to the Span a tag with key `custom` and a value `tag`.
 
 [source,java]
 ----
-include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]
 ----
 
 === Custom SA tag in Zipkin
@@ -444,7 +381,7 @@ Below you can see an example of a call to Redis that is wrapped in such a span.
 
 [source,java]
 ----
-include::../../../..//spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinSpanReporterTests.java[tags=service_name,indent=0]
+include::../../../..//spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/brave/zipkin2/ZipkinSpanReporterTests.java[tags=service_name,indent=0]
 ----
 
 IMPORTANT: Remember not to add both `peer.service` tag and the `SA` tag! You have to add only `peer.service`.
@@ -472,18 +409,20 @@ Example of usage:
 In Sleuth we're generating spans with a fixed name. Some users want to modify the name depending on values
 of tags. Implementation of the `SpanAdjuster` interface can be used to alter that name. Example:
 
+// TODO: Put it in a test or sth
+
 [source,yaml]
 ----
 @Bean
-SpanAdjuster customSpanAdjuster() {
-    return span -> span.toBuilder().name(scrub(span.getName())).build();
+Reporter<zipkin2.Span> adjustingReporter(Sender sender) {
+    Reporter<zipkin2.Span> delegate = new AsyncReporter(sender);
+    return span -> {
+        delegate.report(span.toBuilder().name(scrub(span.getName())).build());
+    }
 }
 ----
 
 This will lead in changing the name of the reported span just before it gets sent to Zipkin.
-
-IMPORTANT: Your `SpanReporter` should inject the `SpanAdjuster` and
- allow span manipulation before the actual reporting is done.
 
 === Host locator
 
@@ -543,46 +482,6 @@ Please refer to the http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi
 on how to create a Stream Zipkin server. That approach has been
 deprecated in Edgware and removed in Finchley release.
 
-=== Custom Consumer
-
-A custom consumer can also easily be implemented using
-`spring-cloud-sleuth-stream` and binding to the `SleuthSink`. Example:
-
-[source,java]
-----
-@EnableBinding(SleuthSink.class)
-@SpringBootApplication(exclude = SleuthStreamAutoConfiguration.class)
-@MessageEndpoint
-public class Consumer {
-
-    @ServiceActivator(inputChannel = SleuthSink.INPUT)
-    public void sink(Spans input) throws Exception {
-        // ... process spans
-    }
-}
-----
-
-NOTE: the sample consumer application above explicitly excludes
-`SleuthStreamAutoConfiguration` so it doesn't send messages to itself,
-but this is optional (you might actually want to trace requests into
-the consumer app).
-
-In order to customize the polling mechanism you can create a bean of `PollerMetadata` type
-with name equal to `StreamSpanReporter.POLLER`. Here you can find an example of such a configuration.
-
-[source,java]
-----
-include::../../../../spring-cloud-sleuth-stream/src/test/java/org/springframework/cloud/sleuth/stream/SleuthStreamAutoConfigurationTest.java[tags=custom_poller,indent=0]
-----
-
-== Metrics
-
-Currently Spring Cloud Sleuth registers very simple metrics related to spans.
-It's using the http://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics[Spring Boot's metrics support]
-to calculate the number of accepted and dropped spans. Each time a span gets
-sent to Zipkin the number of accepted spans will increase. If there's an error then
-the number of dropped spans will get increased.
-
 == Integrations
 
 === Runnable and Callable
@@ -593,14 +492,14 @@ Example for `Runnable`:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_runnable,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=trace_runnable,indent=0]
 ----
 
 Example for `Callable`:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_callable,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/documentation/SpringCloudSleuthDocTests.java[tags=trace_callable,indent=0]
 ----
 
 That way you will ensure that a new Span is created and closed for each execution.
@@ -620,7 +519,7 @@ Assuming that you have the following `HystrixCommand`:
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=hystrix_command,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/hystrix/TraceCommandTests.java[tags=hystrix_command,indent=0]
 ----
 
 In order to pass the tracing information you have to wrap the same logic in the Sleuth version of the `HystrixCommand` which is the
@@ -628,7 +527,7 @@ In order to pass the tracing information you have to wrap the same logic in the 
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=trace_hystrix_command,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/hystrix/TraceCommandTests.java[tags=trace_hystrix_command,indent=0]
 ----
 
 === RxJava
@@ -672,7 +571,6 @@ Via the `TraceWebFilter` all sampled incoming requests result in creation of a S
  like to skip via the `spring.sleuth.web.skipPattern` property. If you have `ManagementServerProperties` on classpath then
  its value of `contextPath` gets appended to the provided skip pattern.
 
-
 === HTTP client integration
 
 ==== Synchronous Rest Template
@@ -697,7 +595,7 @@ wrap `ThreadPoolTaskScheduler` in a `TraceAsyncListenableTaskExecutor`). Example
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebAsyncClientAutoConfigurationTests.java[tags=async_template_factories,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/client/TraceWebAsyncClientAutoConfigurationTests.java[tags=async_template_factories,indent=0]
 ----
 
 To block the `AsyncRestTemplate` features set `spring.sleuth.web.async.client.enabled` to `false`.
@@ -711,7 +609,7 @@ can see an example of how to set up such a custom `AsyncRestTemplate`.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/MultipleAsyncRestTemplateTests.java[tags=custom_async_rest_template,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/async/MultipleAsyncRestTemplateTests.java[tags=custom_async_rest_template,indent=0]
 ----
 
 ==== WebClient
@@ -786,7 +684,7 @@ Here you can see an example of how to pass tracing information with `TraceableEx
 [source,java]
 ----
 
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/TraceableExecutorServiceTests.java[tags=completablefuture,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/async/TraceableExecutorServiceTests.java[tags=completablefuture,indent=0]
 ----
 
 IMPORTANT: Sleuth doesn't work with `parallelStream()` out of the box. If you want
@@ -800,7 +698,7 @@ can see an example of how to set up such a custom `Executor`.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/async/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]
 ----
 
 === Messaging

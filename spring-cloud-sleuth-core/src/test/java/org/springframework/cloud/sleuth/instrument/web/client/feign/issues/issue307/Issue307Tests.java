@@ -19,8 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issu
 import java.util.ArrayList;
 import java.util.List;
 
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import org.junit.Before;
+import brave.sampler.Sampler;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +29,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -44,32 +40,28 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 public class Issue307Tests {
-
-	@Before
-	public void setup() {
-		TestSpanContextHolder.removeCurrentSpan();
-	}
 
 	@Test
 	public void should_start_context() {
 		try (ConfigurableApplicationContext applicationContext = SpringApplication
 				.run(SleuthSampleApplication.class, "--spring.jmx.enabled=false", "--server.port=0")) {
 		}
-		then(ExceptionUtils.getLastException()).isNull();
 	}
 }
 
 @EnableAutoConfiguration
-@Import({ParticipantsBean.class, ParticipantsClient.class})
+@Import({
+		ParticipantsBean.class, ParticipantsClient.class})
 @RestController
 @EnableFeignClients
 @EnableCircuitBreaker
 class SleuthSampleApplication {
 
-	private static final Logger LOG = LoggerFactory.getLogger(SleuthSampleApplication.class.getName());
+	private static final Logger LOG = LoggerFactory.getLogger(
+			SleuthSampleApplication.class.getName());
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -86,8 +78,8 @@ class SleuthSampleApplication {
 	}
 
 	@Bean
-	public AlwaysSampler defaultSampler() {
-		return new AlwaysSampler();
+	public Sampler defaultSampler() {
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 	@RequestMapping("/")

@@ -16,40 +16,31 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.SocketPolicy;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Random;
 
+import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
-import org.springframework.cloud.sleuth.instrument.web.ZipkinHttpSpanInjector;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
+import brave.spring.web.TracingClientHttpRequestInterceptor;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
 
 /**
  * @author Marcin Grzejszczak
@@ -60,47 +51,46 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 
 	private RestTemplate template = new RestTemplate(clientHttpRequestFactory());
 
-	private DefaultTracer tracer;
-
-	private ArrayListSpanAccumulator spanAccumulator = new ArrayListSpanAccumulator();
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
 
 	@Before
 	public void setup() {
-		this.tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanAccumulator, new TraceKeys());
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				new TraceRestTemplateInterceptor(this.tracer, new ZipkinHttpSpanInjector(),
-						new HttpTraceKeysInjector(this.tracer, new TraceKeys()),
-						new ExceptionMessageErrorParser())));
-		TestSpanContextHolder.removeCurrentSpan();
+				TracingClientHttpRequestInterceptor.create(HttpTracing.create(this.tracing))));
 	}
 
 	@After
-	public void clean() throws IOException {
-		TestSpanContextHolder.removeCurrentSpan();
+	public void clean() {
+		Tracing.current().close();
 	}
 
 	// Issue #198
 	@Test
 	public void spanRemovedFromThreadUponException() throws IOException {
 		this.mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
-		Span span = this.tracer.createSpan("new trace");
+		Span span = this.tracing.tracer().nextSpan().name("new trace");
 
-		try {
+		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
 			this.template.getForEntity(
 					"http://localhost:" + this.mockWebServer.getPort() + "/exception",
 					Map.class).getBody();
 			Assert.fail("should throw an exception");
 		} catch (RuntimeException e) {
-			SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
+			BDDAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
+		} finally {
+			span.finish();
 		}
 
-		SleuthAssertions.then(this.tracer.getCurrentSpan()).isEqualTo(span);
-		this.tracer.close(span);
-		SleuthAssertions.then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME, "Read timed out")
-				.hasRpcWithoutSeverSideDueToException();
-		then(ExceptionUtils.getLastException()).isNull();
+		// 1 span "new race", 1 span "rest template"
+		BDDAssertions.then(this.reporter.getSpans()).hasSize(2);
+		zipkin2.Span span1 = this.reporter.getSpans().get(0);
+		BDDAssertions.then(span1.tags())
+				.containsEntry("error", "Read timed out");
+		BDDAssertions.then(span1.kind().ordinal()).isEqualTo(Span.Kind.CLIENT.ordinal());
 	}
 
 	private ClientHttpRequestFactory clientHttpRequestFactory() {

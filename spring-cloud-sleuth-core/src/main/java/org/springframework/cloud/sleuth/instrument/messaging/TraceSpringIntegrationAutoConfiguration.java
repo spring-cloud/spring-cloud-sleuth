@@ -16,14 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import org.springframework.beans.factory.BeanFactory;
+import brave.Tracing;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,21 +36,20 @@ import org.springframework.integration.config.GlobalChannelInterceptor;
  * @author Spencer Gibb
  * @since 1.0.0
  *
- * @see TraceChannelInterceptor
+ * @see TracingChannelInterceptor
  */
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)
-@ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter({ TraceAutoConfiguration.class,
-		TraceSpanMessagingAutoConfiguration.class })
+@ConditionalOnBean(Tracing.class)
+@AutoConfigureAfter({ TraceAutoConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(TraceKeys.class)
 public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	@GlobalChannelInterceptor(patterns = "${spring.sleuth.integration.patterns:*}")
-	public TraceChannelInterceptor traceChannelInterceptor(BeanFactory beanFactory) {
-		return new IntegrationTraceChannelInterceptor(beanFactory);
+	public TracingChannelInterceptor traceChannelInterceptor(Tracing tracing) {
+		return new TracingChannelInterceptor(tracing);
 	}
 
 }

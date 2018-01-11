@@ -16,16 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging.websocket;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
+import brave.sampler.Sampler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptor;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -34,6 +31,8 @@ import org.springframework.web.socket.config.annotation.AbstractWebSocketMessage
 import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -45,38 +44,32 @@ public class TraceWebSocketAutoConfigurationTests {
 	@Autowired
 	DelegatingWebSocketMessageBrokerConfiguration delegatingWebSocketMessageBrokerConfiguration;
 
-	@Test
-	public void should_register_interceptors_for_all_channels() {
+	@Test public void should_register_interceptors_for_all_channels() {
 		then(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannel()
 				.getInterceptors())
-						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
+				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 		then(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannel()
 				.getInterceptors())
-						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
+				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 		then(this.delegatingWebSocketMessageBrokerConfiguration.brokerChannel()
 				.getInterceptors())
-						.hasAtLeastOneElementOfType(TraceChannelInterceptor.class);
+				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 	}
 
-	@EnableAutoConfiguration
-	@Configuration
-	@EnableWebSocketMessageBroker
+	@EnableAutoConfiguration @Configuration @EnableWebSocketMessageBroker
 	public static class Config extends AbstractWebSocketMessageBrokerConfigurer {
 
-		@Override
-		public void configureMessageBroker(MessageBrokerRegistry config) {
+		@Override public void configureMessageBroker(MessageBrokerRegistry config) {
 			config.enableSimpleBroker("/topic");
 			config.setApplicationDestinationPrefixes("/app");
 		}
 
-		@Override
-		public void registerStompEndpoints(StompEndpointRegistry registry) {
+		@Override public void registerStompEndpoints(StompEndpointRegistry registry) {
 			registry.addEndpoint("/hello").withSockJS();
 		}
 
-		@Bean
-		Sampler testSampler() {
-			return new AlwaysSampler();
+		@Bean Sampler testSampler() {
+			return Sampler.ALWAYS_SAMPLE;
 		}
 	}
 }

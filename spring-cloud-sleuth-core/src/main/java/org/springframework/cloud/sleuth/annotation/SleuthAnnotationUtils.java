@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.annotation;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +34,7 @@ import org.springframework.core.annotation.AnnotationUtils;
  */
 class SleuthAnnotationUtils {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(SleuthAnnotationUtils.class);
 
 	static boolean isMethodAnnotated(Method method) {
 		return findAnnotation(method, NewSpan.class) != null ||

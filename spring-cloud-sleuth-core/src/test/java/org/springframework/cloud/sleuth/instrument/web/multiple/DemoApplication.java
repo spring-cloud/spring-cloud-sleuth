@@ -3,6 +3,8 @@ package org.springframework.cloud.sleuth.instrument.web.multiple;
 import java.util.Arrays;
 import java.util.List;
 
+import brave.Span;
+import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,32 +25,61 @@ import org.springframework.web.bind.annotation.RestController;
 @IntegrationComponentScan
 public class DemoApplication {
 
-	private static final Log log = LogFactory.getLog(DemoApplication.class);
+	private static final Log log = LogFactory.getLog(
+			DemoApplication.class);
 
-	@Autowired
-	Sender sender;
+	Span httpSpan;
+	Span splitterSpan;
+	Span aggregatorSpan;
+	Span serviceActivatorSpan;
+
+	@Autowired Sender sender;
+	@Autowired Tracing tracing;
 
 	@RequestMapping("/greeting")
 	public Greeting greeting(@RequestParam(defaultValue="Hello World!") String message) {
 		this.sender.send(message);
+		this.httpSpan = this.tracing.tracer().currentSpan();
 		return new Greeting(message);
 	}
 
 	@Splitter(inputChannel="greetings", outputChannel="words")
 	public List<String> words(String greeting) {
+		this.splitterSpan = this.tracing.tracer().currentSpan();
 		return Arrays.asList(StringUtils.delimitedListToStringArray(greeting, " "));
 	}
 
 	@Aggregator(inputChannel="words", outputChannel="counts")
 	public int count(List<String> greeting) {
+		this.aggregatorSpan = this.tracing.tracer().currentSpan();
 		return greeting.size();
 	}
 
 	@ServiceActivator(inputChannel="counts")
 	public void report(int count) {
+		this.serviceActivatorSpan = this.tracing.tracer().currentSpan();
 		log.info("Count: " + count);
 	}
 
+	public Span getHttpSpan() {
+		return this.httpSpan;
+	}
+
+	public Span getSplitterSpan() {
+		return this.splitterSpan;
+	}
+
+	public Span getAggregatorSpan() {
+		return this.aggregatorSpan;
+	}
+
+	public Span getServiceActivatorSpan() {
+		return this.serviceActivatorSpan;
+	}
+
+	public List<Span> allSpans() {
+		return Arrays.asList(this.httpSpan, this.splitterSpan, this.aggregatorSpan, this.serviceActivatorSpan);
+	}
 }
 
 @MessagingGateway(name = "greeter")

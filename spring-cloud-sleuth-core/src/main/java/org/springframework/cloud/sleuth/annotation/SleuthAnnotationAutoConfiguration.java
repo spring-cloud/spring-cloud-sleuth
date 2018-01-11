@@ -15,12 +15,12 @@
  */
 package org.springframework.cloud.sleuth.annotation;
 
+import brave.Tracing;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,32 +36,28 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.2.0
  */
 @Configuration
-@ConditionalOnBean(Tracer.class)
+@ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(name = "spring.sleuth.annotation.enabled", matchIfMissing = true)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthAnnotationProperties.class)
 public class SleuthAnnotationAutoConfiguration {
 	
 	@Bean
-	@ConditionalOnMissingBean
-	SpanCreator spanCreator(Tracer tracer) {
-		return new DefaultSpanCreator(tracer);
+	@ConditionalOnMissingBean SpanCreator spanCreator(Tracing tracing) {
+		return new DefaultSpanCreator(tracing);
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
-	TagValueExpressionResolver spelTagValueExpressionResolver() {
+	@ConditionalOnMissingBean TagValueExpressionResolver spelTagValueExpressionResolver() {
 		return new SpelTagValueExpressionResolver();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
-	TagValueResolver noOpTagValueResolver() {
+	@ConditionalOnMissingBean TagValueResolver noOpTagValueResolver() {
 		return new NoOpTagValueResolver();
 	}
 
-	@Bean
-	SleuthAdvisorConfig sleuthAdvisorConfig() {
+	@Bean SleuthAdvisorConfig sleuthAdvisorConfig() {
 		return new SleuthAdvisorConfig();
 	}
 	

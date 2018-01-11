@@ -15,13 +15,11 @@
  */
 package org.springframework.cloud.sleuth.annotation;
 
-import java.lang.invoke.MethodHandles;
-
+import brave.Span;
+import brave.Tracing;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.util.StringUtils;
 
@@ -34,11 +32,11 @@ import org.springframework.util.StringUtils;
  */
 class DefaultSpanCreator implements SpanCreator {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(DefaultSpanCreator.class);
 
-	private final Tracer tracer;
+	private final Tracing tracer;
 
-	DefaultSpanCreator(Tracer tracer) {
+	DefaultSpanCreator(Tracing tracer) {
 		this.tracer = tracer;
 	}
 
@@ -50,14 +48,7 @@ class DefaultSpanCreator implements SpanCreator {
 			log.debug("For the class [" + pjp.getThis().getClass() + "] method "
 					+ "[" + pjp.getMethod().getName() + "] will name the span [" + changedName + "]");
 		}
-		return createSpan(changedName);
-	}
-
-	private Span createSpan(String name) {
-		if (this.tracer.isTracing()) {
-			return this.tracer.createSpan(name, this.tracer.getCurrentSpan());
-		}
-		return this.tracer.createSpan(name);
+		return this.tracer.tracer().nextSpan().name(changedName);
 	}
 
 }

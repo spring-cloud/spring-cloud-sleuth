@@ -1,39 +1,38 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanName;
-import org.springframework.cloud.sleuth.TraceCallable;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceCallableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
-	Tracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
 
 	@After
 	public void clean() {
-		TestSpanContextHolder.removeCurrentSpan();
+		this.tracing.close();
+		this.reporter.clear();
 	}
 
 	@Test
@@ -45,9 +44,8 @@ public class TraceCallableTests {
 		Span secondSpan = whenCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		then(secondSpan.getTraceId())
-				.isNotEqualTo(firstSpan.getTraceId());
-		then(secondSpan.getSavedSpan()).isNull();
+		then(secondSpan.context().traceId())
+				.isNotEqualTo(firstSpan.context().traceId());
 	}
 
 	@Test
@@ -64,10 +62,13 @@ public class TraceCallableTests {
 	@Test
 	public void should_remove_parent_span_from_thread_local_after_finishing_work()
 			throws Exception {
-		Span parent = givenSpanIsAlreadyActive();
-		Span child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
-		then(parent).as("parent").isNotNull();
-		then(child.getSavedSpan()).isEqualTo(parent);
+		Span parent = this.tracing.tracer().nextSpan().name("http:parent");
+		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(parent)){
+			Span child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
+			then(parent).as("parent").isNotNull();
+			then(child.context().parentId()).isEqualTo(parent.context().spanId());
+		}
+		then(this.tracing.tracer().currentSpan()).isNull();
 
 		Span secondSpan = whenNonTraceableCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
@@ -78,29 +79,27 @@ public class TraceCallableTests {
 	@Test
 	public void should_take_name_of_span_from_span_name_annotation()
 			throws Exception {
-		Span span = whenATraceKeepingCallableGetsSubmitted();
+		whenATraceKeepingCallableGetsSubmitted();
 
-		then(span).hasNameEqualTo("some-callable-name-from-annotation");
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans().get(0).name()).isEqualTo("some-callable-name-from-annotation");
 	}
 
 	@Test
 	public void should_take_name_of_span_from_to_string_if_span_name_annotation_is_missing()
 			throws Exception {
-		Span span = whenCallableGetsSubmitted(
+		whenCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
 
-		then(span).hasNameEqualTo("some-callable-name-from-to-string");
-	}
-
-	private Span givenSpanIsAlreadyActive() {
-		return this.tracer.createSpan("http:parent");
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans().get(0).name()).isEqualTo("some-callable-name-from-to-string");
 	}
 
 	private Callable<Span> thatRetrievesTraceFromThreadLocal() {
 		return new Callable<Span>() {
 			@Override
 			public Span call() throws Exception {
-				return TestSpanContextHolder.getCurrentSpan();
+				return Tracing.currentTracer().currentSpan();
 			}
 
 			@Override
@@ -117,13 +116,13 @@ public class TraceCallableTests {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracer, new DefaultSpanNamer(), callable))
-				.get();
+		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
+				new ExceptionMessageErrorParser(), callable)).get();
 	}
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracer, new DefaultSpanNamer(),
-				new TraceKeepingCallable())).get();
+		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
+				new ExceptionMessageErrorParser(), new TraceKeepingCallable())).get();
 	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)
@@ -137,7 +136,7 @@ public class TraceCallableTests {
 
 		@Override
 		public Span call() throws Exception {
-			this.span = TestSpanContextHolder.getCurrentSpan();
+			this.span = Tracing.currentTracer().currentSpan();
 			return this.span;
 		}
 	}

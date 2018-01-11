@@ -21,9 +21,14 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.sampler.Sampler;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -34,18 +39,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -60,11 +58,7 @@ import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-import static junitparams.JUnitParamsRunner.$;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
 @SpringBootTest(classes = {
@@ -84,18 +78,12 @@ public class WebClientExceptionTests {
 
 	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
 	@Autowired @LoadBalanced RestTemplate template;
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanAccumulator accumulator;
+	@Autowired Tracing tracer;
+	@Autowired ArrayListSpanReporter reporter;
 
 	@Before
 	public void open() {
-		TestSpanContextHolder.removeCurrentSpan();
-		ExceptionUtils.setFail(true);
-	}
-
-	@After
-	public void close() {
-		TestSpanContextHolder.removeCurrentSpan();
+		this.reporter.clear();
 	}
 
 	// issue #198
@@ -103,23 +91,23 @@ public class WebClientExceptionTests {
 	@Parameters
 	public void shouldCloseSpanUponException(ResponseEntityProvider provider)
 			throws IOException {
-		Span span = this.tracer.createSpan("new trace");
-		log.info("Started new span " + span);
+		Span span = this.tracer.tracer().nextSpan().name("new trace").start();
 
-		try {
+		try (Tracer.SpanInScope ws = this.tracer.tracer().withSpanInScope(span)) {
+			log.info("Started new span " + span);
 			provider.get(this);
 			Assert.fail("should throw an exception");
 		}
 		catch (RuntimeException e) {
 			// SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
+		} finally {
+			span.finish();
 		}
 
-		then(ExceptionUtils.getLastException()).isNull();
-		then(this.tracer.getCurrentSpan()).isEqualTo(span);
-		this.tracer.close(span);
-		then(ExceptionUtils.getLastException()).isNull();
-		then(this.capture.toString()).doesNotContain("Tried to detach trace span but it is not the current span");
-		then(new ListOfSpans(this.accumulator.getSpans())).hasRpcWithoutSeverSideDueToException();
+		then(this.tracer.tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.reporter.getSpans().get(0).tags().get("error"))
+				.contains("invalid.host.to.break.tests");
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
@@ -151,13 +139,12 @@ public class WebClientExceptionTests {
 			return new RestTemplate(clientHttpRequestFactory);
 		}
 
-		@Bean
-		Sampler alwaysSampler() {
-			return new AlwaysSampler();
+		@Bean Sampler alwaysSampler() {
+			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean ArrayListSpanAccumulator accumulator() {
-			return new ArrayListSpanAccumulator();
+		@Bean ArrayListSpanReporter accumulator() {
+			return new ArrayListSpanReporter();
 		}
 	}
 
@@ -176,6 +163,7 @@ public class WebClientExceptionTests {
 
 	@FunctionalInterface
 	interface ResponseEntityProvider {
-		ResponseEntity<?> get(WebClientExceptionTests webClientTests);
+		ResponseEntity<?> get(
+				WebClientExceptionTests webClientTests);
 	}
 }

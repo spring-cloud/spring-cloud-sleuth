@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.PostConstruct;
 
+import brave.http.HttpTracing;
+import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +30,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,19 +48,16 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 @Configuration
 @SleuthWebClientEnabled
-@ConditionalOnBean(HttpTraceKeysInjector.class)
+@ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceWebClientAutoConfiguration {
 
 	@ConditionalOnClass(RestTemplate.class)
 	static class RestTemplateConfig {
+
 		@Bean
-		@ConditionalOnMissingBean
-		public TraceRestTemplateInterceptor traceRestTemplateInterceptor(Tracer tracer,
-				HttpSpanInjector spanInjector, HttpTraceKeysInjector httpTraceKeysInjector,
-				ErrorParser errorParser) {
-			return new TraceRestTemplateInterceptor(tracer, spanInjector,
-					httpTraceKeysInjector, errorParser);
+		public TracingClientHttpRequestInterceptor tracingClientHttpRequestInterceptor(HttpTracing httpTracing) {
+			return (TracingClientHttpRequestInterceptor) TracingClientHttpRequestInterceptor.create(httpTracing);
 		}
 
 		@Configuration
@@ -73,7 +67,7 @@ public class TraceWebClientAutoConfiguration {
 			private Collection<RestTemplate> restTemplates;
 
 			@Autowired
-			private TraceRestTemplateInterceptor traceRestTemplateInterceptor;
+			private TracingClientHttpRequestInterceptor clientInterceptor;
 
 			@PostConstruct
 			public void init() {
@@ -81,7 +75,7 @@ public class TraceWebClientAutoConfiguration {
 					for (RestTemplate restTemplate : this.restTemplates) {
 						List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>(
 								restTemplate.getInterceptors());
-						interceptors.add(this.traceRestTemplateInterceptor);
+						interceptors.add(this.clientInterceptor);
 						restTemplate.setInterceptors(interceptors);
 					}
 				}
@@ -109,7 +103,8 @@ public class TraceWebClientAutoConfiguration {
 					throws BeansException {
 				if (o instanceof RestTemplateBuilder) {
 					RestTemplateBuilder builder = (RestTemplateBuilder) o;
-					return builder.additionalInterceptors(this.beanFactory.getBean(TraceRestTemplateInterceptor.class));
+					return builder.additionalInterceptors(
+							this.beanFactory.getBean(TracingClientHttpRequestInterceptor.class));
 				}
 				return o;
 			}

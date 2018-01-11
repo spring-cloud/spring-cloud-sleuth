@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation to provide the name for the span. You should annotate all your
- * custom {@link java.lang.Runnable Runnable} or {@link java.util.concurrent.Callable Callable} classes
+ * custom {@link Runnable Runnable} or {@link java.util.concurrent.Callable Callable} classes
  * for the instrumentation logic to pick up how to name the span.
  * <p>
  *

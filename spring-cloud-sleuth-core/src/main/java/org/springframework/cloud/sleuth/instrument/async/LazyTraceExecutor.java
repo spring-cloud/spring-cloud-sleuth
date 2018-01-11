@@ -16,35 +16,33 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Executor;
 
+import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * {@link Executor} that wraps {@link Runnable} in a
- * {@link org.springframework.cloud.sleuth.TraceRunnable TraceRunnable} that sets a
- * local component tag on the span.
+ * {@link Executor} that wraps {@link Runnable} in a trace representation
  *
  * @author Dave Syer
  * @since 1.0.0
  */
 public class LazyTraceExecutor implements Executor {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(LazyTraceExecutor.class);
 
-	private Tracer tracer;
+	private Tracing tracer;
 	private final BeanFactory beanFactory;
 	private final Executor delegate;
-	private TraceKeys traceKeys;
 	private SpanNamer spanNamer;
+	private ErrorParser errorParser;
 
 	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate) {
 		this.beanFactory = beanFactory;
@@ -55,28 +53,14 @@ public class LazyTraceExecutor implements Executor {
 	public void execute(Runnable command) {
 		if (this.tracer == null) {
 			try {
-				this.tracer = this.beanFactory.getBean(Tracer.class);
+				this.tracer = this.beanFactory.getBean(Tracing.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
 				this.delegate.execute(command);
 				return;
 			}
 		}
-		this.delegate.execute(new SpanContinuingTraceRunnable(this.tracer, traceKeys(), spanNamer(), command));
-	}
-
-	// due to some race conditions trace keys might not be ready yet
-	private TraceKeys traceKeys() {
-		if (this.traceKeys == null) {
-			try {
-				this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
-			}
-			catch (NoSuchBeanDefinitionException e) {
-				log.warn("TraceKeys bean not found - will provide a manually created instance");
-				return new TraceKeys();
-			}
-		}
-		return this.traceKeys;
+		this.delegate.execute(new TraceRunnable(this.tracer, spanNamer(), errorParser(), command));
 	}
 
 	// due to some race conditions trace keys might not be ready yet
@@ -91,6 +75,20 @@ public class LazyTraceExecutor implements Executor {
 			}
 		}
 		return this.spanNamer;
+	}
+
+	// due to some race conditions trace keys might not be ready yet
+	private ErrorParser errorParser() {
+		if (this.errorParser == null) {
+			try {
+				this.errorParser = this.beanFactory.getBean(ErrorParser.class);
+			}
+			catch (NoSuchBeanDefinitionException e) {
+				log.warn("ErrorParser bean not found - will provide a manually created instance");
+				return new ExceptionMessageErrorParser();
+			}
+		}
+		return this.errorParser;
 	}
 
 }

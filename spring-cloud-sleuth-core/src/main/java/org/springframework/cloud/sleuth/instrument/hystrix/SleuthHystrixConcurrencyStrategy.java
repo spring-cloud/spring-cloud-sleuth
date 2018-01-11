@@ -16,11 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import java.lang.invoke.MethodHandles;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import brave.Tracing;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
@@ -33,11 +39,6 @@ import com.netflix.hystrix.strategy.executionhook.HystrixCommandExecutionHook;
 import com.netflix.hystrix.strategy.metrics.HystrixMetricsPublisher;
 import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
 import com.netflix.hystrix.strategy.properties.HystrixProperty;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A {@link HystrixConcurrencyStrategy} that wraps a {@link Callable} in a
@@ -53,13 +54,16 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 	private static final Log log = LogFactory
 			.getLog(SleuthHystrixConcurrencyStrategy.class);
 
-	private final Tracer tracer;
-	private final TraceKeys traceKeys;
+	private final Tracing tracing;
+	private final SpanNamer spanNamer;
+	private final ErrorParser errorParser;
 	private HystrixConcurrencyStrategy delegate;
 
-	public SleuthHystrixConcurrencyStrategy(Tracer tracer, TraceKeys traceKeys) {
-		this.tracer = tracer;
-		this.traceKeys = traceKeys;
+	public SleuthHystrixConcurrencyStrategy(Tracing tracing,
+			SpanNamer spanNamer, ErrorParser errorParser) {
+		this.tracing = tracing;
+		this.spanNamer = spanNamer;
+		this.errorParser = errorParser;
 		try {
 			this.delegate = HystrixPlugins.getInstance().getConcurrencyStrategy();
 			if (this.delegate instanceof SleuthHystrixConcurrencyStrategy) {
@@ -103,15 +107,16 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 
 	@Override
 	public <T> Callable<T> wrapCallable(Callable<T> callable) {
-		if (callable instanceof HystrixTraceCallable) {
+		if (callable instanceof TraceCallable) {
 			return callable;
 		}
 		Callable<T> wrappedCallable = this.delegate != null
 				? this.delegate.wrapCallable(callable) : callable;
-		if (wrappedCallable instanceof HystrixTraceCallable) {
+		if (wrappedCallable instanceof TraceCallable) {
 			return wrappedCallable;
 		}
-		return new HystrixTraceCallable<>(this.tracer, this.traceKeys, wrappedCallable);
+		return new TraceCallable<>(this.tracing, this.spanNamer,
+				this.errorParser, wrappedCallable, HYSTRIX_COMPONENT);
 	}
 
 	@Override
@@ -139,69 +144,5 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 	public <T> HystrixRequestVariable<T> getRequestVariable(
 			HystrixRequestVariableLifecycle<T> rv) {
 		return this.delegate.getRequestVariable(rv);
-	}
-
-	// Visible for testing
-	static class HystrixTraceCallable<S> implements Callable<S> {
-
-		private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
-
-		private final Tracer tracer;
-		private final TraceKeys traceKeys;
-		private final Callable<S> callable;
-		private final Span parent;
-
-		public HystrixTraceCallable(Tracer tracer, TraceKeys traceKeys,
-				Callable<S> callable) {
-			this.tracer = tracer;
-			this.traceKeys = traceKeys;
-			this.callable = callable;
-			this.parent = tracer.getCurrentSpan();
-		}
-
-		@Override
-		public S call() throws Exception {
-			Span span = this.parent;
-			boolean created = false;
-			if (span != null) {
-				span = this.tracer.continueSpan(span);
-				if (log.isDebugEnabled()) {
-					log.debug("Continuing span " + span);
-				}
-			}
-			else {
-				span = this.tracer.createSpan(HYSTRIX_COMPONENT);
-				created = true;
-				if (log.isDebugEnabled()) {
-					log.debug("Creating new span " + span);
-				}
-			}
-			if (!span.tags().containsKey(Span.SPAN_LOCAL_COMPONENT_TAG_NAME)) {
-				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, HYSTRIX_COMPONENT);
-			}
-			String asyncKey = this.traceKeys.getAsync().getPrefix()
-					+ this.traceKeys.getAsync().getThreadNameKey();
-			if (!span.tags().containsKey(asyncKey)) {
-				this.tracer.addTag(asyncKey, Thread.currentThread().getName());
-			}
-			try {
-				return this.callable.call();
-			}
-			finally {
-				if (created) {
-					if (log.isDebugEnabled()) {
-						log.debug("Closing span since it was created" + span);
-					}
-					this.tracer.close(span);
-				}
-				else if(this.tracer.isTracing()) {
-					if (log.isDebugEnabled()) {
-						log.debug("Detaching span since it was continued " + span);
-					}
-					this.tracer.detach(span);
-				}
-			}
-		}
-
 	}
 }

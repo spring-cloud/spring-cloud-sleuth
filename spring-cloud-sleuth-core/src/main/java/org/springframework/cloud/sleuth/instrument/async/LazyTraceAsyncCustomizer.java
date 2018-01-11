@@ -42,6 +42,9 @@ public class LazyTraceAsyncCustomizer extends AsyncConfigurerSupport {
 
 	@Override
 	public Executor getAsyncExecutor() {
+		if (this.delegate.getAsyncExecutor() instanceof LazyTraceExecutor) {
+			return this.delegate.getAsyncExecutor();
+		}
 		return new LazyTraceExecutor(this.beanFactory, this.delegate.getAsyncExecutor());
 	}
 

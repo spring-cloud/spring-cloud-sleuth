@@ -34,7 +34,7 @@ import org.springframework.core.annotation.AnnotationUtils;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  *
- * @see org.springframework.cloud.sleuth.SpanName
+ * @see SpanName
  */
 public class DefaultSpanNamer implements SpanNamer {
 

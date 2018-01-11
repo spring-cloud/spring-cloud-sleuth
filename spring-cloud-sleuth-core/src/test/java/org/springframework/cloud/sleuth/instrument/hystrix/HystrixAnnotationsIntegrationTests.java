@@ -16,33 +16,30 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.After;
+import brave.Span;
+import brave.Tracing;
+import brave.sampler.Sampler;
+import org.awaitility.Awaitility;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.netflix.hystrix.EnableHystrix;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import org.awaitility.Awaitility;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.strategy.HystrixPlugins;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { HystrixAnnotationsIntegrationTests.TestConfig.class })
@@ -52,7 +49,7 @@ public class HystrixAnnotationsIntegrationTests {
 	@Autowired
 	HystrixCommandInvocationSpanCatcher catcher;
 	@Autowired
-	Tracer tracer;
+	Tracing tracer;
 
 	@BeforeClass
 	@AfterClass
@@ -60,29 +57,11 @@ public class HystrixAnnotationsIntegrationTests {
 		HystrixPlugins.reset();
 	}
 
-	@After
-	public void cleanTrace() {
-		TestSpanContextHolder.removeCurrentSpan();
-	}
-
-	@Test
-	public void should_continue_current_span_when_executed_a_hystrix_command_annotated_method() {
-		Span span = givenASpanInCurrentThread();
-
-		whenHystrixCommandAnnotatedMethodGetsExecuted();
-
-		thenSpanInHystrixThreadIsContinued(span);
-	}
-
 	@Test
 	public void should_create_new_span_with_thread_name_when_executed_a_hystrix_command_annotated_method() {
 		whenHystrixCommandAnnotatedMethodGetsExecuted();
 
 		thenSpanInHystrixThreadIsCreated();
-	}
-
-	private Span givenASpanInCurrentThread() {
-		return this.tracer.createSpan("http:existing");
 	}
 
 	private void whenHystrixCommandAnnotatedMethodGetsExecuted() {
@@ -93,18 +72,14 @@ public class HystrixAnnotationsIntegrationTests {
 		then(span).isNotNull();
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 				then(HystrixAnnotationsIntegrationTests.this.catcher).isNotNull();
-				then(span)
-						.hasTraceIdEqualTo(HystrixAnnotationsIntegrationTests.this.catcher
-								.getTraceId())
-						.hasNameEqualTo(HystrixAnnotationsIntegrationTests.this.catcher
-								.getSpanName());
+				then(span.context().traceId())
+						.isEqualTo(HystrixAnnotationsIntegrationTests.this.catcher.getTraceId());
 		});
 	}
 
 	private void thenSpanInHystrixThreadIsCreated() {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(HystrixAnnotationsIntegrationTests.this.catcher.getSpan())
-					.nameStartsWith("hystrix").isALocalComponentSpan();
+			then(HystrixAnnotationsIntegrationTests.this.catcher.getSpan()).isNotNull();
 		});
 	}
 
@@ -114,13 +89,13 @@ public class HystrixAnnotationsIntegrationTests {
 	static class TestConfig {
 
 		@Bean
-		HystrixCommandInvocationSpanCatcher spanCatcher() {
-			return new HystrixCommandInvocationSpanCatcher();
+		HystrixCommandInvocationSpanCatcher spanCatcher(Tracing tracing) {
+			return new HystrixCommandInvocationSpanCatcher(tracing);
 		}
 
 		@Bean
 		Sampler sampler() {
-			return new AlwaysSampler();
+			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}
@@ -128,11 +103,16 @@ public class HystrixAnnotationsIntegrationTests {
 	public static class HystrixCommandInvocationSpanCatcher {
 
 		AtomicReference<Span> spanCaughtFromHystrixThread;
+		private final Tracing tracing;
+
+		public HystrixCommandInvocationSpanCatcher(Tracing tracing) {
+			this.tracing = tracing;
+		}
 
 		@HystrixCommand
 		public void invokeLogicWrappedInHystrixCommand() {
 			this.spanCaughtFromHystrixThread = new AtomicReference<>(
-					TestSpanContextHolder.getCurrentSpan());
+					tracing.tracer().currentSpan());
 		}
 
 		public Long getTraceId() {
@@ -140,17 +120,7 @@ public class HystrixAnnotationsIntegrationTests {
 					|| this.spanCaughtFromHystrixThread.get() == null) {
 				return null;
 			}
-			return this.spanCaughtFromHystrixThread.get().getTraceId();
-		}
-
-		public String getSpanName() {
-			if (this.spanCaughtFromHystrixThread == null
-					|| (this.spanCaughtFromHystrixThread.get() != null
-							&& this.spanCaughtFromHystrixThread.get()
-									.getName() == null)) {
-				return null;
-			}
-			return this.spanCaughtFromHystrixThread.get().getName();
+			return this.spanCaughtFromHystrixThread.get().context().traceId();
 		}
 
 		public Span getSpan() {

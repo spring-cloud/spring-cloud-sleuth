@@ -16,29 +16,48 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
+import brave.sampler.Sampler;
 import org.apache.http.Header;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.cloud.sleuth.util.SpanUtil;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
 public class ApacheHttpClientRibbonRequestCustomizerTests {
 
-	@Mock Tracer tracer;
-	@InjectMocks ApacheHttpClientRibbonRequestCustomizer customizer;
-	Span span = Span.builder().name("name").spanId(1L).traceId(2L).parent(3L)
-			.processId("processId").build();
+	private static final String SAMPLED_NAME = "X-B3-Sampled";
+	private static final String TRACE_ID_NAME = "X-B3-TraceId";
+	private static final String SPAN_ID_NAME = "X-B3-SpanId";
+	
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
+	TraceKeys traceKeys = new TraceKeys();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
+			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
+			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
+			.build();
+	brave.Span span = this.tracing.tracer().nextSpan().name("name").start();
+	ApacheHttpClientRibbonRequestCustomizer customizer =
+			new ApacheHttpClientRibbonRequestCustomizer(this.httpTracing) {
+				@Override brave.Span getCurrentSpan() {
+					return span;
+				}
+			};
 
 	@Test
 	public void should_accept_customizer_when_apache_http_client_is_passed() throws Exception {
@@ -48,44 +67,55 @@ public class ApacheHttpClientRibbonRequestCustomizerTests {
 
 	@Test
 	public void should_set_not_sampled_on_the_context_when_there_is_no_span() throws Exception {
-		RequestBuilder requestBuilder = RequestBuilder.create("GET");
+		this.span = null;
+		Tracing tracing = Tracing.newBuilder()
+				.currentTraceContext(CurrentTraceContext.Default.create())
+				.spanReporter(this.reporter)
+				.sampler(Sampler.NEVER_SAMPLE)
+				.build();
+		TraceKeys traceKeys = new TraceKeys();
+		HttpTracing httpTracing = HttpTracing.newBuilder(tracing)
+				.clientParser(SleuthHttpParserAccessor.getClient(traceKeys))
+				.serverParser(SleuthHttpParserAccessor.getServer(traceKeys, new ExceptionMessageErrorParser()))
+				.build();
+		RequestBuilder requestBuilder = RequestBuilder.create("GET").setUri("http://foo");
 
-		this.customizer.inject(null, this.customizer.toSpanTextMap(requestBuilder));
+		new ApacheHttpClientRibbonRequestCustomizer(httpTracing) {
+			@Override brave.Span getCurrentSpan() {
+				return span;
+			}
+		}.customize(requestBuilder);
 
 		HttpUriRequest request = requestBuilder.build();
-		Header header = request.getFirstHeader(Span.SAMPLED_NAME);
-		then(header.getName()).isEqualTo(Span.SAMPLED_NAME);
-		then(header.getValue()).isEqualTo(Span.SPAN_NOT_SAMPLED);
+		Header header = request.getFirstHeader(SAMPLED_NAME);
+		then(header.getName()).isEqualTo(SAMPLED_NAME);
+		then(header.getValue()).isEqualTo("0");
 	}
 
 	@Test
 	public void should_set_tracing_headers_on_the_context_when_there_is_a_span() throws Exception {
-		RequestBuilder requestBuilder = RequestBuilder.create("GET");
+		RequestBuilder requestBuilder = RequestBuilder.create("GET").setUri("http://foo");
 
-		this.customizer.inject(this.span, this.customizer.toSpanTextMap(requestBuilder));
+		this.customizer.customize(requestBuilder);
 
 		HttpUriRequest request = requestBuilder.build();
-		thenThereIsAHeaderWithNameAndValue(request, Span.SPAN_ID_NAME, "0000000000000001");
-		thenThereIsAHeaderWithNameAndValue(request, Span.TRACE_ID_NAME, "0000000000000002");
-		thenThereIsAHeaderWithNameAndValue(request, Span.PARENT_ID_NAME, "0000000000000003");
-		thenThereIsAHeaderWithNameAndValue(request, Span.PROCESS_ID_NAME, "processId");
+		thenThereIsAHeaderWithNameAndValue(request, SPAN_ID_NAME, SpanUtil.idToHex(this.span.context().spanId()));
+		thenThereIsAHeaderWithNameAndValue(request, TRACE_ID_NAME, this.span.context().traceIdString());
 	}
 
 	@Test
 	public void should_not_set_duplicate_tracing_headers_on_the_context_when_there_is_a_span() throws Exception {
-		RequestBuilder requestBuilder = RequestBuilder.create("GET");
+		RequestBuilder requestBuilder = RequestBuilder.create("GET").setUri("http://foo");
 
-		this.customizer.inject(this.span, this.customizer.toSpanTextMap(requestBuilder));
-		this.customizer.inject(this.span, this.customizer.toSpanTextMap(requestBuilder));
+		this.customizer.customize(requestBuilder);
+		this.customizer.customize(requestBuilder);
 
 		HttpUriRequest request = requestBuilder.build();
-		thenThereIsAHeaderWithNameAndValue(request, Span.SPAN_ID_NAME, "0000000000000001");
-		thenThereIsAHeaderWithNameAndValue(request, Span.TRACE_ID_NAME, "0000000000000002");
-		thenThereIsAHeaderWithNameAndValue(request, Span.PARENT_ID_NAME, "0000000000000003");
-		thenThereIsAHeaderWithNameAndValue(request, Span.PROCESS_ID_NAME, "processId");
+		thenThereIsAHeaderWithNameAndValue(request, SPAN_ID_NAME, SpanUtil.idToHex(this.span.context().spanId()));
+		thenThereIsAHeaderWithNameAndValue(request, TRACE_ID_NAME, this.span.context().traceIdString());
 	}
 
-	private void thenThereIsAHeaderWithNameAndValue(HttpUriRequest request, String name, String value) {
+	public void thenThereIsAHeaderWithNameAndValue(HttpUriRequest request, String name, String value) {
 		then(request.getHeaders(name)).hasSize(1);
 		Header header = request.getFirstHeader(name);
 		then(header.getName()).isEqualTo(name);

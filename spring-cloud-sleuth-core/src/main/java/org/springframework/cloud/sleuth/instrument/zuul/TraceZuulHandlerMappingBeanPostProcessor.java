@@ -23,8 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
 import org.springframework.cloud.sleuth.instrument.web.TraceHandlerInterceptor;
+import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
 
 /**
  * Bean post processor that wraps {@link ZuulHandlerMapping} in its

@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import brave.Span;
+import brave.http.HttpTracing;
 import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 
 /**
  * Propagates traces downstream via http headers that contain trace metadata.
@@ -33,22 +32,40 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 class TraceRibbonCommandFactory implements RibbonCommandFactory {
 
 	private final RibbonCommandFactory delegate;
-	private final Tracer tracer;
-	private final HttpTraceKeysInjector httpTraceKeysInjector;
+	private final HttpTracing tracing;
 
 	public TraceRibbonCommandFactory(RibbonCommandFactory delegate,
-			Tracer tracer, HttpTraceKeysInjector httpTraceKeysInjector) {
+			HttpTracing tracing) {
 		this.delegate = delegate;
-		this.tracer = tracer;
-		this.httpTraceKeysInjector = httpTraceKeysInjector;
+		this.tracing = tracing;
 	}
 
 	@Override
 	public RibbonCommand create(RibbonCommandContext context) {
 		RibbonCommand ribbonCommand = this.delegate.create(context);
-		Span span = this.tracer.getCurrentSpan();
-		this.httpTraceKeysInjector.addRequestTags(span, context.uri(), context.getMethod());
+		Span span = this.tracing.tracing().tracer().currentSpan();
+		this.tracing.clientParser().request(new TraceRibbonCommandFactory.HttpAdapter(), context, span);
 		return ribbonCommand;
 	}
 
+	static final class HttpAdapter
+			extends brave.http.HttpClientAdapter<RibbonCommandContext, RibbonCommand> {
+
+		@Override public String method(RibbonCommandContext request) {
+			return request.getMethod();
+		}
+
+		@Override public String url(RibbonCommandContext request) {
+			return request.getUri();
+		}
+
+		@Override public String requestHeader(RibbonCommandContext request, String name) {
+			Object result = request.getHeaders().getFirst(name);
+			return result != null ? result.toString() : null;
+		}
+
+		@Override public Integer statusCode(RibbonCommand response) {
+			throw new UnsupportedOperationException("RibbonCommand doesn't support status code");
+		}
+	}
 }

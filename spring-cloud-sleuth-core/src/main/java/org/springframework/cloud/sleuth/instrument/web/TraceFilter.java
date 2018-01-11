@@ -15,48 +15,42 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.regex.Pattern;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.regex.Pattern;
 
+import brave.Span;
+import brave.Tracer;
+import brave.http.HttpServerHandler;
+import brave.http.HttpTracing;
+import brave.propagation.SamplingFlags;
+import brave.propagation.TraceContextOrSamplingFlags;
+import brave.servlet.HttpServletAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
+import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.async.WebAsyncUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.util.UrlPathHelper;
 
 /**
- * Filter that takes the value of the {@link Span#SPAN_ID_NAME} and
- * {@link Span#TRACE_ID_NAME} header from either request or response and uses them to
+ * Filter that takes the value of the headers from either request and uses them to
  * create a new span.
  *
  * <p>
  * In order to keep the size of spans manageable, this only add tags defined in
- * {@link TraceKeys}. If you need to add additional tags, such as headers subtype this and
- * override {@link #addRequestTags} or {@link #addResponseTags}.
+ * {@link TraceKeys}.
  *
  * @author Jakub Nabrdalik, 4financeIT
  * @author Tomasz Nurkiewicz, 4financeIT
@@ -72,7 +66,7 @@ import org.springframework.web.util.UrlPathHelper;
 @Order(TraceFilter.ORDER)
 public class TraceFilter extends GenericFilterBean {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(TraceFilter.class);
 
 	private static final String HTTP_COMPONENT = "http";
 
@@ -95,15 +89,18 @@ public class TraceFilter extends GenericFilterBean {
 	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceFilter.class.getName()
 			+ ".SPAN_WITH_NO_PARENT";
 
-	private Tracer tracer;
+	private static final String TRACE_EXCEPTION_REQUEST_ATTR = TraceFilter.class.getName()
+			+ ".EXCEPTION";
+
+	private static final String SAMPLED_NAME = "X-B3-Sampled";
+	private static final String SPAN_NOT_SAMPLED = "0";
+
+	private HttpTracing tracing;
 	private TraceKeys traceKeys;
 	private final Pattern skipPattern;
-	private final boolean supportsJoin;
-	private SpanReporter spanReporter;
-	private HttpSpanExtractor spanExtractor;
-	private HttpTraceKeysInjector httpTraceKeysInjector;
-	private ErrorParser errorParser;
 	private final BeanFactory beanFactory;
+	private HttpServerHandler<HttpServletRequest, HttpServletResponse> handler;
+	private Boolean hasErrorController;
 
 	private final UrlPathHelper urlPathHelper = new UrlPathHelper();
 
@@ -113,7 +110,6 @@ public class TraceFilter extends GenericFilterBean {
 
 	public TraceFilter(BeanFactory beanFactory, Pattern skipPattern) {
 		this.beanFactory = beanFactory;
-		this.supportsJoin = beanFactory.getBean(SleuthProperties.class).isSupportsJoin();
 		this.skipPattern = skipPattern;
 	}
 
@@ -136,63 +132,58 @@ public class TraceFilter extends GenericFilterBean {
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
 			FilterChain filterChain) throws IOException, ServletException {
-		if (!(servletRequest instanceof HttpServletRequest) || !(servletResponse instanceof HttpServletResponse)) {
+		if (!(servletRequest instanceof HttpServletRequest) ||
+				!(servletResponse instanceof HttpServletResponse)) {
 			throw new ServletException("Filter just supports HTTP requests");
 		}
 		HttpServletRequest request = (HttpServletRequest) servletRequest;
 		HttpServletResponse response = (HttpServletResponse) servletResponse;
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
 		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| Span.SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, Span.SAMPLED_NAME));
+				|| SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, SAMPLED_NAME));
 		Span spanFromRequest = getSpanFromAttribute(request);
+		Tracer.SpanInScope ws = null;
 		if (spanFromRequest != null) {
-			continueSpan(request, spanFromRequest);
+			ws = continueSpan(request, spanFromRequest);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "] that should not be sampled [" + skip + "]");
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
-			Span parentSpan = parentSpan(spanFromRequest);
-			processErrorRequest(filterChain, request, new TraceHttpServletResponse(response, parentSpan), spanFromRequest);
+			processErrorRequest(filterChain, request, response, spanFromRequest, ws);
 			return;
 		}
 		String name = HTTP_COMPONENT + ":" + uri;
+		SpanAndScope spanAndScope = new SpanAndScope();
 		Throwable exception = null;
 		try {
-			spanFromRequest = createSpan(request, skip, spanFromRequest, name);
-			filterChain.doFilter(request, new TraceHttpServletResponse(response, spanFromRequest));
+			spanAndScope = createSpan(request, skip, spanFromRequest, name, ws);
+			filterChain.doFilter(request, response);
 		} catch (Throwable e) {
 			exception = e;
-			errorParser().parseErrorTags(tracer().getCurrentSpan(), e);
 			if (log.isErrorEnabled()) {
 				log.error("Uncaught exception thrown", e);
 			}
+			request.setAttribute(TRACE_EXCEPTION_REQUEST_ATTR, e);
 			throw e;
 		} finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
 				if (log.isDebugEnabled()) {
-					log.debug("The span " + spanFromRequest + " will get detached by a HandleInterceptor");
+					log.debug("The span " + spanFromRequest + " was created for async");
 				}
 				// TODO: how to deal with response annotations and async?
-				return;
+			} else {
+				detachOrCloseSpans(request, response, spanAndScope, exception);
 			}
-			detachOrCloseSpans(request, response, spanFromRequest, exception);
+			if (spanAndScope.scope != null) {
+				spanAndScope.scope.close();
+			}
 		}
-	}
-
-	private Span parentSpan(Span span) {
-		if (span == null) {
-			return null;
-		}
-		if (span.hasSavedSpan()) {
-			return span.getSavedSpan();
-		}
-		return span;
 	}
 
 	private void processErrorRequest(FilterChain filterChain, HttpServletRequest request,
-			HttpServletResponse response, Span spanFromRequest)
+			HttpServletResponse response, Span spanFromRequest, Tracer.SpanInScope ws)
 			throws IOException, ServletException {
 		if (log.isDebugEnabled()) {
 			log.debug("The span " + spanFromRequest + " was already detached once and we're processing an error");
@@ -201,19 +192,23 @@ public class TraceFilter extends GenericFilterBean {
 			filterChain.doFilter(request, response);
 		} finally {
 			request.setAttribute(TRACE_ERROR_HANDLED_REQUEST_ATTR, true);
-			addResponseTags(response, null);
 			if (request.getAttribute(TraceRequestAttributes.ERROR_HANDLED_SPAN_REQUEST_ATTR) == null) {
-				tracer().close(spanFromRequest);
+				handler().handleSend(response,
+						(Throwable) request.getAttribute(TRACE_EXCEPTION_REQUEST_ATTR), spanFromRequest);
+				request.setAttribute(TRACE_EXCEPTION_REQUEST_ATTR, null);
+			}
+			if (ws != null) {
+				ws.close();
 			}
 		}
 	}
 
-	private void continueSpan(HttpServletRequest request, Span spanFromRequest) {
-		tracer().continueSpan(spanFromRequest);
+	private Tracer.SpanInScope continueSpan(HttpServletRequest request, Span spanFromRequest) {
 		request.setAttribute(TraceRequestAttributes.SPAN_CONTINUED_REQUEST_ATTR, "true");
 		if (log.isDebugEnabled()) {
 			log.debug("There has already been a span in the request " + spanFromRequest);
 		}
+		return httpTracing().tracing().tracer().withSpanInScope(spanFromRequest);
 	}
 
 	private boolean requestHasAlreadyBeenHandled(HttpServletRequest request) {
@@ -221,48 +216,49 @@ public class TraceFilter extends GenericFilterBean {
 	}
 
 	private void detachOrCloseSpans(HttpServletRequest request,
-			HttpServletResponse response, Span spanFromRequest, Throwable exception) {
-		Span span = spanFromRequest;
+			HttpServletResponse response, SpanAndScope spanFromRequest, Throwable exception) {
+		Span span = spanFromRequest.span;
 		if (span != null) {
-			addResponseTags(response, exception);
-			addResponseTagsForSpanWithoutParent(request, response);
-			if (span.hasSavedSpan() && requestHasAlreadyBeenHandled(request)) {
-				recordParentSpan(span.getSavedSpan());
-			}
-			recordParentSpan(span);
+			addResponseTagsForSpanWithoutParent(exception, request, response, span);
 			// in case of a response with exception status will close the span when exception dispatch is handled
 			// checking if tracing is in progress due to async / different order of view controller processing
-			if (httpStatusSuccessful(response) && tracer().isTracing()) {
+			if (httpStatusSuccessful(response)) {
 				if (log.isDebugEnabled()) {
 					log.debug("Closing the span " + span + " since the response was successful");
 				}
-				tracer().close(span);
-				clearTraceAttribute(request);
-			} else if (errorAlreadyHandled(request) && tracer().isTracing() && !shouldCloseSpan(request)) {
+				if (exception == null || !hasErrorController()) {
+					clearTraceAttribute(request);
+					handler().handleSend(response, exception, span);
+				}
+			} else if (errorAlreadyHandled(request) && !shouldCloseSpan(request)) {
 				if (log.isDebugEnabled()) {
 					log.debug(
 							"Won't detach the span " + span + " since error has already been handled");
 				}
-			}  else if ((shouldCloseSpan(request) || isRootSpan(span)) && tracer().isTracing() && stillTracingCurrentSpan(span)) {
+			}  else if ((shouldCloseSpan(request) || isRootSpan(span)) && stillTracingCurrentSpan(span)) {
 				if (log.isDebugEnabled()) {
 					log.debug("Will close span " + span + " since " + (shouldCloseSpan(request) ? "some component marked it for closure" : "response was unsuccessful for the root span"));
 				}
-				tracer().close(span);
+				handler().handleSend(response, exception, span);
 				clearTraceAttribute(request);
-			} else if (tracer().isTracing()) {
+			} else if (span != null || requestHasAlreadyBeenHandled(request)) {
 				if (log.isDebugEnabled()) {
 					log.debug("Detaching the span " + span + " since the response was unsuccessful");
 				}
-				tracer().detach(span);
 				clearTraceAttribute(request);
+				if (exception == null || !hasErrorController()) {
+					handler().handleSend(response, exception, span);
+				} else {
+					span.abandon();
+				}
 			}
 		}
 	}
 
-	private void addResponseTagsForSpanWithoutParent(HttpServletRequest request,
-			HttpServletResponse response) {
-		if (spanWithoutParent(request) && response.getStatus() >= 100) {
-			tracer().addTag(traceKeys().getHttp().getStatusCode(),
+	private void addResponseTagsForSpanWithoutParent(Throwable exception,
+			HttpServletRequest request, HttpServletResponse response, Span span) {
+		if (exception == null && spanWithoutParent(request) && response.getStatus() >= 100) {
+			span.tag(traceKeys().getHttp().getStatusCode(),
 					String.valueOf(response.getStatus()));
 		}
 	}
@@ -272,29 +268,12 @@ public class TraceFilter extends GenericFilterBean {
 	}
 
 	private boolean isRootSpan(Span span) {
-		return span.getTraceId() == span.getSpanId();
+		return span.context().traceId() == span.context().spanId();
 	}
 
 	private boolean stillTracingCurrentSpan(Span span) {
-		return tracer().getCurrentSpan().equals(span);
-	}
-
-	private void recordParentSpan(Span parent) {
-		if (parent == null) {
-			return;
-		}
-		if (parent.isRemote()) {
-			if (log.isDebugEnabled()) {
-				log.debug("Trying to send the parent span " + parent + " to Zipkin");
-			}
-			parent.stop();
-			// should be already done by HttpServletResponse wrappers
-			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(parent);
-			spanReporter().report(parent);
-		} else {
-			// should be already done by HttpServletResponse wrappers
-			SsLogSetter.annotateWithServerSendIfLogIsNotAlreadyPresent(parent);
-		}
+		Span currentSpan = httpTracing().tracing().tracer().currentSpan();
+		return currentSpan != null && currentSpan.equals(span);
 	}
 
 	private boolean httpStatusSuccessful(HttpServletResponse response) {
@@ -328,98 +307,71 @@ public class TraceFilter extends GenericFilterBean {
 	}
 
 	/**
-	 * In order not to send unnecessary data we're not adding request tags to the server
-	 * side spans. All the tags are there on the client side.
-	 */
-	private void addRequestTagsForParentSpan(HttpServletRequest request, Span spanFromRequest) {
-		if (spanFromRequest.getName().contains("parent")) {
-			addRequestTags(spanFromRequest, request);
-		}
-	}
-
-	/**
 	 * Creates a span and appends it as the current request's attribute
 	 */
-	private Span createSpan(HttpServletRequest request,
-			boolean skip, Span spanFromRequest, String name) {
+	private SpanAndScope createSpan(HttpServletRequest request,
+			boolean skip, Span spanFromRequest, String name, Tracer.SpanInScope ws) {
 		if (spanFromRequest != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Span has already been created - continuing with the previous one");
 			}
-			return spanFromRequest;
+			return new SpanAndScope(spanFromRequest, ws);
 		}
-		Span parent = spanExtractor().joinTrace(new HttpServletRequestTextMap(request));
-		if (parent != null) {
-			if (log.isDebugEnabled()) {
-				log.debug("Found a parent span " + parent + " in the request");
-			}
-			if (!this.supportsJoin) { // create a child span for this side of the RPC
-				spanFromRequest = tracer().createSpan(parent.getName(), parent);
+		try {
+			// TODO: Try to use Brave's mechanism for sampling
+			if (skip) {
+				spanFromRequest = unsampledSpan(name);
 			} else {
-				spanFromRequest = parent;
+				spanFromRequest = handler().handleReceive(httpTracing().tracing()
+						.propagation().extractor(HttpServletRequest::getHeader), request);
 			}
-			addRequestTagsForParentSpan(request, spanFromRequest);
-			tracer().continueSpan(spanFromRequest);
-			if (parent.isRemote()) { // then we are in a server span
-				parent.logEvent(Span.SERVER_RECV);
+			if (log.isDebugEnabled()) {
+				log.debug("Found a parent span " + spanFromRequest.context() + " in the request");
 			}
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 			if (log.isDebugEnabled()) {
-				log.debug("Parent span is " + parent + "");
+				log.debug("Parent span is " + spanFromRequest + "");
 			}
-		} else {
+		} catch (Exception e) {
+			log.error("Exception occurred while trying to extract tracing context from request. "
+					+ "Falling back to manual span creation", e);
 			if (skip) {
-				spanFromRequest = tracer().createSpan(name, NeverSampler.INSTANCE);
+				spanFromRequest = unsampledSpan(name);
 			}
 			else {
-				String header = request.getHeader(Span.SPAN_FLAGS);
-				if (Span.SPAN_SAMPLED.equals(header)) {
-					spanFromRequest = tracer().createSpan(name, new AlwaysSampler());
-				} else {
-					spanFromRequest = tracer().createSpan(name);
-				}
-				addRequestTags(spanFromRequest, request);
+				spanFromRequest = httpTracing().tracing().tracer().nextSpan()
+						.kind(Span.Kind.SERVER)
+						.name(name).start();
 				request.setAttribute(TRACE_SPAN_WITHOUT_PARENT, spanFromRequest);
 			}
-			spanFromRequest.logEvent(Span.SERVER_RECV);
 			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
 			if (log.isDebugEnabled()) {
 				log.debug("No parent span present - creating a new span");
 			}
 		}
-		return spanFromRequest;
+		return new SpanAndScope(spanFromRequest, httpTracing().tracing()
+				.tracer().withSpanInScope(spanFromRequest));
 	}
 
-	/** Override to add annotations not defined in {@link TraceKeys}. */
-	protected void addRequestTags(Span span, HttpServletRequest request) {
-		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		keysInjector().addRequestTags(span, getFullUrl(request),
-				request.getServerName(), uri, request.getMethod());
-		for (String name : traceKeys().getHttp().getHeaders()) {
-			Enumeration<String> values = request.getHeaders(name);
-			if (values.hasMoreElements()) {
-				String key = traceKeys().getHttp().getPrefix() + name.toLowerCase();
-				ArrayList<String> list = Collections.list(values);
-				String value = list.size() == 1 ? list.get(0)
-						: StringUtils.collectionToDelimitedString(list, ",", "'", "'");
-				keysInjector().tagSpan(span, key, value);
-			}
-		}
+	private Span unsampledSpan(String name) {
+		return httpTracing().tracing().tracer()
+				.nextSpan(TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED))
+				.kind(Span.Kind.SERVER)
+				.name(name).start();
 	}
 
-	/** Override to add annotations not defined in {@link TraceKeys}. */
-	protected void addResponseTags(HttpServletResponse response, Throwable e) {
-		int httpStatus = response.getStatus();
-		if (httpStatus == HttpServletResponse.SC_OK && e != null) {
-			// Filter chain threw exception but the response status may not have been set
-			// yet, so we have to guess.
-			tracer().addTag(traceKeys().getHttp().getStatusCode(),
-					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+	class SpanAndScope {
+
+		final Span span;
+		final Tracer.SpanInScope scope;
+		SpanAndScope(Span span, Tracer.SpanInScope scope) {
+			this.span = span;
+			this.scope = scope;
 		}
-		// only tag valid http statuses
-		else if (httpStatus >= 100 && (httpStatus < 200) || (httpStatus > 399)) {
-			tracer().addTag(traceKeys().getHttp().getStatusCode(),
-					String.valueOf(response.getStatus()));
+
+		SpanAndScope() {
+			this.span = null;
+			this.scope = null;
 		}
 	}
 
@@ -427,21 +379,13 @@ public class TraceFilter extends GenericFilterBean {
 		return WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted();
 	}
 
-	private String getFullUrl(HttpServletRequest request) {
-		StringBuffer requestURI = request.getRequestURL();
-		String queryString = request.getQueryString();
-		if (queryString == null) {
-			return requestURI.toString();
-		} else {
-			return requestURI.append('?').append(queryString).toString();
+	@SuppressWarnings("unchecked")
+	HttpServerHandler<HttpServletRequest, HttpServletResponse> handler() {
+		if (this.handler == null) {
+			this.handler = HttpServerHandler.create(this.beanFactory.getBean(HttpTracing.class),
+					new HttpServletAdapter());
 		}
-	}
-
-	Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
-		}
-		return this.tracer;
+		return this.handler;
 	}
 
 	TraceKeys traceKeys() {
@@ -451,32 +395,23 @@ public class TraceFilter extends GenericFilterBean {
 		return this.traceKeys;
 	}
 
-	SpanReporter spanReporter() {
-		if (this.spanReporter == null) {
-			this.spanReporter = this.beanFactory.getBean(SpanReporter.class);
+	HttpTracing httpTracing() {
+		if (this.tracing == null) {
+			this.tracing = this.beanFactory.getBean(HttpTracing.class);
 		}
-		return this.spanReporter;
+		return this.tracing;
 	}
 
-	HttpSpanExtractor spanExtractor() {
-		if (this.spanExtractor == null) {
-			this.spanExtractor = this.beanFactory.getBean(HttpSpanExtractor.class);
+	// null check is only for tests
+	private boolean hasErrorController() {
+		if (this.hasErrorController == null) {
+			try {
+				this.hasErrorController = this.beanFactory.getBean(ErrorController.class) != null;
+			} catch (NoSuchBeanDefinitionException e) {
+				this.hasErrorController = false;
+			}
 		}
-		return this.spanExtractor;
-	}
-
-	HttpTraceKeysInjector keysInjector() {
-		if (this.httpTraceKeysInjector == null) {
-			this.httpTraceKeysInjector = this.beanFactory.getBean(HttpTraceKeysInjector.class);
-		}
-		return this.httpTraceKeysInjector;
-	}
-
-	ErrorParser errorParser() {
-		if (this.errorParser == null) {
-			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
-		}
-		return this.errorParser;
+		return this.hasErrorController;
 	}
 }
 

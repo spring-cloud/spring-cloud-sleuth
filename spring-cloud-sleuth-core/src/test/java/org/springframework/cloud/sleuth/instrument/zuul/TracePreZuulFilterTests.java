@@ -16,8 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import com.netflix.zuul.context.RequestContext;
-import com.netflix.zuul.monitoring.MonitoringHelper;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
+import brave.sampler.Sampler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,24 +33,16 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
-import org.springframework.cloud.sleuth.instrument.web.ZipkinHttpSpanInjector;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.sampler.NeverSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.monitoring.MonitoringHelper;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Dave Syer
@@ -50,19 +50,29 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TracePreZuulFilterTests {
+	static final String TRACE_ID_NAME = "X-B3-TraceId";
+	static final String SAMPLED_NAME = "X-B3-Sampled";
 
 	@Mock HttpServletRequest httpServletRequest;
 
-	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
+	TraceKeys traceKeys = new TraceKeys();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
+			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
+			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
+			.build();
+	ErrorParser errorParser = new ExceptionMessageErrorParser();
 
-	private TracePreZuulFilter filter = new TracePreZuulFilter(this.tracer, new ZipkinHttpSpanInjector(),
-			new HttpTraceKeysInjector(this.tracer, new TraceKeys()), new ExceptionMessageErrorParser());
+	private TracePreZuulFilter filter = new TracePreZuulFilter(this.httpTracing, this.errorParser);
 
 	@After
 	public void clean() {
 		RequestContext.getCurrentContext().unset();
-		TestSpanContextHolder.removeCurrentSpan();
+		this.tracing.close();
 		RequestContext.testSetCurrentContext(null);
 	}
 
@@ -78,70 +88,100 @@ public class TracePreZuulFilterTests {
 
 	@Test
 	public void filterAddsHeaders() throws Exception {
-		this.tracer.createSpan("http:start");
+		Span span = this.tracing.tracer().nextSpan().name("http:start").start();
 
-		this.filter.runFilter();
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			this.filter.runFilter();
+		} finally {
+			span.finish();
+		}
 
 		RequestContext ctx = RequestContext.getCurrentContext();
-		then(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME))
+		then(ctx.getZuulRequestHeaders().get(TRACE_ID_NAME))
 				.isNotNull();
-		then(ctx.getZuulRequestHeaders().get(Span.SAMPLED_NAME))
-				.isEqualTo(Span.SPAN_SAMPLED);
+		then(ctx.getZuulRequestHeaders().get(SAMPLED_NAME))
+				.isEqualTo("1");
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
 	public void notSampledIfNotExportable() throws Exception {
-		this.tracer.createSpan("http:start", NeverSampler.INSTANCE);
+		Tracing tracing = Tracing.newBuilder()
+				.sampler(Sampler.NEVER_SAMPLE)
+				.currentTraceContext(CurrentTraceContext.Default.create())
+				.spanReporter(this.reporter)
+				.build();
+		HttpTracing httpTracing = HttpTracing.create(tracing);
+		this.filter = new TracePreZuulFilter(httpTracing, this.errorParser);
+		
+		Span span = tracing.tracer().nextSpan().name("http:start").start();
 
-		this.filter.runFilter();
+		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+			this.filter.runFilter();
+		} finally {
+			span.finish();
+		}
 
 		RequestContext ctx = RequestContext.getCurrentContext();
-		then(ctx.getZuulRequestHeaders().get(Span.TRACE_ID_NAME))
+		then(ctx.getZuulRequestHeaders().get(TRACE_ID_NAME))
 				.isNotNull();
-		then(ctx.getZuulRequestHeaders().get(Span.SAMPLED_NAME))
-				.isEqualTo(Span.SPAN_NOT_SAMPLED);
+		then(ctx.getZuulRequestHeaders().get(SAMPLED_NAME))
+				.isEqualTo("0");
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCloseSpanWhenExceptionIsThrown() throws Exception {
-		Span startedSpan = this.tracer.createSpan("http:start");
+		Span startedSpan = this.tracing.tracer().nextSpan().name("http:start").start();
 		final AtomicReference<Span> span = new AtomicReference<>();
 
-		new TracePreZuulFilter(this.tracer, new ZipkinHttpSpanInjector(),
-				new HttpTraceKeysInjector(this.tracer, new TraceKeys()), new ExceptionMessageErrorParser()) {
-			@Override
-			public Object run() {
-				super.run();
-				span.set(TracePreZuulFilterTests.this.tracer.getCurrentSpan());
-				throw new RuntimeException("foo");
-			}
-		}.runFilter();
+		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(startedSpan)) {
+			new TracePreZuulFilter(this.httpTracing, this.errorParser) {
+				@Override
+				public Object run() {
+					super.run();
+					span.set(
+							TracePreZuulFilterTests.this.tracing.tracer().currentSpan());
+					throw new RuntimeException("foo");
+				}
+			}.runFilter();
+		} finally {
+			startedSpan.finish();
+		}
 
 		then(startedSpan).isNotEqualTo(span.get());
-		then(span.get().logs()).extracting("event").contains(Span.CLIENT_SEND);
-		then(span.get()).hasATag("http.method", "GET");
-		then(span.get()).hasATag("error", "foo");
-		then(this.tracer.getCurrentSpan()).isEqualTo(startedSpan);
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(2);
+		// initial span
+		then(spans.get(0).tags())
+				.containsEntry("http.method", "GET")
+				.containsEntry("error", "foo");
+		// span from zuul
+		then(spans.get(1).name()).isEqualTo("http:start");
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldNotCloseSpanWhenNoExceptionIsThrown() throws Exception {
-		Span startedSpan = this.tracer.createSpan("http:start");
+		Span startedSpan = this.tracing.tracer().nextSpan().name("http:start").start();
 		final AtomicReference<Span> span = new AtomicReference<>();
 
-		new TracePreZuulFilter(this.tracer, new ZipkinHttpSpanInjector(),
-				new HttpTraceKeysInjector(this.tracer, new TraceKeys()), new ExceptionMessageErrorParser()) {
-			@Override
-			public Object run() {
-				span.set(TracePreZuulFilterTests.this.tracer.getCurrentSpan());
-				return super.run();
-			}
-		}.runFilter();
+		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(startedSpan)) {
+			new TracePreZuulFilter(this.httpTracing, this.errorParser) {
+				@Override
+				public Object run() {
+					span.set(
+							TracePreZuulFilterTests.this.tracing.tracer().currentSpan());
+					return super.run();
+				}
+			}.runFilter();
+		} finally {
+			startedSpan.finish();
+		}
 
 		then(startedSpan).isNotEqualTo(span.get());
-		then(span.get().logs()).extracting("event").contains(Span.CLIENT_SEND);
-		then(span.get().tags()).containsKey(Span.SPAN_LOCAL_COMPONENT_TAG_NAME);
-		then(this.tracer.getCurrentSpan()).isEqualTo(span.get());
+		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
 }

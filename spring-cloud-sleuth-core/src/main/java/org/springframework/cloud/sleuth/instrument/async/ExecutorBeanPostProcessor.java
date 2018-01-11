@@ -42,7 +42,8 @@ import org.springframework.util.ReflectionUtils;
  */
 class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
-	private static final Log log = LogFactory.getLog(ExecutorBeanPostProcessor.class);
+	private static final Log log = LogFactory.getLog(
+			ExecutorBeanPostProcessor.class);
 
 	private final BeanFactory beanFactory;
 

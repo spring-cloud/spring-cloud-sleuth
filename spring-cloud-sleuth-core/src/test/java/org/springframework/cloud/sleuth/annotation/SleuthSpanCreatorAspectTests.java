@@ -18,75 +18,74 @@ package org.springframework.cloud.sleuth.annotation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.sampler.Sampler;
+import zipkin2.Annotation;
+import zipkin2.reporter.Reporter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectTests.TestConfiguration;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = TestConfiguration.class)
+@SpringBootTest(classes = SleuthSpanCreatorAspectTests.TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SleuthSpanCreatorAspectTests {
 	
 	@Autowired TestBeanInterface testBean;
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanAccumulator accumulator;
+	@Autowired Tracing tracing;
+	@Autowired ArrayListSpanReporter reporter;
 	
 	@Before
 	public void setup() {
-		ExceptionUtils.setFail(true);
-		this.accumulator.clear();
+		this.reporter.clear();
 	}
 	
 	@Test
 	public void shouldCreateSpanWhenAnnotationOnInterfaceMethod() {
 		this.testBean.testMethod();
-		
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("test-method");
-		then(ExceptionUtils.getLastException()).isNull();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("test-method");
 	}
 	
 	@Test
 	public void shouldCreateSpanWhenAnnotationOnClassMethod() {
 		this.testBean.testMethod2();
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("test-method2");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("test-method2");
 	}
 	
 	@Test
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnClassMethod() {
 		this.testBean.testMethod3();
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("custom-name-on-test-method3");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
 	}
 	
 	@Test
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnInterfaceMethod() {
 		this.testBean.testMethod4();
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("custom-name-on-test-method4");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
 	}
 	
 	@Test
@@ -95,96 +94,105 @@ public class SleuthSpanCreatorAspectTests {
 		this.testBean.testMethod5("test");
 		// end::execution[]
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("custom-name-on-test-method5")
-				.hasASpanWithTagEqualTo("testTag", "test");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
+		then(spans.get(0).tags()).containsEntry("testTag", "test");
 	}
 	
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnClassMethod() {
 		this.testBean.testMethod6("test");
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("custom-name-on-test-method6")
-				.hasASpanWithTagEqualTo("testTag6", "test");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
+		then(spans.get(0).tags()).containsEntry("testTag6", "test");
 	}
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnInterfaceMethod() {
 		this.testBean.testMethod8("test");
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("custom-name-on-test-method8");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
 	}
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
 		this.testBean.testMethod9("test");
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("custom-name-on-test-method9")
-				.hasASpanWithTagEqualTo("class", "TestBean")
-				.hasASpanWithTagEqualTo("method", "testMethod9");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod9");
 	}
 
 	@Test
 	public void shouldContinueSpanWithLogWhenAnnotationOnInterfaceMethod() {
-		Span span = this.tracer.createSpan("foo");
+		Span span = this.tracing.tracer().nextSpan().name("foo");
 
-		this.testBean.testMethod10("test");
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			this.testBean.testMethod10("test");
+		} finally {
+			span.finish();
+		}
 
-		this.tracer.close(span);
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("foo")
-				.hasASpanWithTagEqualTo("customTestTag10", "test")
-				.hasASpanWithLogEqualTo("customTest.before")
-				.hasASpanWithLogEqualTo("customTest.after");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("foo");
+		then(spans.get(0).tags())
+				.containsEntry("customTestTag10", "test");
+		then(spans.get(0).annotations()
+				.stream().map(Annotation::value).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
 	}
 
 	@Test
 	public void shouldContinueSpanWhenKeyIsUsedOnSpanTagWhenAnnotationOnInterfaceMethod() {
-		Span span = this.tracer.createSpan("foo");
+		Span span = this.tracing.tracer().nextSpan().name("foo");
 
-		this.testBean.testMethod10_v2("test");
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			this.testBean.testMethod10_v2("test");
+		} finally {
+			span.finish();
+		}
 
-		this.tracer.close(span);
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("foo")
-				.hasASpanWithTagEqualTo("customTestTag10", "test")
-				.hasASpanWithLogEqualTo("customTest.before")
-				.hasASpanWithLogEqualTo("customTest.after");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("foo");
+		then(spans.get(0).tags())
+				.containsEntry("customTestTag10", "test");
+		then(spans.get(0).annotations()
+				.stream().map(Annotation::value).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
 	}
 
 	@Test
 	public void shouldContinueSpanWithLogWhenAnnotationOnClassMethod() {
-		Span span = this.tracer.createSpan("foo");
+		Span span = this.tracing.tracer().nextSpan().name("foo");
 
-		// tag::continue_span_execution[]
-		this.testBean.testMethod11("test");
-		// end::continue_span_execution[]
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			// tag::continue_span_execution[]
+			this.testBean.testMethod11("test");
+			// end::continue_span_execution[]
+		} finally {
+			span.finish();
+		}
 
-		this.tracer.close(span);
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("foo")
-				.hasASpanWithTagEqualTo("customTestTag11", "test")
-				.hasASpanWithTagEqualTo("class", "TestBean")
-				.hasASpanWithTagEqualTo("method", "testMethod11")
-				.hasASpanWithLogEqualTo("customTest.before")
-				.hasASpanWithLogEqualTo("customTest.after");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("foo");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod11")
+				.containsEntry("customTestTag11", "test");
+		then(spans.get(0).annotations()
+				.stream().map(Annotation::value).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
 	}
 
 	@Test
@@ -194,40 +202,43 @@ public class SleuthSpanCreatorAspectTests {
 		} catch (RuntimeException ignored) {
 		}
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("test-method12")
-				.hasASpanWithTagEqualTo("testTag12", "test")
-				.hasASpanWithTagEqualTo("error", "test exception 12");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("test-method12");
+		then(spans.get(0).tags())
+				.containsEntry("testTag12", "test")
+				.containsEntry("error", "test exception 12");
 	}
 
 	@Test
 	public void shouldAddErrorTagWhenExceptionOccurredInContinueSpan() {
-		Span span = this.tracer.createSpan("foo");
-		try {
+		Span span = this.tracing.tracer().nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			// tag::continue_span_execution[]
 			this.testBean.testMethod13();
+			// end::continue_span_execution[]
 		} catch (RuntimeException ignored) {
-		}
-		finally {
-			this.tracer.close(span);
+		} finally {
+			span.finish();
 		}
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1)
-				.hasASpanWithName("foo")
-				.hasASpanWithTagEqualTo("error", "test exception 13")
-				.hasASpanWithLogEqualTo("testMethod13.before")
-				.hasASpanWithLogEqualTo("testMethod13.afterFailure")
-				.hasASpanWithLogEqualTo("testMethod13.after");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("foo");
+		then(spans.get(0).tags())
+				.containsEntry("error", "test exception 13");
+		then(spans.get(0).annotations()
+				.stream().map(Annotation::value).collect(Collectors.toList()))
+				.contains("testMethod13.before", "testMethod13.afterFailure",
+						"testMethod13.after");
 	}
 
 	@Test
 	public void shouldNotCreateSpanWhenNotAnnotated() {
 		this.testBean.testMethod7();
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
 		then(spans).isEmpty();
 	}
 	
@@ -364,12 +375,12 @@ public class SleuthSpanCreatorAspectTests {
 			return new TestBean();
 		}
 
-		@Bean SpanReporter spanReporter() {
-			return new ArrayListSpanAccumulator();
+		@Bean Reporter<zipkin2.Span> spanReporter() {
+			return new ArrayListSpanReporter();
 		}
 
-		@Bean AlwaysSampler alwaysSampler() {
-			return new AlwaysSampler();
+		@Bean Sampler alwaysSampler() {
+			return Sampler.ALWAYS_SAMPLE;
 		}
 	}
 }

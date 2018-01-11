@@ -33,7 +33,8 @@ import org.springframework.core.env.PropertySource;
  * </ul>
  *
  * @author Dave Syer
- * @since 1.0.0
+ * @author Marcin Grzejszczak
+ * @since 2.0.0
  */
 public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 

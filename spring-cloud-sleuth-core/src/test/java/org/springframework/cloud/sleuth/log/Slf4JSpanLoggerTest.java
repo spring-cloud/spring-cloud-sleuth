@@ -16,164 +16,66 @@
 
 package org.springframework.cloud.sleuth.log;
 
+import brave.Span;
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.slf4j.Logger;
 import org.slf4j.MDC;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 
 /**
  * @author Marcin Grzejszczak
  */
 public class Slf4JSpanLoggerTest {
 
-	Span spanWithNameToBeExcluded = Span.builder().name("Hystrix").build();
-	Span spanWithNameNotToBeExcluded = Span.builder().name("Aspect").parent(3L).build();
-	String nameExcludingPattern = "^.*Hystrix.*$";
-	Logger log = Mockito.mock(Logger.class);
-	Slf4jSpanLogger slf4JSpanLogger = new Slf4jSpanLogger(this.nameExcludingPattern, this.log);
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
+
+	Span span = this.tracing.tracer().nextSpan().name("span").start();
+	Slf4jCurrentTraceContext slf4jCurrentTraceContext =
+			new Slf4jCurrentTraceContext(CurrentTraceContext.Default.create());
 
 	@Before
+	@After
 	public void setup() {
 		MDC.clear();
-		given(log.isTraceEnabled()).willReturn(true);
 	}
 
 	@Test
-	public void when_start_event_arrived_should_add_64bit_trace_id_to_MDC() throws Exception {
-		Span span = Span.builder().traceId(1L).spanId(2L).build();
+	public void should_set_entries_to_mdc_from_span() throws Exception {
+		CurrentTraceContext.Scope scope = this.slf4jCurrentTraceContext
+				.newScope(this.span.context());
 
-		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameNotToBeExcluded, span);
+		assertThat(MDC.get("X-B3-TraceId")).isEqualTo(span.context().traceIdString());
+		assertThat(MDC.get("traceId")).isEqualTo(span.context().traceIdString());
 
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("0000000000000001");
+		scope.close();
+
+		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
+		assertThat(MDC.get("traceId")).isNullOrEmpty();
 	}
 
 	@Test
-	public void when_start_event_arrived_should_add_128bit_trace_id_to_MDC() throws Exception {
-		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).build();
+	public void should_remove_entries_from_mdc_from_null_span() throws Exception {
+		MDC.put("X-B3-TraceId", "A");
+		MDC.put("traceId", "A");
 
-		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameNotToBeExcluded, span);
+		CurrentTraceContext.Scope scope = this.slf4jCurrentTraceContext
+				.newScope(null);
 
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("00000000000000010000000000000002");
-	}
+		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
+		assertThat(MDC.get("traceId")).isNullOrEmpty();
 
-	@Test
-	public void when_continued_event_arrived_should_add_64bit_trace_id_to_MDC() throws Exception {
-		Span span = Span.builder().traceId(1L).spanId(2L).build();
+		scope.close();
 
-		this.slf4JSpanLogger.logContinuedSpan(span);
-
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("0000000000000001");
-	}
-
-	@Test
-	public void when_continued_event_arrived_should_add_128bit_trace_id_to_MDC() throws Exception {
-		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).build();
-
-		this.slf4JSpanLogger.logContinuedSpan(span);
-
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("00000000000000010000000000000002");
-	}
-
-	@Test
-	public void should_log_when_start_event_arrived_and_pattern_doesnt_match_span_name() throws Exception {
-		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameNotToBeExcluded,
-				this.spanWithNameNotToBeExcluded);
-
-		then(this.log).should(times(2)).trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_log_once_when_start_event_arrived_and_pattern_matches_only_parent_span_name() throws Exception {
-		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameToBeExcluded,
-				this.spanWithNameNotToBeExcluded);
-
-		then(this.log).should().trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_log_when_continue_event_arrived_and_pattern_doesnt_match_span_name() throws Exception {
-		this.slf4JSpanLogger.logContinuedSpan(
-				this.spanWithNameNotToBeExcluded);
-
-		then(this.log).should().trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_not_log_when_continue_event_arrived_and_pattern_matches_name() throws Exception {
-		this.slf4JSpanLogger.logContinuedSpan(this.spanWithNameToBeExcluded);
-
-		then(this.log).should(never()).trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_log_when_close_event_arrived_and_pattern_doesnt_match_span_name() throws Exception {
-		this.slf4JSpanLogger.logStoppedSpan(null, this.spanWithNameNotToBeExcluded);
-
-		then(this.log).should().trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_log_both_spans_when_their_names_dont_match_pattern() throws Exception {
-		this.slf4JSpanLogger.logStoppedSpan(this.spanWithNameNotToBeExcluded,
-				this.spanWithNameNotToBeExcluded);
-
-		then(this.log).should(times(2)).trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_not_log_any_spans_if_both_match_pattern() throws Exception {
-		this.slf4JSpanLogger.logStoppedSpan(this.spanWithNameToBeExcluded,
-				this.spanWithNameToBeExcluded);
-
-		then(this.log).should(never()).trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_log_only_current_span_if_parent_span_name_matches_pattern() throws Exception {
-		this.slf4JSpanLogger.logStoppedSpan(this.spanWithNameNotToBeExcluded,
-				this.spanWithNameToBeExcluded);
-
-		then(this.log).should().trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_log_only_current_span_if_there_is_no_parent() throws Exception {
-		this.slf4JSpanLogger.logStoppedSpan(null, this.spanWithNameNotToBeExcluded);
-
-		then(this.log).should().trace(anyString(), any(Span.class));
-	}
-
-	@Test
-	public void should_set_mdc_entry_for_parent_when_starting() throws Exception {
-		this.slf4JSpanLogger.logStartedSpan(this.spanWithNameNotToBeExcluded,
-				this.spanWithNameNotToBeExcluded);
-
-		assertThat(MDC.get(Span.PARENT_ID_NAME)).isEqualTo(
-				Span.idToHex(this.spanWithNameNotToBeExcluded.getSpanId()));
-	}
-
-	@Test
-	public void should_set_mdc_entry_for_parent_when_continuing() throws Exception {
-  		this.slf4JSpanLogger.logContinuedSpan(this.spanWithNameNotToBeExcluded);
-
-		assertThat(MDC.get(Span.PARENT_ID_NAME)).isEqualTo(Span.idToHex(3L));
-	}
-
-	@Test
-	public void should_set_mdc_entry_for_parent_when_stopping() throws Exception {
-		this.slf4JSpanLogger.logStoppedSpan(this.spanWithNameNotToBeExcluded,
-				this.spanWithNameNotToBeExcluded);
-
-		assertThat(MDC.get(Span.PARENT_ID_NAME)).isEqualTo(Span.idToHex(3L));
+		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("A");
+		assertThat(MDC.get("traceId")).isEqualTo("A");
 	}
 }

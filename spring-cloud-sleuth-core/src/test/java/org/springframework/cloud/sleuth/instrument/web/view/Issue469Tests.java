@@ -16,17 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.web.view;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -38,14 +35,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 		"spring.mvc.view.suffix=.jsp"})
 public class Issue469Tests {
 
-	@Autowired Tracer tracer;
+	@Autowired ArrayListSpanReporter reporter;
 	@Autowired Environment environment;
 	RestTemplate restTemplate = new RestTemplate();
-
-	@Before
-	public void setup() {
-		ExceptionUtils.setFail(true);
-	}
 
 	@Test
 	public void should_not_result_in_tracing_exceptions_when_using_view_controllers() throws Exception {
@@ -57,8 +49,7 @@ public class Issue469Tests {
 			then(e).hasMessageContaining("404");
 		}
 
-		then(ExceptionUtils.getLastException()).isNull();
-		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
 	private int port() {

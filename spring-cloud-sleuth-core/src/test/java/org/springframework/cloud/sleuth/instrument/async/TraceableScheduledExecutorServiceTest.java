@@ -16,6 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
@@ -23,14 +31,11 @@ import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -42,16 +47,20 @@ import static org.mockito.BDDMockito.then;
 @RunWith(MockitoJUnitRunner.class)
 public class TraceableScheduledExecutorServiceTest {
 
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.build();
 	@Mock
-	Tracer tracer;
-	@Mock
-	TraceKeys traceKeys;
-	@Mock
-	SpanNamer spanNamer;
+	BeanFactory beanFactory;
 	@Mock
 	ScheduledExecutorService scheduledExecutorService;
 	@InjectMocks
 	TraceableScheduledExecutorService traceableScheduledExecutorService;
+
+	@Before
+	public void setup() {
+		beanFactory();
+	}
 
 	@Test
 	public void should_schedule_a_trace_runnable() throws Exception {
@@ -59,7 +68,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should().schedule(
 				BDDMockito.argThat(
-						matcher(Runnable.class, instanceOf(SpanContinuingTraceRunnable.class))),
+						matcher(Runnable.class, instanceOf(TraceRunnable.class))),
 				anyLong(), any(TimeUnit.class));
 	}
 
@@ -69,7 +78,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should().schedule(
 				BDDMockito.argThat(matcher(Callable.class,
-						instanceOf(SpanContinuingTraceCallable.class))),
+						instanceOf(TraceCallable.class))),
 				anyLong(), any(TimeUnit.class));
 	}
 
@@ -80,7 +89,7 @@ public class TraceableScheduledExecutorServiceTest {
 				TimeUnit.DAYS);
 
 		then(this.scheduledExecutorService).should().scheduleAtFixedRate(
-				BDDMockito.argThat(matcher(Runnable.class, instanceOf(SpanContinuingTraceRunnable.class))),
+				BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))),
 				anyLong(), anyLong(), any(TimeUnit.class));
 	}
 
@@ -91,7 +100,7 @@ public class TraceableScheduledExecutorServiceTest {
 				TimeUnit.DAYS);
 
 		then(this.scheduledExecutorService).should().scheduleWithFixedDelay(
-				BDDMockito.argThat(matcher(Runnable.class, instanceOf(SpanContinuingTraceRunnable.class))),
+				BDDMockito.argThat(matcher(Runnable.class, instanceOf(TraceRunnable.class))),
 				anyLong(), anyLong(), any(TimeUnit.class));
 	}
 
@@ -110,5 +119,12 @@ public class TraceableScheduledExecutorServiceTest {
 
 	Callable<?> aCallable() {
 		return () -> null;
+	}
+
+	BeanFactory beanFactory() {
+		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
+		BDDMockito.given(this.beanFactory.getBean(ErrorParser.class)).willReturn(new ExceptionMessageErrorParser());
+		return this.beanFactory;
 	}
 }

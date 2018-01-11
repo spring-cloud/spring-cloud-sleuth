@@ -43,6 +43,7 @@ public class TraceRibbonCommandFactoryBeanPostProcessorTests {
 
 	@Test
 	public void should_wrap_ribbon_command_factory_in_a_trace_representation() {
-		then(this.postProcessor.postProcessBeforeInitialization(ribbonCommandFactory, "name")).isInstanceOf(TraceRibbonCommandFactory.class);
+		then(this.postProcessor.postProcessBeforeInitialization(ribbonCommandFactory, "name")).isInstanceOf(
+				TraceRibbonCommandFactory.class);
 	}
 }

@@ -18,25 +18,29 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.util.ArrayList;
 
-import com.netflix.zuul.context.RequestContext;
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
 
-import static org.mockito.BDDMockito.given;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import com.netflix.zuul.context.RequestContext;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -44,35 +48,47 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRibbonCommandFactoryTest {
 
-	@Mock Tracer tracer;
-	HttpTraceKeysInjector httpTraceKeysInjector;
+
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
+	TraceKeys traceKeys = new TraceKeys();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
+			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
+			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
+			.build();
 	@Mock RibbonCommandFactory ribbonCommandFactory;
 	TraceRibbonCommandFactory traceRibbonCommandFactory;
-	Span span = Span.builder().name("name").spanId(1L).traceId(2L).parent(3L)
-			.processId("processId").build();
+	Span span = this.tracing.tracer().nextSpan().name("name");
 
 	@Before
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void setup() {
-		this.httpTraceKeysInjector = new HttpTraceKeysInjector(this.tracer, new TraceKeys());
 		this.traceRibbonCommandFactory = new TraceRibbonCommandFactory(
-				this.ribbonCommandFactory, this.tracer,
-				httpTraceKeysInjector);
-		given(this.tracer.getCurrentSpan()).willReturn(span);
+				this.ribbonCommandFactory, this.httpTracing);
 	}
 
 	@After
 	public void cleanup() {
 		RequestContext.getCurrentContext().unset();
-		TestSpanContextHolder.removeCurrentSpan();
+		this.tracing.close();
 	}
 
 	@Test
 	public void should_attach_trace_headers_to_the_span() throws Exception {
-		this.traceRibbonCommandFactory.create(ribbonCommandContext());
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(this.span)) {
+			this.traceRibbonCommandFactory.create(ribbonCommandContext());
+		} finally {
+			this.span.finish();
+		}
 
-		then(this.span).hasATag("http.method", "GET");
-		then(this.span).hasATag("http.url", "http://localhost:1234/foo");
+		then(this.reporter.getSpans()).hasSize(1);
+		zipkin2.Span span = this.reporter.getSpans().get(0);
+		then(span.tags())
+				.containsEntry("http.method", "GET")
+				.containsEntry("http.url", "http://localhost:1234/foo");
 	}
 
 	private RibbonCommandContext ribbonCommandContext() {

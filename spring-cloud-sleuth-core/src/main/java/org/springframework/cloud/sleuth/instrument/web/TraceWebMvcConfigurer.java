@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * MVC Adapter that adds the {@link TraceHandlerInterceptor}
@@ -31,7 +31,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
  * @since 1.0.3
  */
 @Configuration
-class TraceWebMvcConfigurer extends WebMvcConfigurerAdapter {
+class TraceWebMvcConfigurer implements WebMvcConfigurer {
 	@Autowired BeanFactory beanFactory;
 
 	@Bean

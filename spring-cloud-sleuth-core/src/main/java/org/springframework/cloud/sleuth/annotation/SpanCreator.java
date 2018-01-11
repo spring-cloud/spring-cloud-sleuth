@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
+import brave.Span;
 import org.aopalliance.intercept.MethodInvocation;
-import org.springframework.cloud.sleuth.Span;
 
 /**
  * A contract for creating a new span for a given join point

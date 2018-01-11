@@ -16,14 +16,27 @@
 
 package org.springframework.cloud.sleuth.instrument.web.view;
 
+import brave.sampler.Sampler;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @EnableAutoConfiguration
+@Configuration
 public class Issue469 extends WebMvcConfigurerAdapter {
 
 	@Override public void addViewControllers(ViewControllerRegistry registry) {
 		registry.addViewController("/welcome").setViewName("welcome");
+	}
+
+	@Bean ArrayListSpanReporter reporter() {
+		return new ArrayListSpanReporter();
+	}
+
+	@Bean Sampler sampler() {
+		return Sampler.ALWAYS_SAMPLE;
 	}
 }

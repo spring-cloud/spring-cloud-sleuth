@@ -18,16 +18,15 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.lang.reflect.Method;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.InternalApi;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.util.ReflectionUtils;
 
@@ -38,64 +37,35 @@ import org.springframework.util.ReflectionUtils;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  *
- * @see Tracer
+ * @see Tracing
  */
 @Aspect
 public class TraceAsyncAspect {
 
-	private static final String ASYNC_COMPONENT = "async";
-
-	private final Tracer tracer;
+	private final Tracing tracing;
+	private final SpanNamer spanNamer;
 	private final TraceKeys traceKeys;
-	private final BeanFactory beanFactory;
-	private SpanNamer spanNamer;
 
-	@Deprecated
-	public TraceAsyncAspect(Tracer tracer, TraceKeys traceKeys, BeanFactory beanFactory) {
-		this.tracer = tracer;
-		this.traceKeys = traceKeys;
-		this.beanFactory = beanFactory;
-	}
-
-	public TraceAsyncAspect(Tracer tracer, TraceKeys traceKeys, SpanNamer spanNamer) {
-		this.tracer = tracer;
-		this.traceKeys = traceKeys;
+	public TraceAsyncAspect(Tracing tracing, SpanNamer spanNamer, TraceKeys traceKeys) {
+		this.tracing = tracing;
 		this.spanNamer = spanNamer;
-		this.beanFactory = null;
+		this.traceKeys = traceKeys;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		String spanName = spanNamer().name(getMethod(pjp, pjp.getTarget()),
+		String spanName = this.spanNamer.name(getMethod(pjp, pjp.getTarget()),
 				SpanNameUtil.toLowerHyphen(pjp.getSignature().getName()));
-		Span span = span(spanName);
-		renameAsyncSpan(spanName, span);
-		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ASYNC_COMPONENT);
-		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
-				this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
-		this.tracer.addTag(this.traceKeys.getAsync().getPrefix() +
-				this.traceKeys.getAsync().getMethodNameKey(), pjp.getSignature().getName());
-		try {
+		Span span = this.tracing.tracer().currentSpan().name(spanName);
+		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			span.tag(this.traceKeys.getAsync().getPrefix() +
+					this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
+			span.tag(this.traceKeys.getAsync().getPrefix() +
+					this.traceKeys.getAsync().getMethodNameKey(), pjp.getSignature().getName());
 			return pjp.proceed();
 		} finally {
-			this.tracer.close(span);
+			span.finish();
 		}
-	}
-
-	private void renameAsyncSpan(String spanName, Span span) {
-		// if there's a tag "lc" -> "async", that means the span came from
-		// a LazyTraceExecutor component that creates a span that contains very few
-		// information. If that's the case we want to rename it to have a different name
-		if (ASYNC_COMPONENT.equals(span.tags().get(Span.SPAN_LOCAL_COMPONENT_TAG_NAME))) {
-			InternalApi.renameSpan(span, spanName);
-		}
-	}
-
-	private Span span(String spanName) {
-		if (this.tracer.isTracing()) {
-			return this.tracer.getCurrentSpan();
-		}
-		return this.tracer.createSpan(spanName);
 	}
 
 	private Method getMethod(ProceedingJoinPoint pjp, Object object) {
@@ -103,13 +73,6 @@ public class TraceAsyncAspect {
 		Method method = signature.getMethod();
 		return ReflectionUtils
 				.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
-	}
-
-	SpanNamer spanNamer() {
-		if (this.spanNamer == null && this.beanFactory != null) {
-			this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
-		}
-		return this.spanNamer;
 	}
 
 }

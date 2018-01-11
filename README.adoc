@@ -322,9 +322,7 @@ Example of setting baggage on a span:
 
 [source,java]
 ----
-Span initialSpan = this.tracer.createSpan("span");
-initialSpan.setBaggageItem("foo", "bar");
-initialSpan.setBaggageItem("UPPER_CASE", "someValue");
+Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
 ----
 
 ===== Baggage vs. Span Tags

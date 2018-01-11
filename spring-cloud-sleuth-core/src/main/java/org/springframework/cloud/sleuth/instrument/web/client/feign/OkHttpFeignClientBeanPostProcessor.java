@@ -16,11 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import feign.okhttp.OkHttpClient;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-
-import feign.okhttp.OkHttpClient;
 
 /**
  * Post processor that wraps takes care of the OkHttp Feign Client instrumentation

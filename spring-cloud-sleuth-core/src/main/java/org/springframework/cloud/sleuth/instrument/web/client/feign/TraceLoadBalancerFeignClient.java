@@ -1,11 +1,14 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import java.io.IOException;
+
+import feign.Client;
+import feign.Request;
+import feign.Response;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.feign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.netflix.feign.ribbon.LoadBalancerFeignClient;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
-
-import feign.Client;
 
 /**
  * We need to wrap the {@link LoadBalancerFeignClient} into a trace representation
@@ -16,13 +19,19 @@ import feign.Client;
  */
 class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 
+	private final BeanFactory beanFactory;
+
 	TraceLoadBalancerFeignClient(Client delegate,
 			CachingSpringLoadBalancerFactory lbClientFactory,
 			SpringClientFactory clientFactory, BeanFactory beanFactory) {
-		super(wrap(delegate, beanFactory), lbClientFactory, clientFactory);
+		super(delegate, lbClientFactory, clientFactory);
+		this.beanFactory = beanFactory;
 	}
 
-	private static Client wrap(Client delegate, BeanFactory beanFactory) {
-		return (Client) new TraceFeignObjectWrapper(beanFactory).wrap(delegate);
+	@Override public Response execute(Request request, Request.Options options)
+			throws IOException {
+		return ((Client) new TraceFeignObjectWrapper(this.beanFactory).wrap(
+				(Client) TraceLoadBalancerFeignClient.super::execute)).execute(request, options);
 	}
+
 }

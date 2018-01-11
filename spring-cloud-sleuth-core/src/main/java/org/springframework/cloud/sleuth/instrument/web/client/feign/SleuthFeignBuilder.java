@@ -16,15 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import brave.http.HttpTracing;
+import feign.Client;
+import feign.Feign;
 import feign.Retryer;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 
-import feign.Client;
-import feign.Feign;
-
 /**
- * Contains {@link feign.Feign.Builder} implementation with tracing components
+ * Contains {@link Feign.Builder} implementation with tracing components
  * that close spans on completion of request processing.
  *
  * @author Marcin Grzejszczak
@@ -45,7 +45,8 @@ final class SleuthFeignBuilder {
 			Client client = beanFactory.getBean(Client.class);
 			return (Client) new TraceFeignObjectWrapper(beanFactory).wrap(client);
 		} catch (BeansException e) {
-			return new TraceFeignClient(beanFactory);
+			return TracingFeignClient.create(beanFactory.getBean(HttpTracing.class),
+					new Client.Default(null, null));
 		}
 	}
 }

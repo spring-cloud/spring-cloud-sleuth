@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import java.lang.invoke.MethodHandles;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.expression.Expression;
@@ -32,7 +30,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * @since 1.2.0
  */
 class SpelTagValueExpressionResolver implements TagValueExpressionResolver {
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(SpelTagValueExpressionResolver.class);
 
 	@Override
 	public String resolve(String expression, Object parameter) {

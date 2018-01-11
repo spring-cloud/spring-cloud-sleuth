@@ -18,13 +18,12 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 
+import feign.Client;
+import feign.Request;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.BeanFactory;
-
-import feign.Client;
-import feign.Request;
 
 /**
  * Aspect for Feign clients so that you can autowire your custom components

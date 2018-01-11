@@ -22,7 +22,7 @@ import java.util.LinkedHashSet;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Well-known {@link org.springframework.cloud.sleuth.Span#tag(String, String) span tag}
+ * Well-known {@link brave.Span#tag(String, String) span tag}
  * keys.
  *
  * <h3>Overhead of adding Trace Data</h3>

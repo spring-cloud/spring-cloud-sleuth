@@ -16,32 +16,32 @@
 
 package org.springframework.cloud.sleuth.util;
 
+import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.assertions.SleuthAssertions;
 
 public class SpanNameUtilTests {
 
 	@Test
 	public void should_convert_a_name_in_hyphen_based_notation() throws Exception {
-		SleuthAssertions.then(SpanNameUtil.toLowerHyphen("aMethodNameInCamelCaseNotation"))
+		BDDAssertions.then(SpanNameUtil.toLowerHyphen("aMethodNameInCamelCaseNotation"))
 				.isEqualTo("a-method-name-in-camel-case-notation");
 	}
 
 	@Test
 	public void should_convert_a_class_name_in_hyphen_based_notation() throws Exception {
-		SleuthAssertions.then(SpanNameUtil.toLowerHyphen("MySuperClassName"))
+		BDDAssertions.then(SpanNameUtil.toLowerHyphen("MySuperClassName"))
 				.isEqualTo("my-super-class-name");
 	}
 
 	@Test
 	public void should_not_shorten_a_name_that_is_below_max_threshold() throws Exception {
-		SleuthAssertions.then(SpanNameUtil.shorten("someName"))
+		BDDAssertions.then(SpanNameUtil.shorten("someName"))
 				.isEqualTo("someName");
 	}
 
 	@Test
 	public void should_not_shorten_a_name_that_is_null() throws Exception {
-		SleuthAssertions.then(SpanNameUtil.shorten(null)).isNull();
+		BDDAssertions.then(SpanNameUtil.shorten(null)).isNull();
 	}
 
 	@Test
@@ -50,7 +50,7 @@ public class SpanNameUtilTests {
 		for (int i = 0; i < 60; i++) {
 			sb.append("a");
 		}
-		SleuthAssertions.then(SpanNameUtil.shorten(sb.toString()).length())
+		BDDAssertions.then(SpanNameUtil.shorten(sb.toString()).length())
 				.isEqualTo(SpanNameUtil.MAX_NAME_LENGTH);
 	}
 }

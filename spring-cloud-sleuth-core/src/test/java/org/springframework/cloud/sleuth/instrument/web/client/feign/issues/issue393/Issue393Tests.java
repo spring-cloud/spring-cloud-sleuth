@@ -16,20 +16,25 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issue393;
 
-import org.junit.After;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import brave.Tracing;
+import brave.sampler.Sampler;
+import feign.okhttp.OkHttpClient;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -40,8 +45,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
-import feign.okhttp.OkHttpClient;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -55,17 +58,12 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class Issue393Tests {
 
 	RestTemplate template = new RestTemplate();
-	@Autowired Tracer tracer;
+	@Autowired ArrayListSpanReporter reporter;
+	@Autowired Tracing tracer;
 
 	@Before
 	public void open() {
-		TestSpanContextHolder.removeCurrentSpan();
-		ExceptionUtils.setFail(true);
-	}
-
-	@After
-	public void cleanup() {
-		TestSpanContextHolder.removeCurrentSpan();
+		this.reporter.clear();
 	}
 
 	@Test
@@ -75,19 +73,23 @@ public class Issue393Tests {
 		ResponseEntity<String> response = this.template.getForEntity(url, String.class);
 
 		then(response.getBody()).isEqualTo("mikesarver foo");
-		then(ExceptionUtils.getLastException()).isNull();
-		then(this.tracer.getCurrentSpan()).isNull();
+		List<Span> spans = this.reporter.getSpans();
+		// retries
+		then(spans).hasSize(2);
+		then(spans.stream().map(span -> span.tags().get("http.path")).collect(
+				Collectors.toList())).containsOnly("/name/mikesarver");
 	}
 }
 
 @Configuration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
 @EnableFeignClients
 @EnableDiscoveryClient
 class Application {
 
 	@Bean
-	public DemoController demoController(MyNameRemote myNameRemote) {
+	public DemoController demoController(
+			MyNameRemote myNameRemote) {
 		return new DemoController(myNameRemote);
 	}
 
@@ -103,8 +105,13 @@ class Application {
 	}
 
 	@Bean
-	public AlwaysSampler defaultSampler() {
-		return new AlwaysSampler();
+	public Sampler defaultSampler() {
+		return Sampler.ALWAYS_SAMPLE;
+	}
+
+	@Bean
+	public Reporter<Span> spanReporter() {
+		return new ArrayListSpanReporter();
 	}
 
 }
@@ -122,7 +129,8 @@ class DemoController {
 
 	private final MyNameRemote myNameRemote;
 
-	public DemoController(MyNameRemote myNameRemote) {
+	public DemoController(
+			MyNameRemote myNameRemote) {
 		this.myNameRemote = myNameRemote;
 	}
 

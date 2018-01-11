@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.async.issues.issue546;
 
 import java.lang.invoke.MethodHandles;
 
+import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
@@ -26,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -37,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
@@ -65,6 +66,11 @@ public class Issue546Tests {
 @SpringBootApplication
 class Issue546TestsApp {
 
+	@Bean
+	AsyncRestTemplate asyncRestTemplate() {
+		return new AsyncRestTemplate();
+	}
+
 }
 
 @RestController
@@ -72,9 +78,9 @@ class Controller {
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private final AsyncRestTemplate traceAsyncRestTemplate;
-	private final Tracer tracer;
+	private final Tracing tracer;
 
-	public Controller(AsyncRestTemplate traceAsyncRestTemplate, Tracer tracer) {
+	public Controller(AsyncRestTemplate traceAsyncRestTemplate, Tracing tracer) {
 		this.traceAsyncRestTemplate = traceAsyncRestTemplate;
 		this.tracer = tracer;
 	}
@@ -90,20 +96,24 @@ class Controller {
 	public void asyncTest(@RequestParam(required = false) boolean isSleep)
 			throws InterruptedException {
 		log.info("(/trace-async-rest-template) I got a request!");
-		final long traceId = tracer.getCurrentSpan().getTraceId();
+		final long traceId = tracer.tracer().currentSpan().context().traceId();
 		ListenableFuture<ResponseEntity<HogeBean>> res = traceAsyncRestTemplate
 				.getForEntity("http://localhost:" + port + "/bean", HogeBean.class);
 		if (isSleep) {
 			Thread.sleep(1000);
 		}
 		res.addCallback(success -> {
-			then(Controller.this.tracer.getCurrentSpan()).hasTraceIdEqualTo(traceId);
+			then(Controller.this.tracer.tracer().currentSpan().context().traceId())
+					.isEqualTo(traceId);
 			log.info("(/trace-async-rest-template) success");
-			then(Controller.this.tracer.getCurrentSpan()).hasTraceIdEqualTo(traceId);
+			then(Controller.this.tracer.tracer().currentSpan().context().traceId())
+					.isEqualTo(traceId);
 		}, failure -> {
-			then(Controller.this.tracer.getCurrentSpan()).hasTraceIdEqualTo(traceId);
+			then(Controller.this.tracer.tracer().currentSpan().context().traceId())
+					.isEqualTo(traceId);
 			log.error("(/trace-async-rest-template) failure", failure);
-			then(Controller.this.tracer.getCurrentSpan()).hasTraceIdEqualTo(traceId);
+			then(Controller.this.tracer.tracer().currentSpan().context().traceId())
+					.isEqualTo(traceId);
 		});
 	}
 

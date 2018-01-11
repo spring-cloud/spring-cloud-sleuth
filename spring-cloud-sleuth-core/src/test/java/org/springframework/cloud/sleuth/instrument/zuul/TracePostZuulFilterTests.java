@@ -16,9 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.Random;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,18 +32,16 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.cloud.netflix.zuul.metrics.EmptyTracerFactory;
 
 import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.monitoring.TracerFactory;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Dave Syer
@@ -46,36 +50,57 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class TracePostZuulFilterTests {
 
+	@Mock HttpServletRequest httpServletRequest;
 	@Mock HttpServletResponse httpServletResponse;
 
-	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
-
-	private TracePostZuulFilter filter = new TracePostZuulFilter(this.tracer, new TraceKeys());
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
+	TraceKeys traceKeys = new TraceKeys();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
+			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
+			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
+			.build();
+	private TracePostZuulFilter filter = new TracePostZuulFilter(this.httpTracing);
+	RequestContext requestContext = new RequestContext();
 
 	@After
 	public void clean() {
 		RequestContext.getCurrentContext().unset();
-		TestSpanContextHolder.removeCurrentSpan();
+		this.httpTracing.tracing().close();
 		RequestContext.testSetCurrentContext(null);
 	}
 
 	@Before
 	public void setup() {
-		RequestContext requestContext = new RequestContext();
 		BDDMockito.given(this.httpServletResponse.getStatus()).willReturn(200);
-		requestContext.setResponse(this.httpServletResponse);
-		RequestContext.testSetCurrentContext(requestContext);
+		this.requestContext.setRequest(this.httpServletRequest);
+		this.requestContext.setResponse(this.httpServletResponse);
+		RequestContext.testSetCurrentContext(this.requestContext);
+		TracerFactory.initialize(new EmptyTracerFactory());
 	}
 
 	@Test
 	public void filterPublishesEventAndClosesSpan() throws Exception {
-		Span span = this.tracer.createSpan("http:start");
-		this.filter.run();
+		Span span = this.tracing.tracer().nextSpan().name("http:start").start();
+		BDDMockito.given(this.httpServletRequest
+				.getAttribute(TracePostZuulFilter.ZUUL_CURRENT_SPAN)).willReturn(span);
+		BDDMockito.given(this.httpServletResponse.getStatus()).willReturn(456);
 
-		then(span)
-				.hasLoggedAnEvent(Span.CLIENT_RECV)
-				.hasATag("http.status_code", "200");
-		then(this.tracer.getCurrentSpan()).isNull();
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			this.filter.runFilter();
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		// initial span
+		then(spans.get(0).tags())
+				.containsEntry("http.status_code", "456");
+		then(spans.get(0).name()).isEqualTo("http:start");
+		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 }

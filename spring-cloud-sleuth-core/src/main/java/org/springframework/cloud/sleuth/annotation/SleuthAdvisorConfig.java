@@ -16,12 +16,14 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
+import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.PostConstruct;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
@@ -37,8 +39,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -154,7 +154,7 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements BeanFactor
 								return;
 							}
 							Annotation annotation = AnnotationUtils.findAnnotation(method,
-									AnnotationMethodsResolver.this.annotationType);
+									SleuthAdvisorConfig.AnnotationMethodsResolver.this.annotationType);
 							if (annotation != null) { found.set(true); }
 						}
 					});
@@ -168,15 +168,15 @@ class SleuthAdvisorConfig  extends AbstractPointcutAdvisor implements BeanFactor
  * Interceptor that creates or continues a span depending on the provided
  * annotation. Also it adds logs and tags if necessary.
  */
-class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
+class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 
-	private static final Log logger = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log logger = LogFactory.getLog(SleuthInterceptor.class);
 	private static final String CLASS_KEY = "class";
 	private static final String METHOD_KEY = "method";
 
 	private BeanFactory beanFactory;
 	private SpanCreator spanCreator;
-	private Tracer tracer;
+	private Tracing tracing;
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 	private ErrorParser errorParser;
 
@@ -193,13 +193,13 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 		if (newSpan == null && continueSpan == null) {
 			return invocation.proceed();
 		}
-		Span span = tracer().getCurrentSpan();
+		Span span = tracing().tracer().currentSpan();
+		if (newSpan != null || span == null) {
+			span = spanCreator().createSpan(invocation, newSpan);
+		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
-		try {
-			if (newSpan != null) {
-				span = spanCreator().createSpan(invocation, newSpan);
-			}
+		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span)) {
 			if (hasLog) {
 				logEvent(span, log + ".before");
 			}
@@ -213,7 +213,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 			if (hasLog) {
 				logEvent(span, log + ".afterFailure");
 			}
-			errorParser().parseErrorTags(tracer().getCurrentSpan(), e);
+			errorParser().parseErrorTags(span, e);
 			throw e;
 		} finally {
 			if (span != null) {
@@ -221,15 +221,15 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 					logEvent(span, log + ".after");
 				}
 				if (newSpan != null) {
-					tracer().close(span);
+					span.finish();
 				}
 			}
 		}
 	}
 
 	private void addTags(MethodInvocation invocation, Span span) {
-		tracer().addTag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
-		tracer().addTag(METHOD_KEY, invocation.getMethod().getName());
+		span.tag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
+		span.tag(METHOD_KEY, invocation.getMethod().getName());
 	}
 
 	private void logEvent(Span span, String name) {
@@ -239,7 +239,7 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 					+ "the same class then the aspect will not be properly resolved");
 			return;
 		}
-		span.logEvent(name);
+		span.annotate(name);
 	}
 
 	private String log(ContinueSpan continueSpan) {
@@ -249,11 +249,11 @@ class SleuthInterceptor  implements IntroductionInterceptor, BeanFactoryAware  {
 		return "";
 	}
 
-	private Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
+	private Tracing tracing() {
+		if (this.tracing == null) {
+			this.tracing = this.beanFactory.getBean(Tracing.class);
 		}
-		return this.tracer;
+		return this.tracing;
 	}
 
 	private SpanCreator spanCreator() {

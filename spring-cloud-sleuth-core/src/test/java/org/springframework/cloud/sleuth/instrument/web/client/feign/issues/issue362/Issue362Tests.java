@@ -18,23 +18,33 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issu
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
-import org.junit.After;
+import brave.Tracing;
+import brave.sampler.Sampler;
+import feign.Client;
+import feign.Logger;
+import feign.Request;
+import feign.Response;
+import feign.RetryableException;
+import feign.Retryer;
+import feign.codec.ErrorDecoder;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -46,14 +56,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import feign.Client;
-import feign.Logger;
-import feign.Request;
-import feign.Response;
-import feign.RetryableException;
-import feign.Retryer;
-import feign.codec.ErrorDecoder;
-
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -63,23 +65,19 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = Application.class,
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = {"ribbon.eureka.enabled=false", "feign.hystrix.enabled=false", "server.port=9998"})
+@TestPropertySource(properties = {"ribbon.eureka.enabled=false",
+		"feign.hystrix.enabled=false", "server.port=9998"})
 public class Issue362Tests {
 
 	RestTemplate template = new RestTemplate();
 	@Autowired FeignComponentAsserter feignComponentAsserter;
-	@Autowired Tracer tracer;
+	@Autowired Tracing tracer;
+	@Autowired ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
 		this.feignComponentAsserter.executedComponents.clear();
-		ExceptionUtils.setFail(true);
-		TestSpanContextHolder.removeCurrentSpan();
-	}
-
-	@After
-	public void cleanup() {
-		TestSpanContextHolder.removeCurrentSpan();
+		this.reporter.clear();
 	}
 
 	@Test
@@ -89,9 +87,10 @@ public class Issue362Tests {
 		ResponseEntity<String> response = this.template.getForEntity(securedURl, String.class);
 
 		then(response.getBody()).isEqualTo("I'm OK");
-		then(ExceptionUtils.getLastException()).isNull();
 		then(this.feignComponentAsserter.executedComponents).containsEntry(Client.class, true);
-		then(this.tracer.getCurrentSpan()).isNull();
+		List<Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).tags()).containsEntry("http.path", "/service/ok");
 	}
 
 	@Test
@@ -103,16 +102,19 @@ public class Issue362Tests {
 			fail("should propagate an exception");
 		} catch (Exception e) { }
 
-		then(ExceptionUtils.getLastException()).isNull();
 		then(this.feignComponentAsserter.executedComponents)
 				.containsEntry(ErrorDecoder.class, true)
 				.containsEntry(Client.class, true);
-		then(this.tracer.getCurrentSpan()).isNull();
+		List<Span> spans = this.reporter.getSpans();
+		// retries
+		then(spans).hasSize(5);
+		then(spans.stream().map(span -> span.tags().get("http.status_code")).collect(
+				Collectors.toList())).containsOnly("409");
 	}
 }
 
 @Configuration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
 @EnableFeignClients(basePackageClasses = {
 		SleuthTestController.class})
 class Application {
@@ -129,16 +131,21 @@ class Application {
 
 	@Bean
 	public Logger.Level feignLoggerLevel() {
-		return feign.Logger.Level.FULL;
+		return Logger.Level.FULL;
 	}
 
 	@Bean
-	public AlwaysSampler defaultSampler() {
-		return new AlwaysSampler();
+	public Sampler defaultSampler() {
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 	@Bean
 	public FeignComponentAsserter testHolder() { return new FeignComponentAsserter(); }
+
+	@Bean
+	public Reporter<Span> spanReporter() {
+		return new ArrayListSpanReporter();
+	}
 
 }
 
@@ -150,7 +157,8 @@ class FeignComponentAsserter {
 class CustomConfig {
 
 	@Bean
-	public ErrorDecoder errorDecoder(FeignComponentAsserter feignComponentAsserter) {
+	public ErrorDecoder errorDecoder(
+			FeignComponentAsserter feignComponentAsserter) {
 		return new CustomErrorDecoder(feignComponentAsserter);
 	}
 
@@ -163,7 +171,8 @@ class CustomConfig {
 
 		private final FeignComponentAsserter feignComponentAsserter;
 
-		public CustomErrorDecoder(FeignComponentAsserter feignComponentAsserter) {
+		public CustomErrorDecoder(
+				FeignComponentAsserter feignComponentAsserter) {
 			this.feignComponentAsserter = feignComponentAsserter;
 		}
 
@@ -179,7 +188,8 @@ class CustomConfig {
 	}
 
 	@Bean
-	public Client client(FeignComponentAsserter feignComponentAsserter) {
+	public Client client(
+			FeignComponentAsserter feignComponentAsserter) {
 		return new CustomClient(feignComponentAsserter);
 	}
 
@@ -187,7 +197,8 @@ class CustomConfig {
 
 		private final FeignComponentAsserter feignComponentAsserter;
 
-		public CustomClient(FeignComponentAsserter feignComponentAsserter) {
+		public CustomClient(
+				FeignComponentAsserter feignComponentAsserter) {
 			super(null, null);
 			this.feignComponentAsserter = feignComponentAsserter;
 		}
