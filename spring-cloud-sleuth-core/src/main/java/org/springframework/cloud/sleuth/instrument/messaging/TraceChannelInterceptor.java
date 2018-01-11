@@ -219,5 +219,4 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			getErrorParser().parseErrorTags(getTracer().getCurrentSpan(), ex);
 		}
 	}
-
 }

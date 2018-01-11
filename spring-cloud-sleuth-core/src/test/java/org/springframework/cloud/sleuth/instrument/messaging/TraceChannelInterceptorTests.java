@@ -54,6 +54,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.PollableChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ErrorMessage;
@@ -88,6 +89,10 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Autowired
 	@Qualifier("ignoredChannel")
 	private DirectChannel ignoredChannel;
+
+	@Autowired
+	@Qualifier("tracedPollableChannel")
+	private QueueChannel queueChannel;
 
 	@Autowired
 	private Tracer tracer;
@@ -127,6 +132,18 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.executorChannel.unsubscribe(this);
 		this.ignoredChannel.unsubscribe(this);
 		this.accumulator.getSpans().clear();
+	}
+
+	@Test
+	public void shouldWorkForQueue() {
+		this.queueChannel.send(MessageBuilder.withPayload("hi").build());
+		this.message = this.queueChannel.receive();
+		assertNotNull("message was null", this.message);
+
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		then(spanId).isNotNull();
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(this.accumulator.getSpans()).isNotEmpty();
 	}
 
 	@Test
@@ -411,6 +428,11 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		@Bean
 		public ExecutorChannel tracedExecutorChannel() {
 			return new ExecutorChannel(Executors.newSingleThreadExecutor());
+		}
+
+		@Bean
+		public PollableChannel tracedPollableChannel() {
+			return new QueueChannel(10);
 		}
 
 		@Bean
