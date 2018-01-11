@@ -16,10 +16,15 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import brave.sampler.Sampler;
+import zipkin2.Span;
+import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.InMemoryReporterMetrics;
+import zipkin2.reporter.Reporter;
+import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.Sender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -31,12 +36,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.SpanAdjuster;
-import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
-import org.springframework.cloud.sleuth.sampler.PercentageBasedSampler;
+import org.springframework.cloud.sleuth.sampler.ProbabilityBasedSampler;
 import org.springframework.cloud.sleuth.sampler.SamplerProperties;
 import org.springframework.cloud.sleuth.zipkin2.sender.ZipkinSenderConfigurationImportSelector;
 import org.springframework.context.annotation.Bean;
@@ -44,15 +45,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.web.client.RestTemplate;
-import zipkin2.Span;
-import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.Reporter;
-import zipkin2.reporter.Sender;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
  * enables reporting to Zipkin via HTTP. Has a default {@link Sampler} set as
- * {@link PercentageBasedSampler}.
+ * {@link ProbabilityBasedSampler}.
  *
  * The {@link ZipkinRestTemplateCustomizer} allows you to customize the {@link RestTemplate}
  * that is used to send Spans to Zipkin. Its default implementation - {@link DefaultZipkinRestTemplateCustomizer}
@@ -61,7 +58,7 @@ import zipkin2.reporter.Sender;
  * @author Spencer Gibb
  * @since 1.0.0
  *
- * @see PercentageBasedSampler
+ * @see ProbabilityBasedSampler
  * @see ZipkinRestTemplateCustomizer
  * @see DefaultZipkinRestTemplateCustomizer
  */
@@ -72,8 +69,6 @@ import zipkin2.reporter.Sender;
 @Import(ZipkinSenderConfigurationImportSelector.class)
 public class ZipkinAutoConfiguration {
 
-	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
-
 	/**
 	 * Accepts a sender so you can plug-in any standard one. Returns a Reporter so you can also
 	 * replace with a standard one.
@@ -81,14 +76,14 @@ public class ZipkinAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public Reporter<Span> reporter(
-			SpanMetricReporter spanMetricReporter,
+			ReporterMetrics reporterMetrics,
 			ZipkinProperties zipkin,
 			Sender sender
 	) {
 		return AsyncReporter.builder(sender)
 				.queuedMaxSpans(1000) // historical constraint. Note: AsyncReporter supports memory bounds
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
-				.metrics(new ReporterMetricsAdapter(spanMetricReporter))
+				.metrics(reporterMetrics)
 				.build(zipkin.getEncoder());
 	}
 
@@ -98,31 +93,31 @@ public class ZipkinAutoConfiguration {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
+	@Bean
+	@ConditionalOnMissingBean
+	ReporterMetrics sleuthReporterMetrics() {
+		return new InMemoryReporterMetrics(); 
+	}
+	
 	@Configuration
 	@ConditionalOnClass(RefreshScope.class)
-	protected static class RefreshScopedPercentageBasedSamplerConfiguration {
+	protected static class RefreshScopedProbabilityBasedSamplerConfiguration {
 		@Bean
 		@RefreshScope
 		@ConditionalOnMissingBean
 		public Sampler defaultTraceSampler(SamplerProperties config) {
-			return new PercentageBasedSampler(config);
+			return new ProbabilityBasedSampler(config);
 		}
 	}
 
 	@Configuration
 	@ConditionalOnMissingClass("org.springframework.cloud.context.config.annotation.RefreshScope")
-	protected static class NonRefreshScopePercentageBasedSamplerConfiguration {
+	protected static class NonRefreshScopeProbabilityBasedSamplerConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		public Sampler defaultTraceSampler(SamplerProperties config) {
-			return new PercentageBasedSampler(config);
+			return new ProbabilityBasedSampler(config);
 		}
-	}
-
-	@Bean
-	public SpanReporter zipkinSpanListener(Reporter<Span> reporter, EndpointLocator endpointLocator,
-			Environment environment) {
-		return new ZipkinSpanReporter(reporter, endpointLocator, environment, this.spanAdjusters);
 	}
 
 	@Configuration
