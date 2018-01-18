@@ -68,21 +68,20 @@ public class TraceWebAutoConfiguration {
 		}
 
 		/**
-		 * Sets or appends {@link ManagementServerProperties#getContextPath()} to the skip
+		 * Sets or appends {@link ManagementServerProperties.Servlet#getContextPath()} to the skip
 		 * pattern. If neither is available then sets the default one
 		 */
 		static Pattern getPatternForManagementServerProperties(
 				ManagementServerProperties managementServerProperties,
 				SleuthWebProperties sleuthWebProperties) {
 			String skipPattern = sleuthWebProperties.getSkipPattern();
-			if (StringUtils.hasText(skipPattern)
-					&& StringUtils.hasText(managementServerProperties.getContextPath())) {
-				return Pattern.compile(skipPattern + "|"
-						+ managementServerProperties.getContextPath() + ".*");
+			String contextPath = managementServerProperties.getServlet().getContextPath();
+
+			if (StringUtils.hasText(skipPattern) && StringUtils.hasText(contextPath)) {
+				return Pattern.compile(skipPattern + "|" + contextPath + ".*");
 			}
-			else if (StringUtils.hasText(managementServerProperties.getContextPath())) {
-				return Pattern
-						.compile(managementServerProperties.getContextPath() + ".*");
+			else if (StringUtils.hasText(contextPath)) {
+				return Pattern.compile(contextPath + ".*");
 			}
 			return defaultSkipPattern(skipPattern);
 		}

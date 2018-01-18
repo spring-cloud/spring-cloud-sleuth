@@ -64,20 +64,18 @@ public class SkipPatternProviderConfigTest {
 		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
 		sleuthWebProperties.setSkipPattern("");
 
+		ManagementServerProperties properties = new ManagementServerProperties();
+		properties.getServlet().setContextPath("");
+
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				new ManagementServerProperties() {
-					@Override
-					public String getContextPath() {
-						return "";
-					}
-				}, sleuthWebProperties);
+				properties, sleuthWebProperties);
 
 		then(pattern.pattern()).isEqualTo(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 	}
 
 	private ManagementServerProperties managementServerPropertiesWithContextPath() {
 		ManagementServerProperties managementServerProperties = new ManagementServerProperties();
-		managementServerProperties.setContextPath("/management/context");
+		managementServerProperties.getServlet().setContextPath("/management/context");
 		return managementServerProperties;
 	}
 }
