@@ -81,6 +81,16 @@ public class MultipleHopsIntegrationTests {
 	// issue #237 - baggage
 	@Test
 	@Ignore
+	// Notes:
+	// * path-prefix header propagation can't reliably support mixed case, due to http/2 downcasing
+	//   * Since not all tokenizers are case insensitive, mixed case can break correlation
+	//   * Brave's ExtraFieldPropagation downcases due to the above
+	//   * This code should probably test the side-effect on http headers
+	// * the assumption all correlation fields (baggage) are saved to a span is an interesting one
+	//   * should all correlation fields (baggage) be added to the MDC context?
+	// * Until below, a configuration item of a correlation field whitelist is needed
+	//   * https://github.com/openzipkin/brave/pull/577
+	//   * probably needed anyway as an empty whitelist is a nice way to disable the feature
 	public void should_propagate_the_baggage() throws Exception {
 		//tag::baggage[]
 		Span initialSpan = this.tracing.tracer().nextSpan().name("span").start();
