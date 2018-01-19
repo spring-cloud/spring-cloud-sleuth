@@ -2,12 +2,11 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import java.util.List;
 
+import brave.Span;
+import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
@@ -23,7 +22,8 @@ import rx.plugins.RxJavaSchedulersHook;
  */
 class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
-	private static final Log log = LogFactory.getLog(SleuthRxJavaSchedulersHook.class);
+	private static final Log log = LogFactory.getLog(
+			SleuthRxJavaSchedulersHook.class);
 
 	private static final String RXJAVA_COMPONENT = "rxjava";
 	private final Tracer tracer;
@@ -93,7 +93,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			this.tracer = tracer;
 			this.traceKeys = traceKeys;
 			this.threadsToIgnore = threadsToIgnore;
-			this.parent = tracer.getCurrentSpan();
+			this.parent = this.tracer.currentSpan();
 			this.actual = actual;
 		}
 
@@ -116,21 +116,19 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			Span span = this.parent;
 			boolean created = false;
 			if (span != null) {
-				span = this.tracer.continueSpan(span);
+				span = this.tracer.joinSpan(this.parent.context());
 			} else {
-				span = this.tracer.createSpan(RXJAVA_COMPONENT);
-				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, RXJAVA_COMPONENT);
-				this.tracer.addTag(this.traceKeys.getAsync().getPrefix()
-					+ this.traceKeys.getAsync().getThreadNameKey(), Thread.currentThread().getName());
+				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
+				span.tag(this.traceKeys.getAsync().getPrefix()
+					+ this.traceKeys.getAsync().getThreadNameKey(),
+						Thread.currentThread().getName());
 				created = true;
 			}
-			try {
+			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 				this.actual.call();
 			} finally {
 				if (created) {
-					this.tracer.close(span);
-				} else if (this.tracer.isTracing()) {
-					this.tracer.detach(span);
+					span.finish();
 				}
 			}
 		}

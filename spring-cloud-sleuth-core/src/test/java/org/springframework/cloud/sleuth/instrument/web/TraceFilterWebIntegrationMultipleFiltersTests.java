@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import java.io.IOException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.After;
-import org.junit.Before;
+import brave.Span;
+import brave.Tracing;
+import brave.sampler.Sampler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +35,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -49,31 +45,26 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.GenericFilterBean;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TraceFilterWebIntegrationMultipleFiltersTests.Config.class },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = "spring.sleuth.http.legacy.enabled=true")
 public class TraceFilterWebIntegrationMultipleFiltersTests {
 
-	@Autowired Tracer tracer;
+	@Autowired Tracing tracer;
 	@Autowired RestTemplate restTemplate;
 	@Autowired Environment environment;
 	@Autowired MyFilter myFilter;
+	@Autowired ArrayListSpanReporter reporter;
 	// issue #550
 	@Autowired @Qualifier("myExecutor") Executor myExecutor;
 	@Autowired @Qualifier("finalExecutor") Executor finalExecutor;
 	@Autowired MyExecutor cglibExecutor;
-
-	@Before
-	@After
-	public void cleanup() {
-		ExceptionUtils.setFail(true);
-		TestSpanContextHolder.removeCurrentSpan();
-	}
 
 	@Test
 	public void should_register_trace_filter_before_the_custom_filter() {
@@ -83,9 +74,9 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 
 		this.restTemplate.getForObject("http://localhost:" + port() + "/", String.class);
 
-		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.tracer.tracer().currentSpan()).isNull();
 		then(this.myFilter.getSpan().get()).isNotNull();
-		then(ExceptionUtils.getLastException()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
 	private int port() {
@@ -112,7 +103,7 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 		}
 
 		@Bean Sampler alwaysSampler() {
-			return new AlwaysSampler();
+			return Sampler.ALWAYS_SAMPLE;
 		}
 
 		@Bean RestTemplate restTemplate() {
@@ -125,7 +116,7 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 			return restTemplate;
 		}
 
-		@Bean MyFilter myFilter(Tracer tracer) {
+		@Bean MyFilter myFilter(Tracing tracer) {
 			return new MyFilter(tracer);
 		}
 
@@ -135,21 +126,25 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 			bean.setOrder(0);
 			return bean;
 		}
+
+		@Bean ArrayListSpanReporter reporter() {
+			return new ArrayListSpanReporter();
+		}
 	}
 
 	static class MyFilter extends GenericFilterBean {
 
 		AtomicReference<Span> span = new AtomicReference<>();
 
-		private final Tracer tracer;
+		private final Tracing tracer;
 
-		MyFilter(Tracer tracer) {
+		MyFilter(Tracing tracer) {
 			this.tracer = tracer;
 		}
 
 		@Override public void doFilter(ServletRequest request, ServletResponse response,
 				FilterChain chain) throws IOException, ServletException {
-			Span currentSpan = tracer.getCurrentSpan();
+			Span currentSpan = tracer.tracer().currentSpan();
 			this.span.set(currentSpan);
 		}
 

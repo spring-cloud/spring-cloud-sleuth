@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,34 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign.servererrors;
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import brave.Tracing;
+import brave.sampler.Sampler;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import zipkin2.Span;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClients;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -57,11 +52,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * Related to https://github.com/spring-cloud/spring-cloud-sleuth/issues/257
@@ -69,20 +65,19 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
  * @author ryarabori
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=fooservice" ,
-"feign.hystrix.enabled=true"})
+"feign.hystrix.enabled=true", "spring.sleuth.http.legacy.enabled=true"})
 public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;
 	@Autowired TestFeignWithCustomConfInterface customConfFeignInterface;
-	@Autowired Listener listener;
-	@Rule public OutputCapture capture = new OutputCapture();
+	@Autowired ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
-		this.listener.clear();
-		ExceptionUtils.setFail(true);
+		this.reporter.clear();
 	}
 
 	@Test
@@ -93,12 +88,13 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.capture.toString())
-					.doesNotContain("Tried to close span but it is not the current span");
-			then(ExceptionUtils.getLastException()).isNull();
-			then(new ListOfSpans(this.listener.getEvents()))
-					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-							"Request processing failed; nested exception is java.lang.RuntimeException: Internal Error");
+			List<Span> spans = this.reporter.getSpans();
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("error")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("error", "500")
+					.containsEntry("http.status_code", "500");
 		});
 	}
 
@@ -110,9 +106,12 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.capture.toString())
-					.doesNotContain("Tried to close span but it is not the current span");
-			then(ExceptionUtils.getLastException()).isNull();
+			List<Span> spans = this.reporter.getSpans();
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("http.status_code")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("http.status_code", "404");
 		});
 	}
 
@@ -124,8 +123,13 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
-			then(ExceptionUtils.getLastException()).isNull();
+			List<Span> spans = this.reporter.getSpans();
+			then(spans).hasSize(2);
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("http.method")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("http.method", "GET");
 		});
 	}
 
@@ -137,8 +141,13 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
-			then(ExceptionUtils.getLastException()).isNull();
+			List<Span> spans = this.reporter.getSpans();
+			then(spans).hasSize(2);
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("http.method")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("http.method", "GET");
 		});
 	}
 
@@ -150,13 +159,18 @@ public class FeignClientServerErrorTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.capture.toString()).doesNotContain("Tried to close span but it is not the current span");
-			then(ExceptionUtils.getLastException()).isNull();
+			List<Span> spans = this.reporter.getSpans();
+			Optional<Span> spanWithError = spans.stream()
+					.filter(span -> span.tags().containsKey("error")).findFirst();
+			then(spanWithError.isPresent()).isTrue();
+			then(spanWithError.get().tags())
+					.containsEntry("error", "404")
+					.containsEntry("http.status_code", "404");
 		});
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
 	@EnableFeignClients
 	@RibbonClients({@RibbonClient(value = "fooservice",
 			configuration = SimpleRibbonClientConfiguration.class),
@@ -170,8 +184,8 @@ public class FeignClientServerErrorTests {
 		}
 
 		@Bean
-		Listener listener() {
-			return new Listener();
+		ArrayListSpanReporter listener() {
+			return new ArrayListSpanReporter();
 		}
 
 		@LoadBalanced
@@ -181,7 +195,7 @@ public class FeignClientServerErrorTests {
 		}
 
 		@Bean Sampler testSampler() {
-			return new AlwaysSampler();
+			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}
@@ -223,51 +237,32 @@ public class FeignClientServerErrorTests {
 		}
 	}
 
-	@Component
-	public static class Listener implements SpanReporter {
-		private List<Span> events = new ArrayList<>();
-
-		public List<Span> getEvents() {
-			return new ArrayList<>(this.events);
-		}
-
-		public void clear() {
-			this.events.clear();
-		}
-
-		@Override
-		public void report(Span span) {
-			this.events.add(span);
-		}
-	}
-
 	@RestController
 	public static class FooController {
 
-		@Autowired
-		Tracer tracer;
+		@Autowired Tracing tracer;
 
 		@RequestMapping("/internalerror")
 		public ResponseEntity<String> internalError(
-				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
-				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
-				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+				@RequestHeader("X-B3-TraceId") String traceId,
+				@RequestHeader("X-B3-SpanId") String spanId,
+				@RequestHeader("X-B3-ParentSpanId") String parentId) {
 			throw new RuntimeException("Internal Error");
 		}
 
 		@RequestMapping("/notfound")
 		public ResponseEntity<String> notFound(
-				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
-				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
-				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+				@RequestHeader("X-B3-TraceId") String traceId,
+				@RequestHeader("X-B3-SpanId") String spanId,
+				@RequestHeader("X-B3-ParentSpanId") String parentId) {
 			return new ResponseEntity<>("not found", HttpStatus.NOT_FOUND);
 		}
 
 		@RequestMapping("/ok")
 		public ResponseEntity<String> ok(
-				@RequestHeader(Span.TRACE_ID_NAME) String traceId,
-				@RequestHeader(Span.SPAN_ID_NAME) String spanId,
-				@RequestHeader(Span.PARENT_ID_NAME) String parentId) {
+				@RequestHeader("X-B3-TraceId") String traceId,
+				@RequestHeader("X-B3-SpanId") String spanId,
+				@RequestHeader("X-B3-ParentSpanId") String parentId) {
 			return new ResponseEntity<>("ok", HttpStatus.OK);
 		}
 	}

@@ -17,13 +17,12 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  * A decorator class for {@link ScheduledExecutorService} to support tracing in Executors
@@ -33,9 +32,8 @@ import org.springframework.cloud.sleuth.TraceKeys;
  */
 public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
 
-	public TraceableScheduledExecutorService(ScheduledExecutorService delegate,
-			Tracer tracer, TraceKeys traceKeys, SpanNamer spanNamer) {
-		super(delegate, tracer, traceKeys, spanNamer);
+	public TraceableScheduledExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
+		super(beanFactory, delegate);
 	}
 
 	private ScheduledExecutorService getScheduledExecutorService() {
@@ -44,25 +42,25 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		Runnable r = new SpanContinuingTraceRunnable(this.tracer, this.traceKeys, this.spanNamer, command);
+		Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), command);
 		return getScheduledExecutorService().schedule(r, delay, unit);
 	}
 
 	@Override
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-		Callable<V> c = new SpanContinuingTraceCallable<>(this.tracer, this.traceKeys, this.spanNamer,  callable);
+		Callable<V> c = new TraceCallable<>(tracer(), spanNamer(), errorParser(), callable);
 		return getScheduledExecutorService().schedule(c, delay, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-		Runnable r = new SpanContinuingTraceRunnable(this.tracer, this.traceKeys, this.spanNamer,  command);
+		Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), command);
 		return getScheduledExecutorService().scheduleAtFixedRate(r, initialDelay, period, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-		Runnable r = new SpanContinuingTraceRunnable(this.tracer, this.traceKeys, this.spanNamer,  command);
+		Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), command);
 		return getScheduledExecutorService().scheduleWithFixedDelay(r, initialDelay, delay, unit);
 	}
 

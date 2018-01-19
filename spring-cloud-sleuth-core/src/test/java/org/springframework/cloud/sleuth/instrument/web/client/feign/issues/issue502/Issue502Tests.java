@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,28 +19,29 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issu
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.List;
 
-import org.junit.After;
+import brave.Tracing;
+import brave.sampler.Sampler;
+import feign.Client;
+import feign.Request;
+import feign.Response;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-
-import feign.Client;
-import feign.Request;
-import feign.Response;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -55,16 +56,12 @@ public class Issue502Tests {
 
 	@Autowired MyClient myClient;
 	@Autowired MyNameRemote myNameRemote;
+	@Autowired ArrayListSpanReporter reporter;
+	@Autowired Tracing tracer;
 
 	@Before
 	public void open() {
-		TestSpanContextHolder.removeCurrentSpan();
-		ExceptionUtils.setFail(true);
-	}
-
-	@After
-	public void close() {
-		TestSpanContextHolder.removeCurrentSpan();
+		this.reporter.clear();
 	}
 
 	@Test
@@ -73,7 +70,10 @@ public class Issue502Tests {
 
 		then(this.myClient.wasCalled()).isTrue();
 		then(response).isEqualTo("foo");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<Span> spans = this.reporter.getSpans();
+		// retries
+		then(spans).hasSize(1);
+		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
 	}
 }
 
@@ -88,8 +88,13 @@ class Application {
 	}
 
 	@Bean
-	public AlwaysSampler defaultSampler() {
-		return new AlwaysSampler();
+	public Sampler defaultSampler() {
+		return Sampler.ALWAYS_SAMPLE;
+	}
+
+	@Bean
+	public Reporter<Span> spanReporter() {
+		return new ArrayListSpanReporter();
 	}
 
 }

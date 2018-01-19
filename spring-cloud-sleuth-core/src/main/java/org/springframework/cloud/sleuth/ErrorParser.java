@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth;
 
+import brave.SpanCustomizer;
+
 /**
  * Contract for hooking into process of adding error response tags.
  * This interface is only called when an exception is thrown upon receiving a response.
@@ -12,11 +14,9 @@ public interface ErrorParser {
 
 	/**
 	 * Allows setting of tags when an exception was thrown when the response was received.
-	 * The implementation should not manipulate the {@link Span} in other way than just
-	 * by adding the tags.
 	 *
 	 * @param span - current span in context
 	 * @param error - error that was thrown upon receiving a response
 	 */
-	void parseErrorTags(Span span, Throwable error);
+	void parseErrorTags(SpanCustomizer span, Throwable error);
 }

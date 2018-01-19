@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.scheduling;
 
+import java.util.regex.Pattern;
+
+import brave.Tracer;
+import brave.Tracing;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-
-import java.util.regex.Pattern;
 
 /**
  * Registers beans related to task scheduling.
@@ -42,15 +43,16 @@ import java.util.regex.Pattern;
 @Configuration
 @EnableAspectJAutoProxy
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
-@ConditionalOnBean(Tracer.class)
+@ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthSchedulingProperties.class)
 public class TraceSchedulingAutoConfiguration {
 
-	@ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
 	@Bean
-	public TraceSchedulingAspect traceSchedulingAspect(Tracer tracer, TraceKeys traceKeys,
-			SleuthSchedulingProperties sleuthSchedulingProperties) {
-		return new TraceSchedulingAspect(tracer, traceKeys, Pattern.compile(sleuthSchedulingProperties.getSkipPattern()));
+	@ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
+	public TraceSchedulingAspect traceSchedulingAspect(Tracer tracer,
+			SleuthSchedulingProperties sleuthSchedulingProperties, TraceKeys traceKeys) {
+		return new TraceSchedulingAspect(tracer,
+				Pattern.compile(sleuthSchedulingProperties.getSkipPattern()), traceKeys);
 	}
 }

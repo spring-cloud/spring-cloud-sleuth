@@ -2,18 +2,18 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import java.util.Arrays;
 
+import brave.Tracer;
+import brave.Tracing;
+import rx.plugins.RxJavaSchedulersHook;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import rx.plugins.RxJavaSchedulersHook;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} that
@@ -24,7 +24,7 @@ import rx.plugins.RxJavaSchedulersHook;
  */
 @Configuration
 @AutoConfigureAfter(TraceAutoConfiguration.class)
-@ConditionalOnBean(Tracer.class)
+@ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(RxJavaSchedulersHook.class)
 @ConditionalOnProperty(value = "spring.sleuth.rxjava.schedulers.hook.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthRxJavaSchedulersProperties.class)

@@ -8,7 +8,7 @@
 :github-code: https://github.com/{github-repo}/tree/{github-tag}
 
 image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"]
-image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/master/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
+image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 == Spring Cloud Sleuth
 
@@ -66,8 +66,12 @@ of that span is equal to trace id.
 *Trace:* A set of spans forming a tree-like structure.  For example, if you are running a distributed
 big-data store, a trace might be formed by a put request.
 
-*Annotation:*  is used to record existence of an event in time. Some of the core annotations used to define
-the start and stop of a request are:
+*Annotation:*  is used to record existence of an event in time. With
+https://github.com/openzipkin/brave[Brave] instrumentation we no longer need to set special events
+for https://zipkin.io/[Zipkin] to understand who the client and server are and where
+the request started and where it has ended. For learning purposes
+however we will mark these events to highlight what kind
+of an action took place.
 
     - *cs* - Client Sent - The client has made a request. This annotation depicts the start of the span.
     - *sr* - Server Received -  The server side got the request and will start processing it.
@@ -90,8 +94,8 @@ Trace Id = X
 Span Id = D
 Client Sent
 
-That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*. It also has emitted
- *Client Sent* event.
+That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*. Also, the
+ *Client Sent* event took place.
 
 This is how the visualization of the parent / child relationship of spans would look like:
 
@@ -118,14 +122,14 @@ annotations then they will presented as a single span.
 Why is there a difference between the 7 and 4 spans in this case?
 
     - 2 spans come from `http:/start` span. It has the Server Received (SR) and Server Sent (SS) annotations.
-    - 2 spans come from the RPC call from `service1` to `service2` to the `http:/foo` endpoint. It has the Client Sent (CS)
-     and Client Received (CR) annotations on `service1` side. It also has Server Received (SR) and Server Sent (SS) annotations
+    - 2 spans come from the RPC call from `service1` to `service2` to the `http:/foo` endpoint. The Client Sent (CS)
+     and Client Received (CR) events took place on `service1` side. Server Received (SR) and Server Sent (SS) events took place
      on the `service2` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
-    - 2 spans come from the RPC call from `service2` to `service3` to the `http:/bar` endpoint. It has the Client Sent (CS)
-     and Client Received (CR) annotations on `service2` side. It also has Server Received (SR) and Server Sent (SS) annotations
+    - 2 spans come from the RPC call from `service2` to `service3` to the `http:/bar` endpoint. The Client Sent (CS)
+     and Client Received (CR) events took place on `service2` side. Server Received (SR) and Server Sent (SS) events took place
      on the `service3` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
-    - 2 spans come from the RPC call from `service2` to `service4` to the `http:/baz` endpoint. It has the Client Sent (CS)
-     and Client Received (CR) annotations on `service2` side. It also has Server Received (SR) and Server Sent (SS) annotations
+    - 2 spans come from the RPC call from `service2` to `service4` to the `http:/baz` endpoint. The Client Sent (CS)
+     and Client Received (CR) events took place on `service2` side. Server Received (SR) and Server Sent (SS) events took place
      on the `service4` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
 
 So if we count the physical spans we have *1* from `http:/start`, *2* from `service1` calling `service2`, *2* form `service2`
@@ -150,11 +154,25 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 
 As you can see you can easily see the reason for an error and the whole stacktrace related to it.
 
+==== Distributed tracing with Brave
+
+Starting with version `2.0.0`, Spring Cloud Sleuth uses
+https://github.com/openzipkin/brave[Brave] as the tracing library. That means
+that Sleuth no longer takes care of storing the context but it delegates
+that work to Brave.
+
+Due to the fact that Sleuth had different naming / tagging
+conventions than Brave, we've decided to follow the Brave's
+conventions from now on. However, if you want to use the legacy
+Sleuth approaches, it's enough to set the `spring.sleuth.http.legacy.enabled` property
+to `true`.
+
 ==== Live examples
 
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
+http://docssleuth-zipkin-server.cfapps.io/[Click here to see it live!]
 
 The dependency graph in Zipkin would look like this:
 
@@ -163,7 +181,7 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
-
+http://docssleuth-zipkin-server.cfapps.io/dependency[Click here to see it live!]
 
 ==== Log correlation
 
@@ -322,9 +340,8 @@ Example of setting baggage on a span:
 
 [source,java]
 ----
-Span initialSpan = this.tracer.createSpan("span");
-initialSpan.setBaggageItem("foo", "bar");
-initialSpan.setBaggageItem("UPPER_CASE", "someValue");
+Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+}
 ----
 
 ===== Baggage vs. Span Tags
@@ -337,15 +354,11 @@ can search by tag to find the trace, where there exists a span having the search
 
 If you want to be able to lookup a span based on baggage, you should add corresponding entry as a tag in the root span.
 
+IMPORTANT: Remember that the span needs to be in scope!
+
 [source,java]
 ----
-@Autowired Tracer tracer;
-
-Span span = tracer.getCurrentSpan();
-String baggageKey = "key";
-String baggageValue = "foo";
-span.setBaggageItem(baggageKey, baggageValue);
-tracer.addTag(baggageKey, baggageValue);
+Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
 ----
 
 === Adding to the project
@@ -361,7 +374,7 @@ the `spring-cloud-starter-sleuth` module to your project.
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
 ----
-	<dependencyManagement> <1>
+    <dependencyManagement> <1>
           <dependencies>
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
@@ -406,7 +419,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` de
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
 ----
-	<dependencyManagement> <1>
+    <dependencyManagement> <1>
           <dependencies>
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
@@ -457,7 +470,7 @@ dependencies.
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
 ----
-	<dependencyManagement> <1>
+    <dependencyManagement> <1>
           <dependencies>
               <dependency>
                   <groupId>org.springframework.cloud</groupId>

@@ -3,12 +3,11 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.reactivestreams.Publisher;
-import org.springframework.cloud.sleuth.Tracer;
-
+import brave.Tracing;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.core.publisher.Operators;
+import org.reactivestreams.Publisher;
 
 /**
  * Reactive Span pointcuts factories
@@ -19,18 +18,19 @@ import reactor.core.publisher.Operators;
 public abstract class ReactorSleuth {
 
 	/**
-	 * Return a span operator pointcut given a {@link Tracer}. This can be used in reactor
+	 * Return a span operator pointcut given a {@link Tracing}. This can be used in reactor
 	 * via {@link reactor.core.publisher.Flux#transform(Function)}, {@link
 	 * reactor.core.publisher.Mono#transform(Function)}, {@link
 	 * reactor.core.publisher.Hooks#onEachOperator(Function)} or {@link
 	 * reactor.core.publisher.Hooks#onLastOperator(Function)}.
 	 *
-	 * @param tracer the {@link Tracer} instance to use in this span operator
+	 * @param tracing the {@link Tracing} instance to use in this span operator
 	 * @param <T> an arbitrary type that is left unchanged by the span operator
 	 *
 	 * @return a new Span operator pointcut
 	 */
-	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanOperator(Tracer tracer) {
+	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanOperator(
+			Tracing tracing) {
 		return Operators.lift(POINTCUT_FILTER, ((scannable, sub) -> {
 			//do not trace fused flows
 			if(scannable instanceof Fuseable && sub instanceof Fuseable.QueueSubscription){
@@ -39,7 +39,7 @@ public abstract class ReactorSleuth {
 			return new SpanSubscriber<>(
 					sub,
 					sub.currentContext(),
-					tracer,
+					tracing,
 					scannable.name());
 		}));
 	}

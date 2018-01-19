@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,45 +16,40 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import java.util.List;
+
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-
-import java.util.Random;
 
 import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class TraceCommandTests {
 
-	static final long EXPECTED_TRACE_ID = 1L;
-	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
+	Tracer tracer = this.tracing.tracer();
 
 	@Before
 	public void setup() {
 		HystrixPlugins.reset();
-		TestSpanContextHolder.removeCurrentSpan();
-	}
-
-	@After
-	public void cleanup() {
-		TestSpanContextHolder.removeCurrentSpan();
+		this.reporter.clear();
 	}
 
 	@Test
@@ -64,41 +59,42 @@ public class TraceCommandTests {
 
 		Span secondSpanFromHystrix = whenCommandIsExecuted(traceReturningCommand());
 
-		then(secondSpanFromHystrix.getTraceId()).as("second trace id")
-				.isNotEqualTo(firstSpanFromHystrix.getTraceId()).as("first trace id");
-		then(secondSpanFromHystrix.getSavedSpan())
-				.as("saved span as remnant of first span").isNull();
+		then(secondSpanFromHystrix.context().traceId()).as("second trace id")
+				.isNotEqualTo(firstSpanFromHystrix.context().traceId()).as("first trace id");
 	}
 	@Test
 	public void should_create_a_local_span_with_proper_tags_when_hystrix_command_gets_executed()
 			throws Exception {
-		Span spanFromHystrix = whenCommandIsExecuted(traceReturningCommand());
+		whenCommandIsExecuted(traceReturningCommand());
 
-		then(spanFromHystrix)
-				.isALocalComponentSpan()
-				.hasNameEqualTo("traceCommandKey")
-				.hasATag("commandKey", "traceCommandKey");
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans().get(0).tags())
+				.containsEntry("commandKey", "traceCommandKey");
 	}
 
 	@Test
 	public void should_run_Hystrix_command_with_span_passed_from_parent_thread() {
-		givenATraceIsPresentInTheCurrentThread();
-		TraceCommand<Span> command = traceReturningCommand();
+		Span span = this.tracer.nextSpan();
 
-		Span spanFromCommand = whenCommandIsExecuted(command);
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			TraceCommand<Span> command = traceReturningCommand();
+			whenCommandIsExecuted(command);
+		} finally {
+			span.finish();
+		}
 
-		then(spanFromCommand).as("Span from the Hystrix Thread")
-				.isNotNull()
-				.hasTraceIdEqualTo(EXPECTED_TRACE_ID)
-				.hasATag("commandKey", "traceCommandKey")
-				.hasATag("commandGroup", "group")
-				.hasATag("threadPoolKey", "group");
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(2);
+		then(spans.get(0).traceId()).isEqualTo(span.context().traceIdString());
+		then(spans.get(0).tags())
+				.containsEntry("commandKey", "traceCommandKey")
+				.containsEntry("commandGroup", "group")
+				.containsEntry("threadPoolKey", "group");
 	}
 
 	@Test
 	public void should_pass_tracing_information_when_using_Hystrix_commands() {
-		Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-				new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
+		Tracer tracer = this.tracer;
 		TraceKeys traceKeys = new TraceKeys();
 		HystrixCommand.Setter setter = withGroupKey(asKey("group"))
 				.andCommandKey(HystrixCommandKey.Factory.asKey("command"));
@@ -123,16 +119,10 @@ public class TraceCommandTests {
 		String resultFromTraceCommand = traceCommand.execute();
 
 		then(resultFromHystrixCommand).isEqualTo(resultFromTraceCommand);
-		then(tracer.getCurrentSpan()).isNull();
 	}
 
 	private String someLogic(){
 		return "some logic";
-	}
-
-	private Span givenATraceIsPresentInTheCurrentThread() {
-		return this.tracer.createSpan("http:test",
-				Span.builder().traceId(EXPECTED_TRACE_ID).build());
 	}
 
 	private TraceCommand<Span> traceReturningCommand() {
@@ -145,7 +135,7 @@ public class TraceCommandTests {
 				.andCommandKey(HystrixCommandKey.Factory.asKey("traceCommandKey"))) {
 			@Override
 			public Span doRun() throws Exception {
-				return TestSpanContextHolder.getCurrentSpan();
+				return TraceCommandTests.this.tracer.currentSpan();
 			}
 		};
 	}

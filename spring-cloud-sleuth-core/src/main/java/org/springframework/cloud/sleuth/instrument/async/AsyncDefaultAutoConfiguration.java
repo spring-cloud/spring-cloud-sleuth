@@ -18,15 +18,15 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 
+import brave.Tracer;
+import brave.Tracing;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
@@ -46,8 +46,8 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
-@ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(AsyncCustomAutoConfiguration.class)
+@ConditionalOnBean(Tracing.class)
+//@AutoConfigureAfter(AsyncCustomAutoConfiguration.class)
 public class AsyncDefaultAutoConfiguration {
 
 	@Autowired private BeanFactory beanFactory;
@@ -66,8 +66,8 @@ public class AsyncDefaultAutoConfiguration {
 	}
 
 	@Bean
-	public TraceAsyncAspect traceAsyncAspect(Tracer tracer, TraceKeys traceKeys, SpanNamer spanNamer) {
-		return new TraceAsyncAspect(tracer, traceKeys, spanNamer);
+	public TraceAsyncAspect traceAsyncAspect(Tracer tracer, SpanNamer spanNamer, TraceKeys traceKeys) {
+		return new TraceAsyncAspect(tracer, spanNamer, traceKeys);
 	}
 
 	@Bean

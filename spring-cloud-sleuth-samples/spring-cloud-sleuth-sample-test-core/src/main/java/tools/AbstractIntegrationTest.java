@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,11 @@
 package tools;
 
 import java.lang.invoke.MethodHandles;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.springframework.cloud.sleuth.trace.IntegrationTestSpanContextHolder;
 import org.springframework.web.client.RestTemplate;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -37,16 +35,6 @@ public abstract class AbstractIntegrationTest {
 	protected static final int POLL_INTERVAL = 1;
 	protected static final int TIMEOUT = 20;
 	protected final RestTemplate restTemplate = new AssertingRestTemplate();
-
-	@Before
-	public void clearSpanBefore() {
-		IntegrationTestSpanContextHolder.removeCurrentSpan();
-	}
-
-	@After
-	public void clearSpanAfter() {
-		IntegrationTestSpanContextHolder.removeCurrentSpan();
-	}
 
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId) {

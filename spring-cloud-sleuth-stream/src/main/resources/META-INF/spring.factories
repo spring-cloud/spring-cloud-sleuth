@@ -1,7 +1,0 @@
-# Auto Configuration
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.cloud.sleuth.stream.SleuthStreamAutoConfiguration
-
-# Environment Post Processor
-org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.stream.StreamEnvironmentPostProcessor

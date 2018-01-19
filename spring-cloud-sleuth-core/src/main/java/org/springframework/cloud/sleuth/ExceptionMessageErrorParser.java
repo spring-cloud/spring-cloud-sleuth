@@ -1,9 +1,8 @@
 package org.springframework.cloud.sleuth;
 
+import brave.SpanCustomizer;
+import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
-
-import java.lang.invoke.MethodHandles;
 
 /**
  * {@link ErrorParser} that sets the error tag for an exportable span.
@@ -13,16 +12,20 @@ import java.lang.invoke.MethodHandles;
  */
 public class ExceptionMessageErrorParser implements ErrorParser {
 
-	private static final org.apache.commons.logging.Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(ExceptionMessageErrorParser.class);
 
 	@Override
-	public void parseErrorTags(Span span, Throwable error) {
-		if (span != null && span.isExportable()) {
-			String errorMsg = ExceptionUtils.getExceptionMessage(error);
+	public void parseErrorTags(SpanCustomizer span, Throwable error) {
+		if (span != null && error != null) {
+			String errorMsg = getExceptionMessage(error);
 			if (log.isDebugEnabled()) {
 				log.debug("Adding an error tag [" + errorMsg + "] to span " + span);
 			}
-			span.tag(Span.SPAN_ERROR_TAG_NAME, errorMsg);
+			span.tag("error", errorMsg);
 		}
+	}
+
+	private String getExceptionMessage(Throwable e) {
+		return e.getMessage() != null ? e.getMessage() : e.toString();
 	}
 }

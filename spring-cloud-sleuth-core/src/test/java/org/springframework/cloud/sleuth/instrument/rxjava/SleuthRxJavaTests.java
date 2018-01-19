@@ -1,13 +1,8 @@
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
-import static org.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.After;
+import brave.Span;
+import brave.Tracer;
+import brave.sampler.Sampler;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -16,21 +11,19 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
-
 import rx.Observable;
 import rx.functions.Action0;
 import rx.plugins.RxJavaPlugins;
 import rx.schedulers.Schedulers;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.awaitility.Awaitility.await;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { SleuthRxJavaTests.TestConfig.class })
@@ -38,19 +31,14 @@ import rx.schedulers.Schedulers;
 public class SleuthRxJavaTests {
 
 	@Autowired
-	Listener listener;
+	ArrayListSpanReporter reporter;
 	@Autowired
 	Tracer tracer;
 	StringBuffer caller = new StringBuffer();
 
 	@Before
 	public void clean() {
-		this.listener.getEvents().clear();
-	}
-
-	@After
-	public void clearTrace() {
-		TestSpanContextHolder.removeCurrentSpan();
+		this.reporter.clear();
 	}
 
 	@BeforeClass
@@ -68,50 +56,34 @@ public class SleuthRxJavaTests {
 				.subscribe(Action0::call);
 
 		then(this.caller.toString()).isEqualTo("actual_action");
-		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		await().atMost(5, SECONDS)
-				.untilAsserted(() -> then(this.listener.getEvents()).hasSize(1));
-		then(this.listener.getEvents().get(0)).hasNameEqualTo("rxjava");
-		then(this.listener.getEvents().get(0)).isExportable();
-		then(this.listener.getEvents().get(0)).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME,
-				"rxjava");
-		then(this.listener.getEvents().get(0)).isALocalComponentSpan();
+				.untilAsserted(() -> then(this.reporter.getSpans()).hasSize(1));
+		then(this.reporter.getSpans()).hasSize(1);
+		zipkin2.Span span = this.reporter.getSpans().get(0);
+		then(span.name()).isEqualTo("rxjava");
 	}
 
 	@Test
 	public void should_continue_current_span_when_rx_java_action_is_executed() {
-		Span spanInCurrentThread = this.tracer.createSpan("current_span");
-		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "current_span");
+		Span spanInCurrentThread = this.tracer.nextSpan().name("current_span");
 
-		Observable
-				.defer(() -> Observable.just(
-						(Action0) () -> this.caller = new StringBuffer("actual_action")))
-				.subscribeOn(Schedulers.newThread()).toBlocking()
-				.subscribe(Action0::call);
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(spanInCurrentThread)) {
+			Observable
+					.defer(() -> Observable.just(
+							(Action0) () -> this.caller = new StringBuffer("actual_action")))
+					.subscribeOn(Schedulers.newThread()).toBlocking()
+					.subscribe(Action0::call);
+		} finally {
+			spanInCurrentThread.finish();
+		}
 
 		then(this.caller.toString()).isEqualTo("actual_action");
-		then(this.tracer.getCurrentSpan()).isNotNull();
+		then(this.tracer.currentSpan()).isNull();
 		// making sure here that no new spans were created or reported as closed
-		then(this.listener.getEvents()).isEmpty();
-		then(spanInCurrentThread).hasNameEqualTo(spanInCurrentThread.getName());
-		then(spanInCurrentThread).isExportable();
-		then(spanInCurrentThread).hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME,
-				"current_span");
-		then(spanInCurrentThread).isALocalComponentSpan();
-	}
-
-	static class Listener implements SpanReporter {
-
-		private List<Span> events = new ArrayList<>();
-
-		public List<Span> getEvents() {
-			return this.events;
-		}
-
-		@Override
-		public void report(Span span) {
-			this.events.add(span);
-		}
+		then(this.reporter.getSpans()).hasSize(1);
+		zipkin2.Span span = this.reporter.getSpans().get(0);
+		then(span.name()).isEqualTo("current_span");
 	}
 
 	@Configuration
@@ -120,12 +92,12 @@ public class SleuthRxJavaTests {
 
 		@Bean
 		Sampler alwaysSampler() {
-			return new AlwaysSampler();
+			return Sampler.ALWAYS_SAMPLE;
 		}
 
 		@Bean
-		SpanReporter spanReporter() {
-			return new Listener();
+		ArrayListSpanReporter spanReporter() {
+			return new ArrayListSpanReporter();
 		}
 
 	}

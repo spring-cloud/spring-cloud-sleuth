@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,73 +16,60 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.lang.invoke.MethodHandles;
-
+import brave.Span;
+import brave.Tracer;
+import brave.http.HttpClientHandler;
+import brave.http.HttpTracing;
+import brave.propagation.Propagation;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanInjector;
-import org.springframework.cloud.sleuth.SpanTextMap;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * Abstraction over customization of Ribbon Requests. All clients will inject the span
  * into their respective context. The only difference is how those contexts set the headers.
- * In order to add a new implementation of the {@link RibbonRequestCustomizer} it's
- * necessary only to provide the {@link RibbonRequestCustomizer#accepts(Class)} method
- * with the context class name and {@link SpanInjectingRibbonRequestCustomizer#toSpanTextMap(Object)}
- * to tell Sleuth how to set a header using the particular library.
  *
  * @author Marcin Grzejszczak
  * @since 1.1.0
  */
-abstract class SpanInjectingRibbonRequestCustomizer<T> implements RibbonRequestCustomizer<T>,
-		SpanInjector<SpanTextMap> {
+abstract class SpanInjectingRibbonRequestCustomizer<T> implements RibbonRequestCustomizer<T> {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(SpanInjectingRibbonRequestCustomizer.class);
 
 	private final Tracer tracer;
+	HttpClientHandler<T, T> handler;
+	TraceContext.Injector<T> injector;
 
-	SpanInjectingRibbonRequestCustomizer(Tracer tracer) {
-		this.tracer = tracer;
+	SpanInjectingRibbonRequestCustomizer(HttpTracing httpTracing) {
+		this.tracer = httpTracing.tracing().tracer();
+		this.handler = HttpClientHandler
+				.create(httpTracing, handlerClientAdapter());
+		this.injector = httpTracing.tracing().propagation().injector(setter());
 	}
 
 	@Override
 	public void customize(T context) {
 		Span span = getCurrentSpan();
-		inject(span, toSpanTextMap(context));
-		span.logEvent(Span.CLIENT_SEND);
-		if (log.isDebugEnabled()) {
-			log.debug("Span in the RibbonRequestCustomizer is" + span);
+		if (span == null) {
+			this.handler.handleSend(this.injector, context);
+			return;
+		}
+		Span childSpan = this.handler.handleSend(this.injector, context, span);
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(childSpan)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Span in the RibbonRequestCustomizer is" + span);
+			}
+		} finally {
+			childSpan.finish();
 		}
 	}
 	
-	protected abstract SpanTextMap toSpanTextMap(T context);
+	protected abstract brave.http.HttpClientAdapter<T, T> handlerClientAdapter();
 
-	@Override
-	public void inject(Span span, SpanTextMap carrier) {
-		if (span == null) {
-			carrier.put(Span.SAMPLED_NAME, Span.SPAN_NOT_SAMPLED);
-			return;
-		}
-		carrier.put(Span.SAMPLED_NAME, span.isExportable() ?
-				Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
-		carrier.put(Span.TRACE_ID_NAME, span.traceIdString());
-		carrier.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		carrier.put(Span.SPAN_NAME_NAME, span.getName());
-		if (getParentId(span) != null) {
-			carrier.put(Span.PARENT_ID_NAME, Span.idToHex(getParentId(span)));
-		}
-		carrier.put(Span.PROCESS_ID_NAME, span.getProcessId());
-	}
+	protected abstract Propagation.Setter<T, String> setter();
 
-	private Long getParentId(Span span) {
-		return !span.getParents().isEmpty()
-				? span.getParents().get(0) : null;
-	}
-
-	private Span getCurrentSpan() {
-		return this.tracer.getCurrentSpan();
+	Span getCurrentSpan() {
+		return this.tracer.currentSpan();
 	}
 }

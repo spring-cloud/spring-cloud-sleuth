@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.cloud.sleuth.SpanTextMap;
-import org.springframework.cloud.sleuth.Tracer;
-
+import brave.http.HttpClientAdapter;
+import brave.http.HttpTracing;
+import brave.propagation.Propagation;
 import okhttp3.Request;
 
 /**
@@ -32,9 +27,24 @@ import okhttp3.Request;
  * @author Marcin Grzejszczak
  * @since 1.1.0
  */
-class OkHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCustomizer<Request.Builder> {
+class OkHttpClientRibbonRequestCustomizer extends
+		SpanInjectingRibbonRequestCustomizer<Request.Builder> {
 
-	OkHttpClientRibbonRequestCustomizer(Tracer tracer) {
+	static final Propagation.Setter<Request.Builder, String> SETTER =
+			new Propagation.Setter<Request.Builder, String>() {
+		@Override public void put(Request.Builder carrier, String key, String value) {
+			if (carrier.build().header(key) != null) {
+				return;
+			}
+			carrier.addHeader(key, value);
+		}
+
+		@Override public String toString() {
+			return "RequestBuilder::addHeader";
+		}
+	};
+
+	OkHttpClientRibbonRequestCustomizer(HttpTracing tracer) {
 		super(tracer);
 	}
 
@@ -44,21 +54,27 @@ class OkHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCust
 	}
 
 	@Override
-	protected SpanTextMap toSpanTextMap(final Request.Builder context) {
-		return new SpanTextMap() {
-			@Override public Iterator<Map.Entry<String, String>> iterator() {
-				Map<String, String> map = new HashMap<>();
-				for (Map.Entry<String, List<String>> entry : context.build().headers().toMultimap().entrySet()) {
-					if (!entry.getValue().isEmpty()) {
-						map.put(entry.getKey(), entry.getValue().get(0));
-					}
-				}
-				return map.entrySet().iterator();
+	protected HttpClientAdapter<Request.Builder, Request.Builder> handlerClientAdapter() {
+		return new HttpClientAdapter<Request.Builder, Request.Builder>() {
+			@Override public String method(Request.Builder request) {
+				return request.build().method();
 			}
 
-			@Override public void put(String key, String value) {
-				context.header(key, value);
+			@Override public String url(Request.Builder request) {
+				return request.build().url().uri().toString();
+			}
+
+			@Override public String requestHeader(Request.Builder request, String name) {
+				return request.build().header(name);
+			}
+
+			@Override public Integer statusCode(Request.Builder response) {
+				throw new UnsupportedOperationException("response not supported");
 			}
 		};
+	}
+
+	@Override protected Propagation.Setter<Request.Builder, String> setter() {
+		return SETTER;
 	}
 }

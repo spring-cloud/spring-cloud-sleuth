@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,24 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign.issues.issue350;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.junit.After;
-import org.junit.Before;
+import brave.Tracing;
+import brave.sampler.Sampler;
+import feign.Logger;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -41,8 +43,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import feign.Logger;
-
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -51,34 +51,28 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = Application.class,
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = {"ribbon.eureka.enabled=false", "feign.hystrix.enabled=false", "server.port=9988"})
+@TestPropertySource(properties = {"ribbon.eureka.enabled=false",
+		"feign.hystrix.enabled=false", "server.port=9988"})
 public class Issue350Tests {
 
 	TestRestTemplate template = new TestRestTemplate();
-	@Autowired Tracer tracer;
-
-	@Before
-	public void setup() {
-		ExceptionUtils.setFail(true);
-		TestSpanContextHolder.removeCurrentSpan();
-	}
-
-	@After
-	public void cleanup() {
-		TestSpanContextHolder.removeCurrentSpan();
-	}
+	@Autowired Tracing tracer;
+	@Autowired ArrayListSpanReporter reporter;
 
 	@Test
 	public void should_successfully_work_without_hystrix() {
 		this.template.getForEntity("http://localhost:9988/sleuth/test-not-ok", String.class);
-		then(ExceptionUtils.getLastException()).isNull();
-		then(this.tracer.getCurrentSpan()).isNull();
+
+		List<Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).tags()).containsEntry("http.status_code", "406");
 	}
 }
 
 @Configuration
-@EnableAutoConfiguration
-@EnableFeignClients(basePackageClasses = {SleuthTestController.class})
+@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
+@EnableFeignClients(basePackageClasses = {
+		SleuthTestController.class})
 class Application {
 
 	@Bean
@@ -93,12 +87,17 @@ class Application {
 
 	@Bean
 	public Logger.Level feignLoggerLevel() {
-		return feign.Logger.Level.FULL;
+		return Logger.Level.FULL;
 	}
 
 	@Bean
-	public AlwaysSampler defaultSampler() {
-		return new AlwaysSampler();
+	public Sampler defaultSampler() {
+		return Sampler.ALWAYS_SAMPLE;
+	}
+
+	@Bean
+	public Reporter<Span> spanReporter() {
+		return new ArrayListSpanReporter();
 	}
 }
 
@@ -127,7 +126,6 @@ interface MyFeignClient {
 	@RequestMapping("/service/not-ok")
 	String exp();
 }
-
 
 @RestController
 @RequestMapping(path = "/sleuth")

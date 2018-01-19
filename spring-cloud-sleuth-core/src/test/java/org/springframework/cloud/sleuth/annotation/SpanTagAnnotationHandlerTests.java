@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+import brave.sampler.Sampler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,9 +27,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.annotation.SpanTagAnnotationHandlerTests.TestConfiguration;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -36,7 +34,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@SpringBootTest(classes = TestConfiguration.class)
+@SpringBootTest(classes = SpanTagAnnotationHandlerTests.TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SpanTagAnnotationHandlerTests {
 
@@ -46,7 +44,6 @@ public class SpanTagAnnotationHandlerTests {
 
 	@Before
 	public void setup() {
-		ExceptionUtils.setFail(true);
 		this.handler = new SpanTagAnnotationHandler(this.beanFactory);
 	}
 
@@ -119,8 +116,8 @@ public class SpanTagAnnotationHandlerTests {
 		}
 		// end::custom_resolver[]
 
-		@Bean AlwaysSampler alwaysSampler() {
-			return new AlwaysSampler();
+		@Bean Sampler alwaysSampler() {
+			return Sampler.ALWAYS_SAMPLE;
 		}
 	}
 

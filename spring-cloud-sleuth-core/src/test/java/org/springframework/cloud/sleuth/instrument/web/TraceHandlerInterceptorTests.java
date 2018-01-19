@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@ public class TraceHandlerInterceptorTests {
 	public void should_cache_the_retrieved_bean_when_exception_took_place() throws Exception {
 		given(this.beanFactory.getBean(ErrorController.class)).willThrow(new NoSuchBeanDefinitionException("errorController"));
 
-		then(this.traceHandlerInterceptor.getErrorController()).isNull();
-		then(this.traceHandlerInterceptor.getErrorController()).isNull();
+		then(this.traceHandlerInterceptor.errorController()).isNull();
+		then(this.traceHandlerInterceptor.errorController()).isNull();
 		BDDMockito.then(this.beanFactory).should(only()).getBean(ErrorController.class);
 	}
 
@@ -52,8 +52,8 @@ public class TraceHandlerInterceptorTests {
 	public void should_cache_the_retrieved_bean_when_no_exception_took_place() throws Exception {
 		given(this.beanFactory.getBean(ErrorController.class)).willReturn(() -> null);
 
-		then(this.traceHandlerInterceptor.getErrorController()).isNotNull();
-		then(this.traceHandlerInterceptor.getErrorController()).isNotNull();
+		then(this.traceHandlerInterceptor.errorController()).isNotNull();
+		then(this.traceHandlerInterceptor.errorController()).isNotNull();
 		BDDMockito.then(this.beanFactory).should(only()).getBean(ErrorController.class);
 	}
 

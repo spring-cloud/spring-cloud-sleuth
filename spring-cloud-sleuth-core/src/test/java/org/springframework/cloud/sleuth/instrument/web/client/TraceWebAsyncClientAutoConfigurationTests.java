@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,245 +16,143 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import brave.Tracer;
+import brave.Tracing;
+import brave.sampler.Sampler;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import zipkin2.Span;
 import org.assertj.core.api.BDDAssertions;
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.AsyncClientHttpRequest;
-import org.springframework.http.client.AsyncClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
 
-import org.awaitility.Awaitility;
-
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(Enclosed.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = {
+		TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class },
+		webEnvironment = RANDOM_PORT)
 public class TraceWebAsyncClientAutoConfigurationTests {
+	@Autowired AsyncRestTemplate asyncRestTemplate;
+	@Autowired Environment environment;
+	@Autowired ArrayListSpanReporter accumulator;
+	@Autowired Tracing tracer;
 
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringBootTest(classes = {
-			CustomSyncAndAsyncClientFactory.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
-	public static class CustomSyncAndAsyncClientFactory {
-		@Autowired AsyncRestTemplate asyncRestTemplate;
-
-		@Test
-		public void should_inject_to_async_rest_template_custom_client_http_request_factory() {
-			then(this.asyncRestTemplate.getAsyncRequestFactory()).isInstanceOf(TraceAsyncClientHttpRequestFactoryWrapper.class);
-			TraceAsyncClientHttpRequestFactoryWrapper wrapper = (TraceAsyncClientHttpRequestFactoryWrapper) this.asyncRestTemplate.getAsyncRequestFactory();
-			then(wrapper.syncDelegate).isInstanceOf(MySyncClientHttpRequestFactory.class);
-			then(wrapper.asyncDelegate).isInstanceOf(MyAsyncClientHttpRequestFactory.class);
-			then(this.asyncRestTemplate).isInstanceOf(TraceAsyncRestTemplate.class);
-		}
-
-		// tag::async_template_factories[]
-		@EnableAutoConfiguration
-		@Configuration
-		public static class TestConfiguration {
-
-			@Bean
-			ClientHttpRequestFactory mySyncClientFactory() {
-				return new MySyncClientHttpRequestFactory();
-			}
-
-			@Bean
-			AsyncClientHttpRequestFactory myAsyncClientFactory() {
-				return new MyAsyncClientHttpRequestFactory();
-			}
-		}
-		// end::async_template_factories[]
-
+	@Before
+	public void setup() {
+		this.accumulator.clear();
 	}
 
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringBootTest(classes = {
-			CustomSyncClientFactory.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
-	public static class CustomSyncClientFactory {
-		@Autowired AsyncRestTemplate asyncRestTemplate;
+	@Test
+	public void should_close_span_upon_success_callback()
+			throws ExecutionException, InterruptedException {
+		brave.Span initialSpan = this.tracer.tracer().nextSpan().name("foo");
 
-		@Test
-		public void should_inject_to_async_rest_template_custom_client_http_request_factory() {
-			then(this.asyncRestTemplate.getAsyncRequestFactory()).isInstanceOf(TraceAsyncClientHttpRequestFactoryWrapper.class);
-			TraceAsyncClientHttpRequestFactoryWrapper wrapper = (TraceAsyncClientHttpRequestFactoryWrapper) this.asyncRestTemplate.getAsyncRequestFactory();
-			then(wrapper.syncDelegate).isInstanceOf(MySyncClientHttpRequestFactory.class);
-			then(wrapper.asyncDelegate).isInstanceOf(SimpleClientHttpRequestFactory.class);
-			then(this.asyncRestTemplate).isInstanceOf(TraceAsyncRestTemplate.class);
-		}
-
-		@EnableAutoConfiguration
-		@Configuration
-		public static class TestConfiguration {
-
-			@Bean
-			ClientHttpRequestFactory mySyncClientFactory() {
-				return new MySyncClientHttpRequestFactory();
-			}
-		}
-
-	}
-
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringBootTest(classes = {
-			CustomASyncClientFactory.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
-	public static class CustomASyncClientFactory {
-		@Autowired AsyncRestTemplate asyncRestTemplate;
-
-		@Test
-		public void should_inject_to_async_rest_template_custom_client_http_request_factory() {
-			then(this.asyncRestTemplate.getAsyncRequestFactory()).isInstanceOf(TraceAsyncClientHttpRequestFactoryWrapper.class);
-			TraceAsyncClientHttpRequestFactoryWrapper wrapper = (TraceAsyncClientHttpRequestFactoryWrapper) this.asyncRestTemplate.getAsyncRequestFactory();
-			then(wrapper.syncDelegate).isInstanceOf(SimpleClientHttpRequestFactory.class);
-			then(wrapper.asyncDelegate).isInstanceOf(AsyncClientHttpRequestFactory.class);
-			then(this.asyncRestTemplate).isInstanceOf(TraceAsyncRestTemplate.class);
-		}
-
-		@EnableAutoConfiguration
-		@Configuration
-		public static class TestConfiguration {
-
-			@Bean
-			AsyncClientHttpRequestFactory myAsyncClientFactory() {
-				return new MyAsyncClientHttpRequestFactory();
-			}
-		}
-
-	}
-
-	private  static class MySyncClientHttpRequestFactory implements ClientHttpRequestFactory {
-		@Override public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod)
-				throws IOException {
-			return null;
-		}
-	}
-	private static class MyAsyncClientHttpRequestFactory implements AsyncClientHttpRequestFactory {
-		@Override
-		public AsyncClientHttpRequest createAsyncRequest(URI uri, HttpMethod httpMethod)
-				throws IOException {
-			return null;
-		}
-	}
-
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringBootTest(classes = {
-			DurationChecking.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
-	public static class DurationChecking {
-		@Autowired AsyncRestTemplate asyncRestTemplate;
-		@Autowired Environment environment;
-		@Autowired ArrayListSpanAccumulator accumulator;
-		@Autowired Tracer tracer;
-
-		@Before
-		public void setup() {
-			ExceptionUtils.setFail(true);
-		}
-
-		@Test
-		public void should_close_span_upon_success_callback()
-				throws ExecutionException, InterruptedException {
+		try (Tracer.SpanInScope ws = this.tracer.tracer().withSpanInScope(initialSpan.start())) {
 			ListenableFuture<ResponseEntity<String>> future = this.asyncRestTemplate
 					.getForEntity("http://localhost:" + port() + "/foo", String.class);
 			String result = future.get().getBody();
 
 			then(result).isEqualTo("foo");
-			then(new ArrayList<>(this.accumulator.getSpans()).stream().filter(
-					span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent())).findFirst().isPresent()
-			).findFirst().get()).matches(span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100));
-			then(this.tracer.getCurrentSpan()).isNull();
-			then(ExceptionUtils.getLastException()).isNull();
+		} finally {
+			initialSpan.finish();
 		}
 
-		@Test
-		public void should_close_span_upon_failure_callback()
-				throws ExecutionException, InterruptedException {
-			ListenableFuture<ResponseEntity<String>> future;
-			try {
-				future = this.asyncRestTemplate
-						.getForEntity("http://localhost:" + port() + "/blowsup", String.class);
-				future.get();
-				BDDAssertions.fail("should throw an exception from the controller");
-			} catch (Exception e) {
+		then(this.accumulator.getSpans().stream()
+				.filter(span -> Span.Kind.CLIENT == span.kind()).findFirst().get())
+				.matches(span -> span.duration() >= TimeUnit.MILLISECONDS.toMicros(100));
+		then(this.tracer.tracer().currentSpan()).isNull();
+	}
 
-			}
-
-			Awaitility.await().untilAsserted(() -> {
-				then(new ArrayList<>(this.accumulator.getSpans()).stream()
-						.filter(span -> span.logs().stream().filter(log -> Span.CLIENT_RECV.equals(log.getEvent()))
-								.findFirst().isPresent()).findFirst().get()).matches(
-						span -> span.getAccumulatedMicros() >= TimeUnit.MILLISECONDS.toMicros(100))
-						.hasATagWithKey(Span.SPAN_ERROR_TAG_NAME);
-				then(this.tracer.getCurrentSpan()).isNull();
-				then(ExceptionUtils.getLastException()).isNull();
-			});
+	@Test
+	public void should_close_span_upon_failure_callback()
+			throws ExecutionException, InterruptedException {
+		ListenableFuture<ResponseEntity<String>> future;
+		try {
+			future = this.asyncRestTemplate
+					.getForEntity("http://localhost:" + port() + "/blowsup", String.class);
+			future.get();
+			BDDAssertions.fail("should throw an exception from the controller");
+		} catch (Exception e) {
 		}
 
-		int port() {
-			return this.environment.getProperty("local.server.port", Integer.class);
+		Awaitility.await().untilAsserted(() -> {
+			Span reportedRpcSpan = new ArrayList<>(this.accumulator.getSpans()).stream()
+					.filter(span -> Span.Kind.CLIENT == span.kind()).findFirst().get();
+			then(reportedRpcSpan).matches(
+					span -> span.duration() >= TimeUnit.MILLISECONDS.toMicros(100));
+			then(reportedRpcSpan.tags()).containsKey("error");
+			then(this.tracer.tracer().currentSpan()).isNull();
+		});
+	}
+
+	int port() {
+		return this.environment.getProperty("local.server.port", Integer.class);
+	}
+
+	@EnableAutoConfiguration(
+			// spring boot test will otherwise instrument the client and server with the same bean factory
+			// which isn't expected
+			exclude = TraceWebServletAutoConfiguration.class
+	)
+	@Configuration
+	public static class TestConfiguration {
+
+		@Bean ArrayListSpanReporter reporter() {
+			return new ArrayListSpanReporter();
 		}
 
-		@EnableAutoConfiguration
-		@Configuration
-		public static class TestConfiguration {
-
-			@Bean ArrayListSpanAccumulator accumulator() {
-				return new ArrayListSpanAccumulator();
-			}
-
-			@Bean
-			MyController myController() {
-				return new MyController();
-			}
-
-			@Bean AlwaysSampler sampler() {
-				return new AlwaysSampler();
-			}
+		@Bean
+		MyController myController() {
+			return new MyController();
 		}
 
-		@RestController
-		public static class MyController {
-
-			@RequestMapping("/foo")
-			String foo() throws Exception {
-				Thread.sleep(100);
-				return "foo";
-			}
-
-			@RequestMapping("/blowsup")
-			String blowsup() throws Exception {
-				Thread.sleep(100);
-				throw new RuntimeException("boom");
-			}
+		@Bean Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
 		}
 
+		@Bean
+		AsyncRestTemplate restTemplate() {
+			return new AsyncRestTemplate();
+		}
+	}
+
+	@RestController
+	public static class MyController {
+
+		@RequestMapping("/foo")
+		String foo() throws Exception {
+			Thread.sleep(100);
+			return "foo";
+		}
+
+		@RequestMapping("/blowsup")
+		String blowsup() throws Exception {
+			Thread.sleep(100);
+			throw new RuntimeException("boom");
+		}
 	}
 
 }
