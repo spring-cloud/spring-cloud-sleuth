@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,9 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import brave.Span;
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import zipkin2.reporter.Sender;
-import zipkin2.reporter.amqp.RabbitMQSender;
-import zipkin2.reporter.kafka11.KafkaSender;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Rule;
@@ -34,11 +30,14 @@ import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import zipkin2.reporter.Sender;
+import zipkin2.reporter.amqp.RabbitMQSender;
+import zipkin2.reporter.kafka11.KafkaSender;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
@@ -50,14 +49,6 @@ public class ZipkinAutoConfigurationTests {
 
 	@Rule public ExpectedException thrown = ExpectedException.none();
 	@Rule public MockWebServer server = new MockWebServer();
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
-			.spanReporter(this.reporter)
-			.build();
-
-	Span span =
-			this.tracing.tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
 	AnnotationConfigApplicationContext context;
 
@@ -180,6 +171,17 @@ public class ZipkinAutoConfigurationTests {
 	protected static class Config {
 		@Bean Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
+		}
+	}
+
+	@Configuration
+	protected static class AdjustersConfig {
+		@Bean SpanAdjuster adjusterOne() {
+			return span -> span.toBuilder().name("foo").build();
+		}
+
+		@Bean SpanAdjuster adjusterTwo() {
+			return span -> span.toBuilder().name(span.name() + " bar").build();
 		}
 	}
 }

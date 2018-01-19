@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,24 @@ public class SleuthProperties {
 	private boolean enabled = true;
 
 	/**
-	 * List of baggage key names that should be propagated out of process
+	 * List of baggage key names that should be propagated out of process.
+	 * These keys will be prefixed with `baggage` before the actual key.
+	 * This property is set in order to be backward compatible with previous
+	 * Sleuth versions.
+	 *
+	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String, java.util.Collection)
 	 */
 	private List<String> baggageKeys = new ArrayList<>();
+
+	/**
+	 * List of fields that are referenced the same in-process as it is on the wire. For example, the
+	 * name "x-vcap-request-id" would be set as-is including the prefix.
+	 *
+	 * <p>Note: {@code fieldName} will be implicitly lower-cased.
+	 *
+	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addField(String)
+	 */
+	private List<String> propagationKeys = new ArrayList<>();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -50,5 +65,13 @@ public class SleuthProperties {
 
 	public void setBaggageKeys(List<String> baggageKeys) {
 		this.baggageKeys = baggageKeys;
+	}
+
+	public List<String> getPropagationKeys() {
+		return this.propagationKeys;
+	}
+
+	public void setPropagationKeys(List<String> propagationKeys) {
+		this.propagationKeys = propagationKeys;
 	}
 }

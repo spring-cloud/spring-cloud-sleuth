@@ -8,6 +8,7 @@ import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.integration.annotation.Aggregator;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.IntegrationComponentScan;
@@ -16,6 +17,7 @@ import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.annotation.Splitter;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,7 +39,7 @@ public class DemoApplication {
 	@Autowired Tracer tracer;
 
 	@RequestMapping("/greeting")
-	public Greeting greeting(@RequestParam(defaultValue="Hello World!") String message) {
+	public Greeting greeting(@RequestParam(defaultValue="Hello World!") String message, @RequestHeader HttpHeaders headers) {
 		this.sender.send(message);
 		this.httpSpan = this.tracer.currentSpan();
 		return new Greeting(message);

@@ -23,7 +23,7 @@ of that span is equal to trace id.
 big-data store, a trace might be formed by a put request.
 
 *Annotation:*  is used to record existence of an event in time. With
-Brave instrumentation we no longer need to set special events
+https://github.com/openzipkin/brave[Brave] instrumentation we no longer need to set special events
 for https://zipkin.io/[Zipkin] to understand who the client and server are and where
 the request started and where it has ended. For learning purposes
 however we will mark these events to highlight what kind
@@ -128,6 +128,7 @@ to `true`.
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
+http://docssleuth-zipkin-server.cfapps.io/[Click here to see it live!]
 
 The dependency graph in Zipkin would look like this:
 
@@ -136,6 +137,7 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
+http://docssleuth-zipkin-server.cfapps.io/dependency[Click here to see it live!]
 
 ==== Log correlation
 

@@ -1,19 +1,10 @@
 package org.springframework.cloud.sleuth.autoconfig;
 
-import brave.Tracer;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
-import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import java.util.ArrayList;
+import java.util.List;
 
 import brave.CurrentSpanCustomizer;
+import brave.Tracer;
 import brave.Tracing;
 import brave.context.log4j2.ThreadContextCurrentTraceContext;
 import brave.propagation.B3Propagation;
@@ -21,6 +12,20 @@ import brave.propagation.CurrentTraceContext;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.sampler.Sampler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
+import org.springframework.cloud.sleuth.SpanAdjuster;
+import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
 /**
@@ -36,6 +41,8 @@ import zipkin2.reporter.Reporter;
 @EnableConfigurationProperties({ TraceKeys.class, SleuthProperties.class })
 public class TraceAutoConfiguration {
 
+	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
+
 	@Bean
 	@ConditionalOnMissingBean
 	Tracing sleuthTracing(@Value("${spring.zipkin.service.name:${spring.application.name:default}}") String serviceName,
@@ -48,7 +55,17 @@ public class TraceAutoConfiguration {
 				.localServiceName(serviceName)
 				.propagationFactory(factory)
 				.currentTraceContext(currentTraceContext)
-				.spanReporter(reporter).build();
+				.spanReporter(adjustedReporter(reporter)).build();
+	}
+
+	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate) {
+		return span -> {
+			Span spanToAdjust = span;
+			for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
+				spanToAdjust = spanAdjuster.adjust(spanToAdjust);
+			}
+			delegate.report(spanToAdjust);
+		};
 	}
 
 	@Bean
@@ -71,10 +88,24 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
-		if (sleuthProperties.getBaggageKeys().isEmpty()) {
+		if (sleuthProperties.getBaggageKeys().isEmpty() && sleuthProperties.getPropagationKeys().isEmpty()) {
 			return B3Propagation.FACTORY;
 		}
-		return ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, sleuthProperties.getBaggageKeys());
+		ExtraFieldPropagation.FactoryBuilder factoryBuilder = ExtraFieldPropagation
+				.newFactoryBuilder(B3Propagation.FACTORY);
+		if (!sleuthProperties.getBaggageKeys().isEmpty()) {
+			factoryBuilder = factoryBuilder
+					// for HTTP
+					.addPrefixedFields("baggage-", sleuthProperties.getBaggageKeys())
+					// for messaging
+					.addPrefixedFields("baggage_", sleuthProperties.getBaggageKeys());
+		}
+		if (!sleuthProperties.getPropagationKeys().isEmpty()) {
+			for (String key : sleuthProperties.getPropagationKeys()) {
+				factoryBuilder = factoryBuilder.addField(key);
+			}
+		}
+		return factoryBuilder.build();
 	}
 
 	@Bean

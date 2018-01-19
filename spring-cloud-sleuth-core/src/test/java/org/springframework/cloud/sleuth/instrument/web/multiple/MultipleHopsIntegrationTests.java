@@ -104,8 +104,8 @@ public class MultipleHopsIntegrationTests {
 			//end::baggage_tag[]
 
 			HttpHeaders headers = new HttpHeaders();
-			headers.put("baz", Collections.singletonList("baz"));
-			headers.put("bizarreCASE", Collections.singletonList("value"));
+			headers.put("baggage-baz", Collections.singletonList("baz"));
+			headers.put("baggage-bizarreCASE", Collections.singletonList("value"));
 			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
 					URI.create("http://localhost:" + this.config.port + "/greeting"));
 			this.restTemplate.exchange(requestEntity, String.class);

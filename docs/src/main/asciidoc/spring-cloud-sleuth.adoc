@@ -424,8 +424,11 @@ String countryCode = ExtraFieldPropagation.get(span.context(), "country-code");
 ```
 
 IMPORTANT: In comparison to previous versions of Sleuth, with
-Brave it's required to pass the list of whitelisted baggage keys
-via the `spring.sleuth.baggage-keys` property.
+Brave it's required to pass the list of baggage keys.
+There are two properties to achieve this. Via the `spring.sleuth.baggage-keys` you set keys
+that will get prefixed with `baggage-` for http calls and `baggage_` for messaging. You can also pass
+a list of prefixed keys that will be whitelisted without any prefix via
+`spring.sleuth.prefixed-keys` property.
 
 ==== Extracting a propagated context
 
@@ -866,27 +869,22 @@ spring.zipkin.service.name: foo
 Before reporting spans to e.g. Zipkin you can be interested in modifying that span in some way.
  You can achieve that by using the `SpanAdjuster` interface.
 
-Example of usage:
-
 In Sleuth we're generating spans with a fixed name. Some users want to modify the name depending on values
 of tags. Implementation of the `SpanAdjuster` interface can be used to alter that name. Example:
 
-// TODO: Put it in a test or sth
+Example. If you register two beans of `SpanAdjuster` type:
 
-[source,yaml]
+[source,java]
 ----
-@Bean
-Reporter<zipkin2.Span> adjustingReporter(Sender sender) {
-    Reporter<zipkin2.Span> delegate = new AsyncReporter(sender);
-    return span -> {
-        delegate.report(span.toBuilder().name(scrub(span.getName())).build());
-    }
-}
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/autoconfig/SpanAdjusterAspectTests.java[tags=adjuster,indent=0]
 ----
 
-This will lead in changing the name of the reported span just before it gets sent to Zipkin.
+This will lead in changing the name of the reported span to `foo bar`, just before it gets reported (e.g. to Zipkin).
 
 === Host locator
+
+IMPORTANT: This section is about defining *host* from service discovery. It's *NOT*
+about finding Zipkin in service discovery.
 
 In order to define the host that is corresponding to a particular span we need to resolve the host name
 and port. The default approach is to take it from server properties. If those for some reason are not set
@@ -1137,7 +1135,7 @@ can see an example of how to set up such a custom `Executor`.
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]
+include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]
 ----
 
 === Messaging
