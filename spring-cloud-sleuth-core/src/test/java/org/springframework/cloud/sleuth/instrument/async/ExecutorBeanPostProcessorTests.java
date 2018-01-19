@@ -48,6 +48,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		then(o).isInstanceOf(ScheduledExecutorService.class);
 		then(ClassUtils.isCglibProxy(o)).isFalse();
+		service.shutdown();
 	}
 
 	@Test
@@ -63,6 +64,7 @@ public class ExecutorBeanPostProcessorTests {
 		thenThrownBy(() -> bpp.postProcessAfterInitialization(service, "foo"))
 				.isInstanceOf(AopConfigException.class)
 				.hasMessage("foo");
+		service.shutdown();
 	}
 
 	@Test

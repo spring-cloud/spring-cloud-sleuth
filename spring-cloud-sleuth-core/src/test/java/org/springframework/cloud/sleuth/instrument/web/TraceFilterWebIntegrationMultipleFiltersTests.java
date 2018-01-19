@@ -16,14 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.io.IOException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.PreDestroy;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
 import brave.Tracing;
@@ -160,6 +162,11 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 		@Override public void execute(Runnable command) {
 			this.delegate.execute(command);
 		}
+
+		@PreDestroy
+		public void destroy() {
+			((ExecutorService) this.delegate).shutdown();
+		}
 	}
 
 	static class MyExecutorWithFinalMethod implements Executor {
@@ -169,6 +176,11 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 		@Override public final void execute(Runnable command) {
 			this.delegate.execute(command);
 		}
+
+		@PreDestroy
+		public void destroy() {
+			((ExecutorService) this.delegate).shutdown();
+		}
 	}
 
 	static final class MyFinalExecutor implements Executor {
@@ -177,6 +189,11 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 
 		@Override public void execute(Runnable command) {
 			this.delegate.execute(command);
+		}
+
+		@PreDestroy
+		public void destroy() {
+			((ExecutorService) this.delegate).shutdown();
 		}
 	}
 }

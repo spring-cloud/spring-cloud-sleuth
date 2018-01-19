@@ -2,7 +2,10 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import javax.annotation.PreDestroy;
 
 import brave.Span;
 import brave.Tracer;
@@ -344,8 +347,15 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 			return tracing().tracer();
 		}
 
+		ExecutorService service = Executors.newSingleThreadExecutor();
+
 		@Bean ExecutorChannel executorChannel() {
-			return new ExecutorChannel(Executors.newSingleThreadExecutor());
+			return new ExecutorChannel(this.service);
+		}
+
+		@PreDestroy
+		public void destroy() {
+			this.service.shutdown();
 		}
 
 		@Bean DirectChannel directChannel() {

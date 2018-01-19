@@ -34,6 +34,7 @@ public class TraceRunnableTests {
 	public void clean() {
 		this.tracing.close();
 		this.reporter.clear();
+		this.executor.shutdown();
 	}
 
 	@Test
