@@ -67,7 +67,7 @@ of that span is equal to trace id.
 big-data store, a trace might be formed by a put request.
 
 *Annotation:*  is used to record existence of an event in time. With
-Brave instrumentation we no longer need to set special events
+https://github.com/openzipkin/brave[Brave] instrumentation we no longer need to set special events
 for https://zipkin.io/[Zipkin] to understand who the client and server are and where
 the request started and where it has ended. For learning purposes
 however we will mark these events to highlight what kind

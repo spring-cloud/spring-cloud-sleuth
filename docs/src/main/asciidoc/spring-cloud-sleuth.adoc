@@ -153,7 +153,7 @@ void userCode() {
 ==== RPC tracing
 
 Check for https://github.com/openzipkin/sleuth/tree/master/instrumentation[instrumentation written here]
-and [Zipkin's list](http://zipkin.io/pages/existing_instrumentations.html)
+and http://zipkin.io/pages/existing_instrumentations.html[Zipkin's list]
 before rolling your own RPC instrumentation!
 
 RPC tracing is often done automatically by interceptors. Under the scenes,
@@ -296,7 +296,7 @@ exporting span data to Zipkin, there is also an `Sampler.ALWAYS_SAMPLE`
 that exports everything and a `ProbabilityBasedSampler` that samples a
 fixed fraction of spans.
 
-NOTE: the `ProbabilityBasedSampler` is the default if you are using
+NOTE: The `ProbabilityBasedSampler` is the default if you are using
 `spring-cloud-sleuth-zipkin`. You can
 configure the exports using `spring.sleuth.sampler.probability`. The passed
 value needs to be a double from `0.0` to `1.0`.
@@ -340,7 +340,7 @@ sent along with it, encoded as request headers:
 └──────────────────┘                                       └──────────────────┘
 ```
 
-The names above are from [B3 Propagation](https://github.com/openzipkin/b3-propagation),
+The names above are from https://github.com/openzipkin/b3-propagation[B3 Propagation],
 which is built-in to Brave and has implementations in many languages and
 frameworks.
 
