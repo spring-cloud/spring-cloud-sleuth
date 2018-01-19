@@ -25,14 +25,14 @@ package org.springframework.cloud.sleuth.instrument.web;
 public final class TraceRequestAttributes {
 
 	/**
-	 * Attribute containing a {@link org.springframework.cloud.sleuth.Span} set on a request when it got handled by a Sleuth component.
+	 * Attribute containing a Span set on a request when it got handled by a Sleuth component.
 	 * If that attribute is set then {@link TraceFilter} will not create a "fallback" server-side span.
 	 */
 	public static final String HANDLED_SPAN_REQUEST_ATTR = TraceRequestAttributes.class.getName()
 			+ ".TRACE_HANDLED";
 
 	/**
-	 * Attribute containing a {@link org.springframework.cloud.sleuth.Span} set on a request when it got handled by a Sleuth component.
+	 * Attribute containing a Span set on a request when it got handled by a Sleuth component.
 	 * If that attribute is set then {@link TraceFilter} will not close a span processed by the Error Controller.
 	 */
 	public static final String ERROR_HANDLED_SPAN_REQUEST_ATTR = TraceRequestAttributes.class.getName()
@@ -45,7 +45,7 @@ public final class TraceRequestAttributes {
 			+ ".TRACE_HANDLED_NEW_SPAN";
 
 	/**
-	 * Attribute set when the {@link org.springframework.cloud.sleuth.Span} got continued in the {@link TraceFilter}.
+	 * Attribute set when the Span got continued in the {@link TraceFilter}.
 	 * The Sleuth tracing components will most likely continue the current Span instead of creating a new one.
 	 */
 	public static final String SPAN_CONTINUED_REQUEST_ATTR = TraceRequestAttributes.class.getName()
