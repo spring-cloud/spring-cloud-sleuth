@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
+import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
 import org.junit.After;
@@ -27,6 +28,7 @@ public class TraceRunnableTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 
 	@After
 	public void clean() {
@@ -118,7 +120,7 @@ public class TraceRunnableTests {
 		return new Runnable() {
 			@Override
 			public void run() {
-				span.set(Tracing.currentTracer().currentSpan());
+				span.set(tracer.currentSpan());
 			}
 
 			@Override public String toString() {
