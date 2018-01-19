@@ -17,4 +17,110 @@ Configure the location of the service using <code class="literal">spring.zipkin.
  above. Other logging systems have to configure their own formatter to get the same result. The default is
  <code class="literal">logging.pattern.level</code> set to <code class="literal">%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]</code>
  (this is a Spring Boot feature for logback users).
- <span class="strong"><strong>This means that if you&#8217;re not using SLF4J this pattern WILL NOT be automatically applied</strong></span>.</p></td></tr></table></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi__additional_resources.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__sampling.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.&nbsp;Additional resources&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;4.&nbsp;Sampling</td></tr></table></div></body></html>
+ <span class="strong"><strong>This means that if you&#8217;re not using SLF4J this pattern WILL NOT be automatically applied</strong></span>.</p></td></tr></table></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_introduction_to_brave" href="#_introduction_to_brave"></a>3.1&nbsp;Introduction to Brave</h2></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>Starting with version <code class="literal">2.0.0</code> Spring Cloud Sleuth uses
+<a class="link" href="https://github.com/openzipkin/brave" target="_top">Brave</a> as the tracing library.
+For your convenience we&#8217;re embedding part of the Brave&#8217;s docs here.</p></td></tr></table></div><p>Brave is a library used to capture and report latency information about
+distributed operations to Zipkin. Most users won&#8217;t use Brave directly,
+rather libraries or frameworks than employ Brave on their behalf.</p><p>This module includes tracer creates and joins spans that model the
+latency of potentially distributed work. It also includes libraries to
+propagate the trace context over network boundaries, for example, via
+http headers.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_tracing" href="#_tracing"></a>3.1.1&nbsp;Tracing</h3></div></div></div><p>Most importantly, you need a <code class="literal">brave.Tracer</code>, configured to [report to Zipkin]
+(<a class="link" href="https://github.com/openzipkin/zipkin-reporter-java" target="_top">https://github.com/openzipkin/zipkin-reporter-java</a>).</p><p>Here&#8217;s an example setup that sends trace data (spans) to Zipkin over
+http (as opposed to Kafka).</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> MyClass {
+
+    <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">private</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">final</span> Tracer tracer;
+
+    <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Tracer will be autowired</span>
+    MyClass(Tracer tracer) {
+        <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer = tracer;
+    }
+
+    <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> doSth() {
+        Span span = tracer.newTrace().name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"encode"</span>).start();
+        <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
+    }
+}</pre><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>If your span contains a name greater than 50 chars, then that name will
+be truncated to 50 chars. Your names have to be explicit and concrete. Big names lead to
+latency issues and sometimes even thrown exceptions.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_tracing_2" href="#_tracing_2"></a>3.1.2&nbsp;Tracing</h3></div></div></div><p>The tracer creates and joins spans that model the latency of potentially
+distributed work. It can employ sampling to reduce overhead in process
+or to reduce the amount of data sent to Zipkin.</p><p>Spans returned by a tracer report data to Zipkin when finished, or do
+nothing if unsampled. After starting a span, you can annotate events of
+interest or add tags containing details or lookup keys.</p><p>Spans have a context which includes trace identifiers that place it at
+the correct spot in the tree representing the distributed operation.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_local_tracing" href="#_local_tracing"></a>3.1.3&nbsp;Local Tracing</h3></div></div></div><p>When tracing local code, just run it inside a span.</p><pre class="programlisting">Span span = tracer.newTrace().name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"encode"</span>).start();
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> {
+  doSomethingExpensive();
+} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+  span.finish();
+}</pre><p>In the above example, the span is the root of the trace. In many cases,
+you will be a part of an existing trace. When this is the case, call
+<code class="literal">newChild</code> instead of <code class="literal">newTrace</code></p><pre class="programlisting">Span span = tracer.newChild(root.context()).name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"encode"</span>).start();
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> {
+  doSomethingExpensive();
+} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+  span.finish();
+}</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_customizing_spans" href="#_customizing_spans"></a>3.1.4&nbsp;Customizing spans</h3></div></div></div><p>Once you have a span, you can add tags to it, which can be used as lookup
+keys or details. For example, you might add a tag with your runtime
+version.</p><pre class="programlisting">span.tag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"clnt/finagle.version"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"6.36.0"</span>);</pre><p>When exposing the ability to customize spans to third parties, prefer
+<code class="literal">brave.SpanCustomizer</code> as opposed to <code class="literal">brave.Span</code>. The former is simpler to
+understand and test, and doesn&#8217;t tempt users with span lifecycle hooks.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">interface</span> MyTraceCallback {
+  <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> request(Request request, SpanCustomizer customizer);
+}</pre><p>Since <code class="literal">brave.Span</code> implements <code class="literal">brave.SpanCustomizer</code>, it is just as easy for you
+to pass to users.</p><p>Ex.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">for</span> (MyTraceCallback callback : userCallbacks) {
+  callback.request(request, span);
+}</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_implicitly_looking_up_the_current_span" href="#_implicitly_looking_up_the_current_span"></a>3.1.5&nbsp;Implicitly looking up the current span</h3></div></div></div><p>Sometimes you won&#8217;t know if a trace is in progress or not, and you don&#8217;t
+want users to do null checks. <code class="literal">brave.CurrentSpanCustomizer</code> adds to any
+span that&#8217;s in progress or drops data accordingly.</p><p>Ex.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// user code can then inject this without a chance of it being null.</span>
+<em><span class="hl-annotation" style="color: gray">@Autowire</span></em> SpanCustomizer span;
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> userCode() {
+  span.annotate(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"tx.started"</span>);
+  ...
+}</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_rpc_tracing" href="#_rpc_tracing"></a>3.1.6&nbsp;RPC tracing</h3></div></div></div><p>Check for <a class="link" href="https://github.com/openzipkin/sleuth/tree/master/instrumentation" target="_top">instrumentation written here</a>
+and <a class="link" href="http://zipkin.io/pages/existing_instrumentations.html" target="_top">Zipkin&#8217;s list</a>
+before rolling your own RPC instrumentation!</p><p>RPC tracing is often done automatically by interceptors. Under the scenes,
+they add tags and events that relate to their role in an RPC operation.</p><p>Here&#8217;s an example of a client span:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// before you send a request, add metadata that describes the operation</span>
+span = tracer.newTrace().name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"get"</span>).type(CLIENT);
+span.tag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"clnt/finagle.version"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"6.36.0"</span>);
+span.tag(TraceKeys.HTTP_PATH, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"/api"</span>);
+span.remoteEndpoint(Endpoint.builder()
+    .serviceName(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"backend"</span>)
+    .ipv4(<span class="hl-number">127</span> &lt;&lt; <span class="hl-number">24</span> | <span class="hl-number">1</span>)
+    .port(<span class="hl-number">8080</span>).build());
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// when the request is scheduled, start the span</span>
+span.start();
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// if you have callbacks for when data is on the wire, note those events</span>
+span.annotate(Constants.WIRE_SEND);
+span.annotate(Constants.WIRE_RECV);
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// when the response is complete, finish the span</span>
+span.finish();</pre><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_one_way_tracing" href="#_one_way_tracing"></a>One-Way tracing</h4></div></div></div><p>Sometimes you need to model an asynchronous operation, where there is a
+request, but no response. In normal RPC tracing, you use <code class="literal">span.finish()</code>
+which indicates the response was received. In one-way tracing, you use
+<code class="literal">span.flush()</code> instead, as you don&#8217;t expect a response.</p><p>Here&#8217;s how a client might model a one-way operation</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// start a new span representing a client request</span>
+oneWaySend = tracer.newSpan(parent).kind(Span.Kind.CLIENT);
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Add the trace context to the request, so it can be propagated in-band</span>
+tracing.propagation().injector(Request::addHeader)
+                     .inject(oneWaySend.context(), request);
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// fire off the request asynchronously, totally dropping any response</span>
+request.execute();
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// start the client side and flush instead of finish</span>
+oneWaySend.start().flush();</pre><p>And here&#8217;s how a server might handle this..</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// pull the context out of the incoming request</span>
+extractor = tracing.propagation().extractor(Request::getHeader);
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// convert that context to a span which you can name and add tags to</span>
+oneWayReceive = nextSpan(tracer, extractor.extract(request))
+    .name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"process-request"</span>)
+    .kind(SERVER)
+    ... add tags etc.
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// start the server side and flush instead of finish</span>
+oneWayReceive.start().flush();
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// you should not modify this span anymore as it is complete. However,</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// you can create children to represent follow-up work.</span>
+next = tracer.newSpan(oneWayReceive.context()).name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"step2"</span>).start();</pre><p><span class="strong"><strong>Note</strong></span> The above propagation logic is a simplified version of our [http handlers](<a class="link" href="https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server" target="_top">https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server</a>).</p><p>There&#8217;s a working example of a one-way span [here](src/test/java/sleuth/features/async/OneWaySpanTest.java).</p></div></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi__additional_resources.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__sampling.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.&nbsp;Additional resources&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;4.&nbsp;Sampling</td></tr></table></div></body></html>

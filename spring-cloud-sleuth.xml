@@ -34,8 +34,12 @@ of that span is equal to trace id.</simpara>
 </tip>
 <simpara><emphasis role="strong">Trace:</emphasis> A set of spans forming a tree-like structure.  For example, if you are running a distributed
 big-data store, a trace might be formed by a put request.</simpara>
-<simpara><emphasis role="strong">Annotation:</emphasis>  is used to record existence of an event in time. Some of the core annotations used to define
-the start and stop of a request are:</simpara>
+<simpara><emphasis role="strong">Annotation:</emphasis>  is used to record existence of an event in time. With
+<link xl:href="https://github.com/openzipkin/brave">Brave</link> instrumentation we no longer need to set special events
+for <link xl:href="https://zipkin.io/">Zipkin</link> to understand who the client and server are and where
+the request started and where it has ended. For learning purposes
+however we will mark these events to highlight what kind
+of an action took place.</simpara>
 <itemizedlist>
 <listitem>
 <simpara><emphasis role="strong">cs</emphasis> - Client Sent - The client has made a request. This annotation depicts the start of the span.</simpara>
@@ -68,8 +72,8 @@ will receive the whole time needed by the client to receive the response from th
 <screen>Trace Id = X
 Span Id = D
 Client Sent</screen>
-<simpara>That means that the current span has <emphasis role="strong">Trace-Id</emphasis> set to <emphasis role="strong">X</emphasis>, <emphasis role="strong">Span-Id</emphasis> set to <emphasis role="strong">D</emphasis>. It also has emitted
- <emphasis role="strong">Client Sent</emphasis> event.</simpara>
+<simpara>That means that the current span has <emphasis role="strong">Trace-Id</emphasis> set to <emphasis role="strong">X</emphasis>, <emphasis role="strong">Span-Id</emphasis> set to <emphasis role="strong">D</emphasis>. Also, the
+ <emphasis role="strong">Client Sent</emphasis> event took place.</simpara>
 <simpara>This is how the visualization of the parent / child relationship of spans would look like:</simpara>
 <informalfigure>
 <mediaobject>
@@ -114,18 +118,18 @@ annotations then they will presented as a single span.</simpara>
 <simpara>2 spans come from <literal>http:/start</literal> span. It has the Server Received (SR) and Server Sent (SS) annotations.</simpara>
 </listitem>
 <listitem>
-<simpara>2 spans come from the RPC call from <literal>service1</literal> to <literal>service2</literal> to the <literal>http:/foo</literal> endpoint. It has the Client Sent (CS)
-and Client Received (CR) annotations on <literal>service1</literal> side. It also has Server Received (SR) and Server Sent (SS) annotations
+<simpara>2 spans come from the RPC call from <literal>service1</literal> to <literal>service2</literal> to the <literal>http:/foo</literal> endpoint. The Client Sent (CS)
+and Client Received (CR) events took place on <literal>service1</literal> side. Server Received (SR) and Server Sent (SS) events took place
 on the <literal>service2</literal> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</simpara>
 </listitem>
 <listitem>
-<simpara>2 spans come from the RPC call from <literal>service2</literal> to <literal>service3</literal> to the <literal>http:/bar</literal> endpoint. It has the Client Sent (CS)
-and Client Received (CR) annotations on <literal>service2</literal> side. It also has Server Received (SR) and Server Sent (SS) annotations
+<simpara>2 spans come from the RPC call from <literal>service2</literal> to <literal>service3</literal> to the <literal>http:/bar</literal> endpoint. The Client Sent (CS)
+and Client Received (CR) events took place on <literal>service2</literal> side. Server Received (SR) and Server Sent (SS) events took place
 on the <literal>service3</literal> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</simpara>
 </listitem>
 <listitem>
-<simpara>2 spans come from the RPC call from <literal>service2</literal> to <literal>service4</literal> to the <literal>http:/baz</literal> endpoint. It has the Client Sent (CS)
-and Client Received (CR) annotations on <literal>service2</literal> side. It also has Server Received (SR) and Server Sent (SS) annotations
+<simpara>2 spans come from the RPC call from <literal>service2</literal> to <literal>service4</literal> to the <literal>http:/baz</literal> endpoint. The Client Sent (CS)
+and Client Received (CR) events took place on <literal>service2</literal> side. Server Received (SR) and Server Sent (SS) events took place
 on the <literal>service4</literal> side. Physically there are 2 spans but they form 1 logical span related to an RPC call.</simpara>
 </listitem>
 </itemizedlist>
@@ -159,6 +163,18 @@ setting proper tags on the span which Zipkin can properly colorize. You could se
 </informalfigure>
 <simpara>As you can see you can easily see the reason for an error and the whole stacktrace related to it.</simpara>
 </section>
+<section xml:id="_distributed_tracing_with_brave">
+<title>Distributed tracing with Brave</title>
+<simpara>Starting with version <literal>2.0.0</literal>, Spring Cloud Sleuth uses
+<link xl:href="https://github.com/openzipkin/brave">Brave</link> as the tracing library. That means
+that Sleuth no longer takes care of storing the context but it delegates
+that work to Brave.</simpara>
+<simpara>Due to the fact that Sleuth had different naming / tagging
+conventions than Brave, we&#8217;ve decided to follow the Brave&#8217;s
+conventions from now on. However, if you want to use the legacy
+Sleuth approaches, it&#8217;s enough to set the <literal>spring.sleuth.http.legacy.enabled</literal> property
+to <literal>true</literal>.</simpara>
+</section>
 <section xml:id="_live_examples">
 <title>Live examples</title>
 <figure>
@@ -170,6 +186,7 @@ setting proper tags on the span which Zipkin can properly colorize. You could se
 <textobject><phrase>Zipkin deployed on Pivotal Web Services</phrase></textobject>
 </mediaobject>
 </figure>
+<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/">Click here to see it live!</link></simpara>
 <simpara>The dependency graph in Zipkin would look like this:</simpara>
 <informalfigure>
 <mediaobject>
@@ -188,6 +205,7 @@ setting proper tags on the span which Zipkin can properly colorize. You could se
 <textobject><phrase>Zipkin deployed on Pivotal Web Services</phrase></textobject>
 </mediaobject>
 </figure>
+<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/dependency">Click here to see it live!</link></simpara>
 </section>
 <section xml:id="_log_correlation">
 <title>Log correlation</title>
@@ -348,9 +366,8 @@ too many can decrease system throughput or increase RPC latency. In extreme case
 to exceeding transport-level message or header capacity.</simpara>
 </important>
 <simpara>Example of setting baggage on a span:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.createSpan("span");
-initialSpan.setBaggageItem("foo", "bar");
-initialSpan.setBaggageItem("UPPER_CASE", "someValue");</programlisting>
+<programlisting language="java" linenumbering="unnumbered">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+}</programlisting>
 <section xml:id="_baggage_vs_span_tags">
 <title>Baggage vs. Span Tags</title>
 <simpara>Baggage travels with the trace (i.e. every child span contains the baggage of its parent). Zipkin has no knowledge of
@@ -358,13 +375,10 @@ baggage and will not even receive that information.</simpara>
 <simpara>Tags are attached to a specific span - they are presented for that particular span only. However you
 can search by tag to find the trace, where there exists a span having the searched tag value.</simpara>
 <simpara>If you want to be able to lookup a span based on baggage, you should add corresponding entry as a tag in the root span.</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
-
-Span span = tracer.getCurrentSpan();
-String baggageKey = "key";
-String baggageValue = "foo";
-span.setBaggageItem(baggageKey, baggageValue);
-tracer.addTag(baggageKey, baggageValue);</programlisting>
+<important>
+<simpara>Remember that the span needs to be in scope!</simpara>
+</important>
+<programlisting language="java" linenumbering="unnumbered">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]</programlisting>
 </section>
 </section>
 </section>
@@ -382,21 +396,21 @@ the <literal>spring-cloud-starter-sleuth</literal> module to your project.</simp
 <title>Maven</title>
 <para>
 <programlisting language="xml" linenumbering="unnumbered">&lt;dependencyManagement&gt; <co xml:id="CO1-1"/>
-         &lt;dependencies&gt;
-             &lt;dependency&gt;
-                 &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-                 &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
-                 &lt;version&gt;${release.train.version}&lt;/version&gt;
-                 &lt;type&gt;pom&lt;/type&gt;
-                 &lt;scope&gt;import&lt;/scope&gt;
-             &lt;/dependency&gt;
-         &lt;/dependencies&gt;
-   &lt;/dependencyManagement&gt;
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
 
-   &lt;dependency&gt; <co xml:id="CO1-2"/>
-       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
-   &lt;/dependency&gt;</programlisting>
+&lt;dependency&gt; <co xml:id="CO1-2"/>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
+&lt;/dependency&gt;</programlisting>
 </para>
 </formalpara>
 <calloutlist>
@@ -439,21 +453,21 @@ the Spring BOM</para>
 <title>Maven</title>
 <para>
 <programlisting language="xml" linenumbering="unnumbered">&lt;dependencyManagement&gt; <co xml:id="CO3-1"/>
-         &lt;dependencies&gt;
-             &lt;dependency&gt;
-                 &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-                 &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
-                 &lt;version&gt;${release.train.version}&lt;/version&gt;
-                 &lt;type&gt;pom&lt;/type&gt;
-                 &lt;scope&gt;import&lt;/scope&gt;
-             &lt;/dependency&gt;
-         &lt;/dependencies&gt;
-   &lt;/dependencyManagement&gt;
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
 
-   &lt;dependency&gt; <co xml:id="CO3-2"/>
-       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
-   &lt;/dependency&gt;</programlisting>
+&lt;dependency&gt; <co xml:id="CO3-2"/>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+&lt;/dependency&gt;</programlisting>
 </para>
 </formalpara>
 <calloutlist>
@@ -500,25 +514,25 @@ dependencies.</simpara>
 <title>Maven</title>
 <para>
 <programlisting language="xml" linenumbering="unnumbered">&lt;dependencyManagement&gt; <co xml:id="CO5-1"/>
-         &lt;dependencies&gt;
-             &lt;dependency&gt;
-                 &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-                 &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
-                 &lt;version&gt;${release.train.version}&lt;/version&gt;
-                 &lt;type&gt;pom&lt;/type&gt;
-                 &lt;scope&gt;import&lt;/scope&gt;
-             &lt;/dependency&gt;
-         &lt;/dependencies&gt;
-   &lt;/dependencyManagement&gt;
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
 
-   &lt;dependency&gt; <co xml:id="CO5-2"/>
-       &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
-   &lt;/dependency&gt;
-   &lt;dependency&gt; <co xml:id="CO5-3"/>
-       &lt;groupId&gt;org.springframework.amqp&lt;/groupId&gt;
-       &lt;artifactId&gt;spring-rabbit&lt;/artifactId&gt;
-   &lt;/dependency&gt;</programlisting>
+&lt;dependency&gt; <co xml:id="CO5-2"/>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt; <co xml:id="CO5-3"/>
+    &lt;groupId&gt;org.springframework.amqp&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-rabbit&lt;/artifactId&gt;
+&lt;/dependency&gt;</programlisting>
 </para>
 </formalpara>
 <calloutlist>
@@ -661,41 +675,436 @@ Configure the location of the service using <literal>spring.zipkin.baseUrl</lite
  (this is a Spring Boot feature for logback users).
  <emphasis role="strong">This means that if you&#8217;re not using SLF4J this pattern WILL NOT be automatically applied</emphasis>.</simpara>
 </note>
+<section xml:id="_introduction_to_brave">
+<title>Introduction to Brave</title>
+<important>
+<simpara>Starting with version <literal>2.0.0</literal> Spring Cloud Sleuth uses
+<link xl:href="https://github.com/openzipkin/brave">Brave</link> as the tracing library.
+For your convenience we&#8217;re embedding part of the Brave&#8217;s docs here.</simpara>
+</important>
+<simpara>Brave is a library used to capture and report latency information about
+distributed operations to Zipkin. Most users won&#8217;t use Brave directly,
+rather libraries or frameworks than employ Brave on their behalf.</simpara>
+<simpara>This module includes tracer creates and joins spans that model the
+latency of potentially distributed work. It also includes libraries to
+propagate the trace context over network boundaries, for example, via
+http headers.</simpara>
+<section xml:id="_tracing">
+<title>Tracing</title>
+<simpara>Most importantly, you need a <literal>brave.Tracer</literal>, configured to [report to Zipkin]
+(<link xl:href="https://github.com/openzipkin/zipkin-reporter-java">https://github.com/openzipkin/zipkin-reporter-java</link>).</simpara>
+<simpara>Here&#8217;s an example setup that sends trace data (spans) to Zipkin over
+http (as opposed to Kafka).</simpara>
+<programlisting language="java" linenumbering="unnumbered">class MyClass {
+
+    private final Tracer tracer;
+
+    // Tracer will be autowired
+    MyClass(Tracer tracer) {
+        this.tracer = tracer;
+    }
+
+    void doSth() {
+        Span span = tracer.newTrace().name("encode").start();
+        // ...
+    }
+}</programlisting>
+<important>
+<simpara>If your span contains a name greater than 50 chars, then that name will
+be truncated to 50 chars. Your names have to be explicit and concrete. Big names lead to
+latency issues and sometimes even thrown exceptions.</simpara>
+</important>
+</section>
+<section xml:id="_tracing_2">
+<title>Tracing</title>
+<simpara>The tracer creates and joins spans that model the latency of potentially
+distributed work. It can employ sampling to reduce overhead in process
+or to reduce the amount of data sent to Zipkin.</simpara>
+<simpara>Spans returned by a tracer report data to Zipkin when finished, or do
+nothing if unsampled. After starting a span, you can annotate events of
+interest or add tags containing details or lookup keys.</simpara>
+<simpara>Spans have a context which includes trace identifiers that place it at
+the correct spot in the tree representing the distributed operation.</simpara>
+</section>
+<section xml:id="_local_tracing">
+<title>Local Tracing</title>
+<simpara>When tracing local code, just run it inside a span.</simpara>
+<programlisting language="java" linenumbering="unnumbered">Span span = tracer.newTrace().name("encode").start();
+try {
+  doSomethingExpensive();
+} finally {
+  span.finish();
+}</programlisting>
+<simpara>In the above example, the span is the root of the trace. In many cases,
+you will be a part of an existing trace. When this is the case, call
+<literal>newChild</literal> instead of <literal>newTrace</literal></simpara>
+<programlisting language="java" linenumbering="unnumbered">Span span = tracer.newChild(root.context()).name("encode").start();
+try {
+  doSomethingExpensive();
+} finally {
+  span.finish();
+}</programlisting>
+</section>
+<section xml:id="_customizing_spans">
+<title>Customizing spans</title>
+<simpara>Once you have a span, you can add tags to it, which can be used as lookup
+keys or details. For example, you might add a tag with your runtime
+version.</simpara>
+<programlisting language="java" linenumbering="unnumbered">span.tag("clnt/finagle.version", "6.36.0");</programlisting>
+<simpara>When exposing the ability to customize spans to third parties, prefer
+<literal>brave.SpanCustomizer</literal> as opposed to <literal>brave.Span</literal>. The former is simpler to
+understand and test, and doesn&#8217;t tempt users with span lifecycle hooks.</simpara>
+<programlisting language="java" linenumbering="unnumbered">interface MyTraceCallback {
+  void request(Request request, SpanCustomizer customizer);
+}</programlisting>
+<simpara>Since <literal>brave.Span</literal> implements <literal>brave.SpanCustomizer</literal>, it is just as easy for you
+to pass to users.</simpara>
+<simpara>Ex.</simpara>
+<programlisting language="java" linenumbering="unnumbered">for (MyTraceCallback callback : userCallbacks) {
+  callback.request(request, span);
+}</programlisting>
+</section>
+<section xml:id="_implicitly_looking_up_the_current_span">
+<title>Implicitly looking up the current span</title>
+<simpara>Sometimes you won&#8217;t know if a trace is in progress or not, and you don&#8217;t
+want users to do null checks. <literal>brave.CurrentSpanCustomizer</literal> adds to any
+span that&#8217;s in progress or drops data accordingly.</simpara>
+<simpara>Ex.</simpara>
+<programlisting language="java" linenumbering="unnumbered">// user code can then inject this without a chance of it being null.
+@Autowire SpanCustomizer span;
+
+void userCode() {
+  span.annotate("tx.started");
+  ...
+}</programlisting>
+</section>
+<section xml:id="_rpc_tracing">
+<title>RPC tracing</title>
+<simpara>Check for <link xl:href="https://github.com/openzipkin/sleuth/tree/master/instrumentation">instrumentation written here</link>
+and <link xl:href="http://zipkin.io/pages/existing_instrumentations.html">Zipkin&#8217;s list</link>
+before rolling your own RPC instrumentation!</simpara>
+<simpara>RPC tracing is often done automatically by interceptors. Under the scenes,
+they add tags and events that relate to their role in an RPC operation.</simpara>
+<simpara>Here&#8217;s an example of a client span:</simpara>
+<programlisting language="java" linenumbering="unnumbered">// before you send a request, add metadata that describes the operation
+span = tracer.newTrace().name("get").type(CLIENT);
+span.tag("clnt/finagle.version", "6.36.0");
+span.tag(TraceKeys.HTTP_PATH, "/api");
+span.remoteEndpoint(Endpoint.builder()
+    .serviceName("backend")
+    .ipv4(127 &lt;&lt; 24 | 1)
+    .port(8080).build());
+
+// when the request is scheduled, start the span
+span.start();
+
+// if you have callbacks for when data is on the wire, note those events
+span.annotate(Constants.WIRE_SEND);
+span.annotate(Constants.WIRE_RECV);
+
+// when the response is complete, finish the span
+span.finish();</programlisting>
+<section xml:id="_one_way_tracing">
+<title>One-Way tracing</title>
+<simpara>Sometimes you need to model an asynchronous operation, where there is a
+request, but no response. In normal RPC tracing, you use <literal>span.finish()</literal>
+which indicates the response was received. In one-way tracing, you use
+<literal>span.flush()</literal> instead, as you don&#8217;t expect a response.</simpara>
+<simpara>Here&#8217;s how a client might model a one-way operation</simpara>
+<programlisting language="java" linenumbering="unnumbered">// start a new span representing a client request
+oneWaySend = tracer.newSpan(parent).kind(Span.Kind.CLIENT);
+
+// Add the trace context to the request, so it can be propagated in-band
+tracing.propagation().injector(Request::addHeader)
+                     .inject(oneWaySend.context(), request);
+
+// fire off the request asynchronously, totally dropping any response
+request.execute();
+
+// start the client side and flush instead of finish
+oneWaySend.start().flush();</programlisting>
+<simpara>And here&#8217;s how a server might handle this..</simpara>
+<programlisting language="java" linenumbering="unnumbered">// pull the context out of the incoming request
+extractor = tracing.propagation().extractor(Request::getHeader);
+
+// convert that context to a span which you can name and add tags to
+oneWayReceive = nextSpan(tracer, extractor.extract(request))
+    .name("process-request")
+    .kind(SERVER)
+    ... add tags etc.
+
+// start the server side and flush instead of finish
+oneWayReceive.start().flush();
+
+// you should not modify this span anymore as it is complete. However,
+// you can create children to represent follow-up work.
+next = tracer.newSpan(oneWayReceive.context()).name("step2").start();</programlisting>
+<simpara><emphasis role="strong">Note</emphasis> The above propagation logic is a simplified version of our [http handlers](<link xl:href="https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server">https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server</link>).</simpara>
+<simpara>There&#8217;s a working example of a one-way span [here](src/test/java/sleuth/features/async/OneWaySpanTest.java).</simpara>
+</section>
+</section>
+</section>
 </chapter>
 <chapter xml:id="_sampling">
 <title>Sampling</title>
-<simpara>In distributed tracing the data volumes can be very high so sampling
-can be important (you usually don&#8217;t need to export all spans to get a
-good picture of what is happening). Spring Cloud Sleuth has a
-<literal>Sampler</literal> strategy that you can implement to take control of the
-sampling algorithm. Samplers do not stop span (correlation) ids from
-being generated, but they do prevent the tags and events being
-attached and exported. By default you get a strategy that continues to
-trace if a span is already active, but new ones are always marked as
-non-exportable. If all your apps run with this sampler you will see
-traces in logs, but not in any remote store. For testing the default
-is often enough, and it probably is all you need if you are only using
-the logs (e.g. with an ELK aggregator). If you are exporting span data
-to Zipkin or Spring Cloud Stream, there is also an <literal>AlwaysSampler</literal>
-that exports everything and a <literal>PercentageBasedSampler</literal> that samples a
+<simpara>Sampling may be employed to reduce the data collected and reported out
+of process. When a span isn&#8217;t sampled, it adds no overhead (noop).</simpara>
+<simpara>Sampling is an up-front decision, meaning that the decision to report
+data is made at the first operation in a trace, and that decision is
+propagated downstream.</simpara>
+<simpara>By default, there&#8217;s a global sampler that applies a single rate to all
+traced operations. <literal>Tracer.Builder.sampler</literal> is how you indicate this,
+and it defaults to trace every request.</simpara>
+<section xml:id="_declarative_sampling">
+<title>Declarative sampling</title>
+<simpara>Some need to sample based on the type or annotations of a java method.</simpara>
+<simpara>Most users will use a framework interceptor which automates this sort of
+policy. Here&#8217;s how they might work internally.</simpara>
+<programlisting language="java" linenumbering="unnumbered">// derives a sample rate from an annotation on a java method
+DeclarativeSampler&lt;Traced&gt; sampler = DeclarativeSampler.create(Traced::sampleRate);
+
+@Around("@annotation(traced)")
+public Object traceThing(ProceedingJoinPoint pjp, Traced traced) throws Throwable {
+  Span span = tracing.tracer().newTrace(sampler.sample(traced))...
+  try {
+    return pjp.proceed();
+  } finally {
+    span.finish();
+  }
+}</programlisting>
+</section>
+<section xml:id="_custom_sampling">
+<title>Custom sampling</title>
+<simpara>You may want to apply different policies depending on what the operation
+is. For example, you might not want to trace requests to static resources
+such as images, or you might want to trace all requests to a new api.</simpara>
+<simpara>Most users will use a framework interceptor which automates this sort of
+policy. Here&#8217;s how they might work internally.</simpara>
+<programlisting language="java" linenumbering="unnumbered">Span newTrace(Request input) {
+  SamplingFlags flags = SamplingFlags.NONE;
+  if (input.url().startsWith("/experimental")) {
+    flags = SamplingFlags.SAMPLED;
+  } else if (input.url().startsWith("/static")) {
+    flags = SamplingFlags.NOT_SAMPLED;
+  }
+  return tracer.newTrace(flags);
+}</programlisting>
+<simpara>Note: the above is the basis for the built-in <link xl:href="https://github.com/openzipkin/sleuth/tree/master/instrumentation/http">http sampler</link></simpara>
+</section>
+<section xml:id="_sampling_in_spring_cloud_sleuth">
+<title>Sampling in Spring Cloud Sleuth</title>
+<simpara>Spring Cloud Sleuth by default sets all spans to non-exportable.
+That means that you will see traces in logs, but not in any remote store.
+For testing the default is often enough, and it probably is all you need
+if you are only using the logs (e.g. with an ELK aggregator). If you are
+exporting span data to Zipkin, there is also an <literal>Sampler.ALWAYS_SAMPLE</literal>
+that exports everything and a <literal>ProbabilityBasedSampler</literal> that samples a
 fixed fraction of spans.</simpara>
 <note>
-<simpara>the <literal>PercentageBasedSampler</literal> is the default if you are using
-<literal>spring-cloud-sleuth-zipkin</literal> or <literal>spring-cloud-sleuth-stream</literal>. You can
-configure the exports using <literal>spring.sleuth.sampler.percentage</literal>. The passed
-value needs to be a double from <literal>0.0</literal> to <literal>1.0</literal> so it&#8217;s not a percentage.
-For backwards compatibility reasons we&#8217;re not changing the property name.</simpara>
+<simpara>The <literal>ProbabilityBasedSampler</literal> is the default if you are using
+<literal>spring-cloud-sleuth-zipkin</literal>. You can
+configure the exports using <literal>spring.sleuth.sampler.probability</literal>. The passed
+value needs to be a double from <literal>0.0</literal> to <literal>1.0</literal>.</simpara>
 </note>
 <simpara>A sampler can be installed just by creating a bean definition, e.g:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Bean
 public Sampler defaultSampler() {
-	return new AlwaysSampler();
+	return Sampler.ALWAYS_SAMPLE;
 }</programlisting>
 <tip>
 <simpara>You can set the HTTP header <literal>X-B3-Flags</literal> to <literal>1</literal> or when doing messaging you can
 set <literal>spanFlags</literal> header to <literal>1</literal>. Then the current span will be forced to be exportable
 regardless of the sampling decision.</simpara>
 </tip>
+</section>
+</chapter>
+<chapter xml:id="_propagation">
+<title>Propagation</title>
+<simpara>Propagation is needed to ensure activity originating from the same root
+are collected together in the same trace. The most common propagation
+approach is to copy a trace context from a client sending an RPC request
+to a server receiving it.</simpara>
+<simpara>For example, when an downstream Http call is made, its trace context is
+sent along with it, encoded as request headers:</simpara>
+<screen>   Client Span                                                Server Span
+┌──────────────────┐                                       ┌──────────────────┐
+│                  │                                       │                  │
+│   TraceContext   │           Http Request Headers        │   TraceContext   │
+│ ┌──────────────┐ │          ┌───────────────────┐        │ ┌──────────────┐ │
+│ │ TraceId      │ │          │ X─B3─TraceId      │        │ │ TraceId      │ │
+│ │              │ │          │                   │        │ │              │ │
+│ │ ParentSpanId │ │ Extract  │ X─B3─ParentSpanId │ Inject │ │ ParentSpanId │ │
+│ │              ├─┼─────────&gt;│                   ├────────┼&gt;│              │ │
+│ │ SpanId       │ │          │ X─B3─SpanId       │        │ │ SpanId       │ │
+│ │              │ │          │                   │        │ │              │ │
+│ │ Sampled      │ │          │ X─B3─Sampled      │        │ │ Sampled      │ │
+│ └──────────────┘ │          └───────────────────┘        │ └──────────────┘ │
+│                  │                                       │                  │
+└──────────────────┘                                       └──────────────────┘</screen>
+<simpara>The names above are from <link xl:href="https://github.com/openzipkin/b3-propagation">B3 Propagation</link>,
+which is built-in to Brave and has implementations in many languages and
+frameworks.</simpara>
+<simpara>Most users will use a framework interceptor which automates propagation.
+Here&#8217;s how they might work internally.</simpara>
+<simpara>Here&#8217;s what client-side propagation might look like</simpara>
+<programlisting language="java" linenumbering="unnumbered">// configure a function that injects a trace context into a request
+injector = tracing.propagation().injector(Request.Builder::addHeader);
+
+// before a request is sent, add the current span's context to it
+injector.inject(span.context(), request);</programlisting>
+<simpara>Here&#8217;s what server-side propagation might look like</simpara>
+<programlisting language="java" linenumbering="unnumbered">// configure a function that extracts the trace context from a request
+extracted = tracing.propagation().extractor(Request::getHeader);
+
+// when a server receives a request, it joins or starts a new trace
+span = tracer.nextSpan(extracted, request);</programlisting>
+<section xml:id="_propagating_extra_fields">
+<title>Propagating extra fields</title>
+<simpara>Sometimes you need to propagate extra fields, such as a request ID or an alternate trace context.
+For example, if you are in a Cloud Foundry environment, you might want to pass the request ID:</simpara>
+<programlisting language="java" linenumbering="unnumbered">// when you initialize the builder, define the extra field you want to propagate
+tracingBuilder.propagationFactory(
+  ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, "x-vcap-request-id")
+);
+
+// later, you can tag that request ID or use it in log correlation
+requestId = ExtraFieldPropagation.get("x-vcap-request-id");</programlisting>
+<simpara>You may also need to propagate a trace context you aren&#8217;t using. For example, you may be in an
+Amazon Web Services environment, but not reporting data to X-Ray. To ensure X-Ray can co-exist
+correctly, pass-through its tracing header like so.</simpara>
+<programlisting language="java" linenumbering="unnumbered">tracingBuilder.propagationFactory(
+  ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, "x-amzn-trace-id")
+);</programlisting>
+<section xml:id="_prefixed_fields">
+<title>Prefixed fields</title>
+<simpara>You can also prefix fields, if they follow a common pattern. For example, the following will
+propagate the field "x-vcap-request-id" as-is, but send the fields "country-code" and "user-id"
+on the wire as "x-baggage-country-code" and "x-baggage-user-id" respectively.</simpara>
+<simpara>Setup your tracing instance with allowed fields:</simpara>
+<programlisting language="java" linenumbering="unnumbered">tracingBuilder.propagationFactory(
+  ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY)
+                       .addField("x-vcap-request-id")
+                       .addPrefixedFields("baggage-", Arrays.asList("country-code", "user-id"))
+                       .build()
+);</programlisting>
+<simpara>Later, you can call below to affect the country code of the current trace context</simpara>
+<programlisting language="java" linenumbering="unnumbered">ExtraFieldPropagation.set("country-code", "FO");
+String countryCode = ExtraFieldPropagation.get("country-code");</programlisting>
+<simpara>Or, if you have a reference to a trace context, use it explicitly</simpara>
+<programlisting language="java" linenumbering="unnumbered">ExtraFieldPropagation.set(span.context(), "country-code", "FO");
+String countryCode = ExtraFieldPropagation.get(span.context(), "country-code");</programlisting>
+<important>
+<simpara>In comparison to previous versions of Sleuth, with
+Brave it&#8217;s required to pass the list of baggage keys.
+There are two properties to achieve this. Via the <literal>spring.sleuth.baggage-keys</literal> you set keys
+that will get prefixed with <literal>baggage-</literal> for http calls and <literal>baggage_</literal> for messaging. You can also pass
+a list of prefixed keys that will be whitelisted without any prefix via
+<literal>spring.sleuth.prefixed-keys</literal> property.</simpara>
+</important>
+</section>
+<section xml:id="_extracting_a_propagated_context">
+<title>Extracting a propagated context</title>
+<simpara>The <literal>TraceContext.Extractor&lt;C&gt;</literal> reads trace identifiers and sampling status
+from an incoming request or message. The carrier is usually a request object
+or headers.</simpara>
+<simpara>This utility is used in standard instrumentation like [HttpServerHandler](../instrumentation/http/src/main/java/sleuth/http/HttpServerHandler.java),
+but can also be used for custom RPC or messaging code.</simpara>
+<simpara><literal>TraceContextOrSamplingFlags</literal> is usually only used with <literal>Tracer.nextSpan(extracted)</literal>, unless you are
+sharing span IDs between a client and a server.</simpara>
+</section>
+<section xml:id="_sharing_span_ids_between_client_and_server">
+<title>Sharing span IDs between client and server</title>
+<simpara>A normal instrumentation pattern is creating a span representing the server
+side of an RPC. <literal>Extractor.extract</literal> might return a complete trace context when
+applied to an incoming client request. <literal>Tracer.joinSpan</literal> attempts to continue
+the this trace, using the same span ID if supported, or creating a child span
+if not. When span ID is shared, data reported includes a flag saying so.</simpara>
+<simpara>Here&#8217;s an example of B3 propagation:</simpara>
+<screen>                              ┌───────────────────┐      ┌───────────────────┐
+ Incoming Headers             │   TraceContext    │      │   TraceContext    │
+┌───────────────────┐(extract)│ ┌───────────────┐ │(join)│ ┌───────────────┐ │
+│ X─B3-TraceId      │─────────┼─┼&gt; TraceId      │ │──────┼─┼&gt; TraceId      │ │
+│                   │         │ │               │ │      │ │               │ │
+│ X─B3-ParentSpanId │─────────┼─┼&gt; ParentSpanId │ │──────┼─┼&gt; ParentSpanId │ │
+│                   │         │ │               │ │      │ │               │ │
+│ X─B3-SpanId       │─────────┼─┼&gt; SpanId       │ │──────┼─┼&gt; SpanId       │ │
+└───────────────────┘         │ │               │ │      │ │               │ │
+                              │ │               │ │      │ │  Shared: true │ │
+                              │ └───────────────┘ │      │ └───────────────┘ │
+                              └───────────────────┘      └───────────────────┘</screen>
+<simpara>Some propagation systems only forward the parent span ID, detected when
+<literal>Propagation.Factory.supportsJoin() == false</literal>. In this case, a new span ID is
+always provisioned and the incoming context determines the parent ID.</simpara>
+<simpara>Here&#8217;s an example of AWS propagation:</simpara>
+<screen>                              ┌───────────────────┐      ┌───────────────────┐
+ x-amzn-trace-id              │   TraceContext    │      │   TraceContext    │
+┌───────────────────┐(extract)│ ┌───────────────┐ │(join)│ ┌───────────────┐ │
+│ Root              │─────────┼─┼&gt; TraceId      │ │──────┼─┼&gt; TraceId      │ │
+│                   │         │ │               │ │      │ │               │ │
+│ Parent            │─────────┼─┼&gt; SpanId       │ │──────┼─┼&gt; ParentSpanId │ │
+└───────────────────┘         │ └───────────────┘ │      │ │               │ │
+                              └───────────────────┘      │ │  SpanId: New  │ │
+                                                         │ └───────────────┘ │
+                                                         └───────────────────┘</screen>
+<simpara>Note: Some span reporters do not support sharing span IDs. For example, if you
+set <literal>Tracing.Builder.spanReporter(amazonXrayOrGoogleStackdrive)</literal>, disable join
+via <literal>Tracing.Builder.supportsJoin(false)</literal>. This will force a new child span on
+<literal>Tracer.joinSpan()</literal>.</simpara>
+</section>
+<section xml:id="_implementing_propagation">
+<title>Implementing Propagation</title>
+<simpara><literal>TraceContext.Extractor&lt;C&gt;</literal> is implemented by a <literal>Propagation.Factory</literal> plugin. Internally, this code
+will create the union type <literal>TraceContextOrSamplingFlags</literal> with one of the following:
+* <literal>TraceContext</literal> if trace and span IDs were present.
+* <literal>TraceIdContext</literal> if a trace ID was present, but not span IDs.
+* <literal>SamplingFlags</literal> if no identifiers were present</simpara>
+<simpara>Some <literal>Propagation</literal> implementations carry extra data from point of extraction (ex reading incoming
+headers) to injection (ex writing outgoing headers). For example, it might carry a request ID. When
+implementations have extra data, here&#8217;s how they handle it.
+* If a <literal>TraceContext</literal> was extracted, add the extra data as <literal>TraceContext.extra()</literal>
+* Otherwise, add it as <literal>TraceContextOrSamplingFlags.extra()</literal>, which <literal>Tracer.nextSpan</literal> handles.</simpara>
+</section>
+</section>
+</chapter>
+<chapter xml:id="_current_tracing_component">
+<title>Current Tracing Component</title>
+<simpara>Brave supports a "current tracing component" concept which should only
+be used when you have no other means to get a reference. This was made
+for JDBC connections, as they often initialize prior to the tracing
+component.</simpara>
+<simpara>The most recent tracing component instantiated is available via
+<literal>Tracing.current()</literal>. You there&#8217;s also a shortcut to get only the tracer
+via <literal>Tracing.currentTracer()</literal>. If you use either of these methods, do
+noot cache the result. Instead, look them up each time you need them.</simpara>
+</chapter>
+<chapter xml:id="_current_span">
+<title>Current Span</title>
+<simpara>Brave supports a "current span" concept which represents the in-flight
+operation. <literal>Tracer.currentSpan()</literal> can be used to add custom tags to a
+span and <literal>Tracer.nextSpan()</literal> can be used to create a child of whatever
+is in-flight.</simpara>
+<section xml:id="_setting_a_span_in_scope_manually">
+<title>Setting a span in scope manually</title>
+<simpara>When writing new instrumentation, it is important to place a span you
+created in scope as the current span. Not only does this allow users to
+access it with <literal>Tracer.currentSpan()</literal>, but it also allows customizations
+like SLF4J MDC to see the current trace IDs.</simpara>
+<simpara><literal>Tracer.withSpanInScope(Span)</literal> facilitates this and is most conveniently
+employed via the try-with-resources idiom. Whenever external code might
+be invoked (such as proceeding an interceptor or otherwise), place the
+span in scope like this.</simpara>
+<programlisting language="java" linenumbering="unnumbered">try (SpanInScope ws = tracer.withSpanInScope(span)) {
+  return inboundRequest.invoke();
+} finally { // note the scope is independent of the span
+  span.finish();
+}</programlisting>
+<simpara>In edge cases, you may need to clear the current span temporarily. For
+example, launching a task that should not be associated with the current
+request. To do this, simply pass null to <literal>withSpanInScope</literal>.</simpara>
+<programlisting language="java" linenumbering="unnumbered">try (SpanInScope cleared = tracer.withSpanInScope(null)) {
+  startBackgroundThread();
+}</programlisting>
+</section>
 </chapter>
 <chapter xml:id="_instrumentation">
 <title>Instrumentation</title>
@@ -716,24 +1125,17 @@ list of header names).</simpara>
 danger of accidentally collecting too much data without configuring
 something).</simpara>
 </note>
-<note>
-<simpara>Currently the instrumentation in Spring Cloud Sleuth is eager - it means that
-we&#8217;re actively trying to pass the tracing context between threads. Also timing events
-are captured even when sleuth isn&#8217;t exporting data to a tracing system.
-This approach may change in the future towards being lazy on this matter.</simpara>
-</note>
 </chapter>
 <chapter xml:id="_span_lifecycle">
 <title>Span lifecycle</title>
-<simpara>You can do the following operations on the Span by means of <emphasis role="strong">org.springframework.cloud.sleuth.Tracer</emphasis> interface:</simpara>
+<simpara>You can do the following operations on the Span by means of <emphasis role="strong">brave.Tracer</emphasis>:</simpara>
 <itemizedlist>
 <listitem>
-<simpara><link linkend="creating-and-closing-spans">start</link> - when you start a span its name is assigned and start timestamp is recorded.</simpara>
+<simpara><link linkend="creating-and-finishing-spans">start</link> - when you start a span its name is assigned and start timestamp is recorded.</simpara>
 </listitem>
 <listitem>
-<simpara><link linkend="creating-and-closing-spans">close</link> - the span gets finished (the end time of the span is recorded) and if
-the span is <emphasis role="strong">exportable</emphasis> then it will be eligible for collection to Zipkin.
-The span is also removed from the current thread.</simpara>
+<simpara><link linkend="creating-and-finishing-spans">close</link> - the span gets finished (the end time of the span is recorded) and if
+the span is <emphasis role="strong">sampled</emphasis> then it will be eligible for collection to e.g. Zipkin.</simpara>
 </listitem>
 <listitem>
 <simpara><link linkend="continuing-spans">continue</link> - a new instance of span will be created whereas it will be a copy of the
@@ -747,30 +1149,31 @@ one that it continues.</simpara>
 </listitem>
 </itemizedlist>
 <tip>
-<simpara>Spring creates the instance of <literal>Tracer</literal> for you. In order to use it all you need is to just autowire it.</simpara>
+<simpara>Spring Cloud Sleuth creates the instance of <literal>Tracer</literal> for you. In order to use it,
+all you need is to just autowire it.</simpara>
 </tip>
-<section xml:id="creating-and-closing-spans">
-<title>Creating and closing spans</title>
-<simpara>You can manually create spans by using the <emphasis role="strong">Tracer</emphasis> interface.</simpara>
+<section xml:id="creating-and-finishing-spans">
+<title>Creating and finishing spans</title>
+<simpara>You can manually create spans by using the <emphasis role="strong">Tracer</emphasis>.</simpara>
 <programlisting language="java" linenumbering="unnumbered">// Start a span. If there was a span present in this thread it will become
 // the `newSpan`'s parent.
-Span newSpan = this.tracer.createSpan("calculateTax");
-try {
+Span newSpan = this.tracer.nextSpan().name("calculateTax");
+try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(newSpan.start())) {
 	// ...
 	// You can tag a span
-	this.tracer.addTag("taxValue", taxValue);
+	newSpan.tag("taxValue", taxValue);
 	// ...
 	// You can log an event on a span
-	newSpan.logEvent("taxCalculated");
+	newSpan.annotate("taxCalculated");
 } finally {
-	// Once done remember to close the span. This will allow collecting
+	// Once done remember to finish the span. This will allow collecting
 	// the span to send it to Zipkin
-	this.tracer.close(newSpan);
+	newSpan.finish();
 }</programlisting>
 <simpara>In this example we could see how to create a new instance of span. Assuming that there already
 was a span present in this thread then it would become the parent of that span.</simpara>
 <important>
-<simpara>Always clean after you create a span! Don&#8217;t forget to close a span if you want to send it to Zipkin.</simpara>
+<simpara>Always clean after you create a span! Don&#8217;t forget to finish a span if you want to send it to Zipkin.</simpara>
 </important>
 <important>
 <simpara>If your span contains a name greater than 50 chars, then that name will
@@ -791,58 +1194,53 @@ situation might be (of course it all depends on the use-case):</simpara>
 only a technical implementation detail that you wouldn&#8217;t necessarily want to reflect in tracing as a separate being.</simpara>
 </listitem>
 </itemizedlist>
-<simpara>The continued instance of span is equal to the one that it continues:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Span continuedSpan = this.tracer.continueSpan(spanToContinue);
-assertThat(continuedSpan).isEqualTo(spanToContinue);</programlisting>
-<simpara>To continue a span you can use the <emphasis role="strong">Tracer</emphasis> interface.</simpara>
+<simpara>To continue a span you can use <emphasis role="strong">brave.Tracer</emphasis>.</simpara>
 <programlisting language="java" linenumbering="unnumbered">// let's assume that we're in a thread Y and we've received
 // the `initialSpan` from thread X
-Span continuedSpan = this.tracer.continueSpan(initialSpan);
+Span continuedSpan = this.tracer.joinSpan(newSpan.context());
 try {
 	// ...
 	// You can tag a span
-	this.tracer.addTag("taxValue", taxValue);
+	continuedSpan.tag("taxValue", taxValue);
 	// ...
 	// You can log an event on a span
-	continuedSpan.logEvent("taxCalculated");
+	continuedSpan.annotate("taxCalculated");
 } finally {
-	// Once done remember to detach the span. That way you'll
-	// safely remove it from the current thread without closing it
-	this.tracer.detach(continuedSpan);
+	// Once done remember to flush the span. That means that
+	// it will get reported but the span itself is not yet finished
+	continuedSpan.flush();
 }</programlisting>
-<important>
-<simpara>Always clean after you create a span! Don&#8217;t forget to detach a span if some work was done started in one
- thread (e.g. thread X) and it&#8217;s waiting for other threads (e.g. Y, Z) to finish.
- Then the spans in the threads Y, Z should be detached at the end of their work. When the results are collected
- the span in thread X should be closed.</simpara>
-</important>
 </section>
 <section xml:id="creating-spans-with-explicit-parent">
 <title>Creating spans with an explicit parent</title>
 <simpara>There is a possibility that you want to start a new span and provide an explicit parent of that span.
-Let&#8217;s assume that the parent of a span is in one thread and you want to start a new span in another thread. The
-<literal>startSpan</literal> method of the <literal>Tracer</literal> interface is the method you are looking for.</simpara>
+Let&#8217;s assume that the parent of a span is in one thread and you want to start a new span in another thread.
+In Brave, whenever you call <literal>nextSpan()</literal>, it&#8217;s creating one in reference
+to the span being currently in scope. It&#8217;s enough to just put
+the span in scope and then call <literal>nextSpan()</literal>, as presented in the example below:</simpara>
 <programlisting language="java" linenumbering="unnumbered">// let's assume that we're in a thread Y and we've received
 // the `initialSpan` from thread X. `initialSpan` will be the parent
 // of the `newSpan`
-Span newSpan = this.tracer.createSpan("calculateCommission", initialSpan);
-try {
+Span newSpan = null;
+try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+	newSpan = this.tracer.nextSpan().name("calculateCommission");
 	// ...
 	// You can tag a span
-	this.tracer.addTag("commissionValue", commissionValue);
+	newSpan.tag("commissionValue", commissionValue);
 	// ...
 	// You can log an event on a span
-	newSpan.logEvent("commissionCalculated");
+	newSpan.annotate("commissionCalculated");
 } finally {
-	// Once done remember to close the span. This will allow collecting
+	// Once done remember to finish the span. This will allow collecting
 	// the span to send it to Zipkin. The tags and events set on the
 	// newSpan will not be present on the parent
-	this.tracer.close(newSpan);
+	if (newSpan != null) {
+		newSpan.finish();
+	}
 }</programlisting>
 <important>
-<simpara>After having created such a span remember to close it. Otherwise you will see a lot of warnings in your logs
- related to the fact that you have a span present in the current thread other than the one you&#8217;re trying to close.
- What&#8217;s worse your spans won&#8217;t get closed properly thus will not get collected to Zipkin.</simpara>
+<simpara>After having created such a span remember to finish it, otherwise it will not get
+reported to e.g. Zipkin</simpara>
 </important>
 </section>
 </chapter>
@@ -875,7 +1273,8 @@ class TaxCountingRunnable implements Runnable {
 	}
 }</programlisting>
 <simpara>In this case, when processed in the following manner:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracer, spanNamer, new TaxCountingRunnable());
+<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracer, spanNamer, errorParser,
+		new TaxCountingRunnable());
 Future&lt;?&gt; future = executorService.submit(runnable);
 // ... some additional logic ...
 future.get();</programlisting>
@@ -887,7 +1286,7 @@ future.get();</programlisting>
 instance of those classes. You can&#8217;t annotate such classes thus to override that, if there is no <literal>@SpanName</literal> annotation present,
 we&#8217;re checking if the class has a custom implementation of the <literal>toString()</literal> method.</simpara>
 <simpara>So executing such code:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracer, spanNamer, new Runnable() {
+<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracer, spanNamer, errorParser, new Runnable() {
 	@Override public void run() {
 		// perform logic
 	}
@@ -980,7 +1379,8 @@ with the <literal>@NewSpan</literal> annotation you can also add logs via the <l
 void testMethod11(@SpanTag("testTag11") String param);
 
 // method execution
-this.testBean.testMethod11("test");</programlisting>
+this.testBean.testMethod11("test");
+this.testBean.testMethod13();</programlisting>
 <simpara>That way the span will get continued and:</simpara>
 <itemizedlist>
 <listitem>
@@ -1047,162 +1447,13 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 </chapter>
 <chapter xml:id="_customizations">
 <title>Customizations</title>
-<simpara>Thanks to the <literal>SpanInjector</literal> and <literal>SpanExtractor</literal> you can customize the way spans
-are created and propagated.</simpara>
-<simpara>There are currently two built-in ways to pass tracing information between processes:</simpara>
-<itemizedlist>
-<listitem>
-<simpara>via Spring Integration</simpara>
-</listitem>
-<listitem>
-<simpara>via HTTP</simpara>
-</listitem>
-</itemizedlist>
-<simpara>Span ids are extracted from Zipkin-compatible (B3) headers (either <literal>Message</literal>
-or HTTP headers), to start or join an existing trace. Trace information is
-injected into any outbound requests so the next hop can extract them.</simpara>
-<simpara>The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
-the Open Tracing&#8217;s <literal>TextMap</literal> notion. In Sleuth it&#8217;s called <literal>SpanTextMap</literal>. Basically the idea
-is that any means of communication (e.g. message, http request, etc.) can be abstracted via
-a <literal>SpanTextMap</literal>. This abstraction defines how one can insert data into the carrier and
-how to retrieve it from there. Thanks to this if you want to instrument a new HTTP library
-that uses a <literal>FooRequest</literal> as a mean of sending HTTP requests then you have to create an
-implementation of  a <literal>SpanTextMap</literal> that delegates calls to <literal>FooRequest</literal> in terms of retrieval
-and insertion of HTTP headers.</simpara>
 <section xml:id="_spring_integration">
 <title>Spring Integration</title>
-<simpara>For Spring Integration there are 2 interfaces responsible for creation of a Span from a <literal>Message</literal>.
-These are:</simpara>
-<itemizedlist>
-<listitem>
-<simpara><literal>MessagingSpanTextMapExtractor</literal></simpara>
-</listitem>
-<listitem>
-<simpara><literal>MessagingSpanTextMapInjector</literal></simpara>
-</listitem>
-</itemizedlist>
-<simpara>You can override them by providing your own implementation.</simpara>
+
 </section>
 <section xml:id="_http">
 <title>HTTP</title>
-<simpara>For HTTP there are 2 interfaces responsible for creation of a Span from a <literal>Message</literal>.
-These are:</simpara>
-<itemizedlist>
-<listitem>
-<simpara><literal>HttpSpanExtractor</literal></simpara>
-</listitem>
-<listitem>
-<simpara><literal>HttpSpanInjector</literal></simpara>
-</listitem>
-</itemizedlist>
-<simpara>You can override them by providing your own implementation.</simpara>
-</section>
-<section xml:id="_example">
-<title>Example</title>
-<simpara>Let&#8217;s assume that instead of the standard Zipkin compatible tracing HTTP header names
-you have</simpara>
-<itemizedlist>
-<listitem>
-<simpara>for trace id - <literal>correlationId</literal></simpara>
-</listitem>
-<listitem>
-<simpara>for span id - <literal>mySpanId</literal></simpara>
-</listitem>
-</itemizedlist>
-<simpara>This is a an example of a <literal>SpanExtractor</literal></simpara>
-<programlisting language="java" linenumbering="unnumbered">static class CustomHttpSpanExtractor implements HttpSpanExtractor {
 
-	@Override public Span joinTrace(SpanTextMap carrier) {
-		Map&lt;String, String&gt; map = TextMapUtil.asMap(carrier);
-		long traceId = Span.hexToId(map.get("correlationid"));
-		long spanId = Span.hexToId(map.get("myspanid"));
-		// extract all necessary headers
-		Span.SpanBuilder builder = Span.builder().traceId(traceId).spanId(spanId);
-		// build rest of the Span
-		return builder.build();
-	}
-}
-
-static class CustomHttpSpanInjector implements HttpSpanInjector {
-
-	@Override
-	public void inject(Span span, SpanTextMap carrier) {
-		carrier.put("correlationId", span.traceIdString());
-		carrier.put("mySpanId", Span.idToHex(span.getSpanId()));
-	}
-}</programlisting>
-<simpara>And you could register it like this:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Bean
-HttpSpanInjector customHttpSpanInjector() {
-	return new CustomHttpSpanInjector();
-}
-
-@Bean
-HttpSpanExtractor customHttpSpanExtractor() {
-	return new CustomHttpSpanExtractor();
-}</programlisting>
-<simpara>Spring Cloud Sleuth does not add trace/span related headers to the Http Response for security reasons. If you need the headers then a custom <literal>SpanInjector</literal>
-that injects the headers into the Http Response and a Servlet filter which makes use of this can be added the following way:</simpara>
-<programlisting language="java" linenumbering="unnumbered">static class CustomHttpServletResponseSpanInjector extends ZipkinHttpSpanInjector {
-
-	@Override
-	public void inject(Span span, SpanTextMap carrier) {
-		super.inject(span, carrier);
-		carrier.put(Span.TRACE_ID_NAME, span.traceIdString());
-		carrier.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-	}
-}
-
-static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
-
-	private final Tracer tracer;
-	private final HttpSpanInjector spanInjector;
-
-	public HttpResponseInjectingTraceFilter(Tracer tracer, HttpSpanInjector spanInjector) {
-		this.tracer = tracer;
-		this.spanInjector = spanInjector;
-	}
-
-	@Override
-	public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-		HttpServletResponse response = (HttpServletResponse) servletResponse;
-		Span currentSpan = this.tracer.getCurrentSpan();
-		this.spanInjector.inject(currentSpan, new HttpServletResponseTextMap(response));
-		filterChain.doFilter(request, response);
-	}
-
-	 class HttpServletResponseTextMap implements SpanTextMap {
-
-		 private final HttpServletResponse delegate;
-
-		 HttpServletResponseTextMap(HttpServletResponse delegate) {
-			 this.delegate = delegate;
-		 }
-
-		 @Override
-		 public Iterator&lt;Map.Entry&lt;String, String&gt;&gt; iterator() {
-			 Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
-			 for (String header : this.delegate.getHeaderNames()) {
-				map.put(header, this.delegate.getHeader(header));
-			 }
-			 return map.entrySet().iterator();
-		 }
-
-		 @Override
-		 public void put(String key, String value) {
-			this.delegate.addHeader(key, value);
-		 }
-	 }
-}</programlisting>
-<simpara>And you could register them like this:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Bean HttpSpanInjector customHttpServletResponseSpanInjector() {
-	return new CustomHttpServletResponseSpanInjector();
-}
-
-@Bean
-HttpResponseInjectingTraceFilter responseInjectingTraceFilter(Tracer tracer) {
-	return new HttpResponseInjectingTraceFilter(tracer, customHttpServletResponseSpanInjector());
-}</programlisting>
 </section>
 <section xml:id="_tracefilter">
 <title>TraceFilter</title>
@@ -1212,44 +1463,29 @@ the tags, or modify the response headers by registering your own instance of the
 <simpara>In the following example we will register the <literal>TraceFilter</literal> bean and we will add the
 <literal>ZIPKIN-TRACE-ID</literal> response header containing the current Span&#8217;s trace id. Also we will
 add to the Span a tag with key <literal>custom</literal> and a value <literal>tag</literal>.</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Bean
-TraceFilter myTraceFilter(BeanFactory beanFactory, final Tracer tracer) {
-	return new TraceFilter(beanFactory) {
-		@Override protected void addResponseTags(HttpServletResponse response,
-				Throwable e) {
-			// execute the default behaviour
-			super.addResponseTags(response, e);
-			// for readability we're returning trace id in a hex form
-			response.addHeader("ZIPKIN-TRACE-ID",
-					Span.idToHex(tracer.getCurrentSpan().getTraceId()));
-			// we can also add some custom tags
-			tracer.addTag("custom", "tag");
-		}
-	};
+<programlisting language="java" linenumbering="unnumbered">@Component
+@Order(TraceFilter.ORDER + 1)
+class MyFilter extends GenericFilterBean {
+
+	private final Tracer tracer;
+
+	MyFilter(Tracer tracer) {
+		this.tracer = tracer;
+	}
+
+	@Override public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain chain) throws IOException, ServletException {
+		Span currentSpan = this.tracer.currentSpan();
+		then(currentSpan).isNotNull();
+		// for readability we're returning trace id in a hex form
+		((HttpServletResponse) response)
+				.addHeader("ZIPKIN-TRACE-ID",
+						currentSpan.context().traceIdString());
+		// we can also add some custom tags
+		currentSpan.tag("custom", "tag");
+		chain.doFilter(request, response);
+	}
 }</programlisting>
-</section>
-<section xml:id="_custom_sa_tag_in_zipkin">
-<title>Custom SA tag in Zipkin</title>
-<simpara>Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
-What you can do is to create a span with the <literal>peer.service</literal> tag that will contain a value of the service that you want to call.
-Below you can see an example of a call to Redis that is wrapped in such a span.</simpara>
-<programlisting language="java" linenumbering="unnumbered">Span span = tracer.createSpan("redis");
-try {
-	span.tag("redis.op", "get");
-	span.tag("lc", "redis");
-	span.logEvent("cs");
-	// call redis service e.g
-	// return (SomeObj) redisTemplate.opsForHash().get("MYHASH", someObjKey);
-} finally {
-	span.tag("peer.service", "redis");
-	span.tag("peer.ipv4", "1.2.3.4");
-	span.tag("peer.port", "1234");
-	span.logEvent("cr");
-	span.stop();
-}</programlisting>
-<important>
-<simpara>Remember not to add both <literal>peer.service</literal> tag and the <literal>SA</literal> tag! You have to add only <literal>peer.service</literal>.</simpara>
-</important>
 </section>
 <section xml:id="_custom_service_name">
 <title>Custom service name</title>
@@ -1264,21 +1500,18 @@ try {
 <title>Customization of reported spans</title>
 <simpara>Before reporting spans to e.g. Zipkin you can be interested in modifying that span in some way.
  You can achieve that by using the <literal>SpanAdjuster</literal> interface.</simpara>
-<simpara>Example of usage:</simpara>
 <simpara>In Sleuth we&#8217;re generating spans with a fixed name. Some users want to modify the name depending on values
 of tags. Implementation of the <literal>SpanAdjuster</literal> interface can be used to alter that name. Example:</simpara>
-<programlisting language="yaml" linenumbering="unnumbered">@Bean
-SpanAdjuster customSpanAdjuster() {
-    return span -&gt; span.toBuilder().name(scrub(span.getName())).build();
-}</programlisting>
-<simpara>This will lead in changing the name of the reported span just before it gets sent to Zipkin.</simpara>
-<important>
-<simpara>Your <literal>SpanReporter</literal> should inject the <literal>SpanAdjuster</literal> and
- allow span manipulation before the actual reporting is done.</simpara>
-</important>
+<simpara>Example. If you register two beans of <literal>SpanAdjuster</literal> type:</simpara>
+<programlisting language="java" linenumbering="unnumbered">Unresolved directive in spring-cloud-sleuth.adoc - include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/autoconfig/SpanAdjusterAspectTests.java[tags=adjuster,indent=0]</programlisting>
+<simpara>This will lead in changing the name of the reported span to <literal>foo bar</literal>, just before it gets reported (e.g. to Zipkin).</simpara>
 </section>
 <section xml:id="_host_locator">
 <title>Host locator</title>
+<important>
+<simpara>This section is about defining <emphasis role="strong">host</emphasis> from service discovery. It&#8217;s <emphasis role="strong">NOT</emphasis>
+about finding Zipkin in service discovery.</simpara>
+</important>
 <simpara>In order to define the host that is corresponding to a particular span we need to resolve the host name
 and port. The default approach is to take it from server properties. If those for some reason are not set
 then we&#8217;re trying to retrieve the host name from the network interfaces.</simpara>
@@ -1299,71 +1532,16 @@ property as follows:</simpara>
 Zipkin&#8217;s service id inside the URL (example for <literal>zipkinserver</literal> service id)</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://zipkinserver/</programlisting>
 </chapter>
-<chapter xml:id="_span_data_as_messages">
-<title>Span Data as Messages</title>
+<chapter xml:id="_zipkin_stream_span_consumer">
+<title>Zipkin Stream Span Consumer</title>
 <important>
 <simpara>The suggested approach is to use the Zipkin&#8217;s
 native support for message based span sending. Starting from
 Edgware Zipkin Stream server is deprecated and in Finchley
 it got removed.</simpara>
 </important>
-<simpara>You can accumulate and send span data over
-<link xl:href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</link> by
-including the <literal>spring-cloud-sleuth-stream</literal> jar as a dependency, and
-adding a Channel Binder implementation
-(e.g. <literal>spring-cloud-starter-stream-rabbit</literal> for RabbitMQ or
-<literal>spring-cloud-starter-stream-kafka</literal> for Kafka). This will
-automatically turn your app into a producer of messages with payload
-type <literal>Spans</literal>. The channel name to which the spans will be sent
-is called <literal>sleuth</literal>.</simpara>
-<section xml:id="_zipkin_consumer">
-<title>Zipkin Consumer</title>
 <simpara>Please refer to the <link xl:href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentaion</link>
-on how to create a Stream Zipkin server. That approach has been
-deprecated in Edgware and removed in Finchley release.</simpara>
-</section>
-<section xml:id="_custom_consumer">
-<title>Custom Consumer</title>
-<simpara>A custom consumer can also easily be implemented using
-<literal>spring-cloud-sleuth-stream</literal> and binding to the <literal>SleuthSink</literal>. Example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@EnableBinding(SleuthSink.class)
-@SpringBootApplication(exclude = SleuthStreamAutoConfiguration.class)
-@MessageEndpoint
-public class Consumer {
-
-    @ServiceActivator(inputChannel = SleuthSink.INPUT)
-    public void sink(Spans input) throws Exception {
-        // ... process spans
-    }
-}</programlisting>
-<note>
-<simpara>the sample consumer application above explicitly excludes
-<literal>SleuthStreamAutoConfiguration</literal> so it doesn&#8217;t send messages to itself,
-but this is optional (you might actually want to trace requests into
-the consumer app).</simpara>
-</note>
-<simpara>In order to customize the polling mechanism you can create a bean of <literal>PollerMetadata</literal> type
-with name equal to <literal>StreamSpanReporter.POLLER</literal>. Here you can find an example of such a configuration.</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Configuration
-public static class CustomPollerConfiguration {
-
-	@Bean(name = StreamSpanReporter.POLLER)
-	PollerMetadata customPoller() {
-		PollerMetadata poller = new PollerMetadata();
-		poller.setMaxMessagesPerPoll(500);
-		poller.setTrigger(new PeriodicTrigger(5000L));
-		return poller;
-	}
-}</programlisting>
-</section>
-</chapter>
-<chapter xml:id="_metrics">
-<title>Metrics</title>
-<simpara>Currently Spring Cloud Sleuth registers very simple metrics related to spans.
-It&#8217;s using the <link xl:href="http://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics">Spring Boot&#8217;s metrics support</link>
-to calculate the number of accepted and dropped spans. Each time a span gets
-sent to Zipkin the number of accepted spans will increase. If there&#8217;s an error then
-the number of dropped spans will get increased.</simpara>
+on how to create a Stream Zipkin server.</simpara>
 </chapter>
 <chapter xml:id="_integrations">
 <title>Integrations</title>
@@ -1383,10 +1561,11 @@ the number of dropped spans will get increased.</simpara>
 	}
 };
 // Manual `TraceRunnable` creation with explicit "calculateTax" Span name
-Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, runnable, "calculateTax");
-// Wrapping `Runnable` with `Tracer`. The Span name will be taken either from the
-// `@SpanName` annotation or from `toString` method
-Runnable traceRunnableFromTracer = tracer.wrap(runnable);</programlisting>
+Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, errorParser,
+		runnable, "calculateTax");
+// Wrapping `Runnable` with `Tracing`. That way the current span will be available
+// in the thread of `Runnable`
+Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);</programlisting>
 <simpara>Example for <literal>Callable</literal>:</simpara>
 <programlisting language="java" linenumbering="unnumbered">Callable&lt;String&gt; callable = new Callable&lt;String&gt;() {
 	@Override
@@ -1400,10 +1579,11 @@ Runnable traceRunnableFromTracer = tracer.wrap(runnable);</programlisting>
 	}
 };
 // Manual `TraceCallable` creation with explicit "calculateTax" Span name
-Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(tracer, spanNamer, callable, "calculateTax");
-// Wrapping `Callable` with `Tracer`. The Span name will be taken either from the
-// `@SpanName` annotation or from `toString` method
-Callable&lt;String&gt; traceCallableFromTracer = tracer.wrap(callable);</programlisting>
+Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(tracer, spanNamer, errorParser,
+		callable, "calculateTax");
+// Wrapping `Callable` with `Tracing`. That way the current span will be available
+// in the thread of `Callable`
+Callable&lt;String&gt; traceCallableFromTracer = tracing.currentTraceContext().wrap(callable);</programlisting>
 <simpara>That way you will ensure that a new Span is created and closed for each execution.</simpara>
 </section>
 <section xml:id="_hystrix">
@@ -1489,28 +1669,10 @@ If you create a <literal>RestTemplate</literal> instance with a <literal>new</li
 <section xml:id="_asynchronous_rest_template">
 <title>Asynchronous Rest Template</title>
 <important>
-<simpara>A traced version of an <literal>AsyncRestTemplate</literal> bean is registered for you out of the box. If you
-have your own bean you have to wrap it in a <literal>TraceAsyncRestTemplate</literal> representation. The best solution
-is to only customize the <literal>ClientHttpRequestFactory</literal> and / or <literal>AsyncClientHttpRequestFactory</literal>.
-<emphasis role="strong">If you have your own <literal>AsyncRestTemplate</literal> and you don&#8217;t wrap it your calls WILL NOT GET TRACED</emphasis>.</simpara>
+<simpara>Starting with Sleuth <literal>2.0.0</literal> we no longer register
+a bean of <literal>AsyncRestTemplate</literal> type. It&#8217;s up to you to create such
+a bean. Then we will instrument it.</simpara>
 </important>
-<simpara>Custom instrumentation is set to create and close Spans upon sending and receiving requests. You can customize the <literal>ClientHttpRequestFactory</literal>
-and the <literal>AsyncClientHttpRequestFactory</literal> by registering your beans. Remember to use tracing compatible implementations (e.g. don&#8217;t forget to
-wrap <literal>ThreadPoolTaskScheduler</literal> in a <literal>TraceAsyncListenableTaskExecutor</literal>). Example of custom request factories:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@EnableAutoConfiguration
-@Configuration
-public static class TestConfiguration {
-
-	@Bean
-	ClientHttpRequestFactory mySyncClientFactory() {
-		return new MySyncClientHttpRequestFactory();
-	}
-
-	@Bean
-	AsyncClientHttpRequestFactory myAsyncClientFactory() {
-		return new MyAsyncClientHttpRequestFactory();
-	}
-}</programlisting>
 <simpara>To block the <literal>AsyncRestTemplate</literal> features set <literal>spring.sleuth.web.async.client.enabled</literal> to <literal>false</literal>.
 To disable creation of the default <literal>TraceAsyncClientHttpRequestFactoryWrapper</literal> set <literal>spring.sleuth.web.async.client.factory.enabled</literal>
 to <literal>false</literal>. If you don&#8217;t want to create <literal>AsyncRestClient</literal> at all set <literal>spring.sleuth.web.async.client.template.enabled</literal> to <literal>false</literal>.</simpara>
@@ -1521,23 +1683,10 @@ can see an example of how to set up such a custom <literal>AsyncRestTemplate</li
 <programlisting language="java" linenumbering="unnumbered">@Configuration
 @EnableAutoConfiguration
 static class Config {
-	@Autowired Tracer tracer;
-	@Autowired HttpTraceKeysInjector httpTraceKeysInjector;
-	@Autowired HttpSpanInjector spanInjector;
 
 	@Bean(name = "customAsyncRestTemplate")
-	public AsyncRestTemplate traceAsyncRestTemplate(@Qualifier("customHttpRequestFactoryWrapper")
-			TraceAsyncClientHttpRequestFactoryWrapper wrapper, ErrorParser errorParser) {
-		return new TraceAsyncRestTemplate(wrapper, this.tracer, errorParser);
-	}
-
-	@Bean(name = "customHttpRequestFactoryWrapper")
-	public TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactory() {
-		return new TraceAsyncClientHttpRequestFactoryWrapper(this.tracer,
-				this.spanInjector,
-				asyncClientFactory(),
-				clientHttpRequestFactory(),
-				this.httpTraceKeysInjector);
+	public AsyncRestTemplate traceAsyncRestTemplate() {
+		return new AsyncRestTemplate(asyncClientFactory(), clientHttpRequestFactory());
 	}
 
 	private ClientHttpRequestFactory clientHttpRequestFactory() {
@@ -1631,9 +1780,9 @@ are creating Spans each time a new task is submitted, invoked or scheduled.</sim
 <programlisting language="java" linenumbering="unnumbered">CompletableFuture&lt;Long&gt; completableFuture = CompletableFuture.supplyAsync(() -&gt; {
 	// perform some logic
 	return 1_000_000L;
-}, new TraceableExecutorService(executorService,
+}, new TraceableExecutorService(beanFactory, executorService,
 		// 'calculateTax' explicitly names the span - this param is optional
-		tracer, traceKeys, spanNamer, "calculateTax"));</programlisting>
+		"calculateTax"));</programlisting>
 <important>
 <simpara>Sleuth doesn&#8217;t work with <literal>parallelStream()</literal> out of the box. If you want
 to have the tracing information propagated through the stream you have to use the
