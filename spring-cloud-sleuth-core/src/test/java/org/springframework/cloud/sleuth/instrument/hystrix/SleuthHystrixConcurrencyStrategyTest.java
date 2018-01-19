@@ -70,7 +70,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 		HystrixPlugins.getInstance().registerMetricsPublisher(new MyHystrixMetricsPublisher());
 		HystrixPlugins.getInstance().registerPropertiesStrategy(new MyHystrixPropertiesStrategy());
 
-		new SleuthHystrixConcurrencyStrategy(this.tracing, new DefaultSpanNamer(), new ExceptionMessageErrorParser());
+		new SleuthHystrixConcurrencyStrategy(this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 
 		then(HystrixPlugins
 				.getInstance().getCommandExecutionHook()).isExactlyInstanceOf(MyHystrixCommandExecutionHook.class);
@@ -87,7 +87,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 			throws Exception {
 		HystrixPlugins.getInstance().registerConcurrencyStrategy(new MyHystrixConcurrencyStrategy());
 		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracing, new DefaultSpanNamer(), new ExceptionMessageErrorParser());
+				this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 
 		Callable<String> callable = strategy.wrapCallable(() -> "hello");
 
@@ -99,7 +99,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 	public void should_wrap_callable_in_trace_callable_when_delegate_is_present()
 			throws Exception {
 		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracing, new DefaultSpanNamer(), new ExceptionMessageErrorParser());
+				this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 
 		Callable<String> callable = strategy.wrapCallable(() -> "hello");
 
@@ -110,7 +110,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 	public void should_add_trace_keys_when_span_is_created()
 			throws Exception {
 		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracing, new DefaultSpanNamer(), new ExceptionMessageErrorParser());
+				this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 		Callable<String> callable = strategy.wrapCallable(() -> "hello");
 
 		callable.call();
@@ -125,7 +125,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 		HystrixConcurrencyStrategy strategy = Mockito.mock(HystrixConcurrencyStrategy.class);
 		HystrixPlugins.getInstance().registerConcurrencyStrategy(strategy);
 		SleuthHystrixConcurrencyStrategy sleuthStrategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracing, new DefaultSpanNamer(), new ExceptionMessageErrorParser());
+				this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 
 		sleuthStrategy.wrapCallable(() -> "foo");
 		sleuthStrategy.getThreadPool(HystrixThreadPoolKey.Factory.asKey(""), Mockito.mock(

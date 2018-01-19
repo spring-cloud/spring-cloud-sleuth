@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth;
 import java.util.AbstractMap;
 
 import brave.Span;
+import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
 import org.junit.Before;
@@ -21,6 +22,7 @@ public class ExceptionMessageErrorParserTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 
 	@Before
 	public void setup() {
@@ -30,7 +32,7 @@ public class ExceptionMessageErrorParserTests {
 	@Test
 	public void should_append_tag_for_exportable_span() throws Exception {
 		Throwable e = new RuntimeException("foo");
-		Span span = this.tracing.tracer().nextSpan();
+		Span span = this.tracer.nextSpan();
 
 		new ExceptionMessageErrorParser().parseErrorTags(span, e);
 
@@ -48,7 +50,7 @@ public class ExceptionMessageErrorParserTests {
 
 	@Test
 	public void should_not_append_tag_for_non_exportable_span() throws Exception {
-		Span span = this.tracing.tracer().nextSpan();
+		Span span = this.tracer.nextSpan();
 
 		new ExceptionMessageErrorParser().parseErrorTags(span, null);
 

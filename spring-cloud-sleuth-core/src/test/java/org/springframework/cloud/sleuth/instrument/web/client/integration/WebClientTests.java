@@ -109,7 +109,7 @@ public class WebClientTests {
 	@Autowired WebClient webClient;
 	@Autowired WebClient.Builder webClientBuilder;
 	@Autowired ArrayListSpanReporter reporter;
-	@Autowired Tracing tracing;
+	@Autowired Tracer tracer;
 	@Autowired TestErrorController testErrorController;
 	@Autowired RestTemplateBuilder restTemplateBuilder;
 	@LocalServerPort int port;
@@ -178,11 +178,11 @@ public class WebClientTests {
 	@Parameters
 	@SuppressWarnings("unchecked")
 	public void shouldPropagateNotSamplingHeader(ResponseEntityProvider provider) {
-		Span span = tracing.tracer().nextSpan(
+		Span span = this.tracer.nextSpan(
 				TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED))
 				.name("foo").start();
 		
-		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			ResponseEntity<Map<String, String>> response = provider.get(this);
 
 			then(response.getBody().get(TRACE_ID_NAME.toLowerCase())).isNotNull();
@@ -207,9 +207,9 @@ public class WebClientTests {
 	@SuppressWarnings("unchecked")
 	public void shouldAttachTraceIdWhenCallingAnotherService(
 			ResponseEntityProvider provider) {
-		Span span = tracing.tracer().nextSpan().name("foo").start();
+		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			ResponseEntity<String> response = provider.get(this);
 
 			// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
@@ -220,16 +220,16 @@ public class WebClientTests {
 			span.finish();
 		}
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
 	public void shouldAttachTraceIdWhenCallingAnotherServiceViaWebClient() {
-		Span span = tracing.tracer().nextSpan().name("foo").start();
+		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			this.webClient.get()
 					.uri("http://localhost:" + this.port + "/traceid")
 					.retrieve()
@@ -240,7 +240,7 @@ public class WebClientTests {
 		} finally {
 			span.finish();
 		}
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
@@ -255,15 +255,15 @@ public class WebClientTests {
 	@Parameters
 	public void shouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody(
 			ResponseEntityProvider provider) {
-		Span span = tracing.tracer().nextSpan().name("foo").start();
+		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			provider.get(this);
 		} finally {
 			span.finish();
 		}
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
@@ -283,7 +283,7 @@ public class WebClientTests {
 			fail("An exception should be thrown");
 		} catch (HttpClientErrorException e) { }
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		Optional<zipkin2.Span> storedSpan = this.reporter.getSpans().stream()
 				.filter(span -> "404".equals(span.tags().get("http.status_code"))).findFirst();
 		then(storedSpan.isPresent()).isTrue();
@@ -303,15 +303,15 @@ public class WebClientTests {
 	public void shouldNotExecuteErrorControllerWhenUrlIsFound() {
 		this.template.getForEntity("http://fooservice/notrace", String.class);
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		then(this.testErrorController.getSpan()).isNull();
 	}
 
 	@Test
 	public void should_wrap_rest_template_builders() {
-		Span span = tracing.tracer().nextSpan().name("foo").start();
+		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			RestTemplate template = this.restTemplateBuilder.build();
 
 			template.getForObject("http://localhost:" + this.port + "/traceid", String.class);
@@ -320,7 +320,7 @@ public class WebClientTests {
 		} finally {
 			span.finish();
 		}
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	private void assertThatSpanGotContinued(Span span) {
@@ -420,7 +420,7 @@ public class WebClientTests {
 	public static class FooController {
 
 		@Autowired
-		Tracing tracing;
+		Tracer tracer;
 
 		Span span;
 
@@ -438,7 +438,7 @@ public class WebClientTests {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
-			this.span = this.tracing.tracer().currentSpan();
+			this.span = this.tracer.currentSpan();
 			return traceId;
 		}
 

@@ -28,6 +28,7 @@ public class TraceCallableTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 
 	@After
 	public void clean() {
@@ -62,13 +63,13 @@ public class TraceCallableTests {
 	@Test
 	public void should_remove_parent_span_from_thread_local_after_finishing_work()
 			throws Exception {
-		Span parent = this.tracing.tracer().nextSpan().name("http:parent");
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(parent)){
+		Span parent = this.tracer.nextSpan().name("http:parent");
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(parent)){
 			Span child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 			then(parent).as("parent").isNotNull();
 			then(child.context().parentId()).isEqualTo(parent.context().spanId());
 		}
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 
 		Span secondSpan = whenNonTraceableCallableGetsSubmitted(
 				thatRetrievesTraceFromThreadLocal());
@@ -116,12 +117,12 @@ public class TraceCallableTests {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
+		return this.executor.submit(new TraceCallable<>(this.tracing.tracer(), new DefaultSpanNamer(),
 				new ExceptionMessageErrorParser(), callable)).get();
 	}
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
+		return this.executor.submit(new TraceCallable<>(this.tracing.tracer(), new DefaultSpanNamer(),
 				new ExceptionMessageErrorParser(), new TraceKeepingCallable())).get();
 	}
 

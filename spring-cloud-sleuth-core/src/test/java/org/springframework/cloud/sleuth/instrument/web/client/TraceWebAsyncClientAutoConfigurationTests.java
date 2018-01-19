@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web;
+package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import brave.Tracer;
 import brave.Tracing;
 import brave.sampler.Sampler;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import zipkin2.Span;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;

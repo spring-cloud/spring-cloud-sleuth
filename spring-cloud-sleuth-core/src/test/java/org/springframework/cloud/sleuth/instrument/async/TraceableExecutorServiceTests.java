@@ -48,6 +48,7 @@ public class TraceableExecutorServiceTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 	SpanVerifyingRunnable spanVerifyingRunnable = new SpanVerifyingRunnable();
 
 	@Before
@@ -69,8 +70,8 @@ public class TraceableExecutorServiceTests {
 	@Test
 	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed()
 			throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("http:PARENT");
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		Span span = this.tracer.nextSpan().name("http:PARENT");
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		} finally {
 			span.finish();
@@ -122,7 +123,7 @@ public class TraceableExecutorServiceTests {
 
 	private List callables() {
 		List list = new ArrayList<>();
-		list.add(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
+		list.add(new TraceCallable<>(this.tracing.tracer(), new DefaultSpanNamer(),
 				new ExceptionMessageErrorParser(), () -> "foo"));
 		list.add((Callable) () -> "bar");
 		return list;
@@ -142,7 +143,7 @@ public class TraceableExecutorServiceTests {
 		// end::completablefuture[]
 
 		then(completableFuture.get()).isEqualTo(1_000_000L);
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	private CompletableFuture<?>[] runnablesExecutedViaTraceManagerableExecutorService() {
@@ -154,7 +155,7 @@ public class TraceableExecutorServiceTests {
 	}
 	
 	BeanFactory beanFactory() {
-		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		BDDMockito.given(this.beanFactory.getBean(ErrorParser.class)).willReturn(new ExceptionMessageErrorParser());
 		return this.beanFactory;

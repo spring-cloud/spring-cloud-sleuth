@@ -59,6 +59,7 @@ public class SpringCloudSleuthDocTests {
 			.sampler(Sampler.ALWAYS_SAMPLE)
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 	
 	@Before
 	public void setup() {
@@ -93,7 +94,7 @@ public class SpringCloudSleuthDocTests {
 		ErrorParser errorParser = new ExceptionMessageErrorParser();
 
 		// tag::span_name_annotated_runnable_execution[]
-		Runnable runnable = new TraceRunnable(tracing, spanNamer, errorParser, 
+		Runnable runnable = new TraceRunnable(tracer, spanNamer, errorParser,
 				new TaxCountingRunnable());
 		Future<?> future = executorService.submit(runnable);
 		// ... some additional logic ...
@@ -114,7 +115,7 @@ public class SpringCloudSleuthDocTests {
 		ErrorParser errorParser = new ExceptionMessageErrorParser();
 
 		// tag::span_name_to_string_runnable_execution[]
-		Runnable runnable = new TraceRunnable(tracing, spanNamer, errorParser, new Runnable() {
+		Runnable runnable = new TraceRunnable(tracer, spanNamer, errorParser, new Runnable() {
 			@Override public void run() {
 				// perform logic
 			}
@@ -142,8 +143,8 @@ public class SpringCloudSleuthDocTests {
 		// tag::manual_span_creation[]
 		// Start a span. If there was a span present in this thread it will become
 		// the `newSpan`'s parent.
-		Span newSpan = this.tracing.tracer().nextSpan().name("calculateTax");
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(newSpan.start())) {
+		Span newSpan = this.tracer.nextSpan().name("calculateTax");
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(newSpan.start())) {
 			// ...
 			// You can tag a span
 			newSpan.tag("taxValue", taxValue);
@@ -151,7 +152,7 @@ public class SpringCloudSleuthDocTests {
 			// You can log an event on a span
 			newSpan.annotate("taxCalculated");
 		} finally {
-			// Once done remember to close the span. This will allow collecting
+			// Once done remember to finish the span. This will allow collecting
 			// the span to send it to Zipkin
 			newSpan.finish();
 		}
@@ -170,13 +171,13 @@ public class SpringCloudSleuthDocTests {
 	public void should_continue_a_span_with_tracer() throws Exception {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		String taxValue = "10";
-		Span newSpan = this.tracing.tracer().nextSpan().name("calculateTax");
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(newSpan.start())) {
+		Span newSpan = this.tracer.nextSpan().name("calculateTax");
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(newSpan.start())) {
 			executorService.submit(() -> {
 						// tag::manual_span_continuation[]
 						// let's assume that we're in a thread Y and we've received
 						// the `initialSpan` from thread X
-						Span continuedSpan = this.tracing.tracer().joinSpan(newSpan.context());
+						Span continuedSpan = this.tracer.joinSpan(newSpan.context());
 						try {
 							// ...
 							// You can tag a span
@@ -185,8 +186,8 @@ public class SpringCloudSleuthDocTests {
 							// You can log an event on a span
 							continuedSpan.annotate("taxCalculated");
 						} finally {
-							// Once done remember to detach the span. That way you'll
-							// safely remove it from the current thread without closing it
+							// Once done remember to flush the span. That means that
+							// it will get reported but the span itself is not yet finished
 							continuedSpan.flush();
 						}
 						// end::manual_span_continuation[]
@@ -210,7 +211,7 @@ public class SpringCloudSleuthDocTests {
 	public void should_start_a_span_with_explicit_parent() throws Exception {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		String commissionValue = "10";
-		Span initialSpan = this.tracing.tracer().nextSpan().name("calculateTax").start();
+		Span initialSpan = this.tracer.nextSpan().name("calculateTax").start();
 
 		executorService.submit(() -> {
 					// tag::manual_span_joining[]
@@ -218,8 +219,8 @@ public class SpringCloudSleuthDocTests {
 					// the `initialSpan` from thread X. `initialSpan` will be the parent
 					// of the `newSpan`
 					Span newSpan = null;
-					try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(initialSpan)) {
-						newSpan = this.tracing.tracer().nextSpan().name("calculateCommission");
+					try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+						newSpan = this.tracer.nextSpan().name("calculateCommission");
 						// ...
 						// You can tag a span
 						newSpan.tag("commissionValue", commissionValue);
@@ -227,7 +228,7 @@ public class SpringCloudSleuthDocTests {
 						// You can log an event on a span
 						newSpan.annotate("commissionCalculated");
 					} finally {
-						// Once done remember to close the span. This will allow collecting
+						// Once done remember to finish the span. This will allow collecting
 						// the span to send it to Zipkin. The tags and events set on the
 						// newSpan will not be present on the parent
 						if (newSpan != null) {
@@ -265,7 +266,7 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceRunnable` creation with explicit "calculateTax" Span name
-		Runnable traceRunnable = new TraceRunnable(tracing, spanNamer, errorParser,
+		Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, errorParser,
 				runnable, "calculateTax");
 		// Wrapping `Runnable` with `Tracing`. That way the current span will be available
 		// in the thread of `Runnable`
@@ -292,7 +293,7 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceCallable` creation with explicit "calculateTax" Span name
-		Callable<String> traceCallable = new TraceCallable<>(tracing, spanNamer, errorParser,
+		Callable<String> traceCallable = new TraceCallable<>(tracer, spanNamer, errorParser,
 				callable, "calculateTax");
 		// Wrapping `Callable` with `Tracing`. That way the current span will be available
 		// in the thread of `Callable`

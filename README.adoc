@@ -8,7 +8,7 @@
 :github-code: https://github.com/{github-repo}/tree/{github-tag}
 
 image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"]
-image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/master/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
+image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 == Spring Cloud Sleuth
 
@@ -66,8 +66,12 @@ of that span is equal to trace id.
 *Trace:* A set of spans forming a tree-like structure.  For example, if you are running a distributed
 big-data store, a trace might be formed by a put request.
 
-*Annotation:*  is used to record existence of an event in time. Some of the core annotations used to define
-the start and stop of a request are:
+*Annotation:*  is used to record existence of an event in time. With
+Brave instrumentation we no longer need to set special events
+for https://zipkin.io/[Zipkin] to understand who the client and server are and where
+the request started and where it has ended. For learning purposes
+however we will mark these events to highlight what kind
+of an action took place.
 
     - *cs* - Client Sent - The client has made a request. This annotation depicts the start of the span.
     - *sr* - Server Received -  The server side got the request and will start processing it.
@@ -90,8 +94,8 @@ Trace Id = X
 Span Id = D
 Client Sent
 
-That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*. It also has emitted
- *Client Sent* event.
+That means that the current span has *Trace-Id* set to *X*, *Span-Id* set to *D*. Also, the
+ *Client Sent* event took place.
 
 This is how the visualization of the parent / child relationship of spans would look like:
 
@@ -118,14 +122,14 @@ annotations then they will presented as a single span.
 Why is there a difference between the 7 and 4 spans in this case?
 
     - 2 spans come from `http:/start` span. It has the Server Received (SR) and Server Sent (SS) annotations.
-    - 2 spans come from the RPC call from `service1` to `service2` to the `http:/foo` endpoint. It has the Client Sent (CS)
-     and Client Received (CR) annotations on `service1` side. It also has Server Received (SR) and Server Sent (SS) annotations
+    - 2 spans come from the RPC call from `service1` to `service2` to the `http:/foo` endpoint. The Client Sent (CS)
+     and Client Received (CR) events took place on `service1` side. Server Received (SR) and Server Sent (SS) events took place
      on the `service2` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
-    - 2 spans come from the RPC call from `service2` to `service3` to the `http:/bar` endpoint. It has the Client Sent (CS)
-     and Client Received (CR) annotations on `service2` side. It also has Server Received (SR) and Server Sent (SS) annotations
+    - 2 spans come from the RPC call from `service2` to `service3` to the `http:/bar` endpoint. The Client Sent (CS)
+     and Client Received (CR) events took place on `service2` side. Server Received (SR) and Server Sent (SS) events took place
      on the `service3` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
-    - 2 spans come from the RPC call from `service2` to `service4` to the `http:/baz` endpoint. It has the Client Sent (CS)
-     and Client Received (CR) annotations on `service2` side. It also has Server Received (SR) and Server Sent (SS) annotations
+    - 2 spans come from the RPC call from `service2` to `service4` to the `http:/baz` endpoint. The Client Sent (CS)
+     and Client Received (CR) events took place on `service2` side. Server Received (SR) and Server Sent (SS) events took place
      on the `service4` side. Physically there are 2 spans but they form 1 logical span related to an RPC call.
 
 So if we count the physical spans we have *1* from `http:/start`, *2* from `service1` calling `service2`, *2* form `service2`
@@ -150,6 +154,19 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 
 As you can see you can easily see the reason for an error and the whole stacktrace related to it.
 
+==== Distributed tracing with Brave
+
+Starting with version `2.0.0`, Spring Cloud Sleuth uses
+https://github.com/openzipkin/brave[Brave] as the tracing library. That means
+that Sleuth no longer takes care of storing the context but it delegates
+that work to Brave.
+
+Due to the fact that Sleuth had different naming / tagging
+conventions than Brave, we've decided to follow the Brave's
+conventions from now on. However, if you want to use the legacy
+Sleuth approaches, it's enough to set the `spring.sleuth.http.legacy.enabled` property
+to `true`.
+
 ==== Live examples
 
 .Click Pivotal Web Services icon to see it live!
@@ -163,7 +180,6 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
-
 
 ==== Log correlation
 
@@ -223,83 +239,7 @@ Below you can find an example of a Logback configuration (file named https://git
 
 [source,xml]
 -----
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-	​
-	<springProperty scope="context" name="springAppName" source="spring.application.name"/>
-	<!-- Example for logging into the build folder of your project -->
-	<property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>​
-
-	<!-- You can override this to have a custom pattern -->
-	<property name="CONSOLE_LOG_PATTERN"
-			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
-
-	<!-- Appender to log to console -->
-	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<!-- Minimum logging level to be presented in the console logs-->
-			<level>DEBUG</level>
-		</filter>
-		<encoder>
-			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
-			<charset>utf8</charset>
-		</encoder>
-	</appender>
-
-	<!-- Appender to log to file -->​
-	<appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${LOG_FILE}</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
-			<maxHistory>7</maxHistory>
-		</rollingPolicy>
-		<encoder>
-			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
-			<charset>utf8</charset>
-		</encoder>
-	</appender>
-	​
-	<!-- Appender to log to file in a JSON format -->
-	<appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${LOG_FILE}.json</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOG_FILE}.json.%d{yyyy-MM-dd}.gz</fileNamePattern>
-			<maxHistory>7</maxHistory>
-		</rollingPolicy>
-		<encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-			<providers>
-				<timestamp>
-					<timeZone>UTC</timeZone>
-				</timestamp>
-				<pattern>
-					<pattern>
-						{
-						"severity": "%level",
-						"service": "${springAppName:-}",
-						"trace": "%X{X-B3-TraceId:-}",
-						"span": "%X{X-B3-SpanId:-}",
-						"parent": "%X{X-B3-ParentSpanId:-}",
-						"exportable": "%X{X-Span-Export:-}",
-						"pid": "${PID:-}",
-						"thread": "%thread",
-						"class": "%logger{40}",
-						"rest": "%message"
-						}
-					</pattern>
-				</pattern>
-			</providers>
-		</encoder>
-	</appender>
-	​
-	<root level="INFO">
-		<appender-ref ref="console"/>
-		<!-- uncomment this to have also JSON logs -->
-		<!--<appender-ref ref="logstash"/>-->
-		<!--<appender-ref ref="flatfile"/>-->
-	</root>
-</configuration>
------
+Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud-samples/sleuth-documentation-apps/master/service1/src/main/resources/logback-spring.xml[]
 
 NOTE: If you're using a custom `logback-spring.xml` then you have to pass the `spring.application.name` in
 `bootstrap` instead of `application` property file. Otherwise your custom logback file won't read the property properly.
@@ -323,6 +263,7 @@ Example of setting baggage on a span:
 [source,java]
 ----
 Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+}
 ----
 
 ===== Baggage vs. Span Tags
@@ -335,15 +276,11 @@ can search by tag to find the trace, where there exists a span having the search
 
 If you want to be able to lookup a span based on baggage, you should add corresponding entry as a tag in the root span.
 
+IMPORTANT: Remember that the span needs to be in scope!
+
 [source,java]
 ----
-@Autowired Tracer tracer;
-
-Span span = tracer.getCurrentSpan();
-String baggageKey = "key";
-String baggageValue = "foo";
-span.setBaggageItem(baggageKey, baggageValue);
-tracer.addTag(baggageKey, baggageValue);
+Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
 ----
 
 === Adding to the project
@@ -359,7 +296,7 @@ the `spring-cloud-starter-sleuth` module to your project.
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
 ----
-	<dependencyManagement> <1>
+    <dependencyManagement> <1>
           <dependencies>
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
@@ -404,7 +341,7 @@ If you want both Sleuth and Zipkin just add the `spring-cloud-starter-zipkin` de
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
 ----
-	<dependencyManagement> <1>
+    <dependencyManagement> <1>
           <dependencies>
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
@@ -455,7 +392,7 @@ dependencies.
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
 ----
-	<dependencyManagement> <1>
+    <dependencyManagement> <1>
           <dependencies>
               <dependency>
                   <groupId>org.springframework.cloud</groupId>
@@ -568,95 +505,7 @@ NOTE: the SLF4J MDC is always set and logback users will immediately see the tra
 
 == Building
 
-:jdkversion: 1.7
-
-=== Basic Compile and Test
-
-To build the source you will need to install JDK {jdkversion}.
-
-Spring Cloud uses Maven for most build-related activities, and you
-should be able to get off the ground quite quickly by cloning the
-project you are interested in and typing
-
-----
-$ ./mvnw install
-----
-
-NOTE: You can also install Maven (>=3.3.3) yourself and run the `mvn` command
-in place of `./mvnw` in the examples below. If you do that you also
-might need to add `-P spring` if your local Maven settings do not
-contain repository declarations for spring pre-release artifacts.
-
-NOTE: Be aware that you might need to increase the amount of memory
-available to Maven by setting a `MAVEN_OPTS` environment variable with
-a value like `-Xmx512m -XX:MaxPermSize=128m`. We try to cover this in
-the `.mvn` configuration, so if you find you have to do it to make a
-build succeed, please raise a ticket to get the settings added to
-source control.
-
-For hints on how to build the project look in `.travis.yml` if there
-is one. There should be a "script" and maybe "install" command. Also
-look at the "services" section to see if any services need to be
-running locally (e.g. mongo or rabbit).  Ignore the git-related bits
-that you might find in "before_install" since they're related to setting git
-credentials and you already have those.
-
-The projects that require middleware generally include a
-`docker-compose.yml`, so consider using
-http://compose.docker.io/[Docker Compose] to run the middeware servers
-in Docker containers. See the README in the
-https://github.com/spring-cloud-samples/scripts[scripts demo
-repository] for specific instructions about the common cases of mongo,
-rabbit and redis.
-
-NOTE: If all else fails, build with the command from `.travis.yml` (usually
-`./mvnw install`).
-
-=== Documentation
-
-The spring-cloud-build module has a "docs" profile, and if you switch
-that on it will try to build asciidoc sources from
-`src/main/asciidoc`. As part of that process it will look for a
-`README.adoc` and process it by loading all the includes, but not
-parsing or rendering it, just copying it to `${main.basedir}`
-(defaults to `${basedir}`, i.e. the root of the project). If there are
-any changes in the README it will then show up after a Maven build as
-a modified file in the correct place. Just commit it and push the change.
-
-=== Working with the code
-If you don't have an IDE preference we would recommend that you use
-http://www.springsource.com/developer/sts[Spring Tools Suite] or
-http://eclipse.org[Eclipse] when working with the code. We use the
-http://eclipse.org/m2e/[m2eclipse] eclipse plugin for maven support. Other IDEs and tools
-should also work without issue as long as they use Maven 3.3.3 or better.
-
-==== Importing into eclipse with m2eclipse
-We recommend the http://eclipse.org/m2e/[m2eclipse] eclipse plugin when working with
-eclipse. If you don't already have m2eclipse installed it is available from the "eclipse
-marketplace".
-
-NOTE: Older versions of m2e do not support Maven 3.3, so once the
-projects are imported into Eclipse you will also need to tell
-m2eclipse to use the right profile for the projects.  If you
-see many different errors related to the POMs in the projects, check
-that you have an up to date installation.  If you can't upgrade m2e,
-add the "spring" profile to your `settings.xml`. Alternatively you can
-copy the repository settings from the "spring" profile of the parent
-pom into your `settings.xml`.
-
-==== Importing into eclipse without m2eclipse
-If you prefer not to use m2eclipse you can generate eclipse project metadata using the
-following command:
-
-[indent=0]
-----
-	$ ./mvnw eclipse:eclipse
-----
-
-The generated eclipse projects can be imported by selecting `import existing projects`
-from the `file` menu.
-
-
+Unresolved directive in README.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/building.adoc[]
 IMPORTANT: There are 2 different versions of language level used in Spring Cloud Sleuth. Java 1.7 is used for main sources and
 Java 1.8 is used for tests. When importing your project to an IDE please activate the `ide` Maven profile to turn on
 Java 1.8 for both main and test sources. Of course remember that you MUST NOT use Java 1.8 features in the main sources. If you do
@@ -664,47 +513,4 @@ so your app will break during the Maven build.
 
 == Contributing
 
-Spring Cloud is released under the non-restrictive Apache 2.0 license,
-and follows a very standard Github development process, using Github
-tracker for issues and merging pull requests into master. If you want
-to contribute even something trivial please do not hesitate, but
-follow the guidelines below.
-
-=== Sign the Contributor License Agreement
-Before we accept a non-trivial patch or pull request we will need you to sign the
-https://cla.pivotal.io/sign/spring[Contributor License Agreement].
-Signing the contributor's agreement does not grant anyone commit rights to the main
-repository, but it does mean that we can accept your contributions, and you will get an
-author credit if we do.  Active contributors might be asked to join the core team, and
-given the ability to merge pull requests.
-
-=== Code of Conduct
-This project adheres to the Contributor Covenant https://github.com/spring-cloud/spring-cloud-build/blob/master/docs/src/main/asciidoc/code-of-conduct.adoc[code of
-conduct]. By participating, you  are expected to uphold this code. Please report
-unacceptable behavior to spring-code-of-conduct@pivotal.io.
-
-=== Code Conventions and Housekeeping
-None of these is essential for a pull request, but they will all help.  They can also be
-added after the original pull request but before a merge.
-
-* Use the Spring Framework code format conventions. If you use Eclipse
-  you can import formatter settings using the
-  `eclipse-code-formatter.xml` file from the
-  https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-dependencies-parent/eclipse-code-formatter.xml[Spring
-  Cloud Build] project. If using IntelliJ, you can use the
-  http://plugins.jetbrains.com/plugin/6546[Eclipse Code Formatter
-  Plugin] to import the same file.
-* Make sure all new `.java` files to have a simple Javadoc class comment with at least an
-  `@author` tag identifying you, and preferably at least a paragraph on what the class is
-  for.
-* Add the ASF license header comment to all new `.java` files (copy from existing files
-  in the project)
-* Add yourself as an `@author` to the .java files that you modify substantially (more
-  than cosmetic changes).
-* Add some Javadocs and, if you change the namespace, some XSD doc elements.
-* A few unit tests would help a lot as well -- someone has to do it.
-* If no-one else is using your branch, please rebase it against the current master (or
-  other target branch in the main project).
-* When writing a commit message please follow http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html[these conventions],
-  if you are fixing an existing issue please add `Fixes gh-XXXX` at the end of the commit
-  message (where XXXX is the issue number).
+Unresolved directive in README.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/contributing.adoc[]

@@ -35,7 +35,7 @@ public class TraceAsyncIntegrationTests {
 	@Autowired
 	ClassPerformingAsyncLogic classPerformingAsyncLogic;
 	@Autowired
-	Tracing tracing;
+	Tracer tracer;
 	@Autowired
 	ArrayListSpanReporter reporter;
 
@@ -62,7 +62,7 @@ public class TraceAsyncIntegrationTests {
 	public void should_continue_a_span_on_an_async_annotated_method() {
 		Span span = givenASpanInCurrentThread();
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			whenAsyncProcessingTakesPlace();
 		} finally {
 			span.finish();
@@ -75,7 +75,7 @@ public class TraceAsyncIntegrationTests {
 	public void should_continue_a_span_with_custom_method_on_an_async_annotated_method() {
 		Span span = givenASpanInCurrentThread();
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			whenAsyncProcessingTakesPlaceWithCustomSpanName();
 		} finally {
 			span.finish();
@@ -85,7 +85,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private Span givenASpanInCurrentThread() {
-		return this.tracing.tracer().nextSpan().name("http:existing");
+		return this.tracer.nextSpan().name("http:existing");
 	}
 
 	private void whenAsyncProcessingTakesPlace() {
@@ -161,8 +161,8 @@ public class TraceAsyncIntegrationTests {
 	static class TraceAsyncITestConfiguration {
 
 		@Bean
-		ClassPerformingAsyncLogic asyncClass(Tracing tracing) {
-			return new ClassPerformingAsyncLogic(tracing);
+		ClassPerformingAsyncLogic asyncClass(Tracer tracer) {
+			return new ClassPerformingAsyncLogic(tracer);
 		}
 
 		@Bean
@@ -181,21 +181,21 @@ public class TraceAsyncIntegrationTests {
 
 		AtomicReference<Span> span = new AtomicReference<>();
 
-		private final Tracing tracing;
+		private final Tracer tracer;
 
-		ClassPerformingAsyncLogic(Tracing tracing) {
-			this.tracing = tracing;
+		ClassPerformingAsyncLogic(Tracer tracer) {
+			this.tracer = tracer;
 		}
 
 		@Async
 		public void invokeAsynchronousLogic() {
-			this.span.set(this.tracing.tracer().currentSpan());
+			this.span.set(this.tracer.currentSpan());
 		}
 
 		@Async
 		@SpanName("foo")
 		public void customNameInvokeAsynchronousLogic() {
-			this.span.set(this.tracing.tracer().currentSpan());
+			this.span.set(this.tracer.currentSpan());
 		}
 
 		public Span getSpan() {

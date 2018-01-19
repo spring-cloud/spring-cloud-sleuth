@@ -165,8 +165,8 @@ public class TraceAsyncIntegrationTests {
 	static class TraceAsyncITestConfiguration {
 
 		@Bean
-		ClassPerformingAsyncLogic asyncClass(Tracing tracing) {
-			return new ClassPerformingAsyncLogic(tracing);
+		ClassPerformingAsyncLogic asyncClass(Tracer tracer) {
+			return new ClassPerformingAsyncLogic(tracer);
 		}
 
 		@Bean Sampler defaultSampler() {
@@ -184,21 +184,21 @@ public class TraceAsyncIntegrationTests {
 
 		AtomicReference<Span> span = new AtomicReference<>();
 
-		private final Tracing tracing;
+		private final Tracer tracer;
 
-		ClassPerformingAsyncLogic(Tracing tracing) {
-			this.tracing = tracing;
+		ClassPerformingAsyncLogic(Tracer tracer) {
+			this.tracer = tracer;
 		}
 
 		@Async
 		public void invokeAsynchronousLogic() {
-			this.span.set(this.tracing.tracer().currentSpan());
+			this.span.set(this.tracer.currentSpan());
 		}
 
 		@Async
 		@SpanName("foo")
 		public void customNameInvokeAsynchronousLogic() {
-			this.span.set(this.tracing.tracer().currentSpan());
+			this.span.set(this.tracer.currentSpan());
 		}
 
 		public Span getSpan() {

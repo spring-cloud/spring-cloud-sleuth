@@ -18,11 +18,8 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
-
-import org.springframework.cloud.sleuth.TraceKeys;
-
 import com.netflix.hystrix.HystrixCommand;
+import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
@@ -37,15 +34,15 @@ import com.netflix.hystrix.HystrixCommand;
  */
 public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 	private final TraceKeys traceKeys;
 	private final Span span;
 
-	protected TraceCommand(Tracing tracing, TraceKeys traceKeys, Setter setter) {
+	protected TraceCommand(Tracer tracer, TraceKeys traceKeys, Setter setter) {
 		super(setter);
-		this.tracing = tracing;
+		this.tracer = tracer;
 		this.traceKeys = traceKeys;
-		this.span = this.tracing.tracer().nextSpan();
+		this.span = this.tracer.nextSpan();
 	}
 
 	@Override
@@ -58,7 +55,7 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 				this.traceKeys.getHystrix().getCommandGroup(), getCommandGroup().name());
 		span.tag(this.traceKeys.getHystrix().getPrefix() +
 				this.traceKeys.getHystrix().getThreadPoolKey(), getThreadPoolKey().name());
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			return doRun();
 		}
 		finally {

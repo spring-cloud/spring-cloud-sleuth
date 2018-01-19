@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.autoconfig;
 
+import brave.Tracer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -48,6 +49,12 @@ public class TraceAutoConfiguration {
 				.propagationFactory(factory)
 				.currentTraceContext(currentTraceContext)
 				.spanReporter(reporter).build();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	Tracer sleuthTracer(Tracing tracing) {
+		return tracing.tracer();
 	}
 
 	@Bean

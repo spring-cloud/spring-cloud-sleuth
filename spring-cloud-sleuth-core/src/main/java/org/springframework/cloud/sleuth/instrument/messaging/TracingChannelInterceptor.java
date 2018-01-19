@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import brave.Span;
 import brave.SpanCustomizer;
+import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.ThreadLocalSpan;
 import brave.propagation.TraceContext;
@@ -42,13 +43,15 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	final Tracing tracing;
+	final Tracer tracer;
 	final ThreadLocalSpan threadLocalSpan;
 	final TraceContext.Injector<MessageHeaderAccessor> injector;
 	final TraceContext.Extractor<MessageHeaderAccessor> extractor;
 
 	TracingChannelInterceptor(Tracing tracing) {
 		this.tracing = tracing;
-		this.threadLocalSpan = ThreadLocalSpan.create(tracing.tracer());
+		this.tracer = tracing.tracer();
+		this.threadLocalSpan = ThreadLocalSpan.create(this.tracer);
 		this.injector = tracing.propagation().injector(MessageHeaderPropagation.INSTANCE);
 		this.extractor = tracing.propagation()
 				.extractor(MessageHeaderPropagation.INSTANCE);
@@ -65,7 +68,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		headers.setImmutable();
-		Span result = this.tracing.tracer().nextSpan(extracted);
+		Span result = this.tracer.nextSpan(extracted);
 		if (extracted.context() == null && !result.isNoop()) {
 			addTags(message, result, null);
 		}
@@ -100,7 +103,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	@Override public void afterSendCompletion(Message<?> message, MessageChannel channel,
 			boolean sent, Exception ex) {
 		if (log.isDebugEnabled()) {
-			log.debug("Will finish the current span after completion " + this.tracing.tracer().currentSpan());
+			log.debug("Will finish the current span after completion " + this.tracer.currentSpan());
 		}
 		finishSpan(ex);
 	}
@@ -132,7 +135,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	public void afterReceiveCompletion(Message<?> message, MessageChannel channel,
 			Exception ex) {
 		if (log.isDebugEnabled()) {
-			log.debug("Will finish the current span after receive completion " + this.tracing.tracer().currentSpan());
+			log.debug("Will finish the current span after receive completion " + this.tracer.currentSpan());
 		}
 		finishSpan(ex);
 	}
@@ -147,7 +150,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 
 		// Start and finish a consumer span as we will immediately process it.
-		Span consumerSpan = this.tracing.tracer().nextSpan(extracted);
+		Span consumerSpan = this.tracer.nextSpan(extracted);
 		if (!consumerSpan.isNoop()) {
 			consumerSpan.kind(Span.Kind.CONSUMER).start();
 			addTags(message, consumerSpan, channel);
@@ -175,7 +178,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	@Override public void afterMessageHandled(Message<?> message, MessageChannel channel,
 			MessageHandler handler, Exception ex) {
 		if (log.isDebugEnabled()) {
-			log.debug("Will finish the current span after message handled " + this.tracing.tracer().currentSpan());
+			log.debug("Will finish the current span after message handled " + this.tracer.currentSpan());
 		}
 		finishSpan(ex);
 	}

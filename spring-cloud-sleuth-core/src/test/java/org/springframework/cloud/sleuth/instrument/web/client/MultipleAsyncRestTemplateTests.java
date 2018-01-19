@@ -77,7 +77,7 @@ public class MultipleAsyncRestTemplateTests {
 	@Autowired @Qualifier("customAsyncRestTemplate") AsyncRestTemplate asyncRestTemplate;
 	@Autowired AsyncConfigurer executor;
 	Executor wrappedExecutor;
-	@Autowired Tracing tracing;
+	@Autowired Tracer tracer;
 	@LocalServerPort int port;
 
 	@Before
@@ -92,8 +92,8 @@ public class MultipleAsyncRestTemplateTests {
 
 	@Test
 	public void should_pass_tracing_context_with_custom_async_client() throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		Span span = this.tracer.nextSpan().name("foo");
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			String result = this.asyncRestTemplate.getForEntity("http://localhost:"
 					+ port + "/foo", String.class).get().getBody();
 			then(span.context().traceIdString()).isEqualTo(result);
@@ -101,7 +101,7 @@ public class MultipleAsyncRestTemplateTests {
 			span.finish();
 		}
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -109,16 +109,16 @@ public class MultipleAsyncRestTemplateTests {
 		then(this.executor).isNotNull();
 		then(this.wrappedExecutor).isInstanceOf(LazyTraceExecutor.class);
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void should_inject_traced_executor_that_passes_tracing_context() throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 		AtomicBoolean executed = new AtomicBoolean(false);
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.wrappedExecutor.execute(() -> {
-				Span currentSpan = this.tracing.tracer().currentSpan();
+				Span currentSpan = this.tracer.currentSpan();
 				log.info("Current span " + currentSpan);
 				then(currentSpan).isNotNull();
 				long currentTraceId = currentSpan.context().traceId();
@@ -136,7 +136,7 @@ public class MultipleAsyncRestTemplateTests {
 				.untilAsserted(() -> {
 					then(executed.get()).isTrue();
 				});
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	//tag::custom_async_rest_template[]
@@ -188,8 +188,8 @@ public class MultipleAsyncRestTemplateTests {
 	@Configuration
 	static class ControllerConfig {
 		@Bean
-		MyRestController myRestController(Tracing tracing) {
-			return new MyRestController(tracing);
+		MyRestController myRestController(Tracer tracer) {
+			return new MyRestController(tracer);
 		}
 
 		@Bean Sampler sampler() {
@@ -226,14 +226,14 @@ class CustomAsyncClientHttpRequestFactory implements AsyncClientHttpRequestFacto
 @RestController
 class MyRestController {
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 
-	MyRestController(Tracing tracing) {
-		this.tracing = tracing;
+	MyRestController(Tracer tracer) {
+		this.tracer = tracer;
 	}
 
 	@RequestMapping("/foo")
 	String foo() {
-		return this.tracing.tracer().currentSpan().context().traceIdString();
+		return this.tracer.currentSpan().context().traceIdString();
 	}
 }

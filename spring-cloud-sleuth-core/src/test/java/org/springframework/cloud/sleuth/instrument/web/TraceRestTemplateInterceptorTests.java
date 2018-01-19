@@ -64,6 +64,7 @@ public class TraceRestTemplateInterceptorTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 	TraceKeys traceKeys = new TraceKeys();
 
 	@Before
@@ -93,10 +94,10 @@ public class TraceRestTemplateInterceptorTests {
 
 	@Test
 	public void headersAddedWhenTracing() {
-		Span span = this.tracing.tracer().nextSpan().name("new trace");
+		Span span = this.tracer.nextSpan().name("new trace");
 		Map<String, String> headers;
 
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			headers = this.template.getForEntity("/", Map.class)
 					.getBody();
 		} finally {
@@ -117,9 +118,9 @@ public class TraceRestTemplateInterceptorTests {
 		setInterceptors(HttpTracing.newBuilder(this.tracing)
 				.clientParser(new SleuthHttpClientParser(this.traceKeys))
 				.build());
-		Span span = this.tracing.tracer().nextSpan().name("new trace");
+		Span span = this.tracer.nextSpan().name("new trace");
 
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.template.getForEntity("/foo?a=b", Map.class);
 		} finally {
 			span.finish();
@@ -159,9 +160,9 @@ public class TraceRestTemplateInterceptorTests {
 	// issue #198
 	@Test
 	public void spanRemovedFromThreadUponException() {
-		Span span = this.tracing.tracer().nextSpan().name("new trace");
+		Span span = this.tracer.nextSpan().name("new trace");
 
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.template.getForEntity("/exception", Map.class).getBody();
 			Assert.fail("should throw an exception");
 		} catch (RuntimeException e) {
@@ -170,7 +171,7 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -178,9 +179,9 @@ public class TraceRestTemplateInterceptorTests {
 		setInterceptors(HttpTracing.newBuilder(this.tracing)
 				.clientParser(new SleuthHttpClientParser(this.traceKeys))
 				.build());
-		Span span = this.tracing.tracer().nextSpan().name("new trace");
+		Span span = this.tracer.nextSpan().name("new trace");
 
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.template.getForEntity("/cas~fs~åˆ’", Map.class).getBody();
 		} catch (Exception e) {
 
@@ -201,9 +202,9 @@ public class TraceRestTemplateInterceptorTests {
 		setInterceptors(HttpTracing.newBuilder(this.tracing)
 				.clientParser(new SleuthHttpClientParser(this.traceKeys))
 				.build());
-		Span span = this.tracing.tracer().nextSpan().name("new trace");
+		Span span = this.tracer.nextSpan().name("new trace");
 
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.template.getForEntity("/" + bigName(), Map.class).getBody();
 		} catch (Exception e) {
 
@@ -234,7 +235,7 @@ public class TraceRestTemplateInterceptorTests {
 
 		@RequestMapping("/")
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
-			this.span = TraceRestTemplateInterceptorTests.this.tracing.tracer().currentSpan();
+			this.span = TraceRestTemplateInterceptorTests.this.tracer.currentSpan();
 			Map<String, String> map = new HashMap<String, String>();
 			addHeaders(map, headers, "X-B3-SpanId", "X-B3-TraceId",
 					"X-B3-ParentSpanId");

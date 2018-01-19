@@ -105,7 +105,7 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(),
+		this.executor.submit(new TraceRunnable(this.tracing.tracer(), new DefaultSpanNamer(),
 				new ExceptionMessageErrorParser(), runnable)).get();
 	}
 

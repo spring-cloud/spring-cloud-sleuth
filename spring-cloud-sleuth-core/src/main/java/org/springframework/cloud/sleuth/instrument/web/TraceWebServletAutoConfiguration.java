@@ -1,6 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import brave.Tracing;
+import brave.Tracer;
 import brave.http.HttpTracing;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -49,8 +49,8 @@ public class TraceWebServletAutoConfiguration {
 	}
 
 	@Bean
-	TraceWebAspect traceWebAspect(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser) {
-		return new TraceWebAspect(tracing, spanNamer, errorParser);
+	TraceWebAspect traceWebAspect(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser) {
+		return new TraceWebAspect(tracer, spanNamer, errorParser);
 	}
 
 	@Bean

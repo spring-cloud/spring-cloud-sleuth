@@ -20,7 +20,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 import brave.Span;
-import brave.Tracing;
+import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ public class SampleController
 	@Autowired
 	private RestTemplate restTemplate;
 	@Autowired
-	private Tracing tracing;
+	private Tracer tracer;
 	@Autowired
 	private SampleBackground controller;
 
@@ -65,9 +65,9 @@ public class SampleController
 				log.info("call");
 				int millis = SampleController.this.random.nextInt(1000);
 				Thread.sleep(millis);
-				SampleController.this.tracing.tracer().currentSpan().tag("callable-sleep-millis",
+				SampleController.this.tracer.currentSpan().tag("callable-sleep-millis",
 						String.valueOf(millis));
-				Span span = SampleController.this.tracing.tracer().currentSpan();
+				Span span = SampleController.this.tracer.currentSpan();
 				return "async hi: " + span;
 			}
 		};
@@ -85,18 +85,18 @@ public class SampleController
 		log.info("hi2!");
 		int millis = this.random.nextInt(1000);
 		Thread.sleep(millis);
-		this.tracing.tracer().currentSpan().tag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
 	@RequestMapping("/traced")
 	public String traced() throws InterruptedException {
 		log.info("traced");
-		Span span = this.tracing.tracer().nextSpan().name("http:customTraceEndpoint");
+		Span span = this.tracer.nextSpan().name("http:customTraceEndpoint");
 		int millis = this.random.nextInt(1000);
 		log.info(String.format("Sleeping for [%d] millis", millis));
 		Thread.sleep(millis);
-		this.tracing.tracer().currentSpan().tag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate
 				.getForObject("http://localhost:" + this.port + "/call", String.class);
@@ -110,7 +110,7 @@ public class SampleController
 		int millis = this.random.nextInt(1000);
 		log.info(String.format("Sleeping for [%d] millis", millis));
 		Thread.sleep(millis);
-		this.tracing.tracer().currentSpan().tag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate
 				.getForObject("http://localhost:" + this.port + "/call", String.class);

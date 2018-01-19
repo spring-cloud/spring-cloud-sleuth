@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Span;
+import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
@@ -63,6 +64,7 @@ public class TraceFilterTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(new SleuthHttpClientParser(this.traceKeys))
@@ -202,7 +204,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void continuesSpanInRequestAttr() throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("http:foo");
+		Span span = this.tracer.nextSpan().name("http:foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
 
 		TraceFilter filter = new TraceFilter(beanFactory());
@@ -214,7 +216,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void closesSpanInRequestAttrIfStatusCodeNotSuccessful() throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("http:foo");
+		Span span = this.tracer.nextSpan().name("http:foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
 		this.response.setStatus(404);
 
@@ -229,7 +231,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void doesntDetachASpanIfStatusCodeNotSuccessfulAndRequestWasProcessed() throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("http:foo");
+		Span span = this.tracer.nextSpan().name("http:foo");
 		this.request.setAttribute(TraceFilter.TRACE_REQUEST_ATTR, span);
 		this.request.setAttribute(TraceFilter.TRACE_ERROR_HANDLED_REQUEST_ATTR, true);
 		this.response.setStatus(404);

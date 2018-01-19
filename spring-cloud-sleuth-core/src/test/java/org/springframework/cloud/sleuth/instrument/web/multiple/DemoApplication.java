@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import brave.Span;
-import brave.Tracing;
+import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,30 +34,30 @@ public class DemoApplication {
 	Span serviceActivatorSpan;
 
 	@Autowired Sender sender;
-	@Autowired Tracing tracing;
+	@Autowired Tracer tracer;
 
 	@RequestMapping("/greeting")
 	public Greeting greeting(@RequestParam(defaultValue="Hello World!") String message) {
 		this.sender.send(message);
-		this.httpSpan = this.tracing.tracer().currentSpan();
+		this.httpSpan = this.tracer.currentSpan();
 		return new Greeting(message);
 	}
 
 	@Splitter(inputChannel="greetings", outputChannel="words")
 	public List<String> words(String greeting) {
-		this.splitterSpan = this.tracing.tracer().currentSpan();
+		this.splitterSpan = this.tracer.currentSpan();
 		return Arrays.asList(StringUtils.delimitedListToStringArray(greeting, " "));
 	}
 
 	@Aggregator(inputChannel="words", outputChannel="counts")
 	public int count(List<String> greeting) {
-		this.aggregatorSpan = this.tracing.tracer().currentSpan();
+		this.aggregatorSpan = this.tracer.currentSpan();
 		return greeting.size();
 	}
 
 	@ServiceActivator(inputChannel="counts")
 	public void report(int count) {
-		this.serviceActivatorSpan = this.tracing.tracer().currentSpan();
+		this.serviceActivatorSpan = this.tracer.currentSpan();
 		log.info("Count: " + count);
 	}
 

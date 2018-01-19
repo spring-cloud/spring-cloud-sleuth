@@ -53,6 +53,7 @@ public class TracingFeignClientTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
@@ -67,9 +68,9 @@ public class TracingFeignClientTests {
 
 	@Test
 	public void should_log_cr_when_response_successful() throws IOException {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.traceFeignClient.execute(
 					Request.create("GET", "http://foo", new HashMap<>(), "".getBytes(),
 							Charset.defaultCharset()), new Request.Options());
@@ -83,11 +84,11 @@ public class TracingFeignClientTests {
 
 	@Test
 	public void should_log_error_when_exception_thrown() throws IOException {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 		BDDMockito.given(this.client.execute(BDDMockito.any(), BDDMockito.any()))
 				.willThrow(new RuntimeException("exception has occurred"));
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.traceFeignClient.execute(
 					Request.create("GET", "http://foo", new HashMap<>(), "".getBytes(),
 							Charset.defaultCharset()), new Request.Options());

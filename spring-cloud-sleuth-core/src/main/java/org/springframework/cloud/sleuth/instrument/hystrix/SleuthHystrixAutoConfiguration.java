@@ -1,5 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import brave.Tracer;
 import brave.Tracing;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -29,7 +30,7 @@ import com.netflix.hystrix.HystrixCommand;
 @ConditionalOnProperty(value = "spring.sleuth.hystrix.strategy.enabled", matchIfMissing = true)
 public class SleuthHystrixAutoConfiguration {
 
-	@Bean SleuthHystrixConcurrencyStrategy sleuthHystrixConcurrencyStrategy(Tracing tracer,
+	@Bean SleuthHystrixConcurrencyStrategy sleuthHystrixConcurrencyStrategy(Tracer tracer,
 			SpanNamer spanNamer, ErrorParser errorParser) {
 		return new SleuthHystrixConcurrencyStrategy(tracer, spanNamer,
 				errorParser);

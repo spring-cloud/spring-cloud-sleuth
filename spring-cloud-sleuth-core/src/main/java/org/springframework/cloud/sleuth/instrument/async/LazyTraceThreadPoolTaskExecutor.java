@@ -22,7 +22,7 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import brave.Tracing;
+import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -46,7 +46,7 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	private static final Log log = LogFactory.getLog(LazyTraceThreadPoolTaskExecutor.class);
 
-	private Tracing tracing;
+	private Tracer tracer;
 	private final BeanFactory beanFactory;
 	private final ThreadPoolTaskExecutor delegate;
 	private SpanNamer spanNamer;
@@ -229,11 +229,11 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		this.delegate.setTaskDecorator(taskDecorator);
 	}
 
-	private Tracing tracer() {
-		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+	private Tracer tracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
-		return this.tracing;
+		return this.tracer;
 	}
 
 	private SpanNamer spanNamer() {

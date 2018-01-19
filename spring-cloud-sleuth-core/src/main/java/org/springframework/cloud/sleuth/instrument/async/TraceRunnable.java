@@ -17,8 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import brave.Span;
+import brave.Tracer;
 import brave.Tracer.SpanInScope;
-import brave.Tracing;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 
@@ -39,27 +39,27 @@ public class TraceRunnable implements Runnable {
 	 */
 	private static final String DEFAULT_SPAN_NAME = "async";
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 	private final Runnable delegate;
 	private final Span span;
 	private final ErrorParser errorParser;
 
-	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser, Runnable delegate) {
-		this(tracing, spanNamer, errorParser, delegate, null);
+	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser, Runnable delegate) {
+		this(tracer, spanNamer, errorParser, delegate, null);
 	}
 
-	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser, Runnable delegate, String name) {
-		this.tracing = tracing;
+	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser, Runnable delegate, String name) {
+		this.tracer = tracer;
 		this.delegate = delegate;
 		String spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
-		this.span = this.tracing.tracer().nextSpan().name(spanName);
+		this.span = this.tracer.nextSpan().name(spanName);
 		this.errorParser = errorParser;
 	}
 
 	@Override
 	public void run() {
 		Throwable error = null;
-			try (SpanInScope ws = this.tracing.tracer().withSpanInScope(this.span.start())) {
+			try (SpanInScope ws = this.tracer.withSpanInScope(this.span.start())) {
 				this.delegate.run();
 			} catch (RuntimeException | Error e) {
 				error = e;

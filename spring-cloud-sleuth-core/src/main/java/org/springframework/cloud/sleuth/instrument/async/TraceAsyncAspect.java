@@ -20,7 +20,6 @@ import java.lang.reflect.Method;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -37,17 +36,17 @@ import org.springframework.util.ReflectionUtils;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  *
- * @see Tracing
+ * @see Tracer
  */
 @Aspect
 public class TraceAsyncAspect {
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 	private final SpanNamer spanNamer;
 	private final TraceKeys traceKeys;
 
-	public TraceAsyncAspect(Tracing tracing, SpanNamer spanNamer, TraceKeys traceKeys) {
-		this.tracing = tracing;
+	public TraceAsyncAspect(Tracer tracer, SpanNamer spanNamer, TraceKeys traceKeys) {
+		this.tracer = tracer;
 		this.spanNamer = spanNamer;
 		this.traceKeys = traceKeys;
 	}
@@ -56,8 +55,8 @@ public class TraceAsyncAspect {
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
 		String spanName = this.spanNamer.name(getMethod(pjp, pjp.getTarget()),
 				SpanNameUtil.toLowerHyphen(pjp.getSignature().getName()));
-		Span span = this.tracing.tracer().currentSpan().name(spanName);
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		Span span = this.tracer.currentSpan().name(spanName);
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			span.tag(this.traceKeys.getAsync().getPrefix() +
 					this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
 			span.tag(this.traceKeys.getAsync().getPrefix() +

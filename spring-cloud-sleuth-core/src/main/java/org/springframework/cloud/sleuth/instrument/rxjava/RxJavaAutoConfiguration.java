@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import java.util.Arrays;
 
+import brave.Tracer;
 import brave.Tracing;
 import rx.plugins.RxJavaSchedulersHook;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -30,9 +31,9 @@ import org.springframework.context.annotation.Configuration;
 public class RxJavaAutoConfiguration {
 
 	@Bean
-	SleuthRxJavaSchedulersHook sleuthRxJavaSchedulersHook(Tracing tracing, TraceKeys traceKeys,
+	SleuthRxJavaSchedulersHook sleuthRxJavaSchedulersHook(Tracer tracer, TraceKeys traceKeys,
 			SleuthRxJavaSchedulersProperties sleuthRxJavaSchedulersProperties) {
-		return new SleuthRxJavaSchedulersHook(tracing, traceKeys,
+		return new SleuthRxJavaSchedulersHook(tracer, traceKeys,
 				Arrays.asList(sleuthRxJavaSchedulersProperties.getIgnoredthreads()));
 	}
 }

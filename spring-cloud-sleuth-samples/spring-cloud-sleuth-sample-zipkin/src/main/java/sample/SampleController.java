@@ -20,7 +20,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 import brave.Span;
-import brave.Tracing;
+import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ ApplicationListener<ServletWebServerInitializedEvent> {
 	@Autowired
 	private RestTemplate restTemplate;
 	@Autowired
-	private Tracing tracing;
+	private Tracer tracer;
 	@Autowired
 	private SampleBackground controller;
 	private Random random = new Random();
@@ -64,7 +64,7 @@ ApplicationListener<ServletWebServerInitializedEvent> {
 			public String call() throws Exception {
 				int millis = SampleController.this.random.nextInt(1000);
 				Thread.sleep(millis);
-				Span currentSpan = SampleController.this.tracing.tracer().currentSpan();
+				Span currentSpan = SampleController.this.tracer.currentSpan();
 				currentSpan.tag("callable-sleep-millis", String.valueOf(millis));
 				return "async hi: " + currentSpan;
 			}
@@ -83,17 +83,17 @@ ApplicationListener<ServletWebServerInitializedEvent> {
 		log.info("hi2");
 		int millis = this.random.nextInt(1000);
 		Thread.sleep(millis);
-		this.tracing.tracer().currentSpan().tag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 		return "hi2";
 	}
 
 	@RequestMapping("/traced")
 	public String traced() throws InterruptedException {
-		Span span = this.tracing.tracer().nextSpan().name("http:customTraceEndpoint").start();
+		Span span = this.tracer.nextSpan().name("http:customTraceEndpoint").start();
 		int millis = this.random.nextInt(1000);
 		log.info(String.format("Sleeping for [%d] millis", millis));
 		Thread.sleep(millis);
-		this.tracing.tracer().currentSpan().tag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
@@ -106,7 +106,7 @@ ApplicationListener<ServletWebServerInitializedEvent> {
 		int millis = this.random.nextInt(1000);
 		log.info(String.format("Sleeping for [%d] millis", millis));
 		Thread.sleep(millis);
-		this.tracing.tracer().currentSpan().tag("random-sleep-millis", String.valueOf(millis));
+		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port
 				+ "/call", String.class);
 		return "start/" + s;

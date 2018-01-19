@@ -44,6 +44,7 @@ public class TraceCommandTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 
 	@Before
 	public void setup() {
@@ -73,9 +74,9 @@ public class TraceCommandTests {
 
 	@Test
 	public void should_run_Hystrix_command_with_span_passed_from_parent_thread() {
-		Span span = this.tracing.tracer().nextSpan();
+		Span span = this.tracer.nextSpan();
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			TraceCommand<Span> command = traceReturningCommand();
 			whenCommandIsExecuted(command);
 		} finally {
@@ -93,7 +94,7 @@ public class TraceCommandTests {
 
 	@Test
 	public void should_pass_tracing_information_when_using_Hystrix_commands() {
-		Tracing tracing = this.tracing;
+		Tracer tracer = this.tracer;
 		TraceKeys traceKeys = new TraceKeys();
 		HystrixCommand.Setter setter = withGroupKey(asKey("group"))
 				.andCommandKey(HystrixCommandKey.Factory.asKey("command"));
@@ -106,7 +107,7 @@ public class TraceCommandTests {
 		};
 		// end::hystrix_command[]
 		// tag::trace_hystrix_command[]
-		TraceCommand<String> traceCommand = new TraceCommand<String>(tracing, traceKeys, setter) {
+		TraceCommand<String> traceCommand = new TraceCommand<String>(tracer, traceKeys, setter) {
 			@Override
 			public String doRun() throws Exception {
 				return someLogic();
@@ -125,7 +126,7 @@ public class TraceCommandTests {
 	}
 
 	private TraceCommand<Span> traceReturningCommand() {
-		return new TraceCommand<Span>(this.tracing, new TraceKeys(),
+		return new TraceCommand<Span>(this.tracer, new TraceKeys(),
 				withGroupKey(asKey("group"))
 						.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties
 								.Setter().withCoreSize(1).withMaxQueueSize(1))
@@ -134,7 +135,7 @@ public class TraceCommandTests {
 				.andCommandKey(HystrixCommandKey.Factory.asKey("traceCommandKey"))) {
 			@Override
 			public Span doRun() throws Exception {
-				return TraceCommandTests.this.tracing.tracer().currentSpan();
+				return TraceCommandTests.this.tracer.currentSpan();
 			}
 		};
 	}

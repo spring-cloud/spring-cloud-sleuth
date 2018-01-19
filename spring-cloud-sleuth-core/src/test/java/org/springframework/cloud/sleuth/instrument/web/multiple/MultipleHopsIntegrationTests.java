@@ -7,11 +7,9 @@ import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.propagation.ExtraFieldPropagation;
 import brave.sampler.Sampler;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +46,7 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("baggage")
 public class MultipleHopsIntegrationTests {
 
-	@Autowired Tracing tracing;
+	@Autowired Tracer tracer;
 	@Autowired TraceKeys traceKeys;
 	@Autowired ArrayListSpanReporter reporter;
 	@Autowired RestTemplate restTemplate;
@@ -80,7 +78,6 @@ public class MultipleHopsIntegrationTests {
 
 	// issue #237 - baggage
 	@Test
-	@Ignore
 	// Notes:
 	// * path-prefix header propagation can't reliably support mixed case, due to http/2 downcasing
 	//   * Since not all tokenizers are case insensitive, mixed case can break correlation
@@ -93,12 +90,19 @@ public class MultipleHopsIntegrationTests {
 	//   * probably needed anyway as an empty whitelist is a nice way to disable the feature
 	public void should_propagate_the_baggage() throws Exception {
 		//tag::baggage[]
-		Span initialSpan = this.tracing.tracer().nextSpan().name("span").start();
-		initialSpan.tag("foo", "bar");
-		initialSpan.tag("UPPER_CASE", "someValue");
-		//end::baggage[]
+		Span initialSpan = this.tracer.nextSpan().name("span").start();
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+			ExtraFieldPropagation.set("foo", "bar");
+			ExtraFieldPropagation.set("UPPER_CASE", "someValue");
+			//end::baggage[]
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(initialSpan)) {
+			//tag::baggage_tag[]
+			initialSpan.tag("foo",
+					ExtraFieldPropagation.get(initialSpan.context(), "foo"));
+			initialSpan.tag("UPPER_CASE",
+					ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
+			//end::baggage_tag[]
+
 			HttpHeaders headers = new HttpHeaders();
 			headers.put("baz", Collections.singletonList("baz"));
 			headers.put("bizarreCASE", Collections.singletonList("value"));
@@ -121,6 +125,12 @@ public class MultipleHopsIntegrationTests {
 				.filter(span -> "baz".equals(baggage(span, "baz")))
 				.collect(Collectors.toList()))
 				.as("Someone has baz")
+				.isNotEmpty();
+		then(this.reporter.getSpans()
+				.stream()
+				.filter(span -> span.tags().containsKey("foo") && span.tags().containsKey("UPPER_CASE"))
+				.collect(Collectors.toList()))
+				.as("Someone has foo and UPPER_CASE tags")
 				.isNotEmpty();
 		then(this.application.allSpans()
 				.stream()

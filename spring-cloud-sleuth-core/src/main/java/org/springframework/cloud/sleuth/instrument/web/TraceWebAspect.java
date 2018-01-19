@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 
+import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -32,7 +33,6 @@ import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 import brave.Span;
-import brave.Tracing;
 
 /**
  * Aspect that adds tracing to
@@ -63,7 +63,6 @@ import brave.Tracing;
  *
  * @see org.springframework.stereotype.Controller
  * @see org.springframework.web.client.RestOperations
- * @see org.springframework.cloud.sleuth.TraceCallable
  */
 @SuppressWarnings("ArgNamesWarningsInspection")
 @Aspect
@@ -72,12 +71,12 @@ public class TraceWebAspect {
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(TraceWebAspect.class);
 
-	private final Tracing tracer;
+	private final Tracer tracer;
 	private final SpanNamer spanNamer;
 	//private final TraceKeys traceKeys;
 	private final ErrorParser errorParser;
 
-	public TraceWebAspect(Tracing tracer, SpanNamer spanNamer, //TraceKeys traceKeys,
+	public TraceWebAspect(Tracer tracer, SpanNamer spanNamer, //TraceKeys traceKeys,
 			ErrorParser errorParser) {
 		this.tracer = tracer;
 		this.spanNamer = spanNamer;
@@ -110,9 +109,9 @@ public class TraceWebAspect {
 	@SuppressWarnings("unchecked")
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		Callable<Object> callable = (Callable<Object>) pjp.proceed();
-		if (this.tracer.tracer().currentSpan() != null) {
+		if (this.tracer.currentSpan() != null) {
 			if (log.isDebugEnabled()) {
-				log.debug("Wrapping callable with span [" + this.tracer.tracer().currentSpan() + "]");
+				log.debug("Wrapping callable with span [" + this.tracer.currentSpan() + "]");
 			}
 			return new TraceCallable<>(this.tracer, this.spanNamer, this.errorParser, callable);
 		}
@@ -124,10 +123,10 @@ public class TraceWebAspect {
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
 	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		final WebAsyncTask<?> webAsyncTask = (WebAsyncTask<?>) pjp.proceed();
-		if (this.tracer.tracer().currentSpan() != null) {
+		if (this.tracer.currentSpan() != null) {
 			try {
 				if (log.isDebugEnabled()) {
-					log.debug("Wrapping callable with span [" + this.tracer.tracer().currentSpan()
+					log.debug("Wrapping callable with span [" + this.tracer.currentSpan()
 							+ "]");
 				}
 				Field callableField = WebAsyncTask.class.getDeclaredField("callable");
@@ -144,18 +143,9 @@ public class TraceWebAspect {
 	@Around("anyHandlerExceptionResolver(request, response, handler, ex)")
 	public Object markRequestForSpanClosing(ProceedingJoinPoint pjp,
 			HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Throwable {
-		Span currentSpan = this.tracer.tracer().currentSpan();
-		try {
-			//TODO: Update this
-//			if (currentSpan != null && !currentSpan.tags().containsKey(Span.SPAN_ERROR_TAG_NAME)) {
-//				this.errorParser.parseErrorTags(currentSpan, ex);
-//			}
+		Span currentSpan = this.tracer.currentSpan();
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(currentSpan)){
 			return pjp.proceed();
-		} finally {
-			if (log.isDebugEnabled()) {
-				log.debug("Marking span " + currentSpan + " for closure by Trace Filter");
-			}
-			//request.setAttribute(TraceFilter.TRACE_CLOSE_SPAN_REQUEST_ATTR, true);
 		}
 	}
 

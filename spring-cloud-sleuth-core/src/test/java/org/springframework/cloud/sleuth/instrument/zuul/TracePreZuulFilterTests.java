@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.servlet.http.HttpServletRequest;
 
 import brave.Span;
 import brave.Tracer;
@@ -26,6 +26,8 @@ import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
+import com.netflix.zuul.context.RequestContext;
+import com.netflix.zuul.monitoring.MonitoringHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,9 +40,6 @@ import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
-
-import com.netflix.zuul.context.RequestContext;
-import com.netflix.zuul.monitoring.MonitoringHelper;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -60,6 +59,7 @@ public class TracePreZuulFilterTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
@@ -88,9 +88,9 @@ public class TracePreZuulFilterTests {
 
 	@Test
 	public void filterAddsHeaders() throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("http:start").start();
+		Span span = this.tracer.nextSpan().name("http:start").start();
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			this.filter.runFilter();
 		} finally {
 			span.finish();
@@ -101,7 +101,7 @@ public class TracePreZuulFilterTests {
 				.isNotNull();
 		then(ctx.getZuulRequestHeaders().get(SAMPLED_NAME))
 				.isEqualTo("1");
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -127,12 +127,12 @@ public class TracePreZuulFilterTests {
 				.isNotNull();
 		then(ctx.getZuulRequestHeaders().get(SAMPLED_NAME))
 				.isEqualTo("0");
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCloseSpanWhenExceptionIsThrown() throws Exception {
-		Span startedSpan = this.tracing.tracer().nextSpan().name("http:start").start();
+		Span startedSpan = this.tracer.nextSpan().name("http:start").start();
 		final AtomicReference<Span> span = new AtomicReference<>();
 
 		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(startedSpan)) {
@@ -141,7 +141,7 @@ public class TracePreZuulFilterTests {
 				public Object run() {
 					super.run();
 					span.set(
-							TracePreZuulFilterTests.this.tracing.tracer().currentSpan());
+							TracePreZuulFilterTests.this.tracer.currentSpan());
 					throw new RuntimeException("foo");
 				}
 			}.runFilter();
@@ -158,12 +158,12 @@ public class TracePreZuulFilterTests {
 				.containsEntry("error", "foo");
 		// span from zuul
 		then(spans.get(1).name()).isEqualTo("http:start");
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldNotCloseSpanWhenNoExceptionIsThrown() throws Exception {
-		Span startedSpan = this.tracing.tracer().nextSpan().name("http:start").start();
+		Span startedSpan = this.tracer.nextSpan().name("http:start").start();
 		final AtomicReference<Span> span = new AtomicReference<>();
 
 		try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(startedSpan)) {
@@ -171,7 +171,7 @@ public class TracePreZuulFilterTests {
 				@Override
 				public Object run() {
 					span.set(
-							TracePreZuulFilterTests.this.tracing.tracer().currentSpan());
+							TracePreZuulFilterTests.this.tracer.currentSpan());
 					return super.run();
 				}
 			}.runFilter();
@@ -180,7 +180,7 @@ public class TracePreZuulFilterTests {
 		}
 
 		then(startedSpan).isNotEqualTo(span.get());
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
 

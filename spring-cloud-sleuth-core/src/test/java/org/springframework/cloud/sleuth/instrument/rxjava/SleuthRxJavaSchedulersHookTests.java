@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
+import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
 import rx.functions.Action0;
@@ -38,6 +39,7 @@ public class SleuthRxJavaSchedulersHookTests {
 			.currentTraceContext(CurrentTraceContext.Default.create())
 			.spanReporter(this.reporter)
 			.build();
+	Tracer tracer = this.tracing.tracer();
 
 	@After
 	public void clean() {
@@ -58,7 +60,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		RxJavaPlugins.getInstance().registerErrorHandler(new MyRxJavaErrorHandler());
 		RxJavaPlugins.getInstance().registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
 
-		new SleuthRxJavaSchedulersHook(this.tracing, this.traceKeys, threadsToIgnore);
+		new SleuthRxJavaSchedulersHook(this.tracer, this.traceKeys, threadsToIgnore);
 
 		then(RxJavaPlugins.getInstance().getErrorHandler()).isExactlyInstanceOf(MyRxJavaErrorHandler.class);
 		then(RxJavaPlugins.getInstance().getObservableExecutionHook()).isExactlyInstanceOf(MyRxJavaObservableExecutionHook.class);
@@ -68,7 +70,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	public void should_wrap_delegates_action_in_wrapped_action_when_delegate_is_present_on_schedule() {
 		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
 		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-			this.tracing, this.traceKeys, threadsToIgnore);
+			this.tracer, this.traceKeys, threadsToIgnore);
 		Action0 action = schedulersHook.onSchedule(() -> {
 			caller = new StringBuilder("hello");
 		});
@@ -78,7 +80,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		then(action).isInstanceOf(SleuthRxJavaSchedulersHook.TraceAction.class);
 		then(caller.toString()).isEqualTo("called_from_schedulers_hook");
 		then(this.reporter.getSpans()).isNotEmpty();
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -87,7 +89,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		String threadNameToIgnore = "^MyCustomThread.*$";
 		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
 		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-			this.tracing, this.traceKeys, Collections.singletonList(threadNameToIgnore));
+			this.tracer, this.traceKeys, Collections.singletonList(threadNameToIgnore));
 		Future<Void> hello = executorService().submit((Callable<Void>) () -> {
 			Action0 action = schedulersHook.onSchedule(() -> {
 				caller = new StringBuilder("hello");
@@ -99,7 +101,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		hello.get();
 
 		then(this.reporter.getSpans()).isEmpty();
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	private ExecutorService executorService() {

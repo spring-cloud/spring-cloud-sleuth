@@ -21,6 +21,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
+import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
 import org.junit.Before;
@@ -122,7 +123,7 @@ public class TraceableScheduledExecutorServiceTest {
 	}
 
 	BeanFactory beanFactory() {
-		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(this.tracing.tracer());
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		BDDMockito.given(this.beanFactory.getBean(ErrorParser.class)).willReturn(new ExceptionMessageErrorParser());
 		return this.beanFactory;

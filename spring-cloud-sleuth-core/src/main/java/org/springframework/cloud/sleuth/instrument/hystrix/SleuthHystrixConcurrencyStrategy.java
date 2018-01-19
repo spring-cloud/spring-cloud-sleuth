@@ -21,13 +21,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import brave.Tracing;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
-
+import brave.Tracer;
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
@@ -39,6 +33,11 @@ import com.netflix.hystrix.strategy.executionhook.HystrixCommandExecutionHook;
 import com.netflix.hystrix.strategy.metrics.HystrixMetricsPublisher;
 import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
 import com.netflix.hystrix.strategy.properties.HystrixProperty;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 
 /**
  * A {@link HystrixConcurrencyStrategy} that wraps a {@link Callable} in a
@@ -54,14 +53,14 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 	private static final Log log = LogFactory
 			.getLog(SleuthHystrixConcurrencyStrategy.class);
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 	private final SpanNamer spanNamer;
 	private final ErrorParser errorParser;
 	private HystrixConcurrencyStrategy delegate;
 
-	public SleuthHystrixConcurrencyStrategy(Tracing tracing,
+	public SleuthHystrixConcurrencyStrategy(Tracer tracer,
 			SpanNamer spanNamer, ErrorParser errorParser) {
-		this.tracing = tracing;
+		this.tracer = tracer;
 		this.spanNamer = spanNamer;
 		this.errorParser = errorParser;
 		try {
@@ -115,7 +114,7 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 		if (wrappedCallable instanceof TraceCallable) {
 			return wrappedCallable;
 		}
-		return new TraceCallable<>(this.tracing, this.spanNamer,
+		return new TraceCallable<>(this.tracer, this.spanNamer,
 				this.errorParser, wrappedCallable, HYSTRIX_COMPONENT);
 	}
 

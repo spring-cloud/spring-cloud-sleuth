@@ -25,7 +25,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brave.Tracing;
+import brave.Tracer;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
@@ -38,7 +38,7 @@ import org.springframework.cloud.sleuth.SpanNamer;
  */
 public class TraceableExecutorService implements ExecutorService {
 	final ExecutorService delegate;
-	Tracing tracer;
+	Tracer tracer;
 	private final String spanName;
 	SpanNamer spanNamer;
 	BeanFactory beanFactory;
@@ -135,9 +135,9 @@ public class TraceableExecutorService implements ExecutorService {
 		return ts;
 	}
 
-	Tracing tracer() {
+	Tracer tracer() {
 		if (this.tracer == null && this.beanFactory != null) {
-			this.tracer = this.beanFactory.getBean(Tracing.class);
+			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
 	}

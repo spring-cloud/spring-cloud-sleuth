@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import java.util.regex.Pattern;
 
+import brave.Tracer;
 import brave.Tracing;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -49,9 +50,9 @@ public class TraceSchedulingAutoConfiguration {
 
 	@Bean
 	@ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
-	public TraceSchedulingAspect traceSchedulingAspect(Tracing tracing,
+	public TraceSchedulingAspect traceSchedulingAspect(Tracer tracer,
 			SleuthSchedulingProperties sleuthSchedulingProperties, TraceKeys traceKeys) {
-		return new TraceSchedulingAspect(tracing,
+		return new TraceSchedulingAspect(tracer,
 				Pattern.compile(sleuthSchedulingProperties.getSkipPattern()), traceKeys);
 	}
 }

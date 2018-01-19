@@ -63,7 +63,7 @@ public class WebClientDiscoveryExceptionTests {
 
 	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
 	@Autowired @LoadBalanced RestTemplate template;
-	@Autowired Tracing tracing;
+	@Autowired Tracer tracer;
 	@Autowired ArrayListSpanReporter reporter;
 
 	@Before
@@ -74,9 +74,9 @@ public class WebClientDiscoveryExceptionTests {
 	// issue #240
 	private void shouldCloseSpanUponException(ResponseEntityProvider provider)
 			throws IOException, InterruptedException {
-		Span span = this.tracing.tracer().nextSpan().name("new trace");
+		Span span = this.tracer.nextSpan().name("new trace");
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			provider.get(this);
 			Assertions.fail("should throw an exception");
 		}

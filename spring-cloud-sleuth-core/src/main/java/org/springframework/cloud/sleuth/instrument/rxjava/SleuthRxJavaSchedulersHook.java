@@ -4,15 +4,14 @@ import java.util.List;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.TraceKeys;
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  * {@link RxJavaSchedulersHook} that wraps an {@link Action0} into its tracing
@@ -27,14 +26,14 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			SleuthRxJavaSchedulersHook.class);
 
 	private static final String RXJAVA_COMPONENT = "rxjava";
-	private final Tracing tracer;
+	private final Tracer tracer;
 	private final TraceKeys traceKeys;
 	private final List<String> threadsToSample;
 	private RxJavaSchedulersHook delegate;
 
-	SleuthRxJavaSchedulersHook(Tracing tracing, TraceKeys traceKeys,
+	SleuthRxJavaSchedulersHook(Tracer tracer, TraceKeys traceKeys,
 			List<String> threadsToSample) {
-		this.tracer = tracing;
+		this.tracer = tracer;
 		this.traceKeys = traceKeys;
 		this.threadsToSample = threadsToSample;
 		try {
@@ -84,17 +83,17 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 	static class TraceAction implements Action0 {
 
 		private final Action0 actual;
-		private final Tracing tracing;
+		private final Tracer tracer;
 		private final TraceKeys traceKeys;
 		private final Span parent;
 		private final List<String> threadsToIgnore;
 
-		public TraceAction(Tracing tracing, TraceKeys traceKeys, Action0 actual,
+		public TraceAction(Tracer tracer, TraceKeys traceKeys, Action0 actual,
 				List<String> threadsToIgnore) {
-			this.tracing = tracing;
+			this.tracer = tracer;
 			this.traceKeys = traceKeys;
 			this.threadsToIgnore = threadsToIgnore;
-			this.parent = this.tracing.tracer().currentSpan();
+			this.parent = this.tracer.currentSpan();
 			this.actual = actual;
 		}
 
@@ -117,15 +116,15 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			Span span = this.parent;
 			boolean created = false;
 			if (span != null) {
-				span = this.tracing.tracer().joinSpan(this.parent.context());
+				span = this.tracer.joinSpan(this.parent.context());
 			} else {
-				span = this.tracing.tracer().nextSpan().name(RXJAVA_COMPONENT).start();
+				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
 				span.tag(this.traceKeys.getAsync().getPrefix()
 					+ this.traceKeys.getAsync().getThreadNameKey(),
 						Thread.currentThread().getName());
 				created = true;
 			}
-			try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 				this.actual.call();
 			} finally {
 				if (created) {

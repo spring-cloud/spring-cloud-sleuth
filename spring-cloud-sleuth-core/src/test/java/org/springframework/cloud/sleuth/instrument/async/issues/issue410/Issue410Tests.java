@@ -65,7 +65,7 @@ public class Issue410Tests {
 			.getLog(MethodHandles.lookup().lookupClass());
 
 	@Autowired Environment environment;
-	@Autowired Tracing tracing;
+	@Autowired Tracer tracer;
 	@Autowired AsyncTask asyncTask;
 	@Autowired RestTemplate restTemplate;
 	/**
@@ -76,9 +76,9 @@ public class Issue410Tests {
 
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_without_a_pool() {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.restTemplate.getForObject(
 					"http://localhost:" + port() + "/without_pool", String.class);
 
@@ -93,14 +93,14 @@ public class Issue410Tests {
 			span.finish();
 		}
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void should_pass_tracing_info_for_tasks_running_with_a_pool() {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.restTemplate.getForObject(
 					"http://localhost:" + port() + "/with_pool", String.class);
 
@@ -115,7 +115,7 @@ public class Issue410Tests {
 			span.finish();
 		}
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	/**
@@ -123,9 +123,9 @@ public class Issue410Tests {
 	 */
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_executor() {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.restTemplate.getForObject(
 					"http://localhost:" + port() + "/completable", String.class);
 
@@ -140,7 +140,7 @@ public class Issue410Tests {
 			span.finish();
 		}
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	/**
@@ -148,9 +148,9 @@ public class Issue410Tests {
 	 */
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_task_scheduler() {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.restTemplate.getForObject(
 					"http://localhost:" + port() + "/taskScheduler", String.class);
 
@@ -165,7 +165,7 @@ public class Issue410Tests {
 			span.finish();
 		}
 
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	private int port() {
@@ -205,7 +205,7 @@ class AsyncTask {
 	private AtomicReference<Span> span = new AtomicReference<>();
 
 	@Autowired 
-	Tracing tracing;
+	Tracer tracer;
 	@Autowired
 	@Qualifier("poolTaskExecutor")
 	Executor executor;
@@ -218,24 +218,24 @@ class AsyncTask {
 	@Async("poolTaskExecutor")
 	public void runWithPool() {
 		log.info("This task is running with a pool.");
-		this.span.set(this.tracing.tracer().currentSpan());
+		this.span.set(this.tracer.currentSpan());
 	}
 
 	@Async
 	public void runWithoutPool() {
 		log.info("This task is running without a pool.");
-		this.span.set(this.tracing.tracer().currentSpan());
+		this.span.set(this.tracer.currentSpan());
 	}
 
 	public Span completableFutures() throws ExecutionException, InterruptedException {
 		log.info("This task is running with completable future");
 		CompletableFuture<Span> span1 = CompletableFuture.supplyAsync(() -> {
 			AsyncTask.log.info("First completable future");
-			return AsyncTask.this.tracing.tracer().currentSpan();
+			return AsyncTask.this.tracer.currentSpan();
 		}, AsyncTask.this.executor);
 		CompletableFuture<Span> span2 = CompletableFuture.supplyAsync(() -> {
 			AsyncTask.log.info("Second completable future");
-			return AsyncTask.this.tracing.tracer().currentSpan();
+			return AsyncTask.this.tracer.currentSpan();
 		}, AsyncTask.this.executor);
 		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2)
 				.thenApply(ignoredVoid -> {
@@ -255,13 +255,13 @@ class AsyncTask {
 		log.info("This task is running with completable future");
 		CompletableFuture<Span> span1 = CompletableFuture.supplyAsync(() -> {
 			AsyncTask.log.info("First completable future");
-			return AsyncTask.this.tracing.tracer().currentSpan();
+			return AsyncTask.this.tracer.currentSpan();
 		}, new LazyTraceExecutor(
 				AsyncTask.this.beanFactory,
 				AsyncTask.this.taskScheduler));
 		CompletableFuture<Span> span2 = CompletableFuture.supplyAsync(() -> {
 			AsyncTask.log.info("Second completable future");
-			return AsyncTask.this.tracing.tracer().currentSpan();
+			return AsyncTask.this.tracer.currentSpan();
 		}, new LazyTraceExecutor(
 				AsyncTask.this.beanFactory,
 				AsyncTask.this.taskScheduler));
@@ -292,13 +292,13 @@ class Application {
 			Application.class);
 
 	@Autowired AsyncTask asyncTask;
-	@Autowired Tracing tracing;
+	@Autowired Tracer tracer;
 
 	@RequestMapping("/with_pool")
 	public String withPool() {
 		log.info("Executing with pool.");
 		this.asyncTask.runWithPool();
-		return this.tracing.tracer().currentSpan().context().traceIdString();
+		return this.tracer.currentSpan().context().traceIdString();
 
 	}
 
@@ -306,7 +306,7 @@ class Application {
 	public String withoutPool() {
 		log.info("Executing without pool.");
 		this.asyncTask.runWithoutPool();
-		return this.tracing.tracer().currentSpan().context().traceIdString();
+		return this.tracer.currentSpan().context().traceIdString();
 	}
 
 	@RequestMapping("/completable")

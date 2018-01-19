@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 
+import brave.Tracer;
 import brave.Tracing;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,8 +66,8 @@ public class AsyncDefaultAutoConfiguration {
 	}
 
 	@Bean
-	public TraceAsyncAspect traceAsyncAspect(Tracing tracing, SpanNamer spanNamer, TraceKeys traceKeys) {
-		return new TraceAsyncAspect(tracing, spanNamer, traceKeys);
+	public TraceAsyncAspect traceAsyncAspect(Tracer tracer, SpanNamer spanNamer, TraceKeys traceKeys) {
+		return new TraceAsyncAspect(tracer, spanNamer, traceKeys);
 	}
 
 	@Bean

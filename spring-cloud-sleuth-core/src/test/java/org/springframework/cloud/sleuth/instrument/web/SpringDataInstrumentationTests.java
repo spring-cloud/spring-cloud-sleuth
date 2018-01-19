@@ -23,6 +23,7 @@ import javax.persistence.Id;
 import java.net.URI;
 import java.util.stream.Stream;
 
+import brave.Tracer;
 import brave.Tracing;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
@@ -65,7 +66,7 @@ public class SpringDataInstrumentationTests {
 	@Autowired
 	Environment environment;
 	@Autowired
-	Tracing tracing;
+	Tracer tracer;
 	@Autowired
 	ArrayListSpanReporter reporter;
 
@@ -86,7 +87,7 @@ public class SpringDataInstrumentationTests {
 			then(storedSpan.name()).isEqualTo("http:/reservations");
 			then(storedSpan.tags()).containsKey("mvc.controller.class");
 		});
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	long namesCount() {

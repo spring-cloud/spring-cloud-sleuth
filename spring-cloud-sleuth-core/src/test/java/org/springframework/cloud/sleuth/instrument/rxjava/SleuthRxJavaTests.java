@@ -2,12 +2,7 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
-import rx.Observable;
-import rx.functions.Action0;
-import rx.plugins.RxJavaPlugins;
-import rx.schedulers.Schedulers;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -21,10 +16,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
+import rx.Observable;
+import rx.functions.Action0;
+import rx.plugins.RxJavaPlugins;
+import rx.schedulers.Schedulers;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.awaitility.Awaitility.await;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { SleuthRxJavaTests.TestConfig.class })
@@ -34,7 +33,7 @@ public class SleuthRxJavaTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 	@Autowired
-	Tracing tracing;
+	Tracer tracer;
 	StringBuffer caller = new StringBuffer();
 
 	@Before
@@ -57,7 +56,7 @@ public class SleuthRxJavaTests {
 				.subscribe(Action0::call);
 
 		then(this.caller.toString()).isEqualTo("actual_action");
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		await().atMost(5, SECONDS)
 				.untilAsserted(() -> then(this.reporter.getSpans()).hasSize(1));
 		then(this.reporter.getSpans()).hasSize(1);
@@ -67,9 +66,9 @@ public class SleuthRxJavaTests {
 
 	@Test
 	public void should_continue_current_span_when_rx_java_action_is_executed() {
-		Span spanInCurrentThread = this.tracing.tracer().nextSpan().name("current_span");
+		Span spanInCurrentThread = this.tracer.nextSpan().name("current_span");
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(spanInCurrentThread)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(spanInCurrentThread)) {
 			Observable
 					.defer(() -> Observable.just(
 							(Action0) () -> this.caller = new StringBuffer("actual_action")))
@@ -80,7 +79,7 @@ public class SleuthRxJavaTests {
 		}
 
 		then(this.caller.toString()).isEqualTo("actual_action");
-		then(this.tracing.tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 		// making sure here that no new spans were created or reported as closed
 		then(this.reporter.getSpans()).hasSize(1);
 		zipkin2.Span span = this.reporter.getSpans().get(0);

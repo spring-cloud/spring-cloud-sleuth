@@ -44,7 +44,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class SleuthSpanCreatorAspectTests {
 	
 	@Autowired TestBeanInterface testBean;
-	@Autowired Tracing tracing;
+	@Autowired Tracer tracer;
 	@Autowired ArrayListSpanReporter reporter;
 	
 	@Before
@@ -133,9 +133,9 @@ public class SleuthSpanCreatorAspectTests {
 
 	@Test
 	public void shouldContinueSpanWithLogWhenAnnotationOnInterfaceMethod() {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			this.testBean.testMethod10("test");
 		} finally {
 			span.finish();
@@ -153,9 +153,9 @@ public class SleuthSpanCreatorAspectTests {
 
 	@Test
 	public void shouldContinueSpanWhenKeyIsUsedOnSpanTagWhenAnnotationOnInterfaceMethod() {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			this.testBean.testMethod10_v2("test");
 		} finally {
 			span.finish();
@@ -173,9 +173,9 @@ public class SleuthSpanCreatorAspectTests {
 
 	@Test
 	public void shouldContinueSpanWithLogWhenAnnotationOnClassMethod() {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			// tag::continue_span_execution[]
 			this.testBean.testMethod11("test");
 			// end::continue_span_execution[]
@@ -212,9 +212,9 @@ public class SleuthSpanCreatorAspectTests {
 
 	@Test
 	public void shouldAddErrorTagWhenExceptionOccurredInContinueSpan() {
-		Span span = this.tracing.tracer().nextSpan().name("foo");
+		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			// tag::continue_span_execution[]
 			this.testBean.testMethod13();
 			// end::continue_span_execution[]

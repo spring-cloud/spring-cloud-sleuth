@@ -45,13 +45,13 @@ import org.springframework.cloud.sleuth.util.SpanNameUtil;
 @Aspect
 public class TraceSchedulingAspect {
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 	private final Pattern skipPattern;
 	private final TraceKeys traceKeys;
 
-	public TraceSchedulingAspect(Tracing tracing, Pattern skipPattern,
+	public TraceSchedulingAspect(Tracer tracer, Pattern skipPattern,
 			TraceKeys traceKeys) {
-		this.tracing = tracing;
+		this.tracer = tracer;
 		this.skipPattern = skipPattern;
 		this.traceKeys = traceKeys;
 	}
@@ -63,7 +63,7 @@ public class TraceSchedulingAspect {
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
 		Span span = startOrContinueRenamedSpan(spanName);
-		try(Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			span.tag(this.traceKeys.getAsync().getPrefix() +
 					this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
 			span.tag(this.traceKeys.getAsync().getPrefix() +
@@ -75,11 +75,11 @@ public class TraceSchedulingAspect {
 	}
 
 	private Span startOrContinueRenamedSpan(String spanName) {
-		Span currentSpan = this.tracing.tracer().currentSpan();
+		Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan != null) {
 			return currentSpan.name(spanName);
 		}
-		return this.tracing.tracer().nextSpan().name(spanName);
+		return this.tracer.nextSpan().name(spanName);
 	}
 
 }

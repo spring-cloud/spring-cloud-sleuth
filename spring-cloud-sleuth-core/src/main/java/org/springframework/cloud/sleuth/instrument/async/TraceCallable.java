@@ -20,7 +20,6 @@ import java.util.concurrent.Callable;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 
@@ -41,26 +40,26 @@ public class TraceCallable<V> implements Callable<V> {
 	 */
 	private static final String DEFAULT_SPAN_NAME = "async";
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 	private final Callable<V> delegate;
 	private final Span span;
 	private final ErrorParser errorParser;
 
-	public TraceCallable(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser, Callable<V> delegate) {
-		this(tracing, spanNamer, errorParser, delegate, null);
+	public TraceCallable(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser, Callable<V> delegate) {
+		this(tracer, spanNamer, errorParser, delegate, null);
 	}
 
-	public TraceCallable(Tracing tracing, SpanNamer spanNamer, ErrorParser errorParser, Callable<V> delegate, String name) {
-		this.tracing = tracing;
+	public TraceCallable(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser, Callable<V> delegate, String name) {
+		this.tracer = tracer;
 		this.delegate = delegate;
 		String spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
-		this.span = this.tracing.tracer().nextSpan().name(spanName);
+		this.span = this.tracer.nextSpan().name(spanName);
 		this.errorParser = errorParser;
 	}
 
 	@Override public V call() throws Exception {
 		Throwable error = null;
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(this.span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(this.span.start())) {
 			return this.delegate.call();
 		} catch (Exception | Error e) {
 			error = e;
