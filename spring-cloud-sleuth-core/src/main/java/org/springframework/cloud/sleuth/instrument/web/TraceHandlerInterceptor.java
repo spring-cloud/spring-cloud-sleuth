@@ -68,6 +68,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		String spanName = spanName(handler);
 		boolean continueSpan = getRootSpanFromAttribute(request) != null;
 		Span span = continueSpan ? getRootSpanFromAttribute(request) : getTracer().createSpan(spanName);
+		getTracer().continueSpan(span);
 		if (log.isDebugEnabled()) {
 			log.debug("Handling span " + span);
 		}

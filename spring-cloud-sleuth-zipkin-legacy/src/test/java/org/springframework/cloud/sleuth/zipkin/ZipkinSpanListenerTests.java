@@ -16,20 +16,12 @@
 
 package org.springframework.cloud.sleuth.zipkin;
 
-import org.assertj.core.api.Condition;
-import org.junit.Ignore;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
-import zipkin.Constants;
-
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.PostConstruct;
 
+import org.assertj.core.api.Condition;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,12 +34,12 @@ import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.zipkin.ZipkinSpanListenerTests.TestConfiguration;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.context.junit4.SpringRunner;
+import zipkin.Constants;
 import zipkin.Endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;

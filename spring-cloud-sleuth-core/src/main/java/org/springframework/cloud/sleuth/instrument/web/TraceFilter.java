@@ -172,9 +172,9 @@ public class TraceFilter extends GenericFilterBean {
 		} finally {
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
 				if (log.isDebugEnabled()) {
-					log.debug("The span " + spanFromRequest + " will get detached by a HandleInterceptor");
+					log.debug("The span " + this.tracer.getCurrentSpan() + " will get detached");
 				}
-				// TODO: how to deal with response annotations and async?
+				this.tracer.detach(this.tracer.getCurrentSpan());
 				return;
 			}
 			detachOrCloseSpans(request, response, spanFromRequest, exception);
