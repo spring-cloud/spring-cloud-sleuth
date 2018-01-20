@@ -1,9 +1,6 @@
 package org.springframework.cloud.sleuth.instrument.rxjava2;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.never;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,21 +10,32 @@ import java.util.concurrent.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
+import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
 import io.reactivex.plugins.RxJavaPlugins;
 
-@RunWith(MockitoJUnitRunner.class)
+/**
+ * @author Łukasz Guz
+ */
 public class SleuthRxJava2SchedulersHandlerTest {
+
 	List<String> threadsToIgnore = new ArrayList<>();
-	@Mock
-	Tracer tracer;
 	TraceKeys traceKeys = new TraceKeys();
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter).build();
+	Tracer tracer = this.tracing.tracer();
+
+	@After
+	public void clean() {
+		this.tracing.close();
+		this.reporter.clear();
+	}
 
 	private static StringBuilder caller;
 
@@ -73,8 +81,8 @@ public class SleuthRxJava2SchedulersHandlerTest {
 
 		hello.get();
 
-		BDDMockito.then(this.tracer).should(never()).createSpan(anyString());
-		BDDMockito.then(this.tracer).should(never()).continueSpan(any());
+		then(this.reporter.getSpans()).isEmpty();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	private ExecutorService executorService() {

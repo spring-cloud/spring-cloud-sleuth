@@ -4,10 +4,10 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 
+import brave.Span;
+import brave.Tracer;
 import io.reactivex.functions.Function;
 import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.SchedulerRunnableIntrospection;
@@ -102,7 +102,7 @@ class SleuthRxJava2SchedulersHandler {
 			this.tracer = tracer;
 			this.traceKeys = traceKeys;
 			this.threadsToIgnore = threadsToIgnore;
-			this.parent = tracer.getCurrentSpan();
+			this.parent = tracer.currentSpan();
 			this.actual = actual;
 		}
 
@@ -121,29 +121,26 @@ class SleuthRxJava2SchedulersHandler {
 					return;
 				}
 			}
+
 			Span span = this.parent;
 			boolean created = false;
 			if (span != null) {
-				span = this.tracer.continueSpan(span);
+				span = this.tracer.joinSpan(this.parent.context());
 			}
 			else {
-				span = this.tracer.createSpan(RXJAVA_COMPONENT);
-				this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, RXJAVA_COMPONENT);
-				this.tracer.addTag(
+				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
+				span.tag(
 						this.traceKeys.getAsync().getPrefix()
 								+ this.traceKeys.getAsync().getThreadNameKey(),
 						Thread.currentThread().getName());
 				created = true;
 			}
-			try {
+			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 				this.actual.run();
 			}
 			finally {
 				if (created) {
-					this.tracer.close(span);
-				}
-				else if (this.tracer.isTracing()) {
-					this.tracer.detach(span);
+					span.finish();
 				}
 			}
 		}
