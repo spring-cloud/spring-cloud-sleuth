@@ -16,15 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.net.URI;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import java.net.URI;
-import java.util.stream.Stream;
 
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
 import org.junit.Before;
@@ -33,7 +32,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
