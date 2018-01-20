@@ -43,12 +43,13 @@ public class TraceWebFluxTests {
 								"management.security.enabled=false").run();
 		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
 		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
+		accumulator.clear();
 
 		Mono<ClientResponse> exchange = WebClient.create().get()
 				.uri("http://localhost:" + port + "/api/c2/10").exchange();
+		ClientResponse response = exchange.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			ClientResponse response = exchange.block();
 			then(response.statusCode().value()).isEqualTo(200);
 			then(accumulator.getSpans()).hasSize(1);
 		});
