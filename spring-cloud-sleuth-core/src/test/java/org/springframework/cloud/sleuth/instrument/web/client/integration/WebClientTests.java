@@ -44,6 +44,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -54,6 +55,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.assertions.ListOfSpans;
+import org.springframework.cloud.sleuth.instrument.web.client.TraceRestTemplateInterceptor;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
@@ -103,6 +105,7 @@ public class WebClientTests {
 	@Autowired RestTemplateBuilder restTemplateBuilder;
 	@LocalServerPort int port;
 	@Autowired FooController fooController;
+	@Autowired MyRestTemplateCustomizer customizer;
 
 	@After
 	public void close() {
@@ -286,6 +289,7 @@ public class WebClientTests {
 			Span spanInController = this.fooController.getSpan();
 			BDDAssertions.then(spanInController).isNotNull();
 			then(spanInController.getTraceId()).isEqualTo(span.getTraceId());
+			then(this.customizer.isExecuted()).isTrue();
 		} finally {
 			this.tracer.close(span);
 		}
@@ -351,6 +355,25 @@ public class WebClientTests {
 		@Bean
 		SpanReporter spanReporter() {
 			return new ArrayListSpanAccumulator();
+		}
+
+		@Bean
+		RestTemplateCustomizer myRestTemplateCustomizer() {
+			return new MyRestTemplateCustomizer();
+		}
+	}
+
+	static class MyRestTemplateCustomizer implements RestTemplateCustomizer {
+		boolean executed;
+
+		@Override public void customize(RestTemplate restTemplate) {
+			this.executed = true;
+			then(restTemplate.getInterceptors().get(0)).isInstanceOf(
+					TraceRestTemplateInterceptor.class);
+		}
+
+		public boolean isExecuted() {
+			return executed;
 		}
 	}
 
