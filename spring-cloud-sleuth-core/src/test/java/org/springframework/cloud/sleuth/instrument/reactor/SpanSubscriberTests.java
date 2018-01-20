@@ -135,7 +135,6 @@ public class SpanSubscriberTests {
 		final AtomicReference<Span> spanInOperation = new AtomicReference<>();
 		log.info("Hello");
 
-
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.1")
 					.map(d -> d + 1).map(d -> d + 1).publishOn(Schedulers.newSingle("secondThread")).log("reactor.2")
@@ -169,6 +168,44 @@ public class SpanSubscriberTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
+	}
+
+	@Test
+	public void checkSequenceOfOperations() {
+		Span parentSpan = this.tracer.nextSpan().name("foo").start();
+		log.info("Hello");
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(parentSpan)) {
+			final Long traceId = Mono.fromCallable(tracer::currentSpan)
+					.map(span -> span.context().traceId())
+					.block();
+			then(traceId).isNotNull();
+
+			final Long secondTraceId = Mono.fromCallable(tracer::currentSpan)
+					.map(span -> span.context().traceId())
+					.block();
+			then(secondTraceId).isEqualTo(traceId); // different trace ids here
+		}
+	}
+
+	@Test
+	public void checkTraceIdDuringZipOperation() {
+		Span initSpan = this.tracer.nextSpan().name("foo").start();
+		final AtomicReference<Long> spanInOperation = new AtomicReference<>();
+		final AtomicReference<Long> spanInZipOperation = new AtomicReference<>();
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
+			Mono.fromCallable(tracer::currentSpan)
+					.map(span -> span.context().traceId())
+					.doOnNext(spanInOperation::set)
+					.zipWith(
+							Mono.fromCallable(tracer::currentSpan)
+									.map(span -> span.context().traceId())
+									.doOnNext(spanInZipOperation::set))
+					.block();
+		}
+
+		then(spanInZipOperation).hasValue(initSpan.context().traceId()); // ok here
+		then(spanInOperation).hasValue(initSpan.context().traceId()); // Expecting <AtomicReference[null]> to have value: <1L> but did not.
 	}
 
 	@AfterClass
