@@ -1503,7 +1503,13 @@ class MyFilter extends GenericFilterBean {
 <simpara>In Sleuth we&#8217;re generating spans with a fixed name. Some users want to modify the name depending on values
 of tags. Implementation of the <literal>SpanAdjuster</literal> interface can be used to alter that name. Example:</simpara>
 <simpara>Example. If you register two beans of <literal>SpanAdjuster</literal> type:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Unresolved directive in spring-cloud-sleuth.adoc - include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/autoconfig/SpanAdjusterAspectTests.java[tags=adjuster,indent=0]</programlisting>
+<programlisting language="java" linenumbering="unnumbered">@Bean SpanAdjuster adjusterOne() {
+	return span -&gt; span.toBuilder().name("foo").build();
+}
+
+@Bean SpanAdjuster adjusterTwo() {
+	return span -&gt; span.toBuilder().name(span.name() + " bar").build();
+}</programlisting>
 <simpara>This will lead in changing the name of the reported span to <literal>foo bar</literal>, just before it gets reported (e.g. to Zipkin).</simpara>
 </section>
 <section xml:id="_host_locator">
