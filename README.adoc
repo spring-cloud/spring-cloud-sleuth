@@ -169,6 +169,9 @@ to `true`.
 
 ==== Live examples
 
+.First, send a request
+http://docssleuth-service1.cfapps.io/start[Click here to send the request]
+
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
@@ -180,8 +183,8 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
-http://docssleuth-zipkin-server.cfapps.io/dependency[Click here to see it live!]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/zipkin/dependency/", width=150, height=74]
+http://docssleuth-zipkin-server.cfapps.io/zipkin/dependency/[Click here to see it live!]
 
 ==== Log correlation
 
