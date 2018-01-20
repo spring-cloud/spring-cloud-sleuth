@@ -876,7 +876,7 @@ Example. If you register two beans of `SpanAdjuster` type:
 
 [source,java]
 ----
-include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/autoconfig/SpanAdjusterAspectTests.java[tags=adjuster,indent=0]
+include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/SpanAdjusterTests.java[tags=adjuster,indent=0]
 ----
 
 This will lead in changing the name of the reported span to `foo bar`, just before it gets reported (e.g. to Zipkin).
