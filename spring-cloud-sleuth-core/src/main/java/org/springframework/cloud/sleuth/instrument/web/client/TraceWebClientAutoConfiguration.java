@@ -23,17 +23,17 @@ import javax.annotation.PostConstruct;
 
 import brave.http.HttpTracing;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -73,40 +73,34 @@ public class TraceWebClientAutoConfiguration {
 			public void init() {
 				if (this.restTemplates != null) {
 					for (RestTemplate restTemplate : this.restTemplates) {
-						List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>(
-								restTemplate.getInterceptors());
-						interceptors.add(this.clientInterceptor);
-						restTemplate.setInterceptors(interceptors);
+						new RestTemplateInterceptorInjector(this.clientInterceptor)
+								.inject(restTemplate);
 					}
 				}
 			}
 		}
 
+		@Autowired(required = false)
+		private Collection<RestTemplate> restTemplates;
+
+		@Autowired
+		private TracingClientHttpRequestInterceptor traceRestTemplateInterceptor;
+
 		@Bean
-		public BeanPostProcessor traceRestTemplateBuilderBPP(BeanFactory beanFactory) {
-			return new TraceRestTemplateBuilderBPP(beanFactory);
+		@Order(Ordered.HIGHEST_PRECEDENCE)
+		RestTemplateCustomizer traceRestTemplateCustomizer() {
+			final TracingClientHttpRequestInterceptor interceptor = this.traceRestTemplateInterceptor;
+			return restTemplate ->
+					new RestTemplateInterceptorInjector(interceptor).inject(restTemplate);
 		}
 
-		private static class TraceRestTemplateBuilderBPP implements BeanPostProcessor {
-			private final BeanFactory beanFactory;
-
-			private TraceRestTemplateBuilderBPP(BeanFactory beanFactory) {
-				this.beanFactory = beanFactory;
-			}
-
-			@Override public Object postProcessBeforeInitialization(Object o, String s)
-					throws BeansException {
-				return o;
-			}
-
-			@Override public Object postProcessAfterInitialization(Object o, String s)
-					throws BeansException {
-				if (o instanceof RestTemplateBuilder) {
-					RestTemplateBuilder builder = (RestTemplateBuilder) o;
-					return builder.additionalInterceptors(
-							this.beanFactory.getBean(TracingClientHttpRequestInterceptor.class));
+		@PostConstruct
+		public void init() {
+			if (this.restTemplates != null) {
+				for (RestTemplate restTemplate : this.restTemplates) {
+					new RestTemplateInterceptorInjector(
+							this.traceRestTemplateInterceptor).inject(restTemplate);
 				}
-				return o;
 			}
 		}
 	}
@@ -118,5 +112,33 @@ public class TraceWebClientAutoConfiguration {
 		TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(BeanFactory beanFactory) {
 			return new TraceWebClientBeanPostProcessor(beanFactory);
 		}
+	}
+}
+
+class RestTemplateInterceptorInjector {
+	private final TracingClientHttpRequestInterceptor interceptor;
+
+	RestTemplateInterceptorInjector(TracingClientHttpRequestInterceptor interceptor) {
+		this.interceptor = interceptor;
+	}
+
+	void inject(RestTemplate restTemplate) {
+		if (hasTraceInterceptor(restTemplate)) {
+			return;
+		}
+		List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>(
+				restTemplate.getInterceptors());
+		interceptors.add(0, this.interceptor);
+		restTemplate.setInterceptors(interceptors);
+	}
+
+	private boolean hasTraceInterceptor(RestTemplate restTemplate) {
+		for (ClientHttpRequestInterceptor interceptor : restTemplate
+				.getInterceptors()) {
+			if (interceptor instanceof TracingClientHttpRequestInterceptor) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

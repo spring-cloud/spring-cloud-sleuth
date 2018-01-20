@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.integration;
 
-import javax.servlet.http.HttpServletRequest;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 
 import brave.Span;
 import brave.Tracer;
@@ -33,12 +33,12 @@ import brave.Tracing;
 import brave.propagation.SamplingFlags;
 import brave.propagation.TraceContextOrSamplingFlags;
 import brave.sampler.Sampler;
+import brave.spring.web.TracingClientHttpRequestInterceptor;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import reactor.core.publisher.Hooks;
-import reactor.core.scheduler.Schedulers;
-import zipkin2.Annotation;
-import zipkin2.reporter.Reporter;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
@@ -55,13 +55,14 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -77,10 +78,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
+import reactor.core.publisher.Hooks;
+import reactor.core.scheduler.Schedulers;
+import zipkin2.Annotation;
+import zipkin2.reporter.Reporter;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -114,6 +115,7 @@ public class WebClientTests {
 	@Autowired RestTemplateBuilder restTemplateBuilder;
 	@LocalServerPort int port;
 	@Autowired FooController fooController;
+	@Autowired MyRestTemplateCustomizer customizer;
 
 	@After
 	public void close() {
@@ -181,7 +183,7 @@ public class WebClientTests {
 		Span span = this.tracer.nextSpan(
 				TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED))
 				.name("foo").start();
-		
+
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			ResponseEntity<Map<String, String>> response = provider.get(this);
 
@@ -190,7 +192,7 @@ public class WebClientTests {
 		} finally {
 			span.finish();
 		}
-		
+
 		then(this.reporter.getSpans()).isEmpty();
 		then(Tracing.current().tracer().currentSpan()).isNull();
 	}
@@ -321,6 +323,7 @@ public class WebClientTests {
 			span.finish();
 		}
 		then(this.tracer.currentSpan()).isNull();
+		then(this.customizer.isExecuted()).isTrue();
 	}
 
 	private void assertThatSpanGotContinued(Span span) {
@@ -387,6 +390,25 @@ public class WebClientTests {
 		@Bean
 		WebClient.Builder webClientBuilder() {
 			return WebClient.builder();
+		}
+
+		@Bean
+		RestTemplateCustomizer myRestTemplateCustomizer() {
+			return new MyRestTemplateCustomizer();
+		}
+	}
+
+	static class MyRestTemplateCustomizer implements RestTemplateCustomizer {
+		boolean executed;
+
+		@Override public void customize(RestTemplate restTemplate) {
+			this.executed = true;
+			then(restTemplate.getInterceptors().get(0)).isInstanceOf(
+					TracingClientHttpRequestInterceptor.class);
+		}
+
+		public boolean isExecuted() {
+			return executed;
 		}
 	}
 
