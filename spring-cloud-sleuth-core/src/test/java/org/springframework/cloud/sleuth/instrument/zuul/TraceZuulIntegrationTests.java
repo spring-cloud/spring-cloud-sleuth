@@ -1,13 +1,18 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.netflix.ribbon.StaticServerList;
@@ -24,15 +30,6 @@ import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.cloud.netflix.zuul.filters.discovery.DiscoveryClientRouteLocator;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpEntity;
@@ -50,7 +47,11 @@ import org.springframework.web.client.RestTemplate;
 
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ServerList;
-import com.netflix.zuul.context.RequestContext;
+
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = SampleZuulProxyApplication.class, properties = {
@@ -58,79 +59,91 @@ import com.netflix.zuul.context.RequestContext;
 @DirtiesContext
 public class TraceZuulIntegrationTests {
 
-	private static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	@Value("${local.server.port}")
 	private int port;
 	@Autowired
-	Tracer tracer;
+	Tracing tracing;
 	@Autowired
-	ArrayListSpanAccumulator spanAccumulator;
+	ArrayListSpanReporter spanAccumulator;
 	@Autowired
 	RestTemplate restTemplate;
 
 	@Before
 	@After
 	public void cleanup() {
-		TestSpanContextHolder.removeCurrentSpan();
-		RequestContext.getCurrentContext().unset();
-		this.spanAccumulator.getSpans().clear();
+		this.spanAccumulator.clear();
 	}
 
 	@Test
 	public void should_close_span_when_routing_to_service_via_discovery() {
-		Span span = this.tracer.createSpan("new_span");
-		log.info("Started span " + span);
-		ResponseEntity<String> result = this.restTemplate.exchange(
-				"http://localhost:" + this.port + "/simple/foo", HttpMethod.GET,
-				new HttpEntity<>((Void) null), String.class);
+		Span span = this.tracing.tracer().nextSpan().name("foo").start();
 
-		this.tracer.close(span);
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			ResponseEntity<String> result = this.restTemplate.exchange(
+					"http://localhost:" + this.port + "/simple/foo", HttpMethod.GET,
+					new HttpEntity<>((Void) null), String.class);
 
-		then(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-		then(result.getBody()).isEqualTo("Hello world");
-		then(this.tracer.getCurrentSpan()).isNull();
-		then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.everyParentIdHasItsCorrespondingSpan()
-				.clientSideSpanWithNameHasTags("http:/simple/foo",
-						TestTag.tag().tag("http.method", "GET")
-								.tag("http.status_code", "200")
-								.tag("http.path", "/simple/foo"));
-		then(ExceptionUtils.getLastException()).isNull();
+			then(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+			then(result.getBody()).isEqualTo("Hello world");
+		} catch (Exception e) {
+			log.error(e);
+			throw e;
+		} finally {
+			span.finish();
+		}
+
+		then(this.tracing.tracer().currentSpan()).isNull();
+		List<zipkin2.Span> spans = this.spanAccumulator.getSpans();
+		then(spans).isNotEmpty();
+		everySpanHasTheSameTraceId(spans);
+		everyParentIdHasItsCorrespondingSpan(spans);
 	}
 
 	@Test
 	public void should_close_span_when_routing_to_service_via_discovery_to_a_non_existent_url() {
-		Span span = this.tracer.createSpan("new_span");
-		log.info("Started span " + span);
-		ResponseEntity<String> result = this.restTemplate.exchange(
-				"http://localhost:" + this.port + "/simple/nonExistentUrl",
-				HttpMethod.GET, new HttpEntity<>((Void) null), String.class);
+		Span span = this.tracing.tracer().nextSpan().name("foo").start();
 
-		this.tracer.close(span);
+		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
+			ResponseEntity<String> result = this.restTemplate.exchange(
+					"http://localhost:" + this.port + "/simple/nonExistentUrl",
+					HttpMethod.GET, new HttpEntity<>((Void) null), String.class);
 
-		then(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-		then(this.tracer.getCurrentSpan()).isNull();
-		then(new ListOfSpans(this.spanAccumulator.getSpans()))
-				.everyParentIdHasItsCorrespondingSpan()
-				.clientSideSpanWithNameHasTags("http:/simple/nonExistentUrl",
-						TestTag.tag().tag("http.method", "GET")
-								.tag("http.status_code", "404")
-								.tag("http.path", "/simple/nonExistentUrl"));
-		then(ExceptionUtils.getLastException()).isNull();
+			then(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+		} finally {
+			span.finish();
+		}
+
+		then(this.tracing.tracer().currentSpan()).isNull();
+		List<zipkin2.Span> spans = this.spanAccumulator.getSpans();
+		then(spans).isNotEmpty();
+		everySpanHasTheSameTraceId(spans);
+		everyParentIdHasItsCorrespondingSpan(spans);
 	}
 
-	private static class TestTag extends HashMap<String, String> {
+	void everySpanHasTheSameTraceId(List<zipkin2.Span> actual) {
+		BDDAssertions.assertThat(actual).isNotNull();
+		List<String> traceIds = actual.stream()
+				.map(zipkin2.Span::traceId).distinct()
+				.collect(toList());
+		log.info("Stored traceids " + traceIds);
+		assertThat(traceIds).hasSize(1);
+	}
 
-		public static TestTag tag() {
-			return new TestTag();
-		}
-
-		public TestTag tag(String key, String value) {
-			put(key, value);
-			return this;
-		}
+	void everyParentIdHasItsCorrespondingSpan(List<zipkin2.Span> actual) {
+		BDDAssertions.assertThat(actual).isNotNull();
+		List<String> parentSpanIds = actual.stream().map(zipkin2.Span::parentId)
+				.filter(Objects::nonNull).collect(toList());
+		List<String> spanIds = actual.stream()
+				.map(zipkin2.Span::id).distinct()
+				.collect(toList());
+		List<String> difference = new ArrayList<>(parentSpanIds);
+		difference.removeAll(spanIds);
+		log.info("Difference between parent ids and span ids " +
+				difference.stream().map(span -> "id as hex [" + span + "]").collect(
+						joining("\n")));
+		assertThat(spanIds).containsAll(parentSpanIds);
 	}
 }
 
@@ -159,8 +172,8 @@ class SampleZuulProxyApplication {
 	}
 
 	@Bean
-	SpanReporter testSpanReporter() {
-		return new ArrayListSpanAccumulator();
+	ArrayListSpanReporter testSpanReporter() {
+		return new ArrayListSpanReporter();
 	}
 
 	@Bean
@@ -179,7 +192,7 @@ class SampleZuulProxyApplication {
 
 	@Bean
 	Sampler alwaysSampler() {
-		return new AlwaysSampler();
+		return Sampler.ALWAYS_SAMPLE;
 	}
 }
 

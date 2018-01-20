@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,13 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import brave.sampler.Sampler;
+import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
+import sample.SampleMessagingApplication;
+import tools.AbstractIntegrationTest;
+import tools.SpanUtil;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,12 +37,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
-import sample.SampleMessagingApplication;
-import tools.AbstractIntegrationTest;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -113,8 +114,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 				.collect(Collectors.joining("\n")) + "\n]");
 		then(this.integrationTestSpanCollector.hashedSpans
 				.stream()
-				.filter(span ->
-						org.springframework.cloud.sleuth.Span.hexToId(span.traceId()) != traceId)
+				.filter(span -> !span.traceId().equals(SpanUtil.idToHex(traceId)))
 				.collect(Collectors.toList()))
 				.describedAs("All spans have same trace id [" + traceIdHex + "]")
 				.isEmpty();
@@ -124,11 +124,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		Optional<Span> firstHttpSpan = findFirstHttpRequestSpan();
 		List<Span> eventSpans = findAllEventRelatedSpans();
 		Optional<Span> eventSentSpan = findSpanWithKind(Span.Kind.SERVER);
-		Optional<Span> eventReceivedSpan = findSpanWithKind(Span.Kind.CLIENT);
+		Optional<Span> producerSpan = findSpanWithKind(Span.Kind.PRODUCER);
 		Optional<Span> lastHttpSpansParent = findLastHttpSpansParent();
 		// "http:/parent/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo" (SS)
-		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, eventReceivedSpan);
-		then(this.integrationTestSpanCollector.hashedSpans).as("There were 4 spans").hasSize(4);
+		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, producerSpan);
+		then(this.integrationTestSpanCollector.hashedSpans).as("There were 3 spans").hasSize(3);
 		log.info("Checking the parent child structure");
 		List<Optional<Span>> parentChild = this.integrationTestSpanCollector.hashedSpans.stream()
 				.filter(span -> span.parentId() != null)
@@ -140,7 +140,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private Optional<Span> findLastHttpSpansParent() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "http:/foo".equals(span.name()) && span.kind() != null).findFirst();
+				.filter(span -> "get".equals(span.name()) && span.kind() != null).findFirst();
 	}
 
 	private Optional<Span> findSpanWithKind(Span.Kind kind) {
@@ -151,7 +151,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private List<Span> findAllEventRelatedSpans() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "message:messages".equals(span.name()) && span.parentId() != null).collect(
+				.filter(span -> "send".equals(span.name()) && span.parentId() != null).collect(
 						Collectors.toList());
 	}
 
@@ -185,6 +185,10 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		@Bean
 		Reporter<Span> integrationTestZipkinSpanReporter() {
 			return new IntegrationTestZipkinSpanReporter();
+		}
+
+		@Bean Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
 		}
 	}
 }

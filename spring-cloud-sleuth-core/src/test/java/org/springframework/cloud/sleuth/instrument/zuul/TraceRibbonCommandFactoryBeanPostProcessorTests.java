@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ public class TraceRibbonCommandFactoryBeanPostProcessorTests {
 
 	@Test
 	public void should_wrap_ribbon_command_factory_in_a_trace_representation() {
-		then(this.postProcessor.postProcessBeforeInitialization(ribbonCommandFactory, "name")).isInstanceOf(TraceRibbonCommandFactory.class);
+		then(this.postProcessor.postProcessBeforeInitialization(ribbonCommandFactory, "name")).isInstanceOf(
+				TraceRibbonCommandFactory.class);
 	}
 }

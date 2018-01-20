@@ -1,0 +1,7 @@
+spring.sleuth:
+  baggage-keys:
+    - baz
+    - bizarrecase
+  propagation-keys:
+    - foo
+    - upper_case

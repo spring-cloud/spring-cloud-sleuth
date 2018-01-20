@@ -14,9 +14,10 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<zipkin.version>2.4.1</zipkin.version>
+		<zipkin.version>2.4.3</zipkin.version>
 		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
-		<zipkin-reporter2.version>2.2.0</zipkin-reporter2.version>
+		<zipkin-reporter2.version>2.3.0</zipkin-reporter2.version>
+		<brave.version>4.13.3</brave.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -65,11 +66,33 @@
 				<artifactId>spring-cloud-starter-sleuth</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<!-- BRAVE -->
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-context-log4j2</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-instrumentation-spring-web</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-instrumentation-spring-webmvc</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<!-- BRAVE -->
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin</artifactId>
 				<!-- misaligned intentionally https://github.com/spring-projects/spring-boot/issues/10778-->
-				<version>2.4.0</version>
+				<version>2.4.2</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.zipkin2</groupId>

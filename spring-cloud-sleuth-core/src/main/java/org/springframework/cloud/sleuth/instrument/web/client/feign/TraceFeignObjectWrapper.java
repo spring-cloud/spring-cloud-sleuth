@@ -1,11 +1,10 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import feign.Client;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.feign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.netflix.feign.ribbon.LoadBalancerFeignClient;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
-
-import feign.Client;
 
 /**
  * Class that wraps Feign related classes into their Trace representative
@@ -25,16 +24,17 @@ final class TraceFeignObjectWrapper {
 	}
 
 	Object wrap(Object bean) {
-		if (bean instanceof Client && !(bean instanceof TraceFeignClient)) {
+		if (bean instanceof Client && !(bean instanceof TracingFeignClient)) {
 			if (bean instanceof LoadBalancerFeignClient && !(bean instanceof TraceLoadBalancerFeignClient)) {
 				LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
 				return new TraceLoadBalancerFeignClient(
-						client.getDelegate(), factory(),
-						clientFactory(), this.beanFactory);
+						(Client) new TraceFeignObjectWrapper(this.beanFactory)
+								.wrap(client.getDelegate()),
+						factory(), clientFactory(), this.beanFactory);
 			} else if (bean instanceof TraceLoadBalancerFeignClient) {
 				return bean;
 			}
-			return new TraceFeignClient(this.beanFactory, (Client) bean);
+			return new LazyTracingFeignClient(this.beanFactory, (Client) bean);
 		}
 		return bean;
 	}
@@ -54,4 +54,5 @@ final class TraceFeignObjectWrapper {
 		}
 		return this.springClientFactory;
 	}
+
 }

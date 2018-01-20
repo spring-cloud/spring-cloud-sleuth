@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
 import org.springframework.cloud.sleuth.instrument.web.TraceHandlerInterceptor;
+import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
 
 /**
  * Bean post processor that wraps {@link ZuulHandlerMapping} in its

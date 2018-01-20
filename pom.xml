@@ -29,7 +29,6 @@
 		<module>spring-cloud-sleuth-dependencies</module>
 		<module>spring-cloud-sleuth-core</module>
 		<module>spring-cloud-sleuth-zipkin</module>
-		<module>spring-cloud-sleuth-stream</module>
 		<module>spring-cloud-starter-sleuth</module>
 		<module>spring-cloud-starter-zipkin</module>
 		<module>spring-cloud-sleuth-samples</module>
@@ -246,6 +245,18 @@
 					<id>spring-snapshots</id>
 					<name>Spring Snapshots</name>
 					<url>https://repo.spring.io/libs-snapshot-local</url>
+					<snapshots>
+						<enabled>true</enabled>
+					</snapshots>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
+				</repository>
+				<!-- TODO: REMOVE ME - ONLY FOR BRAVE SNAPSHOTS -->
+				<repository>
+					<id>jfrog-snapshots</id>
+					<name>JFrog Snapshots</name>
+					<url>https://oss.jfrog.org/oss-snapshot-local/</url>
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>

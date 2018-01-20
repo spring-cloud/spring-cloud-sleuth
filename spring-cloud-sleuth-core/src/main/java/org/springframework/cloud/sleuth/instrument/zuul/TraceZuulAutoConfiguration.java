@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import com.netflix.client.http.HttpRequest;
-import com.netflix.zuul.ZuulFilter;
-
+import brave.http.HttpTracing;
+import okhttp3.Request;
 import org.apache.http.client.methods.RequestBuilder;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -26,17 +25,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import okhttp3.Request;
+import com.netflix.client.http.HttpRequest;
+import com.netflix.zuul.ZuulFilter;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -49,22 +45,21 @@ import okhttp3.Request;
 @ConditionalOnProperty(value = "spring.sleuth.zuul.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 @ConditionalOnClass(ZuulFilter.class)
-@ConditionalOnBean(Tracer.class)
+@ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracePreZuulFilter tracePreZuulFilter(Tracer tracer,
-			HttpSpanInjector spanInjector, HttpTraceKeysInjector httpTraceKeysInjector,
+	public ZuulFilter tracePreZuulFilter(HttpTracing tracer,
 			ErrorParser errorParser) {
-		return new TracePreZuulFilter(tracer, spanInjector, httpTraceKeysInjector, errorParser);
+		return TracePreZuulFilter.create(tracer, errorParser);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracePostZuulFilter tracePostZuulFilter(Tracer tracer, TraceKeys traceKeys) {
-		return new TracePostZuulFilter(tracer, traceKeys);
+	public ZuulFilter tracePostZuulFilter(HttpTracing tracer) {
+		return TracePostZuulFilter.create(tracer);
 	}
 
 	@Bean
@@ -74,19 +69,19 @@ public class TraceZuulAutoConfiguration {
 
 	@Bean
 	@ConditionalOnClass(name = "com.netflix.client.http.HttpRequest.Builder")
-	public RibbonRequestCustomizer<HttpRequest.Builder> restClientRibbonRequestCustomizer(Tracer tracer) {
+	public RibbonRequestCustomizer<HttpRequest.Builder> restClientRibbonRequestCustomizer(HttpTracing tracer) {
 		return new RestClientRibbonRequestCustomizer(tracer);
 	}
 
 	@Bean
 	@ConditionalOnClass(name = "org.apache.http.client.methods.RequestBuilder")
-	public RibbonRequestCustomizer<RequestBuilder> apacheHttpRibbonRequestCustomizer(Tracer tracer) {
+	public RibbonRequestCustomizer<RequestBuilder> apacheHttpRibbonRequestCustomizer(HttpTracing tracer) {
 		return new ApacheHttpClientRibbonRequestCustomizer(tracer);
 	}
 
 	@Bean
 	@ConditionalOnClass(name = "okhttp3.Request.Builder")
-	public RibbonRequestCustomizer<Request.Builder> okHttpRibbonRequestCustomizer(Tracer tracer) {
+	public RibbonRequestCustomizer<Request.Builder> okHttpRibbonRequestCustomizer(HttpTracing tracer) {
 		return new OkHttpClientRibbonRequestCustomizer(tracer);
 	}
 

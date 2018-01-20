@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,22 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
+import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
@@ -26,44 +42,25 @@ import com.netflix.hystrix.strategy.executionhook.HystrixCommandExecutionHook;
 import com.netflix.hystrix.strategy.metrics.HystrixMetricsPublisher;
 import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
 import com.netflix.hystrix.strategy.properties.HystrixProperty;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 
-import java.util.Random;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
+import static org.assertj.core.api.BDDAssertions.then;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
 public class SleuthHystrixConcurrencyStrategyTest {
 
-	ArrayListSpanAccumulator spanReporter = new ArrayListSpanAccumulator();
-	Tracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
-			new DefaultSpanNamer(), new NoOpSpanLogger(), this.spanReporter, new TraceKeys());
-	TraceKeys traceKeys = new TraceKeys();
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
 
 	@Before
 	@After
 	public void setup() {
-		ExceptionUtils.setFail(true);
 		HystrixPlugins.reset();
-		this.spanReporter.getSpans().clear();
+		this.reporter.clear();
 	}
 
 	@Test
@@ -73,7 +70,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 		HystrixPlugins.getInstance().registerMetricsPublisher(new MyHystrixMetricsPublisher());
 		HystrixPlugins.getInstance().registerPropertiesStrategy(new MyHystrixPropertiesStrategy());
 
-		new SleuthHystrixConcurrencyStrategy(this.tracer, this.traceKeys);
+		new SleuthHystrixConcurrencyStrategy(this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 
 		then(HystrixPlugins
 				.getInstance().getCommandExecutionHook()).isExactlyInstanceOf(MyHystrixCommandExecutionHook.class);
@@ -90,11 +87,11 @@ public class SleuthHystrixConcurrencyStrategyTest {
 			throws Exception {
 		HystrixPlugins.getInstance().registerConcurrencyStrategy(new MyHystrixConcurrencyStrategy());
 		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracer, this.traceKeys);
+				this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 
 		Callable<String> callable = strategy.wrapCallable(() -> "hello");
 
-		then(callable).isInstanceOf(SleuthHystrixConcurrencyStrategy.HystrixTraceCallable.class);
+		then(callable).isInstanceOf(TraceCallable.class);
 		then(callable.call()).isEqualTo("executed_custom_callable");
 	}
 
@@ -102,63 +99,24 @@ public class SleuthHystrixConcurrencyStrategyTest {
 	public void should_wrap_callable_in_trace_callable_when_delegate_is_present()
 			throws Exception {
 		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracer, this.traceKeys);
+				this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 
 		Callable<String> callable = strategy.wrapCallable(() -> "hello");
 
-		then(callable).isInstanceOf(SleuthHystrixConcurrencyStrategy.HystrixTraceCallable.class);
+		then(callable).isInstanceOf(TraceCallable.class);
 	}
 
 	@Test
 	public void should_add_trace_keys_when_span_is_created()
 			throws Exception {
 		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracer, this.traceKeys);
+				this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 		Callable<String> callable = strategy.wrapCallable(() -> "hello");
 
 		callable.call();
 
-		String asyncKey = this.traceKeys.getAsync().getPrefix()
-				+ this.traceKeys.getAsync().getThreadNameKey();
-		then(new ListOfSpans(this.spanReporter.getSpans()))
-				.hasASpanWithTagEqualTo(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "hystrix")
-				.hasASpanWithTagKeyEqualTo(asyncKey);
-	}
-
-	@Test
-	public void should_add_trace_keys_when_span_is_continued()
-			throws Exception {
-		Span span = this.tracer.createSpan("new_span");
-		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracer, this.traceKeys);
-		Callable<String> callable = strategy.wrapCallable(() -> "hello");
-
-		callable.call();
-
-		String asyncKey = this.traceKeys.getAsync().getPrefix()
-				+ this.traceKeys.getAsync().getThreadNameKey();
-		then(span)
-				.hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "hystrix")
-				.hasATagWithKey(asyncKey);
-	}
-
-	@Test
-	public void should_not_override_trace_keys_when_span_is_continued()
-			throws Exception {
-		Span span = this.tracer.createSpan("new_span");
-		String asyncKey = this.traceKeys.getAsync().getPrefix()
-				+ this.traceKeys.getAsync().getThreadNameKey();
-		this.tracer.addTag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "foo");
-		this.tracer.addTag(asyncKey, "bar");
-		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracer, this.traceKeys);
-		Callable<String> callable = strategy.wrapCallable(() -> "hello");
-
-		callable.call();
-
-		then(span)
-				.hasATag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, "foo")
-				.hasATag(asyncKey, "bar");
+		then(callable).isInstanceOf(TraceCallable.class);
+		then(this.reporter.getSpans()).hasSize(1);
 	}
 
 	@Test
@@ -167,7 +125,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 		HystrixConcurrencyStrategy strategy = Mockito.mock(HystrixConcurrencyStrategy.class);
 		HystrixPlugins.getInstance().registerConcurrencyStrategy(strategy);
 		SleuthHystrixConcurrencyStrategy sleuthStrategy = new SleuthHystrixConcurrencyStrategy(
-				this.tracer, this.traceKeys);
+				this.tracing.tracer(), new DefaultSpanNamer(), new ExceptionMessageErrorParser());
 
 		sleuthStrategy.wrapCallable(() -> "foo");
 		sleuthStrategy.getThreadPool(HystrixThreadPoolKey.Factory.asKey(""), Mockito.mock(

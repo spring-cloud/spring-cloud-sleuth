@@ -6,7 +6,7 @@
 :github-code: https://github.com/{github-repo}/tree/{github-tag}
 
 image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"]
-image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/master/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
+image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 == Spring Cloud Sleuth
 

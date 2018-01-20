@@ -4,9 +4,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.netflix.zuul.ZuulFilter;
-import org.junit.After;
-import org.junit.Before;
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.sampler.Sampler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +14,14 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import com.netflix.zuul.ZuulFilter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -35,19 +35,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class Issue634Tests {
 
 	@LocalServerPort int port;
-	@Autowired Tracer tracer;
+	@Autowired HttpTracing tracer;
 	@Autowired TraceCheckingSpanFilter filter;
-
-	@Before
-	public void setup() {
-		TestSpanContextHolder.removeCurrentSpan();
-		ExceptionUtils.setFail(true);
-	}
-
-	@After
-	public void close() {
-		TestSpanContextHolder.removeCurrentSpan();
-	}
+	@Autowired ArrayListSpanReporter reporter;
 
 	@Test
 	public void should_reuse_custom_feign_client() {
@@ -56,11 +46,12 @@ public class Issue634Tests {
 					.getForEntity("http://localhost:" + this.port + "/display/ddd",
 							String.class);
 
-			then(this.tracer.getCurrentSpan()).isNull();
-			then(ExceptionUtils.getLastException()).isNull();
+			then(this.tracer.tracing().tracer().currentSpan()).isNull();
 		}
+
 		then(new HashSet<>(this.filter.counter.values()))
 				.describedAs("trace id should not be reused from thread").hasSize(1);
+		then(this.reporter.getSpans()).isNotEmpty();
 	}
 }
 
@@ -69,19 +60,26 @@ public class Issue634Tests {
 @Configuration
 class TestZuulApplication {
 
-	@Bean
-	TraceCheckingSpanFilter traceCheckingSpanFilter(Tracer tracer) {
+	@Bean TraceCheckingSpanFilter traceCheckingSpanFilter(Tracing tracer) {
 		return new TraceCheckingSpanFilter(tracer);
+	}
+
+	@Bean Sampler sampler() {
+		return Sampler.ALWAYS_SAMPLE;
+	}
+
+	@Bean ArrayListSpanReporter reporter() {
+		return new ArrayListSpanReporter();
 	}
 
 }
 
 class TraceCheckingSpanFilter extends ZuulFilter {
 
-	private final Tracer tracer;
+	private final Tracing tracer;
 	final Map<Long, Integer> counter = new ConcurrentHashMap<>();
 
-	TraceCheckingSpanFilter(Tracer tracer) {
+	TraceCheckingSpanFilter(Tracing tracer) {
 		this.tracer = tracer;
 	}
 
@@ -98,7 +96,7 @@ class TraceCheckingSpanFilter extends ZuulFilter {
 	}
 
 	@Override public Object run() {
-		long trace = this.tracer.getCurrentSpan().getTraceId();
+		long trace = this.tracer.tracer().currentSpan().context().traceId();
 		Integer integer = this.counter.getOrDefault(trace, 0);
 		counter.put(trace, integer + 1);
 		return null;

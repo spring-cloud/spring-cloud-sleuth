@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
+import brave.Span;
+import brave.Tracing;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.util.StringUtils;
 
 /**
@@ -43,10 +43,10 @@ import org.springframework.util.StringUtils;
  */
 class SpanTagAnnotationHandler {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(SpanTagAnnotationHandler.class);
 
 	private final BeanFactory beanFactory;
-	private Tracer tracer;
+	private Tracing tracing;
 	
 	SpanTagAnnotationHandler(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -122,11 +122,20 @@ class SpanTagAnnotationHandler {
 		for (SleuthAnnotatedParameter container : toBeAdded) {
 			String tagValue = resolveTagValue(container.annotation, container.argument);
 			String tagKey = resolveTagKey(container);
-			tracer().addTag(tagKey, tagValue);
+			span().tag(tagKey, tagValue);
 		}
 	}
 
-	private String resolveTagKey(SleuthAnnotatedParameter container) {
+	private Span span() {
+		Span span = tracing().tracer().currentSpan();
+		if (span != null) {
+			return span;
+		}
+		return tracing().tracer().nextSpan();
+	}
+
+	private String resolveTagKey(
+			SleuthAnnotatedParameter container) {
 		return StringUtils.hasText(container.annotation.value()) ?
 				container.annotation.value() : container.annotation.key();
 	}
@@ -145,11 +154,11 @@ class SpanTagAnnotationHandler {
 		return argument.toString();
 	}
 
-	private Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
+	private Tracing tracing() {
+		if (this.tracing == null) {
+			this.tracing = this.beanFactory.getBean(Tracing.class);
 		}
-		return this.tracer;
+		return this.tracing;
 	}
 
 }

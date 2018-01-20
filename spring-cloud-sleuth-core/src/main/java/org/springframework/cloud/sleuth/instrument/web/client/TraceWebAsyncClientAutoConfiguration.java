@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import brave.http.HttpTracing;
+import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.http.client.AsyncClientHttpRequestInterceptor;
 import org.springframework.web.client.AsyncRestTemplate;
 
 /**
@@ -48,47 +47,38 @@ import org.springframework.web.client.AsyncRestTemplate;
 @SleuthWebClientEnabled
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(AsyncRestTemplate.class)
-@ConditionalOnBean(HttpTraceKeysInjector.class)
+@ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceWebAsyncClientAutoConfiguration {
 
-	@Autowired Tracer tracer;
-	@Autowired private HttpTraceKeysInjector httpTraceKeysInjector;
-	@Autowired private HttpSpanInjector spanInjector;
-	@Autowired(required = false) private ClientHttpRequestFactory clientHttpRequestFactory;
-	@Autowired(required = false) private AsyncClientHttpRequestFactory asyncClientHttpRequestFactory;
+	@ConditionalOnBean(AsyncRestTemplate.class)
+	static class AsyncRestTemplateConfig {
 
-	private TraceAsyncClientHttpRequestFactoryWrapper traceAsyncClientHttpRequestFactory() {
-		ClientHttpRequestFactory clientFactory = this.clientHttpRequestFactory;
-		AsyncClientHttpRequestFactory asyncClientFactory = this.asyncClientHttpRequestFactory;
-		if (clientFactory == null) {
-			clientFactory = defaultClientHttpRequestFactory(this.tracer);
+		@Bean
+		public TracingAsyncClientHttpRequestInterceptor asyncTracingClientHttpRequestInterceptor(HttpTracing httpTracing) {
+			return (TracingAsyncClientHttpRequestInterceptor) TracingAsyncClientHttpRequestInterceptor.create(httpTracing);
 		}
-		if (asyncClientFactory == null) {
-			asyncClientFactory = clientFactory instanceof AsyncClientHttpRequestFactory ?
-					(AsyncClientHttpRequestFactory) clientFactory : defaultClientHttpRequestFactory(this.tracer);
+
+		@Configuration
+		protected static class TraceInterceptorConfiguration {
+
+			@Autowired(required = false)
+			private Collection<AsyncRestTemplate> restTemplates;
+
+			@Autowired
+			private TracingAsyncClientHttpRequestInterceptor clientInterceptor;
+
+			@PostConstruct
+			public void init() {
+				if (this.restTemplates != null) {
+					for (AsyncRestTemplate restTemplate : this.restTemplates) {
+						List<AsyncClientHttpRequestInterceptor> interceptors = new ArrayList<>(
+								restTemplate.getInterceptors());
+						interceptors.add(this.clientInterceptor);
+						restTemplate.setInterceptors(interceptors);
+					}
+				}
+			}
 		}
-		return new TraceAsyncClientHttpRequestFactoryWrapper(this.tracer, this.spanInjector,
-				asyncClientFactory, clientFactory, this.httpTraceKeysInjector);
 	}
-
-	private SimpleClientHttpRequestFactory defaultClientHttpRequestFactory(Tracer tracer) {
-		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
-		simpleClientHttpRequestFactory.setTaskExecutor(asyncListenableTaskExecutor(tracer));
-		return simpleClientHttpRequestFactory;
-	}
-
-	private AsyncListenableTaskExecutor asyncListenableTaskExecutor(Tracer tracer) {
-		ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
-		threadPoolTaskScheduler.initialize();
-		return new TraceAsyncListenableTaskExecutor(threadPoolTaskScheduler, tracer);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	@ConditionalOnProperty(value = "spring.sleuth.web.async.client.template.enabled", matchIfMissing = true)
-	public AsyncRestTemplate traceAsyncRestTemplate(ErrorParser errorParser) {
-		return new TraceAsyncRestTemplate(traceAsyncClientHttpRequestFactory(), this.tracer, errorParser);
-	}
-
 }

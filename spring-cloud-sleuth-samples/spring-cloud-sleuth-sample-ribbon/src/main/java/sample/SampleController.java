@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,7 @@ public class SampleController  {
 
 	@Autowired
 	private RestTemplate restTemplate;
-	@Autowired
-	private Random random;
+	private Random random = new Random();
 
 	@RequestMapping("/")
 	public String hi() throws InterruptedException {

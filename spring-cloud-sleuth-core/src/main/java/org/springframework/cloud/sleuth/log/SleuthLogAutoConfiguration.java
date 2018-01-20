@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,32 @@
 
 package org.springframework.cloud.sleuth.log;
 
+import brave.propagation.CurrentTraceContext;
 import org.slf4j.MDC;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables a {@link Slf4jSpanLogger} that prints tracing information in the logs.
+ * enables a {@link Slf4jCurrentTraceContext} that prints tracing information in the logs.
  * <p>
- * Note: this is only available for Slf4j
  *
  * @author Spencer Gibb
- * @since 1.0.0
+ * @author Marcin Grzejszczak
+ * @since 2.0.0
  */
 @Configuration
 @ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
+@AutoConfigureBefore(TraceAutoConfiguration.class)
 public class SleuthLogAutoConfiguration {
 
 	@Configuration
@@ -46,23 +52,31 @@ public class SleuthLogAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
 		@ConditionalOnMissingBean
-		public SpanLogger slf4jSpanLogger(SleuthSlf4jProperties sleuthSlf4jProperties) {
-			// Sets up MDC entries X-B3-TraceId and X-B3-SpanId
-			return new Slf4jSpanLogger(sleuthSlf4jProperties.getNameSkipPattern());
+		public CurrentTraceContext slf4jSpanLogger() {
+			return Slf4jCurrentTraceContext.create();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", havingValue = "false")
-		@ConditionalOnMissingBean
-		public SpanLogger noOpSlf4jSpanLogger() {
-			return new NoOpSpanLogger();
+		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
+		@ConditionalOnBean(CurrentTraceContext.class)
+		public BeanPostProcessor slf4jSpanLoggerBPP() {
+			return new Slf4jBeanPostProcessor();
 		}
-	}
 
-	@Bean
-	@ConditionalOnMissingClass("org.slf4j.MDC")
-	@ConditionalOnMissingBean
-	public SpanLogger defaultLoggedSpansHandler() {
-		return new NoOpSpanLogger();
+		class Slf4jBeanPostProcessor implements BeanPostProcessor {
+
+			@Override public Object postProcessBeforeInitialization(Object bean,
+					String beanName) throws BeansException {
+				return bean;
+			}
+
+			@Override public Object postProcessAfterInitialization(Object bean,
+					String beanName) throws BeansException {
+				if (bean instanceof CurrentTraceContext && !(bean instanceof Slf4jCurrentTraceContext)) {
+					return Slf4jCurrentTraceContext.create((CurrentTraceContext) bean);
+				}
+				return bean;
+			}
+		}
 	}
 }

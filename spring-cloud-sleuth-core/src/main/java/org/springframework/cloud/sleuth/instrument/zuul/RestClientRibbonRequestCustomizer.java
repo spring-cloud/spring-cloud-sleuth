@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.Iterator;
-import java.util.Map;
+import brave.http.HttpClientAdapter;
+import brave.http.HttpTracing;
+import brave.propagation.Propagation;
 
 import com.netflix.client.http.HttpRequest;
-
-import org.springframework.cloud.sleuth.SpanTextMap;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * Customization of a Ribbon request for Netflix HttpClient
@@ -30,9 +28,24 @@ import org.springframework.cloud.sleuth.Tracer;
  * @author Marcin Grzejszczak
  * @since 1.1.0
  */
-class RestClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCustomizer<HttpRequest.Builder> {
+class RestClientRibbonRequestCustomizer extends
+		SpanInjectingRibbonRequestCustomizer<HttpRequest.Builder> {
 
-	RestClientRibbonRequestCustomizer(Tracer tracer) {
+	static final Propagation.Setter<HttpRequest.Builder, String> SETTER =
+			new Propagation.Setter<HttpRequest.Builder, String>() {
+		@Override public void put(HttpRequest.Builder carrier, String key, String value) {
+			if (carrier.build().getHttpHeaders().containsHeader(key)) {
+				return;
+			}
+			carrier.header(key, value);
+		}
+
+		@Override public String toString() {
+			return "RequestBuilder::addHeader";
+		}
+	};
+
+	RestClientRibbonRequestCustomizer(HttpTracing tracer) {
 		super(tracer);
 	}
 
@@ -42,16 +55,28 @@ class RestClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCustom
 	}
 
 	@Override
-	protected SpanTextMap toSpanTextMap(final HttpRequest.Builder context) {
-		context.build().getHttpHeaders();
-		return new SpanTextMap() {
-			@Override public Iterator<Map.Entry<String, String>> iterator() {
-				return context.build().getHttpHeaders().getAllHeaders().iterator();
+	protected HttpClientAdapter<HttpRequest.Builder, HttpRequest.Builder> handlerClientAdapter() {
+		return new HttpClientAdapter<HttpRequest.Builder, HttpRequest.Builder>() {
+			@Override public String method(HttpRequest.Builder request) {
+				return request.build().getVerb().verb();
 			}
 
-			@Override public void put(String key, String value) {
-				context.header(key, value);
+			@Override public String url(HttpRequest.Builder request) {
+				return request.build().getUri().toString();
+			}
+
+			@Override
+			public String requestHeader(HttpRequest.Builder request, String name) {
+				return request.build().getHttpHeaders().getFirstValue(name);
+			}
+
+			@Override public Integer statusCode(HttpRequest.Builder response) {
+				throw new UnsupportedOperationException("response not supported");
 			}
 		};
+	}
+
+	@Override protected Propagation.Setter<HttpRequest.Builder, String> setter() {
+		return SETTER;
 	}
 }

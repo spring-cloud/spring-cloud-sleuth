@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package sample;
 
+import brave.sampler.Sampler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +27,6 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @SpringBootApplication
-
 @EnableAsync
 public class SampleSleuthApplication {
 
@@ -38,6 +38,11 @@ public class SampleSleuthApplication {
 	@Bean
 	public SampleController sampleController() {
 		return new SampleController();
+	}
+
+	@Bean
+	public Sampler sampler() {
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 	public static void main(String[] args) {

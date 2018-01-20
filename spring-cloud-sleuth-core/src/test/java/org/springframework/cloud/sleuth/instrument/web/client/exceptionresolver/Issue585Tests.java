@@ -1,10 +1,11 @@
 package org.springframework.cloud.sleuth.instrument.web.client.exceptionresolver;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import java.time.Instant;
 import javax.servlet.http.HttpServletRequest;
+import java.time.Instant;
 
+import brave.Span;
+import brave.Tracing;
+import brave.sampler.Sampler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -14,13 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,14 +28,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfig.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class Issue585Tests {
 
 	TestRestTemplate testRestTemplate = new TestRestTemplate();
-	@Autowired ArrayListSpanAccumulator accumulator;
+	@Autowired ArrayListSpanReporter reporter;
 	@LocalServerPort int port;
 
 	@Test
@@ -49,29 +46,31 @@ public class Issue585Tests {
 				"http://localhost:" + this.port + "/sleuthtest?greeting=foo",
 				String.class);
 
+		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(entity.getStatusCode().value()).isEqualTo(500);
-		then(new ListOfSpans(this.accumulator.getSpans()))
-				.hasASpanWithTagEqualTo("custom", "tag")
-				.hasASpanWithTagKeyEqualTo("error");
+		then(this.reporter.getSpans().get(0).tags())
+				.containsEntry("custom", "tag")
+				.containsKeys("error");
 	}
 }
 
 @SpringBootApplication
 class TestConfig {
 
-	@Bean SpanReporter testSpanReporter() {
-		return new ArrayListSpanAccumulator();
+	@Bean ArrayListSpanReporter testSpanReporter() {
+		return new ArrayListSpanReporter();
 	}
 
 	@Bean Sampler testSampler() {
-		return new AlwaysSampler();
+		return Sampler.ALWAYS_SAMPLE;
 	}
 }
 
 @RestController
 class TestController {
 
-	private final static Logger logger = LoggerFactory.getLogger(TestController.class);
+	private final static Logger logger = LoggerFactory.getLogger(
+			TestController.class);
 
 	@RequestMapping(value = "sleuthtest", method = RequestMethod.GET)
 	public ResponseEntity<String> testSleuth(@RequestParam String greeting) {
@@ -87,9 +86,10 @@ class TestController {
 class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
 	private final static Logger logger = LoggerFactory
-			.getLogger(CustomExceptionHandler.class);
+			.getLogger(
+					CustomExceptionHandler.class);
 
-	@Autowired private Tracer tracer;
+	@Autowired private Tracing tracer;
 
 	@ExceptionHandler(value = { Exception.class })
 	protected ResponseEntity<ExceptionResponse> handleDefaultError(
@@ -102,9 +102,9 @@ class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	private void reportErrorSpan(String message) {
-		Span span = tracer.getCurrentSpan();
-		span.logEvent("ERROR: " + message);
-		tracer.addTag("custom", "tag");
+		Span span = tracer.tracer().currentSpan();
+		span.annotate("ERROR: " + message);
+		span.tag("custom", "tag");
 		logger.info("Foo");
 	}
 

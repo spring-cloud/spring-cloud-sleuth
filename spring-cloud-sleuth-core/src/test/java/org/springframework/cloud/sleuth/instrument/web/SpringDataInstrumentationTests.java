@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,25 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.net.URI;
+import java.util.stream.Stream;
+import javax.annotation.PostConstruct;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+import brave.Tracer;
+import brave.sampler.Sampler;
+import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -44,22 +47,15 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import org.awaitility.Awaitility;
-import javax.annotation.PostConstruct;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import java.net.URI;
-import java.util.stream.Stream;
-
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ReservationServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = ReservationServiceApplication.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = "spring.sleuth.http.legacy.enabled=true")
 @DirtiesContext
 @ActiveProfiles("data")
 public class SpringDataInstrumentationTests {
@@ -71,11 +67,11 @@ public class SpringDataInstrumentationTests {
 	@Autowired
 	Tracer tracer;
 	@Autowired
-	ArrayListSpanAccumulator arrayListSpanAccumulator;
+	ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
-		TestSpanContextHolder.removeCurrentSpan();
+		reporter.clear();
 	}
 
 	@Test
@@ -83,15 +79,14 @@ public class SpringDataInstrumentationTests {
 		long noOfNames = namesCount();
 
 		then(noOfNames).isEqualTo(8);
-		then(this.arrayListSpanAccumulator.getSpans()).isNotEmpty();
+		then(this.reporter.getSpans()).isNotEmpty();
 		Awaitility.await().untilAsserted(() -> {
-			then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans()))
-					.hasASpanWithName("http:/reservations")
-					.hasASpanWithTagKeyEqualTo("mvc.controller.class");
+			then(this.reporter.getSpans()).hasSize(1);
+			zipkin2.Span storedSpan = this.reporter.getSpans().get(0);
+			then(storedSpan.name()).isEqualTo("http:/reservations");
+			then(storedSpan.tags()).containsKey("mvc.controller.class");
 		});
-		then(this.tracer.getCurrentSpan()).isNull();
-		then(ExceptionUtils.getLastException()).isNull();
-		then(new ListOfSpans(this.arrayListSpanAccumulator.getSpans())).hasRpcLogsInProperOrder();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	long namesCount() {
@@ -116,19 +111,19 @@ class ReservationServiceApplication {
 		return new RestTemplate();
 	}
 
-	@Bean
-	SampleRecords sampleRecords(ReservationRepository reservationRepository) {
+	@Bean SampleRecords sampleRecords(
+			ReservationRepository reservationRepository) {
 		return new SampleRecords(reservationRepository);
 	}
 
 	@Bean
-	ArrayListSpanAccumulator arrayListSpanAccumulator() {
-		return new ArrayListSpanAccumulator();
+	ArrayListSpanReporter arrayListSpanAccumulator() {
+		return new ArrayListSpanReporter();
 	}
 
 	@Bean
 	Sampler alwaysSampler() {
-		return new AlwaysSampler();
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 }
@@ -137,7 +132,8 @@ class SampleRecords {
 
 	private final ReservationRepository reservationRepository;
 
-	public SampleRecords(ReservationRepository reservationRepository) {
+	public SampleRecords(
+			ReservationRepository reservationRepository) {
 		this.reservationRepository = reservationRepository;
 	}
 

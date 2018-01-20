@@ -1,18 +1,20 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.HashMap;
 
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
 import feign.Client;
-import feign.Request;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.TraceKeys;
+import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -28,6 +30,13 @@ public class TraceFeignAspectTests {
 	@Mock Client client;
 	@Mock ProceedingJoinPoint pjp;
 	@Mock TraceLoadBalancerFeignClient traceLoadBalancerFeignClient;
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.build();
+	TraceKeys traceKeys = new TraceKeys();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
+			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
+			.build();
 	TraceFeignAspect traceFeignAspect;
 	
 	@Before
@@ -42,7 +51,7 @@ public class TraceFeignAspectTests {
 	@Test 
 	public void should_wrap_feign_client_in_trace_representation() throws Throwable {
 		given(this.pjp.getTarget()).willReturn(this.client);
-		
+
 		this.traceFeignAspect.feignClientWasCalled(this.pjp);
 
 		verify(this.pjp, never()).proceed();
@@ -50,7 +59,7 @@ public class TraceFeignAspectTests {
 	
 	@Test 
 	public void should_not_wrap_traced_feign_client_in_trace_representation() throws Throwable {
-		given(this.pjp.getTarget()).willReturn(new TraceFeignClient(this.beanFactory, this.client));
+		given(this.pjp.getTarget()).willReturn(new TracingFeignClient(this.httpTracing, this.client));
 
 		this.traceFeignAspect.feignClientWasCalled(this.pjp);
 

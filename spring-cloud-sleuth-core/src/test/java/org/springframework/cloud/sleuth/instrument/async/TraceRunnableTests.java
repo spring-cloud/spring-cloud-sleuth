@@ -1,39 +1,40 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.NoOpSpanReporter;
-import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanName;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.TraceRunnable;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.log.NoOpSpanLogger;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.DefaultTracer;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRunnableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
-	Tracer tracer = new DefaultTracer(new AlwaysSampler(),
-			new Random(), new DefaultSpanNamer(),
-			new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
+	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Tracing tracing = Tracing.newBuilder()
+			.currentTraceContext(CurrentTraceContext.Default.create())
+			.spanReporter(this.reporter)
+			.build();
+	Tracer tracer = this.tracing.tracer();
 
 	@After
-	public void cleanup() {
-		TestSpanContextHolder.removeCurrentSpan();
+	public void clean() {
+		this.tracing.close();
+		this.reporter.clear();
+		this.executor.shutdown();
 	}
 
 	@Test
@@ -50,11 +51,11 @@ public class TraceRunnableTests {
 
 		// then
 		Span secondSpan = traceKeepingRunnable.span;
-		then(secondSpan.getTraceId()).as("second span id")
-				.isNotEqualTo(firstSpan.getTraceId()).as("first span id");
+		then(secondSpan.context().traceId()).as("second span id")
+				.isNotEqualTo(firstSpan.context().traceId()).as("first span id");
 
 		// and
-		then(secondSpan.getSavedSpan()).as("saved span as remnant of first span")
+		then(secondSpan.context().parentId()).as("saved span as remnant of first span")
 				.isNull();
 	}
 
@@ -82,7 +83,8 @@ public class TraceRunnableTests {
 
 		whenRunnableGetsSubmitted(traceKeepingRunnable);
 
-		then(traceKeepingRunnable.span).hasNameEqualTo("some-runnable-name-from-annotation");
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans().get(0).name()).isEqualTo("some-runnable-name-from-annotation");
 	}
 
 	@Test
@@ -93,7 +95,8 @@ public class TraceRunnableTests {
 
 		whenRunnableGetsSubmitted(runnable);
 
-		then(span.get()).hasNameEqualTo("some-runnable-name-from-to-string");
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans().get(0).name()).isEqualTo("some-runnable-name-from-to-string");
 	}
 
 	private TraceKeepingRunnable runnableThatRetrievesTraceFromThreadLocal() {
@@ -105,7 +108,8 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(this.tracer, new DefaultSpanNamer(), runnable)).get();
+		this.executor.submit(new TraceRunnable(this.tracing.tracer(), new DefaultSpanNamer(),
+				new ExceptionMessageErrorParser(), runnable)).get();
 	}
 
 	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable)
@@ -117,7 +121,7 @@ public class TraceRunnableTests {
 		return new Runnable() {
 			@Override
 			public void run() {
-				span.set(TestSpanContextHolder.getCurrentSpan());
+				span.set(tracer.currentSpan());
 			}
 
 			@Override public String toString() {
@@ -132,7 +136,7 @@ public class TraceRunnableTests {
 
 		@Override
 		public void run() {
-			this.span = TestSpanContextHolder.getCurrentSpan();
+			this.span = Tracing.currentTracer().currentSpan();
 		}
 	}
 

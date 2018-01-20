@@ -16,13 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.lang.invoke.MethodHandles;
+import javax.servlet.http.HttpServletResponse;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
+import brave.http.HttpTracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
@@ -33,16 +34,20 @@ import com.netflix.zuul.context.RequestContext;
  * @author Dave Syer
  * @since 1.0.0
  */
-public class TracePostZuulFilter extends ZuulFilter {
+public class TracePostZuulFilter extends AbstractTraceZuulFilter {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(TracePostZuulFilter.class);
 
-	private final Tracer tracer;
-	private final TraceKeys traceKeys;
+	public static ZuulFilter create(Tracing tracing) {
+		return new TracePostZuulFilter(HttpTracing.create(tracing));
+	}
 
-	public TracePostZuulFilter(Tracer tracer, TraceKeys traceKeys) {
-		this.tracer = tracer;
-		this.traceKeys = traceKeys;
+	public static ZuulFilter create(HttpTracing httpTracing) {
+		return new TracePostZuulFilter(httpTracing);
+	}
+
+	TracePostZuulFilter(HttpTracing httpTracing) {
+		super(httpTracing);
 	}
 
 	@Override
@@ -52,19 +57,28 @@ public class TracePostZuulFilter extends ZuulFilter {
 
 	@Override
 	public Object run() {
-		this.tracer.continueSpan(getCurrentSpan());
-		// TODO: the client sent event should come from the client not the filter!
-		getCurrentSpan().logEvent(Span.CLIENT_RECV);
-		if (log.isDebugEnabled()) {
-			log.debug("Closing current client span " + getCurrentSpan());
+		Span span = getCurrentSpan();
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Closing current client span " + span);
+			}
+			HttpServletResponse response = RequestContext.getCurrentContext()
+					.getResponse();
+			this.handler.handleReceive(response, null, span);
+		} finally {
+			if (span != null) {
+				span.finish();
+			}
 		}
-		int httpStatus = RequestContext.getCurrentContext().getResponse().getStatus();
-		if (httpStatus > 0) {
-			this.tracer.addTag(this.traceKeys.getHttp().getStatusCode(),
-					String.valueOf(httpStatus));
-		}
-		this.tracer.close(getCurrentSpan());
 		return null;
+	}
+
+	private Span getCurrentSpan() {
+		RequestContext ctx = RequestContext.getCurrentContext();
+		if (ctx == null || ctx.getRequest() == null) {
+			return null;
+		}
+		return (Span) ctx.getRequest().getAttribute(ZUUL_CURRENT_SPAN);
 	}
 
 	@Override
@@ -77,7 +91,4 @@ public class TracePostZuulFilter extends ZuulFilter {
 		return 0;
 	}
 
-	private Span getCurrentSpan() {
-		return this.tracer.getCurrentSpan();
-	}
 }

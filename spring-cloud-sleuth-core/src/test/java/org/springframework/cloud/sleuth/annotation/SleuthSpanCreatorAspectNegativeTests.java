@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,56 +16,51 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import brave.sampler.Sampler;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectNegativeTests.TestConfiguration;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestConfiguration.class)
+@SpringBootTest(classes = SleuthSpanCreatorAspectNegativeTests.TestConfiguration.class)
 public class SleuthSpanCreatorAspectNegativeTests {
 
 	@Autowired NotAnnotatedTestBeanInterface testBean;
 	@Autowired TestBeanInterface annotatedTestBean;
-	@Autowired ArrayListSpanAccumulator accumulator;
+	@Autowired ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
-		ExceptionUtils.setFail(true);
-		this.accumulator.clear();
+		this.reporter.clear();
 	}
 
 	@Test
 	public void shouldNotCallAdviceForNotAnnotatedBean() {
 		this.testBean.testMethod();
 
-		then(this.accumulator.getSpans()).isEmpty();
-		then(ExceptionUtils.getLastException()).isNull();
+		then(this.reporter.getSpans()).isEmpty();
 	}
 
 	@Test
 	public void shouldCallAdviceForAnnotatedBean() throws Throwable {
 		this.annotatedTestBean.testMethod();
 
-		List<Span> spans = new ArrayList<>(this.accumulator.getSpans());
-		then(new ListOfSpans(spans)).hasSize(1).hasASpanWithName("test-method");
-		then(ExceptionUtils.getLastException()).isNull();
+		List<Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("test-method");
 	}
 	
 	protected interface NotAnnotatedTestBeanInterface {
@@ -139,8 +134,8 @@ public class SleuthSpanCreatorAspectNegativeTests {
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class TestConfiguration {
-		@Bean SpanReporter spanReporter() {
-			return new ArrayListSpanAccumulator();
+		@Bean Reporter<Span> spanReporter() {
+			return new ArrayListSpanReporter();
 		}
 
 		@Bean
@@ -151,6 +146,11 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		@Bean
 		public TestBeanInterface annotatedTestBean() {
 			return new TestBean();
+		}
+
+		@Bean
+		public Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
 		}
 	}
 }

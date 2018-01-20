@@ -1,11 +1,12 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
+import brave.Span;
+import brave.Tracing;
+import brave.sampler.Sampler;
 import okhttp3.mockwebserver.MockWebServer;
 import org.awaitility.Awaitility;
 import org.junit.ClassRule;
@@ -17,11 +18,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerRequest;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class, properties = {
@@ -32,14 +33,13 @@ public class ZipkinDiscoveryClientTests {
 
 	@ClassRule public static MockWebServer ZIPKIN_RULE = new MockWebServer();
 
-	@Autowired SpanReporter spanReporter;
+	@Autowired Tracing tracing;
 
 	@Test
 	public void shouldUseDiscoveryClientToFindZipkinUrlIfPresent() throws Exception {
-		Span span = Span.builder().traceIdHigh(1L).traceId(2L).spanId(3L).name("foo")
-				.build();
+		Span span = this.tracing.tracer().nextSpan().name("foo").start();
 
-		this.spanReporter.report(span);
+		span.finish();
 
 		Awaitility.await().untilAsserted(() -> then(ZIPKIN_RULE.getRequestCount()).isGreaterThan(0));
 	}
@@ -47,6 +47,10 @@ public class ZipkinDiscoveryClientTests {
 	@Configuration
 	@EnableAutoConfiguration
 	static class Config {
+
+		@Bean Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
 
 		@Bean LoadBalancerClient loadBalancerClient() {
 			return new LoadBalancerClient() {

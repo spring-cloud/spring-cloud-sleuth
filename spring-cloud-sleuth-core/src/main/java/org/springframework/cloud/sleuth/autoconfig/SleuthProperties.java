@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -27,10 +30,26 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthProperties {
 
 	private boolean enabled = true;
-	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
-	private boolean traceId128 = false;
-	/** When true, your tracing system allows sharing a span ID between a client and server span */
-	private boolean supportsJoin = true;
+
+	/**
+	 * List of baggage key names that should be propagated out of process.
+	 * These keys will be prefixed with `baggage` before the actual key.
+	 * This property is set in order to be backward compatible with previous
+	 * Sleuth versions.
+	 *
+	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String, java.util.Collection)
+	 */
+	private List<String> baggageKeys = new ArrayList<>();
+
+	/**
+	 * List of fields that are referenced the same in-process as it is on the wire. For example, the
+	 * name "x-vcap-request-id" would be set as-is including the prefix.
+	 *
+	 * <p>Note: {@code fieldName} will be implicitly lower-cased.
+	 *
+	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addField(String)
+	 */
+	private List<String> propagationKeys = new ArrayList<>();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -40,19 +59,19 @@ public class SleuthProperties {
 		this.enabled = enabled;
 	}
 
-	public boolean isTraceId128() {
-		return this.traceId128;
+	public List<String> getBaggageKeys() {
+		return this.baggageKeys;
 	}
 
-	public void setTraceId128(boolean traceId128) {
-		this.traceId128 = traceId128;
+	public void setBaggageKeys(List<String> baggageKeys) {
+		this.baggageKeys = baggageKeys;
 	}
 
-	public boolean isSupportsJoin() {
-		return this.supportsJoin;
+	public List<String> getPropagationKeys() {
+		return this.propagationKeys;
 	}
 
-	public void setSupportsJoin(boolean supportsJoin) {
-		this.supportsJoin = supportsJoin;
+	public void setPropagationKeys(List<String> propagationKeys) {
+		this.propagationKeys = propagationKeys;
 	}
 }

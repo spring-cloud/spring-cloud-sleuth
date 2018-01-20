@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.Assertions.fail;
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import brave.Tracing;
+import brave.sampler.Sampler;
+import zipkin2.Span;
+import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,14 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.rule.OutputCapture;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.assertions.ListOfSpans;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -54,44 +48,45 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.BDDAssertions.then;
+
 /**
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = "spring.sleuth.http.legacy.enabled=true")
 public class TraceFilterWebIntegrationTests {
 
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanAccumulator accumulator;
-	@Autowired RestTemplate restTemplate;
+	@Autowired Tracing tracer;
+	@Autowired ArrayListSpanReporter accumulator;
 	@Autowired Environment environment;
-	@Rule  public OutputCapture capture = new OutputCapture();
+	@Rule public OutputCapture capture = new OutputCapture();
 
 	@Before
 	@After
 	public void cleanup() {
-		ExceptionUtils.setFail(true);
-		TestSpanContextHolder.removeCurrentSpan();
 		this.accumulator.clear();
 	}
 
 	@Test
 	public void should_not_create_a_span_for_error_controller() {
-		this.restTemplate.getForObject("http://localhost:" + port() + "/", String.class);
+		try {
+			new RestTemplate().getForObject("http://localhost:" + port() + "/", String.class);
+			BDDAssertions.fail("should fail due to runtime exception");
+		} catch (Exception e) {
+		}
 
-		then(this.tracer.getCurrentSpan()).isNull();
-		then(new ListOfSpans(this.accumulator.getSpans()))
-				.doesNotHaveASpanWithName("error")
-				.hasASpanWithTagEqualTo("http.status_code", "500");
-		then(ExceptionUtils.getLastException()).isNull();
-		then(new ListOfSpans(this.accumulator.getSpans()))
-				.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
-				.hasRpcLogsInProperOrder();
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.accumulator.getSpans()).hasSize(1);
+		Span reportedSpan = this.accumulator.getSpans().get(0);
+		then(reportedSpan.tags())
+				.containsEntry("http.status_code", "500")
+				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		// issue#714
-		Span span = this.accumulator.getSpans().get(0);
-		String hex = Span.idToHex(span.getTraceId());
+		String hex = reportedSpan.traceId();
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split).filter(s -> s.contains(
 				"Uncaught exception thrown"))
@@ -108,10 +103,10 @@ public class TraceFilterWebIntegrationTests {
 		} catch (HttpClientErrorException e) {
 		}
 
-		then(this.tracer.getCurrentSpan()).isNull();
-		then(ExceptionUtils.getLastException()).isNull();
-		then(new ListOfSpans(this.accumulator.getSpans()))
-				.hasServerSideSpansInProperOrder();
+		//TODO: Check if it should be 1 or 2 spans
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.accumulator.getSpans().get(0).kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
 	}
 
 	private int port() {
@@ -126,12 +121,12 @@ public class TraceFilterWebIntegrationTests {
 			return new ExceptionThrowingController();
 		}
 
-		@Bean ArrayListSpanAccumulator arrayListSpanAccumulator() {
-			return new ArrayListSpanAccumulator();
+		@Bean ArrayListSpanReporter reporter() {
+			return new ArrayListSpanReporter();
 		}
 
 		@Bean Sampler alwaysSampler() {
-			return new AlwaysSampler();
+			return Sampler.ALWAYS_SAMPLE;
 		}
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import brave.http.HttpTracing;
+import feign.Client;
+import feign.Feign;
+import feign.okhttp.OkHttpClient;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -23,17 +27,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
+import org.springframework.cloud.netflix.feign.FeignAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
-
-import feign.Client;
-import feign.Feign;
-import feign.okhttp.OkHttpClient;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -45,9 +44,9 @@ import feign.okhttp.OkHttpClient;
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass(Client.class)
-@ConditionalOnBean(Tracer.class)
+@ConditionalOnBean(HttpTracing.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
-@AutoConfigureAfter({SleuthHystrixAutoConfiguration.class, TraceWebServletAutoConfiguration.class})
+@AutoConfigureAfter({SleuthHystrixAutoConfiguration.class, TraceHttpAutoConfiguration.class})
 public class TraceFeignClientAutoConfiguration {
 
 	@Bean
@@ -70,8 +69,7 @@ public class TraceFeignClientAutoConfiguration {
 	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
 	protected static class FeignBeanPostProcessorConfiguration {
 
-		@Bean
-		FeignContextBeanPostProcessor feignContextBeanPostProcessor(BeanFactory beanFactory) {
+		@Bean FeignContextBeanPostProcessor feignContextBeanPostProcessor(BeanFactory beanFactory) {
 			return new FeignContextBeanPostProcessor(beanFactory);
 		}
 	}
@@ -80,8 +78,7 @@ public class TraceFeignClientAutoConfiguration {
 	@ConditionalOnClass(OkHttpClient.class)
 	protected static class OkHttpClientFeignBeanPostProcessorConfiguration {
 
-		@Bean
-		OkHttpFeignClientBeanPostProcessor okHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
+		@Bean OkHttpFeignClientBeanPostProcessor okHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
 			return new OkHttpFeignClientBeanPostProcessor(beanFactory);
 		}
 	}
@@ -91,8 +88,7 @@ public class TraceFeignClientAutoConfiguration {
 		return new TraceFeignObjectWrapper(beanFactory);
 	}
 
-	@Bean
-	TraceFeignAspect traceFeignAspect(BeanFactory beanFactory) {
+	@Bean TraceFeignAspect traceFeignAspect(BeanFactory beanFactory) {
 		return new TraceFeignAspect(beanFactory);
 	}
 }

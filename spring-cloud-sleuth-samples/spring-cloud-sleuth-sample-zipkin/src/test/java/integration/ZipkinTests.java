@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,16 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import brave.sampler.Sampler;
 import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import sample.SampleZipkinApplication;
+import tools.AbstractIntegrationTest;
+import tools.SpanUtil;
+import zipkin2.Span;
+import zipkin2.codec.SpanBytesDecoder;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,10 +45,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import sample.SampleZipkinApplication;
-import tools.AbstractIntegrationTest;
-import zipkin2.Span;
-import zipkin2.codec.SpanBytesDecoder;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -88,6 +90,10 @@ public class ZipkinTests extends AbstractIntegrationTest {
 			zipkinProperties.setBaseUrl(zipkin.url("/").toString());
 			return zipkinProperties;
 		}
+
+		@Bean Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
 	}
 
 	void spansSentToZipkin(MockWebServer zipkin, long traceId)
@@ -107,7 +113,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	}
 
 	List<String> traceIdsNotFoundInZipkin(List<Span> spans, long traceId) {
-		String traceIdString = org.springframework.cloud.sleuth.Span.idToHex(traceId);
+		String traceIdString = SpanUtil.idToHex(traceId);
 		Optional<String> traceIds = spans.stream()
 				.map(Span::traceId)
 				.filter(traceIdString::equals)

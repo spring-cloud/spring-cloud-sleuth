@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,28 +21,24 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
 import javax.annotation.PreDestroy;
 
+import brave.Span;
+import brave.Tracer;
+import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
-import org.springframework.cloud.sleuth.Sampler;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.cloud.sleuth.annotation.SpanTag;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -102,9 +98,9 @@ public class SleuthBenchmarkingSpringApp implements
 	}
 
 	@Bean
-	public EmbeddedServletContainerFactory servletContainer(@Value("${server.port:0}") int serverPort) {
+	public ServletWebServerFactory servletContainer(@Value("${server.port:0}") int serverPort) {
 		log.info("Starting container at port [" + serverPort + "]");
-		return new TomcatEmbeddedServletContainerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
+		return new TomcatServletWebServerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
 	}
 
 	@PreDestroy
@@ -113,7 +109,7 @@ public class SleuthBenchmarkingSpringApp implements
 	}
 
  	@Bean Sampler alwaysSampler() {
-		return new AlwaysSampler();
+		return Sampler.ALWAYS_SAMPLE;
 	}
 
 	@Bean AnotherClass anotherClass() {
@@ -142,11 +138,11 @@ class AClass {
 	}
 
 	public String manualSpan() {
-		Span manual = this.tracer.createSpan("span-name");
-		try {
+		Span manual = this.tracer.nextSpan().name("span-name");
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(manual)) {
 			return this.anotherClass.continuedSpan();
 		} finally {
-			this.tracer.close(manual);
+			manual.finish();
 		}
 	}
 
@@ -169,11 +165,11 @@ class AnotherClass {
 	}
 
 	public String continuedSpan() {
-		Span continuedSpan = this.tracer.continueSpan(this.tracer.getCurrentSpan());
-		this.tracer.addTag("foo", "bar");
-		continuedSpan.logEvent("continuedspan.before");
+		Span span = this.tracer.currentSpan();
+		span.tag("foo", "bar");
+		span.annotate("continuedspan.before");
 		String response = "continued";
-		continuedSpan.logEvent("continuedspan.after");
+		span.annotate("continuedspan.after");
 		return response;
 	}
 }

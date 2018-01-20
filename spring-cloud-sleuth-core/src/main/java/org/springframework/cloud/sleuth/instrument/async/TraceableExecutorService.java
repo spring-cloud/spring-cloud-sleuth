@@ -25,10 +25,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import brave.Tracer;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors
@@ -40,34 +40,23 @@ public class TraceableExecutorService implements ExecutorService {
 	final ExecutorService delegate;
 	Tracer tracer;
 	private final String spanName;
-	TraceKeys traceKeys;
 	SpanNamer spanNamer;
 	BeanFactory beanFactory;
-
-	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer,
-			TraceKeys traceKeys, SpanNamer spanNamer) {
-		this(delegate, tracer, traceKeys, spanNamer, null);
-	}
+	ErrorParser errorParser;
 
 	public TraceableExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
-		this.delegate = delegate;
-		this.beanFactory = beanFactory;
-		this.spanName = null;
+		this(beanFactory, delegate, null);
 	}
 
-	public TraceableExecutorService(final ExecutorService delegate, final Tracer tracer,
-			TraceKeys traceKeys, SpanNamer spanNamer, String spanName) {
+	public TraceableExecutorService(BeanFactory beanFactory, final ExecutorService delegate, String spanName) {
 		this.delegate = delegate;
-		this.tracer = tracer;
+		this.beanFactory = beanFactory;
 		this.spanName = spanName;
-		this.traceKeys = traceKeys;
-		this.spanNamer = spanNamer;
 	}
 
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new LocalComponentTraceRunnable(tracer(), traceKeys(),
-				spanNamer(), command, this.spanName);
+		final Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), command, this.spanName);
 		this.delegate.execute(r);
 	}
 
@@ -98,22 +87,19 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new SpanContinuingTraceCallable<>(tracer(), traceKeys(),
-				spanNamer(), this.spanName, task);
+		Callable<T> c = new TraceCallable<>(tracer(), spanNamer(), errorParser(), task, this.spanName);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new SpanContinuingTraceRunnable(tracer(), traceKeys(),
-				spanNamer(), task, this.spanName);
+		Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), task, this.spanName);
 		return this.delegate.submit(r, result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = new LocalComponentTraceRunnable(tracer(), traceKeys(),
-				spanNamer(), task, this.spanName);
+		Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), task, this.spanName);
 		return this.delegate.submit(r);
 	}
 
@@ -142,9 +128,8 @@ public class TraceableExecutorService implements ExecutorService {
 	private <T> Collection<? extends Callable<T>> wrapCallableCollection(Collection<? extends Callable<T>> tasks) {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
-			if (!(task instanceof SpanContinuingTraceCallable)) {
-				ts.add(new SpanContinuingTraceCallable<>(tracer(), traceKeys(),
-						spanNamer(), this.spanName, task));
+			if (!(task instanceof TraceCallable)) {
+				ts.add(new TraceCallable<>(tracer(), spanNamer(), errorParser(), task, this.spanName));
 			}
 		}
 		return ts;
@@ -157,18 +142,17 @@ public class TraceableExecutorService implements ExecutorService {
 		return this.tracer;
 	}
 
-	TraceKeys traceKeys() {
-		if (this.traceKeys == null && this.beanFactory != null) {
-			this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
-		}
-		return this.traceKeys;
-	}
-
 	SpanNamer spanNamer() {
 		if (this.spanNamer == null && this.beanFactory != null) {
 			this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 		}
 		return this.spanNamer;
 	}
-
+	
+	ErrorParser errorParser() {
+		if (this.errorParser == null) {
+			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
+		}
+		return this.errorParser;
+	}
 }

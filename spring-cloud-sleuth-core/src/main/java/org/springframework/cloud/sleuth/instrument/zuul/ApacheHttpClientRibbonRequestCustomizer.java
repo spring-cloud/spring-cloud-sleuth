@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
+import brave.http.HttpClientAdapter;
+import brave.http.HttpTracing;
+import brave.propagation.Propagation;
 import org.apache.http.Header;
 import org.apache.http.client.methods.RequestBuilder;
-import org.springframework.cloud.sleuth.SpanTextMap;
-import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * Customization of a Ribbon request for Apache HttpClient
@@ -31,9 +28,23 @@ import org.springframework.cloud.sleuth.Tracer;
  * @author Marcin Grzejszczak
  * @since 1.1.0
  */
-class ApacheHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequestCustomizer<RequestBuilder> {
+class ApacheHttpClientRibbonRequestCustomizer extends
+		SpanInjectingRibbonRequestCustomizer<RequestBuilder> {
 
-	ApacheHttpClientRibbonRequestCustomizer(Tracer tracer) {
+	static final Propagation.Setter<RequestBuilder, String> SETTER = new Propagation.Setter<RequestBuilder, String>() {
+		@Override public void put(RequestBuilder carrier, String key, String value) {
+			if (carrier.getFirstHeader(key) != null) {
+				return;
+			}
+			carrier.addHeader(key, value);
+		}
+
+		@Override public String toString() {
+			return "RequestBuilder::addHeader";
+		}
+	};
+
+	ApacheHttpClientRibbonRequestCustomizer(HttpTracing tracer) {
 		super(tracer);
 	}
 
@@ -43,20 +54,31 @@ class ApacheHttpClientRibbonRequestCustomizer extends SpanInjectingRibbonRequest
 	}
 
 	@Override
-	protected SpanTextMap toSpanTextMap(final RequestBuilder context) {
-		return new SpanTextMap() {
-			@Override public Iterator<Map.Entry<String, String>> iterator() {
-				Map<String, String> map = new HashMap<>();
-				for (Header header : context.build().getAllHeaders()) {
-					map.put(header.getName(), header.getValue());
-				}
-				return map.entrySet().iterator();
+	protected HttpClientAdapter<RequestBuilder, RequestBuilder> handlerClientAdapter() {
+		return new HttpClientAdapter<RequestBuilder, RequestBuilder>() {
+			@Override public String method(RequestBuilder request) {
+				return request.getMethod();
 			}
 
-			@Override public void put(String key, String value) {
-				context.setHeader(key, value);
+			@Override public String url(RequestBuilder request) {
+				return request.getUri().toString();
+			}
+
+			@Override public String requestHeader(RequestBuilder request, String name) {
+				Header header = request.getFirstHeader(name);
+				if (header == null) {
+					return null;
+				}
+				return header.getValue();
+			}
+
+			@Override public Integer statusCode(RequestBuilder response) {
+				throw new UnsupportedOperationException("response not supported");
 			}
 		};
 	}
 
+	@Override protected Propagation.Setter<RequestBuilder, String> setter() {
+		return SETTER;
+	}
 }

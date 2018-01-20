@@ -17,13 +17,13 @@ public class SamplerProperties {
 	 * sampled. The precision is whole-numbers only (i.e. there's no support for 0.1% of
 	 * the traces).
 	 */
-	private float percentage = 0.1f;
+	private float probability = 0.1f;
 
-	public float getPercentage() {
-		return this.percentage;
+	public float getProbability() {
+		return this.probability;
 	}
 
-	public void setPercentage(float percentage) {
-		this.percentage = percentage;
+	public void setProbability(float probability) {
+		this.probability = probability;
 	}
 }

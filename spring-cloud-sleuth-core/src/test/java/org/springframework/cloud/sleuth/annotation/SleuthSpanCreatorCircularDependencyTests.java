@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,19 @@
  */
 package org.springframework.cloud.sleuth.annotation;
 
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.SpanReporter;
-import org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorCircularDependencyTests.TestConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-@SpringBootTest(classes = TestConfiguration.class)
+@SpringBootTest(classes = SleuthSpanCreatorCircularDependencyTests.TestConfiguration.class)
 @RunWith(SpringRunner.class)
 public class SleuthSpanCreatorCircularDependencyTests {
 	@Test public void contextLoads() throws Exception {
@@ -49,8 +49,8 @@ public class SleuthSpanCreatorCircularDependencyTests {
 
 	@Configuration @EnableAutoConfiguration
 	protected static class TestConfiguration {
-		@Bean SpanReporter spanReporter() {
-			return new ArrayListSpanAccumulator();
+		@Bean Reporter<Span> spanReporter() {
+			return new ArrayListSpanReporter();
 		}
 
 		@Bean public Service1 service1() {

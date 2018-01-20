@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,25 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
+import brave.Span;
+import brave.http.HttpTracing;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanTextMap;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -57,11 +56,13 @@ import static org.assertj.core.api.BDDAssertions.then;
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class TraceCustomFilterResponseInjectorTests {
+	static final String TRACE_ID_NAME = "X-B3-TraceId";
+	static final String SPAN_ID_NAME = "X-B3-SpanId";
+	
 	@Autowired RestTemplate restTemplate;
 	@Autowired Config config;
 	@Autowired CustomRestController customRestController;
-
-
+	
 	@Test
 	@SuppressWarnings("unchecked")
 	public void should_inject_trace_and_span_ids_in_response_headers() {
@@ -73,7 +74,7 @@ public class TraceCustomFilterResponseInjectorTests {
 		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity, Map.class);
 
 		then(responseEntity.getHeaders())
-				.containsKeys(Span.TRACE_ID_NAME, Span.SPAN_ID_NAME)
+				.containsKeys(TRACE_ID_NAME, SPAN_ID_NAME)
 				.as("Trace headers must be present in response headers");
 	}
 
@@ -84,13 +85,9 @@ public class TraceCustomFilterResponseInjectorTests {
 		int port;
 
 		// tag::configuration[]
-		@Bean HttpSpanInjector customHttpServletResponseSpanInjector() {
-			return new CustomHttpServletResponseSpanInjector();
-		}
-
 		@Bean
-		HttpResponseInjectingTraceFilter responseInjectingTraceFilter(Tracer tracer) {
-			return new HttpResponseInjectingTraceFilter(tracer, customHttpServletResponseSpanInjector());
+		HttpResponseInjectingTraceFilter responseInjectingTraceFilter(HttpTracing httpTracing) {
+			return new HttpResponseInjectingTraceFilter(httpTracing);
 		}
 		// end::configuration[]
 
@@ -113,56 +110,24 @@ public class TraceCustomFilterResponseInjectorTests {
 	}
 
 	// tag::injector[]
-	static class CustomHttpServletResponseSpanInjector extends ZipkinHttpSpanInjector {
-
-		@Override
-		public void inject(Span span, SpanTextMap carrier) {
-			super.inject(span, carrier);
-			carrier.put(Span.TRACE_ID_NAME, span.traceIdString());
-			carrier.put(Span.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		}
-	}
-
 	static class HttpResponseInjectingTraceFilter extends GenericFilterBean {
 
-		private final Tracer tracer;
-		private final HttpSpanInjector spanInjector;
+		private final HttpTracing httpTracing;
 
-		public HttpResponseInjectingTraceFilter(Tracer tracer, HttpSpanInjector spanInjector) {
-			this.tracer = tracer;
-			this.spanInjector = spanInjector;
+		public HttpResponseInjectingTraceFilter(HttpTracing httpTracing) {
+			this.httpTracing = httpTracing;
 		}
 
 		@Override
 		public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 			HttpServletResponse response = (HttpServletResponse) servletResponse;
-			Span currentSpan = this.tracer.getCurrentSpan();
-			this.spanInjector.inject(currentSpan, new HttpServletResponseTextMap(response));
+			Span currentSpan = this.httpTracing.tracing().tracer().currentSpan();
+			response.addHeader("X-B3-TraceId",
+					currentSpan.context().traceIdString());
+			response.addHeader("X-B3-SpanId",
+					SpanUtil.idToHex(currentSpan.context().spanId()));
 			filterChain.doFilter(request, response);
 		}
-
-		 class HttpServletResponseTextMap implements SpanTextMap {
-
-			 private final HttpServletResponse delegate;
-
-			 HttpServletResponseTextMap(HttpServletResponse delegate) {
-				 this.delegate = delegate;
-			 }
-
-			 @Override
-			 public Iterator<Map.Entry<String, String>> iterator() {
-				 Map<String, String> map = new HashMap<>();
-				 for (String header : this.delegate.getHeaderNames()) {
-					map.put(header, this.delegate.getHeader(header));
-				 }
-				 return map.entrySet().iterator();
-			 }
-
-			 @Override
-			 public void put(String key, String value) {
-				this.delegate.addHeader(key, value);
-			 }
-		 }
 	}
 	// end::injector[]
 
