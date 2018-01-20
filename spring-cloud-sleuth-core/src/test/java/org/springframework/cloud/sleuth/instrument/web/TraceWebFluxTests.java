@@ -1,14 +1,10 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.sampler.Sampler;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.MDC;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
@@ -24,6 +20,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class TraceWebFluxTests {
 
@@ -47,10 +49,10 @@ public class TraceWebFluxTests {
 
 		Awaitility.await().untilAsserted(() -> {
 			ClientResponse response = exchange.block();
-			BDDAssertions.then(response.statusCode().value()).isEqualTo(200);
+			then(response.statusCode().value()).isEqualTo(200);
 		});
-		BDDAssertions.then(accumulator.getSpans()).hasSize(1);
-		BDDAssertions.then(accumulator.getSpans().get(0).tags())
+		then(accumulator.getSpans()).hasSize(1);
+		then(accumulator.getSpans().get(0).tags())
 				.containsEntry("mvc.controller.method", "successful")
 				.containsEntry("mvc.controller.class", "Controller2");
 	}
@@ -80,8 +82,11 @@ public class TraceWebFluxTests {
 
 	@RestController
 	static class Controller2 {
+
 		@GetMapping("/api/c2/{id}")
 		public Flux<String> successful(@PathVariable Long id) {
+			// #786
+			then(MDC.get("X-B3-TraceId")).isNotEmpty();
 			return Flux.just(id.toString());
 		}
 	}

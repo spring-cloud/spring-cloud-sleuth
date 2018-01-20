@@ -364,6 +364,7 @@ public class TraceFilter extends GenericFilterBean {
 
 		final Span span;
 		final Tracer.SpanInScope scope;
+
 		SpanAndScope(Span span, Tracer.SpanInScope scope) {
 			this.span = span;
 			this.scope = scope;

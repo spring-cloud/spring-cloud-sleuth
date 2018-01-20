@@ -133,7 +133,8 @@ public class TraceWebFilter implements WebFilter, Ordered {
 								.map(c -> c.put(CONTEXT_ERROR, t)))
 						.flatMap(c -> {
 							//reactivate span from context
-							Span span = c.getOrDefault(Span.class, tracer().nextSpan().start());
+							SpanAndScope spanAndScope = c.getOrDefault(SpanAndScope.class, defaultSpanAndScope());
+							Span span = spanAndScope.span;
 							Mono<Void> continuation;
 							Throwable t = null;
 							if (c.hasKey(CONTEXT_ERROR)) {
@@ -151,12 +152,14 @@ public class TraceWebFilter implements WebFilter, Ordered {
 							}
 							addResponseTagsForSpanWithoutParent(exchange, response, span);
 							handler().handleSend(response, t, span);
+							spanAndScope.scope.close();
 							return continuation;
 						})
 						.subscriberContext(c -> {
 							Span span;
-							if (c.hasKey(Span.class)) {
-								Span parent = c.get(Span.class);
+							if (c.hasKey(SpanAndScope.class)) {
+								SpanAndScope spanAndScope = c.get(SpanAndScope.class);
+								Span parent = spanAndScope.span;
 								span = tracer()
 										.nextSpan(TraceContextOrSamplingFlags.create(parent.context()))
 										.start();
@@ -184,8 +187,13 @@ public class TraceWebFilter implements WebFilter, Ordered {
 									}
 								}
 							}
-							return c.put(Span.class, span);
+							return c.put(SpanAndScope.class, new SpanAndScope(span, tracer().withSpanInScope(span)));
 						}));
+	}
+
+	private SpanAndScope defaultSpanAndScope() {
+		Span defaultSpan = tracer().nextSpan().start();
+		return new SpanAndScope(defaultSpan, tracer().withSpanInScope(defaultSpan));
 	}
 
 	private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange,
@@ -218,6 +226,22 @@ public class TraceWebFilter implements WebFilter, Ordered {
 			if (log.isDebugEnabled()) {
 				log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
 			}
+		}
+	}
+
+	class SpanAndScope {
+
+		final Span span;
+		final Tracer.SpanInScope scope;
+
+		SpanAndScope(Span span, Tracer.SpanInScope scope) {
+			this.span = span;
+			this.scope = scope;
+		}
+
+		SpanAndScope() {
+			this.span = null;
+			this.scope = null;
 		}
 	}
 
