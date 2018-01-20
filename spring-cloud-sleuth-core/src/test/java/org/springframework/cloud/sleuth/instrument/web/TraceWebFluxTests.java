@@ -50,8 +50,8 @@ public class TraceWebFluxTests {
 		Awaitility.await().untilAsserted(() -> {
 			ClientResponse response = exchange.block();
 			then(response.statusCode().value()).isEqualTo(200);
+			then(accumulator.getSpans()).hasSize(1);
 		});
-		then(accumulator.getSpans()).hasSize(1);
 		then(accumulator.getSpans().get(0).tags())
 				.containsEntry("mvc.controller.method", "successful")
 				.containsEntry("mvc.controller.class", "Controller2");
