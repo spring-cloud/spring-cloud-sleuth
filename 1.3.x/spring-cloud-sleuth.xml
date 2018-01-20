@@ -4,7 +4,7 @@
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
-<date>2018-01-19</date>
+<date>2018-01-20</date>
 <author>
 <personname>
 <firstname>Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer</firstname>
@@ -348,9 +348,10 @@ too many can decrease system throughput or increase RPC latency. In extreme case
 to exceeding transport-level message or header capacity.</simpara>
 </important>
 <simpara>Example of setting baggage on a span:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.createSpan("span");
-initialSpan.setBaggageItem("foo", "bar");
-initialSpan.setBaggageItem("UPPER_CASE", "someValue");</programlisting>
+<programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.nextSpan().name("span").start();
+try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+	ExtraFieldPropagation.set("foo", "bar");
+	ExtraFieldPropagation.set("UPPER_CASE", "someValue");</programlisting>
 <section xml:id="_baggage_vs_span_tags">
 <title>Baggage vs. Span Tags</title>
 <simpara>Baggage travels with the trace (i.e. every child span contains the baggage of its parent). Zipkin has no knowledge of
