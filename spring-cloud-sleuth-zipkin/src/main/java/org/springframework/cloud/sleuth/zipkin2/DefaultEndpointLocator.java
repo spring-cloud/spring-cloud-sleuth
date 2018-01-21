@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
 import java.lang.invoke.MethodHandles;
+import java.net.InetAddress;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,9 +54,9 @@ public class DefaultEndpointLocator implements EndpointLocator,
 	private final Registration registration;
 	private final ServerProperties serverProperties;
 	private final Environment environment;
-	private final InetUtils inetUtils;
 	private final ZipkinProperties zipkinProperties;
 	private Integer port;
+	private InetAddress firstNonLoopbackAddress;
 
 	public DefaultEndpointLocator(Registration registration, ServerProperties serverProperties,
 			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
@@ -63,11 +64,14 @@ public class DefaultEndpointLocator implements EndpointLocator,
 		this.serverProperties = serverProperties;
 		this.environment = environment;
 		this.zipkinProperties = zipkinProperties;
+		this.firstNonLoopbackAddress = findFirstNonLoopbackAddress(inetUtils);
+	}
+
+	private InetAddress findFirstNonLoopbackAddress(InetUtils inetUtils) {
 		if (inetUtils == null) {
-			this.inetUtils = new InetUtils(new InetUtilsProperties());
-		} else {
-			this.inetUtils = inetUtils;
+			inetUtils = new InetUtils(new InetUtilsProperties());
 		}
+		return inetUtils.findFirstNonLoopbackAddress();
 	}
 
 	@Override
@@ -124,7 +128,7 @@ public class DefaultEndpointLocator implements EndpointLocator,
 			return builder;
 		}
 		else {
-			return builder.ip(this.inetUtils.findFirstNonLoopbackAddress());
+			return builder.ip(this.firstNonLoopbackAddress);
 		}
 	}
 }
