@@ -648,9 +648,6 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 <simpara>Provides a way to create / continue spans and add tags and logs via annotations.</simpara>
 </listitem>
 <listitem>
-<simpara>Provides simple metrics of accepted / dropped spans.</simpara>
-</listitem>
-<listitem>
 <simpara>If <literal>spring-cloud-sleuth-zipkin</literal> then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using <literal>spring.zipkin.baseUrl</literal>.</simpara>
@@ -662,6 +659,9 @@ Configure the location of the service using <literal>spring.zipkin.baseUrl</lite
 <simpara>Note: <literal>spring-cloud-sleuth-stream</literal> is deprecated and should no longer be used.</simpara>
 </listitem>
 </itemizedlist>
+</listitem>
+<listitem>
+<simpara>Spring Cloud Sleuth is <link xl:href="http://opentracing.io/">OpenTracing</link> compatible</simpara>
 </listitem>
 </itemizedlist>
 <important>
@@ -1551,6 +1551,12 @@ on how to create a Stream Zipkin server.</simpara>
 </chapter>
 <chapter xml:id="_integrations">
 <title>Integrations</title>
+<section xml:id="_opentracing">
+<title>OpenTracing</title>
+<simpara>Spring Cloud Sleuth is <link xl:href="http://opentracing.io/">OpenTracing</link> compatible. If you have
+OpenTracing on the classpath we will automatically register the OpenTracing
+<literal>Tracer</literal> bean. If you wish to disable this just set <literal>spring.sleuth.opentracing.enabled</literal> to <literal>false</literal></simpara>
+</section>
 <section xml:id="_runnable_and_callable">
 <title>Runnable and Callable</title>
 <simpara>If you&#8217;re wrapping your logic in <literal>Runnable</literal> or <literal>Callable</literal> it&#8217;s enough to wrap those classes in their Sleuth representative.</simpara>
