@@ -931,6 +931,12 @@ on how to create a Stream Zipkin server.
 
 == Integrations
 
+=== OpenTracing
+
+Spring Cloud Sleuth is http://opentracing.io/[OpenTracing] compatible. If you have
+OpenTracing on the classpath we will automatically register the OpenTracing
+`Tracer` bean. If you wish to disable this just set `spring.sleuth.opentracing.enabled` to `false`
+
 === Runnable and Callable
 
 If you're wrapping your logic in `Runnable` or `Callable` it's enough to wrap those classes in their Sleuth representative.

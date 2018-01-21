@@ -18,6 +18,7 @@
 		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
 		<zipkin-reporter2.version>2.3.0</zipkin-reporter2.version>
 		<brave.version>4.13.3</brave.version>
+		<brave.opentracing.version>0.25.0</brave.opentracing.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -87,7 +88,7 @@
 				<artifactId>brave-instrumentation-spring-webmvc</artifactId>
 				<version>${brave.version}</version>
 			</dependency>
-			<!-- BRAVE -->
+			<!-- ZIPKIN -->
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
 				<artifactId>zipkin</artifactId>
@@ -152,6 +153,11 @@
 						<artifactId>amqp-client</artifactId>
 					</exclusion>
 				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>io.opentracing.brave</groupId>
+				<artifactId>brave-opentracing</artifactId>
+				<version>${brave.opentracing.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

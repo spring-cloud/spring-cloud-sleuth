@@ -32,7 +32,7 @@ import org.springframework.web.server.WebFilterChain;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-public class TraceWebFilter implements WebFilter, Ordered {
+public final class TraceWebFilter implements WebFilter, Ordered {
 
 	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
 

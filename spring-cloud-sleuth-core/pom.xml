@@ -152,6 +152,11 @@
 			<groupId>io.zipkin.brave</groupId>
 			<artifactId>brave-instrumentation-spring-webmvc</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.opentracing.brave</groupId>
+			<artifactId>brave-opentracing</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- BRAVE -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
