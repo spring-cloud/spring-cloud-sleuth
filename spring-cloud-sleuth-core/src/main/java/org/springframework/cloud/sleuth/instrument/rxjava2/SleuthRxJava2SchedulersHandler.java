@@ -124,10 +124,7 @@ class SleuthRxJava2SchedulersHandler {
 
 			Span span = this.parent;
 			boolean created = false;
-			if (span != null) {
-				span = this.tracer.joinSpan(this.parent.context());
-			}
-			else {
+			if (span == null) {
 				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
 				span.tag(
 						this.traceKeys.getAsync().getPrefix()
