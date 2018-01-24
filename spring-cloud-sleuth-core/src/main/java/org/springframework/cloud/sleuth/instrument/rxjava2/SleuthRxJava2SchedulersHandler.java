@@ -34,7 +34,7 @@ class SleuthRxJava2SchedulersHandler {
 			if (delegate instanceof SleuthRxJava2SchedulersHandler.ScheduleHandler) {
 				return;
 			}
-			logCurrentStateOfRxJavaPlugins();
+			logRegisterRxJavaPlugins();
 			RxJavaPlugins.reset();
 			RxJavaPlugins.setScheduleHandler(
 					new ScheduleHandler(tracer, traceKeys, threadsToSample, delegate));
@@ -44,7 +44,7 @@ class SleuthRxJava2SchedulersHandler {
 		}
 	}
 
-	private void logCurrentStateOfRxJavaPlugins() {
+	private void logRegisterRxJavaPlugins() {
 		if (log.isDebugEnabled()) {
 			log.debug("Registering Sleuth RxJava2 Schedulers Hook.");
 		}
