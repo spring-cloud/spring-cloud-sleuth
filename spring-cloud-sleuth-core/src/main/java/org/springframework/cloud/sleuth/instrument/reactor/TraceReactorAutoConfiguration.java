@@ -39,13 +39,16 @@ public class TraceReactorAutoConfiguration {
 	@Configuration
 	@ConditionalOnBean(Tracing.class)
 	static class TraceReactorConfiguration {
+
+		private static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class.getName();
+
 		@Autowired Tracing tracing;
 		@Autowired BeanFactory beanFactory;
 		@Autowired LastOperatorWrapper lastOperatorWrapper;
 
 		@Bean
 		@ConditionalOnNotWebApplication LastOperatorWrapper spanOperator() {
-			return tracer -> Hooks.onLastOperator(ReactorSleuth.spanOperator(tracer));
+			return tracer -> Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.spanOperator(tracer));
 		}
 
 		@Bean
