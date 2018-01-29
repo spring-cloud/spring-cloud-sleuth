@@ -55,7 +55,7 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 				this.traceKeys.getHystrix().getCommandGroup(), getCommandGroup().name());
 		span.tag(this.traceKeys.getHystrix().getPrefix() +
 				this.traceKeys.getHystrix().getThreadPoolKey(), getThreadPoolKey().name());
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			return doRun();
 		}
 		finally {

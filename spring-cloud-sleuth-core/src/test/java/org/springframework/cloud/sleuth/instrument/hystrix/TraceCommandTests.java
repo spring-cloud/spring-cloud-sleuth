@@ -70,6 +70,8 @@ public class TraceCommandTests {
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("commandKey", "traceCommandKey");
+		then(this.reporter.getSpans().get(0).duration())
+				.isGreaterThan(0L);
 	}
 
 	@Test
