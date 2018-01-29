@@ -68,7 +68,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=fooservice" ,
-"feign.hystrix.enabled=true", "spring.sleuth.http.legacy.enabled=true"})
+"feign.hystrix.enabled=true", "spring.sleuth.http.legacy.enabled=true",
+		"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=60000"})
 public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;
