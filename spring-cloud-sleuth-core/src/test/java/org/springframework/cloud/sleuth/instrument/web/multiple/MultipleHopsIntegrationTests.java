@@ -73,7 +73,7 @@ public class MultipleHopsIntegrationTests {
 				.distinct()
 				.collect(toList()))
 				.hasSize(3)
-				.containsAll(asList("send:words", "send:counts", "send:greetings"));
+				.containsAll(asList("words", "counts", "greetings"));
 	}
 
 	// issue #237 - baggage
