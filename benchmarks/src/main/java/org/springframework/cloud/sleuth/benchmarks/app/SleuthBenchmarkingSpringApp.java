@@ -139,7 +139,7 @@ class AClass {
 
 	public String manualSpan() {
 		Span manual = this.tracer.nextSpan().name("span-name");
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(manual)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(manual.start())) {
 			return this.anotherClass.continuedSpan();
 		} finally {
 			manual.finish();
