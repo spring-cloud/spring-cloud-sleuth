@@ -100,7 +100,7 @@ public class TraceRunnableTests {
 	}
 
 	private TraceKeepingRunnable runnableThatRetrievesTraceFromThreadLocal() {
-		return new TraceKeepingRunnable();
+		return new TraceKeepingRunnable(this.tracer);
 	}
 
 	private void givenRunnableGetsSubmitted(Runnable runnable) throws Exception {
@@ -132,11 +132,18 @@ public class TraceRunnableTests {
 
 	@SpanName("some-runnable-name-from-annotation")
 	static class TraceKeepingRunnable implements Runnable {
+
+		private final Tracer tracer;
+
 		public Span span;
+
+		TraceKeepingRunnable(Tracer tracer) {
+			this.tracer = tracer;
+		}
 
 		@Override
 		public void run() {
-			this.span = Tracing.currentTracer().currentSpan();
+			this.span = this.tracer.currentSpan();
 		}
 	}
 
