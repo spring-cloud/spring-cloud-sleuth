@@ -38,13 +38,16 @@ public class TraceReactorAutoConfiguration {
 	@Configuration
 	@ConditionalOnBean(Tracer.class)
 	static class TraceReactorConfiguration {
+
+		private static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class.getName();
+
 		@Autowired Tracer tracer;
 		@Autowired TraceKeys traceKeys;
 		@Autowired SpanNamer spanNamer;
 
 		@PostConstruct
 		public void setupHooks() {
-			Hooks.onLastOperator(ReactorSleuth.spanOperator(this.tracer));
+			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.spanOperator(this.tracer));
 			Schedulers.setFactory(new Schedulers.Factory() {
 				@Override public ScheduledExecutorService decorateExecutorService(
 						String schedulerType,
