@@ -52,7 +52,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		this.tracing = tracing;
 		this.tracer = tracing.tracer();
 		this.threadLocalSpan = ThreadLocalSpan.create(this.tracer);
-		this.injector = tracing.propagation().injector(MessageHeaderPropagation.INSTANCE);
+		this.injector = tracing.propagation()
+				.injector(MessageHeaderPropagation.INSTANCE);
 		this.extractor = tracing.propagation()
 				.extractor(MessageHeaderPropagation.INSTANCE);
 	}
@@ -85,7 +86,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		Span span = this.threadLocalSpan.next(extracted);
-
 		MessageHeaderPropagation
 				.removeAnyTraceHeaders(headers, this.tracing.propagation().keys());
 		this.injector.inject(span.context(), headers);
@@ -116,7 +116,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		Span span = this.threadLocalSpan.next(extracted);
-
 		MessageHeaderPropagation
 				.removeAnyTraceHeaders(headers, this.tracing.propagation().keys());
 		this.injector.inject(span.context(), headers);
@@ -148,7 +147,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			MessageHandler handler) {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
-
 		// Start and finish a consumer span as we will immediately process it.
 		Span consumerSpan = this.tracer.nextSpan(extracted);
 		if (!consumerSpan.isNoop()) {
@@ -156,11 +154,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			addTags(message, consumerSpan, channel);
 			consumerSpan.finish();
 		}
-
 		// create and scope a span for the message processor
 		this.threadLocalSpan.next(TraceContextOrSamplingFlags.create(consumerSpan.context()))
 				.name("handle").start();
-
 		// remove any trace headers, but don't re-inject as we are synchronously processing the
 		// message and can rely on scoping to access this span later.
 		MessageHeaderPropagation
@@ -212,7 +208,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	private static String messageChannelName(MessageChannel channel) {
-		return SpanNameUtil.shorten("send:" + channelName(channel));
+		return SpanNameUtil.shorten(channelName(channel));
 	}
 
 	void finishSpan(Exception error) {
