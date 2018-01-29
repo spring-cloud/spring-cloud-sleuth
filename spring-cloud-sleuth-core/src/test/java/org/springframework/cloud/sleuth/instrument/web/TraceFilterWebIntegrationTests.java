@@ -80,13 +80,20 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
-		Span reportedSpan = this.accumulator.getSpans().get(0);
-		then(reportedSpan.tags())
+		then(this.accumulator.getSpans()).hasSize(2);
+		Span fromFirstTraceFilterFlow = this.accumulator.getSpans().get(0);
+		then(fromFirstTraceFilterFlow.tags())
 				.containsEntry("http.status_code", "500")
-				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
+				.containsEntry("http.method", "GET")
+				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
+				.containsEntry("mvc.controller.class", "ExceptionThrowingController");
+		Span fromErrorController = this.accumulator.getSpans().get(1);
+		then(fromErrorController.tags())
+				.containsEntry("http.status_code", "500")
+				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
+				.containsEntry("mvc.controller.class", "BasicErrorController");
 		// issue#714
-		String hex = reportedSpan.traceId();
+		String hex = fromErrorController.traceId();
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split).filter(s -> s.contains(
 				"Uncaught exception thrown"))
