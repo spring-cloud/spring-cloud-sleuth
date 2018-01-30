@@ -16,11 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.concurrent.Future;
+
 import brave.Span;
+import brave.Tracer;
+import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
+import brave.propagation.Propagation;
+import brave.propagation.TraceContext;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
+import org.springframework.http.client.ClientHttpResponse;
+import rx.Observable;
 
 /**
  * Propagates traces downstream via http headers that contain trace metadata.
@@ -31,25 +43,77 @@ import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory
  */
 class TraceRibbonCommandFactory implements RibbonCommandFactory {
 
-	private final RibbonCommandFactory delegate;
-	private final HttpTracing tracing;
+	static final Propagation.Setter<RibbonCommandContext, String> SETTER = new Propagation.Setter<RibbonCommandContext, String>() {
+		@Override public void put(RibbonCommandContext carrier, String key, String value) {
+			carrier.getHeaders().put(key, Collections.singletonList(value));
+		}
 
-	public TraceRibbonCommandFactory(RibbonCommandFactory delegate,
-			HttpTracing tracing) {
+		@Override public String toString() {
+			return "RibbonCommandContext::headers::put";
+		}
+	};
+
+	private static final Log log = LogFactory.getLog(TraceRibbonCommandFactory.class);
+
+	final HttpTracing tracing;
+	final Tracer tracer;
+	final RibbonCommandFactory delegate;
+	HttpClientHandler<RibbonCommandContext, ClientHttpResponse> handler;
+	TraceContext.Injector<RibbonCommandContext> injector;
+
+	TraceRibbonCommandFactory(RibbonCommandFactory delegate, HttpTracing httpTracing) {
+		this.tracing = httpTracing;
 		this.delegate = delegate;
-		this.tracing = tracing;
+		this.tracer = httpTracing.tracing().tracer();
+		this.handler = HttpClientHandler
+				.create(httpTracing, new TraceRibbonCommandFactory.HttpAdapter());
+		this.injector = httpTracing.tracing().propagation().injector(SETTER);
 	}
 
 	@Override
-	public RibbonCommand create(RibbonCommandContext context) {
-		RibbonCommand ribbonCommand = this.delegate.create(context);
-		Span span = this.tracing.tracing().tracer().currentSpan();
-		this.tracing.clientParser().request(new TraceRibbonCommandFactory.HttpAdapter(), context, span);
-		return ribbonCommand;
+	public RibbonCommand create(final RibbonCommandContext context) {
+		final RibbonCommand ribbonCommand = this.delegate.create(context);
+		Span span = this.tracer.currentSpan();
+		if (log.isDebugEnabled()) {
+			log.debug("Will set contents of the span " + this.tracer.currentSpan() + " in the ribbon command");
+		}
+		return new RibbonCommand() {
+			@Override public ClientHttpResponse execute() {
+				Span span = TraceRibbonCommandFactory.this.handler.handleSend(TraceRibbonCommandFactory.this.injector, context);
+				ClientHttpResponse response = null;
+				Throwable error = null;
+				try (Tracer.SpanInScope ws = TraceRibbonCommandFactory.this.tracer.withSpanInScope(span)) {
+					return response = ribbonCommand.execute();
+				} catch (RuntimeException | Error e) {
+					error = e;
+					throw e;
+				} finally {
+					TraceRibbonCommandFactory.this.handler.handleReceive(response, error, span);
+				}
+			}
+
+			// currently only .execute() is used in Zuul
+			@Override public Future<ClientHttpResponse> queue() {
+				parseRequest(context, span);
+				return ribbonCommand.queue();
+			}
+
+			// currently only .execute() is used in Zuul
+			@Override public Observable<ClientHttpResponse> observe() {
+				parseRequest(context, span);
+				return ribbonCommand.observe();
+			}
+		};
+
+	}
+
+	private void parseRequest(RibbonCommandContext context, Span span) {
+		TraceRibbonCommandFactory.this.tracing.clientParser()
+				.request(new TraceRibbonCommandFactory.HttpAdapter(), context, span);
 	}
 
 	static final class HttpAdapter
-			extends brave.http.HttpClientAdapter<RibbonCommandContext, RibbonCommand> {
+			extends brave.http.HttpClientAdapter<RibbonCommandContext, ClientHttpResponse> {
 
 		@Override public String method(RibbonCommandContext request) {
 			return request.getMethod();
@@ -64,8 +128,12 @@ class TraceRibbonCommandFactory implements RibbonCommandFactory {
 			return result != null ? result.toString() : null;
 		}
 
-		@Override public Integer statusCode(RibbonCommand response) {
-			throw new UnsupportedOperationException("RibbonCommand doesn't support status code");
+		@Override public Integer statusCode(ClientHttpResponse response) {
+			try {
+				return response.getRawStatusCode();
+			} catch (IOException e) {
+				return null;
+			}
 		}
 	}
 }

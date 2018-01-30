@@ -28,7 +28,7 @@ import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory
  *
  * @author Marcin Grzejszczak
  *
- * @since 1.1.0
+ * @since 2.0.0
  */
 final class TraceRibbonCommandFactoryBeanPostProcessor implements BeanPostProcessor {
 
@@ -42,15 +42,16 @@ final class TraceRibbonCommandFactoryBeanPostProcessor implements BeanPostProces
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof RibbonCommandFactory) {
-			return new TraceRibbonCommandFactory((RibbonCommandFactory) bean, tracing());
-		}
 		return bean;
 	}
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
+		if (bean instanceof RibbonCommandFactory
+				&& !(bean instanceof TraceRibbonCommandFactory)) {
+			return new TraceRibbonCommandFactory((RibbonCommandFactory) bean, tracing());
+		}
 		return bean;
 	}
 

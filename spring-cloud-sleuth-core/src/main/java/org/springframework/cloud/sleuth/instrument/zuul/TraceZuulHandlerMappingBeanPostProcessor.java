@@ -23,8 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.instrument.web.TraceHandlerInterceptor;
 import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
+import org.springframework.cloud.sleuth.instrument.web.TraceHandlerInterceptor;
 
 /**
  * Bean post processor that wraps {@link ZuulHandlerMapping} in its
@@ -46,6 +46,12 @@ class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
+		return bean;
+	}
+
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
 		if (bean instanceof ZuulHandlerMapping) {
 			if (log.isDebugEnabled()) {
 				log.debug("Attaching trace interceptor to bean [" + beanName + "] of type [" + bean.getClass().getSimpleName() + "]");
@@ -54,12 +60,6 @@ class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 			zuulHandlerMapping.setInterceptors(
 					new TraceHandlerInterceptor(this.beanFactory));
 		}
-		return bean;
-	}
-
-	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
 		return bean;
 	}
 }

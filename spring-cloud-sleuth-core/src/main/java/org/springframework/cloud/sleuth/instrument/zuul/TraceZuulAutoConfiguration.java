@@ -16,23 +16,17 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import brave.http.HttpTracing;
-import okhttp3.Request;
-import org.apache.http.client.methods.RequestBuilder;
+import com.netflix.zuul.ZuulFilter;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.cloud.sleuth.ErrorParser;
+import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
-import org.springframework.cloud.netflix.ribbon.support.RibbonRequestCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.netflix.client.http.HttpRequest;
-import com.netflix.zuul.ZuulFilter;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -49,40 +43,12 @@ import com.netflix.zuul.ZuulFilter;
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceZuulAutoConfiguration {
 
-	@Bean
-	@ConditionalOnMissingBean
-	public ZuulFilter tracePreZuulFilter(HttpTracing tracer,
-			ErrorParser errorParser) {
-		return TracePreZuulFilter.create(tracer, errorParser);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public ZuulFilter tracePostZuulFilter(HttpTracing tracer) {
-		return TracePostZuulFilter.create(tracer);
-	}
-
-	@Bean
-	public TraceRibbonCommandFactoryBeanPostProcessor traceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
-		return new TraceRibbonCommandFactoryBeanPostProcessor(beanFactory);
-	}
-
-	@Bean
-	@ConditionalOnClass(name = "com.netflix.client.http.HttpRequest.Builder")
-	public RibbonRequestCustomizer<HttpRequest.Builder> restClientRibbonRequestCustomizer(HttpTracing tracer) {
-		return new RestClientRibbonRequestCustomizer(tracer);
-	}
-
-	@Bean
-	@ConditionalOnClass(name = "org.apache.http.client.methods.RequestBuilder")
-	public RibbonRequestCustomizer<RequestBuilder> apacheHttpRibbonRequestCustomizer(HttpTracing tracer) {
-		return new ApacheHttpClientRibbonRequestCustomizer(tracer);
-	}
-
-	@Bean
-	@ConditionalOnClass(name = "okhttp3.Request.Builder")
-	public RibbonRequestCustomizer<Request.Builder> okHttpRibbonRequestCustomizer(HttpTracing tracer) {
-		return new OkHttpClientRibbonRequestCustomizer(tracer);
+	@ConditionalOnClass(RibbonCommand.class)
+	static class RibbonConfig {
+		@Bean
+		public TraceRibbonCommandFactoryBeanPostProcessor traceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
+			return new TraceRibbonCommandFactoryBeanPostProcessor(beanFactory);
+		}
 	}
 
 	@Bean

@@ -23,22 +23,23 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
+import com.netflix.zuul.context.RequestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
+import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
+import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
 import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
-import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
-import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
-
-import com.netflix.zuul.context.RequestContext;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -47,7 +48,6 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TraceRibbonCommandFactoryTest {
-
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
@@ -60,6 +60,7 @@ public class TraceRibbonCommandFactoryTest {
 			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
 			.build();
 	@Mock RibbonCommandFactory ribbonCommandFactory;
+	@Mock RibbonCommand ribbonCommand;
 	TraceRibbonCommandFactory traceRibbonCommandFactory;
 	Span span = this.tracing.tracer().nextSpan().name("name");
 
@@ -68,6 +69,9 @@ public class TraceRibbonCommandFactoryTest {
 	public void setup() {
 		this.traceRibbonCommandFactory = new TraceRibbonCommandFactory(
 				this.ribbonCommandFactory, this.httpTracing);
+		BDDMockito.given(this.ribbonCommandFactory
+				.create(BDDMockito.any(RibbonCommandContext.class)))
+				.willReturn(this.ribbonCommand);
 	}
 
 	@After
@@ -79,16 +83,21 @@ public class TraceRibbonCommandFactoryTest {
 	@Test
 	public void should_attach_trace_headers_to_the_span() throws Exception {
 		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(this.span)) {
-			this.traceRibbonCommandFactory.create(ribbonCommandContext());
+			RibbonCommand ribbonCommand = this.traceRibbonCommandFactory
+					.create(ribbonCommandContext());
+			ribbonCommand.execute();
 		} finally {
 			this.span.finish();
 		}
 
-		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans()).hasSize(2);
+		// RPC
 		zipkin2.Span span = this.reporter.getSpans().get(0);
 		then(span.tags())
 				.containsEntry("http.method", "GET")
 				.containsEntry("http.url", "http://localhost:1234/foo");
+		zipkin2.Span main = this.reporter.getSpans().get(1);
+		then(main.name()).isEqualTo("name");
 	}
 
 	private RibbonCommandContext ribbonCommandContext() {

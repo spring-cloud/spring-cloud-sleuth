@@ -1158,7 +1158,7 @@ Decorating Spring Integration Executor Channel with `TraceableExecutorService` w
 
 === Zuul
 
-We're registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
+We're instrumenting the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
 To disable Zuul support set the `spring.sleuth.zuul.enabled` property to `false`.
 
 == Running examples
