@@ -1840,7 +1840,7 @@ Decorating Spring Integration Executor Channel with <literal>TraceableExecutorSe
 </section>
 <section xml:id="_zuul">
 <title>Zuul</title>
-<simpara>We&#8217;re registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
+<simpara>We&#8217;re instrumenting the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
 To disable Zuul support set the <literal>spring.sleuth.zuul.enabled</literal> property to <literal>false</literal>.</simpara>
 </section>
 </chapter>
