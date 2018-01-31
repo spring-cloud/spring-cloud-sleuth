@@ -43,6 +43,11 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceZuulAutoConfiguration {
 
+	@Bean
+	TracePostZuulFilter tracePostZuulFilter(HttpTracing httpTracing) {
+		return new TracePostZuulFilter(httpTracing);
+	}
+
 	@ConditionalOnClass(RibbonCommand.class)
 	static class RibbonConfig {
 		@Bean

@@ -222,7 +222,7 @@ public class TraceFilter extends GenericFilterBean {
 			addResponseTagsForSpanWithoutParent(exception, request, response, span);
 			// in case of a response with exception status will close the span when exception dispatch is handled
 			// checking if tracing is in progress due to async / different order of view controller processing
-			if (httpStatusSuccessful(response)) {
+			if (httpStatusSuccessful(response) && !requestHasAlreadyBeenHandled(request)) {
 				if (log.isDebugEnabled()) {
 					log.debug("Closing the span " + span + " since the response was successful");
 				}

@@ -85,6 +85,9 @@ class TraceRibbonCommandFactory implements RibbonCommandFactory {
 				try (Tracer.SpanInScope ws = TraceRibbonCommandFactory.this.tracer.withSpanInScope(span)) {
 					return response = ribbonCommand.execute();
 				} catch (RuntimeException | Error e) {
+					if (log.isDebugEnabled()) {
+						log.debug("Exception occurred while trying to execute ribbon command", e);
+					}
 					error = e;
 					throw e;
 				} finally {
