@@ -43,7 +43,7 @@ class ZipkinSenderCondition extends SpringBootCondition {
 			return ConditionOutcome.match(message.because("automatic sender type"));
 		}
 		String senderType = getType(((AnnotationMetadata) md).getClassName());
-		if (property.equals(senderType)) {
+		if (property.equalsIgnoreCase(senderType)) {
 			return ConditionOutcome.match(message.because(property + " sender type"));
 		}
 		return ConditionOutcome.noMatch(message.because(property + " sender type"));

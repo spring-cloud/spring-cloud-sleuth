@@ -153,6 +153,22 @@ public class ZipkinAutoConfigurationTests {
 	}
 
 	@Test
+	public void canOverrideBySenderAndIsCaseInsensitive() throws Exception {
+		context = new AnnotationConfigApplicationContext();
+		addEnvironment(context, "spring.zipkin.sender.type:WEB");
+		context.register(
+				PropertyPlaceholderAutoConfiguration.class,
+				RabbitAutoConfiguration.class,
+				KafkaAutoConfiguration.class,
+				ZipkinAutoConfiguration.class);
+		context.refresh();
+
+		then(context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender");
+
+		context.close();
+	}
+
+	@Test
 	public void rabbitWinsWhenKafkaPresent() throws Exception {
 		context = new AnnotationConfigApplicationContext();
 		context.register(
