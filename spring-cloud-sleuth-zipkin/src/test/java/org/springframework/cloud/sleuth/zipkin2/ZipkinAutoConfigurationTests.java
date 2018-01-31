@@ -26,7 +26,6 @@ import org.junit.rules.ExpectedException;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -138,6 +137,26 @@ public class ZipkinAutoConfigurationTests {
 	public void canOverrideBySender() throws Exception {
 		context = new AnnotationConfigApplicationContext();
 		addEnvironment(context, "spring.zipkin.sender.type:web");
+		context.register(
+				PropertyPlaceholderAutoConfiguration.class,
+				TraceMetricsAutoConfiguration.class,
+				RabbitAutoConfiguration.class,
+				KafkaAutoConfiguration.class,
+				ZipkinAutoConfiguration.class);
+		context.refresh();
+
+		SpanReporter spanReporter = context.getBean(SpanReporter.class);
+		assertThat(spanReporter).extracting("reporter.sender").allSatisfy(
+				s -> assertThat(s.getClass().getSimpleName()).isEqualTo("RestTemplateSender")
+		);
+
+		context.close();
+	}
+
+	@Test
+	public void canOverrideBySenderAndIsCaseInsensitive() throws Exception {
+		context = new AnnotationConfigApplicationContext();
+		addEnvironment(context, "spring.zipkin.sender.type:WEB");
 		context.register(
 				PropertyPlaceholderAutoConfiguration.class,
 				TraceMetricsAutoConfiguration.class,

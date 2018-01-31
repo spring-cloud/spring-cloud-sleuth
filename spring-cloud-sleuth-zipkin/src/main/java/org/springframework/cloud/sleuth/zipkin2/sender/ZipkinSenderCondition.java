@@ -29,7 +29,7 @@ class ZipkinSenderCondition extends SpringBootCondition {
 
 		String senderType = getType(((AnnotationMetadata) md).getClassName());
 		String value = resolver.getProperty("type");
-		if (value.equals(senderType)) {
+		if (value.equalsIgnoreCase(senderType)) {
 			return ConditionOutcome.match(message.because(value + " sender type"));
 		}
 		return ConditionOutcome.noMatch(message.because(value + " sender type"));
