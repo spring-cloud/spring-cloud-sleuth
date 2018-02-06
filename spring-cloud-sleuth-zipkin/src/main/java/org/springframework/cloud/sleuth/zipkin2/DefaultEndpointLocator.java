@@ -69,7 +69,9 @@ public class DefaultEndpointLocator implements EndpointLocator,
 
 	private InetAddress findFirstNonLoopbackAddress(InetUtils inetUtils) {
 		if (inetUtils == null) {
-			inetUtils = new InetUtils(new InetUtilsProperties());
+			try (InetUtils inetUtilsCloseable = new InetUtils(new InetUtilsProperties())){
+				return inetUtilsCloseable.findFirstNonLoopbackAddress();
+			}
 		}
 		return inetUtils.findFirstNonLoopbackAddress();
 	}
