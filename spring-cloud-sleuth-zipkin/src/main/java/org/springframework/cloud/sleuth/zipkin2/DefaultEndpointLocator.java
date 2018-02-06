@@ -25,9 +25,9 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import zipkin2.Endpoint;
 
@@ -64,16 +64,8 @@ public class DefaultEndpointLocator implements EndpointLocator,
 		this.serverProperties = serverProperties;
 		this.environment = environment;
 		this.zipkinProperties = zipkinProperties;
-		this.firstNonLoopbackAddress = findFirstNonLoopbackAddress(inetUtils);
-	}
-
-	private InetAddress findFirstNonLoopbackAddress(InetUtils inetUtils) {
-		if (inetUtils == null) {
-			try (InetUtils inetUtilsCloseable = new InetUtils(new InetUtilsProperties())){
-				return inetUtilsCloseable.findFirstNonLoopbackAddress();
-			}
-		}
-		return inetUtils.findFirstNonLoopbackAddress();
+        Assert.notNull(inetUtils, "inetUtils may not be null");
+		this.firstNonLoopbackAddress = inetUtils.findFirstNonLoopbackAddress();
 	}
 
 	@Override
