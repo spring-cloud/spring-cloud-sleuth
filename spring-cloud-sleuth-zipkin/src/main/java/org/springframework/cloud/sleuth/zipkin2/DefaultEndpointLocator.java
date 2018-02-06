@@ -64,7 +64,7 @@ public class DefaultEndpointLocator implements EndpointLocator,
 		this.serverProperties = serverProperties;
 		this.environment = environment;
 		this.zipkinProperties = zipkinProperties;
-        Assert.notNull(inetUtils, "inetUtils may not be null");
+		Assert.notNull(inetUtils, "inetUtils may not be null");
 		this.firstNonLoopbackAddress = inetUtils.findFirstNonLoopbackAddress();
 	}
 
