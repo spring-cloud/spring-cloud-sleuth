@@ -96,7 +96,7 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	InetUtils zipkinInetUtils(){
+	public InetUtils zipkinInetUtils(){
 		return new InetUtils(new InetUtilsProperties());
 	}
 
