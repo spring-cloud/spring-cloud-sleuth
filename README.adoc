@@ -322,10 +322,9 @@ Example of setting baggage on a span:
 
 [source,java]
 ----
-Span initialSpan = this.tracer.nextSpan().name("span").start();
-try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
-    ExtraFieldPropagation.set("foo", "bar");
-    ExtraFieldPropagation.set("UPPER_CASE", "someValue");
+Span initialSpan = this.tracer.createSpan("span");
+initialSpan.setBaggageItem("foo", "bar");
+initialSpan.setBaggageItem("UPPER_CASE", "someValue");
 ----
 
 ===== Baggage vs. Span Tags
