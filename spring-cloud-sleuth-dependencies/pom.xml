@@ -30,11 +30,11 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<zipkin.version>2.4.5</zipkin.version>
+		<zipkin.version>2.4.6</zipkin.version>
 		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
-		<zipkin-reporter2.version>2.3.1</zipkin-reporter2.version>
-		<brave.version>4.14.2</brave.version>
-		<brave.opentracing.version>0.26.0</brave.opentracing.version>
+		<zipkin-reporter2.version>2.3.2</zipkin-reporter2.version>
+		<brave.version>4.15.0</brave.version>
+		<brave.opentracing.version>0.27.0</brave.opentracing.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
