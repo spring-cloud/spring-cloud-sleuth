@@ -221,7 +221,7 @@ Example of setting baggage on a span:
 
 [source,java]
 ----
-include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
 }
 ----
 
@@ -239,7 +239,7 @@ IMPORTANT: Remember that the span needs to be in scope!
 
 [source,java]
 ----
-include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
+include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
 ----
 
 === Adding to the project
