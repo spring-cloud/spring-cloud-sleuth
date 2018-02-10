@@ -4,7 +4,7 @@
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
-<date>2018-02-09</date>
+<date>2018-02-10</date>
 <author>
 <personname>
 <firstname>Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer</firstname>
@@ -366,7 +366,10 @@ too many can decrease system throughput or increase RPC latency. In extreme case
 to exceeding transport-level message or header capacity.</simpara>
 </important>
 <simpara>Example of setting baggage on a span:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+<programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.nextSpan().name("span").start();
+try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+	ExtraFieldPropagation.set("foo", "bar");
+	ExtraFieldPropagation.set("UPPER_CASE", "someValue");
 }</programlisting>
 <section xml:id="_baggage_vs_span_tags">
 <title>Baggage vs. Span Tags</title>
@@ -378,7 +381,10 @@ can search by tag to find the trace, where there exists a span having the search
 <important>
 <simpara>Remember that the span needs to be in scope!</simpara>
 </important>
-<programlisting language="java" linenumbering="unnumbered">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]</programlisting>
+<programlisting language="java" linenumbering="unnumbered">initialSpan.tag("foo",
+		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
+initialSpan.tag("UPPER_CASE",
+		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));</programlisting>
 </section>
 </section>
 </section>
