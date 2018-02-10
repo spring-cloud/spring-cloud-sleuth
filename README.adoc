@@ -169,6 +169,9 @@ to `true`.
 
 ==== Live examples
 
+.First, send a request
+http://docssleuth-service1.cfapps.io/start[Click here to send the request]
+
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
@@ -180,8 +183,8 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 
 .Click Pivotal Web Services icon to see it live!
 [caption="Click Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
-http://docssleuth-zipkin-server.cfapps.io/dependency[Click here to see it live!]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/zipkin/dependency/", width=150, height=74]
+http://docssleuth-zipkin-server.cfapps.io/zipkin/dependency/[Click here to see it live!]
 
 ==== Log correlation
 
@@ -340,10 +343,7 @@ Example of setting baggage on a span:
 
 [source,java]
 ----
-Span initialSpan = this.tracer.nextSpan().name("span").start();
-try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
-    ExtraFieldPropagation.set("foo", "bar");
-    ExtraFieldPropagation.set("UPPER_CASE", "someValue");
+Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
 }
 ----
 
@@ -361,10 +361,7 @@ IMPORTANT: Remember that the span needs to be in scope!
 
 [source,java]
 ----
-initialSpan.tag("foo",
-        ExtraFieldPropagation.get(initialSpan.context(), "foo"));
-initialSpan.tag("UPPER_CASE",
-        ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
+Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/brave/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
 ----
 
 === Adding to the project
@@ -570,13 +567,13 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 
 * Provides a way to create / continue spans and add tags and logs via annotations.
 
+* Provides simple metrics of accepted / dropped spans.
+
 * If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using `spring.zipkin.baseUrl`.
   - If you depend on `spring-rabbit` or `spring-kafka` your app will send traces to a broker instead of http.
   - Note: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
-
-* Spring Cloud Sleuth is http://opentracing.io/[OpenTracing] compatible
 
 IMPORTANT: If using Zipkin, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
 (default 0.1, i.e. 10%). *Otherwise you might think that Sleuth is not working cause it's omitting some spans.*
