@@ -1,4 +1,4 @@
-:github-tag: master
+:github-tag: 1.3.x
 :github-repo: spring-cloud/spring-cloud-sleuth
 :github-raw: https://raw.githubusercontent.com/{github-repo}/{github-tag}
 :github-code: https://github.com/{github-repo}/tree/{github-tag}
