@@ -17,22 +17,23 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import brave.http.HttpTracing;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
@@ -63,44 +64,32 @@ public class TraceWebClientAutoConfiguration {
 		@Configuration
 		protected static class TraceInterceptorConfiguration {
 
-			@Autowired(required = false)
-			private Collection<RestTemplate> restTemplates;
+			@Autowired
+			private ApplicationContext applicationContext;
 
 			@Autowired
 			private TracingClientHttpRequestInterceptor clientInterceptor;
 
 			@PostConstruct
 			public void init() {
-				if (this.restTemplates != null) {
-					for (RestTemplate restTemplate : this.restTemplates) {
-						new RestTemplateInterceptorInjector(this.clientInterceptor)
-								.inject(restTemplate);
-					}
+				Map<String, RestTemplate> restTemplates = BeanFactoryUtils
+						.beansOfTypeIncludingAncestors(this.applicationContext,
+								RestTemplate.class);
+				for (RestTemplate restTemplate : restTemplates.values()) {
+					new RestTemplateInterceptorInjector(
+							this.clientInterceptor).inject(restTemplate);
 				}
 			}
-		}
 
-		@Autowired(required = false)
-		private Collection<RestTemplate> restTemplates;
-
-		@Autowired
-		private TracingClientHttpRequestInterceptor traceRestTemplateInterceptor;
-
-		@Bean
-		@Order(Ordered.HIGHEST_PRECEDENCE)
-		RestTemplateCustomizer traceRestTemplateCustomizer() {
-			final TracingClientHttpRequestInterceptor interceptor = this.traceRestTemplateInterceptor;
-			return restTemplate ->
-					new RestTemplateInterceptorInjector(interceptor).inject(restTemplate);
-		}
-
-		@PostConstruct
-		public void init() {
-			if (this.restTemplates != null) {
-				for (RestTemplate restTemplate : this.restTemplates) {
-					new RestTemplateInterceptorInjector(
-							this.traceRestTemplateInterceptor).inject(restTemplate);
-				}
+			@Bean
+			@Order
+			RestTemplateCustomizer traceRestTemplateCustomizer() {
+				return new RestTemplateCustomizer() {
+					@Override public void customize(RestTemplate restTemplate) {
+						new RestTemplateInterceptorInjector(TraceInterceptorConfiguration.this.clientInterceptor)
+								.inject(restTemplate);
+					}
+				};
 			}
 		}
 	}

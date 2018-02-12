@@ -403,8 +403,6 @@ public class WebClientTests {
 
 		@Override public void customize(RestTemplate restTemplate) {
 			this.executed = true;
-			then(restTemplate.getInterceptors().get(0)).isInstanceOf(
-					TracingClientHttpRequestInterceptor.class);
 		}
 
 		public boolean isExecuted() {
