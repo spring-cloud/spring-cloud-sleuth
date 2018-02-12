@@ -20,6 +20,8 @@ import java.io.IOException;
 
 import feign.Client;
 import feign.Request;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -34,6 +36,8 @@ import org.springframework.beans.factory.BeanFactory;
 @Aspect
 class TraceFeignAspect {
 
+	private static final Log log = LogFactory.getLog(TraceFeignAspect.class);
+
 	private final BeanFactory beanFactory;
 
 	TraceFeignAspect(BeanFactory beanFactory) {
@@ -44,6 +48,9 @@ class TraceFeignAspect {
 	public Object feignClientWasCalled(final ProceedingJoinPoint pjp) throws Throwable {
 		Object bean = pjp.getTarget();
 		Object wrappedBean = new TraceFeignObjectWrapper(this.beanFactory).wrap(bean);
+		if (log.isDebugEnabled()) {
+			log.debug("Executing feign client via TraceFeignAspect");
+		}
 		if (bean != wrappedBean) {
 			return executeTraceFeignClient(bean, pjp);
 		}

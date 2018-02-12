@@ -22,6 +22,8 @@ import brave.http.HttpTracing;
 import feign.Client;
 import feign.Request;
 import feign.Response;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
@@ -31,6 +33,8 @@ import org.springframework.beans.factory.BeanFactory;
  * @since 2.0.0
  */
 class LazyTracingFeignClient implements Client {
+
+	private static final Log log = LogFactory.getLog(LazyTracingFeignClient.class);
 
 	private Client tracingFeignClient;
 	private HttpTracing httpTracing;
@@ -44,6 +48,9 @@ class LazyTracingFeignClient implements Client {
 
 	@Override public Response execute(Request request, Request.Options options)
 			throws IOException {
+		if (log.isDebugEnabled()) {
+			log.debug("Sending a request via tracing feign client");
+		}
 		return tracingFeignClient().execute(request, options);
 	}
 
