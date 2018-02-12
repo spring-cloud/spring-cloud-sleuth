@@ -17,12 +17,13 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -36,9 +37,9 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.HttpSpanInjector;
 import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
@@ -71,14 +72,14 @@ public class TraceWebClientAutoConfiguration {
 	@Configuration
 	protected static class TraceInterceptorConfiguration {
 
-		@Autowired(required = false)
-		private Collection<RestTemplate> restTemplates;
+		@Autowired
+		private ApplicationContext applicationContext;
 
 		@Autowired
 		private TraceRestTemplateInterceptor traceRestTemplateInterceptor;
 
 		@Bean
-		@Order(Ordered.HIGHEST_PRECEDENCE)
+		@Order
 		RestTemplateCustomizer traceRestTemplateCustomizer() {
 			return new RestTemplateCustomizer() {
 				@Override public void customize(RestTemplate restTemplate) {
@@ -90,11 +91,12 @@ public class TraceWebClientAutoConfiguration {
 
 		@PostConstruct
 		public void init() {
-			if (this.restTemplates != null) {
-				for (RestTemplate restTemplate : this.restTemplates) {
-					new RestTemplateInterceptorInjector(
-							this.traceRestTemplateInterceptor).inject(restTemplate);
-				}
+			Map<String, RestTemplate> restTemplates = BeanFactoryUtils
+					.beansOfTypeIncludingAncestors(this.applicationContext,
+							RestTemplate.class);
+			for (RestTemplate restTemplate : restTemplates.values()) {
+				new RestTemplateInterceptorInjector(
+						this.traceRestTemplateInterceptor).inject(restTemplate);
 			}
 		}
 	}

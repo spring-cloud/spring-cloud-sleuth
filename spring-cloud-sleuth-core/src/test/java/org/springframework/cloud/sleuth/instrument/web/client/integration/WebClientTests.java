@@ -368,8 +368,6 @@ public class WebClientTests {
 
 		@Override public void customize(RestTemplate restTemplate) {
 			this.executed = true;
-			then(restTemplate.getInterceptors().get(0)).isInstanceOf(
-					TraceRestTemplateInterceptor.class);
 		}
 
 		public boolean isExecuted() {
