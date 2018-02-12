@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -64,9 +66,9 @@ public class TraceWebClientAutoConfigurationTests {
 
 	private void assertInterceptorsOrder(
 			List<ClientHttpRequestInterceptor> interceptors) {
-		int traceInterceptorIndex = 0;
-		int myInterceptorIndex = 0;
-		int mySecondInterceptorIndex = 0;
+		int traceInterceptorIndex = -1;
+		int myInterceptorIndex = -1;
+		int mySecondInterceptorIndex = -1;
 		for (int i = 0; i < interceptors.size(); i++) {
 			if (interceptors.get(i) instanceof TraceRestTemplateInterceptor) {
 				traceInterceptorIndex = i;
@@ -77,6 +79,7 @@ public class TraceWebClientAutoConfigurationTests {
 			}
 		}
 		then(traceInterceptorIndex)
+				.isGreaterThanOrEqualTo(0)
 				.isLessThan(myInterceptorIndex)
 				.isLessThan(mySecondInterceptorIndex);
 	}
@@ -95,10 +98,12 @@ public class TraceWebClientAutoConfigurationTests {
 
 		@Bean
 		@Qualifier("secondRestTemplate")
-		RestTemplate secondRestTemplate(RestTemplateBuilder restTemplateBuilder) {
-			return restTemplateBuilder
-					.additionalInterceptors(new MyClientHttpRequestInterceptor())
-					.build();
+		RestTemplate secondRestTemplate() {
+			RestTemplate restTemplate = new RestTemplate();
+			restTemplate.setInterceptors(
+					Arrays.asList(new MyClientHttpRequestInterceptor(),
+							new MySecondClientHttpRequestInterceptor()));
+			return restTemplate;
 		}
 
 		@Bean
