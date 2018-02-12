@@ -81,12 +81,7 @@ public class TraceWebClientAutoConfiguration {
 		@Bean
 		@Order
 		RestTemplateCustomizer traceRestTemplateCustomizer() {
-			return new RestTemplateCustomizer() {
-				@Override public void customize(RestTemplate restTemplate) {
-					new RestTemplateInterceptorInjector(TraceInterceptorConfiguration.this.traceRestTemplateInterceptor)
-							.inject(restTemplate);
-				}
-			};
+			return new TraceRestTemplateCustomizer(this.traceRestTemplateInterceptor);
 		}
 
 		@PostConstruct
@@ -171,6 +166,20 @@ class RestTemplateInterceptorInjector {
 			}
 		}
 		return false;
+	}
+}
+
+class TraceRestTemplateCustomizer implements RestTemplateCustomizer {
+
+	private final TraceRestTemplateInterceptor interceptor;
+
+	TraceRestTemplateCustomizer(TraceRestTemplateInterceptor interceptor) {
+		this.interceptor = interceptor;
+	}
+
+	@Override public void customize(RestTemplate restTemplate) {
+		new RestTemplateInterceptorInjector(this.interceptor)
+				.inject(restTemplate);
 	}
 }
 
