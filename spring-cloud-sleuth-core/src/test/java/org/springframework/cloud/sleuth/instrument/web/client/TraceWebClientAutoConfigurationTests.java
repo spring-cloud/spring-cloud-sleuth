@@ -49,11 +49,13 @@ public class TraceWebClientAutoConfigurationTests {
 
 	@Autowired @Qualifier("firstRestTemplate") RestTemplate restTemplate;
 	@Autowired @Qualifier("secondRestTemplate") RestTemplate secondRestTemplate;
+	@Autowired RestTemplateBuilder builder;
 
 	@Test
 	public void should_add_rest_template_interceptors() {
-		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.restTemplate));
+ 		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.restTemplate));
 		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.secondRestTemplate));
+		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.builder.build()));
 	}
 
 	private List<ClientHttpRequestInterceptor> assertInterceptorsNotEmpty(RestTemplate restTemplate) {
@@ -88,14 +90,23 @@ public class TraceWebClientAutoConfigurationTests {
 	@EnableAutoConfiguration
 	static class Config {
 
+		// custom builder
+		@Bean
+		RestTemplateBuilder myRestTemplateBuilder(List<RestTemplateCustomizer> customizers) {
+			return new RestTemplateBuilder()
+					.additionalCustomizers(customizers)
+					.additionalInterceptors(new MyClientHttpRequestInterceptor());
+		}
+
+		// rest template from builder
 		@Bean
 		@Qualifier("firstRestTemplate")
 		RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
 			return restTemplateBuilder
-					.additionalInterceptors(new MyClientHttpRequestInterceptor())
 					.build();
 		}
 
+		// manual rest template
 		@Bean
 		@Qualifier("secondRestTemplate")
 		RestTemplate secondRestTemplate() {
@@ -106,6 +117,7 @@ public class TraceWebClientAutoConfigurationTests {
 			return restTemplate;
 		}
 
+		// custom customizer
 		@Bean
 		RestTemplateCustomizer myRestTemplateCustomizer() {
 			return restTemplate -> {
