@@ -72,7 +72,10 @@ public class TraceSchedulingAspect {
 			return pjp.proceed();
 		}
 		finally {
-			this.tracer.close(span);
+			// #842 - the span might have already been closed
+			if (this.tracer.isTracing()) {
+				this.tracer.close(span);
+			}
 		}
 	}
 
