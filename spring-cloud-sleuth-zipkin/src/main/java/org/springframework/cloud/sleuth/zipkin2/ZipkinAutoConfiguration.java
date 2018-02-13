@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.zipkin2;
 import java.util.concurrent.TimeUnit;
 
 import brave.sampler.Sampler;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import zipkin2.Span;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.InMemoryReporterMetrics;
@@ -95,6 +96,12 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	public InetUtils zipkinInetUtils(){
+		return new InetUtils(new InetUtilsProperties());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	ReporterMetrics sleuthReporterMetrics() {
 		return new InMemoryReporterMetrics(); 
 	}
@@ -131,7 +138,7 @@ public class ZipkinAutoConfiguration {
 		@Autowired
 		private ZipkinProperties zipkinProperties;
 
-		@Autowired(required=false)
+		@Autowired
 		private InetUtils inetUtils;
 
 		@Autowired
