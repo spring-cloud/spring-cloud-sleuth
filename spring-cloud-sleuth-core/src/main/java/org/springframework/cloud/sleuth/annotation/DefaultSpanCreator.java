@@ -48,7 +48,7 @@ class DefaultSpanCreator implements SpanCreator {
 			log.debug("For the class [" + pjp.getThis().getClass() + "] method "
 					+ "[" + pjp.getMethod().getName() + "] will name the span [" + changedName + "]");
 		}
-		return this.tracer.tracer().nextSpan().name(changedName);
+		return this.tracer.tracer().nextSpan().name(changedName).start();
 	}
 
 }

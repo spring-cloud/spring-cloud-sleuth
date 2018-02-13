@@ -195,7 +195,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		}
 		Span span = tracing().tracer().currentSpan();
 		if (newSpan != null || span == null) {
-			span = spanCreator().createSpan(invocation, newSpan).start();
+			span = spanCreator().createSpan(invocation, newSpan);
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
