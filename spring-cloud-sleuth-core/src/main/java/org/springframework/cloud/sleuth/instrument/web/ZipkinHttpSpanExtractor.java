@@ -36,7 +36,6 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 	@Override
 	public Span joinTrace(SpanTextMap textMap) {
 		Map<String, String> carrier = SPAN_CARRIER_MAPPER.convert(textMap);
-
 		boolean debug = Span.SPAN_SAMPLED.equals(carrier.get(Span.SPAN_FLAGS));
 		boolean idToBeGenerated = debug && onlySpanIdIsPresent(carrier);
 		// we're only generating Trace ID since if there's no Span ID will assume

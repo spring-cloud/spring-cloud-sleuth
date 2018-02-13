@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration.SkipPatternProviderConfig;
+import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration.SkipPatternProviderConfig;
 
 import static org.assertj.core.api.BDDAssertions.then;
 

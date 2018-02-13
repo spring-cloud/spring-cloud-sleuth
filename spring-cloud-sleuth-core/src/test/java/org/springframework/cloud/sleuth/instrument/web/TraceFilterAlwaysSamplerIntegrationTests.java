@@ -70,7 +70,7 @@ public class TraceFilterAlwaysSamplerIntegrationTests extends AbstractMvcIntegra
 
 	private BeanFactory beanFactory() {
 		BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
-		BDDMockito.given(beanFactory.getBean(TraceWebAutoConfiguration.SkipPatternProvider.class))
+		BDDMockito.given(beanFactory.getBean(SkipPatternProvider.class))
 				.willThrow(new NoSuchBeanDefinitionException("foo"));
 		BDDMockito.given(beanFactory.getBean(SleuthProperties.class)).willReturn(this.properties);
 		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.tracer);

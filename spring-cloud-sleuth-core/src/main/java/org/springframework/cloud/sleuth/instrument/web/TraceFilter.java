@@ -119,8 +119,8 @@ public class TraceFilter extends GenericFilterBean {
 
 	private static Pattern skipPattern(BeanFactory beanFactory) {
 		try {
-			TraceWebAutoConfiguration.SkipPatternProvider patternProvider = beanFactory
-					.getBean(TraceWebAutoConfiguration.SkipPatternProvider.class);
+			SkipPatternProvider patternProvider = beanFactory
+					.getBean(SkipPatternProvider.class);
 			// the null value will not happen on production but might happen in tests
 			if (patternProvider != null) {
 				return patternProvider.skipPattern();
