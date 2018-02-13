@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.PostConstruct;
 
 import brave.Span;
 import brave.Tracer;
@@ -195,7 +195,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		}
 		Span span = tracing().tracer().currentSpan();
 		if (newSpan != null || span == null) {
-			span = spanCreator().createSpan(invocation, newSpan);
+			span = spanCreator().createSpan(invocation, newSpan).start();
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);

@@ -59,6 +59,7 @@ public class SleuthSpanCreatorAspectTests {
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("test-method");
+		then(spans.get(0).duration()).isNotZero();
 	}
 	
 	@Test
@@ -68,6 +69,7 @@ public class SleuthSpanCreatorAspectTests {
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("test-method2");
+		then(spans.get(0).duration()).isNotZero();
 	}
 	
 	@Test
@@ -77,6 +79,7 @@ public class SleuthSpanCreatorAspectTests {
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
+		then(spans.get(0).duration()).isNotZero();
 	}
 	
 	@Test
@@ -86,6 +89,7 @@ public class SleuthSpanCreatorAspectTests {
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
+		then(spans.get(0).duration()).isNotZero();
 	}
 	
 	@Test
@@ -98,6 +102,7 @@ public class SleuthSpanCreatorAspectTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
 		then(spans.get(0).tags()).containsEntry("testTag", "test");
+		then(spans.get(0).duration()).isNotZero();
 	}
 	
 	@Test
@@ -108,6 +113,7 @@ public class SleuthSpanCreatorAspectTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
 		then(spans.get(0).tags()).containsEntry("testTag6", "test");
+		then(spans.get(0).duration()).isNotZero();
 	}
 
 	@Test
@@ -117,6 +123,7 @@ public class SleuthSpanCreatorAspectTests {
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
+		then(spans.get(0).duration()).isNotZero();
 	}
 
 	@Test
@@ -129,13 +136,14 @@ public class SleuthSpanCreatorAspectTests {
 		then(spans.get(0).tags())
 				.containsEntry("class", "TestBean")
 				.containsEntry("method", "testMethod9");
+		then(spans.get(0).duration()).isNotZero();
 	}
 
 	@Test
 	public void shouldContinueSpanWithLogWhenAnnotationOnInterfaceMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.testBean.testMethod10("test");
 		} finally {
 			span.finish();
@@ -149,13 +157,14 @@ public class SleuthSpanCreatorAspectTests {
 		then(spans.get(0).annotations()
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).duration()).isNotZero();
 	}
 
 	@Test
 	public void shouldContinueSpanWhenKeyIsUsedOnSpanTagWhenAnnotationOnInterfaceMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.testBean.testMethod10_v2("test");
 		} finally {
 			span.finish();
@@ -169,13 +178,14 @@ public class SleuthSpanCreatorAspectTests {
 		then(spans.get(0).annotations()
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).duration()).isNotZero();
 	}
 
 	@Test
 	public void shouldContinueSpanWithLogWhenAnnotationOnClassMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			// tag::continue_span_execution[]
 			this.testBean.testMethod11("test");
 			// end::continue_span_execution[]
@@ -193,6 +203,7 @@ public class SleuthSpanCreatorAspectTests {
 		then(spans.get(0).annotations()
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).duration()).isNotZero();
 	}
 
 	@Test
@@ -208,13 +219,14 @@ public class SleuthSpanCreatorAspectTests {
 		then(spans.get(0).tags())
 				.containsEntry("testTag12", "test")
 				.containsEntry("error", "test exception 12");
+		then(spans.get(0).duration()).isNotZero();
 	}
 
 	@Test
 	public void shouldAddErrorTagWhenExceptionOccurredInContinueSpan() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			// tag::continue_span_execution[]
 			this.testBean.testMethod13();
 			// end::continue_span_execution[]
@@ -232,6 +244,7 @@ public class SleuthSpanCreatorAspectTests {
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("testMethod13.before", "testMethod13.afterFailure",
 						"testMethod13.after");
+		then(spans.get(0).duration()).isNotZero();
 	}
 
 	@Test
