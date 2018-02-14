@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.logging.LogFactory;
-
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
@@ -29,8 +29,8 @@ import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -54,7 +54,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public void afterSendCompletion(Message<?> message, MessageChannel channel,
 			boolean sent, Exception ex) {
-		if (channel instanceof DirectChannel) {
+		if (DirectChannel.class
+				.isAssignableFrom(AopUtils.getTargetClass(channel))) {
 			afterMessageHandled(message, channel, null, ex);
 		}
 		Message<?> retrievedMessage = getMessage(message);
@@ -129,7 +130,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		getSpanInjector().inject(span, new MessagingTextMap(messageBuilder));
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
 		Message<?> outputMessage = outputMessage(message, messageBuilder, headers);
-		if (channel instanceof DirectChannel) {
+		if (DirectChannel.class
+				.isAssignableFrom(AopUtils.getTargetClass(channel))) {
 			beforeHandle(outputMessage, channel, null);
 		}
 		return outputMessage;
