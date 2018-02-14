@@ -18,20 +18,18 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import javax.annotation.PostConstruct;
 
 import brave.http.HttpTracing;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -64,27 +62,14 @@ public class TraceWebClientAutoConfiguration {
 		@Configuration
 		protected static class TraceInterceptorConfiguration {
 
-			@Autowired
-			private ApplicationContext applicationContext;
+			@Autowired private TracingClientHttpRequestInterceptor clientInterceptor;
 
-			@Autowired
-			private TracingClientHttpRequestInterceptor clientInterceptor;
-
-			@Bean
-			@Order
-			RestTemplateCustomizer traceRestTemplateCustomizer() {
+			@Bean @Order RestTemplateCustomizer traceRestTemplateCustomizer() {
 				return new TraceRestTemplateCustomizer(this.clientInterceptor);
 			}
 
-			@PostConstruct
-			public void init() {
-				Map<String, RestTemplate> restTemplates = BeanFactoryUtils
-						.beansOfTypeIncludingAncestors(this.applicationContext,
-								RestTemplate.class);
-				for (RestTemplate restTemplate : restTemplates.values()) {
-					new RestTemplateInterceptorInjector(
-							this.clientInterceptor).inject(restTemplate);
-				}
+			@Bean TraceRestTemplateBPP traceRestTemplateBPP(BeanFactory beanFactory) {
+				return new TraceRestTemplateBPP(beanFactory);
 			}
 		}
 	}
@@ -138,5 +123,36 @@ class TraceRestTemplateCustomizer implements RestTemplateCustomizer {
 	@Override public void customize(RestTemplate restTemplate) {
 		new RestTemplateInterceptorInjector(this.interceptor)
 				.inject(restTemplate);
+	}
+}
+
+class TraceRestTemplateBPP implements BeanPostProcessor {
+
+	private final BeanFactory beanFactory;
+	private TracingClientHttpRequestInterceptor interceptor;
+
+	TraceRestTemplateBPP(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	@Override public Object postProcessBeforeInitialization(Object bean, String beanName)
+			throws BeansException {
+		return bean;
+	}
+
+	@Override public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
+		if (bean instanceof RestTemplate)  {
+			RestTemplate rt = (RestTemplate) bean;
+			new RestTemplateInterceptorInjector(interceptor()).inject(rt);
+		}
+		return bean;
+	}
+
+	private TracingClientHttpRequestInterceptor interceptor() {
+		if (this.interceptor == null) {
+			this.interceptor = this.beanFactory.getBean(TracingClientHttpRequestInterceptor.class);
+		}
+		return this.interceptor;
 	}
 }
