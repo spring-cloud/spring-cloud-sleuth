@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.servlet.http.HttpServletRequest;
+
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.monitoring.MonitoringHelper;
 import org.junit.After;
@@ -37,10 +41,6 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
 import org.springframework.cloud.sleuth.trace.DefaultTracer;
 import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -118,7 +118,6 @@ public class TracePreZuulFilterTests {
 		}.runFilter();
 
 		then(startedSpan).isNotEqualTo(span.get());
-		then(span.get().logs()).extracting("event").contains(Span.CLIENT_SEND);
 		then(span.get()).hasATag("http.method", "GET");
 		then(span.get()).hasATag("error", "foo");
 		then(this.tracer.getCurrentSpan()).isEqualTo(startedSpan);
@@ -139,7 +138,6 @@ public class TracePreZuulFilterTests {
 		}.runFilter();
 
 		then(startedSpan).isNotEqualTo(span.get());
-		then(span.get().logs()).extracting("event").contains(Span.CLIENT_SEND);
 		then(span.get().tags()).containsKey(Span.SPAN_LOCAL_COMPONENT_TAG_NAME);
 		then(this.tracer.getCurrentSpan()).isEqualTo(span.get());
 	}

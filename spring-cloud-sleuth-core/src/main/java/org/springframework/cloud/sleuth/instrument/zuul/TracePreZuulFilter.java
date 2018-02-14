@@ -71,7 +71,6 @@ public class TracePreZuulFilter extends ZuulFilter {
 
 	@Override
 	public Object run() {
-		getCurrentSpan().logEvent(Span.CLIENT_SEND);
 		return null;
 	}
 
