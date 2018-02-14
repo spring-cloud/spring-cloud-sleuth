@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -194,6 +196,12 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		then(traceId).isEqualTo(10L);
 		then(spanId).isNotEqualTo(20L);
 		then(this.accumulator.getSpans()).hasSize(1);
+		List<Log> logs = this.accumulator.getSpans().get(0).logs();
+		then(logs).hasSize(4);
+		then(logs.get(0).getEvent()).isEqualTo(Span.CLIENT_SEND);
+		then(logs.get(1).getEvent()).isEqualTo(Span.SERVER_RECV);
+		then(logs.get(2).getEvent()).isEqualTo(Span.SERVER_SEND);
+		then(logs.get(3).getEvent()).isEqualTo(Span.CLIENT_RECV);
 	}
 
 	@Test
