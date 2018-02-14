@@ -54,8 +54,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public void afterSendCompletion(Message<?> message, MessageChannel channel,
 			boolean sent, Exception ex) {
-		if (DirectChannel.class
-				.isAssignableFrom(AopUtils.getTargetClass(channel))) {
+		if (isDirectChannel(channel)) {
 			afterMessageHandled(message, channel, null, ex);
 		}
 		Message<?> retrievedMessage = getMessage(message);
@@ -130,11 +129,15 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		getSpanInjector().inject(span, new MessagingTextMap(messageBuilder));
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
 		Message<?> outputMessage = outputMessage(message, messageBuilder, headers);
-		if (DirectChannel.class
-				.isAssignableFrom(AopUtils.getTargetClass(channel))) {
+		if (isDirectChannel(channel)) {
 			beforeHandle(outputMessage, channel, null);
 		}
 		return outputMessage;
+	}
+
+	private boolean isDirectChannel(MessageChannel channel) {
+		return DirectChannel.class
+				.isAssignableFrom(AopUtils.getTargetClass(channel));
 	}
 
 	private Message<?> outputMessage(Message<?> message, MessageBuilder<?> messageBuilder,
@@ -215,7 +218,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			addErrorTag(ex);
 		}
 		// related to #447
-		if (getTracer().isTracing() && !(channel instanceof DirectChannel)) {
+		if (getTracer().isTracing() && !(isDirectChannel(channel))) {
 			getTracer().detach(spanFromHeader);
 			if (log.isDebugEnabled()) {
 				log.debug("Detached " + spanFromHeader + " from current thread");
