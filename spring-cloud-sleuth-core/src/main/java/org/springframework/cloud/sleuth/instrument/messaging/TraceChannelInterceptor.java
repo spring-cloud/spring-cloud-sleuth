@@ -20,16 +20,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.logging.LogFactory;
-
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Log;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.sampler.NeverSampler;
+import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -53,6 +54,9 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	@Override
 	public void afterSendCompletion(Message<?> message, MessageChannel channel,
 			boolean sent, Exception ex) {
+		if (isDirectChannel(channel)) {
+			afterMessageHandled(message, channel, null, ex);
+		}
 		Message<?> retrievedMessage = getMessage(message);
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
 		Span currentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
@@ -61,13 +65,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			log.debug("Completed sending and current span is " + currentSpan);
 		}
 		getTracer().continueSpan(currentSpan);
-		if (containsServerReceived(currentSpan)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Marking span with server send");
-			}
-			currentSpan.logEvent(Span.SERVER_SEND);
-		}
-		else if (currentSpan != null) {
+		if (currentSpan != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Marking span with client received");
 			}
@@ -130,6 +128,20 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		}
 		getSpanInjector().inject(span, new MessagingTextMap(messageBuilder));
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
+		Message<?> outputMessage = outputMessage(message, messageBuilder, headers);
+		if (isDirectChannel(channel)) {
+			beforeHandle(outputMessage, channel, null);
+		}
+		return outputMessage;
+	}
+
+	private boolean isDirectChannel(MessageChannel channel) {
+		return DirectChannel.class
+				.isAssignableFrom(AopUtils.getTargetClass(channel));
+	}
+
+	private Message<?> outputMessage(Message<?> message, MessageBuilder<?> messageBuilder,
+			MessageHeaderAccessor headers) {
 		if (message instanceof ErrorMessage) {
 			headers.copyHeaders(sleuthHeaders(messageBuilder.build().getHeaders()));
 			return new ErrorMessage((Throwable) message.getPayload(), headers.getMessageHeaders());
@@ -206,12 +218,30 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 			addErrorTag(ex);
 		}
 		// related to #447
-		if (getTracer().isTracing()) {
+		if (getTracer().isTracing() && !(isDirectChannel(channel))) {
 			getTracer().detach(spanFromHeader);
 			if (log.isDebugEnabled()) {
 				log.debug("Detached " + spanFromHeader + " from current thread");
 			}
 		}
+	}
+
+	@Override public void postSend(Message<?> message, MessageChannel channel,
+			boolean sent) {
+		super.postSend(message, channel, sent);
+	}
+
+	@Override public boolean preReceive(MessageChannel channel) {
+		return super.preReceive(channel);
+	}
+
+	@Override public Message<?> postReceive(Message<?> message, MessageChannel channel) {
+		return super.postReceive(message, channel);
+	}
+
+	@Override public void afterReceiveCompletion(Message<?> message,
+			MessageChannel channel, Exception ex) {
+		super.afterReceiveCompletion(message, channel, ex);
 	}
 
 	private void addErrorTag(Exception ex) {
