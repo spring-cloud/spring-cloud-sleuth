@@ -23,6 +23,8 @@ import java.util.Map;
 
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
+import org.springframework.integration.channel.DirectChannel;
+import org.springframework.messaging.MessagingException;
 import zipkin2.Span;
 import org.junit.After;
 import org.junit.Test;
@@ -48,6 +50,14 @@ public class TracingChannelInterceptorTest {
 			.build());
 
 	QueueChannel channel = new QueueChannel();
+	DirectChannel directChannel = new DirectChannel();
+	Message message;
+	MessageHandler handler = new MessageHandler() {
+		@Override
+		public void handleMessage(Message<?> msg) throws MessagingException {
+			message = msg;
+		}
+	};
 
 	@Test public void injectsProducerSpan() {
 		channel.addInterceptor(producerSideOnly(interceptor));
@@ -59,6 +69,19 @@ public class TracingChannelInterceptorTest {
 						"nativeHeaders");
 		assertThat(spans).hasSize(1).flatExtracting(Span::kind)
 				.containsExactly(Span.Kind.PRODUCER);
+	}
+
+	@Test public void injectsProducerAndConsumerSpan() {
+		directChannel.addInterceptor(interceptor);
+		directChannel.subscribe(this.handler);
+		directChannel.send(MessageBuilder.withPayload("foo").build());
+
+		assertThat(message).isNotNull();
+		assertThat(message.getHeaders())
+				.containsKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled",
+						"nativeHeaders");
+		assertThat(spans).flatExtracting(Span::kind)
+				.contains(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
 	}
 
 	@Test public void injectsProducerSpan_nativeHeaders() {

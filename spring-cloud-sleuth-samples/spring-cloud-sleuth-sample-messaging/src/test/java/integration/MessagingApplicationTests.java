@@ -128,7 +128,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		Optional<Span> lastHttpSpansParent = findLastHttpSpansParent();
 		// "http:/parent/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo" (SS)
 		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, producerSpan);
-		then(this.integrationTestSpanCollector.hashedSpans).as("There were 3 spans").hasSize(3);
+		then(this.integrationTestSpanCollector.hashedSpans).as("There were 5 spans").hasSize(5);
 		log.info("Checking the parent child structure");
 		List<Optional<Span>> parentChild = this.integrationTestSpanCollector.hashedSpans.stream()
 				.filter(span -> span.parentId() != null)

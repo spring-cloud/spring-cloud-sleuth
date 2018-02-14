@@ -79,10 +79,14 @@ public class MultipleHopsIntegrationTests {
 		this.restTemplate.getForObject("http://localhost:" + this.config.port + "/greeting", String.class);
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(this.reporter.getSpans()).hasSize(5);
+			then(this.reporter.getSpans()).hasSize(13);
 		});
 		then(this.reporter.getSpans().stream().map(zipkin2.Span::name)
 				.collect(toList())).containsAll(asList("http:/greeting", "send"));
+		then(this.reporter.getSpans().stream().map(zipkin2.Span::kind)
+				// no server kind due to test constraints
+				.collect(toList())).containsAll(asList(zipkin2.Span.Kind.CONSUMER,
+				zipkin2.Span.Kind.PRODUCER, zipkin2.Span.Kind.SERVER));
 		then(this.reporter.getSpans().stream()
 				.map(span -> span.tags().get("channel"))
 				.filter(Objects::nonNull)

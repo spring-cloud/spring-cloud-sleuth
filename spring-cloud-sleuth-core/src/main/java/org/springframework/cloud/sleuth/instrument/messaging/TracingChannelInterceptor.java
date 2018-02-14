@@ -25,8 +25,10 @@ import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.integration.channel.AbstractMessageChannel;
+import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -113,11 +115,23 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			log.debug("Created a new span in pre send" + span);
 		}
 		headers.setImmutable();
-		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
+		Message<?> outputMessage = new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
+		if (isDirectChannel(channel)) {
+			beforeHandle(outputMessage, channel, null);
+		}
+		return outputMessage;
+	}
+
+	private boolean isDirectChannel(MessageChannel channel) {
+		return DirectChannel.class
+				.isAssignableFrom(AopUtils.getTargetClass(channel));
 	}
 
 	@Override public void afterSendCompletion(Message<?> message, MessageChannel channel,
 			boolean sent, Exception ex) {
+		if (isDirectChannel(channel)) {
+			afterMessageHandled(message, channel, null, ex);
+		}
 		if (log.isDebugEnabled()) {
 			log.debug("Will finish the current span after completion " + this.tracer.currentSpan());
 		}
