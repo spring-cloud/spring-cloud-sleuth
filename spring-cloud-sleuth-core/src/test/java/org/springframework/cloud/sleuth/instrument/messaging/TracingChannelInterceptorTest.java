@@ -16,26 +16,21 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
-import zipkin2.Span;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.ChannelInterceptorAdapter;
-import org.springframework.messaging.support.ExecutorChannelInterceptor;
-import org.springframework.messaging.support.ExecutorSubscribableChannel;
-import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.messaging.support.NativeMessageHeaderAccessor;
+import org.springframework.messaging.support.*;
+import zipkin2.Span;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.messaging.support.NativeMessageHeaderAccessor.NATIVE_HEADERS;
@@ -194,6 +189,13 @@ public class TracingChannelInterceptorTest {
 
 		assertThat(spans).flatExtracting(Span::kind)
 				.containsExactly(Span.Kind.CONSUMER, null, Span.Kind.PRODUCER);
+	}
+
+	@Test public void pollingReceive_emptyQueue() {
+		channel.addInterceptor(consumerSideOnly(interceptor));
+
+		assertThat(channel.receive(0)).isNull();
+		assertThat(spans).hasSize(0);
 	}
 
 	ChannelInterceptor producerSideOnly(ChannelInterceptor delegate) {
