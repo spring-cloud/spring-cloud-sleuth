@@ -41,7 +41,7 @@ class LoadBalancerClientZipkinLoadBalancer implements ZipkinLoadBalancer {
 			String host = uri.getHost();
 			ServiceInstance instance = this.loadBalancerClient.choose(host);
 			if (instance != null) {
-				return URI.create(String.format("http://%s:%s", instance.getHost(), instance.getPort()));
+				return instance.getUri();
 			}
 		}
 		return URI.create(this.zipkinProperties.getBaseUrl());
