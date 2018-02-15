@@ -16,6 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.lang.reflect.Field;
+import java.util.concurrent.Callable;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.logging.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -28,11 +33,6 @@ import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.SpanContinuingTraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Field;
-import java.util.concurrent.Callable;
 
 /**
  * Aspect that adds tracing to
@@ -154,7 +154,7 @@ public class TraceWebAspect {
 			return pjp.proceed();
 		} finally {
 			if (log.isDebugEnabled()) {
-				log.debug("Marking span " + currentSpan + " for closure by Trace Filter");
+				log.debug("Marking span " + currentSpan + " for closure by Trace Filter or Error Controller");
 			}
 			request.setAttribute(TraceFilter.TRACE_CLOSE_SPAN_REQUEST_ATTR, true);
 		}

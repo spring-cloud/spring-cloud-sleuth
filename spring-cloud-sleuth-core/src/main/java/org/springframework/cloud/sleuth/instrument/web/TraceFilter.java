@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanReporter;
@@ -104,6 +105,7 @@ public class TraceFilter extends GenericFilterBean {
 	private HttpTraceKeysInjector httpTraceKeysInjector;
 	private ErrorParser errorParser;
 	private final BeanFactory beanFactory;
+	private Boolean hasErrorController;
 
 	private final UrlPathHelper urlPathHelper = new UrlPathHelper();
 
@@ -236,8 +238,10 @@ public class TraceFilter extends GenericFilterBean {
 				if (log.isDebugEnabled()) {
 					log.debug("Closing the span " + span + " since the response was successful");
 				}
-				tracer().close(span);
-				clearTraceAttribute(request);
+				if (exception == null || !hasErrorController()) {
+					tracer().close(span);
+					clearTraceAttribute(request);
+				}
 			} else if (errorAlreadyHandled(request) && tracer().isTracing() && !shouldCloseSpan(request)) {
 				if (log.isDebugEnabled()) {
 					log.debug(
@@ -248,15 +252,31 @@ public class TraceFilter extends GenericFilterBean {
 					log.debug("Will close span " + span + " since " + (shouldCloseSpan(request) ? "some component marked it for closure" : "response was unsuccessful for the root span"));
 				}
 				tracer().close(span);
-				clearTraceAttribute(request);
+				if (exception == null || !hasErrorController()) {
+					clearTraceAttribute(request);
+				}
 			} else if (tracer().isTracing()) {
 				if (log.isDebugEnabled()) {
 					log.debug("Detaching the span " + span + " since the response was unsuccessful");
 				}
-				tracer().detach(span);
 				clearTraceAttribute(request);
+				if (exception == null || !hasErrorController()) {
+					tracer().detach(span);
+				}
 			}
 		}
+	}
+
+	// null check is only for tests
+	private boolean hasErrorController() {
+		if (this.hasErrorController == null) {
+			try {
+				this.hasErrorController = this.beanFactory.getBean(ErrorController.class) != null;
+			} catch (NoSuchBeanDefinitionException e) {
+				this.hasErrorController = false;
+			}
+		}
+		return this.hasErrorController;
 	}
 
 	private void addResponseTagsForSpanWithoutParent(HttpServletRequest request,
