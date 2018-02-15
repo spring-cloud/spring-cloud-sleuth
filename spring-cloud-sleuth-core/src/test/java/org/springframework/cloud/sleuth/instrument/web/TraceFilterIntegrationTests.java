@@ -37,8 +37,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
@@ -59,7 +61,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.util.NestedServletException;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -164,13 +168,30 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@Test
-	public void should_log_tracing_information_when_exception_was_thrown() throws Exception {
+	public void should_log_tracing_information_when_404_exception_was_thrown() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
 		whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
 
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.tracer.currentSpan()).isNull();
+	}
+
+	@Test
+	public void should_log_tracing_information_when_500_exception_was_thrown() throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+
+		try {
+			whenSentToExceptionThrowingEndpoint(expectedTraceId);
+			fail("Should fail");
+		} catch (NestedServletException e) {
+			then(e).hasRootCauseInstanceOf(RuntimeException.class);
+		}
+
+		// we need to dump the span cause it's not in TraceFilter since TF
+		// has also error dispatch and the ErrorController would report the span
+		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans().get(0).tags()).containsKey("error");
 	}
 
 	@Test
@@ -230,6 +251,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		return sendRequestWithTraceId("/exception/nonExistent", TRACE_ID_NAME, passedTraceId, HttpStatus.NOT_FOUND);
 	}
 
+	private MvcResult whenSentToExceptionThrowingEndpoint(Long passedTraceId) throws Exception {
+		return sendRequestWithTraceId("/throwsException", TRACE_ID_NAME, passedTraceId, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
 	private MvcResult sendPingWithTraceId(String headerName, Long traceId)
 			throws Exception {
 		return sendRequestWithTraceId("/ping", headerName, traceId);
@@ -274,6 +299,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	@DefaultTestAutoConfiguration
 	@Configuration
 	protected static class Config {
+
+		private static final Log log = LogFactory.getLog(Config.class);
 
 		@RestController
 		public static class TestController {
@@ -330,8 +357,19 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		}
 
 		@Bean
+		TraceFilter myTraceFilter(BeanFactory beanFactory,
+				SkipPatternProvider skipPatternProvider) {
+			return new TraceFilter(beanFactory, skipPatternProvider.skipPattern()) {
+				@Override void abandonSpan(Span span) {
+					log.info("Simulating Error Controller");
+					span.finish();
+				}
+			};
+		}
+
+		@Bean
 		@Order(TraceFilter.ORDER + 1)
-		Filter myTraceFilter(Tracer tracer) {
+		Filter myFilter(Tracer tracer) {
 			return new MyFilter(tracer);
 		}
 	}

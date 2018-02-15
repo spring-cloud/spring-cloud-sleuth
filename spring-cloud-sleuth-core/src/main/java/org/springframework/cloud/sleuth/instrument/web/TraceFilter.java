@@ -247,14 +247,21 @@ public class TraceFilter extends GenericFilterBean {
 				if (log.isDebugEnabled()) {
 					log.debug("Detaching the span " + span + " since the response was unsuccessful");
 				}
-				clearTraceAttribute(request);
+				if (!hasErrorController()) {
+					clearTraceAttribute(request);
+				}
 				if (exception == null || !hasErrorController()) {
 					handler().handleSend(response, exception, span);
 				} else {
-					span.abandon();
+					abandonSpan(span);
 				}
 			}
 		}
+	}
+
+	// visible for tests
+	void abandonSpan(Span span) {
+		span.abandon();
 	}
 
 	private void addResponseTagsForSpanWithoutParent(Throwable exception,
