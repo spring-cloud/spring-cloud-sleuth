@@ -25,6 +25,7 @@ import org.springframework.cloud.sleuth.assertions.ListOfSpans;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.common.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.sleuth.trace.TestSpanContextHolder;
 import org.springframework.cloud.sleuth.util.ArrayListSpanAccumulator;
 import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.context.annotation.Bean;
@@ -74,6 +75,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				.hasLoggedAnEvent(Span.SERVER_SEND);
 		then(ExceptionUtils.getLastException()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -85,6 +87,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		// we don't want to respond with any tracing data
 		then(notSampledHeaderIsPresent(mvcResult)).isEqualTo(false);
 		then(ExceptionUtils.getLastException()).isNull();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -95,6 +98,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
 		then(ExceptionUtils.getLastException()).isNull();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -105,6 +109,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		then(MDC.getCopyOfContextMap()).isEmpty();
 		then(ExceptionUtils.getLastException()).isNull();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -135,6 +140,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(taggedSpan.get()).hasATag("mvc.controller.class", "TestController");
 		then(ExceptionUtils.getLastException()).isNull();
 		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasServerSideSpansInProperOrder();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -163,6 +169,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		// the ErrorController would close the span
 		then(this.tracer.getCurrentSpan()).isNotNull();
 		this.tracer.close(this.tracer.getCurrentSpan());
+		then(this.tracer.getCurrentSpan()).isNull();
 		then(this.spanAccumulator.getSpans()).hasSize(1);
 		then(this.spanAccumulator.getSpans().get(0).tags())
 				.containsKey("error");
@@ -192,6 +199,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(ExceptionUtils.getLastException()).isNull();
 		then(mvcResult.getResponse().getHeader("ZIPKIN-TRACE-ID")).isEqualTo(Span.idToHex(expectedTraceId));
 		then(new ListOfSpans(this.spanAccumulator.getSpans())).hasASpanWithTagEqualTo("custom", "tag");
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Override

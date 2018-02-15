@@ -253,9 +253,9 @@ public class TraceFilter extends GenericFilterBean {
 				}
 				if (!httpStatusSuccessful(response) && !hasErrorController()) {
 					tracer().close(span);
-				}
-				if (exception == null || !hasErrorController()) {
+				} else if (exception == null || !hasErrorController()) {
 					clearTraceAttribute(request);
+					tracer().close(span);
 				}
 			} else if (tracer().isTracing()) {
 				if (log.isDebugEnabled()) {

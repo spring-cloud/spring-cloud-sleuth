@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Pattern;
 
