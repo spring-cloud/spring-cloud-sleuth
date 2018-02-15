@@ -251,7 +251,9 @@ public class TraceFilter extends GenericFilterBean {
 				if (log.isDebugEnabled()) {
 					log.debug("Will close span " + span + " since " + (shouldCloseSpan(request) ? "some component marked it for closure" : "response was unsuccessful for the root span"));
 				}
-				tracer().close(span);
+				if (!httpStatusSuccessful(response) && !hasErrorController()) {
+					tracer().close(span);
+				}
 				if (exception == null || !hasErrorController()) {
 					clearTraceAttribute(request);
 				}
@@ -259,7 +261,9 @@ public class TraceFilter extends GenericFilterBean {
 				if (log.isDebugEnabled()) {
 					log.debug("Detaching the span " + span + " since the response was unsuccessful");
 				}
-				clearTraceAttribute(request);
+				if (!httpStatusSuccessful(response) && !hasErrorController()) {
+					clearTraceAttribute(request);
+				}
 				if (exception == null || !hasErrorController()) {
 					tracer().detach(span);
 				}

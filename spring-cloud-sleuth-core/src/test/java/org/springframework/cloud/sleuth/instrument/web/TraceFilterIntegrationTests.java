@@ -3,7 +3,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
@@ -39,7 +38,9 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
+import org.springframework.web.util.NestedServletException;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -137,12 +138,34 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@Test
-	public void should_log_tracing_information_when_exception_was_thrown() throws Exception {
+	public void should_log_tracing_information_when_404_exception_was_thrown() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
 
 		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.spanAccumulator.getSpans()).hasSize(1);
+		then(ExceptionUtils.getLastException()).isNull();
+	}
+
+	@Test
+	public void should_log_tracing_information_when_500_exception_was_thrown() throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+
+		try {
+			whenSentToExceptionThrowingEndpoint(expectedTraceId);
+			fail("Should fail");
+		} catch (NestedServletException e) {
+			then(e).hasRootCauseInstanceOf(RuntimeException.class);
+		}
+
+		// not null cause TraceFilter has also error dispatch and
+		// the ErrorController would close the span
+		then(this.tracer.getCurrentSpan()).isNotNull();
+		this.tracer.close(this.tracer.getCurrentSpan());
+		then(this.spanAccumulator.getSpans()).hasSize(1);
+		then(this.spanAccumulator.getSpans().get(0).tags())
+				.containsKey("error");
 		then(ExceptionUtils.getLastException()).isNull();
 	}
 
@@ -201,6 +224,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private MvcResult whenSentToNonExistentEndpointWithTraceId(Long passedTraceId) throws Exception {
 		return sendRequestWithTraceId("/exception/nonExistent", Span.TRACE_ID_NAME, passedTraceId, HttpStatus.NOT_FOUND);
+	}
+
+	private MvcResult whenSentToExceptionThrowingEndpoint(Long passedTraceId) throws Exception {
+		return sendRequestWithTraceId("/throwsException", Span.TRACE_ID_NAME, passedTraceId, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	private MvcResult sendPingWithTraceId(String headerName, Long traceId)
