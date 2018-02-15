@@ -919,6 +919,16 @@ Zipkin's service id inside the URL (example for `zipkinserver` service id)
 spring.zipkin.baseUrl: http://zipkinserver/
 ----
 
+If you have web, rabbit or kafka together on the classpath, you might need
+to pick the means by which you would like to send spans to zipkin. To do that
+just set either `web`, `rabbit` or `kafka` to the `spring.zipkin.sender.type` property.
+Example for `web`:
+
+[source,yaml]
+----
+spring.zipkin.sender.type: web
+----
+
 == Zipkin Stream Span Consumer
 
 IMPORTANT: The suggested approach is to use the Zipkin's

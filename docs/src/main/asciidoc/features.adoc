@@ -39,7 +39,7 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 
 * Provides a way to create / continue spans and add tags and logs via annotations.
 
-* If `spring-cloud-sleuth-zipkin` then the app will generate and collect Zipkin-compatible traces.
+* If `spring-cloud-sleuth-zipkin` is on the classpath then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using `spring.zipkin.baseUrl`.
   - If you depend on `spring-rabbit` or `spring-kafka` your app will send traces to a broker instead of http.
