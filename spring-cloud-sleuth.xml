@@ -654,7 +654,7 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 <simpara>Provides a way to create / continue spans and add tags and logs via annotations.</simpara>
 </listitem>
 <listitem>
-<simpara>If <literal>spring-cloud-sleuth-zipkin</literal> then the app will generate and collect Zipkin-compatible traces.
+<simpara>If <literal>spring-cloud-sleuth-zipkin</literal> is on the classpath then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using <literal>spring.zipkin.baseUrl</literal>.</simpara>
 <itemizedlist>
@@ -1543,6 +1543,11 @@ property as follows:</simpara>
 <simpara>If you want to find Zipkin via service discovery it&#8217;s enough to pass the
 Zipkin&#8217;s service id inside the URL (example for <literal>zipkinserver</literal> service id)</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://zipkinserver/</programlisting>
+<simpara>If you have web, rabbit or kafka together on the classpath, you might need
+to pick the means by which you would like to send spans to zipkin. To do that
+just set either <literal>web</literal>, <literal>rabbit</literal> or <literal>kafka</literal> to the <literal>spring.zipkin.sender.type</literal> property.
+Example for <literal>web</literal>:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.sender.type: web</programlisting>
 </chapter>
 <chapter xml:id="_zipkin_stream_span_consumer">
 <title>Zipkin Stream Span Consumer</title>
