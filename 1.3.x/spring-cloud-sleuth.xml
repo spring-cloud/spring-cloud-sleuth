@@ -637,7 +637,7 @@ a baggage element then it will be sent downstream either via HTTP or messaging t
 <simpara>Provides simple metrics of accepted / dropped spans.</simpara>
 </listitem>
 <listitem>
-<simpara>If <literal>spring-cloud-sleuth-zipkin</literal> then the app will generate and collect Zipkin-compatible traces.
+<simpara>If <literal>spring-cloud-sleuth-zipkin</literal> is on the classpath then the app will generate and collect Zipkin-compatible traces.
 By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
 Configure the location of the service using <literal>spring.zipkin.baseUrl</literal>.</simpara>
 <itemizedlist>
@@ -1290,6 +1290,12 @@ Stream based span reporting).</simpara>
 </chapter>
 <chapter xml:id="_sending_spans_to_zipkin">
 <title>Sending spans to Zipkin</title>
+<important>
+<simpara><literal>spring-cloud-sleuth-stream</literal> is deprecated and should no longer be used.
+If <literal>spring-cloud-sleuth-zipkin</literal> is on the classpath then the app will generate and collect Zipkin-compatible traces.
+By default it sends them via HTTP to a Zipkin server on localhost (port 9411). If you depend
+on <literal>spring-rabbit</literal> or <literal>spring-kafka</literal> your app will send traces to a broker instead of http.</simpara>
+</important>
 <simpara>By default if you add <literal>spring-cloud-starter-zipkin</literal> as a dependency to your project,
 when the span is closed, it will be sent to Zipkin over HTTP. The communication
 is asynchronous. You can configure the URL by setting the <literal>spring.zipkin.baseUrl</literal>
@@ -1298,6 +1304,11 @@ property as follows:</simpara>
 <simpara>If you want to find Zipkin via service discovery it&#8217;s enough to pass the
 Zipkin&#8217;s service id inside the URL (example for <literal>zipkinserver</literal> service id)</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://zipkinserver/</programlisting>
+<simpara>If you have web, rabbit or kafka together on the classpath, you might need
+to pick the means by which you would like to send spans to zipkin. To do that
+just set either <literal>web</literal>, <literal>rabbit</literal> or <literal>kafka</literal> to the <literal>spring.zipkin.sender.type</literal> property.
+Example for <literal>web</literal>:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.sender.type: web</programlisting>
 </chapter>
 <chapter xml:id="_span_data_as_messages">
 <title>Span Data as Messages</title>
@@ -1312,6 +1323,12 @@ type <literal>Spans</literal>. The channel name to which the spans will be sent
 is called <literal>sleuth</literal>.</simpara>
 <section xml:id="_zipkin_consumer">
 <title>Zipkin Consumer</title>
+<important>
+<simpara><literal>spring-cloud-sleuth-zipkin-stream</literal> is deprecated and should no longer be used.
+Please use the OpenZipkin&#8217;s Zipkin server and set the environment variables
+as presented <link xl:href="https://github.com/openzipkin/zipkin/tree/release-2.4.6/zipkin-collector/rabbitmq">here for rabbit (Zipkin 2.4.6)</link>
+or <link xl:href="https://github.com/openzipkin/zipkin/tree/release-2.4.6/zipkin-autoconfigure/collector-kafka10">here for kafka (Zipkin 2.4.6)</link></simpara>
+</important>
 <simpara>There is a special convenience annotation for setting up a message consumer
 for the Span data and pushing it into a Zipkin <literal>SpanStore</literal>. This application</simpara>
 <programlisting language="java" linenumbering="unnumbered">@SpringBootApplication

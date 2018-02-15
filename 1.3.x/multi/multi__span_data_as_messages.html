@@ -8,7 +8,10 @@ adding a Channel Binder implementation
 <code class="literal">spring-cloud-starter-stream-kafka</code> for Kafka). This will
 automatically turn your app into a producer of messages with payload
 type <code class="literal">Spans</code>. The channel name to which the spans will be sent
-is called <code class="literal">sleuth</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_zipkin_consumer" href="#_zipkin_consumer"></a>11.1&nbsp;Zipkin Consumer</h2></div></div></div><p>There is a special convenience annotation for setting up a message consumer
+is called <code class="literal">sleuth</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_zipkin_consumer" href="#_zipkin_consumer"></a>11.1&nbsp;Zipkin Consumer</h2></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p><code class="literal">spring-cloud-sleuth-zipkin-stream</code> is deprecated and should no longer be used.
+Please use the OpenZipkin&#8217;s Zipkin server and set the environment variables
+as presented <a class="link" href="https://github.com/openzipkin/zipkin/tree/release-2.4.6/zipkin-collector/rabbitmq" target="_top">here for rabbit (Zipkin 2.4.6)</a>
+or <a class="link" href="https://github.com/openzipkin/zipkin/tree/release-2.4.6/zipkin-autoconfigure/collector-kafka10" target="_top">here for kafka (Zipkin 2.4.6)</a></p></td></tr></table></div><p>There is a special convenience annotation for setting up a message consumer
 for the Span data and pushing it into a Zipkin <code class="literal">SpanStore</code>. This application</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@SpringBootApplication</span></em>
 <em><span class="hl-annotation" style="color: gray">@EnableZipkinStreamServer</span></em>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> Consumer {
