@@ -502,6 +502,11 @@ spring.zipkin.locator.discovery.enabled: true
 
 == Sending spans to Zipkin
 
+IMPORTANT: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
+If `spring-cloud-sleuth-zipkin` is on the classpath then the app will generate and collect Zipkin-compatible traces.
+By default it sends them via HTTP to a Zipkin server on localhost (port 9411). If you depend
+on `spring-rabbit` or `spring-kafka` your app will send traces to a broker instead of http.
+
 By default if you add `spring-cloud-starter-zipkin` as a dependency to your project,
 when the span is closed, it will be sent to Zipkin over HTTP. The communication
 is asynchronous. You can configure the URL by setting the `spring.zipkin.baseUrl`
@@ -520,6 +525,16 @@ Zipkin's service id inside the URL (example for `zipkinserver` service id)
 spring.zipkin.baseUrl: http://zipkinserver/
 ----
 
+If you have web, rabbit or kafka together on the classpath, you might need
+to pick the means by which you would like to send spans to zipkin. To do that
+just set either `web`, `rabbit` or `kafka` to the `spring.zipkin.sender.type` property.
+Example for `web`:
+
+[source,yaml]
+----
+spring.zipkin.sender.type: web
+----
+
 == Span Data as Messages
 
 You can accumulate and send span data over
@@ -533,6 +548,11 @@ type `Spans`. The channel name to which the spans will be sent
 is called `sleuth`.
 
 === Zipkin Consumer
+
+IMPORTANT: `spring-cloud-sleuth-zipkin-stream` is deprecated and should no longer be used.
+Please use the OpenZipkin's Zipkin server and set the environment variables
+as presented https://github.com/openzipkin/zipkin/tree/release-2.4.6/zipkin-collector/rabbitmq[here for rabbit (Zipkin 2.4.6)]
+or https://github.com/openzipkin/zipkin/tree/release-2.4.6/zipkin-autoconfigure/collector-kafka10[here for kafka (Zipkin 2.4.6)]
 
 There is a special convenience annotation for setting up a message consumer
 for the Span data and pushing it into a Zipkin `SpanStore`. This application
