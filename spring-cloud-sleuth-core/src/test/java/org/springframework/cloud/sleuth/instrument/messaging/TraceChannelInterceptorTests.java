@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
@@ -28,7 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -51,12 +50,14 @@ import org.springframework.integration.channel.ExecutorChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
+import org.springframework.integration.support.channel.BeanFactoryChannelResolver;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.PollableChannel;
+import org.springframework.messaging.core.DestinationResolver;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ErrorMessage;
@@ -95,6 +96,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Autowired
 	@Qualifier("tracedPollableChannel")
 	private QueueChannel queueChannel;
+
+	@Autowired
+	private DestinationResolver<MessageChannel> resolver;
 
 	@Autowired
 	private Tracer tracer;
@@ -189,6 +193,20 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
 		then(this.message).isNotNull();
 
+		thenMessageHasAllLogs();
+	}
+
+	@Test
+	public void addsChannelInterceptorForDynamicDestinations() {
+		this.resolver.resolveDestination("tracedChannel").send(MessageBuilder.withPayload("hi")
+				.setHeader(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(10L))
+				.setHeader(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L)).build());
+		then(this.message).isNotNull();
+
+		thenMessageHasAllLogs();
+	}
+
+	private void thenMessageHasAllLogs() {
 		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
 		then(spanId).isNotNull();
 		long traceId = Span
@@ -434,33 +452,38 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		}
 
 		@Bean
-		public ExecutorChannel tracedExecutorChannel() {
+		ExecutorChannel tracedExecutorChannel() {
 			return new ExecutorChannel(Executors.newSingleThreadExecutor());
 		}
 
 		@Bean
-		public PollableChannel tracedPollableChannel() {
+		PollableChannel tracedPollableChannel() {
 			return new QueueChannel(10);
 		}
 
 		@Bean
-		public DirectChannel tracedChannel() {
+		DirectChannel tracedChannel() {
 			return new DirectChannel();
 		}
 
 		@Bean
-		public DirectChannel ignoredChannel() {
+		DirectChannel ignoredChannel() {
 			return new DirectChannel();
 		}
 
 		@Bean
-		public MessagingTemplate messagingTemplate() {
+		MessagingTemplate messagingTemplate() {
 			return new MessagingTemplate(tracedChannel());
 		}
 
 		@Bean
 		Sampler alwaysSampler() {
 			return new AlwaysSampler();
+		}
+
+		@Bean
+		BeanFactoryChannelResolver resolver(BeanFactory beanFactory) {
+			return new BeanFactoryChannelResolver(beanFactory);
 		}
 
 	}

@@ -16,6 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.List;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -27,7 +33,10 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.channel.ChannelInterceptorAware;
 import org.springframework.integration.config.GlobalChannelInterceptor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.InterceptableChannel;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -54,4 +63,47 @@ public class TraceSpringIntegrationAutoConfiguration {
 		return new IntegrationTraceChannelInterceptor(beanFactory);
 	}
 
+	@Bean TraceDestinationResolverAspect traceDestinationResolverAspect(TraceChannelInterceptor interceptor) {
+		return new TraceDestinationResolverAspect(interceptor);
+	}
+}
+
+@Aspect
+class TraceDestinationResolverAspect {
+
+	private final TraceChannelInterceptor interceptor;
+
+	TraceDestinationResolverAspect(TraceChannelInterceptor interceptor) {
+		this.interceptor = interceptor;
+	}
+
+	@Pointcut("execution(public * org.springframework.messaging.core.DestinationResolver.resolveDestination(..))")
+	private void anyDestinationResolver() { } // NOSONAR
+
+	@Around("anyDestinationResolver()")
+	@SuppressWarnings("unchecked")
+	public Object addInterceptor(ProceedingJoinPoint pjp) throws Throwable {
+		Object destination = pjp.proceed();
+		if (destination instanceof ChannelInterceptorAware) {
+			ChannelInterceptorAware interceptorAware = (ChannelInterceptorAware) destination;
+			if (!hasTracedChannelInterceptor(interceptorAware.getChannelInterceptors())) {
+				interceptorAware.addInterceptor(this.interceptor);
+			}
+		} else if (destination instanceof InterceptableChannel) {
+			InterceptableChannel interceptorAware = (InterceptableChannel) destination;
+			if (!hasTracedChannelInterceptor(interceptorAware.getInterceptors())) {
+				interceptorAware.addInterceptor(this.interceptor);
+			}
+		}
+		return destination;
+	}
+
+	private boolean hasTracedChannelInterceptor(List<ChannelInterceptor> interceptors) {
+		for (ChannelInterceptor channelInterceptor : interceptors) {
+			if (channelInterceptor instanceof TraceChannelInterceptor) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
