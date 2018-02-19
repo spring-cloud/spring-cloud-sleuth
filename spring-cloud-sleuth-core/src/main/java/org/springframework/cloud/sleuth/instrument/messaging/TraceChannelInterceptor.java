@@ -235,6 +235,6 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	}
 
 	private boolean emptyMessage(Message<?> message) {
-		return message == null || message.getPayload() == null;
+		return message == null;
 	}
 }
