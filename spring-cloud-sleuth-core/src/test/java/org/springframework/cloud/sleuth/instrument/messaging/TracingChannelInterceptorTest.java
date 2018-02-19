@@ -59,6 +59,13 @@ public class TracingChannelInterceptorTest {
 		}
 	};
 
+	@Test public void pollingReceive_emptyQueue() {
+		channel.addInterceptor(consumerSideOnly(interceptor));
+
+		assertThat(channel.receive(0)).isNull();
+		assertThat(spans).hasSize(0);
+	}
+
 	@Test public void injectsProducerSpan() {
 		channel.addInterceptor(producerSideOnly(interceptor));
 

@@ -101,6 +101,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 * Starts and propagates {@link Span.Kind#PRODUCER} span for each message sent.
 	 */
 	@Override public Message<?> preSend(Message<?> message, MessageChannel channel) {
+		if (emptyMessage(message)) {
+			return message;
+		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		Span span = this.threadLocalSpan.next(extracted);
@@ -129,6 +132,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	@Override public void afterSendCompletion(Message<?> message, MessageChannel channel,
 			boolean sent, Exception ex) {
+		if (emptyMessage(message)) {
+			return;
+		}
 		if (isDirectChannel(channel)) {
 			afterMessageHandled(message, channel, null, ex);
 		}
@@ -143,6 +149,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 * placing it in scope until the receive completes.
 	 */
 	@Override public Message<?> postReceive(Message<?> message, MessageChannel channel) {
+		if (emptyMessage(message)) {
+			return message;
+		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		Span span = this.threadLocalSpan.next(extracted);
@@ -163,6 +172,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	@Override
 	public void afterReceiveCompletion(Message<?> message, MessageChannel channel,
 			Exception ex) {
+		if (emptyMessage(message)) {
+			return;
+		}
 		if (log.isDebugEnabled()) {
 			log.debug("Will finish the current span after receive completion " + this.tracer.currentSpan());
 		}
@@ -175,6 +187,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 */
 	@Override public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
 			MessageHandler handler) {
+		if (emptyMessage(message)) {
+			return message;
+		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		// Start and finish a consumer span as we will immediately process it.
@@ -203,6 +218,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	@Override public void afterMessageHandled(Message<?> message, MessageChannel channel,
 			MessageHandler handler, Exception ex) {
+		if (emptyMessage(message)) {
+			return;
+		}
 		if (log.isDebugEnabled()) {
 			log.debug("Will finish the current span after message handled " + this.tracer.currentSpan());
 		}
@@ -267,5 +285,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			return e.getFailedMessage();
 		}
 		return message;
+	}
+
+	private boolean emptyMessage(Message<?> message) {
+		return message == null || message.getPayload() == null;
 	}
 }
