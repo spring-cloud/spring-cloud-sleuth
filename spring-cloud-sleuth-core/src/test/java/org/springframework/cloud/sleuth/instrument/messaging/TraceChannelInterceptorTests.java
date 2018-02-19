@@ -69,6 +69,7 @@ import org.springframework.util.SerializationUtils;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
@@ -109,6 +110,9 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 	@Autowired
 	private ArrayListSpanAccumulator accumulator;
 
+	@Autowired
+	private TraceChannelInterceptor interceptor;
+
 	private Message<?> message;
 
 	private Span span;
@@ -138,6 +142,21 @@ public class TraceChannelInterceptorTests implements MessageHandler {
 		this.executorChannel.unsubscribe(this);
 		this.ignoredChannel.unsubscribe(this);
 		this.accumulator.getSpans().clear();
+	}
+
+	@Test
+	public void shouldWorkForEmptyQueue() {
+		this.interceptor.beforeHandle(null, null, null);
+		this.interceptor.afterMessageHandled(null, null, null, null);
+		this.interceptor.afterSendCompletion(null, null, true, null);
+		this.interceptor.preSend(null, null);
+
+		thenNoSpanReported();
+	}
+
+	private void thenNoSpanReported() {
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(this.accumulator.getSpans()).isEmpty();
 	}
 
 	@Test
