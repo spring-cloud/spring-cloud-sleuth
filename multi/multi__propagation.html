@@ -54,7 +54,7 @@ Brave it&#8217;s required to pass the list of baggage keys.
 There are two properties to achieve this. Via the <code class="literal">spring.sleuth.baggage-keys</code> you set keys
 that will get prefixed with <code class="literal">baggage-</code> for http calls and <code class="literal">baggage_</code> for messaging. You can also pass
 a list of prefixed keys that will be whitelisted without any prefix via
-<code class="literal">spring.sleuth.prefixed-keys</code> property.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_extracting_a_propagated_context" href="#_extracting_a_propagated_context"></a>5.1.2&nbsp;Extracting a propagated context</h3></div></div></div><p>The <code class="literal">TraceContext.Extractor&lt;C&gt;</code> reads trace identifiers and sampling status
+<code class="literal">spring.sleuth.propagation-keys</code> property.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_extracting_a_propagated_context" href="#_extracting_a_propagated_context"></a>5.1.2&nbsp;Extracting a propagated context</h3></div></div></div><p>The <code class="literal">TraceContext.Extractor&lt;C&gt;</code> reads trace identifiers and sampling status
 from an incoming request or message. The carrier is usually a request object
 or headers.</p><p>This utility is used in standard instrumentation like [HttpServerHandler](../instrumentation/http/src/main/java/sleuth/http/HttpServerHandler.java),
 but can also be used for custom RPC or messaging code.</p><p><code class="literal">TraceContextOrSamplingFlags</code> is usually only used with <code class="literal">Tracer.nextSpan(extracted)</code>, unless you are

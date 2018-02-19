@@ -1005,7 +1005,7 @@ Brave it&#8217;s required to pass the list of baggage keys.
 There are two properties to achieve this. Via the <literal>spring.sleuth.baggage-keys</literal> you set keys
 that will get prefixed with <literal>baggage-</literal> for http calls and <literal>baggage_</literal> for messaging. You can also pass
 a list of prefixed keys that will be whitelisted without any prefix via
-<literal>spring.sleuth.prefixed-keys</literal> property.</simpara>
+<literal>spring.sleuth.propagation-keys</literal> property.</simpara>
 </important>
 </section>
 <section xml:id="_extracting_a_propagated_context">
