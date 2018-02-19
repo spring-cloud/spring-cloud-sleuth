@@ -428,7 +428,7 @@ Brave it's required to pass the list of baggage keys.
 There are two properties to achieve this. Via the `spring.sleuth.baggage-keys` you set keys
 that will get prefixed with `baggage-` for http calls and `baggage_` for messaging. You can also pass
 a list of prefixed keys that will be whitelisted without any prefix via
-`spring.sleuth.prefixed-keys` property.
+`spring.sleuth.propagation-keys` property.
 
 ==== Extracting a propagated context
 
