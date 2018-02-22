@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.List;
+import java.util.function.Consumer;
+
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpClientHandler;
@@ -61,13 +64,23 @@ class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 			WebClient webClient = (WebClient) bean;
 			return webClient
 					.mutate()
-					.filter(new TraceExchangeFilterFunction(this.beanFactory))
+					.filters(addTraceExchangeFilterFunctionIfNotPresent())
 					.build();
 		} else if (bean instanceof WebClient.Builder) {
 			WebClient.Builder webClientBuilder = (WebClient.Builder) bean;
-			return webClientBuilder.filter(new TraceExchangeFilterFunction(this.beanFactory));
+			return webClientBuilder.filters(addTraceExchangeFilterFunctionIfNotPresent());
 		}
 		return bean;
+	}
+
+	private Consumer<List<ExchangeFilterFunction>> addTraceExchangeFilterFunctionIfNotPresent() {
+		return functions -> {
+			if (functions
+					.stream()
+					.noneMatch(f -> f instanceof TraceExchangeFilterFunction)) {
+				functions.add(new TraceExchangeFilterFunction(this.beanFactory));
+			}
+		};
 	}
 }
 
