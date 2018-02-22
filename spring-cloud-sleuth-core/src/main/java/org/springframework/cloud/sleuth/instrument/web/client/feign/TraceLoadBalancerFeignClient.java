@@ -22,13 +22,13 @@ import feign.Client;
 import feign.Request;
 import feign.Response;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.netflix.feign.ribbon.CachingSpringLoadBalancerFactory;
-import org.springframework.cloud.netflix.feign.ribbon.LoadBalancerFeignClient;
+import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
+import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 
 /**
  * We need to wrap the {@link LoadBalancerFeignClient} into a trace representation
- * due to casts in {@link org.springframework.cloud.netflix.feign.FeignClientFactoryBean}.
+ * due to casts in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.7

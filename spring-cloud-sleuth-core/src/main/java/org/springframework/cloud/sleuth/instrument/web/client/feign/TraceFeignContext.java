@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.cloud.netflix.feign.FeignContext;
+import org.springframework.cloud.openfeign.FeignContext;
 
 /**
  * Custom FeignContext that wraps beans in custom Feign configurations in their
