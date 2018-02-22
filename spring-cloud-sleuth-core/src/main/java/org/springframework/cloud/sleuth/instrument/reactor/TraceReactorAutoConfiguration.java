@@ -75,6 +75,7 @@ public class TraceReactorAutoConfiguration {
 		@PostConstruct
 		public void setupHooks() {
 			this.lastOperatorWrapper.wrapLastOperator(this.tracing);
+			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.scopePassingSpanOperator(this.tracing));
 			Schedulers.setFactory(new Schedulers.Factory() {
 				@Override public ScheduledExecutorService decorateExecutorService(String schedulerType,
 						Supplier<? extends ScheduledExecutorService> actual) {
@@ -87,7 +88,8 @@ public class TraceReactorAutoConfiguration {
 
 		@PreDestroy
 		public void cleanupHooks() {
-			Hooks.resetOnLastOperator();
+			Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 			Schedulers.resetFactory();
 		}
 	}

@@ -22,7 +22,6 @@ import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
-import reactor.core.publisher.Mono;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -34,6 +33,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into
@@ -113,41 +113,42 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					Object any = anyAndContext.getT1();
 					Span clientSpan = anyAndContext.getT2().get(CLIENT_SPAN_KEY);
 					Mono<ClientResponse> continuation;
-					Throwable throwable = null;
-					ClientResponse response = null;
-					try (Tracer.SpanInScope ws = tracer().withSpanInScope(clientSpan)) {
+					final Tracer.SpanInScope ws = tracer().withSpanInScope(clientSpan);
 						if (any instanceof Throwable) {
-							throwable = (Throwable) any;
-							continuation = Mono.error(throwable);
+							continuation = Mono.error((Throwable) any);
 						} else {
-							response = (ClientResponse) any;
-							boolean error = response.statusCode().is4xxClientError() ||
-									response.statusCode().is5xxServerError();
-							if (error) {
-								if (log.isDebugEnabled()) {
-									log.debug(
-											"Non positive status code was returned from the call. Will close the span ["
-													+ clientSpan + "]");
-								}
-								throwable = new RestClientException(
-										"Status code of the response is [" + response.statusCode()
-												.value() + "] and the reason is [" + response
-												.statusCode().getReasonPhrase() + "]");
-							}
-							continuation = Mono.just(response);
+							continuation = Mono.just((ClientResponse) any);
 						}
-					} finally {
-						handler().handleReceive(response, throwable, clientSpan);
-					}
-					return continuation;
+					return continuation.doAfterSuccessOrError(
+							(clientResponse, throwable1) -> {
+								Throwable throwable = throwable1;
+								boolean error = clientResponse.statusCode().is4xxClientError() ||
+										clientResponse.statusCode().is5xxServerError();
+								if (error) {
+									if (log.isDebugEnabled()) {
+										log.debug(
+												"Non positive status code was returned from the call. Will close the span ["
+														+ clientSpan + "]");
+									}
+									throwable = new RestClientException(
+											"Status code of the response is [" + clientResponse.statusCode()
+													.value() + "] and the reason is [" + clientResponse
+													.statusCode().getReasonPhrase() + "]");
+								}
+								handler().handleReceive(clientResponse, throwable, clientSpan);
+								ws.close();
+							});
 				})
 				.subscriberContext(c -> {
 					if (log.isDebugEnabled()) {
-						log.debug("Creating a client span for the WebClient");
+						log.debug("Instrumenting WebClient call");
 					}
 					Span parent = c.getOrDefault(Span.class, null);
-					Span clientSpan = handler().handleSend(injector(), builder, request,
-							parent != null ? parent : tracer().nextSpan());
+					Span clientSpan = handler().handleSend(injector(), builder,
+							request, tracer().nextSpan());
+					if (log.isDebugEnabled()) {
+						log.debug("Created a client span for the WebClient " + clientSpan);
+					}
 					if (parent == null) {
 						c = c.put(Span.class, clientSpan);
 						if (log.isDebugEnabled()) {

@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.Random;
+
+import brave.Span;
+import brave.Tracer;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
 import org.junit.BeforeClass;
@@ -46,6 +50,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 public class TraceWebFluxTests {
 
+	public static final String EXPECTED_TRACE_ID = "b919095138aa4c6e";
+
 	@BeforeClass
 	public static void setup() {
 		Hooks.resetOnLastOperator();
@@ -53,6 +59,7 @@ public class TraceWebFluxTests {
 	}
 
 	@Test public void should_instrument_web_filter() throws Exception {
+		// setup
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				TraceWebFluxTests.Config.class).web(WebApplicationType.REACTIVE)
 				.properties("server.port=0", "spring.jmx.enabled=false",
@@ -60,12 +67,31 @@ public class TraceWebFluxTests {
 								"management.security.enabled=false").run();
 		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
 		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
+		Controller2 controller2 = context.getBean(Controller2.class);
+		clean(accumulator, controller2);
+
+		// when
+		ClientResponse response = whenRequestIsSent(port);
+		//then
+		thenSpanWasReportedWithTags(accumulator, response);
+		clean(accumulator, controller2);
+
+		// when
+		ClientResponse nonSampledResponse = whenNonSampledRequestIsSent(port);
+		// then
+		thenNoSpanWasReported(accumulator, nonSampledResponse, controller2);
+
+		// cleanup
+		context.close();
+	}
+
+	private void clean(ArrayListSpanReporter accumulator, Controller2 controller2) {
 		accumulator.clear();
+		controller2.span = null;
+	}
 
-		Mono<ClientResponse> exchange = WebClient.create().get()
-				.uri("http://localhost:" + port + "/api/c2/10").exchange();
-		ClientResponse response = exchange.block();
-
+	private void thenSpanWasReportedWithTags(ArrayListSpanReporter accumulator,
+			ClientResponse response) {
 		Awaitility.await().untilAsserted(() -> {
 			then(response.statusCode().value()).isEqualTo(200);
 			then(accumulator.getSpans()).hasSize(1);
@@ -73,6 +99,32 @@ public class TraceWebFluxTests {
 		then(accumulator.getSpans().get(0).tags())
 				.containsEntry("mvc.controller.method", "successful")
 				.containsEntry("mvc.controller.class", "Controller2");
+	}
+
+	private void thenNoSpanWasReported(ArrayListSpanReporter accumulator,
+			ClientResponse response, Controller2 controller2) {
+		Awaitility.await().untilAsserted(() -> {
+			then(response.statusCode().value()).isEqualTo(200);
+			then(accumulator.getSpans()).isEmpty();
+		});
+		then(controller2.span).isNotNull();
+		then(controller2.span.context().traceIdString()).isEqualTo(EXPECTED_TRACE_ID);
+	}
+
+	private ClientResponse whenRequestIsSent(int port) {
+		Mono<ClientResponse> exchange = WebClient.create().get()
+				.uri("http://localhost:" + port + "/api/c2/10").exchange();
+		return exchange.block();
+	}
+
+	private ClientResponse whenNonSampledRequestIsSent(int port) {
+		Mono<ClientResponse> exchange = WebClient.create().get()
+				.uri("http://localhost:" + port + "/api/c2/10")
+				.header("X-B3-SpanId", EXPECTED_TRACE_ID)
+				.header("X-B3-TraceId", EXPECTED_TRACE_ID)
+				.header("X-B3-Sampled", "0")
+				.exchange();
+		return exchange.block();
 	}
 
 	@Configuration
@@ -94,18 +146,27 @@ public class TraceWebFluxTests {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean Controller2 controller2() {
-			return new Controller2();
+		@Bean Controller2 controller2(Tracer tracer) {
+			return new Controller2(tracer);
 		}
 	}
 
 	@RestController
 	static class Controller2 {
 
+		Span span;
+
+		private final Tracer tracer;
+
+		Controller2(Tracer tracer) {
+			this.tracer = tracer;
+		}
+
 		@GetMapping("/api/c2/{id}")
 		public Flux<String> successful(@PathVariable Long id) {
 			// #786
 			then(MDC.get("X-B3-TraceId")).isNotEmpty();
+			this.span = this.tracer.currentSpan();
 			return Flux.just(id.toString());
 		}
 	}

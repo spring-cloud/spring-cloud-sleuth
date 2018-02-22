@@ -22,12 +22,12 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.TraceContextOrSamplingFlags;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.util.Logger;
 import reactor.util.Loggers;
 import reactor.util.context.Context;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 
 /**
  * A trace representation of the {@link Subscriber}
@@ -139,23 +139,7 @@ final class SpanSubscriber<T> extends AtomicBoolean implements Subscription,
 			if (log.isTraceEnabled()) {
 				log.trace("Cleaning up");
 			}
-			Tracer.SpanInScope ws = null;
-			if (this.tracer.currentSpan() != this.span) {
-				if (log.isTraceEnabled()) {
-					log.trace("Detaching span");
-				}
-				ws = this.tracer.withSpanInScope(this.span);
-				if (log.isTraceEnabled()) {
-					log.trace("Continuing span");
-				}
-			}
-			if (log.isTraceEnabled()) {
-				log.trace("Closing span");
-			}
 			this.span.finish();
-			if (ws != null) {
-				ws.close();
-			}
 			if (log.isTraceEnabled()) {
 				log.trace("Span closed");
 			}

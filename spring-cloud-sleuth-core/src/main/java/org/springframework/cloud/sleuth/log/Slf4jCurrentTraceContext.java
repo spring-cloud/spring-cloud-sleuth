@@ -90,7 +90,7 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 			String sampled = String.valueOf(currentSpan.sampled());
 			MDC.put("spanExportable", sampled);
 			MDC.put(LEGACY_EXPORTABLE_NAME, sampled);
-			log("Starting span: {}", currentSpan);
+			log("Starting scope for span: {}", currentSpan);
 			if (currentSpan.parentId() != null) {
 				if (log.isTraceEnabled()) {
 					log.trace("With parent: {}", currentSpan.parentId());
@@ -112,7 +112,7 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 
 		class ThreadContextCurrentTraceContextScope implements Scope {
 			@Override public void close() {
-				log("Closing span: {}", currentSpan);
+				log("Closing scope for span: {}", currentSpan);
 				scope.close();
 				replace("traceId", previousTraceId);
 				replace("parentId", previousParentId);
@@ -128,7 +128,7 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 	}
 
 	private void log(String text, TraceContext span) {
-		if (span != null) {
+		if (span == null) {
 			return;
 		}
 		if (log.isTraceEnabled()) {

@@ -40,6 +40,7 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import reactor.util.context.Context;
 
 /**
  * A {@link WebFilter} that creates / continues / closes and detaches spans
@@ -131,6 +132,10 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	@Override public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+		if (tracer().currentSpan() != null) {
+			// clear any previous trace
+			tracer().withSpanInScope(null);
+		}
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse response = exchange.getResponse();
 		String uri = request.getPath().pathWithinApplication().value();
@@ -149,8 +154,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 								.map(c -> c.put(CONTEXT_ERROR, t)))
 						.flatMap(c -> {
 							//reactivate span from context
-							SpanAndScope spanAndScope = c.getOrDefault(SpanAndScope.class, defaultSpanAndScope());
-							Span span = spanAndScope.span;
+							Span span = spanFromContext(c);
 							Mono<Void> continuation;
 							Throwable t = null;
 							if (c.hasKey(CONTEXT_ERROR)) {
@@ -168,27 +172,41 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 							}
 							addResponseTagsForSpanWithoutParent(exchange, response, span);
 							handler().handleSend(response, t, span);
-							spanAndScope.scope.close();
+							if (log.isDebugEnabled()) {
+								log.debug("Handled send of " + span);
+							}
 							return continuation;
 						})
 						.subscriberContext(c -> {
 							Span span;
-							if (c.hasKey(SpanAndScope.class)) {
-								SpanAndScope spanAndScope = c.get(SpanAndScope.class);
-								Span parent = spanAndScope.span;
+							if (c.hasKey(Span.class)) {
+								Span parent = c.get(Span.class);
 								span = tracer()
 										.nextSpan(TraceContextOrSamplingFlags.create(parent.context()))
 										.start();
+								if (log.isDebugEnabled()) {
+									log.debug("Found span in reactor context" + span);
+								}
 							} else {
 								try {
-									if (skip) {
+									boolean hasTracingContextInHeaders = extractor()
+											.extract(request.getHeaders()) != TraceContextOrSamplingFlags.EMPTY;
+									// if there was a span received then we must not change
+									// the sampling decision
+									if (skip && !hasTracingContextInHeaders) {
 										span = unsampledSpan(name);
 									} else {
 										if (spanFromAttribute != null) {
 											span = spanFromAttribute;
+											if (log.isDebugEnabled()) {
+												log.debug("Found span in attribute " + span);
+											}
 										} else {
 											span = handler().handleReceive(extractor(),
 													request.getHeaders(), request);
+											if (log.isDebugEnabled()) {
+												log.debug("Handled receive of span " + span);
+											}
 										}
 									}
 									exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
@@ -200,16 +218,33 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 									} else {
 										span = tracer().nextSpan().name(name).start();
 										exchange.getAttributes().put(TRACE_SPAN_WITHOUT_PARENT, span);
+										if (log.isDebugEnabled()) {
+											log.debug("Created a new 'fallback' span " + span);
+										}
 									}
 								}
 							}
-							return c.put(SpanAndScope.class, new SpanAndScope(span, tracer().withSpanInScope(span)));
+							return c.put(Span.class, span);
 						}));
 	}
 
-	private SpanAndScope defaultSpanAndScope() {
-		Span defaultSpan = tracer().nextSpan().start();
-		return new SpanAndScope(defaultSpan, tracer().withSpanInScope(defaultSpan));
+	private Span spanFromContext(Context c) {
+		if (c.hasKey(Span.class)) {
+			Span span = c.get(Span.class);
+			if (log.isDebugEnabled()) {
+				log.debug("Found span in context " + span);
+			}
+			return span;
+		}
+		Span span = defaultSpan();
+		if (log.isDebugEnabled()) {
+			log.debug("No span found in context. Creating a new one " + span);
+		}
+		return span;
+	}
+
+	private Span defaultSpan() {
+		return tracer().nextSpan().start();
 	}
 
 	private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange,
@@ -222,9 +257,13 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	private Span unsampledSpan(String name) {
-		return tracer().nextSpan(TraceContextOrSamplingFlags.create(
+		Span span = tracer().nextSpan(TraceContextOrSamplingFlags.create(
 				SamplingFlags.NOT_SAMPLED)).name(name)
 				.kind(Span.Kind.SERVER).start();
+		if (log.isDebugEnabled()) {
+			log.debug("Created a new unsampled span " + span);
+		}
+		return span;
 	}
 
 	private Span getSpanFromAttribute(ServerWebExchange exchange) {
@@ -242,22 +281,6 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			if (log.isDebugEnabled()) {
 				log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
 			}
-		}
-	}
-
-	class SpanAndScope {
-
-		final Span span;
-		final Tracer.SpanInScope scope;
-
-		SpanAndScope(Span span, Tracer.SpanInScope scope) {
-			this.span = span;
-			this.scope = scope;
-		}
-
-		SpanAndScope() {
-			this.span = null;
-			this.scope = null;
 		}
 	}
 
