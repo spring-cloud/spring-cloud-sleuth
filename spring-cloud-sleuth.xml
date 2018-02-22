@@ -1654,7 +1654,9 @@ of regular expressions in the <literal>spring.sleuth.rxjava.schedulers.ignoredth
 <simpara>Via the <literal>TraceFilter</literal> all sampled incoming requests result in creation of a Span. That Span&#8217;s name is <literal>http:</literal> + the path to which
  the request was sent. E.g. if the request was sent to <literal>/foo/bar</literal> then the name will be <literal>http:/foo/bar</literal>. You can configure which URIs you would
  like to skip via the <literal>spring.sleuth.web.skipPattern</literal> property. If you have <literal>ManagementServerProperties</literal> on classpath then
- its value of <literal>contextPath</literal> gets appended to the provided skip pattern.</simpara>
+ its value of <literal>contextPath</literal> gets appended to the provided skip pattern. If you want to reuse the
+ Sleuth&#8217;s default skip patterns and just append your own, pass those patterns via
+ the <literal>spring.sleuth.web.additionalSkipPattern</literal>.</simpara>
 </section>
 <section xml:id="_handlerinterceptor">
 <title>HandlerInterceptor</title>
@@ -1674,7 +1676,9 @@ of regular expressions in the <literal>spring.sleuth.rxjava.schedulers.ignoredth
 <simpara>Via the <literal>TraceWebFilter</literal> all sampled incoming requests result in creation of a Span. That Span&#8217;s name is <literal>http:</literal> + the path to which
  the request was sent. E.g. if the request was sent to <literal>/foo/bar</literal> then the name will be <literal>http:/foo/bar</literal>. You can configure which URIs you would
  like to skip via the <literal>spring.sleuth.web.skipPattern</literal> property. If you have <literal>ManagementServerProperties</literal> on classpath then
- its value of <literal>contextPath</literal> gets appended to the provided skip pattern.</simpara>
+ its value of <literal>contextPath</literal> gets appended to the provided skip pattern.  If you want to reuse the
+ Sleuth&#8217;s default skip patterns and just append your own, pass those patterns via
+ the <literal>spring.sleuth.web.additionalSkipPattern</literal>.</simpara>
 </section>
 </section>
 <section xml:id="_http_client_integration">
@@ -1792,7 +1796,9 @@ by setting the value of <literal>spring.sleuth.scheduled.enabled</literal> to <l
 <literal>spring.sleuth.scheduled.skipPattern</literal> with a regular expression that will match the fully qualified name of the
 <literal>@Scheduled</literal> annotated class.</simpara>
 <tip>
-<simpara>If you are using <literal>spring-cloud-sleuth-stream</literal> and <literal>spring-cloud-netflix-hystrix-stream</literal> together, Span will be created for each Hystrix metrics and sent to Zipkin. This may be annoying. You can prevent this by setting <literal>spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask</literal></simpara>
+<simpara>If you are using <literal>spring-cloud-sleuth-stream</literal> and <literal>spring-cloud-netflix-hystrix-stream</literal> together, Span will be created for
+each Hystrix metrics and sent to Zipkin. This may be annoying. You can prevent this by setting
+<literal>spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask</literal></simpara>
 </tip>
 </section>
 <section xml:id="_executor_executorservice_and_scheduledexecutorservice">
