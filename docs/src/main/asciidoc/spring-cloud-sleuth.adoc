@@ -1012,7 +1012,9 @@ Features from this section can be disabled by providing the `spring.sleuth.web.e
 Via the `TraceFilter` all sampled incoming requests result in creation of a Span. That Span's name is `http:` + the path to which
  the request was sent. E.g. if the request was sent to `/foo/bar` then the name will be `http:/foo/bar`. You can configure which URIs you would
  like to skip via the `spring.sleuth.web.skipPattern` property. If you have `ManagementServerProperties` on classpath then
- its value of `contextPath` gets appended to the provided skip pattern.
+ its value of `contextPath` gets appended to the provided skip pattern. If you want to reuse the
+ Sleuth's default skip patterns and just append your own, pass those patterns via
+ the `spring.sleuth.web.additionalSkipPattern`.
 
 ==== HandlerInterceptor
 
@@ -1032,7 +1034,9 @@ If your controller returns a `Callable` or a `WebAsyncTask` Spring Cloud Sleuth 
 Via the `TraceWebFilter` all sampled incoming requests result in creation of a Span. That Span's name is `http:` + the path to which
  the request was sent. E.g. if the request was sent to `/foo/bar` then the name will be `http:/foo/bar`. You can configure which URIs you would
  like to skip via the `spring.sleuth.web.skipPattern` property. If you have `ManagementServerProperties` on classpath then
- its value of `contextPath` gets appended to the provided skip pattern.
+ its value of `contextPath` gets appended to the provided skip pattern.  If you want to reuse the
+ Sleuth's default skip patterns and just append your own, pass those patterns via
+ the `spring.sleuth.web.additionalSkipPattern`.
 
 === HTTP client integration
 
@@ -1125,7 +1129,9 @@ If you want to skip Span creation for some `@Scheduled` annotated classes you ca
 `spring.sleuth.scheduled.skipPattern` with a regular expression that will match the fully qualified name of the
 `@Scheduled` annotated class.
 
-TIP: If you are using `spring-cloud-sleuth-stream` and `spring-cloud-netflix-hystrix-stream` together, Span will be created for each Hystrix metrics and sent to Zipkin. This may be annoying. You can prevent this by setting `spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask`
+TIP: If you are using `spring-cloud-sleuth-stream` and `spring-cloud-netflix-hystrix-stream` together, Span will be created for
+each Hystrix metrics and sent to Zipkin. This may be annoying. You can prevent this by setting
+`spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask`
 
 ==== Executor, ExecutorService and ScheduledExecutorService
 

@@ -41,6 +41,12 @@ public class SleuthWebProperties {
 	 */
 	private String skipPattern = DEFAULT_SKIP_PATTERN;
 
+	/**
+	 * Additional pattern for URLs that should be skipped in tracing.
+	 * This will be appended to the {@link SleuthWebProperties#skipPattern}
+	 */
+	private String additionalSkipPattern;
+
 	private Client client;
 
 	public boolean isEnabled() {
@@ -57,6 +63,14 @@ public class SleuthWebProperties {
 
 	public void setSkipPattern(String skipPattern) {
 		this.skipPattern = skipPattern;
+	}
+
+	public String getAdditionalSkipPattern() {
+		return this.additionalSkipPattern;
+	}
+
+	public void setAdditionalSkipPattern(String additionalSkipPattern) {
+		this.additionalSkipPattern = additionalSkipPattern;
 	}
 
 	public Client getClient() {

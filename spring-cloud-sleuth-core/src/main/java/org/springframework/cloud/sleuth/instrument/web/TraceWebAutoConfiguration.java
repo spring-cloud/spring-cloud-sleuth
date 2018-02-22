@@ -77,21 +77,23 @@ public class TraceWebAutoConfiguration {
 				ManagementServerProperties managementServerProperties,
 				SleuthWebProperties sleuthWebProperties) {
 			String skipPattern = sleuthWebProperties.getSkipPattern();
+			String additionalSkipPattern = sleuthWebProperties.getAdditionalSkipPattern();
 			String contextPath = managementServerProperties.getServlet().getContextPath();
 
 			if (StringUtils.hasText(skipPattern) && StringUtils.hasText(contextPath)) {
-				return Pattern.compile(skipPattern + "|" + contextPath + ".*");
+				return Pattern.compile(combinedPattern(skipPattern + "|" + contextPath + ".*", additionalSkipPattern));
 			}
 			else if (StringUtils.hasText(contextPath)) {
-				return Pattern.compile(contextPath + ".*");
+				return Pattern.compile(combinedPattern(contextPath + ".*", additionalSkipPattern));
 			}
-			return defaultSkipPattern(skipPattern);
+			return defaultSkipPattern(skipPattern, additionalSkipPattern);
 		}
 
 		@Bean
 		@ConditionalOnMissingBean(ManagementServerProperties.class)
 		public SkipPatternProvider defaultSkipPatternBeanIfManagementServerPropsArePresent(SleuthWebProperties sleuthWebProperties) {
-			return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern());
+			return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern(),
+					sleuthWebProperties.getAdditionalSkipPattern());
 		}
 	}
 
@@ -100,17 +102,28 @@ public class TraceWebAutoConfiguration {
 	@ConditionalOnMissingBean(
 			SkipPatternProvider.class)
 	public SkipPatternProvider defaultSkipPatternBean(SleuthWebProperties sleuthWebProperties) {
-		return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern());
+		return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern(),
+				sleuthWebProperties.getAdditionalSkipPattern());
 	}
 
 	private static SkipPatternProvider defaultSkipPatternProvider(
-			final String skipPattern) {
-		return () -> defaultSkipPattern(skipPattern);
+			final String skipPattern, final String additionalSkipPattern) {
+		return () -> defaultSkipPattern(skipPattern, additionalSkipPattern);
 	}
 
-	private static Pattern defaultSkipPattern(String skipPattern) {
-		return StringUtils.hasText(skipPattern) ? Pattern.compile(skipPattern)
-				: Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+	private static Pattern defaultSkipPattern(String skipPattern, String additionalSkipPattern) {
+		return Pattern.compile(combinedPattern(skipPattern, additionalSkipPattern));
+	}
+
+	private static String combinedPattern(String skipPattern, String additionalSkipPattern) {
+		String pattern = skipPattern;
+		if (!StringUtils.hasText(skipPattern)) {
+			pattern = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
+		}
+		if (StringUtils.hasText(additionalSkipPattern)) {
+			return pattern + "|" + additionalSkipPattern;
+		}
+		return pattern;
 	}
 
 }
