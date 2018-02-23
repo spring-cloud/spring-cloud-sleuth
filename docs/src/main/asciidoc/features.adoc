@@ -1,6 +1,6 @@
 == Features
 
-* Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator. Example logs:
+* Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:
 +
 ----
 2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
@@ -8,50 +8,56 @@
 2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...
 ----
 +
-notice the `[appname,traceId,spanId,exportable]` entries from the MDC:
+Notice the `[appname,traceId,spanId,exportable]` entries from the MDC:
 
-    - *spanId* - the id of a specific operation that took place
-    - *appname* - the name of the application that logged the span
-    - *traceId* - the id of the latency graph that contains the span
-    - *exportable* - whether the log should be exported to Zipkin or not. When would you like the span not to be
-    exportable? In the case in which you want to wrap some operation in a Span and have it written to the logs
-    only.
+** *`spanId`*: The ID of a specific operation that took place.
+** *`appname`*: The name of the application that logged the span.
+** *`traceId`*: The ID of the latency graph that contains the span.
+** *`exportable`*: Whether the log should be exported to Zipkin.
+When would you like the span not to be exportable?
+When you want to wrap some operation in a Span and have it written to the logs only.
 
-* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations,
-key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.
+* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
+Spring Cloud Slwuth is loosely based on HTrace but is compatible with Zipkin (Dapper).
 
-* Sleuth records timing information to aid in latency analysis. Using sleuth, you can pinpoint causes of
-latency in your applications. Sleuth is written to not log too much, and to not cause your production application to crash.
-  - propagates structural data about your call-graph in-band, and the rest out-of-band.
-  - includes opinionated instrumentation of layers such as HTTP
-  - includes sampling policy to manage volume
-  - can report to a Zipkin system for query and visualization
+* Sleuth records timing information to aid in latency analysis.
+By using sleuth, you can pinpoint causes of latency in your applications.
 
-* Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints,
-rest template, scheduled actions, message channels, zuul filters, feign client).
+* Sleuth is written to not log too much and to not cause your production application to crash.
+To that end, Sleuth:
+** Propagates structural data about your call graph in-band and the rest out-of-band.
+** Includes opinionated instrumentation of layers such as HTTP.
+** Includes a sampling policy to manage volume.
+** Can report to a Zipkin system for query and visualization.
 
-* Sleuth includes default logic to join a trace across http or messaging boundaries. For example, http propagation
-works via Zipkin-compatible request headers. This propagation logic is defined and customized via
-`SpanInjector` and `SpanExtractor` implementations.
+* Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, Zuul filters, and Feign client).
 
-* Sleuth gives you the possibility to propagate context (also known as baggage) between processes. That means that if you set on a Span
-a baggage element then it will be sent downstream either via HTTP or messaging to other processes.
+* Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
+For example, HTTP propagation works over Zipkin-compatible request headers.
+This propagation logic is defined and customized through `SpanInjector` and `SpanExtractor` implementations.
 
-* Provides a way to create / continue spans and add tags and logs via annotations.
+* Sleuth can propagate context (also known as baggage) between processes.
+Consequently, if you set  a baggage element on a Span, it is sent downstream to other processes over either HTTP or messaging.
 
-* If `spring-cloud-sleuth-zipkin` is on the classpath then the app will generate and collect Zipkin-compatible traces.
-By default it sends them via HTTP to a Zipkin server on localhost (port 9411).
-Configure the location of the service using `spring.zipkin.baseUrl`.
-  - If you depend on `spring-rabbit` or `spring-kafka` your app will send traces to a broker instead of http.
-  - Note: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
+* Provides a way to create or continue spans and add tags and logs through annotations.
 
-* Spring Cloud Sleuth is http://opentracing.io/[OpenTracing] compatible
+* If `spring-cloud-sleuth-zipkin` is on the classpath, the app generates and collects Zipkin-compatible traces.
+By default, it sends them over HTTP to a Zipkin server on localhost (port 9411).
+You can configure the location of the service by setting `spring.zipkin.baseUrl`.
+** If you depend on `spring-rabbit` or `spring-kafka`, your app sends traces to a broker instead of HTTP.
+**
 
-IMPORTANT: If using Zipkin, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
-(default 0.1, i.e. 10%). *Otherwise you might think that Sleuth is not working cause it's omitting some spans.*
+CAUTION: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
 
-NOTE: the SLF4J MDC is always set and logback users will immediately see the trace and span ids in logs per the example
- above. Other logging systems have to configure their own formatter to get the same result. The default is
- `logging.pattern.level` set to `%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]`
- (this is a Spring Boot feature for logback users).
- *This means that if you're not using SLF4J this pattern WILL NOT be automatically applied*.
+* Spring Cloud Sleuth is http://opentracing.io/[OpenTracing] compatible.
+
+IMPORTANT: If you use Zipkin, configure the percentage of spans exported by setting `spring.sleuth.sampler.percentage`
+(default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working be cause it omits some spans.
+
+NOTE: The SLF4J MDC is always set and logback users immediately see the trace and span IDs in logs per the example
+shown earlier.
+Other logging systems have to configure their own formatter to get the same result.
+The default is as follows:
+`logging.pattern.level` set to `%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]`
+(this is a Spring Boot feature for logback users).
+If you do not use SLF4J, this pattern is NOT automatically applied.
