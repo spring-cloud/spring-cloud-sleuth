@@ -51,13 +51,13 @@ public class TraceZuulAutoConfiguration {
 	@ConditionalOnClass(RibbonCommand.class)
 	static class RibbonConfig {
 		@Bean
-		public TraceRibbonCommandFactoryBeanPostProcessor traceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
+		static TraceRibbonCommandFactoryBeanPostProcessor traceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
 			return new TraceRibbonCommandFactoryBeanPostProcessor(beanFactory);
 		}
 	}
 
 	@Bean
-	public TraceZuulHandlerMappingBeanPostProcessor traceHandlerMappingBeanPostProcessor(BeanFactory beanFactory) {
+	static TraceZuulHandlerMappingBeanPostProcessor traceHandlerMappingBeanPostProcessor(BeanFactory beanFactory) {
 		return new TraceZuulHandlerMappingBeanPostProcessor(beanFactory);
 	}
 

@@ -19,10 +19,8 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -63,12 +61,7 @@ public class TraceRibbonCommandFactoryBeanPostProcessorTests {
 
 	@Test
 	public void should_wrap_ribbon_command_factory_in_a_trace_representation() {
-		then(this.postProcessor.postProcessAfterInitialization(ribbonCommandFactory, "name")).isInstanceOf(
+		then(this.postProcessor.postProcessAfterInitialization(this.ribbonCommandFactory, "name")).isInstanceOf(
 				TraceRibbonCommandFactory.class);
-	}
-
-	@Before
-	public void setup() {
-		BDDMockito.given(this.beanFactory.getBean(HttpTracing.class)).willReturn(this.httpTracing);
 	}
 }

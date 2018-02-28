@@ -58,7 +58,6 @@ public class GH846Test {
 		}
 	}
 
-	
 	static class MyBean {
 		@Autowired
 		private RestTemplate restTemplate;

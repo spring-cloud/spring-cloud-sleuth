@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
@@ -59,6 +60,7 @@ public class TraceRibbonCommandFactoryTest {
 			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
 			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
 			.build();
+	@Mock BeanFactory beanFactory;
 	@Mock RibbonCommandFactory ribbonCommandFactory;
 	@Mock RibbonCommand ribbonCommand;
 	TraceRibbonCommandFactory traceRibbonCommandFactory;
@@ -67,8 +69,10 @@ public class TraceRibbonCommandFactoryTest {
 	@Before
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void setup() {
+		BDDMockito.given(this.beanFactory.getBean(HttpTracing.class))
+				.willReturn(this.httpTracing);
 		this.traceRibbonCommandFactory = new TraceRibbonCommandFactory(
-				this.ribbonCommandFactory, this.httpTracing);
+				this.ribbonCommandFactory, this.beanFactory);
 		BDDMockito.given(this.ribbonCommandFactory
 				.create(BDDMockito.any(RibbonCommandContext.class)))
 				.willReturn(this.ribbonCommand);

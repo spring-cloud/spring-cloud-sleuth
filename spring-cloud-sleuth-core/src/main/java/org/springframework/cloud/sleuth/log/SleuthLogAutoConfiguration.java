@@ -59,11 +59,11 @@ public class SleuthLogAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
 		@ConditionalOnBean(CurrentTraceContext.class)
-		public BeanPostProcessor slf4jSpanLoggerBPP() {
+		public static BeanPostProcessor slf4jSpanLoggerBPP() {
 			return new Slf4jBeanPostProcessor();
 		}
 
-		class Slf4jBeanPostProcessor implements BeanPostProcessor {
+		static class Slf4jBeanPostProcessor implements BeanPostProcessor {
 
 			@Override public Object postProcessBeforeInitialization(Object bean,
 					String beanName) throws BeansException {

@@ -71,7 +71,7 @@ public class TraceWebServletAutoConfiguration {
 
 	@Bean
 	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
-	public TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
+	public static TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
 			BeanFactory beanFactory) {
 		return new TraceSpringDataBeanPostProcessor(beanFactory);
 	}
