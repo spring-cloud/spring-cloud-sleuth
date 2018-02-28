@@ -68,7 +68,7 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	public TraceRibbonCommandFactoryBeanPostProcessor traceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
+	public static TraceRibbonCommandFactoryBeanPostProcessor traceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
 		return new TraceRibbonCommandFactoryBeanPostProcessor(beanFactory);
 	}
 
@@ -91,7 +91,7 @@ public class TraceZuulAutoConfiguration {
 	}
 
 	@Bean
-	public TraceZuulHandlerMappingBeanPostProcessor traceHandlerMappingBeanPostProcessor(BeanFactory beanFactory) {
+	public static TraceZuulHandlerMappingBeanPostProcessor traceHandlerMappingBeanPostProcessor(BeanFactory beanFactory) {
 		return new TraceZuulHandlerMappingBeanPostProcessor(beanFactory);
 	}
 

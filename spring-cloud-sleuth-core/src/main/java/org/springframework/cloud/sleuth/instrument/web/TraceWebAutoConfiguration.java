@@ -16,6 +16,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -30,6 +31,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Role;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import static javax.servlet.DispatcherType.ASYNC;
@@ -49,6 +51,7 @@ import static javax.servlet.DispatcherType.REQUEST;
  * @since 1.0.0
  */
 @Configuration
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 @ConditionalOnBean(Tracer.class)

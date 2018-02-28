@@ -20,6 +20,7 @@ import java.util.concurrent.Executor;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,6 +29,7 @@ import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
@@ -49,11 +51,10 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 @AutoConfigureAfter(AsyncCustomAutoConfiguration.class)
 public class AsyncDefaultAutoConfiguration {
 
-	@Autowired private BeanFactory beanFactory;
-
 	@Configuration
 	@ConditionalOnMissingBean(AsyncConfigurer.class)
 	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled", matchIfMissing = true)
+	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	static class DefaultAsyncConfigurerSupport extends AsyncConfigurerSupport {
 
 		@Autowired private BeanFactory beanFactory;
@@ -64,14 +65,16 @@ public class AsyncDefaultAutoConfiguration {
 		}
 	}
 
+	@Autowired private BeanFactory beanFactory;
+
 	@Bean
 	public TraceAsyncAspect traceAsyncAspect(Tracer tracer, TraceKeys traceKeys) {
 		return new TraceAsyncAspect(tracer, traceKeys, this.beanFactory);
 	}
 
 	@Bean
-	public ExecutorBeanPostProcessor executorBeanPostProcessor() {
-		return new ExecutorBeanPostProcessor(this.beanFactory);
+	public static ExecutorBeanPostProcessor executorBeanPostProcessor(BeanFactory beanFactory) {
+		return new ExecutorBeanPostProcessor(beanFactory);
 	}
 
 }

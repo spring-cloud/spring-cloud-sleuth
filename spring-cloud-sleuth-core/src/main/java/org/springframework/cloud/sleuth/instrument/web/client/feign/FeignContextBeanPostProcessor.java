@@ -31,7 +31,6 @@ import org.springframework.cloud.netflix.feign.FeignContext;
 final class FeignContextBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
-	private TraceFeignObjectWrapper traceFeignObjectWrapper;
 
 	FeignContextBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -40,22 +39,19 @@ final class FeignContextBeanPostProcessor implements BeanPostProcessor {
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof FeignContext && !(bean instanceof TraceFeignContext)) {
-			return new TraceFeignContext(getTraceFeignObjectWrapper(), (FeignContext) bean);
-		}
 		return bean;
 	}
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
+		if (bean instanceof FeignContext && !(bean instanceof TraceFeignContext)) {
+			return new TraceFeignContext(traceFeignObjectWrapper(), (FeignContext) bean);
+		}
 		return bean;
 	}
 
-	private TraceFeignObjectWrapper getTraceFeignObjectWrapper() {
-		if (this.traceFeignObjectWrapper == null) {
-			this.traceFeignObjectWrapper = this.beanFactory.getBean(TraceFeignObjectWrapper.class);
-		}
-		return this.traceFeignObjectWrapper;
+	private TraceFeignObjectWrapper traceFeignObjectWrapper() {
+		return new TraceFeignObjectWrapper(this.beanFactory);
 	}
 }

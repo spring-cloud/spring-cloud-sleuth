@@ -45,7 +45,7 @@ final class SleuthHystrixFeignBuilder {
 	private static Client client(BeanFactory beanFactory) {
 		try {
 			Client client = beanFactory.getBean(Client.class);
-			return (Client) new TraceFeignObjectWrapper(beanFactory).wrap(client);
+			return new LazyClient(beanFactory, client);
 		} catch (BeansException e) {
 			return new TraceFeignClient(beanFactory);
 		}

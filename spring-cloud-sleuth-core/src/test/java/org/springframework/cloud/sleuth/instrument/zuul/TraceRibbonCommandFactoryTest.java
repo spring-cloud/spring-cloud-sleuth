@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
@@ -51,6 +52,7 @@ public class TraceRibbonCommandFactoryTest {
 
 	@Mock Tracer tracer;
 	@Mock SpringClientFactory springClientFactory;
+	@Mock BeanFactory beanFactory;
 	HttpTraceKeysInjector httpTraceKeysInjector;
 	@Mock RibbonCommandFactory ribbonCommandFactory;
 	TraceRibbonCommandFactory traceRibbonCommandFactory;
@@ -62,12 +64,15 @@ public class TraceRibbonCommandFactoryTest {
 	public void setup() {
 		this.httpTraceKeysInjector = new HttpTraceKeysInjector(this.tracer, new TraceKeys());
 		this.traceRibbonCommandFactory = new TraceRibbonCommandFactory(
-				this.ribbonCommandFactory, this.tracer,
-				httpTraceKeysInjector);
+				this.ribbonCommandFactory, this.beanFactory);
 		given(this.springClientFactory.getClient(anyString(), any(Class.class)))
 				.willReturn(new RestClient());
 		given(this.tracer.getCurrentSpan()).willReturn(span);
 		given(this.tracer.isTracing()).willReturn(true);
+		given(this.beanFactory.getBean(Tracer.class))
+				.willReturn(this.tracer);
+		given(this.beanFactory.getBean(HttpTraceKeysInjector.class))
+				.willReturn(this.httpTraceKeysInjector);
 	}
 
 	@After

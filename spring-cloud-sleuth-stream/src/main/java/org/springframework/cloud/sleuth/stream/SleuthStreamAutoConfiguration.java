@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -45,6 +46,7 @@ import org.springframework.cloud.stream.config.ChannelBindingAutoConfiguration;
 import org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 import org.springframework.integration.config.GlobalChannelInterceptor;
@@ -102,6 +104,7 @@ public class SleuthStreamAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public StreamSpanReporter sleuthStreamSpanReporter(HostLocator endpointLocator,
 			SpanMetricReporter spanMetricReporter, Environment environment) {
 		return new StreamSpanReporter(endpointLocator, spanMetricReporter, environment,

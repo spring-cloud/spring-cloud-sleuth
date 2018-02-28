@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import feign.Client;
+import feign.okhttp.OkHttpClient;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-
-import feign.okhttp.OkHttpClient;
 
 /**
  * Post processor that wraps takes care of the OkHttp Feign Client instrumentation
@@ -32,7 +32,6 @@ import feign.okhttp.OkHttpClient;
 final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
-	private TraceFeignObjectWrapper traceFeignObjectWrapper;
 
 	OkHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -41,8 +40,8 @@ final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof OkHttpClient) {
-			return getTraceFeignObjectWrapper().wrap(bean);
+		if (bean instanceof OkHttpClient && !(bean instanceof LazyClient)) {
+			return new LazyClient(this.beanFactory, (Client) bean);
 		}
 		return bean;
 	}
@@ -51,12 +50,5 @@ final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
 		return bean;
-	}
-
-	private TraceFeignObjectWrapper getTraceFeignObjectWrapper() {
-		if (this.traceFeignObjectWrapper == null) {
-			this.traceFeignObjectWrapper = this.beanFactory.getBean(TraceFeignObjectWrapper.class);
-		}
-		return this.traceFeignObjectWrapper;
 	}
 }

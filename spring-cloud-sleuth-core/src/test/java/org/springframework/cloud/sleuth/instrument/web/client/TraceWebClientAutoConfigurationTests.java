@@ -71,7 +71,8 @@ public class TraceWebClientAutoConfigurationTests {
 		int myInterceptorIndex = -1;
 		int mySecondInterceptorIndex = -1;
 		for (int i = 0; i < interceptors.size(); i++) {
-			if (interceptors.get(i) instanceof TraceRestTemplateInterceptor) {
+			if (interceptors.get(i) instanceof TraceRestTemplateInterceptor  ||
+					interceptors.get(i) instanceof LazyTracingClientHttpRequestInterceptor) {
 				traceInterceptorIndex = i;
 			} else if (interceptors.get(i) instanceof MyClientHttpRequestInterceptor) {
 				myInterceptorIndex = i;

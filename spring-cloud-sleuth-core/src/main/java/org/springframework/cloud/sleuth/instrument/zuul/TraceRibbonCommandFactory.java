@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
@@ -30,24 +32,39 @@ import org.springframework.cloud.sleuth.instrument.web.HttpTraceKeysInjector;
  * @author Marcin Grzejszczak
  * @since 1.1.0
  */
-class TraceRibbonCommandFactory implements RibbonCommandFactory {
+class TraceRibbonCommandFactory implements RibbonCommandFactory,
+		SmartInitializingSingleton {
 
+	private Tracer tracer;
+	private HttpTraceKeysInjector httpTraceKeysInjector;
 	private final RibbonCommandFactory delegate;
-	private final Tracer tracer;
-	private final HttpTraceKeysInjector httpTraceKeysInjector;
+	private final BeanFactory beanFactory;
 
-	public TraceRibbonCommandFactory(RibbonCommandFactory delegate,
-			Tracer tracer, HttpTraceKeysInjector httpTraceKeysInjector) {
+	TraceRibbonCommandFactory(RibbonCommandFactory delegate, BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 		this.delegate = delegate;
-		this.tracer = tracer;
-		this.httpTraceKeysInjector = httpTraceKeysInjector;
+	}
+
+	private void initialize() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
+		if (this.httpTraceKeysInjector == null) {
+			this.httpTraceKeysInjector = this.beanFactory.getBean(HttpTraceKeysInjector.class);
+		}
 	}
 
 	@Override
 	public RibbonCommand create(RibbonCommandContext context) {
+		// just in case - everything should be already initialized
+		initialize();
 		RibbonCommand ribbonCommand = this.delegate.create(context);
 		Span span = this.tracer.getCurrentSpan();
 		this.httpTraceKeysInjector.addRequestTags(span, context.uri(), context.getMethod());
 		return ribbonCommand;
+	}
+
+	@Override public void afterSingletonsInstantiated() {
+		initialize();
 	}
 }

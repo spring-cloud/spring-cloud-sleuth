@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +38,10 @@ import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.web.client.RestTemplate;
 
@@ -77,9 +81,8 @@ public class TraceWebClientAutoConfiguration {
 			return new TraceRestTemplateCustomizer(this.traceRestTemplateInterceptor);
 		}
 
-		@Bean
-		TraceRestTemplateBPP traceRestTemplateBPP(BeanFactory beanFactory) {
-			return new TraceRestTemplateBPP(beanFactory);
+		@Bean static TraceRestTemplateBeanPostProcessor traceRestTemplateBPP(BeanFactory beanFactory) {
+			return new TraceRestTemplateBeanPostProcessor(beanFactory);
 		}
 	}
 
@@ -87,24 +90,21 @@ public class TraceWebClientAutoConfiguration {
 	@ConditionalOnClass({ UserInfoRestTemplateCustomizer.class, OAuth2RestTemplate.class })
 	protected static class TraceOAuthConfiguration {
 
-		@Autowired BeanFactory beanFactory;
-
-		@Bean
-		UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor() {
-			return new UserInfoRestTemplateCustomizerBPP(this.beanFactory);
+		@Bean static UserInfoRestTemplateCustomizerBeanPostProcessor userInfoRestTemplateCustomizerBeanPostProcessor(BeanFactory beanFactory) {
+			return new UserInfoRestTemplateCustomizerBeanPostProcessor(beanFactory);
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
-		UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer() {
-			return new TraceUserInfoRestTemplateCustomizer(this.beanFactory);
+		UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer(BeanFactory beanFactory) {
+			return new TraceUserInfoRestTemplateCustomizer(beanFactory);
 		}
 
-		private static class UserInfoRestTemplateCustomizerBPP implements BeanPostProcessor {
+		private static class UserInfoRestTemplateCustomizerBeanPostProcessor implements BeanPostProcessor {
 
 			private final BeanFactory beanFactory;
 
-			UserInfoRestTemplateCustomizerBPP(BeanFactory beanFactory) {
+			UserInfoRestTemplateCustomizerBeanPostProcessor(BeanFactory beanFactory) {
 				this.beanFactory = beanFactory;
 			}
 
@@ -129,9 +129,9 @@ public class TraceWebClientAutoConfiguration {
 }
 
 class RestTemplateInterceptorInjector {
-	private final TraceRestTemplateInterceptor interceptor;
+	private final ClientHttpRequestInterceptor interceptor;
 
-	RestTemplateInterceptorInjector(TraceRestTemplateInterceptor interceptor) {
+	RestTemplateInterceptorInjector(ClientHttpRequestInterceptor interceptor) {
 		this.interceptor = interceptor;
 	}
 
@@ -170,12 +170,12 @@ class TraceRestTemplateCustomizer implements RestTemplateCustomizer {
 	}
 }
 
-class TraceRestTemplateBPP implements BeanPostProcessor {
+class TraceRestTemplateBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 	private TraceRestTemplateInterceptor interceptor;
 
-	TraceRestTemplateBPP(BeanFactory beanFactory) {
+	TraceRestTemplateBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
@@ -191,6 +191,26 @@ class TraceRestTemplateBPP implements BeanPostProcessor {
 			new RestTemplateInterceptorInjector(interceptor()).inject(rt);
 		}
 		return bean;
+	}
+
+	private ClientHttpRequestInterceptor interceptor() {
+		return new LazyTracingClientHttpRequestInterceptor(this.beanFactory);
+	}
+
+}
+
+class LazyTracingClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
+
+	private final BeanFactory beanFactory;
+	private TraceRestTemplateInterceptor interceptor;
+
+	public LazyTracingClientHttpRequestInterceptor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	@Override public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+			ClientHttpRequestExecution execution) throws IOException {
+		return interceptor().intercept(request, body, execution);
 	}
 
 	private TraceRestTemplateInterceptor interceptor() {
