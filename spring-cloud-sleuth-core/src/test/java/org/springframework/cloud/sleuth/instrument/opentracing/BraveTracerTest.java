@@ -15,32 +15,23 @@
  */
 package org.springframework.cloud.sleuth.instrument.opentracing;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import brave.Span;
-import brave.Tracer;
 import brave.Tracer.SpanInScope;
 import brave.Tracing;
 import brave.opentracing.BraveSpan;
 import brave.opentracing.BraveSpanContext;
 import brave.opentracing.BraveTracer;
-import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
-import brave.propagation.ExtraFieldPropagation;
-import brave.propagation.Propagation;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import io.opentracing.Scope;
 import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
 import io.opentracing.propagation.TextMapExtractAdapter;
 import io.opentracing.propagation.TextMapInjectAdapter;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,7 +43,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 import zipkin2.Annotation;
-import zipkin2.Endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;

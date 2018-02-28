@@ -20,10 +20,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import brave.Tracing;
+import org.reactivestreams.Publisher;
+import org.springframework.beans.factory.BeanFactory;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.core.publisher.Operators;
-import org.reactivestreams.Publisher;
 import reactor.util.context.Context;
 
 /**
@@ -35,29 +36,31 @@ import reactor.util.context.Context;
 public abstract class ReactorSleuth {
 
 	/**
-	 * Return a span operator pointcut given a {@link Tracing}. This can be used in reactor
+	 * Return a span operator pointcut given a {@link BeanFactory}. This can be used in reactor
 	 * via {@link reactor.core.publisher.Flux#transform(Function)}, {@link
 	 * reactor.core.publisher.Mono#transform(Function)}, {@link
 	 * reactor.core.publisher.Hooks#onEachOperator(Function)} or {@link
 	 * reactor.core.publisher.Hooks#onLastOperator(Function)}.
 	 *
-	 * @param tracing the {@link Tracing} instance to use in this span operator
+	 * @param beanFactory
 	 * @param <T> an arbitrary type that is left unchanged by the span operator
 	 *
-	 * @return a new Span operator pointcut
+	 * @return a new lazy span operator pointcut
 	 */
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanOperator(
-			Tracing tracing) {
+			BeanFactory beanFactory) {
 		return Operators.lift(POINTCUT_FILTER, ((scannable, sub) -> {
 			//do not trace fused flows
 			if(scannable instanceof Fuseable && sub instanceof Fuseable.QueueSubscription){
 				return sub;
 			}
-			return new SpanSubscriber<>(
-					sub,
-					sub.currentContext(),
-					tracing,
-					scannable.name());
+			return new LazySpanSubscriber<T>(
+					new SpanSubscriptionProvider(
+						beanFactory,
+						sub,
+						sub.currentContext(),
+						scannable.name())
+			);
 		}));
 	}
 
@@ -69,22 +72,32 @@ public abstract class ReactorSleuth {
 	 * reactor.core.publisher.Hooks#onLastOperator(Function)}. The Span operator
 	 * pointcut will pass the Scope of the Span without ever creating any new spans.
 	 *
-	 * @param tracing the {@link Tracing} instance to use in this span operator
+	 * @param beanFactory
 	 * @param <T> an arbitrary type that is left unchanged by the span operator
 	 *
-	 * @return a new Span operator pointcut
+	 * @return a new lazy span operator pointcut
 	 */
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanOperator(
-			Tracing tracing) {
+			BeanFactory beanFactory) {
 		return Operators.lift(POINTCUT_FILTER, ((scannable, sub) -> {
 			//do not trace fused flows
 			if(scannable instanceof Fuseable && sub instanceof Fuseable.QueueSubscription){
 				return sub;
 			}
-			return new ScopePassingSpanSubscriber<>(
-					sub,
-					sub != null ? sub.currentContext() : Context.empty(),
-					tracing);
+			return new LazySpanSubscriber<T>(
+					new SpanSubscriptionProvider(
+							beanFactory,
+							sub,
+							sub.currentContext(),
+							scannable.name()) {
+						@Override SpanSubscription newCoreSubscriber(Tracing tracing) {
+							return new ScopePassingSpanSubscriber<T>(
+									sub,
+									sub != null ? sub.currentContext() : Context.empty(),
+									tracing);
+						}
+					}
+			);
 		}));
 	}
 

@@ -24,7 +24,6 @@ import brave.Tracing;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import reactor.core.CoreSubscriber;
 import reactor.util.Logger;
 import reactor.util.Loggers;
 import reactor.util.context.Context;
@@ -36,8 +35,7 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-final class SpanSubscriber<T> extends AtomicBoolean implements Subscription,
-		CoreSubscriber<T> {
+final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<T> {
 
 	private static final Logger log = Loggers.getLogger(
 			SpanSubscriber.class);

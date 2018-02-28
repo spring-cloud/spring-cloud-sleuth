@@ -23,9 +23,6 @@ import brave.Tracer;
 import brave.Tracing;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import reactor.core.CoreSubscriber;
-import reactor.util.Logger;
-import reactor.util.Loggers;
 import reactor.util.context.Context;
 
 /**
@@ -35,11 +32,7 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements Subscription,
-		CoreSubscriber<T> {
-
-	private static final Logger log = Loggers.getLogger(
-			ScopePassingSpanSubscriber.class);
+final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<T> {
 
 	private final Span span;
 	private final Subscriber<? super T> subscriber;
@@ -83,11 +76,15 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements Subsc
 	}
 
 	@Override public void onError(Throwable throwable) {
-		this.subscriber.onError(throwable);
+		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
+			this.subscriber.onError(throwable);
+		}
 	}
 
 	@Override public void onComplete() {
-		this.subscriber.onComplete();
+		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
+			this.subscriber.onComplete();
+		}
 	}
 
 	@Override public Context currentContext() {

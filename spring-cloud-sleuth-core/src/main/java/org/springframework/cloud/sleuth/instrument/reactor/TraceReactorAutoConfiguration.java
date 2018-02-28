@@ -16,20 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
+import javax.annotation.PreDestroy;
 
 import brave.Tracing;
-import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -37,6 +37,9 @@ import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecu
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -56,34 +59,16 @@ public class TraceReactorAutoConfiguration {
 	@ConditionalOnBean(Tracing.class)
 	static class TraceReactorConfiguration {
 
-		private static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class.getName();
-
-		@Autowired Tracing tracing;
-		@Autowired BeanFactory beanFactory;
-		@Autowired LastOperatorWrapper lastOperatorWrapper;
+		static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class.getName();
 
 		@Bean
 		@ConditionalOnNotWebApplication LastOperatorWrapper spanOperator() {
-			return tracer -> Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.spanOperator(tracer));
+			return beanFactory -> Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.spanOperator(beanFactory));
 		}
 
 		@Bean
 		@ConditionalOnWebApplication LastOperatorWrapper noOpLastOperatorWrapper() {
-			return tracer -> { };
-		}
-
-		@PostConstruct
-		public void setupHooks() {
-			this.lastOperatorWrapper.wrapLastOperator(this.tracing);
-			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.scopePassingSpanOperator(this.tracing));
-			Schedulers.setFactory(new Schedulers.Factory() {
-				@Override public ScheduledExecutorService decorateExecutorService(String schedulerType,
-						Supplier<? extends ScheduledExecutorService> actual) {
-					return new TraceableScheduledExecutorService(
-							TraceReactorConfiguration.this.beanFactory,
-							actual.get());
-				}
-			});
+			return beanFactory -> { };
 		}
 
 		@PreDestroy
@@ -92,9 +77,48 @@ public class TraceReactorAutoConfiguration {
 			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 			Schedulers.resetFactory();
 		}
+
+		@Bean
+		// for tests
+		@ConditionalOnMissingBean
+		HookRegisteringBeanDefinitionRegistryPostProcessor traceHookRegisteringBeanDefinitionRegistryPostProcessor() {
+			return new HookRegisteringBeanDefinitionRegistryPostProcessor();
+		}
 	}
 }
 
 interface LastOperatorWrapper {
-	void wrapLastOperator(Tracing tracer);
+	void wrapLastOperator(BeanFactory beanFactory);
+}
+
+class HookRegisteringBeanDefinitionRegistryPostProcessor implements
+		BeanDefinitionRegistryPostProcessor {
+
+	@Override public void postProcessBeanDefinitionRegistry(
+			BeanDefinitionRegistry registry) throws BeansException {
+	}
+
+	@Override public void postProcessBeanFactory(
+			ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		LastOperatorWrapper wrapper = beanFactory.getBean(LastOperatorWrapper.class);
+		setupHooks(wrapper, beanFactory);
+	}
+
+	void setupHooks(LastOperatorWrapper wrapper, BeanFactory beanFactory) {
+		wrapper.wrapLastOperator(beanFactory);
+		Hooks.onEachOperator(
+				TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY,
+				ReactorSleuth.scopePassingSpanOperator(beanFactory));
+		Schedulers.setFactory(factoryInstance(beanFactory));
+	}
+
+	private Schedulers.Factory factoryInstance(final BeanFactory beanFactory) {
+		return new Schedulers.Factory() {
+			@Override public ScheduledExecutorService decorateExecutorService(String schedulerType,
+					Supplier<? extends ScheduledExecutorService> actual) {
+				return new TraceableScheduledExecutorService(beanFactory,
+						actual.get());
+			}
+		};
+	}
 }

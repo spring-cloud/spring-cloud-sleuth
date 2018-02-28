@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,10 +35,12 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurity
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -46,6 +49,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import zipkin2.Span;
 
@@ -62,6 +66,12 @@ public class FlatMapTests {
 	public static void setup() {
 		Hooks.resetOnLastOperator();
 		Schedulers.resetFactory();
+		Issue866Configuration.hook = null;
+	}
+
+	@AfterClass
+	public static void cleanup() {
+		Issue866Configuration.hook = null;
 	}
 
 	@Rule public OutputCapture capture = new OutputCapture();
@@ -69,7 +79,8 @@ public class FlatMapTests {
 	@Test public void should_work_with_flat_maps() {
 		//given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				FlatMapTests.TestConfiguration.class).web(WebApplicationType.REACTIVE)
+				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
+				.web(WebApplicationType.REACTIVE)
 				.properties("server.port=0", "spring.jmx.enabled=false",
 						"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
 						"management.security.enabled=false").run();
@@ -77,6 +88,7 @@ public class FlatMapTests {
 		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
 		RequestSender sender = context.getBean(RequestSender.class);
 		TestConfiguration config = context.getBean(TestConfiguration.class);
+		FactoryUser factoryUser = context.getBean(FactoryUser.class);
 		sender.port = port;
 		accumulator.clear();
 
@@ -103,6 +115,8 @@ public class FlatMapTests {
 					.collect(Collectors.toList()))
 					.as("TraceFilter should not have any trace when receiving a request")
 					.containsOnly("");
+			//and #866
+			then(factoryUser.wasSchedulerWrapped).isTrue();
 		});
 	}
 
@@ -176,10 +190,24 @@ public class FlatMapTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean
-		RequestSender sender(WebClient client, Tracer tracer) {
+		@Bean RequestSender sender(WebClient client, Tracer tracer) {
 			return new RequestSender(client, tracer);
 		}
 
+		// https://github.com/spring-cloud/spring-cloud-sleuth/issues/866
+		@Bean
+		FactoryUser factoryUser() {
+			return new FactoryUser();
+		}
+
+	}
+}
+
+class FactoryUser {
+	boolean wasSchedulerWrapped = false;
+
+	FactoryUser() {
+		Issue866Configuration.TestHook hook = Issue866Configuration.hook;
+		this.wasSchedulerWrapped = hook != null && hook.executed;
 	}
 }
