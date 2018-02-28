@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import brave.http.HttpTracing;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -33,7 +32,6 @@ import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory
 final class TraceRibbonCommandFactoryBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
-	private HttpTracing tracing;
 
 	TraceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -50,15 +48,8 @@ final class TraceRibbonCommandFactoryBeanPostProcessor implements BeanPostProces
 			throws BeansException {
 		if (bean instanceof RibbonCommandFactory
 				&& !(bean instanceof TraceRibbonCommandFactory)) {
-			return new TraceRibbonCommandFactory((RibbonCommandFactory) bean, tracing());
+			return new TraceRibbonCommandFactory((RibbonCommandFactory) bean, this.beanFactory);
 		}
 		return bean;
-	}
-
-	HttpTracing tracing() {
-		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(HttpTracing.class);
-		}
-		return this.tracing;
 	}
 }

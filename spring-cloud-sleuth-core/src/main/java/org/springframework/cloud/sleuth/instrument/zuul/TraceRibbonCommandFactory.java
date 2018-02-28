@@ -28,6 +28,8 @@ import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
@@ -41,7 +43,8 @@ import rx.Observable;
  * @author Marcin Grzejszczak
  * @since 1.1.0
  */
-class TraceRibbonCommandFactory implements RibbonCommandFactory {
+class TraceRibbonCommandFactory implements RibbonCommandFactory,
+		SmartInitializingSingleton {
 
 	static final Propagation.Setter<RibbonCommandContext, String> SETTER = new Propagation.Setter<RibbonCommandContext, String>() {
 		@Override public void put(RibbonCommandContext carrier, String key, String value) {
@@ -55,23 +58,45 @@ class TraceRibbonCommandFactory implements RibbonCommandFactory {
 
 	private static final Log log = LogFactory.getLog(TraceRibbonCommandFactory.class);
 
-	final HttpTracing tracing;
-	final Tracer tracer;
-	final RibbonCommandFactory delegate;
+	HttpTracing tracing;
+	Tracer tracer;
+	RibbonCommandFactory delegate;
 	HttpClientHandler<RibbonCommandContext, ClientHttpResponse> handler;
 	TraceContext.Injector<RibbonCommandContext> injector;
+	final BeanFactory beanFactory;
 
-	TraceRibbonCommandFactory(RibbonCommandFactory delegate, HttpTracing httpTracing) {
-		this.tracing = httpTracing;
+	TraceRibbonCommandFactory(RibbonCommandFactory delegate, BeanFactory beanFactory) {
 		this.delegate = delegate;
-		this.tracer = httpTracing.tracing().tracer();
-		this.handler = HttpClientHandler
-				.create(httpTracing, new TraceRibbonCommandFactory.HttpAdapter());
-		this.injector = httpTracing.tracing().propagation().injector(SETTER);
+		this.beanFactory = beanFactory;
+	}
+
+	private void initialize() {
+		if (this.tracing == null) {
+			this.tracing = httpTracing();
+		}
+		if (this.tracer == null) {
+			this.tracer = httpTracing().tracing().tracer();
+		}
+		if (this.handler == null) {
+			this.handler = HttpClientHandler
+					.create(httpTracing(), new TraceRibbonCommandFactory.HttpAdapter());
+		}
+		if (this.injector == null) {
+			this.injector = httpTracing().tracing().propagation().injector(SETTER);
+		}
+	}
+
+	private HttpTracing httpTracing() {
+		if (this.tracing == null) {
+			this.tracing = this.beanFactory.getBean(HttpTracing.class);
+		}
+		return this.tracing;
 	}
 
 	@Override
 	public RibbonCommand create(final RibbonCommandContext context) {
+		// just in case - everything should be already initialized
+		initialize();
 		final RibbonCommand ribbonCommand = this.delegate.create(context);
 		Span span = this.tracer.currentSpan();
 		if (log.isDebugEnabled()) {
@@ -113,6 +138,10 @@ class TraceRibbonCommandFactory implements RibbonCommandFactory {
 	private void parseRequest(RibbonCommandContext context, Span span) {
 		TraceRibbonCommandFactory.this.tracing.clientParser()
 				.request(new TraceRibbonCommandFactory.HttpAdapter(), context, span);
+	}
+
+	@Override public void afterSingletonsInstantiated() {
+		initialize();
 	}
 
 	static final class HttpAdapter

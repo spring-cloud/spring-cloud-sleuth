@@ -16,39 +16,29 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import feign.Client;
-import feign.okhttp.OkHttpClient;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.config.BeanPostProcessor;
+import java.io.IOException;
 
-/**
- * Post processor that wraps takes care of the OkHttp Feign Client instrumentation
- *
- * @author Marcin Grzejszczak
- *
- * @since 1.1.3
- */
-final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
+import feign.Client;
+import feign.Request;
+import feign.Response;
+import org.springframework.beans.factory.BeanFactory;
+
+class LazyClient implements Client {
 
 	private final BeanFactory beanFactory;
+	private final Client delegate;
 
-	OkHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
+	LazyClient(BeanFactory beanFactory, Client delegate) {
 		this.beanFactory = beanFactory;
+		this.delegate = delegate;
 	}
 
-	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
-		if (bean instanceof OkHttpClient && !(bean instanceof LazyClient)) {
-			return new LazyClient(this.beanFactory, (Client) bean);
-		}
-		return bean;
+	@Override public Response execute(Request request, Request.Options options)
+			throws IOException {
+		return ((Client) wrapper().wrap(this.delegate)).execute(request, options);
 	}
 
-	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
-		return bean;
+	private TraceFeignObjectWrapper wrapper() {
+		return new TraceFeignObjectWrapper(this.beanFactory);
 	}
 }
