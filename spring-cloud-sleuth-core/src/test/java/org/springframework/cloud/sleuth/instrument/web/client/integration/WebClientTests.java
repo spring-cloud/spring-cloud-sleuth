@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
@@ -33,13 +34,19 @@ import brave.Tracing;
 import brave.propagation.SamplingFlags;
 import brave.propagation.TraceContextOrSamplingFlags;
 import brave.sampler.Sampler;
-import brave.spring.web.TracingClientHttpRequestInterceptor;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.After;
@@ -59,9 +66,9 @@ import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -109,6 +116,10 @@ public class WebClientTests {
 	@Autowired @LoadBalanced RestTemplate template;
 	@Autowired WebClient webClient;
 	@Autowired WebClient.Builder webClientBuilder;
+	// #845
+	@Autowired HttpClientBuilder httpClientBuilder;
+	// #845
+	@Autowired HttpAsyncClientBuilder httpAsyncClientBuilder;
 	@Autowired ArrayListSpanReporter reporter;
 	@Autowired Tracer tracer;
 	@Autowired TestErrorController testErrorController;
@@ -197,7 +208,7 @@ public class WebClientTests {
 		then(Tracing.current().tracer().currentSpan()).isNull();
 	}
 
-	Object[] parametersForShouldPropagateNotSamplingHeader() {
+	Object[] parametersForShouldPropagateNotSamplingHeader() throws Exception {
 		return new Object[] {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
@@ -224,6 +235,64 @@ public class WebClientTests {
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldAttachTraceIdWhenCallingAnotherServiceForHttpClient() throws Exception {
+		Span span = this.tracer.nextSpan().name("foo").start();
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			String response = this.httpClientBuilder.build()
+					.execute(new HttpGet("http://localhost:" + port),
+							new BasicResponseHandler());
+
+			then(response).isNotEmpty();
+		} finally {
+			span.finish();
+		}
+
+		then(this.tracer.currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.reporter.getSpans())
+				.extracting("traceId", String.class)
+				.containsOnly(span.context().traceIdString());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldAttachTraceIdWhenCallingAnotherServiceForAsyncHttpClient() throws Exception {
+		Span span = this.tracer.nextSpan().name("foo").start();
+
+		CloseableHttpAsyncClient client = this.httpAsyncClientBuilder.build();
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			client.start();
+			Future<HttpResponse> future = client
+					.execute(new HttpGet("http://localhost:" + port),
+							new FutureCallback<HttpResponse>() {
+								@Override public void completed(HttpResponse result) {
+
+								}
+
+								@Override public void failed(Exception ex) {
+
+								}
+
+								@Override public void cancelled() {
+
+								}
+							});
+			then(future.get()).isNotNull();
+		} finally {
+			span.finish();
+			client.close();
+		}
+
+		then(this.tracer.currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.reporter.getSpans())
+				.extracting("traceId", String.class)
+				.containsOnly(span.context().traceIdString());
 	}
 
 	@Test

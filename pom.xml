@@ -276,7 +276,7 @@
 						<enabled>false</enabled>
 					</releases>
 				</repository>
-				<!-- TODO: REMOVE ME - ONLY FOR BRAVE SNAPSHOTS -->
+				<!-- ONLY FOR BRAVE SNAPSHOTS -->
 				<repository>
 					<id>jfrog-snapshots</id>
 					<name>JFrog Snapshots</name>

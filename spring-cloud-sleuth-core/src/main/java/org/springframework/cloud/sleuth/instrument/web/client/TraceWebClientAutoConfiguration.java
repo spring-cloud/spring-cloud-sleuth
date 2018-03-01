@@ -21,16 +21,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import brave.http.HttpTracing;
+import brave.httpasyncclient.TracingHttpAsyncClientBuilder;
+import brave.httpclient.TracingHttpClientBuilder;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
+import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,8 +61,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 @SleuthWebClientEnabled
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
+@AutoConfigureBefore(HttpClientConfiguration.class)
 public class TraceWebClientAutoConfiguration {
 
+	@Configuration
 	@ConditionalOnClass(RestTemplate.class)
 	static class RestTemplateConfig {
 
@@ -76,6 +85,28 @@ public class TraceWebClientAutoConfiguration {
 			@Bean static TraceRestTemplateBeanPostProcessor traceRestTemplateBPP(ListableBeanFactory beanFactory) {
 				return new TraceRestTemplateBeanPostProcessor(beanFactory);
 			}
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass(HttpClientBuilder.class)
+	static class HttpClientBuilderConfig {
+
+		@Bean
+		@ConditionalOnMissingBean
+		HttpClientBuilder traceHttpClientBuilder(HttpTracing httpTracing) {
+			return TracingHttpClientBuilder.create(httpTracing);
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass(HttpAsyncClientBuilder.class)
+	static class HttpAsyncClientBuilderConfig {
+
+		@Bean
+		@ConditionalOnMissingBean
+		HttpAsyncClientBuilder traceHttpAsyncClientBuilder(HttpTracing httpTracing) {
+			return TracingHttpAsyncClientBuilder.create(httpTracing);
 		}
 	}
 

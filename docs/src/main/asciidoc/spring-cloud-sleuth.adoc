@@ -756,8 +756,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 Running the preceding method with a value of `15` leads to setting a tag with a String value of `"15"`.
 
-// TODO: Once content exists, un-comment the headings.
-// == Customizations
+== Customizations
 
 // TODO: Update this
 
@@ -923,6 +922,9 @@ To disable the custom `RxJavaSchedulersHook`, set the `spring.sleuth.rxjava.sche
 You can define a list of regular expressions for thread names for which you do not want spans to be created.
 To do so, provide a comma-separated list of regular expressions in the `spring.sleuth.rxjava.schedulers.ignoredthreads` property.
 
+IMPORTANT: The suggest approach to reactive programming and Sleuth is to use
+the Reactor support.
+
 === HTTP integration
 
 Features from this section can be disabled by setting the `spring.sleuth.web.enabled` property with value equal to `false`.
@@ -994,6 +996,8 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 We inject a `ExchangeFilterFunction` implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.
 
+To block this feature, set `spring.sleuth.web.client.enabled` to `false`.
+
 IMPORTANT: You have to register `WebClient` as a bean so that the tracing instrumentation gets applied.
 If you create a `WebClient` instance with a `new` keyword,  the instrumentation does NOT work.
 
@@ -1011,6 +1015,13 @@ Traverson traverson = new Traverson(URI.create("http://some/address"),
     MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
 // use Traverson
 ----
+
+==== Apache `HttpClientBuilder` and `HttpAsyncClientBuilder`
+
+We instrument the `HttpClientBuilder` and `HttpAsyncClientBuilder` so that
+tracing context gets injected to the sent requests.
+
+To block these features, set `spring.sleuth.web.client.enabled` to `false`.
 
 === Feign
 

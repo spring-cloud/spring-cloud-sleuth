@@ -104,6 +104,16 @@
 				<artifactId>brave-instrumentation-spring-webmvc</artifactId>
 				<version>${brave.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-instrumentation-httpclient</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-instrumentation-httpasyncclient</artifactId>
+				<version>${brave.version}</version>
+			</dependency>
 			<!-- ZIPKIN -->
 			<dependency>
 				<groupId>io.zipkin.java</groupId>
