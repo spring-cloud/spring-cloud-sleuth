@@ -179,6 +179,27 @@ public class SpanSubscriberTests {
 		tracer.close(foo2);
 	}
 
+	// #646
+	@Test
+	public void should_work_for_mono_just_with_flat_map() {
+
+		Span span = this.tracer.createSpan("foo");
+		log.info("Hello");
+
+		Mono.just("value1")
+				.flatMap(request ->
+						Mono.just("value2")
+								.then(Mono.just("foo"))
+				)
+				.map(a -> "qwe")
+			.block();
+
+		Awaitility.await().untilAsserted(() -> {
+			then(ExceptionUtils.getLastException()).isNull();
+		});
+		then(this.tracer.getCurrentSpan()).isNull();
+	}
+
 	@AfterClass
 	public static void cleanup() {
 		Hooks.resetOnLastOperator();
