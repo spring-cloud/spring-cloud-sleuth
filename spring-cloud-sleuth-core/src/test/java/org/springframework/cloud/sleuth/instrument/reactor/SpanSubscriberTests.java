@@ -225,6 +225,18 @@ public class SpanSubscriberTests {
 		then(spanInOperation).hasValue(initSpan.context().traceId()); // Expecting <AtomicReference[null]> to have value: <1L> but did not.
 	}
 
+	// #646
+	@Test
+	public void should_work_for_mono_just_with_flat_map() {
+		Span initSpan = this.tracer.nextSpan().name("foo").start();
+		log.info("Hello");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
+			Mono.just("value1").flatMap(request -> Mono.just("value2").then(Mono.just("foo")))
+					.map(a -> "qwe").block();
+		}
+	}
+
 	@AfterClass
 	public static void cleanup() {
 		Hooks.resetOnLastOperator();

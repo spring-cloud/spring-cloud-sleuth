@@ -102,7 +102,7 @@ public abstract class ReactorSleuth {
 	}
 
 	private static final Predicate<Scannable> POINTCUT_FILTER =
-			s ->  !(s instanceof Fuseable.ScalarCallable);
+			s ->  !(s instanceof Fuseable.ScalarCallable) && s.isScanAvailable();
 
 	private ReactorSleuth() {
 	}
