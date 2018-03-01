@@ -1023,6 +1023,15 @@ tracing context gets injected to the sent requests.
 
 To block these features, set `spring.sleuth.web.client.enabled` to `false`.
 
+==== Netty `HttpClient`
+
+We instrument the Netty's `HttpClient`.
+
+To block this feature, set `spring.sleuth.web.client.enabled` to `false`.
+
+IMPORTANT: You have to register `HttpClient` as a bean so that the instrumentation happens.
+If you create a `HttpClient` instance with a `new` keyword, the instrumentation does NOT work.
+
 === Feign
 
 By default, Spring Cloud Sleuth provides integration with Feign through `TraceFeignClientAutoConfiguration`.

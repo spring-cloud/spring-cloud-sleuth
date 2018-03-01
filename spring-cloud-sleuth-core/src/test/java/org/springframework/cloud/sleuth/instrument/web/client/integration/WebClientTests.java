@@ -87,6 +87,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Hooks;
 import reactor.core.scheduler.Schedulers;
+import reactor.ipc.netty.http.client.HttpClient;
+import reactor.ipc.netty.http.client.HttpClientResponse;
 import zipkin2.Annotation;
 import zipkin2.reporter.Reporter;
 
@@ -116,10 +118,9 @@ public class WebClientTests {
 	@Autowired @LoadBalanced RestTemplate template;
 	@Autowired WebClient webClient;
 	@Autowired WebClient.Builder webClientBuilder;
-	// #845
-	@Autowired HttpClientBuilder httpClientBuilder;
-	// #845
-	@Autowired HttpAsyncClientBuilder httpAsyncClientBuilder;
+	@Autowired HttpClientBuilder httpClientBuilder; // #845
+	@Autowired HttpClient nettyHttpClient;
+	@Autowired HttpAsyncClientBuilder httpAsyncClientBuilder; // #845
 	@Autowired ArrayListSpanReporter reporter;
 	@Autowired Tracer tracer;
 	@Autowired TestErrorController testErrorController;
@@ -235,6 +236,27 @@ public class WebClientTests {
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldAttachTraceIdWhenCallingAnotherServiceForNettyHttpClient() throws Exception {
+		Span span = this.tracer.nextSpan().name("foo").start();
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			HttpClientResponse response = this.nettyHttpClient
+					.get("http://localhost:" + port).block();
+
+			then(response).isNotNull();
+		} finally {
+			span.finish();
+		}
+
+		then(this.tracer.currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.reporter.getSpans())
+				.extracting("traceId", String.class)
+				.containsOnly(span.context().traceIdString());
 	}
 
 	@Test
@@ -464,6 +486,10 @@ public class WebClientTests {
 		@Bean
 		RestTemplateCustomizer myRestTemplateCustomizer() {
 			return new MyRestTemplateCustomizer();
+		}
+
+		@Bean HttpClient reactorHttpClient() {
+			return HttpClient.create();
 		}
 	}
 
