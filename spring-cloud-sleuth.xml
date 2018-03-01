@@ -1668,6 +1668,15 @@ Traverson traverson = new Traverson(URI.create("http://some/address"),
 tracing context gets injected to the sent requests.</simpara>
 <simpara>To block these features, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
 </section>
+<section xml:id="_netty_literal_httpclient_literal">
+<title>Netty <literal>HttpClient</literal></title>
+<simpara>We instrument the Netty&#8217;s <literal>HttpClient</literal>.</simpara>
+<simpara>To block this feature, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
+<important>
+<simpara>You have to register <literal>HttpClient</literal> as a bean so that the instrumentation happens.
+If you create a <literal>HttpClient</literal> instance with a <literal>new</literal> keyword, the instrumentation does NOT work.</simpara>
+</important>
+</section>
 </section>
 <section xml:id="_feign">
 <title>Feign</title>
