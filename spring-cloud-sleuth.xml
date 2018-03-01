@@ -1377,6 +1377,9 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 <simpara>Running the preceding method with a value of <literal>15</literal> leads to setting a tag with a String value of <literal>"15"</literal>.</simpara>
 </section>
 </section>
+</chapter>
+<chapter xml:id="_customizations">
+<title>Customizations</title>
 <section xml:id="__literal_tracefilter_literal">
 <title><literal>TraceFilter</literal></title>
 <simpara>You can also modify the behavior of the <literal>TraceFilter</literal>, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
@@ -1549,6 +1552,10 @@ The hook either starts or continues a span, depending on whether tracing was alr
 To disable the custom <literal>RxJavaSchedulersHook</literal>, set the <literal>spring.sleuth.rxjava.schedulers.hook.enabled</literal> to <literal>false</literal>.</simpara>
 <simpara>You can define a list of regular expressions for thread names for which you do not want spans to be created.
 To do so, provide a comma-separated list of regular expressions in the <literal>spring.sleuth.rxjava.schedulers.ignoredthreads</literal> property.</simpara>
+<important>
+<simpara>The suggest approach to reactive programming and Sleuth is to use
+the Reactor support.</simpara>
+</important>
 </section>
 <section xml:id="_http_integration">
 <title>HTTP integration</title>
@@ -1638,6 +1645,7 @@ static class Config {
 <section xml:id="__literal_webclient_literal">
 <title><literal>WebClient</literal></title>
 <simpara>We inject a <literal>ExchangeFilterFunction</literal> implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.</simpara>
+<simpara>To block this feature, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
 <important>
 <simpara>You have to register <literal>WebClient</literal> as a bean so that the tracing instrumentation gets applied.
 If you create a <literal>WebClient</literal> instance with a <literal>new</literal> keyword,  the instrumentation does NOT work.</simpara>
@@ -1653,6 +1661,12 @@ shows how to do that:</simpara>
 Traverson traverson = new Traverson(URI.create("http://some/address"),
     MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
 // use Traverson</programlisting>
+</section>
+<section xml:id="_apache_literal_httpclientbuilder_literal_and_literal_httpasyncclientbuilder_literal">
+<title>Apache <literal>HttpClientBuilder</literal> and <literal>HttpAsyncClientBuilder</literal></title>
+<simpara>We instrument the <literal>HttpClientBuilder</literal> and <literal>HttpAsyncClientBuilder</literal> so that
+tracing context gets injected to the sent requests.</simpara>
+<simpara>To block these features, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
 </section>
 </section>
 <section xml:id="_feign">
