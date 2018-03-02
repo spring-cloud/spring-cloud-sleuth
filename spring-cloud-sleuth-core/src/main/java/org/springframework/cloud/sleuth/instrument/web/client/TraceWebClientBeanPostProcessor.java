@@ -25,7 +25,6 @@ import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
-import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -90,7 +89,6 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 	private static final Log log = LogFactory.getLog(
 			TraceExchangeFilterFunction.class);
 	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
-	private static final String CLIENT_SPAN_ALREADY_PROCESSED_KEY = "sleuth.webclient.clientSpanAlreadyProcessed";
 
 	static final Propagation.Setter<ClientRequest.Builder, String> SETTER =
 			new Propagation.Setter<ClientRequest.Builder, String>() {
@@ -138,7 +136,6 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				.flatMap(anyAndContext -> {
 					Object any = anyAndContext.getT1();
 					Span clientSpan = anyAndContext.getT2().get(CLIENT_SPAN_KEY);
-					boolean clientSpanAlreadyProcessed = anyAndContext.getT2().get(CLIENT_SPAN_ALREADY_PROCESSED_KEY);
 					Mono<ClientResponse> continuation;
 					final Tracer.SpanInScope ws = tracer().withSpanInScope(clientSpan);
 						if (any instanceof Throwable) {
@@ -148,13 +145,6 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 						}
 					return continuation.doAfterSuccessOrError(
 							(clientResponse, throwable1) -> {
-								if (clientSpanAlreadyProcessed) {
-									if (log.isDebugEnabled()) {
-										log.debug("Another component will process the response. Skipping");
-										ws.close();
-										return;
-									}
-								}
 								Throwable throwable = throwable1;
 								boolean error = clientResponse.statusCode().is4xxClientError() ||
 										clientResponse.statusCode().is5xxServerError();
@@ -177,14 +167,6 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					if (log.isDebugEnabled()) {
 						log.debug("Instrumenting WebClient call");
 					}
-					TraceContextOrSamplingFlags flags = httpTracing().tracing()
-							.propagation().extractor(GETTER).extract(request);
-					if (flags != TraceContextOrSamplingFlags.EMPTY) {
-						if (log.isDebugEnabled()) {
-							log.debug("The request was already instrumented. Will not do it again");
-						}
-						return c.put(CLIENT_SPAN_ALREADY_PROCESSED_KEY, true);
-					}
 					Span parent = c.getOrDefault(Span.class, null);
 					Span clientSpan = handler().handleSend(injector(), builder,
 							request, tracer().nextSpan());
@@ -197,8 +179,7 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 							log.debug("Reactor Context got injected with the client span " + clientSpan);
 						}
 					}
-					return c.put(CLIENT_SPAN_ALREADY_PROCESSED_KEY, false)
-							.put(CLIENT_SPAN_KEY, clientSpan);
+					return c.put(CLIENT_SPAN_KEY, clientSpan);
 				});
 		return exchange;
 	}

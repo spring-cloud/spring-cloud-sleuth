@@ -33,7 +33,6 @@
 		<zipkin.version>2.5.0</zipkin.version>
 		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
 		<zipkin-reporter2.version>2.3.3</zipkin-reporter2.version>
-		<brave.version>4.16.1</brave.version>
 		<brave.opentracing.version>0.28.0</brave.opentracing.version>
 	</properties>
 	<dependencyManagement>
@@ -82,37 +81,6 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-sleuth</artifactId>
 				<version>${project.version}</version>
-			</dependency>
-			<!-- BRAVE -->
-			<dependency>
-				<groupId>io.zipkin.brave</groupId>
-				<artifactId>brave</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.brave</groupId>
-				<artifactId>brave-context-log4j2</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.brave</groupId>
-				<artifactId>brave-instrumentation-spring-web</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.brave</groupId>
-				<artifactId>brave-instrumentation-spring-webmvc</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.brave</groupId>
-				<artifactId>brave-instrumentation-httpclient</artifactId>
-				<version>${brave.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.brave</groupId>
-				<artifactId>brave-instrumentation-httpasyncclient</artifactId>
-				<version>${brave.version}</version>
 			</dependency>
 			<!-- ZIPKIN -->
 			<dependency>
