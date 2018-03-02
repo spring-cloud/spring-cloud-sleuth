@@ -139,8 +139,7 @@ public class TraceFilter extends GenericFilterBean {
 		HttpServletRequest request = (HttpServletRequest) servletRequest;
 		HttpServletResponse response = (HttpServletResponse) servletResponse;
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| SPAN_NOT_SAMPLED.equals(ServletUtils.getHeader(request, response, SAMPLED_NAME));
+		boolean skip = this.skipPattern.matcher(uri).matches();
 		Span spanFromRequest = getSpanFromAttribute(request);
 		Tracer.SpanInScope ws = null;
 		if (spanFromRequest != null) {
@@ -326,10 +325,12 @@ public class TraceFilter extends GenericFilterBean {
 			}
 			return new SpanAndScope(spanFromRequest, ws);
 		}
+		TraceContextOrSamplingFlags flags = null;
 		try {
-			// TODO: Try to use Brave's mechanism for sampling
+			flags = httpTracing().tracing()
+					.propagation().extractor(HttpServletRequest::getHeader).extract(request);
 			if (skip) {
-				spanFromRequest = unsampledSpan(name);
+				spanFromRequest = unsampledSpan(name, flags);
 			} else {
 				spanFromRequest = handler().handleReceive(httpTracing().tracing()
 						.propagation().extractor(HttpServletRequest::getHeader), request);
@@ -345,7 +346,7 @@ public class TraceFilter extends GenericFilterBean {
 			log.error("Exception occurred while trying to extract tracing context from request. "
 					+ "Falling back to manual span creation", e);
 			if (skip) {
-				spanFromRequest = unsampledSpan(name);
+				spanFromRequest = unsampledSpan(name, flags);
 			}
 			else {
 				spanFromRequest = httpTracing().tracing().tracer().nextSpan()
@@ -362,9 +363,12 @@ public class TraceFilter extends GenericFilterBean {
 				.tracer().withSpanInScope(spanFromRequest));
 	}
 
-	private Span unsampledSpan(String name) {
+	private Span unsampledSpan(String name, TraceContextOrSamplingFlags flags) {
 		return httpTracing().tracing().tracer()
-				.nextSpan(TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED))
+				.nextSpan( flags != null ?
+						flags.sampled(false) :
+						TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED)
+				)
 				.kind(Span.Kind.SERVER)
 				.name(name).start();
 	}

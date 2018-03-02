@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
@@ -57,6 +59,7 @@ public class TraceFilterTests {
 	static final String TRACE_ID_NAME = "X-B3-TraceId";
 	static final String SPAN_ID_NAME = "X-B3-SpanId";
 	static final String PARENT_SPAN_ID_NAME = "X-B3-ParentSpanId";
+	static final String SAMPLED_ID_NAME = "X-B3-Sampled";
 	static final String SPAN_FLAGS = "X-B3-Flags";
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
@@ -200,6 +203,28 @@ public class TraceFilterTests {
 				.containsEntry("http.host", "localhost")
 				.containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
+	}
+
+	@Test
+	public void continuesATraceWhenSpanNotSampled() throws Exception {
+		AtomicReference<Span> span = new AtomicReference<>();
+		this.request = builder()
+				.header(SPAN_ID_NAME, PARENT_ID)
+				.header(TRACE_ID_NAME, SpanUtil.idToHex(2L))
+				.header(PARENT_SPAN_ID_NAME, SpanUtil.idToHex(3L))
+				.header(SAMPLED_ID_NAME, 0)
+				.buildRequest(new MockServletContext());
+		BeanFactory beanFactory = beanFactory();
+
+		TraceFilter filter = new TraceFilter(beanFactory);
+		filter.doFilter(this.request, this.response, (req, resp) -> {
+			this.filterChain.doFilter(req, resp);
+			span.set(this.tracing.tracer().currentSpan());
+		});
+
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(span.get().context().traceIdString())
+				.isEqualTo(SpanUtil.idToHex(2L));
 	}
 
 	@Test
