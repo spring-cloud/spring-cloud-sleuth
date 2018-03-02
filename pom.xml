@@ -192,13 +192,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<dependency>
-				<groupId>io.zipkin.brave</groupId>
-				<artifactId>brave-bom</artifactId>
-				<version>${brave.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
 			<!-- Spock -->
 			<dependency>
 				<groupId>org.spockframework</groupId>
@@ -266,7 +259,6 @@
 		<spring-cloud-stream.version>Elmhurst.BUILD-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
-		<brave.version>4.16.3-SNAPSHOT</brave.version>
 	</properties>
 
 	<profiles>
