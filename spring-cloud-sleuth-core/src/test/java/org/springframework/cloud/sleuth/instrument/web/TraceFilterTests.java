@@ -459,14 +459,15 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		// Brave doesn't work like Sleuth. No trace will be created for an invalid span
-		// where invalid means that there is no trace id
-		then(this.reporter.getSpans()).isEmpty();
+		// It is ok to go without a trace ID, if sampling or debug is set
+		then(this.reporter.getSpans())
+				.hasSize(1)
+				.extracting("id").isNotEqualTo(SpanUtil.idToHex(10L));
 	}
 
 	@SuppressWarnings("Duplicates")
 	@Test
-	public void samplesWhenDebugFlagIsSetTo1AndTraceIdIsAlsoSet() throws Exception {
+	public void usesSamplingMechanismWhenIncomingTraceIsMalformed() throws Exception {
 		this.request = builder()
 				.header(SPAN_FLAGS, 1)
 				.header(TRACE_ID_NAME, SpanUtil.idToHex(10L))
@@ -476,11 +477,7 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans())
-				.hasSize(1);
-		// Brave creates a new trace if there was no span id
-		then(this.reporter.getSpans().get(0).traceId())
-				.isNotEqualTo(SpanUtil.idToHex(10L));
+		then(this.reporter.getSpans()).isEmpty();
 	}
 
 	// #668
