@@ -24,6 +24,9 @@ import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.test.annotation.DirtiesContext;
 import zipkin2.Span;
 import org.awaitility.Awaitility;
 import org.junit.Before;
@@ -70,7 +73,10 @@ import static org.assertj.core.api.BDDAssertions.then;
 @TestPropertySource(properties = { "spring.application.name=fooservice" ,
 "feign.hystrix.enabled=true", "spring.sleuth.http.legacy.enabled=true",
 		"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=60000"})
+@DirtiesContext
 public class FeignClientServerErrorTests {
+
+	private static final Log log = LogFactory.getLog(FeignClientServerErrorTests.class);
 
 	@Autowired TestFeignInterface feignInterface;
 	@Autowired TestFeignWithCustomConfInterface customConfFeignInterface;
@@ -84,12 +90,14 @@ public class FeignClientServerErrorTests {
 	@Test
 	public void shouldCloseSpanOnInternalServerError() throws InterruptedException {
 		try {
+			log.info("sending a request");
 			this.feignInterface.internalError();
 		} catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
 			List<Span> spans = this.reporter.getSpans();
+			log.info("Spans " + spans);
 			Optional<Span> spanWithError = spans.stream()
 					.filter(span -> span.tags().containsKey("error")).findFirst();
 			then(spanWithError.isPresent()).isTrue();
@@ -102,12 +110,14 @@ public class FeignClientServerErrorTests {
 	@Test
 	public void shouldCloseSpanOnNotFound() throws InterruptedException {
 		try {
+			log.info("sending a request");
 			this.feignInterface.notFound();
 		} catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
 			List<Span> spans = this.reporter.getSpans();
+			log.info("Spans " + spans);
 			Optional<Span> spanWithError = spans.stream()
 					.filter(span -> span.tags().containsKey("http.status_code")).findFirst();
 			then(spanWithError.isPresent()).isTrue();
@@ -119,12 +129,14 @@ public class FeignClientServerErrorTests {
 	@Test
 	public void shouldCloseSpanOnOk() throws InterruptedException {
 		try {
+			log.info("sending a request");
 			this.feignInterface.ok();
 		} catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
 			List<Span> spans = this.reporter.getSpans();
+			log.info("Spans " + spans);
 			then(spans.size()).isGreaterThanOrEqualTo(2);
 			Optional<Span> httpSpan = spans.stream()
 					.filter(span -> span.tags().containsKey("http.method")).findFirst();
@@ -137,12 +149,14 @@ public class FeignClientServerErrorTests {
 	@Test
 	public void shouldCloseSpanOnOkWithCustomFeignConfiguration() throws InterruptedException {
 		try {
+			log.info("sending a request");
 			this.customConfFeignInterface.ok();
 		} catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
 			List<Span> spans = this.reporter.getSpans();
+			log.info("Spans " + spans);
 			then(spans.size()).isGreaterThanOrEqualTo(2);
 			Optional<Span> httpSpan = spans.stream()
 					.filter(span -> span.tags().containsKey("http.method")).findFirst();
@@ -155,12 +169,14 @@ public class FeignClientServerErrorTests {
 	@Test
 	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() throws InterruptedException {
 		try {
+			log.info("sending a request");
 			this.customConfFeignInterface.notFound();
 		} catch (HystrixRuntimeException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
 			List<Span> spans = this.reporter.getSpans();
+			log.info("Spans " + spans);
 			Optional<Span> spanWithError = spans.stream()
 					.filter(span -> span.tags().containsKey("error")).findFirst();
 			then(spanWithError.isPresent()).isTrue();
