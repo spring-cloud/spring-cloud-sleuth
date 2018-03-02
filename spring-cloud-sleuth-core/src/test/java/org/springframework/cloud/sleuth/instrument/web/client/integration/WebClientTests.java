@@ -69,6 +69,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -248,15 +249,16 @@ public class WebClientTests {
 					.get("http://localhost:" + port).block();
 
 			then(response).isNotNull();
-		} finally {
-			span.finish();
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
 		then(this.reporter.getSpans())
+				.isNotEmpty()
 				.extracting("traceId", String.class)
 				.containsOnly(span.context().traceIdString());
+		then(this.reporter.getSpans())
+				.extracting("kind.name")
+				.contains("CLIENT");
 	}
 
 	@Test
@@ -270,15 +272,16 @@ public class WebClientTests {
 							new BasicResponseHandler());
 
 			then(response).isNotEmpty();
-		} finally {
-			span.finish();
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
 		then(this.reporter.getSpans())
+				.isNotEmpty()
 				.extracting("traceId", String.class)
 				.containsOnly(span.context().traceIdString());
+		then(this.reporter.getSpans())
+				.extracting("kind.name")
+				.contains("CLIENT");
 	}
 
 	@Test
@@ -306,15 +309,17 @@ public class WebClientTests {
 							});
 			then(future.get()).isNotNull();
 		} finally {
-			span.finish();
 			client.close();
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
 		then(this.reporter.getSpans())
+				.isNotEmpty()
 				.extracting("traceId", String.class)
 				.containsOnly(span.context().traceIdString());
+		then(this.reporter.getSpans())
+				.extracting("kind.name")
+				.contains("CLIENT");
 	}
 
 	@Test
@@ -328,13 +333,14 @@ public class WebClientTests {
 					.retrieve()
 					.bodyToMono(String.class)
 					.block();
-
-			assertThatSpanGotContinued(span);
 		} finally {
 			span.finish();
 		}
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.reporter.getSpans())
+				.isNotEmpty()
+				.extracting("kind.name")
+				.contains("CLIENT");
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
@@ -389,7 +395,11 @@ public class WebClientTests {
 					log.info("logs " + span.annotations());
 					then(initialSize).as("there are no duplicate log entries").isEqualTo(distinctSize);
 				});
-		then(this.testErrorController.getSpan()).isNotNull();
+
+		then(this.reporter.getSpans())
+				.isNotEmpty()
+				.extracting("kind.name")
+				.contains("CLIENT");
 	}
 
 	@Test
@@ -408,19 +418,14 @@ public class WebClientTests {
 			RestTemplate template = this.restTemplateBuilder.build();
 
 			template.getForObject("http://localhost:" + this.port + "/traceid", String.class);
-
-			assertThatSpanGotContinued(span);
 		} finally {
 			span.finish();
 		}
 		then(this.tracer.currentSpan()).isNull();
 		then(this.customizer.isExecuted()).isTrue();
-	}
-
-	private void assertThatSpanGotContinued(Span span) {
-		Span spanInController = this.fooController.getSpan();
-		BDDAssertions.then(spanInController).isNotNull();
-		then(spanInController.context().traceId()).isEqualTo(span.context().traceId());
+		then(this.reporter.getSpans())
+				.extracting("kind.name")
+				.contains("CLIENT");
 	}
 
 	private String getHeader(ResponseEntity<String> response, String name) {
@@ -444,7 +449,7 @@ public class WebClientTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
 	@EnableFeignClients
 	@RibbonClient(value = "fooservice", configuration = SimpleRibbonClientConfiguration.class)
 	public static class TestConfiguration {

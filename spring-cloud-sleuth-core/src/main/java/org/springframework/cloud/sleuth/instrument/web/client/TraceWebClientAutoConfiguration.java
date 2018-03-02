@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -31,7 +30,6 @@ import brave.httpasyncclient.TracingHttpAsyncClientBuilder;
 import brave.httpclient.TracingHttpClientBuilder;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
-import brave.propagation.TraceContextOrSamplingFlags;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
@@ -259,7 +257,14 @@ class NettyAspect {
 	public Object wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
 			HttpMethod method,
 			String url, Function<? super HttpClientRequest, ? extends Publisher<Void>> handler) throws Throwable {
-		return this.instrumentation.wrapHttpClientRequestSending(pjp, method, url, handler);
+		return Mono.defer(() -> {
+			try {
+				return this.instrumentation.wrapHttpClientRequestSending(pjp, method, url, handler);
+			}
+			catch (Throwable e) {
+				return Mono.error(e);
+			}
+		});
 	}
 }
 
@@ -304,27 +309,17 @@ class TracingHttpClientInstrumentation {
 		this.httpTracing = httpTracing;
 	}
 
-	Object wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
+	Mono<HttpClientResponse> wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
 			HttpMethod method,
 			String url, Function<? super HttpClientRequest, ? extends Publisher<Void>> handler) throws Throwable {
 		// add headers and set CS
 		final Span currentSpan = this.tracer.currentSpan();
 		final AtomicReference<Span> span = new AtomicReference<>();
-		final AtomicBoolean requestAlreadyInstrumented = new AtomicBoolean();
 		Function<HttpClientRequest, Publisher<Void>> combinedFunction =
 				req -> {
 					try (Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(currentSpan)) {
 						io.netty.handler.codec.http.HttpHeaders headers = req
 								.requestHeaders();
-						TraceContextOrSamplingFlags flags = this.httpTracing.tracing()
-								.propagation().extractor(GETTER).extract(headers);
-						if (flags != TraceContextOrSamplingFlags.EMPTY) {
-							requestAlreadyInstrumented.set(true);
-							if (log.isDebugEnabled()) {
-								log.debug("Request already instrumented. Skipping");
-							}
-							return handle(handler, req);
-						}
 						span.set(this.handler.handleSend(this.injector, headers, req));
 						try (Tracer.SpanInScope clientInScope = this.tracer.withSpanInScope(span.get())) {
 							if (log.isDebugEnabled()) {
@@ -339,12 +334,6 @@ class TracingHttpClientInstrumentation {
 				(Mono<HttpClientResponse>) pjp.proceed(new Object[] { method , url, combinedFunction });
 		// get response
 		return responseMono.doOnSuccessOrError((httpClientResponse, throwable) -> {
-			if (requestAlreadyInstrumented.get()) {
-				if (log.isDebugEnabled()) {
-					log.debug("Request already instrumented. Skipping");
-					return;
-				}
-			}
 			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.get())) {
 				// status codes and CR
 				this.handler.handleReceive(httpClientResponse, throwable, span.get());
