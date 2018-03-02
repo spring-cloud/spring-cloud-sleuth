@@ -16,7 +16,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -28,8 +27,6 @@ import brave.Span;
 import brave.Tracer;
 import brave.http.HttpServerHandler;
 import brave.http.HttpTracing;
-import brave.propagation.SamplingFlags;
-import brave.propagation.TraceContextOrSamplingFlags;
 import brave.servlet.HttpServletAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -92,12 +89,8 @@ public class TraceFilter extends GenericFilterBean {
 	private static final String TRACE_EXCEPTION_REQUEST_ATTR = TraceFilter.class.getName()
 			+ ".EXCEPTION";
 
-	private static final String SAMPLED_NAME = "X-B3-Sampled";
-	private static final String SPAN_NOT_SAMPLED = "0";
-
 	private HttpTracing tracing;
 	private TraceKeys traceKeys;
-	private final Pattern skipPattern;
 	private final BeanFactory beanFactory;
 	private HttpServerHandler<HttpServletRequest, HttpServletResponse> handler;
 	private Boolean hasErrorController;
@@ -105,30 +98,8 @@ public class TraceFilter extends GenericFilterBean {
 	private final UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 	public TraceFilter(BeanFactory beanFactory) {
-		this(beanFactory, skipPattern(beanFactory));
-	}
-
-	public TraceFilter(BeanFactory beanFactory, Pattern skipPattern) {
 		this.beanFactory = beanFactory;
-		this.skipPattern = skipPattern;
 	}
-
-	private static Pattern skipPattern(BeanFactory beanFactory) {
-		try {
-			SkipPatternProvider patternProvider = beanFactory
-					.getBean(SkipPatternProvider.class);
-			// the null value will not happen on production but might happen in tests
-			if (patternProvider != null) {
-				return patternProvider.skipPattern();
-			}
-		} catch (NoSuchBeanDefinitionException e) {
-			if (log.isDebugEnabled()) {
-				log.debug("The default SkipPatternProvider implementation is missing, will fallback to a default value of patterns");
-			}
-		}
-		return Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
-	}
-
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
 			FilterChain filterChain) throws IOException, ServletException {
@@ -139,14 +110,13 @@ public class TraceFilter extends GenericFilterBean {
 		HttpServletRequest request = (HttpServletRequest) servletRequest;
 		HttpServletResponse response = (HttpServletResponse) servletResponse;
 		String uri = this.urlPathHelper.getPathWithinApplication(request);
-		boolean skip = this.skipPattern.matcher(uri).matches();
 		Span spanFromRequest = getSpanFromAttribute(request);
 		Tracer.SpanInScope ws = null;
 		if (spanFromRequest != null) {
 			ws = continueSpan(request, spanFromRequest);
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("Received a request to uri [" + uri + "] that should not be sampled [" + skip + "]");
+			log.debug("Received a request to uri [" + uri + "]");
 		}
 		// in case of a response with exception status a exception controller will close the span
 		if (!httpStatusSuccessful(response) && isSpanContinued(request)) {
@@ -157,7 +127,7 @@ public class TraceFilter extends GenericFilterBean {
 		SpanAndScope spanAndScope = new SpanAndScope();
 		Throwable exception = null;
 		try {
-			spanAndScope = createSpan(request, skip, spanFromRequest, name, ws);
+			spanAndScope = createSpan(request, spanFromRequest, name, ws);
 			filterChain.doFilter(request, response);
 		} catch (Throwable e) {
 			exception = e;
@@ -236,7 +206,7 @@ public class TraceFilter extends GenericFilterBean {
 				}
 			}  else if ((shouldCloseSpan(request) || isRootSpan(span)) && stillTracingCurrentSpan(span)) {
 				if (log.isDebugEnabled()) {
-					log.debug("Will close span " + span + " since " + (shouldCloseSpan(request) ? "some component marked it for closure" : "response was unsuccessful for the root span"));
+					log.debug("Will handle sent for span " + span);
 				}
 				handler().handleSend(response, exception, span);
 				if (shouldCloseSpan(request)) {
@@ -318,59 +288,24 @@ public class TraceFilter extends GenericFilterBean {
 	 * Creates a span and appends it as the current request's attribute
 	 */
 	private SpanAndScope createSpan(HttpServletRequest request,
-			boolean skip, Span spanFromRequest, String name, Tracer.SpanInScope ws) {
+			Span spanFromRequest, String name, Tracer.SpanInScope ws) {
 		if (spanFromRequest != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Span has already been created - continuing with the previous one");
 			}
 			return new SpanAndScope(spanFromRequest, ws);
 		}
-		TraceContextOrSamplingFlags flags = null;
-		try {
-			flags = httpTracing().tracing()
-					.propagation().extractor(HttpServletRequest::getHeader).extract(request);
-			if (skip) {
-				spanFromRequest = unsampledSpan(name, flags);
-			} else {
-				spanFromRequest = handler().handleReceive(httpTracing().tracing()
-						.propagation().extractor(HttpServletRequest::getHeader), request);
-			}
-			if (log.isDebugEnabled()) {
-				log.debug("Found a parent span " + spanFromRequest.context() + " in the request");
-			}
-			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
-			if (log.isDebugEnabled()) {
-				log.debug("Parent span is " + spanFromRequest + "");
-			}
-		} catch (Exception e) {
-			log.error("Exception occurred while trying to extract tracing context from request. "
-					+ "Falling back to manual span creation", e);
-			if (skip) {
-				spanFromRequest = unsampledSpan(name, flags);
-			}
-			else {
-				spanFromRequest = httpTracing().tracing().tracer().nextSpan()
-						.kind(Span.Kind.SERVER)
-						.name(name).start();
-				request.setAttribute(TRACE_SPAN_WITHOUT_PARENT, spanFromRequest);
-			}
-			request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
-			if (log.isDebugEnabled()) {
-				log.debug("No parent span present - creating a new span");
-			}
+		spanFromRequest = handler().handleReceive(httpTracing().tracing()
+				.propagation().extractor(HttpServletRequest::getHeader), request);
+		if (log.isDebugEnabled()) {
+			log.debug("Found a parent span " + spanFromRequest.context() + " in the request");
+		}
+		request.setAttribute(TRACE_REQUEST_ATTR, spanFromRequest);
+		if (log.isDebugEnabled()) {
+			log.debug("Parent span is " + spanFromRequest + "");
 		}
 		return new SpanAndScope(spanFromRequest, httpTracing().tracing()
 				.tracer().withSpanInScope(spanFromRequest));
-	}
-
-	private Span unsampledSpan(String name, TraceContextOrSamplingFlags flags) {
-		return httpTracing().tracing().tracer()
-				.nextSpan( flags != null ?
-						flags.sampled(false) :
-						TraceContextOrSamplingFlags.create(SamplingFlags.NOT_SAMPLED)
-				)
-				.kind(Span.Kind.SERVER)
-				.name(name).start();
 	}
 
 	class SpanAndScope {

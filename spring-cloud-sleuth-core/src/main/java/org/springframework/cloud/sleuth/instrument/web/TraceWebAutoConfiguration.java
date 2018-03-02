@@ -25,8 +25,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -41,16 +41,14 @@ import org.springframework.util.StringUtils;
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.ANY)
 @ConditionalOnBean(Tracing.class)
-@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
+@AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthWebProperties.class)
 public class TraceWebAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(ManagementServerProperties.class)
-	@ConditionalOnMissingBean(
-			SkipPatternProvider.class)
+	@ConditionalOnMissingBean(SkipPatternProvider.class)
 	@EnableConfigurationProperties(SleuthWebProperties.class)
 	protected static class SkipPatternProviderConfig {
 

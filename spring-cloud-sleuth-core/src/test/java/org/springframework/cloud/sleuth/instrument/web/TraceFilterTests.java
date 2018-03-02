@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 import brave.Span;
 import brave.Tracer;
@@ -73,6 +74,7 @@ public class TraceFilterTests {
 			.clientParser(new SleuthHttpClientParser(this.traceKeys))
 			.serverParser(new SleuthHttpServerParser(this.traceKeys,
 					new ExceptionMessageErrorParser()))
+			.serverSampler(new SleuthHttpSampler(() -> Pattern.compile("")))
 			.build();
 	SleuthProperties properties = new SleuthProperties();
 
@@ -124,6 +126,7 @@ public class TraceFilterTests {
 				.clientParser(new SleuthHttpClientParser(this.traceKeys))
 				.serverParser(new SleuthHttpServerParser(this.traceKeys,
 						new ExceptionMessageErrorParser()))
+				.serverSampler(new SleuthHttpSampler(() -> Pattern.compile("")))
 				.build();
 		BeanFactory beanFactory = beanFactory();
 		BDDMockito.given(beanFactory.getBean(HttpTracing.class)).willReturn(httpTracing);

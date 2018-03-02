@@ -357,9 +357,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		}
 
 		@Bean
-		TraceFilter myTraceFilter(BeanFactory beanFactory,
-				SkipPatternProvider skipPatternProvider) {
-			return new TraceFilter(beanFactory, skipPatternProvider.skipPattern()) {
+		TraceFilter myTraceFilter(BeanFactory beanFactory) {
+			return new TraceFilter(beanFactory) {
 				@Override void abandonSpan(Span span) {
 					log.info("Simulating Error Controller");
 					span.finish();
