@@ -16,14 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
+import javax.servlet.http.HttpServletRequest;
 
+import brave.spring.webmvc.TracingHandlerInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
@@ -38,10 +39,10 @@ class TraceSpringDataBeanPostProcessor implements BeanPostProcessor {
 
 	private static final Log log = LogFactory.getLog(TraceSpringDataBeanPostProcessor.class);
 
-	private final BeanFactory beanFactory;
+	private final ApplicationContext applicationContext;
 
-	public TraceSpringDataBeanPostProcessor(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
+	public TraceSpringDataBeanPostProcessor(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
 	}
 
 	@Override
@@ -53,7 +54,7 @@ class TraceSpringDataBeanPostProcessor implements BeanPostProcessor {
 						"] in its trace representation");
 			}
 			return new TraceDelegatingHandlerMapping((DelegatingHandlerMapping) bean,
-					this.beanFactory);
+					this.applicationContext);
 		}
 		return bean;
 	}
@@ -67,13 +68,13 @@ class TraceSpringDataBeanPostProcessor implements BeanPostProcessor {
 	private static class TraceDelegatingHandlerMapping extends DelegatingHandlerMapping {
 
 		private final DelegatingHandlerMapping delegate;
-		private final BeanFactory beanFactory;
+		private final ApplicationContext applicationContext;
 
 		public TraceDelegatingHandlerMapping(DelegatingHandlerMapping delegate,
-				BeanFactory beanFactory) {
+				ApplicationContext beanFactory) {
 			super(Collections.<HandlerMapping>emptyList());
 			this.delegate = delegate;
-			this.beanFactory = beanFactory;
+			this.applicationContext = beanFactory;
 		}
 
 		@Override
@@ -88,7 +89,12 @@ class TraceSpringDataBeanPostProcessor implements BeanPostProcessor {
 			if (handlerExecutionChain == null) {
 				return null;
 			}
-			handlerExecutionChain.addInterceptor(new TraceHandlerInterceptor(this.beanFactory));
+			handlerExecutionChain.addInterceptor(this.applicationContext.getBean(TracingHandlerInterceptor.class));
+			String legacyEnabled = this.applicationContext.getEnvironment()
+					.getProperty("spring.sleuth.http.legacy.enabled", "false");
+			if (Boolean.parseBoolean(legacyEnabled)) {
+				handlerExecutionChain.addInterceptor(this.applicationContext.getBean(SleuthTraceHandlerInterceptor.class));
+			}
 			return handlerExecutionChain;
 		}
 	}

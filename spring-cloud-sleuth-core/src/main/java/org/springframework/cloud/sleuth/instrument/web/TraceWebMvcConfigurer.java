@@ -16,15 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import brave.http.HttpTracing;
+import brave.spring.webmvc.TracingHandlerInterceptor;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * MVC Adapter that adds the {@link TraceHandlerInterceptor}
+ * MVC Adapter that adds the {@link TracingHandlerInterceptor}
  *
  * @author Marcin Grzejszczak
  *
@@ -32,15 +36,26 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 class TraceWebMvcConfigurer implements WebMvcConfigurer {
-	@Autowired BeanFactory beanFactory;
+	@Autowired ApplicationContext applicationContext;
 
 	@Bean
-	public TraceHandlerInterceptor traceHandlerInterceptor(BeanFactory beanFactory) {
-		return new TraceHandlerInterceptor(beanFactory);
+	public TracingHandlerInterceptor tracingHandlerInterceptor(HttpTracing tracing) {
+		return (TracingHandlerInterceptor) TracingHandlerInterceptor.create(tracing);
+	}
+
+	@Bean
+	@ConditionalOnProperty("spring.sleuth.http.legacy.enabled")
+	public SleuthTraceHandlerInterceptor legacySleuthTraceHandlerInterceptor(BeanFactory beanFactory) {
+		return new SleuthTraceHandlerInterceptor(beanFactory);
 	}
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(this.beanFactory.getBean(TraceHandlerInterceptor.class));
+		registry.addInterceptor(this.applicationContext.getBean(TracingHandlerInterceptor.class));
+		String legacyEnabled = this.applicationContext.getEnvironment()
+				.getProperty("spring.sleuth.http.legacy.enabled", "false");
+		if (Boolean.parseBoolean(legacyEnabled)) {
+			registry.addInterceptor(this.applicationContext.getBean(SleuthTraceHandlerInterceptor.class));
+		}
 	}
 }

@@ -85,13 +85,12 @@ public class TraceFilterWebIntegrationTests {
 		then(fromFirstTraceFilterFlow.tags())
 				.containsEntry("http.status_code", "500")
 				.containsEntry("http.method", "GET")
-				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
+				.containsEntry("error", "Throwing exception")
 				.containsEntry("mvc.controller.class", "ExceptionThrowingController");
 		Span fromErrorController = this.accumulator.getSpans().get(1);
 		then(fromErrorController.tags())
 				.containsEntry("http.status_code", "500")
-				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception")
-				.containsEntry("mvc.controller.class", "BasicErrorController");
+				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		// issue#714
 		String hex = fromErrorController.traceId();
 		String[] split = capture.toString().split("\n");
@@ -110,10 +109,10 @@ public class TraceFilterWebIntegrationTests {
 		} catch (HttpClientErrorException e) {
 		}
 
-		//TODO: Check if it should be 1 or 2 spans
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.accumulator.getSpans()).hasSize(2).as("spans with same id, one from server, one from handler");
 		then(this.accumulator.getSpans().get(0).kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
+		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.status_code", "400");
 	}
 
 	private int port() {

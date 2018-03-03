@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
+import brave.servlet.TracingFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -40,7 +41,6 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
@@ -69,7 +69,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceFilterIntegrationTests.Config.class)
+@SpringBootTest(classes = TraceFilterIntegrationTests.Config.class,
+properties = "spring.sleuth.http.legacy.enabled=true")
 public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	static final String TRACE_ID_NAME = "X-B3-TraceId";
 	static final String SPAN_ID_NAME = "X-B3-SpanId";
@@ -78,7 +79,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	private static Log logger = LogFactory.getLog(
 			TraceFilterIntegrationTests.class);
 
-	@Autowired TraceFilter traceFilter;
+	@Autowired TracingFilter traceFilter;
 	@Autowired MyFilter myFilter;
 	@Autowired ArrayListSpanReporter reporter;
 	@Autowired Tracer tracer;
@@ -95,7 +96,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	public void should_create_a_trace() throws Exception {
 		whenSentPingWithoutTracingData();
 
-		then(this.reporter.getSpans()).hasSize(1);
+		then(this.reporter.getSpans()).hasSize(2);
 		zipkin2.Span span = this.reporter.getSpans().get(0);
 		then(span.tags())
 				.containsKey(new TraceKeys().getMvc().getControllerClass())
@@ -173,7 +174,15 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
 
-		then(this.reporter.getSpans()).hasSize(1);
+		// it's a span with the same ids
+		then(this.reporter.getSpans()).hasSize(2);
+		zipkin2.Span serverSpan = this.reporter.getSpans().get(0);
+		then(serverSpan.tags())
+				.containsEntry("custom", "tag")
+				.containsEntry("http.status_code", "404");
+		zipkin2.Span handlerSpan = this.reporter.getSpans().get(0);
+		then(handlerSpan.tags())
+				.containsEntry("http.status_code", "404");
 		then(this.tracer.currentSpan()).isNull();
 	}
 
@@ -190,8 +199,13 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		// we need to dump the span cause it's not in TraceFilter since TF
 		// has also error dispatch and the ErrorController would report the span
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags()).containsKey("error");
+		then(this.reporter.getSpans()).hasSize(2);
+		// server
+		then(this.reporter.getSpans().get(0).tags())
+				.containsEntry("error", "java.lang.RuntimeException");
+		// handler
+		then(this.reporter.getSpans().get(1).tags())
+				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException");
 	}
 
 	@Test
@@ -357,17 +371,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		}
 
 		@Bean
-		TraceFilter myTraceFilter(BeanFactory beanFactory) {
-			return new TraceFilter(beanFactory) {
-				@Override void abandonSpan(Span span) {
-					log.info("Simulating Error Controller");
-					span.finish();
-				}
-			};
-		}
-
-		@Bean
-		@Order(TraceFilter.ORDER + 1)
+		@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
 		Filter myFilter(Tracer tracer) {
 			return new MyFilter(tracer);
 		}
@@ -376,7 +380,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 //tag::response_headers[]
 @Component
-@Order(TraceFilter.ORDER + 1)
+@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
 class MyFilter extends GenericFilterBean {
 
 	private final Tracer tracer;
@@ -388,7 +392,9 @@ class MyFilter extends GenericFilterBean {
 	@Override public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
 		Span currentSpan = this.tracer.currentSpan();
-		then(currentSpan).isNotNull();
+		if (currentSpan == null) {
+			return;
+		}
 		// for readability we're returning trace id in a hex form
 		((HttpServletResponse) response)
 				.addHeader("ZIPKIN-TRACE-ID",

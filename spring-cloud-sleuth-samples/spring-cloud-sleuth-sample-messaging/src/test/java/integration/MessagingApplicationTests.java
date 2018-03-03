@@ -44,7 +44,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class },
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = { "sample.zipkin.enabled=true" })
+@TestPropertySource(properties = { "sample.zipkin.enabled=true",
+		"spring.sleuth.http.legacy.enabled=true" })
 @DirtiesContext
 public class MessagingApplicationTests extends AbstractIntegrationTest {
 
@@ -76,7 +77,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		long spanId = new Random().nextLong();
 
 		await().atMost(15, SECONDS).untilAsserted(() ->
-				httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId).run()
+			httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId).run()
 		);
 
 		await().atMost(15, SECONDS).untilAsserted(() -> {
@@ -140,7 +141,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	private Optional<Span> findLastHttpSpansParent() {
 		return this.integrationTestSpanCollector.hashedSpans.stream()
-				.filter(span -> "get".equals(span.name()) && span.kind() != null).findFirst();
+				.filter(span -> "http:/".equals(span.name()) && span.kind() != null).findFirst();
 	}
 
 	private Optional<Span> findSpanWithKind(Span.Kind kind) {
