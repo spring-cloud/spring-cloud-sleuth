@@ -213,6 +213,12 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.springframework.security.oauth.boot</groupId>
+				<artifactId>spring-security-oauth2-autoconfigure</artifactId>
+				<version>${spring-security-boot-autoconfigure.version}</version>
+				<optional>true</optional>
+			</dependency>
+			<dependency>
 				<groupId>cglib</groupId>
 				<artifactId>cglib-nodep</artifactId>
 				<version>3.1</version>
@@ -267,6 +273,7 @@
 		<spring-cloud-netflix.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>4.17.1</brave.version>
+		<spring-security-boot-autoconfigure.version>2.0.0.RELEASE</spring-security-boot-autoconfigure.version>
 	</properties>
 
 	<profiles>

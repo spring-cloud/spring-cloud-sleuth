@@ -52,6 +52,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoRestTemplateCustomizer;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
@@ -62,6 +63,7 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -144,6 +146,48 @@ public class TraceWebClientAutoConfiguration {
 		@Bean
 		public NettyAspect traceNetyAspect(HttpTracing httpTracing) {
 			return new NettyAspect(httpTracing);
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass({ UserInfoRestTemplateCustomizer.class, OAuth2RestTemplate.class })
+	protected static class TraceOAuthConfiguration {
+
+		@Bean
+		UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor(BeanFactory beanFactory) {
+			return new UserInfoRestTemplateCustomizerBPP(beanFactory);
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer(BeanFactory beanFactory) {
+			return new TraceUserInfoRestTemplateCustomizer(beanFactory);
+		}
+
+		private static class UserInfoRestTemplateCustomizerBPP implements BeanPostProcessor {
+
+			private final BeanFactory beanFactory;
+
+			UserInfoRestTemplateCustomizerBPP(BeanFactory beanFactory) {
+				this.beanFactory = beanFactory;
+			}
+
+			@Override
+			public Object postProcessBeforeInitialization(Object bean,
+					String beanName) throws BeansException {
+				return bean;
+			}
+
+			@Override
+			public Object postProcessAfterInitialization(final Object bean,
+					String beanName) throws BeansException {
+				final BeanFactory beanFactory = this.beanFactory;
+				if (bean instanceof UserInfoRestTemplateCustomizer &&
+						!(bean instanceof TraceUserInfoRestTemplateCustomizer)) {
+					return new TraceUserInfoRestTemplateCustomizer(beanFactory, bean);
+				}
+				return bean;
+			}
 		}
 	}
 }
@@ -371,6 +415,31 @@ class TracingHttpClientInstrumentation {
 
 		@Override public Integer statusCode(HttpClientResponse response) {
 			return response.status().code();
+		}
+	}
+}
+
+class TraceUserInfoRestTemplateCustomizer implements UserInfoRestTemplateCustomizer {
+
+	private final BeanFactory beanFactory;
+	private final Object delegate;
+
+	TraceUserInfoRestTemplateCustomizer(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+		this.delegate = null;
+	}
+
+	TraceUserInfoRestTemplateCustomizer(BeanFactory beanFactory, Object bean) {
+		this.beanFactory = beanFactory;
+		this.delegate = bean;
+	}
+
+	@Override public void customize(OAuth2RestTemplate template) {
+		final TracingClientHttpRequestInterceptor interceptor =
+				this.beanFactory.getBean(TracingClientHttpRequestInterceptor.class);
+		new RestTemplateInterceptorInjector(interceptor).inject(template);
+		if (this.delegate != null) {
+			((UserInfoRestTemplateCustomizer) this.delegate).customize(template);
 		}
 	}
 }
