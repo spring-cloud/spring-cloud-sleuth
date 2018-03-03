@@ -1677,6 +1677,11 @@ tracing context gets injected to the sent requests.</simpara>
 If you create a <literal>HttpClient</literal> instance with a <literal>new</literal> keyword, the instrumentation does NOT work.</simpara>
 </important>
 </section>
+<section xml:id="__literal_userinforesttemplatecustomizer_literal">
+<title><literal>UserInfoRestTemplateCustomizer</literal></title>
+<simpara>We instrument the Spring Security&#8217;s <literal>UserInfoRestTemplateCustomizer</literal>.</simpara>
+<simpara>To block this feature, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
+</section>
 </section>
 <section xml:id="_feign">
 <title>Feign</title>
