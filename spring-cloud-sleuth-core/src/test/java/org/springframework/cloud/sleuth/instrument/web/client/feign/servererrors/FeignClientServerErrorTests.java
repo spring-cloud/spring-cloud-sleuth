@@ -70,8 +70,10 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = { "spring.application.name=fooservice" ,
-"feign.hystrix.enabled=true", "spring.sleuth.http.legacy.enabled=true",
+@TestPropertySource(properties = {
+		"spring.application.name=fooservice" ,
+		"feign.hystrix.enabled=true",
+		"spring.sleuth.http.legacy.enabled=true",
 		"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=60000"})
 @DirtiesContext
 public class FeignClientServerErrorTests {
@@ -88,7 +90,7 @@ public class FeignClientServerErrorTests {
 	}
 
 	@Test
-	public void shouldCloseSpanOnInternalServerError() throws InterruptedException {
+	public void shouldCloseSpanOnInternalServerError(){
 		try {
 			log.info("sending a request");
 			this.feignInterface.internalError();
@@ -108,7 +110,7 @@ public class FeignClientServerErrorTests {
 	}
 
 	@Test
-	public void shouldCloseSpanOnNotFound() throws InterruptedException {
+	public void shouldCloseSpanOnNotFound() {
 		try {
 			log.info("sending a request");
 			this.feignInterface.notFound();
@@ -127,7 +129,7 @@ public class FeignClientServerErrorTests {
 	}
 
 	@Test
-	public void shouldCloseSpanOnOk() throws InterruptedException {
+	public void shouldCloseSpanOnOk() {
 		try {
 			log.info("sending a request");
 			this.feignInterface.ok();
@@ -147,7 +149,7 @@ public class FeignClientServerErrorTests {
 	}
 
 	@Test
-	public void shouldCloseSpanOnOkWithCustomFeignConfiguration() throws InterruptedException {
+	public void shouldCloseSpanOnOkWithCustomFeignConfiguration(){
 		try {
 			log.info("sending a request");
 			this.customConfFeignInterface.ok();
@@ -167,7 +169,7 @@ public class FeignClientServerErrorTests {
 	}
 
 	@Test
-	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() throws InterruptedException {
+	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration(){
 		try {
 			log.info("sending a request");
 			this.customConfFeignInterface.notFound();
@@ -207,11 +209,12 @@ public class FeignClientServerErrorTests {
 
 		@LoadBalanced
 		@Bean
-		public RestTemplate restTemplate() {
+		RestTemplate restTemplate() {
 			return new RestTemplate();
 		}
 
-		@Bean Sampler testSampler() {
+		@Bean
+		Sampler testSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
@@ -264,6 +267,7 @@ public class FeignClientServerErrorTests {
 				@RequestHeader("X-B3-TraceId") String traceId,
 				@RequestHeader("X-B3-SpanId") String spanId,
 				@RequestHeader("X-B3-ParentSpanId") String parentId) {
+			log.info("Will respond with internal error");
 			throw new RuntimeException("Internal Error");
 		}
 
@@ -272,6 +276,7 @@ public class FeignClientServerErrorTests {
 				@RequestHeader("X-B3-TraceId") String traceId,
 				@RequestHeader("X-B3-SpanId") String spanId,
 				@RequestHeader("X-B3-ParentSpanId") String parentId) {
+			log.info("Will respond with not found");
 			return new ResponseEntity<>("not found", HttpStatus.NOT_FOUND);
 		}
 
@@ -280,6 +285,7 @@ public class FeignClientServerErrorTests {
 				@RequestHeader("X-B3-TraceId") String traceId,
 				@RequestHeader("X-B3-SpanId") String spanId,
 				@RequestHeader("X-B3-ParentSpanId") String parentId) {
+			log.info("Will respond with OK");
 			return new ResponseEntity<>("ok", HttpStatus.OK);
 		}
 	}
