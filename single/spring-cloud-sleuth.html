@@ -597,7 +597,7 @@ If you want to use some other expression resolution mechanism, you can create yo
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> getAnnotationForArgumentToString(<em><span class="hl-annotation" style="color: gray">@SpanTag("test")</span></em> Long param) {
 }</pre><p>Running the preceding method with a value of <code class="literal">15</code> leads to setting a tag with a String value of <code class="literal">"15"</code>.</p></div></div></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_customizations" href="#_customizations"></a>12.&nbsp;Customizations</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="__literal_tracefilter_literal" href="#__literal_tracefilter_literal"></a>12.1&nbsp;<code class="literal">TraceFilter</code></h2></div></div></div><p>You can also modify the behavior of the <code class="literal">TraceFilter</code>, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
 You can customize the tags or modify the response headers by registering your own instance of the <code class="literal">TraceFilter</code> bean.</p><p>In the following example, we register the <code class="literal">TraceFilter</code> bean, add the <code class="literal">ZIPKIN-TRACE-ID</code> response header containing the current Span&#8217;s trace id, and add a tag with key <code class="literal">custom</code> and a value <code class="literal">tag</code> to the span.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Component</span></em>
-<em><span class="hl-annotation" style="color: gray">@Order(TraceFilter.ORDER + 1)</span></em>
+<em><span class="hl-annotation" style="color: gray">@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)</span></em>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> MyFilter <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">extends</span> GenericFilterBean {
 
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">private</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">final</span> Tracer tracer;
@@ -609,7 +609,9 @@ You can customize the tags or modify the response headers by registering your ow
 	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> IOException, ServletException {
 		Span currentSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.currentSpan();
-		then(currentSpan).isNotNull();
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">if</span> (currentSpan == null) {
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span>;
+		}
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// for readability we're returning trace id in a hex form</span>
 		((HttpServletResponse) response)
 				.addHeader(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"ZIPKIN-TRACE-ID"</span>,

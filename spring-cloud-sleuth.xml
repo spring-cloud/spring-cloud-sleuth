@@ -1386,7 +1386,7 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 You can customize the tags or modify the response headers by registering your own instance of the <literal>TraceFilter</literal> bean.</simpara>
 <simpara>In the following example, we register the <literal>TraceFilter</literal> bean, add the <literal>ZIPKIN-TRACE-ID</literal> response header containing the current Span&#8217;s trace id, and add a tag with key <literal>custom</literal> and a value <literal>tag</literal> to the span.</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Component
-@Order(TraceFilter.ORDER + 1)
+@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
 class MyFilter extends GenericFilterBean {
 
 	private final Tracer tracer;
@@ -1398,7 +1398,9 @@ class MyFilter extends GenericFilterBean {
 	@Override public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
 		Span currentSpan = this.tracer.currentSpan();
-		then(currentSpan).isNotNull();
+		if (currentSpan == null) {
+			return;
+		}
 		// for readability we're returning trace id in a hex form
 		((HttpServletResponse) response)
 				.addHeader("ZIPKIN-TRACE-ID",
