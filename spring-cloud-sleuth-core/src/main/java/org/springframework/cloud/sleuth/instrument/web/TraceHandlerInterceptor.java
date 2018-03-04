@@ -25,6 +25,7 @@ import brave.Tracer;
 import brave.http.HttpServerHandler;
 import brave.http.HttpTracing;
 import brave.servlet.HttpServletAdapter;
+import javax.servlet.http.HttpServletResponseWrapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -35,6 +36,8 @@ import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE;
 
 /**
  * {@link org.springframework.web.servlet.HandlerInterceptor} that wraps handling of a
@@ -147,15 +150,27 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		}
 		Span span = getRootSpanFromAttribute(request);
 		if (ex != null) {
+			// TODO: the error parser should be used inside the http parser, not individually like this
 			errorParser().parseErrorTags(span, ex);
 		}
+		DecoratedHttpServletResponse decorated = new DecoratedHttpServletResponse(
+				response,
+				request.getMethod(),
+				request.getAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE)
+		);
 		if (getNewSpanFromAttribute(request) != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Closing span " + span);
 			}
 			Span newSpan = getNewSpanFromAttribute(request);
-			handler().handleSend(response, ex, newSpan);
+			handler().handleSend(decorated, ex, newSpan);
 			clearNewSpanCreatedAttribute(request);
+		} else {
+			// TODO: not currently in brave, but we'll likely want a mode like handler().addSendData for
+			// when you are adding data, but not closing the response. This will do for now, at the cost
+			// of redundantly parsing later. This is ok, as the legacy adapter doesn't try to set the span
+			// name.
+			httpTracing().serverParser().response(ADAPTER, decorated, ex, span);
 		}
 	}
 
@@ -196,8 +211,7 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	@SuppressWarnings("unchecked")
 	HttpServerHandler<HttpServletRequest, HttpServletResponse> handler() {
 		if (this.handler == null) {
-			this.handler = HttpServerHandler.create(this.beanFactory.getBean(HttpTracing.class),
-					new HttpServletAdapter());
+			this.handler = HttpServerHandler.create(this.beanFactory.getBean(HttpTracing.class), ADAPTER);
 		}
 		return this.handler;
 	}
@@ -224,4 +238,27 @@ public class TraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		return this.errorController.get();
 	}
 
+	static class DecoratedHttpServletResponse extends HttpServletResponseWrapper {
+		final String method, template;
+
+		DecoratedHttpServletResponse(HttpServletResponse response, String method, Object template) {
+			super(response);
+			this.method = method;
+			this.template = template != null ? template.toString() : "";
+		}
+	}
+
+	static final HttpServletAdapter ADAPTER = new HttpServletAdapter() {
+		@Override public String methodFromResponse(HttpServletResponse response) {
+			return ((DecoratedHttpServletResponse) response).method;
+		}
+
+		@Override public String route(HttpServletResponse response) {
+			return ((DecoratedHttpServletResponse) response).template;
+		}
+
+		@Override public String toString() {
+			return "WebMVCAdapter{}";
+		}
+	};
 }
