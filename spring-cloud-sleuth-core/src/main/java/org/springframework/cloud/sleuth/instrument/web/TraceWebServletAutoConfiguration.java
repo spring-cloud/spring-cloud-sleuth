@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Tracer;
 import brave.http.HttpTracing;
-import org.springframework.beans.factory.BeanFactory;
+import brave.servlet.TracingFilter;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -28,9 +28,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.Ordered;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import static javax.servlet.DispatcherType.ASYNC;
@@ -54,6 +56,8 @@ import static javax.servlet.DispatcherType.REQUEST;
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
 public class TraceWebServletAutoConfiguration {
 
+	public static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
+
 	/**
 	 * Nested config that configures Web MVC if it's present (without adding a runtime
 	 * dependency to it)
@@ -72,22 +76,30 @@ public class TraceWebServletAutoConfiguration {
 	@Bean
 	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
 	public static TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
-			BeanFactory beanFactory) {
-		return new TraceSpringDataBeanPostProcessor(beanFactory);
+			ApplicationContext applicationContext) {
+		return new TraceSpringDataBeanPostProcessor(applicationContext);
 	}
 	
 	@Bean
 	public FilterRegistrationBean traceWebFilter(
-			TraceFilter traceFilter) {
-		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(traceFilter);
+			TracingFilter tracingFilter) {
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(tracingFilter);
 		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
-		filterRegistrationBean.setOrder(TraceFilter.ORDER);
+		filterRegistrationBean.setOrder(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER);
+		return filterRegistrationBean;
+	}
+
+	@Bean
+	public FilterRegistrationBean exceptionThrowingFilter() {
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new ExceptionLoggingFilter());
+		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
+		filterRegistrationBean.setOrder(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1);
 		return filterRegistrationBean;
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TraceFilter traceFilter(BeanFactory beanFactory) {
-		return new TraceFilter(beanFactory);
+	public TracingFilter tracingFilter(HttpTracing tracing) {
+		return (TracingFilter) TracingFilter.create(tracing);
 	}
 }

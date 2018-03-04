@@ -18,13 +18,13 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.lang.invoke.MethodHandles;
 
+import brave.spring.webmvc.TracingHandlerInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
-import org.springframework.cloud.sleuth.instrument.web.TraceHandlerInterceptor;
 
 /**
  * Bean post processor that wraps {@link ZuulHandlerMapping} in its
@@ -58,7 +58,7 @@ class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 			}
 			ZuulHandlerMapping zuulHandlerMapping = (ZuulHandlerMapping) bean;
 			zuulHandlerMapping.setInterceptors(
-					new TraceHandlerInterceptor(this.beanFactory));
+					this.beanFactory.getBean(TracingHandlerInterceptor.class));
 		}
 		return bean;
 	}

@@ -38,7 +38,6 @@ import org.springframework.cloud.netflix.zuul.metrics.EmptyTracerFactory;
 import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
-import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -114,7 +113,5 @@ public class TracePostZuulFilterTests {
 				.containsEntry("http.status_code", "456");
 		then(spans.get(0).name()).isEqualTo("http:start");
 		then(this.tracing.tracer().currentSpan()).isNull();
-		BDDMockito.then(this.httpServletRequest).should().setAttribute(
-				TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR, "true");
 	}
 }

@@ -26,12 +26,10 @@ import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
-import org.springframework.cloud.sleuth.instrument.web.TraceRequestAttributes;
 import org.springframework.http.HttpStatus;
 
 /**
- * A post request {@link ZuulFilter} that marks a span for closing in {@link TraceFilter}
+ * A post request {@link ZuulFilter}
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -67,9 +65,6 @@ class TracePostZuulFilter extends ZuulFilter {
 		if (log.isDebugEnabled()) {
 			log.debug("Marking current span as handled");
 		}
-		RequestContext.getCurrentContext()
-				.getRequest().setAttribute(
-				TraceRequestAttributes.HANDLED_SPAN_REQUEST_ATTR, "true");
 		HttpServletResponse response = RequestContext.getCurrentContext().getResponse();
 		Throwable exception = RequestContext.getCurrentContext().getThrowable();
 		this.handler.handleSend(response, exception, this.tracer.currentSpan());
