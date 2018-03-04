@@ -24,6 +24,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.BeanFactory;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
+import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
@@ -102,7 +103,7 @@ public abstract class ReactorSleuth {
 	}
 
 	private static final Predicate<Scannable> POINTCUT_FILTER =
-			s ->  !(s instanceof Fuseable.ScalarCallable) && s.isScanAvailable();
+			s ->  !(s instanceof ConnectableFlux) && !(s instanceof Fuseable.ScalarCallable) && s.isScanAvailable();
 
 	private ReactorSleuth() {
 	}
