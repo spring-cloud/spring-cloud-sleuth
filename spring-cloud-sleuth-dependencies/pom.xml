@@ -30,9 +30,6 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<zipkin.version>2.5.0</zipkin.version>
-		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
-		<zipkin-reporter2.version>2.3.3</zipkin-reporter2.version>
 		<brave.opentracing.version>0.28.0</brave.opentracing.version>
 	</properties>
 	<dependencyManagement>
@@ -88,65 +85,6 @@
 				<artifactId>zipkin</artifactId>
 				<!-- misaligned intentionally https://github.com/spring-projects/spring-boot/issues/10778-->
 				<version>2.4.4</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.zipkin2</groupId>
-				<artifactId>zipkin</artifactId>
-				<version>${zipkin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.java</groupId>
-				<artifactId>zipkin-server</artifactId>
-				<version>${zipkin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.java</groupId>
-				<artifactId>zipkin-autoconfigure-ui</artifactId>
-				<version>${zipkin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.java</groupId>
-				<artifactId>zipkin-autoconfigure-storage-mysql</artifactId>
-				<version>${zipkin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.java</groupId>
-				<artifactId>zipkin-junit</artifactId>
-				<version>${zipkin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.reporter</groupId>
-				<artifactId>zipkin-reporter</artifactId>
-				<version>${zipkin-reporter.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.reporter2</groupId>
-				<artifactId>zipkin-reporter</artifactId>
-				<version>${zipkin-reporter2.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.reporter2</groupId>
-				<artifactId>zipkin-sender-kafka11</artifactId>
-				<version>${zipkin-reporter2.version}</version>
-				<exclusions>
-					<!-- assigned with spring-kafka -->
-					<exclusion>
-						<groupId>org.apache.kafka</groupId>
-						<artifactId>kafka-clients</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>io.zipkin.reporter2</groupId>
-				<artifactId>zipkin-sender-amqp-client</artifactId>
-				<version>${zipkin-reporter2.version}</version>
-				<exclusions>
-					<!-- assigned with spring-rabbit -->
-					<exclusion>
-						<groupId>com.rabbitmq</groupId>
-						<artifactId>amqp-client</artifactId>
-					</exclusion>
-				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>io.opentracing.brave</groupId>
