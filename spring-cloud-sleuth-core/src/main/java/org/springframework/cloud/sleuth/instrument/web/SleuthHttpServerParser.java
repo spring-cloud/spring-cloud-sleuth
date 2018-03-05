@@ -65,7 +65,11 @@ class SleuthHttpServerParser extends HttpServerParser {
 			error(null, error, customizer);
 			return;
 		}
-		int httpStatus = adapter.statusCode(res);
+		Integer httpStatus = adapter.statusCode(res);
+		if (httpStatus == null) {
+			error(httpStatus, error, customizer);
+			return;
+		}
 		if (httpStatus == HttpServletResponse.SC_OK && error != null) {
 			// Filter chain threw exception but the response status may not have been set
 			// yet, so we have to guess.
