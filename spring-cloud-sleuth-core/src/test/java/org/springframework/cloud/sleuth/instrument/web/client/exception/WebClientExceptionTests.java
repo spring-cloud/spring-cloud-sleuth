@@ -106,8 +106,7 @@ public class WebClientExceptionTests {
 
 		then(this.tracer.tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
-		then(this.reporter.getSpans().get(0).tags().get("error"))
-				.contains("invalid.host.to.break.tests");
+		then(this.reporter.getSpans().get(0).tags()).containsKey("error");
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
