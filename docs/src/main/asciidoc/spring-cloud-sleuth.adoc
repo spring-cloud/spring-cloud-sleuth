@@ -1115,6 +1115,13 @@ By default, all channels are included.
 IMPORTANT: When using the `Executor` to build a Spring Integration `IntegrationFlow`, you must use the untraced version of the `Executor`.
 Decorating the Spring Integration Executor Channel with `TraceableExecutorService` causes the spans to be improperly closed.
 
+==== Spring RabbitMq
+
+We instrument the `RabbiTemplate` so that tracing headers get injected
+into the message.
+
+To block this feature, set `spring.sleuth.messaging.enabled` to `false`.
+
 === Zuul
 
 We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
