@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -42,22 +43,23 @@ public class TraceHttpAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "false", matchIfMissing = true)
-	HttpTracing sleuthHttpTracing(Tracing tracing, SkipPatternProvider provider) {
+	// NOTE: stable bean name as might be used outside sleuth
+	HttpTracing httpTracing(
+			@Value("${spring.sleuth.http.legacy.enabled:false}") boolean legacyEnabled,
+			Tracing tracing,
+			TraceKeys traceKeys,
+			ErrorParser errorParser,
+			SkipPatternProvider provider
+	) {
+		if (legacyEnabled) {
+			return HttpTracing.newBuilder(tracing)
+					.clientParser(new SleuthHttpClientParser(traceKeys))
+					.serverParser(new SleuthHttpServerParser(traceKeys, errorParser))
+					.serverSampler(new SleuthHttpSampler(provider))
+					.build();
+		}
 		return HttpTracing
 				.newBuilder(tracing)
-				.serverSampler(new SleuthHttpSampler(provider))
-				.build();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "true")
-	HttpTracing legacySleuthHttpTracing(Tracing tracing, TraceKeys traceKeys,
-			ErrorParser errorParser, SkipPatternProvider provider) {
-		return HttpTracing.newBuilder(tracing)
-				.clientParser(new SleuthHttpClientParser(traceKeys))
-				.serverParser(new SleuthHttpServerParser(traceKeys, errorParser))
 				.serverSampler(new SleuthHttpSampler(provider))
 				.build();
 	}

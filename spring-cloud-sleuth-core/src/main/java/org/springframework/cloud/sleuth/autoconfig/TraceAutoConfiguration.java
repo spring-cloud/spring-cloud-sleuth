@@ -61,7 +61,8 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Tracing sleuthTracing(@Value("${spring.zipkin.service.name:${spring.application.name:default}}") String serviceName,
+	// NOTE: stable bean name as might be used outside sleuth
+	Tracing tracing(@Value("${spring.zipkin.service.name:${spring.application.name:default}}") String serviceName,
 			Propagation.Factory factory,
 			CurrentTraceContext currentTraceContext,
 			Reporter<zipkin2.Span> reporter,
@@ -86,7 +87,8 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Tracer sleuthTracer(Tracing tracing) {
+	// NOTE: stable bean name as might be used outside sleuth
+	Tracer tracer(Tracing tracing) {
 		return tracing.tracer();
 	}
 
@@ -144,7 +146,8 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	CurrentSpanCustomizer sleuthCurrentSpanCustomizer(Tracing tracing) {
+	// NOTE: stable bean name as might be used outside sleuth
+	CurrentSpanCustomizer spanCustomizer(Tracing tracing) {
 		return CurrentSpanCustomizer.create(tracing);
 	}
 }
