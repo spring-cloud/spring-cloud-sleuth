@@ -59,11 +59,21 @@ public class TraceHttpAutoConfiguration {
 			Tracing tracing,
 			SkipPatternProvider provider
 	) {
+
+		// The user-provided sampler is used in conjuction with the skip pattern
+		HttpSampler serverSampler = this.serverSampler;
+		SleuthHttpSampler skipPatternSampler = new SleuthHttpSampler(provider);
+		if (serverSampler == null) {
+			serverSampler = skipPatternSampler;
+		} else {
+			serverSampler = new CompositeHttpSampler(skipPatternSampler, serverSampler);
+		}
+
 		return HttpTracing.newBuilder(tracing)
 				.clientParser(this.clientParser)
 				.serverParser(this.serverParser)
 				.clientSampler(this.clientSampler)
-				.serverSampler(new CompositeServerSampler(this.serverSampler, provider))
+				.serverSampler(serverSampler)
 				.build();
 	}
 
@@ -102,38 +112,27 @@ public class TraceHttpAutoConfiguration {
 	}
 }
 
+class CompositeHttpSampler extends HttpSampler {
 
+	private final HttpSampler left, right;
 
-class CompositeServerSampler extends HttpSampler {
-
-	private final HttpSampler delegate;
-	private final SkipPatternProvider provider;
-
-	CompositeServerSampler(HttpSampler delegate, SkipPatternProvider provider) {
-		this.delegate = delegate;
-		this.provider = provider;
+	CompositeHttpSampler(HttpSampler left, HttpSampler right) {
+		this.left = left;
+		this.right = right;
 	}
 
 	@Override public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
-		Boolean sleuthSampler = trySleuthSampler(adapter, request);
-		if (this.delegate == null) {
-			return sleuthSampler;
-		}
-		// let's do AND of sleuth sampler and the delegate
-		Boolean sample = this.delegate.trySample(adapter, request);
-		if (!sample) {
-			// if the decision was false then doesn't matter what was the sleuth one
-			return sample;
-		} else if (sample == null) {
-			// if there was no sampling decision, delegate to sleuth one
-			return sleuthSampler;
-		}
-		// if there was a decision from delegate combine it with sleuth
-		// if sleuth was not defined then it should not affect the delegate one
-		return sample && (sleuthSampler == null ? true : sleuthSampler);
-	}
+		// If either decision is false, return false
+		Boolean leftDecision = this.left.trySample(adapter, request);
+		if (Boolean.FALSE.equals(leftDecision)) return false;
+		Boolean rightDecision = this.right.trySample(adapter, request);
+		if (Boolean.FALSE.equals(rightDecision)) return false;
 
-	private <Req> Boolean trySleuthSampler(HttpAdapter<Req, ?> adapter, Req request) {
-		return new SleuthHttpSampler(this.provider).trySample(adapter, request);
+		// If either decision is null, return the other
+		if (leftDecision == null) return rightDecision;
+		if (rightDecision == null) return leftDecision;
+
+		// Neither are null and at least one is true
+		return leftDecision && rightDecision;
 	}
 }
