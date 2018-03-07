@@ -72,7 +72,7 @@ public class CompositeHttpSamplerTests {
 	}
 
 	@Test
-	public void should_return_false_on_both_true() {
+	public void should_return_true_on_both_true() {
 		given(this.left.trySample(this.adapter, this.request)).willReturn(true);
 		given(this.right.trySample(this.adapter, this.request)).willReturn(true);
 
