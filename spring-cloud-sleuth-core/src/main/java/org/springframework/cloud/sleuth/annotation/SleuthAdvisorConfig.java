@@ -23,7 +23,6 @@ import javax.annotation.PostConstruct;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
@@ -218,11 +217,11 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			throw e;
 		} finally {
 			if (hasLog) {
-        logEvent(span, log + ".after");
-      }
+				logEvent(span, log + ".after");
+			}
 			if (newSpan != null) {
-        span.finish();
-      }
+				span.finish();
+			}
 		}
 	}
 
