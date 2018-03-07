@@ -770,6 +770,18 @@ just register a bean of type `brave.http.HttpClientParser` or
 register a bean of type `brave.http.HttpSampler` and name the bean
  `sleuthClientSampler` for client sampler and `sleuthServerSampler` for server sampler.
 
+Check out Brave's code to see an example of how to make a path-based sampler
+https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy
+
+If you want to completely rewrite the `HttpTracing` bean you can use the `SkipPatternProvider`
+interface to retrieve the URL `Pattern` for spans that should be not sampled. Below you can see
+an example of usage of `SkipPatternProvider` inside a `HttpSampler`.
+
+[source,java]
+----
+include::../../../../spring-cloud-sleuth-core/src/main/java/org/springframework/cloud/sleuth/instrument/web/SleuthHttpSampler.java[lines=30..46]
+----
+
 === `TraceFilter`
 
 You can also modify the behavior of the `TraceFilter`, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.

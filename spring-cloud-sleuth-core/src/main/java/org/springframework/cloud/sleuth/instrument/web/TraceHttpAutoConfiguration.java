@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import brave.SpanCustomizer;
 import brave.Tracing;
 import brave.http.HttpAdapter;
 import brave.http.HttpClientParser;
@@ -51,9 +47,9 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(SleuthHttpLegacyProperties.class)
 public class TraceHttpAutoConfiguration {
 
-	@Autowired(required = false) List<HttpClientParser> clientParsers = new ArrayList<>();
-	@Autowired(required = false) List<HttpServerParser> serverParsers = new ArrayList<>();
-	@Autowired(required = false) @ClientSampler HttpSampler clientSampler;
+	@Autowired HttpClientParser clientParser;
+	@Autowired HttpServerParser serverParser;
+	@Autowired @ClientSampler HttpSampler clientSampler;
 	@Autowired(required = false) @ServerSampler HttpSampler serverSampler;
 
 	@Bean
@@ -64,8 +60,8 @@ public class TraceHttpAutoConfiguration {
 			SkipPatternProvider provider
 	) {
 		return HttpTracing.newBuilder(tracing)
-				.clientParser(new CompositeClientParser(this.clientParsers))
-				.serverParser(new CompositeServerParser(this.serverParsers))
+				.clientParser(this.clientParser)
+				.serverParser(this.serverParser)
 				.clientSampler(this.clientSampler)
 				.serverSampler(new CompositeServerSampler(this.serverSampler, provider))
 				.build();
@@ -78,9 +74,25 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
+			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	HttpClientParser httpClientParser() {
+		return new HttpClientParser();
+	}
+
+	@Bean
 	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "true")
 	HttpServerParser sleuthHttpServerParser(TraceKeys traceKeys, ErrorParser errorParser) {
 		return new SleuthHttpServerParser(traceKeys, errorParser);
+	}
+
+	@Bean
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
+			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	HttpServerParser defaultHttpServerParser() {
+		return new HttpServerParser();
 	}
 
 	@Bean
@@ -90,49 +102,7 @@ public class TraceHttpAutoConfiguration {
 	}
 }
 
-class CompositeClientParser extends HttpClientParser {
 
-	private final List<HttpClientParser> parsers;
-
-	CompositeClientParser(List<HttpClientParser> parsers) {
-		this.parsers = parsers;
-		if (this.parsers.isEmpty()) {
-			this.parsers.add(new HttpClientParser());
-		}
-	}
-
-	@Override public <Req> void request(HttpAdapter<Req, ?> adapter, Req req,
-			SpanCustomizer customizer) {
-		this.parsers.forEach(parser -> parser.request(adapter, req, customizer));
-	}
-
-	@Override public <Resp> void response(HttpAdapter<?, Resp> adapter, Resp res,
-			Throwable error, SpanCustomizer customizer) {
-		this.parsers.forEach(parser -> parser.response(adapter, res, error, customizer));
-	}
-}
-
-class CompositeServerParser extends HttpServerParser {
-
-	private final List<HttpServerParser> parsers;
-
-	CompositeServerParser(List<HttpServerParser> parsers) {
-		this.parsers = parsers;
-		if (this.parsers.isEmpty()) {
-			this.parsers.add(new HttpServerParser());
-		}
-	}
-
-	@Override public <Req> void request(HttpAdapter<Req, ?> adapter, Req req,
-			SpanCustomizer customizer) {
-		this.parsers.forEach(parser -> parser.request(adapter, req, customizer));
-	}
-
-	@Override public <Resp> void response(HttpAdapter<?, Resp> adapter, Resp res,
-			Throwable error, SpanCustomizer customizer) {
-		this.parsers.forEach(parser -> parser.response(adapter, res, error, customizer));
-	}
-}
 
 class CompositeServerSampler extends HttpSampler {
 
