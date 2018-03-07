@@ -1380,6 +1380,40 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 </chapter>
 <chapter xml:id="_customizations">
 <title>Customizations</title>
+<section xml:id="_http">
+<title>HTTP</title>
+<simpara>If a customization of client / server parsing of the HTTP related spans is required,
+just register a bean of type <literal>brave.http.HttpClientParser</literal> or
+<literal>brave.http.HttpServerParser</literal>. If client /server sampling is required, just
+register a bean of type <literal>brave.http.HttpSampler</literal> and name the bean
+ <literal>sleuthClientSampler</literal> for client sampler and <literal>sleuthServerSampler</literal> for server sampler.
+ For your convenience the <literal>@ClientSampler</literal> and <literal>@ServerSampler</literal>
+ annotations can be used to inject the proper beans or to
+ reference the bean names via their static String <literal>NAME</literal> fields.</simpara>
+<simpara>Check out Brave&#8217;s code to see an example of how to make a path-based sampler
+<link xl:href="https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy">https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy</link></simpara>
+<simpara>If you want to completely rewrite the <literal>HttpTracing</literal> bean you can use the <literal>SkipPatternProvider</literal>
+interface to retrieve the URL <literal>Pattern</literal> for spans that should be not sampled. Below you can see
+an example of usage of <literal>SkipPatternProvider</literal> inside a server side, <literal>HttpSampler</literal>.</simpara>
+<programlisting language="java" linenumbering="unnumbered">@Configuration
+class Config {
+  @Bean(name = ServerSampler.NAME)
+  HttpSampler myHttpSampler(SkipPatternProvider provider) {
+  	Pattern pattern = provider.skipPattern();
+  	return new HttpSampler() {
+
+  		@Override public &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
+  			String url = adapter.path(request);
+  			boolean shouldSkip = pattern.matcher(url).matches();
+  			if (shouldSkip) {
+  				return false;
+  			}
+  			return null;
+  		}
+  	};
+  }
+}</programlisting>
+</section>
 <section xml:id="__literal_tracefilter_literal">
 <title><literal>TraceFilter</literal></title>
 <simpara>You can also modify the behavior of the <literal>TraceFilter</literal>, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
