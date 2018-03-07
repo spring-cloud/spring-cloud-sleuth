@@ -16,17 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.regex.Pattern;
-
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpServerHandler;
 import brave.http.HttpTracing;
 import brave.propagation.Propagation;
-import brave.propagation.SamplingFlags;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
-import reactor.core.publisher.Mono;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -40,6 +36,7 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
 /**
@@ -53,7 +50,6 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
 
-	private static final String HTTP_COMPONENT = "http";
 	protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
 			+ ".TRACE";
 	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName()
@@ -78,8 +74,8 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 				}
 			};
 
-	public static WebFilter create(BeanFactory beanFactory, SkipPatternProvider skipPatternProvider) {
-		return new TraceWebFilter(beanFactory, skipPatternProvider.skipPattern());
+	public static WebFilter create(BeanFactory beanFactory) {
+		return new TraceWebFilter(beanFactory);
 	}
 
 	TraceKeys traceKeys;
@@ -87,16 +83,9 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
 	TraceContext.Extractor<HttpHeaders> extractor;
 	private final BeanFactory beanFactory;
-	private final Pattern skipPattern;
 
 	TraceWebFilter(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
-		this.skipPattern = Pattern.compile(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
-	}
-
-	TraceWebFilter(BeanFactory beanFactory, Pattern skipPattern) {
-		this.beanFactory = beanFactory;
-		this.skipPattern = skipPattern;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -139,13 +128,10 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse response = exchange.getResponse();
 		String uri = request.getPath().pathWithinApplication().value();
-		boolean skip = this.skipPattern.matcher(uri).matches()
-				|| "0".equals(request.getHeaders().getFirst("X-B3-Sampled"));
 		if (log.isDebugEnabled()) {
-			log.debug("Received a request to uri [" + uri + "] that should not be sampled [" + skip + "]");
+			log.debug("Received a request to uri [" + uri + "]");
 		}
 		Span spanFromAttribute = getSpanFromAttribute(exchange);
-		String name = HTTP_COMPONENT + ":" + uri;
 		final String CONTEXT_ERROR = "sleuth.webfilter.context.error";
 		return chain
 				.filter(exchange)
@@ -188,41 +174,19 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 									log.debug("Found span in reactor context" + span);
 								}
 							} else {
-								try {
-									boolean hasTracingContextInHeaders = extractor()
-											.extract(request.getHeaders()) != TraceContextOrSamplingFlags.EMPTY;
-									// if there was a span received then we must not change
-									// the sampling decision
-									if (skip && !hasTracingContextInHeaders) {
-										span = unsampledSpan(name);
-									} else {
-										if (spanFromAttribute != null) {
-											span = spanFromAttribute;
-											if (log.isDebugEnabled()) {
-												log.debug("Found span in attribute " + span);
-											}
-										} else {
-											span = handler().handleReceive(extractor(),
-													request.getHeaders(), request);
-											if (log.isDebugEnabled()) {
-												log.debug("Handled receive of span " + span);
-											}
-										}
+								if (spanFromAttribute != null) {
+									span = spanFromAttribute;
+									if (log.isDebugEnabled()) {
+										log.debug("Found span in attribute " + span);
 									}
-									exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
-								} catch (Exception e) {
-									log.error("Exception occurred while trying to parse the request. "
-											+ "Will fallback to manual span setting", e);
-									if (skip) {
-										span = unsampledSpan(name);
-									} else {
-										span = tracer().nextSpan().name(name).start();
-										exchange.getAttributes().put(TRACE_SPAN_WITHOUT_PARENT, span);
-										if (log.isDebugEnabled()) {
-											log.debug("Created a new 'fallback' span " + span);
-										}
+								} else {
+									span = handler().handleReceive(extractor(),
+											request.getHeaders(), request);
+									if (log.isDebugEnabled()) {
+										log.debug("Handled receive of span " + span);
 									}
 								}
+								exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
 							}
 							return c.put(Span.class, span);
 						}));
@@ -254,16 +218,6 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			span.tag(traceKeys().getHttp().getStatusCode(),
 					String.valueOf(response.getStatusCode().value()));
 		}
-	}
-
-	private Span unsampledSpan(String name) {
-		Span span = tracer().nextSpan(TraceContextOrSamplingFlags.create(
-				SamplingFlags.NOT_SAMPLED)).name(name)
-				.kind(Span.Kind.SERVER).start();
-		if (log.isDebugEnabled()) {
-			log.debug("Created a new unsampled span " + span);
-		}
-		return span;
 	}
 
 	private Span getSpanFromAttribute(ServerWebExchange exchange) {

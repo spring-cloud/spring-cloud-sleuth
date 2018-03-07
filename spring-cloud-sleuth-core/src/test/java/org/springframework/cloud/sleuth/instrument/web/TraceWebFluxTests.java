@@ -62,7 +62,7 @@ public class TraceWebFluxTests {
 		// setup
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				TraceWebFluxTests.Config.class).web(WebApplicationType.REACTIVE)
-				.properties("server.port=0", "spring.jmx.enabled=false",
+				.properties("server.port=0", "spring.jmx.enabled=false", "spring.sleuth.web.skipPattern=/skipped",
 						"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
 								"management.security.enabled=false").run();
 		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
@@ -80,6 +80,11 @@ public class TraceWebFluxTests {
 		ClientResponse nonSampledResponse = whenNonSampledRequestIsSent(port);
 		// then
 		thenNoSpanWasReported(accumulator, nonSampledResponse, controller2);
+
+		// when
+		ClientResponse skippedPatternResponse = whenRequestIsSentToSkippedPattern(port);
+		// then
+		thenNoSpanWasReported(accumulator, skippedPatternResponse, controller2);
 
 		// cleanup
 		context.close();
@@ -114,6 +119,12 @@ public class TraceWebFluxTests {
 	private ClientResponse whenRequestIsSent(int port) {
 		Mono<ClientResponse> exchange = WebClient.create().get()
 				.uri("http://localhost:" + port + "/api/c2/10").exchange();
+		return exchange.block();
+	}
+
+	private ClientResponse whenRequestIsSentToSkippedPattern(int port) {
+		Mono<ClientResponse> exchange = WebClient.create().get()
+				.uri("http://localhost:" + port + "/skipped").exchange();
 		return exchange.block();
 	}
 
@@ -168,6 +179,13 @@ public class TraceWebFluxTests {
 			then(MDC.get("X-B3-TraceId")).isNotEmpty();
 			this.span = this.tracer.currentSpan();
 			return Flux.just(id.toString());
+		}
+
+		@GetMapping("/skipped")
+		public Flux<String> skipped() {
+			Boolean sampled = this.tracer.currentSpan().context().sampled();
+			then(sampled).isFalse();
+			return Flux.just(sampled.toString());
 		}
 	}
 }
