@@ -46,8 +46,8 @@ import org.springframework.context.annotation.Role;
 public class SleuthAnnotationAutoConfiguration {
 	
 	@Bean
-	@ConditionalOnMissingBean SpanCreator spanCreator(Tracing tracing) {
-		return new DefaultSpanCreator(tracing);
+	@ConditionalOnMissingBean NewSpanParser newSpanParser() {
+		return new DefaultNewSpanParser();
 	}
 
 	@Bean

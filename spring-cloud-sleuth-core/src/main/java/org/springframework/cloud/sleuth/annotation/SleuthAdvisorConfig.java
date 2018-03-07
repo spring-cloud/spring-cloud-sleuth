@@ -175,8 +175,8 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 	private static final String METHOD_KEY = "method";
 
 	private BeanFactory beanFactory;
-	private SpanCreator spanCreator;
-	private Tracing tracing;
+	private NewSpanParser newSpanParser;
+	private Tracer tracer;
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 	private ErrorParser errorParser;
 
@@ -193,13 +193,14 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		if (newSpan == null && continueSpan == null) {
 			return invocation.proceed();
 		}
-		Span span = tracing().tracer().currentSpan();
+		Span span = tracer().currentSpan();
 		if (newSpan != null || span == null) {
-			span = spanCreator().createSpan(invocation, newSpan);
+			span = tracer().nextSpan();
+			this.newSpanParser.parse(invocation, newSpan, span);
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 			if (hasLog) {
 				logEvent(span, log + ".before");
 			}
@@ -216,14 +217,12 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			errorParser().parseErrorTags(span, e);
 			throw e;
 		} finally {
-			if (span != null) {
-				if (hasLog) {
-					logEvent(span, log + ".after");
-				}
-				if (newSpan != null) {
-					span.finish();
-				}
-			}
+			if (hasLog) {
+        logEvent(span, log + ".after");
+      }
+			if (newSpan != null) {
+        span.finish();
+      }
 		}
 	}
 
@@ -249,18 +248,18 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		return "";
 	}
 
-	private Tracing tracing() {
-		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+	private Tracer tracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
-		return this.tracing;
+		return this.tracer;
 	}
 
-	private SpanCreator spanCreator() {
-		if (this.spanCreator == null) {
-			this.spanCreator = this.beanFactory.getBean(SpanCreator.class);
+	private NewSpanParser newSpanParser() {
+		if (this.newSpanParser == null) {
+			this.newSpanParser = this.beanFactory.getBean(NewSpanParser.class);
 		}
-		return this.spanCreator;
+		return this.newSpanParser;
 	}
 
 	private SpanTagAnnotationHandler spanTagAnnotationHandler() {

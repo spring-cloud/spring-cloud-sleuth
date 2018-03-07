@@ -19,8 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import brave.Span;
-import brave.http.HttpTracing;
+import brave.SpanCustomizer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -41,7 +40,7 @@ class SleuthTraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	private static final Log log = LogFactory.getLog(SleuthTraceHandlerInterceptor.class);
 
 	private final BeanFactory beanFactory;
-	private HttpTracing tracing;
+	private SpanCustomizer spanCustomizer;
 	private TraceKeys traceKeys;
 	private ErrorParser errorParser;
 
@@ -52,11 +51,7 @@ class SleuthTraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
 			Object handler) {
-		Span span = httpTracing().tracing()
-				.tracer().currentSpan();
-		if (span == null) {
-			return true;
-		}
+		SpanCustomizer span = spanCustomizer();
 		if (log.isDebugEnabled()) {
 			log.debug("Adding tags to span " + span);
 		}
@@ -65,7 +60,7 @@ class SleuthTraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		return true;
 	}
 
-	private void addClassMethodTag(Object handler, Span span) {
+	private void addClassMethodTag(Object handler, SpanCustomizer span) {
 		if (handler instanceof HandlerMethod) {
 			String methodName = ((HandlerMethod) handler).getMethod().getName();
 			span.tag(traceKeys().getMvc().getControllerMethod(), methodName);
@@ -75,7 +70,7 @@ class SleuthTraceHandlerInterceptor extends HandlerInterceptorAdapter {
 		}
 	}
 
-	private void addClassNameTag(Object handler, Span span) {
+	private void addClassNameTag(Object handler, SpanCustomizer span) {
 		String className;
 		if (handler instanceof HandlerMethod) {
 			className = ((HandlerMethod) handler).getBeanType().getSimpleName();
@@ -97,17 +92,17 @@ class SleuthTraceHandlerInterceptor extends HandlerInterceptorAdapter {
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
 			Object handler, Exception ex) {
-		Span span = httpTracing().tracing().tracer().currentSpan();
+		SpanCustomizer span = spanCustomizer();
 		if (ex != null && span != null) {
 			errorParser().parseErrorTags(span, ex);
 		}
 	}
 
-	private HttpTracing httpTracing() {
-		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(HttpTracing.class);
+	private SpanCustomizer spanCustomizer() {
+		if (this.spanCustomizer == null) {
+			this.spanCustomizer = this.beanFactory.getBean(SpanCustomizer.class);
 		}
-		return this.tracing;
+		return this.spanCustomizer;
 	}
 
 	private TraceKeys traceKeys() {
