@@ -16,14 +16,21 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.regex.Pattern;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Provides a URL {@link Pattern} for spans that should be not sampled.
- *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-public interface SkipPatternProvider {
-	Pattern skipPattern();
+@ConfigurationProperties("spring.sleuth.http.legacy")
+public class SleuthHttpLegacyProperties {
+	private boolean enabled;
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 }

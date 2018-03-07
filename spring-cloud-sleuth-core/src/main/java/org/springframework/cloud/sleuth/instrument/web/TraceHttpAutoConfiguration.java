@@ -17,12 +17,17 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Tracing;
+import brave.http.HttpAdapter;
+import brave.http.HttpClientParser;
+import brave.http.HttpSampler;
+import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.context.annotation.Bean;
@@ -39,28 +44,95 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true", matchIfMissing = true)
 @AutoConfigureAfter(TraceWebAutoConfiguration.class)
+@EnableConfigurationProperties(SleuthHttpLegacyProperties.class)
 public class TraceHttpAutoConfiguration {
+
+	@Autowired HttpClientParser clientParser;
+	@Autowired HttpServerParser serverParser;
+	@Autowired @ClientSampler HttpSampler clientSampler;
+	@Autowired(required = false) @ServerSampler HttpSampler serverSampler;
 
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	HttpTracing httpTracing(
-			@Value("${spring.sleuth.http.legacy.enabled:false}") boolean legacyEnabled,
 			Tracing tracing,
-			TraceKeys traceKeys,
-			ErrorParser errorParser,
 			SkipPatternProvider provider
 	) {
-		if (legacyEnabled) {
-			return HttpTracing.newBuilder(tracing)
-					.clientParser(new SleuthHttpClientParser(traceKeys))
-					.serverParser(new SleuthHttpServerParser(traceKeys, errorParser))
-					.serverSampler(new SleuthHttpSampler(provider))
-					.build();
+
+		// The user-provided sampler is used in conjuction with the skip pattern
+		HttpSampler serverSampler = this.serverSampler;
+		SleuthHttpSampler skipPatternSampler = new SleuthHttpSampler(provider);
+		if (serverSampler == null) {
+			serverSampler = skipPatternSampler;
+		} else {
+			serverSampler = new CompositeHttpSampler(skipPatternSampler, serverSampler);
 		}
-		return HttpTracing
-				.newBuilder(tracing)
-				.serverSampler(new SleuthHttpSampler(provider))
+
+		return HttpTracing.newBuilder(tracing)
+				.clientParser(this.clientParser)
+				.serverParser(this.serverParser)
+				.clientSampler(this.clientSampler)
+				.serverSampler(serverSampler)
 				.build();
+	}
+
+	@Bean
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "true")
+	HttpClientParser sleuthHttpClientParser(TraceKeys traceKeys) {
+		return new SleuthHttpClientParser(traceKeys);
+	}
+
+	@Bean
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
+			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	HttpClientParser httpClientParser() {
+		return new HttpClientParser();
+	}
+
+	@Bean
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "true")
+	HttpServerParser sleuthHttpServerParser(TraceKeys traceKeys, ErrorParser errorParser) {
+		return new SleuthHttpServerParser(traceKeys, errorParser);
+	}
+
+	@Bean
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
+			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	HttpServerParser defaultHttpServerParser() {
+		return new HttpServerParser();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(name = "sleuthClientSampler")
+	HttpSampler sleuthClientSampler() {
+		return HttpSampler.TRACE_ID;
+	}
+}
+
+class CompositeHttpSampler extends HttpSampler {
+
+	private final HttpSampler left, right;
+
+	CompositeHttpSampler(HttpSampler left, HttpSampler right) {
+		this.left = left;
+		this.right = right;
+	}
+
+	@Override public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
+		// If either decision is false, return false
+		Boolean leftDecision = this.left.trySample(adapter, request);
+		if (Boolean.FALSE.equals(leftDecision)) return false;
+		Boolean rightDecision = this.right.trySample(adapter, request);
+		if (Boolean.FALSE.equals(rightDecision)) return false;
+
+		// If either decision is null, return the other
+		if (leftDecision == null) return rightDecision;
+		if (rightDecision == null) return leftDecision;
+
+		// Neither are null and at least one is true
+		return leftDecision && rightDecision;
 	}
 }

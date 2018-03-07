@@ -16,14 +16,28 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.regex.Pattern;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
- * Provides a URL {@link Pattern} for spans that should be not sampled.
+ * Annotate a server {@link brave.http.HttpSampler} that hsould be
+ * injected to {@link brave.http.HttpTracing}
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
+ * @see Qualifier
  */
-public interface SkipPatternProvider {
-	Pattern skipPattern();
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+@Qualifier("sleuthServerSampler")
+public @interface ServerSampler {
+
 }
