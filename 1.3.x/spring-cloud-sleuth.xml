@@ -1718,6 +1718,34 @@ Decorating Spring Integration Executor Channel with <literal>TraceableExecutorSe
 <simpara>We&#8217;re registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
 To disable Zuul support set the <literal>spring.sleuth.zuul.enabled</literal> property to <literal>false</literal>.</simpara>
 </section>
+<section xml:id="_spring_cloud_function">
+<title>Spring Cloud Function</title>
+<simpara>Sleuth works out of the box with Spring Cloud Function. Since functions
+might be short living, it&#8217;s best to make the Zipkin span reporting synchronous.
+Just define a <literal>Reporter&lt;Span&gt;</literal> bean as presented below:</simpara>
+<programlisting language="java" linenumbering="unnumbered">@Configuration
+class ReporterConfiguration {
+	@Bean
+	public Reporter&lt;Span&gt; reporter(
+			SpanMetricReporter spanMetricReporter,
+			ZipkinProperties zipkin,
+			Sender sender
+	) {
+		final AsyncReporter&lt;Span&gt; reporter = AsyncReporter.builder(sender)
+				.queuedMaxSpans(1000)
+				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
+				.metrics(new ReporterMetricsAdapter(spanMetricReporter))
+				.build(zipkin.getEncoder());
+		return new Reporter&lt;Span&gt;() {
+			@Override public void report(Span span) {
+				reporter.report(span);
+				// make the reporter synchronous
+				reporter.flush();
+			}
+		};
+	}
+}</programlisting>
+</section>
 </chapter>
 <chapter xml:id="_running_examples">
 <title>Running examples</title>
