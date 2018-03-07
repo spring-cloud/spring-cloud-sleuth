@@ -19,9 +19,12 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import brave.Tracing;
+import brave.http.HttpAdapter;
+import brave.http.HttpSampler;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
@@ -62,6 +65,7 @@ public class TraceFilterWebIntegrationTests {
 
 	@Autowired Tracing tracer;
 	@Autowired ArrayListSpanReporter accumulator;
+	@Autowired @ServerSampler HttpSampler sampler;
 	@Autowired Environment environment;
 	@Rule public OutputCapture capture = new OutputCapture();
 
@@ -115,6 +119,11 @@ public class TraceFilterWebIntegrationTests {
 		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.status_code", "400");
 	}
 
+	@Test
+	public void should_inject_http_sampler() {
+		then(this.sampler).isNotNull();
+	}
+
 	private int port() {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
@@ -135,6 +144,23 @@ public class TraceFilterWebIntegrationTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
+		// tag::custom_server_sampler[]
+		@Bean(name = ServerSampler.NAME)
+		HttpSampler myHttpSampler(SkipPatternProvider provider) {
+			Pattern pattern = provider.skipPattern();
+			return new HttpSampler() {
+
+				@Override public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
+					String url = adapter.path(request);
+					boolean shouldSkip = pattern.matcher(url).matches();
+					if (shouldSkip) {
+						return false;
+					}
+					return null;
+				}
+			};
+		}
+		// end::custom_server_sampler[]
 
 		@Bean RestTemplate restTemplate() {
 			RestTemplate restTemplate = new RestTemplate();
