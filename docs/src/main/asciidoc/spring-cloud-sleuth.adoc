@@ -869,6 +869,38 @@ Decorating Spring Integration Executor Channel with `TraceableExecutorService` w
 We're registering Zuul filters to propagate the tracing information (the request header is enriched with tracing data).
 To disable Zuul support set the `spring.sleuth.zuul.enabled` property to `false`.
 
+=== Spring Cloud Function
+
+Sleuth works out of the box with Spring Cloud Function. Since functions
+might be short living, it's best to make the Zipkin span reporting synchronous.
+Just define a `Reporter<Span>` bean as presented below:
+
+[source,java]
+----
+@Configuration
+class ReporterConfiguration {
+	@Bean
+	public Reporter<Span> reporter(
+			SpanMetricReporter spanMetricReporter,
+			ZipkinProperties zipkin,
+			Sender sender
+	) {
+		final AsyncReporter<Span> reporter = AsyncReporter.builder(sender)
+				.queuedMaxSpans(1000)
+				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
+				.metrics(new ReporterMetricsAdapter(spanMetricReporter))
+				.build(zipkin.getEncoder());
+		return new Reporter<Span>() {
+			@Override public void report(Span span) {
+				reporter.report(span);
+				// make the reporter synchronous
+				reporter.flush();
+			}
+		};
+	}
+}
+----
+
 == Running examples
 
 You can find the running examples deployed in the https://run.pivotal.io/[Pivotal Web Services]. Check them out in the following links:

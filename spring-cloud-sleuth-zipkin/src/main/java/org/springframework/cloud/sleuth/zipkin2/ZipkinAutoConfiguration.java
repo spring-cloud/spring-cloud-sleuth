@@ -85,11 +85,17 @@ public class ZipkinAutoConfiguration {
 			ZipkinProperties zipkin,
 			Sender sender
 	) {
-		return AsyncReporter.builder(sender)
-				.queuedMaxSpans(1000) // historical constraint. Note: AsyncReporter supports memory bounds
+		final AsyncReporter<Span> reporter = AsyncReporter.builder(sender).queuedMaxSpans(
+				1000) // historical constraint. Note: AsyncReporter supports memory bounds
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
 				.metrics(new ReporterMetricsAdapter(spanMetricReporter))
 				.build(zipkin.getEncoder());
+		return new Reporter<Span>() {
+			@Override public void report(Span span) {
+				reporter.report(span);
+				reporter.flush();
+			}
+		};
 	}
 
 	@Bean
