@@ -20,8 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import brave.Span;
-import brave.Tracing;
+import brave.SpanCustomizer;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,7 +45,7 @@ class SpanTagAnnotationHandler {
 	private static final Log log = LogFactory.getLog(SpanTagAnnotationHandler.class);
 
 	private final BeanFactory beanFactory;
-	private Tracing tracing;
+	private SpanCustomizer spanCustomizer;
 	
 	SpanTagAnnotationHandler(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -126,13 +125,13 @@ class SpanTagAnnotationHandler {
 		}
 	}
 
-	private Span span() {
-		Span span = tracing().tracer().currentSpan();
-		if (span != null) {
-			return span;
+	private SpanCustomizer span() {
+		if (this.spanCustomizer == null) {
+			this.spanCustomizer = this.beanFactory.getBean(SpanCustomizer.class);
 		}
-		return tracing().tracer().nextSpan();
+		return this.spanCustomizer;
 	}
+
 
 	private String resolveTagKey(
 			SleuthAnnotatedParameter container) {
@@ -153,12 +152,4 @@ class SpanTagAnnotationHandler {
 		}
 		return argument.toString();
 	}
-
-	private Tracing tracing() {
-		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
-		}
-		return this.tracing;
-	}
-
 }

@@ -28,14 +28,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = SleuthAnnotationAutoConfiguration.class,
 		properties = "spring.sleuth.enabled=false")
-public class SleuthSpanCreatorAnnotationNoSleuthTests {
+public class SleuthNewSpanParserAnnotationNoSleuthTests {
 
-	@Autowired(required = false) SpanCreator spanCreator;
+	@Autowired(required = false) NewSpanParser newSpanParser;
 	@Autowired(required = false) Tracing tracing;
 
 	@Test
 	public void shouldNotAutowireBecauseConfigIsDisabled() {
-		assertThat(this.spanCreator).isNull();
+		assertThat(this.newSpanParser).isNull();
 		assertThat(this.tracing).isNull();
 	}
 }

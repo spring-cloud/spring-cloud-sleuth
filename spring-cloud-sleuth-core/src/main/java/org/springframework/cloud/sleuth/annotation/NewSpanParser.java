@@ -16,23 +16,17 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import brave.SpanCustomizer;
+import org.aopalliance.intercept.MethodInvocation;
 
-import static org.assertj.core.api.Assertions.assertThat;
+/**
+ * Parses data for a span created via a {@link NewSpan} annotation.
+ *
+ * @author Adrian Cole
+ * @since 2.0.0
+ */
+public interface NewSpanParser {
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = SleuthAnnotationAutoConfiguration.class,
-		properties = "spring.sleuth.annotation.enabled=false")
-public class SleuthSpanCreatorAnnotationDisableTests {
-
-	@Autowired(required = false) SpanCreator spanCreator;
-	
-	@Test
-	public void shouldNotAutowireBecauseConfigIsDisabled() {
-		assertThat(this.spanCreator).isNull();
-	}
+	/** Override to control the name and tags on an annotation-based span */
+	void parse(MethodInvocation methodInvocation, NewSpan newSpan, SpanCustomizer span);
 }
