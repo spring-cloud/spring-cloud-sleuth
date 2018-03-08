@@ -60,7 +60,7 @@ public class SleuthMessagingProperties {
 	public static class Messaging {
 		private boolean enabled;
 
-		private String remoteServiceName = "mq-service";
+		private String remoteServiceName = "rabbitmq";
 
 		public boolean isEnabled() {
 			return this.enabled;

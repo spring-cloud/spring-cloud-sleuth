@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import brave.Tracing;
 import brave.spring.rabbit.SpringRabbitTracing;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -32,6 +33,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -54,10 +56,12 @@ public class TraceMessagingAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		SpringRabbitTracing springRabbitTracing(Tracing tracing,
-				SleuthMessagingProperties properties) {
+				SleuthMessagingProperties properties, ConnectionFactory connectionFactory) {
+			String remoteServiceName = properties.getMessaging().getRemoteServiceName() +
+					(StringUtils.hasText(connectionFactory.getVirtualHost()) ?
+							"-" + connectionFactory.getVirtualHost() : "");
 			return SpringRabbitTracing.newBuilder(tracing)
-					.remoteServiceName(properties.getMessaging()
-							.getRemoteServiceName())
+					.remoteServiceName(remoteServiceName)
 					.build();
 		}
 
