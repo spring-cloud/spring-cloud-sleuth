@@ -66,13 +66,15 @@ public class TraceAutoConfiguration {
 			Propagation.Factory factory,
 			CurrentTraceContext currentTraceContext,
 			Reporter<zipkin2.Span> reporter,
-			Sampler sampler) {
+			Sampler sampler, SleuthProperties sleuthProperties) {
 		return Tracing.newBuilder()
 				.sampler(sampler)
 				.localServiceName(serviceName)
 				.propagationFactory(factory)
 				.currentTraceContext(currentTraceContext)
-				.spanReporter(adjustedReporter(reporter)).build();
+				.spanReporter(adjustedReporter(reporter))
+				.traceId128Bit(sleuthProperties.isTraceId128())
+				.build();
 	}
 
 	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate) {

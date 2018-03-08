@@ -31,6 +31,9 @@ public class SleuthProperties {
 
 	private boolean enabled = true;
 
+	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
+	private boolean traceId128 = false;
+
 	/**
 	 * List of baggage key names that should be propagated out of process.
 	 * These keys will be prefixed with `baggage` before the actual key.
@@ -57,6 +60,14 @@ public class SleuthProperties {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public boolean isTraceId128() {
+		return this.traceId128;
+	}
+
+	public void setTraceId128(boolean traceId128) {
+		this.traceId128 = traceId128;
 	}
 
 	public List<String> getBaggageKeys() {
