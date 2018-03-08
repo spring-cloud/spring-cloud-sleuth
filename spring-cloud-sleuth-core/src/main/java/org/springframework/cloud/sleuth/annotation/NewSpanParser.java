@@ -21,6 +21,9 @@ import org.aopalliance.intercept.MethodInvocation;
 
 /**
  * Parses data for a span created via a {@link NewSpan} annotation.
+ *
+ * @author Adrian Cole
+ * @since 2.0.0
  */
 public interface NewSpanParser {
 
