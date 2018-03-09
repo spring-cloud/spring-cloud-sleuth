@@ -17,7 +17,14 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import brave.Tracing;
+import brave.kafka.clients.KafkaTracing;
 import brave.spring.rabbit.SpringRabbitTracing;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.producer.Producer;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeansException;
@@ -32,6 +39,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.ProducerFactory;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -67,6 +75,24 @@ public class TraceMessagingAutoConfiguration {
 			return new SleuthRabbitBeanPostProcessor(beanFactory);
 		}
 	}
+
+	@Configuration
+	@ConditionalOnClass(ProducerFactory.class)
+	protected static class SleuthKafkaConfiguration {
+
+		@Bean
+		@ConditionalOnMissingBean
+		KafkaTracing kafkaTracing(Tracing tracing) {
+			return KafkaTracing.create(tracing);
+		}
+
+		@Bean
+		// for tests
+		@ConditionalOnMissingBean
+		SleuthKafkaAspect sleuthKafkaAspect(KafkaTracing kafkaTracing) {
+			return new SleuthKafkaAspect(kafkaTracing);
+		}
+	}
 }
 
 class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
@@ -95,5 +121,33 @@ class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 			this.tracing = this.beanFactory.getBean(SpringRabbitTracing.class);
 		}
 		return this.tracing;
+	}
+}
+
+@Aspect
+class SleuthKafkaAspect {
+
+	private final KafkaTracing kafkaTracing;
+
+	SleuthKafkaAspect(KafkaTracing kafkaTracing) {
+		this.kafkaTracing = kafkaTracing;
+	}
+
+	@Pointcut("execution(public * org.springframework.kafka.core.ProducerFactory.createProducer(..))")
+	private void anyProducerFactory() { } // NOSONAR
+
+	@Pointcut("execution(public * org.springframework.kafka.core.ConsumerFactory.createConsumer(..))")
+	private void anyConsumerFactory() { } // NOSONAR
+
+	@Around("anyProducerFactory()")
+	public Object wrapProducerFactory(ProceedingJoinPoint pjp) throws Throwable {
+		Producer producer = (Producer) pjp.proceed();
+		return this.kafkaTracing.producer(producer);
+	}
+
+	@Around("anyConsumerFactory()")
+	public Object wrapConsumerFactory(ProceedingJoinPoint pjp) throws Throwable {
+		Consumer consumer = (Consumer) pjp.proceed();
+		return this.kafkaTracing.consumer(consumer);
 	}
 }

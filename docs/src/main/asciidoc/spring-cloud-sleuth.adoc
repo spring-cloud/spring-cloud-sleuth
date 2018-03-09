@@ -1125,6 +1125,8 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 === Messaging
 
+==== Spring Integration and Spring Cloud Stream
+
 Spring Cloud Sleuth integrates with http://projects.spring.io/spring-integration/[Spring Integration].
 It creates spans for publish and subscribe events.
 To disable Spring Integration instrumentation, set `spring.sleuth.integration.enabled` to `false`.
@@ -1137,8 +1139,16 @@ Decorating the Spring Integration Executor Channel with `TraceableExecutorServic
 
 ==== Spring RabbitMq
 
-We instrument the `RabbiTemplate` so that tracing headers get injected
+We instrument the `RabbitTemplate` so that tracing headers get injected
 into the message.
+
+To block this feature, set `spring.sleuth.messaging.enabled` to `false`.
+
+==== Spring Kafka
+
+We instrument the Spring Kafka's `ProducerFactory` and `ConsumerFactory`
+so that tracing headers get injected into the created Spring Kafka's
+`Producer` and `Consumer`.
 
 To block this feature, set `spring.sleuth.messaging.enabled` to `false`.
 

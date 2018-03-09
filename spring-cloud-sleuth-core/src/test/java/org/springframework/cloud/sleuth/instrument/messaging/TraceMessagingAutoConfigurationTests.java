@@ -16,9 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import brave.kafka.clients.KafkaTracing;
 import brave.sampler.Sampler;
 import brave.spring.rabbit.SpringRabbitTracing;
 import com.rabbitmq.client.Channel;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +43,8 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -56,11 +60,23 @@ public class TraceMessagingAutoConfigurationTests {
 	@Autowired RabbitTemplate rabbitTemplate;
 	@Autowired ArrayListSpanReporter reporter;
 	@Autowired TestSleuthRabbitBeanPostProcessor postProcessor;
+	@Autowired MySleuthKafkaAspect mySleuthKafkaAspect;
+	@Autowired ProducerFactory producerFactory;
+	@Autowired ConsumerFactory consumerFactory;
 
 	@Test
 	public void should_wrap_rabbit_template() {
 		then(this.rabbitTemplate).isNotNull();
 		then(this.postProcessor.rabbitTracingCalled).isTrue();
+	}
+
+	@Test
+	public void should_wrap_kafka() {
+		this.producerFactory.createProducer();
+		then(this.mySleuthKafkaAspect.producerWrapped).isTrue();
+
+		this.consumerFactory.createConsumer();
+		then(this.mySleuthKafkaAspect.consumerWrapped).isTrue();
 	}
 
 	@Configuration
@@ -77,6 +93,9 @@ public class TraceMessagingAutoConfigurationTests {
 		@Bean SleuthRabbitBeanPostProcessor postProcessor(BeanFactory beanFactory) {
 			return new TestSleuthRabbitBeanPostProcessor(beanFactory);
 		}
+		@Bean SleuthKafkaAspect sleuthKafkaAspect(KafkaTracing kafkaTracing) {
+			return new MySleuthKafkaAspect(kafkaTracing);
+		}
 	}
 }
 
@@ -91,5 +110,27 @@ class TestSleuthRabbitBeanPostProcessor  extends SleuthRabbitBeanPostProcessor {
 	@Override SpringRabbitTracing rabbitTracing() {
 		this.rabbitTracingCalled = true;
 		return super.rabbitTracing();
+	}
+}
+
+class MySleuthKafkaAspect extends SleuthKafkaAspect {
+
+	boolean producerWrapped;
+	boolean consumerWrapped;
+
+	MySleuthKafkaAspect(KafkaTracing kafkaTracing) {
+		super(kafkaTracing);
+	}
+
+	@Override public Object wrapProducerFactory(ProceedingJoinPoint pjp)
+			throws Throwable {
+		this.producerWrapped = true;
+		return super.wrapProducerFactory(pjp);
+	}
+
+	@Override public Object wrapConsumerFactory(ProceedingJoinPoint pjp)
+			throws Throwable {
+		this.consumerWrapped = true;
+		return super.wrapConsumerFactory(pjp);
 	}
 }
