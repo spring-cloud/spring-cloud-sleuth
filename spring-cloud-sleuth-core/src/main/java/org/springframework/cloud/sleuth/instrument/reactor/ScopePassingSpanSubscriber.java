@@ -46,8 +46,8 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanS
 		Span root = ctx != null ?
 				ctx.getOrDefault(Span.class, this.tracer.currentSpan()) : null;
 		this.span = root;
-		this.context = root != null ?
-				ctx.put(Span.class, root): Context.empty();
+		this.context = ctx != null && root != null ? ctx.put(Span.class, root) :
+				ctx != null ? ctx : Context.empty();
 	}
 
 	@Override public void onSubscribe(Subscription subscription) {
