@@ -1810,6 +1810,8 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 </section>
 <section xml:id="_messaging">
 <title>Messaging</title>
+<section xml:id="_spring_integration_and_spring_cloud_stream">
+<title>Spring Integration and Spring Cloud Stream</title>
 <simpara>Spring Cloud Sleuth integrates with <link xl:href="http://projects.spring.io/spring-integration/">Spring Integration</link>.
 It creates spans for publish and subscribe events.
 To disable Spring Integration instrumentation, set <literal>spring.sleuth.integration.enabled</literal> to <literal>false</literal>.</simpara>
@@ -1819,10 +1821,18 @@ By default, all channels are included.</simpara>
 <simpara>When using the <literal>Executor</literal> to build a Spring Integration <literal>IntegrationFlow</literal>, you must use the untraced version of the <literal>Executor</literal>.
 Decorating the Spring Integration Executor Channel with <literal>TraceableExecutorService</literal> causes the spans to be improperly closed.</simpara>
 </important>
+</section>
 <section xml:id="_spring_rabbitmq">
 <title>Spring RabbitMq</title>
-<simpara>We instrument the <literal>RabbiTemplate</literal> so that tracing headers get injected
+<simpara>We instrument the <literal>RabbitTemplate</literal> so that tracing headers get injected
 into the message.</simpara>
+<simpara>To block this feature, set <literal>spring.sleuth.messaging.enabled</literal> to <literal>false</literal>.</simpara>
+</section>
+<section xml:id="_spring_kafka">
+<title>Spring Kafka</title>
+<simpara>We instrument the Spring Kafka&#8217;s <literal>ProducerFactory</literal> and <literal>ConsumerFactory</literal>
+so that tracing headers get injected into the created Spring Kafka&#8217;s
+<literal>Producer</literal> and <literal>Consumer</literal>.</simpara>
 <simpara>To block this feature, set <literal>spring.sleuth.messaging.enabled</literal> to <literal>false</literal>.</simpara>
 </section>
 </section>
