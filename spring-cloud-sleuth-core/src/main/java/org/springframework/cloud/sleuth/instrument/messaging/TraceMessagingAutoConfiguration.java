@@ -71,7 +71,7 @@ public class TraceMessagingAutoConfiguration {
 		@Bean
 		// for tests
 		@ConditionalOnMissingBean
-		SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
+		static SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
 			return new SleuthRabbitBeanPostProcessor(beanFactory);
 		}
 	}
