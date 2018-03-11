@@ -40,8 +40,8 @@ could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG
 
 NOTE: Set `spring.application.name=myService` (for instance) to see the service name as well as the trace and span IDs.
 
-IMPORTANT: If using Zipkin, configure the percentage of spans exported using `spring.sleuth.sampler.percentage`
-(default 0.1, i.e. 10%). *Otherwise you might think that Sleuth is not working cause it's omitting some spans.*
+IMPORTANT: If you use Zipkin, configure the probability of spans exported by setting `spring.sleuth.sampler.probability`
+(default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working be cause it omits some spans.
 
 include::intro.adoc[]
 
