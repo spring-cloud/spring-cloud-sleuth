@@ -42,6 +42,9 @@ could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG
 
 NOTE: Set `spring.application.name=myService` (for instance) to see the service name as well as the trace and span IDs.
 
+NOTE: By default, Sleuth https://cloud.spring.io/spring-cloud-static/spring-cloud-sleuth/2.0.0.M8/single/spring-cloud-sleuth.html#_sampling_in_spring_cloud_sleuth[emits only a portion of traces]. If you want to guarantee that all traces are emitted then set `spring.sleuth.sampler.probability = 1.0`.
+
+
 :branch: master
 
 == Introduction
@@ -738,5 +741,4 @@ added after the original pull request but before a merge.
 * If no-one else is using your branch, please rebase it against the current master (or
   other target branch in the main project).
 * When writing a commit message please follow http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html[these conventions],
-  if you are fixing an existing issue please add `Fixes gh-XXXX` at the end of the commit
-  message (where XXXX is the issue number).
+  if you are fixing an existing issue please add `Fixes gh-XXXX` at the end of the commit message (where XXXX is the issue number).
