@@ -42,6 +42,9 @@ could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG
 
 NOTE: Set `spring.application.name=myService` (for instance) to see the service name as well as the trace and span IDs.
 
+NOTE: By default, Sleuth https://cloud.spring.io/spring-cloud-static/spring-cloud-sleuth/2.0.0.M8/single/spring-cloud-sleuth.html#_sampling_in_spring_cloud_sleuth[emits only a portion of traces]. If you want to guarantee that all traces are emitted then set `spring.sleuth.sampler.probability = 1.0`.
+
+
 :branch: master
 
 == Introduction
