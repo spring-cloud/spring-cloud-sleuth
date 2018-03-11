@@ -675,7 +675,7 @@ You can configure the location of the service by setting <literal>spring.zipkin.
 </listitem>
 </itemizedlist>
 <important>
-<simpara>If you use Zipkin, configure the percentage of spans exported by setting <literal>spring.sleuth.sampler.percentage</literal>
+<simpara>If you use Zipkin, configure the probability of spans exported by setting <literal>spring.sleuth.sampler.probability</literal>
 (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working be cause it omits some spans.</simpara>
 </important>
 <note>
