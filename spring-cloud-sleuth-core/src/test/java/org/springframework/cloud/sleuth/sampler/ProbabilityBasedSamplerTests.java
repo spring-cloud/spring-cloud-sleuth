@@ -32,7 +32,7 @@ public class ProbabilityBasedSamplerTests {
 	private static Random RANDOM = new Random();
 
 	@Test
-	public void should_pass_all_samples_when_config_has_1_percentage() throws Exception {
+	public void should_pass_all_samples_when_config_has_1_probability() throws Exception {
 		this.samplerConfiguration.setProbability(1f);
 
 		for (int i = 0; i < 10; i++) {
@@ -43,7 +43,7 @@ public class ProbabilityBasedSamplerTests {
 	}
 
 	@Test
-	public void should_reject_all_samples_when_config_has_0_percentage()
+	public void should_reject_all_samples_when_config_has_0_probability()
 			throws Exception {
 		this.samplerConfiguration.setProbability(0f);
 
@@ -56,23 +56,23 @@ public class ProbabilityBasedSamplerTests {
 	@Test
 	public void should_pass_given_percent_of_samples() throws Exception {
 		int numberOfIterations = 1000;
-		float percentage = 1f;
-		this.samplerConfiguration.setProbability(percentage);
+		float probability = 1f;
+		this.samplerConfiguration.setProbability(probability);
 
 		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations);
 
-		then(numberOfSampledElements).isEqualTo((int) (numberOfIterations * percentage));
+		then(numberOfSampledElements).isEqualTo((int) (numberOfIterations * probability));
 	}
 
 	@Test
 	public void should_pass_given_percent_of_samples_with_fractional_element() throws Exception {
 		int numberOfIterations = 1000;
-		float percentage = 0.35f;
-		this.samplerConfiguration.setProbability(percentage);
+		float probability = 0.35f;
+		this.samplerConfiguration.setProbability(probability);
 
 		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations);
 
-		int threshold = (int) (numberOfIterations * percentage);
+		int threshold = (int) (numberOfIterations * probability);
 		then(numberOfSampledElements).isEqualTo(threshold);
 	}
 

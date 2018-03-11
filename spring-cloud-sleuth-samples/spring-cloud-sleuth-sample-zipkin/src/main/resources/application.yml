@@ -10,7 +10,7 @@ spring:
     # baseUrl: http://192.168.99.100:9411/
   sleuth:
     sampler:
-      percentage: 1.0
+      probability: 1.0
 
 sample:
   zipkin:
