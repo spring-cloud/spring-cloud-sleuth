@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import brave.Tracer;
 import brave.http.HttpTracing;
 import brave.servlet.TracingFilter;
+import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -54,6 +55,7 @@ import static javax.servlet.DispatcherType.REQUEST;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
+@Import(SpanCustomizingAsyncHandlerInterceptor.class)
 public class TraceWebServletAutoConfiguration {
 
 	public static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;

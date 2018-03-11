@@ -47,8 +47,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * what's you are storing.
  *
  * @since 1.0.0
+ *
+ * @deprecated the Brave's defaults are suggested to be used
  */
 @ConfigurationProperties("spring.sleuth.keys")
+@Deprecated
 public class TraceKeys {
 
 	private Http http = new Http();

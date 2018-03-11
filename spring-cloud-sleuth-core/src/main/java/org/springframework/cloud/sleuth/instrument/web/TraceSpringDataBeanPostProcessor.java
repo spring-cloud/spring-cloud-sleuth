@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 
-import brave.spring.webmvc.TracingHandlerInterceptor;
+import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -89,12 +89,7 @@ class TraceSpringDataBeanPostProcessor implements BeanPostProcessor {
 			if (handlerExecutionChain == null) {
 				return null;
 			}
-			handlerExecutionChain.addInterceptor(this.applicationContext.getBean(TracingHandlerInterceptor.class));
-			String legacyEnabled = this.applicationContext.getEnvironment()
-					.getProperty("spring.sleuth.http.legacy.enabled", "false");
-			if (Boolean.parseBoolean(legacyEnabled)) {
-				handlerExecutionChain.addInterceptor(this.applicationContext.getBean(SleuthTraceHandlerInterceptor.class));
-			}
+			handlerExecutionChain.addInterceptor(this.applicationContext.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
 			return handlerExecutionChain;
 		}
 	}

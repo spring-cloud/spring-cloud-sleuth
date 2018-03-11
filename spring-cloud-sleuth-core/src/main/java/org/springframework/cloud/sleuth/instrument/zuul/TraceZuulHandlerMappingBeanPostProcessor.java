@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.lang.invoke.MethodHandles;
 
-import brave.spring.webmvc.TracingHandlerInterceptor;
+import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -58,7 +58,7 @@ class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 			}
 			ZuulHandlerMapping zuulHandlerMapping = (ZuulHandlerMapping) bean;
 			zuulHandlerMapping.setInterceptors(
-					this.beanFactory.getBean(TracingHandlerInterceptor.class));
+					this.beanFactory.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
 		}
 		return bean;
 	}

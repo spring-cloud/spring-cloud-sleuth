@@ -96,7 +96,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	public void should_create_a_trace() throws Exception {
 		whenSentPingWithoutTracingData();
 
-		then(this.reporter.getSpans()).hasSize(2);
+		then(this.reporter.getSpans()).hasSize(1);
 		zipkin2.Span span = this.reporter.getSpans().get(0);
 		then(span.tags())
 				.containsKey(new TraceKeys().getMvc().getControllerClass())
@@ -175,13 +175,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
 
 		// it's a span with the same ids
-		then(this.reporter.getSpans()).hasSize(2);
+		then(this.reporter.getSpans()).hasSize(1);
 		zipkin2.Span serverSpan = this.reporter.getSpans().get(0);
 		then(serverSpan.tags())
 				.containsEntry("custom", "tag")
-				.containsEntry("http.status_code", "404");
-		zipkin2.Span handlerSpan = this.reporter.getSpans().get(0);
-		then(handlerSpan.tags())
 				.containsEntry("http.status_code", "404");
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -199,12 +196,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		// we need to dump the span cause it's not in TraceFilter since TF
 		// has also error dispatch and the ErrorController would report the span
-		then(this.reporter.getSpans()).hasSize(2);
-		// server
+		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("error", "java.lang.RuntimeException");
-		// handler
-		then(this.reporter.getSpans().get(1).tags())
 				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException");
 	}
 
