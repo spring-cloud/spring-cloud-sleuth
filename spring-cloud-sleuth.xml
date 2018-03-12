@@ -1810,6 +1810,7 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 </section>
 <section xml:id="_messaging">
 <title>Messaging</title>
+<simpara>Features from this section can be disabled by setting the <literal>spring.sleuth.messaging.enabled</literal> property with value equal to <literal>false</literal>.</simpara>
 <section xml:id="_spring_integration_and_spring_cloud_stream">
 <title>Spring Integration and Spring Cloud Stream</title>
 <simpara>Spring Cloud Sleuth integrates with <link xl:href="http://projects.spring.io/spring-integration/">Spring Integration</link>.
@@ -1826,14 +1827,14 @@ Decorating the Spring Integration Executor Channel with <literal>TraceableExecut
 <title>Spring RabbitMq</title>
 <simpara>We instrument the <literal>RabbitTemplate</literal> so that tracing headers get injected
 into the message.</simpara>
-<simpara>To block this feature, set <literal>spring.sleuth.messaging.enabled</literal> to <literal>false</literal>.</simpara>
+<simpara>To block this feature, set <literal>spring.sleuth.messaging.rabbit.enabled</literal> to <literal>false</literal>.</simpara>
 </section>
 <section xml:id="_spring_kafka">
 <title>Spring Kafka</title>
 <simpara>We instrument the Spring Kafka&#8217;s <literal>ProducerFactory</literal> and <literal>ConsumerFactory</literal>
 so that tracing headers get injected into the created Spring Kafka&#8217;s
 <literal>Producer</literal> and <literal>Consumer</literal>.</simpara>
-<simpara>To block this feature, set <literal>spring.sleuth.messaging.enabled</literal> to <literal>false</literal>.</simpara>
+<simpara>To block this feature, set <literal>spring.sleuth.messaging.kafka.enabled</literal> to <literal>false</literal>.</simpara>
 </section>
 </section>
 <section xml:id="_zuul">
