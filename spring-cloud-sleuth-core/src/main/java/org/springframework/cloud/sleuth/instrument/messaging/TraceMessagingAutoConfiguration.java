@@ -52,11 +52,12 @@ import org.springframework.kafka.core.ProducerFactory;
 @Configuration
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
-@ConditionalOnProperty(value = "spring.sleuth.messaging.enabled", matchIfMissing = true)
+@OnMessagingEnabled
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
 public class TraceMessagingAutoConfiguration {
 
 	@Configuration
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.rabbit.enabled", matchIfMissing = true)
 	@ConditionalOnClass(RabbitTemplate.class)
 	protected static class SleuthRabbitConfiguration {
 		@Bean
@@ -64,7 +65,7 @@ public class TraceMessagingAutoConfiguration {
 		SpringRabbitTracing springRabbitTracing(Tracing tracing,
 				SleuthMessagingProperties properties) {
 			return SpringRabbitTracing.newBuilder(tracing)
-					.remoteServiceName(properties.getMessaging().getRemoteServiceName())
+					.remoteServiceName(properties.getMessaging().getRabbit().getRemoteServiceName())
 					.build();
 		}
 
@@ -77,13 +78,17 @@ public class TraceMessagingAutoConfiguration {
 	}
 
 	@Configuration
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.enabled", matchIfMissing = true)
 	@ConditionalOnClass(ProducerFactory.class)
 	protected static class SleuthKafkaConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		KafkaTracing kafkaTracing(Tracing tracing) {
-			return KafkaTracing.create(tracing);
+		KafkaTracing kafkaTracing(Tracing tracing, SleuthMessagingProperties properties) {
+			return KafkaTracing
+					.newBuilder(tracing)
+					.remoteServiceName(properties.getMessaging().getKafka().getRemoteServiceName())
+					.build();
 		}
 
 		@Bean

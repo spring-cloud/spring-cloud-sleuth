@@ -41,6 +41,7 @@ import org.springframework.integration.config.GlobalChannelInterceptor;
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
+@OnMessagingEnabled
 @ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
 public class TraceSpringIntegrationAutoConfiguration {

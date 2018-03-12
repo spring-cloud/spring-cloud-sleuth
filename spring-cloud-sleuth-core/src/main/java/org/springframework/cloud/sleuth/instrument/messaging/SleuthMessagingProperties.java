@@ -60,7 +60,61 @@ public class SleuthMessagingProperties {
 	public static class Messaging {
 		private boolean enabled;
 
+		private Rabbit rabbit = new Rabbit();
+
+		private Kafka kafka = new Kafka();
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public Rabbit getRabbit() {
+			return this.rabbit;
+		}
+
+		public void setRabbit(Rabbit rabbit) {
+			this.rabbit = rabbit;
+		}
+
+		public Kafka getKafka() {
+			return this.kafka;
+		}
+
+		public void setKafka(Kafka kafka) {
+			this.kafka = kafka;
+		}
+	}
+
+	public static class Rabbit {
+		private boolean enabled;
+
 		private String remoteServiceName = "rabbitmq";
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public String getRemoteServiceName() {
+			return this.remoteServiceName;
+		}
+
+		public void setRemoteServiceName(String remoteServiceName) {
+			this.remoteServiceName = remoteServiceName;
+		}
+	}
+
+	public static class Kafka {
+		private boolean enabled;
+
+		private String remoteServiceName = "kafka";
 
 		public boolean isEnabled() {
 			return this.enabled;
