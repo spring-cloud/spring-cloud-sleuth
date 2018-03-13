@@ -16,35 +16,26 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import brave.Tracer;
 import brave.kafka.clients.KafkaTracing;
 import brave.sampler.Sampler;
 import brave.spring.rabbit.SpringRabbitTracing;
-import com.rabbitmq.client.Channel;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
-import org.mockito.Mock;
-import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.Connection;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.listener.adapter.MessagingMessageListenerAdapter;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -77,6 +68,8 @@ public class TraceMessagingAutoConfigurationTests {
 
 		this.consumerFactory.createConsumer();
 		then(this.mySleuthKafkaAspect.consumerWrapped).isTrue();
+
+		then(this.mySleuthKafkaAspect.adapterWrapped).isTrue();
 	}
 
 	@Configuration
@@ -93,8 +86,13 @@ public class TraceMessagingAutoConfigurationTests {
 		@Bean SleuthRabbitBeanPostProcessor postProcessor(BeanFactory beanFactory) {
 			return new TestSleuthRabbitBeanPostProcessor(beanFactory);
 		}
-		@Bean SleuthKafkaAspect sleuthKafkaAspect(KafkaTracing kafkaTracing) {
-			return new MySleuthKafkaAspect(kafkaTracing);
+		@Bean SleuthKafkaAspect sleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
+			return new MySleuthKafkaAspect(kafkaTracing, tracer);
+		}
+
+		@KafkaListener(topics = "backend")
+		public void onMessage(ConsumerRecord<?, ?> message) {
+			System.err.println(message);
 		}
 	}
 }
@@ -117,9 +115,10 @@ class MySleuthKafkaAspect extends SleuthKafkaAspect {
 
 	boolean producerWrapped;
 	boolean consumerWrapped;
+	boolean adapterWrapped;
 
-	MySleuthKafkaAspect(KafkaTracing kafkaTracing) {
-		super(kafkaTracing);
+	MySleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
+		super(kafkaTracing, tracer);
 	}
 
 	@Override public Object wrapProducerFactory(ProceedingJoinPoint pjp)
@@ -132,5 +131,11 @@ class MySleuthKafkaAspect extends SleuthKafkaAspect {
 			throws Throwable {
 		this.consumerWrapped = true;
 		return super.wrapConsumerFactory(pjp);
+	}
+
+	@Override public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp)
+			throws Throwable {
+		this.adapterWrapped = true;
+		return super.wrapListenerContainerCreation(pjp);
 	}
 }
