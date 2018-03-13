@@ -213,7 +213,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			if (hasLog) {
 				logEvent(span, log + ".afterFailure");
 			}
-			errorParser().parseErrorTags(span, e);
+			errorParser().parseErrorTags(span.customizer(), e);
 			throw e;
 		} finally {
 			if (hasLog) {

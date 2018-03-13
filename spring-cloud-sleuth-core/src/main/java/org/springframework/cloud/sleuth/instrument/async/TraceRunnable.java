@@ -65,7 +65,7 @@ public class TraceRunnable implements Runnable {
 				error = e;
 				throw e;
 			} finally {
-				this.errorParser.parseErrorTags(this.span, error);
+				this.errorParser.parseErrorTags(this.span.customizer(), error);
 				this.span.finish();
 			}
 	}
