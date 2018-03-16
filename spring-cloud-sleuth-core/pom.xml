@@ -209,6 +209,12 @@
 			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- to compile against Span.remoteEndpoint(zipkin.Span) -->
+		<dependency>
+			<groupId>io.zipkin.java</groupId>
+			<artifactId>zipkin</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- BRAVE -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
