@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import brave.http.HttpTracing;
+import feign.Client;
 import feign.Feign;
 import feign.okhttp.OkHttpClient;
 import org.springframework.beans.factory.BeanFactory;
@@ -43,7 +44,7 @@ import org.springframework.context.annotation.Scope;
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
-@ConditionalOnClass(FeignContext.class)
+@ConditionalOnClass({ Client.class, FeignContext.class })
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
 @AutoConfigureAfter({SleuthHystrixAutoConfiguration.class, TraceHttpAutoConfiguration.class})
