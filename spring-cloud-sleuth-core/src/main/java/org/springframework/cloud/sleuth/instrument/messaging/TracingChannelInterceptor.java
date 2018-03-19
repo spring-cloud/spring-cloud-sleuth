@@ -56,20 +56,20 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		implements ExecutorChannelInterceptor {
 
 	private static final Log log = LogFactory.getLog(TracingChannelInterceptor.class);
-        /**
-         * Using the literal "broker" until we come up with a better solution.
-         *
-         * <p>If the message originated from a binder (consumer binding), there will be different
-         * headers present (e.g. "KafkaHeaders.RECEIVED_TOPIC" Vs. "AmqpHeaders.CONSUMER_QUEUE"
-         * (unless the application removes them before sending). These don't represent the broker,
-         * rather a queue, and in any case the heuristics are not great. At least we might be able
-         * to tell if this is rabbit or not (ex how spring-rabbit works). We need to think this
-         * through before making an api, possibly experimenting.
-         *
-         * <p>If the app is outbound only (producer), there's no indication of what type the
-         * destination broker is. This may hint at a non-manual solution being overwriting the
-         * remoteServiceName later, similar to how servlet instrumentation lazy set "http.route".
-         */
+	/**
+	 * Using the literal "broker" until we come up with a better solution.
+	 *
+	 * <p>If the message originated from a binder (consumer binding), there will be different
+	 * headers present (e.g. "KafkaHeaders.RECEIVED_TOPIC" Vs. "AmqpHeaders.CONSUMER_QUEUE"
+	 * (unless the application removes them before sending). These don't represent the broker,
+	 * rather a queue, and in any case the heuristics are not great. At least we might be able
+	 * to tell if this is rabbit or not (ex how spring-rabbit works). We need to think this
+	 * through before making an api, possibly experimenting.
+	 *
+	 * <p>If the app is outbound only (producer), there's no indication of what type the
+	 * destination broker is. This may hint at a non-manual solution being overwriting the
+	 * remoteServiceName later, similar to how servlet instrumentation lazy set "http.route".
+	 */
 	private static final String REMOTE_SERVICE_NAME = "broker";
 
 	public static TracingChannelInterceptor create(Tracing tracing) {
