@@ -81,7 +81,7 @@ public class TraceReactorAutoConfiguration {
 		@Bean
 		// for tests
 		@ConditionalOnMissingBean
-		HookRegisteringBeanDefinitionRegistryPostProcessor traceHookRegisteringBeanDefinitionRegistryPostProcessor() {
+		static HookRegisteringBeanDefinitionRegistryPostProcessor traceHookRegisteringBeanDefinitionRegistryPostProcessor() {
 			return new HookRegisteringBeanDefinitionRegistryPostProcessor();
 		}
 	}
