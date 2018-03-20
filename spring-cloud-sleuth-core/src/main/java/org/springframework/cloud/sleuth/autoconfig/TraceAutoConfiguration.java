@@ -74,6 +74,7 @@ public class TraceAutoConfiguration {
 				.currentTraceContext(currentTraceContext)
 				.spanReporter(adjustedReporter(reporter))
 				.traceId128Bit(sleuthProperties.isTraceId128())
+				.supportsJoin(sleuthProperties.isSupportsJoin())
 				.build();
 	}
 

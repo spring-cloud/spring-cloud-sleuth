@@ -34,6 +34,9 @@ public class SleuthProperties {
 	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
 	private boolean traceId128 = false;
 
+	/** True means the tracing system supports sharing a span ID between a client and server. */
+	private boolean supportsJoin = true;
+
 	/**
 	 * List of baggage key names that should be propagated out of process.
 	 * These keys will be prefixed with `baggage` before the actual key.
@@ -68,6 +71,14 @@ public class SleuthProperties {
 
 	public void setTraceId128(boolean traceId128) {
 		this.traceId128 = traceId128;
+	}
+
+	public boolean isSupportsJoin() {
+		return this.supportsJoin;
+	}
+
+	public void setSupportsJoin(boolean supportsJoin) {
+		this.supportsJoin = supportsJoin;
 	}
 
 	public List<String> getBaggageKeys() {
