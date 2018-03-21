@@ -34,6 +34,7 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	final Subscriber<? super T> subscriber;
 	final Context context;
 	final String name;
+	private Tracing tracing;
 
 	SpanSubscriptionProvider(BeanFactory beanFactory,
 			Subscriber<? super T> subscriber,
@@ -45,11 +46,17 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	}
 
 	@Override public SpanSubscription<T> get() {
-		Tracing tracing = this.beanFactory.getBean(Tracing.class);
-		return newCoreSubscriber(tracing);
+		return newCoreSubscriber(tracing());
 	}
 
 	SpanSubscription<T> newCoreSubscriber(Tracing tracing) {
 		return new SpanSubscriber<>(this.subscriber, this.context, tracing, this.name);
+	}
+
+	private Tracing tracing() {
+		if (this.tracing == null) {
+			this.tracing = this.beanFactory.getBean(Tracing.class);
+		}
+		return this.tracing;
 	}
 }
