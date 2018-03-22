@@ -293,7 +293,7 @@
 						<enabled>false</enabled>
 					</releases>
 				</repository>
-				<!-- ONLY FOR BRAVE SNAPSHOTS -->
+				<!-- ONLY FOR BRAVE -->
 				<repository>
 					<id>jfrog-snapshots</id>
 					<name>JFrog Snapshots</name>
