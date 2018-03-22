@@ -18,7 +18,6 @@ import zipkin2.codec.BytesEncoder;
 import zipkin2.codec.Encoding;
 import zipkin2.reporter.BytesMessageEncoder;
 import zipkin2.reporter.Sender;
-import zipkin2.reporter.internal.BaseCall;
 
 import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
 
@@ -94,7 +93,7 @@ final class RestTemplateSender extends Sender {
 		this.restTemplate.exchange(requestEntity, String.class);
 	}
 
-	class HttpPostCall extends BaseCall<Void> {
+	class HttpPostCall extends Call.Base<Void> {
 		private final byte[] message;
 
 		HttpPostCall(byte[] message) {
