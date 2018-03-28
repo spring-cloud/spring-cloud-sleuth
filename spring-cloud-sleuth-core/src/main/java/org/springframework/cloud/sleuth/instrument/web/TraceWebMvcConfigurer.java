@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -40,10 +39,5 @@ class TraceWebMvcConfigurer implements WebMvcConfigurer {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(this.applicationContext.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
-	}
-
-	@Bean
-	SpanCustomizingAsyncHandlerInterceptor spanCustomizingAsyncHandlerInterceptor() {
-		return new SpanCustomizingAsyncHandlerInterceptor();
 	}
 }
