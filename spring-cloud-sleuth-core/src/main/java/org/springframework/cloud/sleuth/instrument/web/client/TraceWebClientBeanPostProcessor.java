@@ -146,6 +146,15 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					return continuation.doAfterSuccessOrError(
 							(clientResponse, throwable1) -> {
 								Throwable throwable = throwable1;
+								if (clientResponse == null || clientResponse.statusCode() == null) {
+									if (log.isDebugEnabled()) {
+										log.debug(
+												"No response was returned. Will close the span ["
+														+ clientSpan + "]");
+									}
+									handleReceive(clientSpan, ws, clientResponse, throwable);
+									return;
+								}
 								boolean error = clientResponse.statusCode().is4xxClientError() ||
 										clientResponse.statusCode().is5xxServerError();
 								if (error) {
@@ -159,8 +168,7 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 													.value() + "] and the reason is [" + clientResponse
 													.statusCode().getReasonPhrase() + "]");
 								}
-								handler().handleReceive(clientResponse, throwable, clientSpan);
-								ws.close();
+								handleReceive(clientSpan, ws, clientResponse, throwable);
 							});
 				})
 				.subscriberContext(c -> {
@@ -182,6 +190,12 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					return c.put(CLIENT_SPAN_KEY, clientSpan);
 				});
 		return exchange;
+	}
+
+	private void handleReceive(Span clientSpan, Tracer.SpanInScope ws,
+			ClientResponse clientResponse, Throwable throwable) {
+		handler().handleReceive(clientResponse, throwable, clientSpan);
+		ws.close();
 	}
 
 	@SuppressWarnings("unchecked")
