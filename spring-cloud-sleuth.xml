@@ -1491,6 +1491,13 @@ You can configure the URL by setting the <literal>spring.zipkin.baseUrl</literal
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://192.168.99.100:9411/</programlisting>
 <simpara>If you want to find Zipkin through service discovery, you can pass the Zipkin&#8217;s service ID inside the URL, as shown in the following example for <literal>zipkinserver</literal> service ID:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://zipkinserver/</programlisting>
+<simpara>To disable this feature just set <literal>spring.zipkin.discoveryClientEnabled</literal> to `false.</simpara>
+<simpara>When the Discovery Client feature is enabled, Sleuth uses
+<literal>LoadBalancerClient</literal> to find the URL of the Zipkin Server. It means
+that you can set up the load balancing configuration e.g. via Ribbon.</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">zipkinserver:
+  ribbon:
+    ListOfServers: host1,host2</programlisting>
 <simpara>If you have web, rabbit, or kafka together on the classpath, you might need to pick the means by which you would like to send spans to zipkin.
 To do so, set <literal>web</literal>, <literal>rabbit</literal>, or <literal>kafka</literal> to the <literal>spring.zipkin.sender.type</literal> property.
 The following example shows setting the sender type for <literal>web</literal>:</simpara>
