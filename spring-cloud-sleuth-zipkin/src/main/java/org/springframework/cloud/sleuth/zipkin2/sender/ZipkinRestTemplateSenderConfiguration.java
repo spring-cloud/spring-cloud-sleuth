@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinLoadBalancer;
@@ -42,6 +43,7 @@ class ZipkinRestTemplateSenderConfiguration {
 
 	@Configuration
 	@ConditionalOnMissingClass("org.springframework.cloud.client.loadbalancer.LoadBalancerClient")
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "false")
 	static class DefaultZipkinUrlExtractorConfiguration {
 		@Autowired(required = false) LoadBalancerClient client;
 
@@ -58,6 +60,7 @@ class ZipkinRestTemplateSenderConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(LoadBalancerClient.class)
+	@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "true", matchIfMissing = true)
 	static class DiscoveryClientZipkinUrlExtractorConfiguration {
 
 		@Autowired(required = false) LoadBalancerClient client;

@@ -518,11 +518,24 @@ spring.zipkin.baseUrl: http://192.168.99.100:9411/
 ----
 
 If you want to find Zipkin via service discovery it's enough to pass the
-Zipkin's service id inside the URL (example for `zipkinserver` service id)
+Zipkin's service id inside the URL. If you want to disable this feature
+just set `spring.zipkin.discoveryClientEnabled` to `false.
+Example for `zipkinserver` service id:
 
 [source,yaml]
 ----
 spring.zipkin.baseUrl: http://zipkinserver/
+----
+
+When this Discovery Client feature is enabled, Sleuth uses
+`LoadBalancerClient` to find the URL of the Zipkin Server. It means
+that you can set up the load balancing configuration e.g. via Ribbon.
+
+[source,yaml]
+----
+zipkinserver:
+  ribbon:
+    ListOfServers: host1,host2
 ----
 
 If you have web, rabbit or kafka together on the classpath, you might need
