@@ -43,32 +43,40 @@ class ZipkinRestTemplateSenderConfiguration {
 
 	@Configuration
 	@ConditionalOnMissingClass("org.springframework.cloud.client.loadbalancer.LoadBalancerClient")
-	@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "false")
 	static class DefaultZipkinUrlExtractorConfiguration {
 		@Autowired(required = false) LoadBalancerClient client;
 
 		@Bean
 		@ConditionalOnMissingBean
 		ZipkinLoadBalancer noOpLoadBalancer(final ZipkinProperties zipkinProperties) {
-			return new ZipkinLoadBalancer() {
-				@Override public URI instance() {
-					return URI.create(zipkinProperties.getBaseUrl());
-				}
-			};
+			return new NoOpZipkinLoadBalancer(zipkinProperties);
 		}
 	}
 
 	@Configuration
 	@ConditionalOnClass(LoadBalancerClient.class)
-	@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "true", matchIfMissing = true)
 	static class DiscoveryClientZipkinUrlExtractorConfiguration {
 
-		@Autowired(required = false) LoadBalancerClient client;
+		@Configuration
+		@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "true", matchIfMissing = true)
+		static class ZipkinClientLoadBalancedConfiguration {
+			@Autowired(required = false) LoadBalancerClient client;
 
-		@Bean
-		@ConditionalOnMissingBean
-		ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(ZipkinProperties zipkinProperties) {
-			return new LoadBalancerClientZipkinLoadBalancer(this.client, zipkinProperties);
+			@Bean
+			@ConditionalOnMissingBean
+			ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(ZipkinProperties zipkinProperties) {
+				return new LoadBalancerClientZipkinLoadBalancer(this.client, zipkinProperties);
+			}
+		}
+
+		@Configuration
+		@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "false")
+		static class ZipkinClientNoOpConfiguration {
+			@Bean
+			@ConditionalOnMissingBean
+			ZipkinLoadBalancer noOpLoadBalancer(final ZipkinProperties zipkinProperties) {
+				return new NoOpZipkinLoadBalancer(zipkinProperties);
+			}
 		}
 	}
 
@@ -132,4 +140,17 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
  */
 interface ZipkinUrlExtractor {
 	URI zipkinUrl(ZipkinProperties zipkinProperties);
+}
+
+class NoOpZipkinLoadBalancer implements ZipkinLoadBalancer {
+
+	private final ZipkinProperties zipkinProperties;
+
+	NoOpZipkinLoadBalancer(ZipkinProperties zipkinProperties) {
+		this.zipkinProperties = zipkinProperties;
+	}
+
+	@Override public URI instance() {
+		return URI.create(this.zipkinProperties.getBaseUrl());
+	}
 }
