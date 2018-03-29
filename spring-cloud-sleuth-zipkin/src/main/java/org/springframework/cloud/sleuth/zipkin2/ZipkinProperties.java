@@ -28,11 +28,19 @@ import zipkin2.codec.SpanBytesEncoder;
  */
 @ConfigurationProperties("spring.zipkin")
 public class ZipkinProperties {
-	/** URL of the zipkin query server instance. You can also provide
+	/**
+	 *  URL of the zipkin query server instance. You can also provide
 	 *  the service id of the Zipkin server if Zipkin's registered in
 	 *  service discovery (e.g. http://zipkinserver/)
 	 */
 	private String baseUrl = "http://localhost:9411/";
+
+	/**
+	 * If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl}
+	 * as a URL always
+	 */
+	private Boolean discoveryClientEnabled;
+
 	/**
 	 * Enables sending spans to Zipkin
 	 */
@@ -66,6 +74,14 @@ public class ZipkinProperties {
 
 	public boolean isEnabled() {
 		return this.enabled;
+	}
+
+	public Boolean getDiscoveryClientEnabled() {
+		return this.discoveryClientEnabled;
+	}
+
+	public void setDiscoveryClientEnabled(Boolean discoveryClientEnabled) {
+		this.discoveryClientEnabled = discoveryClientEnabled;
 	}
 
 	public int getMessageTimeout() {
