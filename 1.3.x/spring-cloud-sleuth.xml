@@ -1302,8 +1302,16 @@ is asynchronous. You can configure the URL by setting the <literal>spring.zipkin
 property as follows:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://192.168.99.100:9411/</programlisting>
 <simpara>If you want to find Zipkin via service discovery it&#8217;s enough to pass the
-Zipkin&#8217;s service id inside the URL (example for <literal>zipkinserver</literal> service id)</simpara>
+Zipkin&#8217;s service id inside the URL. If you want to disable this feature
+just set <literal>spring.zipkin.discoveryClientEnabled</literal> to <literal>false.
+Example for `zipkinserver</literal> service id:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://zipkinserver/</programlisting>
+<simpara>When this Discovery Client feature is enabled, Sleuth uses
+<literal>LoadBalancerClient</literal> to find the URL of the Zipkin Server. It means
+that you can set up the load balancing configuration e.g. via Ribbon.</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">zipkinserver:
+  ribbon:
+    ListOfServers: host1,host2</programlisting>
 <simpara>If you have web, rabbit or kafka together on the classpath, you might need
 to pick the means by which you would like to send spans to zipkin. To do that
 just set either <literal>web</literal>, <literal>rabbit</literal> or <literal>kafka</literal> to the <literal>spring.zipkin.sender.type</literal> property.
