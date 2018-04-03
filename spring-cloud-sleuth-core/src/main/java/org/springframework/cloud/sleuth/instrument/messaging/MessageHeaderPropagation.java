@@ -130,7 +130,7 @@ enum MessageHeaderPropagation
 		Object result = accessor.getHeader(key);
 		if (result != null) {
 			if (result instanceof byte[]) {
-				return new String((byte[])result, UTF_8);
+				return new String((byte[]) result, UTF_8);
 			}
 			return result.toString();
 		}
