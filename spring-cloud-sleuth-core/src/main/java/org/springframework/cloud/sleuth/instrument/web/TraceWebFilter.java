@@ -31,6 +31,7 @@ import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
@@ -125,9 +126,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			// clear any previous trace
 			tracer().withSpanInScope(null);
 		}
-		ServerHttpRequest request = exchange.getRequest();
-		ServerHttpResponse response = exchange.getResponse();
-		String uri = request.getPath().pathWithinApplication().value();
+		String uri = exchange.getRequest().getPath().pathWithinApplication().value();
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "]");
 		}
@@ -149,15 +148,22 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 							} else {
 								continuation = Mono.empty();
 							}
+							String httpRoute = null;
 							Object attribute = exchange
 									.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
 							if (attribute instanceof HandlerMethod) {
 								HandlerMethod handlerMethod = (HandlerMethod) attribute;
 								addClassMethodTag(handlerMethod, span);
 								addClassNameTag(handlerMethod, span);
+								Object pattern = exchange
+										.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+								httpRoute = pattern != null ? pattern.toString() : "";
 							}
-							addResponseTagsForSpanWithoutParent(exchange, response, span);
-							handler().handleSend(response, t, span);
+							addResponseTagsForSpanWithoutParent(exchange, exchange.getResponse(), span);
+							DecoratedServerHttpResponse delegate = new DecoratedServerHttpResponse(
+									exchange.getResponse(), exchange.getRequest().getMethodValue(),
+									httpRoute);
+							handler().handleSend(delegate, t, span);
 							if (log.isDebugEnabled()) {
 								log.debug("Handled send of " + span);
 							}
@@ -181,7 +187,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 									}
 								} else {
 									span = handler().handleReceive(extractor(),
-											request.getHeaders(), request);
+											exchange.getRequest().getHeaders(), exchange.getRequest());
 									if (log.isDebugEnabled()) {
 										log.debug("Handled receive of span " + span);
 									}
@@ -255,6 +261,17 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		return ORDER;
 	}
 
+	static final class DecoratedServerHttpResponse extends ServerHttpResponseDecorator {
+
+		final String method, httpRoute;
+
+		DecoratedServerHttpResponse(ServerHttpResponse delegate, String method, String httpRoute) {
+			super(delegate);
+			this.method = method;
+			this.httpRoute = httpRoute;
+		}
+	}
+
 	static final class HttpAdapter
 			extends brave.http.HttpServerAdapter<ServerHttpRequest, ServerHttpResponse> {
 
@@ -274,6 +291,20 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		@Override public Integer statusCode(ServerHttpResponse response) {
 			return response.getStatusCode() != null ?
 					response.getStatusCode().value() : null;
+		}
+
+		@Override public String methodFromResponse(ServerHttpResponse response) {
+			if (response instanceof DecoratedServerHttpResponse) {
+				return ((DecoratedServerHttpResponse) response).method;
+			}
+			return null;
+		}
+
+		@Override public String route(ServerHttpResponse response) {
+			if (response instanceof DecoratedServerHttpResponse) {
+				return ((DecoratedServerHttpResponse) response).httpRoute;
+			}
+			return null;
 		}
 	}
 }
