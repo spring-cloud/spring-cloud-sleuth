@@ -886,6 +886,37 @@ The following example shows setting the sender type for `web`:
 spring.zipkin.sender.type: web
 ----
 
+To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can register
+the `ZipkinRestTemplateCustomizer` bean.
+
+[source,java]
+----
+@Configuration
+class MyConfig {
+	@Bean ZipkinRestTemplateCustomizer myCustomizer() {
+		return new ZipkinRestTemplateCustomizer() {
+			@Override
+			void customize(RestTemplate restTemplate) {
+				// customize the RestTemplate
+			}
+		};
+	}
+}
+----
+
+If, however, you would like to control the full process of creating the `RestTemplate`
+object, you will have to create a bean of `zipkin2.reporter.Sender` type.
+
+[source,java]
+----
+	@Bean Sender myRestTemplateSender(ZipkinProperties zipkin,
+			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
+		RestTemplate restTemplate = mySuperCustomRestTemplate();
+		zipkinRestTemplateCustomizer.customize(restTemplate);
+		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
+	}
+----
+
 == Zipkin Stream Span Consumer
 
 IMPORTANT: We recommend using Zipkin's native support for message-based span sending.
