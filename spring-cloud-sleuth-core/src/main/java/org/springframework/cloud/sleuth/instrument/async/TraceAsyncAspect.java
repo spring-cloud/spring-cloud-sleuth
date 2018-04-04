@@ -16,10 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.lang.reflect.Method;
-
 import brave.Span;
 import brave.Tracer;
+
+import java.lang.reflect.Method;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -53,9 +54,12 @@ public class TraceAsyncAspect {
 
 	@Around("execution (@org.springframework.scheduling.annotation.Async  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		String spanName = this.spanNamer.name(getMethod(pjp, pjp.getTarget()),
-				SpanNameUtil.toLowerHyphen(pjp.getSignature().getName()));
-		Span span = this.tracer.currentSpan().name(spanName);
+		String spanName = name(pjp);
+		Span span = this.tracer.currentSpan();
+		if (span == null) {
+			span = this.tracer.nextSpan();
+		}
+		span = span.name(spanName);
 		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			span.tag(this.traceKeys.getAsync().getPrefix() +
 					this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
@@ -65,6 +69,11 @@ public class TraceAsyncAspect {
 		} finally {
 			span.finish();
 		}
+	}
+
+	String name(ProceedingJoinPoint pjp) {
+		return this.spanNamer.name(getMethod(pjp, pjp.getTarget()),
+				SpanNameUtil.toLowerHyphen(pjp.getSignature().getName()));
 	}
 
 	private Method getMethod(ProceedingJoinPoint pjp, Object object) {
