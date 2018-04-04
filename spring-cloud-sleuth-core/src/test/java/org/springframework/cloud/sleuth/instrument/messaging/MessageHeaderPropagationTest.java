@@ -52,24 +52,26 @@ public class MessageHeaderPropagationTest
 	@Test
 	public void testGetByteArrayValue() {
 		MessageHeaderAccessor carrier = carrier();
-		byte[] bytes = "48485a3953bb6124".getBytes();
-		carrier.setHeader("X-B3-TraceId", bytes);
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124".getBytes());
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124000000".getBytes());
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
-		assertEquals("48485a3953bb6124", value);
+		assertEquals("48485a3953bb6124000000", value);
 	}
 	
 	@Test
 	public void testGetStringValue() {
 		MessageHeaderAccessor carrier = carrier();
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124");
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
-		assertEquals("48485a3953bb6124", value);
+		assertEquals("48485a3953bb61240000000", value);
 	}
 	
 	@Test
 	public void testGetNullValue() {
 		MessageHeaderAccessor carrier = carrier();
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124");
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "non existent key");
 		assertNull(value);
 	}
