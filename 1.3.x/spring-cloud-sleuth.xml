@@ -1317,6 +1317,27 @@ to pick the means by which you would like to send spans to zipkin. To do that
 just set either <literal>web</literal>, <literal>rabbit</literal> or <literal>kafka</literal> to the <literal>spring.zipkin.sender.type</literal> property.
 Example for <literal>web</literal>:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.sender.type: web</programlisting>
+<simpara>To customize the <literal>RestTemplate</literal> that sends spans to Zipkin via HTTP, you can register
+the <literal>ZipkinRestTemplateCustomizer</literal> bean.</simpara>
+<programlisting language="java" linenumbering="unnumbered">@Configuration
+class MyConfig {
+	@Bean ZipkinRestTemplateCustomizer myCustomizer() {
+		return new ZipkinRestTemplateCustomizer() {
+			@Override
+			void customize(RestTemplate restTemplate) {
+				// customize the RestTemplate
+			}
+		};
+	}
+}</programlisting>
+<simpara>If, however, you would like to control the full process of creating the <literal>RestTemplate</literal>
+object, you will have to create a bean of <literal>zipkin2.reporter.Sender</literal> type.</simpara>
+<programlisting language="java" linenumbering="unnumbered">	@Bean Sender myRestTemplateSender(ZipkinProperties zipkin,
+			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
+		RestTemplate restTemplate = mySuperCustomRestTemplate();
+		zipkinRestTemplateCustomizer.customize(restTemplate);
+		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
+	}</programlisting>
 </chapter>
 <chapter xml:id="_span_data_as_messages">
 <title>Span Data as Messages</title>
