@@ -913,7 +913,7 @@ object, you will have to create a bean of `zipkin2.reporter.Sender` type.
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = mySuperCustomRestTemplate();
 		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
+		return myCustomSender(zipkin, restTemplate);
 	}
 ----
 
