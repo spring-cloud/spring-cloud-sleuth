@@ -1521,7 +1521,7 @@ object, you will have to create a bean of <literal>zipkin2.reporter.Sender</lite
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = mySuperCustomRestTemplate();
 		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
+		return myCustomSender(zipkin, restTemplate);
 	}</programlisting>
 </chapter>
 <chapter xml:id="_zipkin_stream_span_consumer">

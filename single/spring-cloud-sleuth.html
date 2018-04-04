@@ -686,7 +686,7 @@ object, you will have to create a bean of <code class="literal">zipkin2.reporter
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = mySuperCustomRestTemplate();
 		zipkinRestTemplateCustomizer.customize(restTemplate);
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> myCustomSender(zipkin, restTemplate);
 	}</pre></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_zipkin_stream_span_consumer" href="#_zipkin_stream_span_consumer"></a>14.&nbsp;Zipkin Stream Span Consumer</h1></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>We recommend using Zipkin&#8217;s native support for message-based span sending.
 Starting from the Edgware release, the Zipkin Stream server is deprecated.
 In the Finchley release, it got removed.</p></td></tr></table></div><p>See the <a class="link" href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer" target="_top">Dalston Documentaion</a>
