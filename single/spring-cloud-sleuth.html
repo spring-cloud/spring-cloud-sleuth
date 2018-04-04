@@ -670,7 +670,24 @@ that you can set up the load balancing configuration e.g. via Ribbon.</p><pre cl
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  ribbon</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    ListOfServers</span>: host1,host2</pre><p>If you have web, rabbit, or kafka together on the classpath, you might need to pick the means by which you would like to send spans to zipkin.
 To do so, set <code class="literal">web</code>, <code class="literal">rabbit</code>, or <code class="literal">kafka</code> to the <code class="literal">spring.zipkin.sender.type</code> property.
-The following example shows setting the sender type for <code class="literal">web</code>:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.sender.type</span>: web</pre></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_zipkin_stream_span_consumer" href="#_zipkin_stream_span_consumer"></a>14.&nbsp;Zipkin Stream Span Consumer</h1></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>We recommend using Zipkin&#8217;s native support for message-based span sending.
+The following example shows setting the sender type for <code class="literal">web</code>:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.sender.type</span>: web</pre><p>To customize the <code class="literal">RestTemplate</code> that sends spans to Zipkin via HTTP, you can register
+the <code class="literal">ZipkinRestTemplateCustomizer</code> bean.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Configuration</span></em>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> MyConfig {
+	<em><span class="hl-annotation" style="color: gray">@Bean</span></em> ZipkinRestTemplateCustomizer myCustomizer() {
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> ZipkinRestTemplateCustomizer() {
+			<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> customize(RestTemplate restTemplate) {
+				<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// customize the RestTemplate</span>
+			}
+		};
+	}
+}</pre><p>If, however, you would like to control the full process of creating the <code class="literal">RestTemplate</code>
+object, you will have to create a bean of <code class="literal">zipkin2.reporter.Sender</code> type.</p><pre class="programlisting">	<em><span class="hl-annotation" style="color: gray">@Bean</span></em> Sender myRestTemplateSender(ZipkinProperties zipkin,
+			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
+		RestTemplate restTemplate = mySuperCustomRestTemplate();
+		zipkinRestTemplateCustomizer.customize(restTemplate);
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
+	}</pre></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_zipkin_stream_span_consumer" href="#_zipkin_stream_span_consumer"></a>14.&nbsp;Zipkin Stream Span Consumer</h1></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>We recommend using Zipkin&#8217;s native support for message-based span sending.
 Starting from the Edgware release, the Zipkin Stream server is deprecated.
 In the Finchley release, it got removed.</p></td></tr></table></div><p>See the <a class="link" href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer" target="_top">Dalston Documentaion</a>
 for how to create a Stream Zipkin server.</p></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_integrations" href="#_integrations"></a>15.&nbsp;Integrations</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_opentracing" href="#_opentracing"></a>15.1&nbsp;OpenTracing</h2></div></div></div><p>Spring Cloud Sleuth is compatible with <a class="link" href="http://opentracing.io/" target="_top">OpenTracing</a>.
