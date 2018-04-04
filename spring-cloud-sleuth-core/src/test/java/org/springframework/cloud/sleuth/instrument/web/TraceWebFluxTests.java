@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -77,6 +78,12 @@ public class TraceWebFluxTests {
 		clean(accumulator, controller2);
 
 		// when
+		ClientResponse functionResponse = whenRequestIsSentToFunction(port);
+		// then
+		thenSpanWasReportedForFunction(accumulator, functionResponse);
+		accumulator.clear();
+
+		// when
 		ClientResponse nonSampledResponse = whenNonSampledRequestIsSent(port);
 		// then
 		thenNoSpanWasReported(accumulator, nonSampledResponse, controller2);
@@ -101,9 +108,19 @@ public class TraceWebFluxTests {
 			then(response.statusCode().value()).isEqualTo(200);
 			then(accumulator.getSpans()).hasSize(1);
 		});
+		then(accumulator.getSpans().get(0).name()).isEqualTo("get /api/c2/{id}");
 		then(accumulator.getSpans().get(0).tags())
 				.containsEntry("mvc.controller.method", "successful")
 				.containsEntry("mvc.controller.class", "Controller2");
+	}
+
+	private void thenSpanWasReportedForFunction(ArrayListSpanReporter accumulator,
+			ClientResponse response) {
+		Awaitility.await().untilAsserted(() -> {
+			then(response.statusCode().value()).isEqualTo(200);
+			then(accumulator.getSpans()).hasSize(1);
+		});
+		then(accumulator.getSpans().get(0).name()).isEqualTo("get");
 	}
 
 	private void thenNoSpanWasReported(ArrayListSpanReporter accumulator,
@@ -119,6 +136,12 @@ public class TraceWebFluxTests {
 	private ClientResponse whenRequestIsSent(int port) {
 		Mono<ClientResponse> exchange = WebClient.create().get()
 				.uri("http://localhost:" + port + "/api/c2/10").exchange();
+		return exchange.block();
+	}
+
+	private ClientResponse whenRequestIsSentToFunction(int port) {
+		Mono<ClientResponse> exchange = WebClient.create().get()
+				.uri("http://localhost:" + port + "/function").exchange();
 		return exchange.block();
 	}
 
@@ -159,6 +182,13 @@ public class TraceWebFluxTests {
 
 		@Bean Controller2 controller2(Tracer tracer) {
 			return new Controller2(tracer);
+		}
+
+		@Bean RouterFunction<ServerResponse> function() {
+			return RouterFunctions.route(RequestPredicates.GET("/function"), r -> {
+				then(MDC.get("X-B3-TraceId")).isNotEmpty();
+				return ServerResponse.ok().syncBody("functionOk");
+			});
 		}
 	}
 
