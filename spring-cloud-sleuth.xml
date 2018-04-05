@@ -1365,7 +1365,7 @@ public TagValueResolver tagValueResolver() {
 <title>Resolving Expressions for a Value</title>
 <simpara>Consider the following annotated method:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@NewSpan
-public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "length() + ' characters'") String test) {
+public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
 }</programlisting>
 <simpara>No custom implementation of a <literal>TagValueExpressionResolver</literal> leads to evaluation of the SPEL expression, and a tag with a value of <literal>4 characters</literal> is set on the span.
 If you want to use some other expression resolution mechanism, you can create your own implementation of the bean.</simpara>
