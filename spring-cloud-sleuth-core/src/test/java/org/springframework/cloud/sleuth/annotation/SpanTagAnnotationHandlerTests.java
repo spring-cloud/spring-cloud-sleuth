@@ -66,7 +66,7 @@ public class SpanTagAnnotationHandlerTests {
 		if (annotation instanceof SpanTag) {
 			String resolvedValue = handler.resolveTagValue((SpanTag) annotation, "test");
 			
-			assertThat(resolvedValue).isEqualTo("4 characters");
+			assertThat(resolvedValue).isEqualTo("hello characters");
 		} else {
 			fail("Annotation was not SleuthSpanTag");
 		}
@@ -94,7 +94,7 @@ public class SpanTagAnnotationHandlerTests {
 
 		// tag::spel[]
 		@NewSpan
-		public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "length() + ' characters'") String test) {
+		public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
 		}
 		// end::spel[]
 
