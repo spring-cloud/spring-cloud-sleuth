@@ -710,6 +710,8 @@ The precedence is as follows:
 . If the bean name has not been provided, try to evaluate an expression.
 We search for a `TagValueExpressionResolver` bean.
 The default implementation uses SPEL expression resolution.
+**IMPORTANT** from Sleuth 2.0.0 you can only reference properties
+from the SPEL expression. Method execution is not allowed due to security constraints.
 . If we do not find any expression to evaluate, return the `toString()` value of the parameter.
 
 ==== Custom extractor

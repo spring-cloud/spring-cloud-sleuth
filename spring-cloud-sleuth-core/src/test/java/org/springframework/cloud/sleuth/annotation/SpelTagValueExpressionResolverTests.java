@@ -27,10 +27,16 @@ public class SpelTagValueExpressionResolverTests {
 	@Test
 	public void should_use_spel_to_resolve_a_value() throws Exception {
 		SpelTagValueExpressionResolver resolver = new SpelTagValueExpressionResolver();
+		MyObject myObject = new MyObject();
+		myObject.name = "hello";
 
-		String resolved = resolver.resolve("length() + 1", "foo");
+		String resolved = resolver.resolve("name + ' world'", myObject);
 
-		then(resolved).isEqualTo("4");
+		then(resolved).isEqualTo("hello world");
+	}
+
+	public static class MyObject {
+		public String name;
 	}
 
 	@Test
