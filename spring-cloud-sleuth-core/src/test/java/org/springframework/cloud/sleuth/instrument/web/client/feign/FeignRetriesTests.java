@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import feign.Client;
 import feign.Feign;
 import feign.FeignException;
@@ -41,8 +41,6 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
@@ -62,7 +60,7 @@ public class FeignRetriesTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	org.springframework.cloud.sleuth.TraceKeys traceKeys = new org.springframework.cloud.sleuth.TraceKeys();
@@ -74,7 +72,6 @@ public class FeignRetriesTests {
 	@After
 	public void setup() {
 		BDDMockito.given(this.beanFactory.getBean(HttpTracing.class)).willReturn(this.httpTracing);
-		BDDMockito.given(this.beanFactory.getBean(ErrorParser.class)).willReturn(new ExceptionMessageErrorParser());
 	}
 
 	@Test

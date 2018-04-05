@@ -18,7 +18,8 @@ package org.springframework.cloud.sleuth.log;
 
 import brave.Span;
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,13 +35,13 @@ public class Slf4JSpanLoggerTest {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 
 	Span span = this.tracing.tracer().nextSpan().name("span").start();
 	Slf4jCurrentTraceContext slf4jCurrentTraceContext =
-			new Slf4jCurrentTraceContext(CurrentTraceContext.Default.create());
+			new Slf4jCurrentTraceContext(new StrictCurrentTraceContext());
 
 	@Before
 	@After
@@ -50,8 +51,7 @@ public class Slf4JSpanLoggerTest {
 
 	@Test
 	public void should_set_entries_to_mdc_from_span() throws Exception {
-		CurrentTraceContext.Scope scope = this.slf4jCurrentTraceContext
-				.newScope(this.span.context());
+		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
 
 		assertThat(MDC.get("X-B3-TraceId")).isEqualTo(span.context().traceIdString());
 		assertThat(MDC.get("traceId")).isEqualTo(span.context().traceIdString());
@@ -67,7 +67,7 @@ public class Slf4JSpanLoggerTest {
 		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");
 
-		CurrentTraceContext.Scope scope = this.slf4jCurrentTraceContext
+		Scope scope = this.slf4jCurrentTraceContext
 				.newScope(null);
 
 		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();

@@ -28,10 +28,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import brave.ScopedSpan;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Before;
@@ -44,8 +45,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
@@ -61,7 +60,7 @@ public class TraceableExecutorServiceTests {
 	ExecutorService traceManagerableExecutorService;
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	Tracer tracer = this.tracing.tracer();
@@ -86,15 +85,15 @@ public class TraceableExecutorServiceTests {
 	@Test
 	public void should_propagate_trace_id_and_set_new_span_when_traceable_executor_service_is_executed()
 			throws Exception {
-		Span span = this.tracer.nextSpan().name("http:PARENT");
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		ScopedSpan span = this.tracer.startScopedSpan("http:PARENT");
+		try {
 			CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		} finally {
 			span.finish();
 		}
 
 		then(this.spanVerifyingRunnable.traceIds.stream().distinct()
-				.collect(toList())).containsOnly(span.context().traceId());
+				.collect(toList())).hasSize(1);
 		then(this.spanVerifyingRunnable.spanIds.stream().distinct()
 				.collect(toList())).hasSize(TOTAL_THREADS);
 	}
@@ -139,8 +138,7 @@ public class TraceableExecutorServiceTests {
 
 	private List callables() {
 		List list = new ArrayList<>();
-		list.add(new TraceCallable<>(this.tracing.tracer(), new DefaultSpanNamer(),
-				new ExceptionMessageErrorParser(), () -> "foo"));
+		list.add(new TraceCallable<>(this.tracing, new DefaultSpanNamer(), () -> "foo"));
 		list.add((Callable) () -> "bar");
 		return list;
 	}
@@ -171,9 +169,8 @@ public class TraceableExecutorServiceTests {
 	}
 	
 	BeanFactory beanFactory() {
-		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(this.tracer);
+		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
-		BDDMockito.given(this.beanFactory.getBean(ErrorParser.class)).willReturn(new ExceptionMessageErrorParser());
 		return this.beanFactory;
 	}
 

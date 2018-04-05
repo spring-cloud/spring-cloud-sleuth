@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import brave.Span;
+import brave.ScopedSpan;
 import brave.Tracer;
-import brave.Tracer.SpanInScope;
-import org.springframework.cloud.sleuth.ErrorParser;
+import brave.Tracing;
+import brave.propagation.TraceContext;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
@@ -41,32 +41,30 @@ public class TraceRunnable implements Runnable {
 
 	private final Tracer tracer;
 	private final Runnable delegate;
-	private final Span span;
-	private final ErrorParser errorParser;
+	private final TraceContext parent;
+	private final String spanName;
 
-	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser, Runnable delegate) {
-		this(tracer, spanNamer, errorParser, delegate, null);
+	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate) {
+		this(tracing, spanNamer, delegate, null);
 	}
 
-	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser, Runnable delegate, String name) {
-		this.tracer = tracer;
+	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate, String name) {
+		this.tracer = tracing.tracer();
 		this.delegate = delegate;
-		String spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
-		this.span = this.tracer.nextSpan().name(spanName);
-		this.errorParser = errorParser;
+		this.parent = tracing.currentTraceContext().get();
+		this.spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
 	}
 
 	@Override
 	public void run() {
-		Throwable error = null;
-			try (SpanInScope ws = this.tracer.withSpanInScope(this.span.start())) {
-				this.delegate.run();
-			} catch (RuntimeException | Error e) {
-				error = e;
-				throw e;
-			} finally {
-				this.errorParser.parseErrorTags(this.span.customizer(), error);
-				this.span.finish();
-			}
+		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
+		try {
+			this.delegate.run();
+		} catch (Exception | Error e) {
+			span.error(e);
+			throw e;
+		} finally {
+			span.finish();
+		}
 	}
 }

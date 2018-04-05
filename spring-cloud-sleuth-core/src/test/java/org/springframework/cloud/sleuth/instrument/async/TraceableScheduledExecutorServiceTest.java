@@ -21,9 +21,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
-import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,8 +33,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -49,7 +46,7 @@ import static org.mockito.BDDMockito.then;
 public class TraceableScheduledExecutorServiceTest {
 
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.build();
 	@Mock
 	BeanFactory beanFactory;
@@ -123,9 +120,8 @@ public class TraceableScheduledExecutorServiceTest {
 	}
 
 	BeanFactory beanFactory() {
-		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(this.tracing.tracer());
+		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
-		BDDMockito.given(this.beanFactory.getBean(ErrorParser.class)).willReturn(new ExceptionMessageErrorParser());
 		return this.beanFactory;
 	}
 }

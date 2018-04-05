@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import brave.Tracer;
+import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.servlet.TracingFilter;
 import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
@@ -27,7 +27,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -71,8 +70,8 @@ public class TraceWebServletAutoConfiguration {
 	}
 
 	@Bean
-	TraceWebAspect traceWebAspect(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser) {
-		return new TraceWebAspect(tracer, spanNamer, errorParser);
+	TraceWebAspect traceWebAspect(Tracing tracing, SpanNamer spanNamer) {
+		return new TraceWebAspect(tracing, spanNamer);
 	}
 
 	@Bean

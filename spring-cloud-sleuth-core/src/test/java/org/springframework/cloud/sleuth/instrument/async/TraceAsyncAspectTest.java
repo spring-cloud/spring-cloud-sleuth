@@ -1,7 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -21,7 +21,7 @@ public class TraceAsyncAspectTest {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	ProceedingJoinPoint point = Mockito.mock(ProceedingJoinPoint.class);

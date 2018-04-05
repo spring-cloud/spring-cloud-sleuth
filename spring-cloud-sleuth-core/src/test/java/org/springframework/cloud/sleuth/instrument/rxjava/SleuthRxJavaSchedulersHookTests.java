@@ -28,7 +28,7 @@ import java.util.concurrent.ThreadFactory;
 
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
@@ -52,7 +52,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	TraceKeys traceKeys = new TraceKeys();
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	Tracer tracer = this.tracing.tracer();

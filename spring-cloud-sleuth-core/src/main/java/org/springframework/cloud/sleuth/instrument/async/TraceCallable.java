@@ -16,11 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import brave.ScopedSpan;
+import brave.Tracing;
+import brave.propagation.TraceContext;
 import java.util.concurrent.Callable;
 
-import brave.Span;
 import brave.Tracer;
-import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
@@ -42,31 +43,29 @@ public class TraceCallable<V> implements Callable<V> {
 
 	private final Tracer tracer;
 	private final Callable<V> delegate;
-	private final Span span;
-	private final ErrorParser errorParser;
+	private final TraceContext parent;
+	private final String spanName;
 
-	public TraceCallable(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser, Callable<V> delegate) {
-		this(tracer, spanNamer, errorParser, delegate, null);
+	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate) {
+		this(tracing, spanNamer, delegate, null);
 	}
 
-	public TraceCallable(Tracer tracer, SpanNamer spanNamer, ErrorParser errorParser, Callable<V> delegate, String name) {
-		this.tracer = tracer;
+	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate, String name) {
+		this.tracer = tracing.tracer();
 		this.delegate = delegate;
-		String spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
-		this.span = this.tracer.nextSpan().name(spanName);
-		this.errorParser = errorParser;
+		this.parent = tracing.currentTraceContext().get();
+		this.spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
 	}
 
 	@Override public V call() throws Exception {
-		Throwable error = null;
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(this.span.start())) {
+		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
+		try {
 			return this.delegate.call();
 		} catch (Exception | Error e) {
-			error = e;
+			span.error(e);
 			throw e;
 		} finally {
-			this.errorParser.parseErrorTags(this.span.customizer(), error);
-			this.span.finish();
+			span.finish();
 		}
 	}
 }
