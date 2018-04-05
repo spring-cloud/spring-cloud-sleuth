@@ -16,17 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import brave.ErrorParser;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
@@ -41,17 +40,16 @@ public class TraceRibbonCommandFactoryBeanPostProcessorTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
-			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
+			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ErrorParser()))
 			.build();
 
 	@Mock RibbonCommandFactory ribbonCommandFactory;
-	@Mock BeanFactory beanFactory;
 	@InjectMocks TraceRibbonCommandFactoryBeanPostProcessor postProcessor;
 
 	@Test

@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import brave.Tracer;
+import brave.Tracing;
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
@@ -35,7 +35,6 @@ import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
 import com.netflix.hystrix.strategy.properties.HystrixProperty;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 
@@ -53,16 +52,13 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 	private static final Log log = LogFactory
 			.getLog(SleuthHystrixConcurrencyStrategy.class);
 
-	private final Tracer tracer;
+	private final Tracing tracing;
 	private final SpanNamer spanNamer;
-	private final ErrorParser errorParser;
 	private HystrixConcurrencyStrategy delegate;
 
-	public SleuthHystrixConcurrencyStrategy(Tracer tracer,
-			SpanNamer spanNamer, ErrorParser errorParser) {
-		this.tracer = tracer;
+	public SleuthHystrixConcurrencyStrategy(Tracing tracing, SpanNamer spanNamer) {
+		this.tracing = tracing;
 		this.spanNamer = spanNamer;
-		this.errorParser = errorParser;
 		try {
 			this.delegate = HystrixPlugins.getInstance().getConcurrencyStrategy();
 			if (this.delegate instanceof SleuthHystrixConcurrencyStrategy) {
@@ -114,8 +110,8 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 		if (wrappedCallable instanceof TraceCallable) {
 			return wrappedCallable;
 		}
-		return new TraceCallable<>(this.tracer, this.spanNamer,
-				this.errorParser, wrappedCallable, HYSTRIX_COMPONENT);
+		return new TraceCallable<>(this.tracing, this.spanNamer,
+				wrappedCallable, HYSTRIX_COMPONENT);
 	}
 
 	@Override

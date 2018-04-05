@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import brave.ErrorParser;
 import brave.http.HttpClientParser;
 import brave.http.HttpServerParser;
-import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 
 /**

@@ -37,7 +37,6 @@ import org.springframework.aop.support.annotation.AnnotationClassFilter;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -177,7 +176,6 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 	private NewSpanParser newSpanParser;
 	private Tracer tracer;
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
-	private ErrorParser errorParser;
 
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -213,7 +211,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			if (hasLog) {
 				logEvent(span, log + ".afterFailure");
 			}
-			errorParser().parseErrorTags(span.customizer(), e);
+			span.error(e);
 			throw e;
 		} finally {
 			if (hasLog) {
@@ -266,13 +264,6 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			this.spanTagAnnotationHandler = new SpanTagAnnotationHandler(this.beanFactory);
 		}
 		return this.spanTagAnnotationHandler;
-	}
-
-	private ErrorParser errorParser() {
-		if (this.errorParser == null) {
-			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
-		}
-		return this.errorParser;
 	}
 
 	@Override public boolean implementsInterface(Class<?> intf) {

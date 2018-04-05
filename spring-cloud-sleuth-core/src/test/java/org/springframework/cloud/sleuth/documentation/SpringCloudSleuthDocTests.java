@@ -27,14 +27,12 @@ import java.util.concurrent.Future;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
@@ -55,12 +53,12 @@ public class SpringCloudSleuthDocTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.sampler(Sampler.ALWAYS_SAMPLE)
 			.spanReporter(this.reporter)
 			.build();
-	Tracer tracer = this.tracing.tracer();
-	
+	Tracer tracer = tracing.tracer();
+
 	@Before
 	public void setup() {
 		this.reporter.clear();
@@ -91,10 +89,9 @@ public class SpringCloudSleuthDocTests {
 			throws ExecutionException, InterruptedException {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		SpanNamer spanNamer = new DefaultSpanNamer();
-		ErrorParser errorParser = new ExceptionMessageErrorParser();
 
 		// tag::span_name_annotated_runnable_execution[]
-		Runnable runnable = new TraceRunnable(tracer, spanNamer, errorParser,
+		Runnable runnable = new TraceRunnable(tracing, spanNamer,
 				new TaxCountingRunnable());
 		Future<?> future = executorService.submit(runnable);
 		// ... some additional logic ...
@@ -112,10 +109,9 @@ public class SpringCloudSleuthDocTests {
 			throws ExecutionException, InterruptedException {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		SpanNamer spanNamer = new DefaultSpanNamer();
-		ErrorParser errorParser = new ExceptionMessageErrorParser();
 
 		// tag::span_name_to_string_runnable_execution[]
-		Runnable runnable = new TraceRunnable(tracer, spanNamer, errorParser, new Runnable() {
+		Runnable runnable = new TraceRunnable(tracing, spanNamer, new Runnable() {
 			@Override public void run() {
 				// perform logic
 			}
@@ -252,7 +248,6 @@ public class SpringCloudSleuthDocTests {
 	@Test
 	public void should_wrap_runnable_in_its_sleuth_representative() {
 		SpanNamer spanNamer = new DefaultSpanNamer();
-		ErrorParser errorParser = new ExceptionMessageErrorParser();
 		// tag::trace_runnable[]
 		Runnable runnable = new Runnable() {
 			@Override
@@ -266,8 +261,8 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceRunnable` creation with explicit "calculateTax" Span name
-		Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, errorParser,
-				runnable, "calculateTax");
+		Runnable traceRunnable = new TraceRunnable(tracing, spanNamer, runnable,
+				"calculateTax");
 		// Wrapping `Runnable` with `Tracing`. That way the current span will be available
 		// in the thread of `Runnable`
 		Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);
@@ -279,7 +274,6 @@ public class SpringCloudSleuthDocTests {
 	@Test
 	public void should_wrap_callable_in_its_sleuth_representative() {
 		SpanNamer spanNamer = new DefaultSpanNamer();
-		ErrorParser errorParser = new ExceptionMessageErrorParser();
 		// tag::trace_callable[]
 		Callable<String> callable = new Callable<String>() {
 			@Override
@@ -293,8 +287,8 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceCallable` creation with explicit "calculateTax" Span name
-		Callable<String> traceCallable = new TraceCallable<>(tracer, spanNamer, errorParser,
-				callable, "calculateTax");
+		Callable<String> traceCallable = new TraceCallable<>(tracing, spanNamer, callable,
+				"calculateTax");
 		// Wrapping `Callable` with `Tracing`. That way the current span will be available
 		// in the thread of `Callable`
 		Callable<String> traceCallableFromTracer = tracing.currentTraceContext().wrap(callable);

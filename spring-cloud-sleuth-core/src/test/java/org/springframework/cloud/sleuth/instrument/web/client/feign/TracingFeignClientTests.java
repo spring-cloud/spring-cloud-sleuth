@@ -24,7 +24,7 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import feign.Client;
 import feign.Request;
 import org.assertj.core.api.BDDAssertions;
@@ -50,7 +50,7 @@ public class TracingFeignClientTests {
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	@Mock BeanFactory beanFactory;
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	Tracer tracer = this.tracing.tracer();

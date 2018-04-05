@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 
 	AsyncListenableTaskExecutor delegate = new SimpleAsyncTaskExecutor();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.build();
 	Tracer tracer = this.tracing.tracer();
 	TraceAsyncListenableTaskExecutor traceAsyncListenableTaskExecutor = new TraceAsyncListenableTaskExecutor(

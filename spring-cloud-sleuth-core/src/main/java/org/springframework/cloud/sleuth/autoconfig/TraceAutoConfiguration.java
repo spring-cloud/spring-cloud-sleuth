@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import brave.CurrentSpanCustomizer;
+import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
 import brave.context.log4j2.ThreadContextCurrentTraceContext;
@@ -34,8 +35,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -66,9 +65,13 @@ public class TraceAutoConfiguration {
 			Propagation.Factory factory,
 			CurrentTraceContext currentTraceContext,
 			Reporter<zipkin2.Span> reporter,
-			Sampler sampler, SleuthProperties sleuthProperties) {
+			Sampler sampler,
+			ErrorParser errorParser,
+			SleuthProperties sleuthProperties
+	) {
 		return Tracing.newBuilder()
 				.sampler(sampler)
+				.errorParser(errorParser)
 				.localServiceName(serviceName)
 				.propagationFactory(factory)
 				.currentTraceContext(currentTraceContext)
@@ -143,8 +146,8 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	ErrorParser sleuthErrorParser() {
-		return new ExceptionMessageErrorParser();
+	ErrorParser errorParser() {
+		return new ErrorParser();
 	}
 
 	@Bean

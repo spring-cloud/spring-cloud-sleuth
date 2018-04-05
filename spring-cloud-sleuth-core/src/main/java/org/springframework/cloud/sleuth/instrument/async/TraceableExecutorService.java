@@ -25,9 +25,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brave.Tracer;
+import brave.Tracing;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
@@ -38,11 +37,10 @@ import org.springframework.cloud.sleuth.SpanNamer;
  */
 public class TraceableExecutorService implements ExecutorService {
 	final ExecutorService delegate;
-	Tracer tracer;
 	private final String spanName;
+	Tracing tracing;
 	SpanNamer spanNamer;
 	BeanFactory beanFactory;
-	ErrorParser errorParser;
 
 	public TraceableExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
 		this(beanFactory, delegate, null);
@@ -56,7 +54,7 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), command, this.spanName);
+		final Runnable r = new TraceRunnable(tracing(), spanNamer(), command, this.spanName);
 		this.delegate.execute(r);
 	}
 
@@ -87,19 +85,19 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new TraceCallable<>(tracer(), spanNamer(), errorParser(), task, this.spanName);
+		Callable<T> c = new TraceCallable<>(tracing(), spanNamer(), task, this.spanName);
 		return this.delegate.submit(c);
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), task, this.spanName);
+		Runnable r = new TraceRunnable(tracing(), spanNamer(), task, this.spanName);
 		return this.delegate.submit(r, result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = new TraceRunnable(tracer(), spanNamer(), errorParser(), task, this.spanName);
+		Runnable r = new TraceRunnable(tracing(), spanNamer(), task, this.spanName);
 		return this.delegate.submit(r);
 	}
 
@@ -129,17 +127,17 @@ public class TraceableExecutorService implements ExecutorService {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
 			if (!(task instanceof TraceCallable)) {
-				ts.add(new TraceCallable<>(tracer(), spanNamer(), errorParser(), task, this.spanName));
+				ts.add(new TraceCallable<>(tracing(), spanNamer(), task, this.spanName));
 			}
 		}
 		return ts;
 	}
 
-	Tracer tracer() {
-		if (this.tracer == null && this.beanFactory != null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
+	Tracing tracing() {
+		if (this.tracing == null && this.beanFactory != null) {
+			this.tracing = this.beanFactory.getBean(Tracing.class);
 		}
-		return this.tracer;
+		return this.tracing;
 	}
 
 	SpanNamer spanNamer() {
@@ -147,12 +145,5 @@ public class TraceableExecutorService implements ExecutorService {
 			this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 		}
 		return this.spanNamer;
-	}
-	
-	ErrorParser errorParser() {
-		if (this.errorParser == null) {
-			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
-		}
-		return this.errorParser;
 	}
 }

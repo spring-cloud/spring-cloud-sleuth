@@ -18,14 +18,12 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 
-import brave.Tracer;
+import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.ErrorParser;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
@@ -38,11 +36,10 @@ public class LazyTraceExecutor implements Executor {
 
 	private static final Log log = LogFactory.getLog(LazyTraceExecutor.class);
 
-	private Tracer tracer;
+	private Tracing tracing;
 	private final BeanFactory beanFactory;
 	private final Executor delegate;
 	private SpanNamer spanNamer;
-	private ErrorParser errorParser;
 
 	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate) {
 		this.beanFactory = beanFactory;
@@ -51,16 +48,16 @@ public class LazyTraceExecutor implements Executor {
 
 	@Override
 	public void execute(Runnable command) {
-		if (this.tracer == null) {
+		if (this.tracing == null) {
 			try {
-				this.tracer = this.beanFactory.getBean(Tracer.class);
+				this.tracing = this.beanFactory.getBean(Tracing.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
 				this.delegate.execute(command);
 				return;
 			}
 		}
-		this.delegate.execute(new TraceRunnable(this.tracer, spanNamer(), errorParser(), command));
+		this.delegate.execute(new TraceRunnable(this.tracing, spanNamer(), command));
 	}
 
 	// due to some race conditions trace keys might not be ready yet
@@ -76,19 +73,4 @@ public class LazyTraceExecutor implements Executor {
 		}
 		return this.spanNamer;
 	}
-
-	// due to some race conditions trace keys might not be ready yet
-	private ErrorParser errorParser() {
-		if (this.errorParser == null) {
-			try {
-				this.errorParser = this.beanFactory.getBean(ErrorParser.class);
-			}
-			catch (NoSuchBeanDefinitionException e) {
-				log.warn("ErrorParser bean not found - will provide a manually created instance");
-				return new ExceptionMessageErrorParser();
-			}
-		}
-		return this.errorParser;
-	}
-
 }

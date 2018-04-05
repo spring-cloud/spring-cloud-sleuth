@@ -20,17 +20,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import javax.servlet.Filter;
 
+import brave.ErrorParser;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.servlet.TracingFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
@@ -61,7 +61,7 @@ public class TraceFilterTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	Tracer tracer = this.tracing.tracer();
@@ -69,7 +69,7 @@ public class TraceFilterTests {
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(new SleuthHttpClientParser(this.traceKeys))
 			.serverParser(new SleuthHttpServerParser(this.traceKeys,
-					new ExceptionMessageErrorParser()))
+					new ErrorParser()))
 			.serverSampler(new SleuthHttpSampler(() -> Pattern.compile("")))
 			.build();
 	Filter filter = TracingFilter.create(this.httpTracing);
@@ -109,7 +109,7 @@ public class TraceFilterTests {
 
 	private Filter neverSampleFilter() {
 		Tracing tracing = Tracing.newBuilder()
-				.currentTraceContext(CurrentTraceContext.Default.create())
+				.currentTraceContext(new StrictCurrentTraceContext())
 				.spanReporter(this.reporter)
 				.sampler(Sampler.NEVER_SAMPLE)
 				.supportsJoin(false)
@@ -117,7 +117,7 @@ public class TraceFilterTests {
 		HttpTracing httpTracing = HttpTracing.newBuilder(tracing)
 				.clientParser(new SleuthHttpClientParser(this.traceKeys))
 				.serverParser(new SleuthHttpServerParser(this.traceKeys,
-						new ExceptionMessageErrorParser()))
+						new ErrorParser()))
 				.serverSampler(new SleuthHttpSampler(() -> Pattern.compile("")))
 				.build();
 		return TracingFilter.create(httpTracing);
@@ -236,7 +236,7 @@ public class TraceFilterTests {
 	@Test
 	public void createsChildFromHeadersWhenJoinUnsupported() throws Exception {
 		Tracing tracing = Tracing.newBuilder()
-				.currentTraceContext(CurrentTraceContext.Default.create())
+				.currentTraceContext(new StrictCurrentTraceContext())
 				.spanReporter(this.reporter)
 				.supportsJoin(false)
 				.build();

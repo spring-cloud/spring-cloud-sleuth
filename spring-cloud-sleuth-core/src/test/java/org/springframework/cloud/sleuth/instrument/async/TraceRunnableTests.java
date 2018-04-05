@@ -23,13 +23,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
@@ -41,7 +40,7 @@ public class TraceRunnableTests {
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	Tracer tracer = this.tracing.tracer();
@@ -124,8 +123,8 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(this.tracing.tracer(), new DefaultSpanNamer(),
-				new ExceptionMessageErrorParser(), runnable)).get();
+		this.executor.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(),
+				runnable)).get();
 	}
 
 	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable)

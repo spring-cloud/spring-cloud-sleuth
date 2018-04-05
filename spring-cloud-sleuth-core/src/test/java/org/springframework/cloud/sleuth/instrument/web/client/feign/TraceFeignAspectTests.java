@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import feign.Client;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Before;
@@ -47,7 +47,7 @@ public class TraceFeignAspectTests {
 	@Mock ProceedingJoinPoint pjp;
 	@Mock TraceLoadBalancerFeignClient traceLoadBalancerFeignClient;
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.build();
 	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)

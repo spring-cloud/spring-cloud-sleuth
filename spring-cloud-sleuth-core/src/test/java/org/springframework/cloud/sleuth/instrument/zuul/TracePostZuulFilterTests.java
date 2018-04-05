@@ -20,11 +20,12 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import brave.ErrorParser;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.monitoring.TracerFactory;
 import org.junit.After;
@@ -35,7 +36,6 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.netflix.zuul.metrics.EmptyTracerFactory;
-import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
@@ -54,13 +54,13 @@ public class TracePostZuulFilterTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(CurrentTraceContext.Default.create())
+			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
 	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
-			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ExceptionMessageErrorParser()))
+			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ErrorParser()))
 			.build();
 	private TracePostZuulFilter filter = new TracePostZuulFilter(this.httpTracing);
 	RequestContext requestContext = new RequestContext();

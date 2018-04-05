@@ -16,13 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import brave.ErrorParser;
 import javax.servlet.http.HttpServletResponse;
 
 import brave.SpanCustomizer;
 import brave.http.HttpAdapter;
 import brave.http.HttpClientParser;
 import brave.http.HttpServerParser;
-import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
@@ -43,6 +43,10 @@ class SleuthHttpServerParser extends HttpServerParser {
 		this.traceKeys = traceKeys;
 	}
 
+	@Override protected ErrorParser errorParser() {
+		return this.errorParser;
+	}
+
 	@Override protected <Req> String spanName(HttpAdapter<Req, ?> adapter,
 			Req req) {
 		return this.clientParser.spanName(adapter, req);
@@ -51,11 +55,6 @@ class SleuthHttpServerParser extends HttpServerParser {
 	@Override public <Req> void request(HttpAdapter<Req, ?> adapter, Req req,
 			SpanCustomizer customizer) {
 		this.clientParser.request(adapter, req, customizer);
-	}
-
-	@Override
-	protected void error(Integer httpStatus, Throwable error, SpanCustomizer customizer) {
-		this.errorParser.parseErrorTags(customizer, error);
 	}
 
 	@Override
