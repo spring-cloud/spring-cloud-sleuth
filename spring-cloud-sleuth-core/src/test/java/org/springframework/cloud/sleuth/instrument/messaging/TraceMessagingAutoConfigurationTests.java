@@ -90,7 +90,7 @@ public class TraceMessagingAutoConfigurationTests {
 			return new MySleuthKafkaAspect(kafkaTracing, tracer);
 		}
 
-		@KafkaListener(topics = "backend")
+		@KafkaListener(topics = "backend", groupId = "foo")
 		public void onMessage(ConsumerRecord<?, ?> message) {
 			System.err.println(message);
 		}
