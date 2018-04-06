@@ -71,7 +71,7 @@ public class SpanTagAnnotationHandlerTests {
 			fail("Annotation was not SleuthSpanTag");
 		}
 	}
-	
+
 	@Test
 	public void shouldReturnArgumentToString() throws NoSuchMethodException, SecurityException {
 		Method method = AnnotationMockClass.class.getMethod("getAnnotationForArgumentToString", Long.class);
@@ -83,7 +83,7 @@ public class SpanTagAnnotationHandlerTests {
 			fail("Annotation was not SleuthSpanTag");
 		}
 	}
-	
+
 	protected class AnnotationMockClass {
 
 		// tag::resolver_bean[]
