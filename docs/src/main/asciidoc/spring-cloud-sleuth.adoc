@@ -294,7 +294,9 @@ Precedence is:
 
 - try with the bean of `TagValueResolver` type and provided name
 - if one hasn't provided the bean name, try to evaluate an expression. We're searching for a `TagValueExpressionResolver` bean.
-The default implementation uses SPEL expression resolution.
+The default implementation uses SPEL expression resolution. If we do not find any expression to evaluate, return the `toString()`
+value of the parameter.
+**IMPORTANT** You can only reference properties from the SPEL expression. Method execution is not allowed due to security constraints.
 - if one hasn't provided any expression to evaluate just return a `toString()` value of the parameter
 
 ==== Custom extractor

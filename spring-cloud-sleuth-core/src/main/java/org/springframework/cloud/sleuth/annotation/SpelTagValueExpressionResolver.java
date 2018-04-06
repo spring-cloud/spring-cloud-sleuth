@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
 /**
  * Uses SPEL to evaluate the expression. If an exception is thrown will return
@@ -37,9 +38,12 @@ class SpelTagValueExpressionResolver implements TagValueExpressionResolver {
 	@Override
 	public String resolve(String expression, Object parameter) {
 		try {
+			SimpleEvaluationContext context = SimpleEvaluationContext
+					.forReadOnlyDataBinding()
+					.build();
 			ExpressionParser expressionParser = new SpelExpressionParser();
 			Expression expressionToEvaluate = expressionParser.parseExpression(expression);
-			return expressionToEvaluate.getValue(parameter, String.class);
+			return expressionToEvaluate.getValue(context, parameter, String.class);
 		} catch (Exception e) {
 			log.error("Exception occurred while tying to evaluate the SPEL expression [" + expression + "]", e);
 		}
