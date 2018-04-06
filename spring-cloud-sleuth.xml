@@ -1339,8 +1339,7 @@ The precedence is as follows:</simpara>
 <simpara>If the bean name has not been provided, try to evaluate an expression.
 We search for a <literal>TagValueExpressionResolver</literal> bean.
 The default implementation uses SPEL expression resolution.
-<emphasis role="strong">IMPORTANT</emphasis> from Sleuth 2.0.0 you can only reference properties
-from the SPEL expression. Method execution is not allowed due to security constraints.</simpara>
+<emphasis role="strong">IMPORTANT</emphasis> You can only reference properties from the SPEL expression. Method execution is not allowed due to security constraints.</simpara>
 </listitem>
 <listitem>
 <simpara>If we do not find any expression to evaluate, return the <literal>toString()</literal> value of the parameter.</simpara>
