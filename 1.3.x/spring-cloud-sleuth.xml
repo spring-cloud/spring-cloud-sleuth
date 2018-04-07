@@ -4,7 +4,7 @@
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
-<date>2018-04-06</date>
+<date>2018-04-07</date>
 <author>
 <personname>
 <firstname>Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer</firstname>
@@ -1004,7 +1004,9 @@ Precedence is:</simpara>
 </listitem>
 <listitem>
 <simpara>if one hasn&#8217;t provided the bean name, try to evaluate an expression. We&#8217;re searching for a <literal>TagValueExpressionResolver</literal> bean.
-The default implementation uses SPEL expression resolution.</simpara>
+The default implementation uses SPEL expression resolution. If we do not find any expression to evaluate, return the <literal>toString()</literal>
+value of the parameter.
+<emphasis role="strong">IMPORTANT</emphasis> You can only reference properties from the SPEL expression. Method execution is not allowed due to security constraints.</simpara>
 </listitem>
 <listitem>
 <simpara>if one hasn&#8217;t provided any expression to evaluate just return a <literal>toString()</literal> value of the parameter</simpara>
@@ -1029,7 +1031,7 @@ public TagValueResolver tagValueResolver() {
 <title>Resolving expressions for value</title>
 <simpara>Having such an annotated method:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@NewSpan
-public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "length() + ' characters'") String test) {
+public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
 }</programlisting>
 <simpara>and no custom implementation of a <literal>TagValueExpressionResolver</literal> will lead to evaluation of the SPEL expression and a tag with value <literal>4 characters</literal> will be set on the span.
 If you want to use some other expression resolution mechanism you can create your own implementation
