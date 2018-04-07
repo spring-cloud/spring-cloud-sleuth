@@ -18,12 +18,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Import;
-
-import zipkin.server.EnableZipkinServer;
+import zipkin.server.internal.EnableZipkinServer;
 
 /**
  * When enabled, instrumented apps will transport spans over a
@@ -33,7 +31,10 @@ import zipkin.server.EnableZipkinServer;
  * @since 1.0.0
  *
  * @see ZipkinMessageListener
+ * @deprecated Please switch to the normal Zipkin server which supports RabbitMQ and Kafka.
+ * See <a href="https://cloud.spring.io/spring-cloud-sleuth/single/spring-cloud-sleuth.html#_sleuth_with_zipkin_over_rabbitmq_or_kafka">our documentation</a> for more.
  */
+@Deprecated
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

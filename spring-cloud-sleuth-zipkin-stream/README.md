@@ -1,3 +1,8 @@
+# This project is deprecated
+
+Please switch to the normal Zipkin server which supports RabbitMQ and Kafka.
+See [our documentation](https://cloud.spring.io/spring-cloud-sleuth/single/spring-cloud-sleuth.html#_sleuth_with_zipkin_over_rabbitmq_or_kafka) for more.
+
 # Running Zipkin Server
 
 There are 3 parts to Zipkin: the instrumented client apps, the backend database and the Zipkin server. The database for this implementation is MySQL.
