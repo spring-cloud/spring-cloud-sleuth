@@ -1655,6 +1655,20 @@ You can configure which URIs you would like to skip by using the <literal>spring
 If you have <literal>ManagementServerProperties</literal> on the classpath, its value of <literal>contextPath</literal> gets appended to the provided skip pattern.
 If you want to reuse Sleuth&#8217;s default skip patterns and append your own, pass those patterns by using the <literal>spring.sleuth.web.additionalSkipPattern</literal>.</simpara>
 </section>
+<section xml:id="_dubbo_rpc_support">
+<title>Dubbo RPC support</title>
+<simpara>Via the integration with Brave, Spring Cloud Sleuth supports <link xl:href="http://dubbo.io/">Dubbo</link>.
+It&#8217;s enough to add the <literal>brave-instrumentation-dubbo-rpc</literal> dependency:</simpara>
+<programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;io.zipkin.brave&lt;/groupId&gt;
+    &lt;artifactId&gt;brave-instrumentation-dubbo-rpc&lt;/artifactId&gt;
+&lt;/dependency&gt;</programlisting>
+<simpara>You need to also set a <literal>dubbo.properties</literal> file with the following contents:</simpara>
+<programlisting language="properties" linenumbering="unnumbered">dubbo.provider.filter=tracing
+dubbo.consumer.filter=tracing</programlisting>
+<simpara>You can read more about Brave - Dubbo integration <link xl:href="https://github.com/openzipkin/brave/tree/master/instrumentation/dubbo-rpc">here</link>.
+An example of Spring Cloud Sleuth and Dubbo can be found <link xl:href="https://github.com/openzipkin/sleuth-webmvc-example/compare/add-dubbo-tracing">here</link>.</simpara>
+</section>
 </section>
 <section xml:id="_http_client_integration">
 <title>HTTP Client Integration</title>
