@@ -1226,7 +1226,7 @@ class TaxCountingRunnable implements Runnable {
 	}
 }</programlisting>
 <simpara>In this case, when processed in the following manner, the span is named <literal>calculateTax</literal>:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracer, spanNamer, errorParser,
+<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracing, spanNamer,
 		new TaxCountingRunnable());
 Future&lt;?&gt; future = executorService.submit(runnable);
 // ... some additional logic ...
@@ -1239,7 +1239,7 @@ Typically, one creates an anonymous instance of those classes.
 You cannot annotate such classes.
 To overcome that limitation, if there is no <literal>@SpanName</literal> annotation present, we check whether the class has a custom implementation of the <literal>toString()</literal> method.</simpara>
 <simpara>Running such code leads to creating a span named <literal>calculateTax</literal>, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracer, spanNamer, errorParser, new Runnable() {
+<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracing, spanNamer, new Runnable() {
 	@Override public void run() {
 		// perform logic
 	}
@@ -1558,8 +1558,8 @@ If you wish to disable this, set <literal>spring.sleuth.opentracing.enabled</lit
 	}
 };
 // Manual `TraceRunnable` creation with explicit "calculateTax" Span name
-Runnable traceRunnable = new TraceRunnable(tracer, spanNamer, errorParser,
-		runnable, "calculateTax");
+Runnable traceRunnable = new TraceRunnable(tracing, spanNamer, runnable,
+		"calculateTax");
 // Wrapping `Runnable` with `Tracing`. That way the current span will be available
 // in the thread of `Runnable`
 Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);</programlisting>
@@ -1576,8 +1576,8 @@ Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);
 	}
 };
 // Manual `TraceCallable` creation with explicit "calculateTax" Span name
-Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(tracer, spanNamer, errorParser,
-		callable, "calculateTax");
+Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(tracing, spanNamer, callable,
+		"calculateTax");
 // Wrapping `Callable` with `Tracing`. That way the current span will be available
 // in the thread of `Callable`
 Callable&lt;String&gt; traceCallableFromTracer = tracing.currentTraceContext().wrap(callable);</programlisting>
