@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 import org.springframework.cloud.sleuth.stream.SleuthSink;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Import;
-import zipkin.server.internal.EnableZipkinServer;
+import zipkin.server.EnableZipkinServer;
 
 /**
  * When enabled, instrumented apps will transport spans over a
