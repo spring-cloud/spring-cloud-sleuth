@@ -29,6 +29,7 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.StringUtils;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.messaging.support.NativeMessageHeaderAccessor.NATIVE_HEADERS;
 
 /**
@@ -127,7 +128,13 @@ enum MessageHeaderPropagation
 			}
 		}
 		Object result = accessor.getHeader(key);
-		return result != null ? result.toString() : null;
+		if (result != null) {
+			if (result instanceof byte[]) {
+				return new String((byte[]) result, UTF_8);
+			}
+			return result.toString();
+		}
+		return null;
 	}
 
 	static void removeAnyTraceHeaders(MessageHeaderAccessor accessor,

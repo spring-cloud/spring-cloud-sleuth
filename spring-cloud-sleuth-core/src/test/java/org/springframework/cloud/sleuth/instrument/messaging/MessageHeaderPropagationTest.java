@@ -19,7 +19,12 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.Collections;
 
 import brave.propagation.Propagation;
+import org.junit.Assert;
+import org.junit.Test;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 public class MessageHeaderPropagationTest
 		extends PropagationSetterTest<MessageHeaderAccessor, String> {
@@ -42,5 +47,32 @@ public class MessageHeaderPropagationTest
 		return result != null ?
 				Collections.singleton(result.toString()) :
 				Collections.emptyList();
+	}
+	
+	@Test
+	public void testGetByteArrayValue() {
+		MessageHeaderAccessor carrier = carrier();
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124".getBytes());
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124000000".getBytes());
+		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
+		assertEquals("48485a3953bb6124000000", value);
+	}
+	
+	@Test
+	public void testGetStringValue() {
+		MessageHeaderAccessor carrier = carrier();
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124");
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
+		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
+		assertEquals("48485a3953bb61240000000", value);
+	}
+	
+	@Test
+	public void testGetNullValue() {
+		MessageHeaderAccessor carrier = carrier();
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124");
+		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
+		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "non existent key");
+		assertNull(value);
 	}
 }
