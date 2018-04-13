@@ -22,16 +22,14 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.cloud.sleuth.TraceKeys;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
-
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
@@ -97,7 +95,6 @@ public class TraceCommandTests {
 	@Test
 	public void should_pass_tracing_information_when_using_Hystrix_commands() {
 		Tracer tracer = this.tracer;
-		TraceKeys traceKeys = new TraceKeys();
 		HystrixCommand.Setter setter = withGroupKey(asKey("group"))
 				.andCommandKey(HystrixCommandKey.Factory.asKey("command"));
 		// tag::hystrix_command[]
@@ -109,7 +106,7 @@ public class TraceCommandTests {
 		};
 		// end::hystrix_command[]
 		// tag::trace_hystrix_command[]
-		TraceCommand<String> traceCommand = new TraceCommand<String>(tracer, traceKeys, setter) {
+		TraceCommand<String> traceCommand = new TraceCommand<String>(tracer, setter) {
 			@Override
 			public String doRun() throws Exception {
 				return someLogic();
@@ -128,7 +125,7 @@ public class TraceCommandTests {
 	}
 
 	private TraceCommand<Span> traceReturningCommand() {
-		return new TraceCommand<Span>(this.tracer, new TraceKeys(),
+		return new TraceCommand<Span>(this.tracer,
 				withGroupKey(asKey("group"))
 						.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties
 								.Setter().withCoreSize(1).withMaxQueueSize(1))

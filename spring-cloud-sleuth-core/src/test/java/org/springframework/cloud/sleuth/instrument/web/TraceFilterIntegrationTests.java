@@ -38,11 +38,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
@@ -99,8 +97,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(this.reporter.getSpans()).hasSize(1);
 		zipkin2.Span span = this.reporter.getSpans().get(0);
 		then(span.tags())
-				.containsKey(new TraceKeys().getMvc().getControllerClass())
-				.containsKey(new TraceKeys().getMvc().getControllerMethod());
+				.containsKey(TraceWebFilter.MVC_CONTROLLER_CLASS_KEY)
+				.containsKey(TraceWebFilter.MVC_CONTROLLER_METHOD_KEY);
 		then(this.tracer.currentSpan()).isNull();
 	}
 

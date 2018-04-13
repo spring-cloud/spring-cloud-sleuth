@@ -31,7 +31,6 @@ import brave.servlet.TracingFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.http.HttpMethod;

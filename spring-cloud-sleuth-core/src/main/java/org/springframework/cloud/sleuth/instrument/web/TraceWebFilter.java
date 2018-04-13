@@ -26,7 +26,6 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -50,6 +49,9 @@ import reactor.util.context.Context;
 public final class TraceWebFilter implements WebFilter, Ordered {
 
 	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
+	private static final String STATUS_CODE_KEY = "http.status_code";
+	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
+	static final String MVC_CONTROLLER_METHOD_KEY = "mvc.controller.method";
 
 	protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
 			+ ".TRACE";
@@ -79,7 +81,6 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		return new TraceWebFilter(beanFactory);
 	}
 
-	TraceKeys traceKeys;
 	Tracer tracer;
 	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
 	TraceContext.Extractor<HttpHeaders> extractor;
@@ -104,13 +105,6 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			this.tracer = this.beanFactory.getBean(HttpTracing.class).tracing().tracer();
 		}
 		return this.tracer;
-	}
-
-	TraceKeys traceKeys() {
-		if (this.traceKeys == null) {
-			this.traceKeys = this.beanFactory.getBean(TraceKeys.class);
-		}
-		return this.traceKeys;
 	}
 
 	TraceContext.Extractor<HttpHeaders> extractor() {
@@ -221,8 +215,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			ServerHttpResponse response, Span span) {
 		if (spanWithoutParent(exchange) && response.getStatusCode() != null
 				&& span != null) {
-			span.tag(traceKeys().getHttp().getStatusCode(),
-					String.valueOf(response.getStatusCode().value()));
+			span.tag(STATUS_CODE_KEY, String.valueOf(response.getStatusCode().value()));
 		}
 	}
 
@@ -237,7 +230,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	private void addClassMethodTag(Object handler, Span span) {
 		if (handler instanceof HandlerMethod) {
 			String methodName = ((HandlerMethod) handler).getMethod().getName();
-			span.tag(traceKeys().getMvc().getControllerMethod(), methodName);
+			span.tag(MVC_CONTROLLER_METHOD_KEY, methodName);
 			if (log.isDebugEnabled()) {
 				log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
 			}
@@ -254,7 +247,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		if (log.isDebugEnabled()) {
 			log.debug("Adding a class tag with value [" + className + "] to a span " + span);
 		}
-		span.tag(traceKeys().getMvc().getControllerClass(), className);
+		span.tag(MVC_CONTROLLER_CLASS_KEY, className);
 	}
 
 	@Override public int getOrder() {

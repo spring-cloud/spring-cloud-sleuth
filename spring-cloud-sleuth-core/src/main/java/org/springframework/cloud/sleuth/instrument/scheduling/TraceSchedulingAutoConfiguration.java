@@ -25,7 +25,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,8 +50,8 @@ public class TraceSchedulingAutoConfiguration {
 	@Bean
 	@ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
 	public TraceSchedulingAspect traceSchedulingAspect(Tracer tracer,
-			SleuthSchedulingProperties sleuthSchedulingProperties, TraceKeys traceKeys) {
+			SleuthSchedulingProperties sleuthSchedulingProperties) {
 		return new TraceSchedulingAspect(tracer,
-				Pattern.compile(sleuthSchedulingProperties.getSkipPattern()), traceKeys);
+				Pattern.compile(sleuthSchedulingProperties.getSkipPattern()));
 	}
 }

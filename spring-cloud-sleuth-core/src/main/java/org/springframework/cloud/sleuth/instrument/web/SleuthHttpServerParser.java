@@ -16,14 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import brave.ErrorParser;
 import javax.servlet.http.HttpServletResponse;
 
+import brave.ErrorParser;
 import brave.SpanCustomizer;
 import brave.http.HttpAdapter;
 import brave.http.HttpClientParser;
 import brave.http.HttpServerParser;
-import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  * An {@link HttpClientParser} that behaves like Sleuth in versions 1.x
@@ -33,14 +32,14 @@ import org.springframework.cloud.sleuth.TraceKeys;
  */
 class SleuthHttpServerParser extends HttpServerParser {
 
+	private static final String STATUS_CODE_KEY = "http.status_code";
+
 	private final SleuthHttpClientParser clientParser;
 	private final ErrorParser errorParser;
-	private final TraceKeys traceKeys;
 
 	SleuthHttpServerParser(TraceKeys traceKeys, ErrorParser errorParser) {
 		this.clientParser = new SleuthHttpClientParser(traceKeys);
 		this.errorParser = errorParser;
-		this.traceKeys = traceKeys;
 	}
 
 	@Override protected ErrorParser errorParser() {
@@ -72,13 +71,11 @@ class SleuthHttpServerParser extends HttpServerParser {
 		if (httpStatus == HttpServletResponse.SC_OK && error != null) {
 			// Filter chain threw exception but the response status may not have been set
 			// yet, so we have to guess.
-			customizer.tag(this.traceKeys.getHttp().getStatusCode(),
-					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+			customizer.tag(STATUS_CODE_KEY, String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
 		// only tag valid http statuses
 		else if (httpStatus >= 100 && (httpStatus < 200) || (httpStatus > 399)) {
-			customizer.tag(this.traceKeys.getHttp().getStatusCode(),
-					String.valueOf(httpStatus));
+			customizer.tag(STATUS_CODE_KEY, String.valueOf(httpStatus));
 		}
 		error(httpStatus, error, customizer);
 	}

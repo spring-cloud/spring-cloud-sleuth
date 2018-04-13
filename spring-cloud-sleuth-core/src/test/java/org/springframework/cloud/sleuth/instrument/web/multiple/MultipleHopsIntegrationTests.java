@@ -33,7 +33,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -63,7 +62,6 @@ import static org.awaitility.Awaitility.await;
 public class MultipleHopsIntegrationTests {
 
 	@Autowired Tracer tracer;
-	@Autowired TraceKeys traceKeys;
 	@Autowired ArrayListSpanReporter reporter;
 	@Autowired RestTemplate restTemplate;
 	@Autowired Config config;

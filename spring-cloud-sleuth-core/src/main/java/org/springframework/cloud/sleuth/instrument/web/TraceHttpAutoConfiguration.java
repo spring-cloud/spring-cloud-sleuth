@@ -29,7 +29,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -44,7 +43,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true", matchIfMissing = true)
 @AutoConfigureAfter(TraceWebAutoConfiguration.class)
-@EnableConfigurationProperties(SleuthHttpLegacyProperties.class)
+@EnableConfigurationProperties({TraceKeys.class, SleuthHttpLegacyProperties.class})
 public class TraceHttpAutoConfiguration {
 
 	@Autowired HttpClientParser clientParser;

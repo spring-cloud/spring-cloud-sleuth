@@ -24,7 +24,6 @@ import brave.Tracing;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 /**
@@ -45,15 +44,15 @@ import org.springframework.cloud.sleuth.util.SpanNameUtil;
 @Aspect
 public class TraceSchedulingAspect {
 
+	private static final String CLASS_KEY = "class";
+	private static final String METHOD_KEY = "method";
+
 	private final Tracer tracer;
 	private final Pattern skipPattern;
-	private final TraceKeys traceKeys;
 
-	public TraceSchedulingAspect(Tracer tracer, Pattern skipPattern,
-			TraceKeys traceKeys) {
+	public TraceSchedulingAspect(Tracer tracer, Pattern skipPattern) {
 		this.tracer = tracer;
 		this.skipPattern = skipPattern;
-		this.traceKeys = traceKeys;
 	}
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
@@ -64,10 +63,8 @@ public class TraceSchedulingAspect {
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
 		Span span = startOrContinueRenamedSpan(spanName);
 		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			span.tag(this.traceKeys.getAsync().getPrefix() +
-					this.traceKeys.getAsync().getClassNameKey(), pjp.getTarget().getClass().getSimpleName());
-			span.tag(this.traceKeys.getAsync().getPrefix() +
-					this.traceKeys.getAsync().getMethodNameKey(), pjp.getSignature().getName());
+			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
+			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();
 		} finally {
 			span.finish();

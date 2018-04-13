@@ -36,7 +36,6 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.cloud.netflix.zuul.metrics.EmptyTracerFactory;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
@@ -57,10 +56,9 @@ public class TracePostZuulFilterTests {
 			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
-	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
-			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ErrorParser()))
+			.clientParser(SleuthHttpParserAccessor.getClient())
+			.serverParser(SleuthHttpParserAccessor.getServer(new ErrorParser()))
 			.build();
 	private TracePostZuulFilter filter = new TracePostZuulFilter(this.httpTracing);
 	RequestContext requestContext = new RequestContext();

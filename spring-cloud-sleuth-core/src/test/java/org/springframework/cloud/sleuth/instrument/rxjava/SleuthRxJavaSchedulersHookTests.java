@@ -37,7 +37,6 @@ import rx.plugins.RxJavaSchedulersHook;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -49,7 +48,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class SleuthRxJavaSchedulersHookTests {
 
 	List<String> threadsToIgnore = new ArrayList<>();
-	TraceKeys traceKeys = new TraceKeys();
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(new StrictCurrentTraceContext())
@@ -76,7 +74,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		RxJavaPlugins.getInstance().registerErrorHandler(new MyRxJavaErrorHandler());
 		RxJavaPlugins.getInstance().registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
 
-		new SleuthRxJavaSchedulersHook(this.tracer, this.traceKeys, threadsToIgnore);
+		new SleuthRxJavaSchedulersHook(this.tracer, threadsToIgnore);
 
 		then(RxJavaPlugins.getInstance().getErrorHandler()).isExactlyInstanceOf(MyRxJavaErrorHandler.class);
 		then(RxJavaPlugins.getInstance().getObservableExecutionHook()).isExactlyInstanceOf(MyRxJavaObservableExecutionHook.class);
@@ -86,7 +84,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	public void should_wrap_delegates_action_in_wrapped_action_when_delegate_is_present_on_schedule() {
 		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
 		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-			this.tracer, this.traceKeys, threadsToIgnore);
+			this.tracer, this.threadsToIgnore);
 		Action0 action = schedulersHook.onSchedule(() -> {
 			caller = new StringBuilder("hello");
 		});
@@ -105,7 +103,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		String threadNameToIgnore = "^MyCustomThread.*$";
 		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
 		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-			this.tracer, this.traceKeys, Collections.singletonList(threadNameToIgnore));
+			this.tracer, Collections.singletonList(threadNameToIgnore));
 		Future<Void> hello = executorService().submit((Callable<Void>) () -> {
 			Action0 action = schedulersHook.onSchedule(() -> {
 				caller = new StringBuilder("hello");

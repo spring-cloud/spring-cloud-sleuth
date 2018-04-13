@@ -2,7 +2,6 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.assertj.core.api.BDDAssertions;
@@ -11,7 +10,6 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 /**
@@ -38,7 +36,7 @@ public class TraceAsyncAspectTest {
 	//Issue#926
 	@Test public void should_work() throws Throwable {
 		TraceAsyncAspect asyncAspect = new TraceAsyncAspect(this.tracing.tracer(),
-				new DefaultSpanNamer(), new TraceKeys()) {
+				new DefaultSpanNamer()) {
 			@Override String name(ProceedingJoinPoint pjp) {
 				return "foo-bar";
 			}

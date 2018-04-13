@@ -29,7 +29,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 
 import static org.mockito.BDDMockito.given;
@@ -49,9 +48,8 @@ public class TraceFeignAspectTests {
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(new StrictCurrentTraceContext())
 			.build();
-	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
+			.clientParser(SleuthHttpParserAccessor.getClient())
 			.build();
 	TraceFeignAspect traceFeignAspect;
 	

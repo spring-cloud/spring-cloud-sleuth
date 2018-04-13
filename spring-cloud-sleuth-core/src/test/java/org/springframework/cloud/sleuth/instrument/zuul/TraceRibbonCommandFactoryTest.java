@@ -36,7 +36,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.ribbon.support.RibbonCommandContext;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
 import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommandFactory;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.http.HttpHeaders;
@@ -55,10 +54,9 @@ public class TraceRibbonCommandFactoryTest {
 			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
-	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
-			.serverParser(SleuthHttpParserAccessor.getServer(this.traceKeys, new ErrorParser()))
+			.clientParser(SleuthHttpParserAccessor.getClient())
+			.serverParser(SleuthHttpParserAccessor.getServer(new ErrorParser()))
 			.build();
 	@Mock BeanFactory beanFactory;
 	@Mock RibbonCommandFactory ribbonCommandFactory;

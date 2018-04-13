@@ -35,7 +35,6 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
@@ -54,9 +53,8 @@ public class TracingFeignClientTests {
 			.spanReporter(this.reporter)
 			.build();
 	Tracer tracer = this.tracing.tracer();
-	TraceKeys traceKeys = new TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
+			.clientParser(SleuthHttpParserAccessor.getClient())
 			.build();
 	@Mock Client client;
 	Client traceFeignClient;

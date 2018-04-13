@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 import brave.Span;
 import brave.Tracer;
 import com.netflix.hystrix.HystrixCommand;
-import org.springframework.cloud.sleuth.TraceKeys;
 
 /**
  * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
@@ -34,14 +33,16 @@ import org.springframework.cloud.sleuth.TraceKeys;
  */
 public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
+	private static final String COMMAND_KEY = "commandKey";
+	private static final String COMMAND_GROUP_KEY = "commandGroup";
+	private static final String THREAD_POOL_KEY = "threadPoolKey";
+
 	private final Tracer tracer;
-	private final TraceKeys traceKeys;
 	private final Span span;
 
-	protected TraceCommand(Tracer tracer, TraceKeys traceKeys, Setter setter) {
+	protected TraceCommand(Tracer tracer, Setter setter) {
 		super(setter);
 		this.tracer = tracer;
-		this.traceKeys = traceKeys;
 		this.span = this.tracer.nextSpan();
 	}
 
@@ -49,12 +50,9 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 	protected R run() throws Exception {
 		String commandKeyName = getCommandKey().name();
 		Span span = this.span.name(commandKeyName);
-		span.tag(this.traceKeys.getHystrix().getPrefix() +
-				this.traceKeys.getHystrix().getCommandKey(), commandKeyName);
-		span.tag(this.traceKeys.getHystrix().getPrefix() +
-				this.traceKeys.getHystrix().getCommandGroup(), getCommandGroup().name());
-		span.tag(this.traceKeys.getHystrix().getPrefix() +
-				this.traceKeys.getHystrix().getThreadPoolKey(), getThreadPoolKey().name());
+		span.tag(COMMAND_KEY, commandKeyName);
+		span.tag(COMMAND_GROUP_KEY, getCommandGroup().name());
+		span.tag(THREAD_POOL_KEY, getThreadPoolKey().name());
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			return doRun();
 		}
