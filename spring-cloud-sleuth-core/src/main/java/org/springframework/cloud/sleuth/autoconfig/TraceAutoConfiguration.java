@@ -56,6 +56,8 @@ import zipkin2.reporter.Reporter;
 @EnableConfigurationProperties({ TraceKeys.class, SleuthProperties.class })
 public class TraceAutoConfiguration {
 
+	public static final String TRACER_BEAN_NAME = "tracer";
+
 	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
 
 	@Bean
@@ -91,9 +93,8 @@ public class TraceAutoConfiguration {
 		};
 	}
 
-	@Bean
+	@Bean(name = TRACER_BEAN_NAME)
 	@ConditionalOnMissingBean
-	// NOTE: stable bean name as might be used outside sleuth
 	Tracer tracer(Tracing tracing) {
 		return tracing.tracer();
 	}
