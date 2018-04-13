@@ -26,9 +26,6 @@ jobs:
           name: "Running build"
           command: ./mvnw -s .settings.xml clean org.jacoco:jacoco-maven-plugin:prepare-agent install -U -P sonar -nsu --batch-mode -Dmaven.test.redirectTestOutputToFile=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
       - run:
-          name: "Running e2e with documentation apps"
-          command: ./scripts/runAcceptanceTestsOfDocApps.sh
-      - run:
           name: "Aggregate test results"
           when: always
           command: |
