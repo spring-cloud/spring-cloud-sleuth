@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2013-2018 the original author or authors.
+  ~  
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~  
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~  
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:task="http://www.springframework.org/schema/task" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	    http://www.springframework.org/schema/beans/spring-beans.xsd
+	    http://www.springframework.org/schema/integration
+		http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd 
+		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd">
+
+	<int:channel id="messagingChannel" />
+
+	<int:channel id="splitterOutChannel" >
+		<int:queue capacity="10" />
+	</int:channel>
+
+	<int:channel id="messagingProcessedChannel">
+		<int:queue capacity="10" />
+	</int:channel>
+
+	<int:channel id="messagingOutputChannel">
+		<int:queue capacity="10" />
+	</int:channel>
+
+	<int:service-activator input-channel="splitterOutChannel"
+		method="invokeProcessor" output-channel="messagingProcessedChannel"
+		ref="helloWorldImpl">
+		<int:poller max-messages-per-poll="1" fixed-rate="1"
+			 task-executor="requestExecutor" />
+	</int:service-activator>
+
+	<int:aggregator input-channel="messagingProcessedChannel"
+		output-channel="messagingOutputChannel"
+		message-store="messageStore"
+		send-partial-result-on-expiry="true">
+		<int:poller max-messages-per-poll="1" fixed-rate="1"
+			 task-executor="requestExecutor" />
+	</int:aggregator>
+
+	<!-- Define a store for our search results and set up a reaper that will 
+		periodically expire those results. -->
+	<bean id="messageStore"
+		class="org.springframework.integration.store.SimpleMessageStore" />
+
+	<bean id="messageStoreReaper"
+		class="org.springframework.integration.store.MessageGroupStoreReaper">
+		<property name="messageGroupStore" ref="messageStore" />
+		<property name="timeout" value="2000" />
+	</bean>
+
+	<int:gateway id="messagingGateway"
+		service-interface="org.springframework.cloud.sleuth.instrument.messaging.issues.issue_943.MessagingGateway"
+		default-request-channel="messagingChannel" default-reply-timeout="10000"
+		default-reply-channel="splitterOutChannel" />
+
+	<task:executor id="requestExecutor" pool-size="10"/>
+	
+	<int:splitter ref="helloWorldImpl" method="splitMessage"
+		input-channel="messagingChannel" output-channel="splitterOutChannel" />
+
+	<bean id="helloWorldImpl" class="org.springframework.cloud.sleuth.instrument.messaging.issues.issue_943.HelloWorldImpl" />
+</beans>
+		
