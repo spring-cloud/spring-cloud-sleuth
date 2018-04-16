@@ -120,7 +120,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (emptyMessage(message)) {
 			return message;
 		}
-		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
+		Message<?> retrievedMessage = getMessage(message);
+		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		Span span = this.threadLocalSpan.next(extracted);
 		MessageHeaderPropagation
@@ -134,12 +135,22 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in pre send" + span);
 		}
-		headers.setImmutable();
-		Message<?> outputMessage = new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
+		Message<?> outputMessage = outputMessage(message, retrievedMessage, headers);
 		if (isDirectChannel(channel)) {
 			beforeHandle(outputMessage, channel, null);
 		}
 		return outputMessage;
+	}
+
+	private Message<?> outputMessage(Message<?> originalMessage, Message<?> retrievedMessage, MessageHeaderAccessor additionalHeaders) {
+		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(originalMessage);
+		if (originalMessage.getPayload() instanceof MessagingException) {
+			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
+					this.tracing.propagation().keys()));
+			return new ErrorMessage((MessagingException) originalMessage.getPayload(), headers.getMessageHeaders());
+		}
+		headers.copyHeaders(additionalHeaders.getMessageHeaders());
+		return new GenericMessage<>(retrievedMessage.getPayload(), headers.getMessageHeaders());
 	}
 
 	private boolean isDirectChannel(MessageChannel channel) {
@@ -292,7 +303,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	private MessageHeaderAccessor mutableHeaderAccessor(Message<?> message) {
-		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(getMessage(message));
+		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
 		headers.setLeaveMutable(true);
 		return headers;
 	}
