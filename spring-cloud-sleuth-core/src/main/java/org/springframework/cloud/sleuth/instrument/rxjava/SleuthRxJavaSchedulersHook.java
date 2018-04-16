@@ -22,7 +22,6 @@ import brave.Span;
 import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.sleuth.TraceKeys;
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
@@ -43,14 +42,11 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
 	private static final String RXJAVA_COMPONENT = "rxjava";
 	private final Tracer tracer;
-	private final TraceKeys traceKeys;
 	private final List<String> threadsToSample;
 	private RxJavaSchedulersHook delegate;
 
-	SleuthRxJavaSchedulersHook(Tracer tracer, TraceKeys traceKeys,
-			List<String> threadsToSample) {
+	SleuthRxJavaSchedulersHook(Tracer tracer, List<String> threadsToSample) {
 		this.tracer = tracer;
-		this.traceKeys = traceKeys;
 		this.threadsToSample = threadsToSample;
 		try {
 			this.delegate = RxJavaPlugins.getInstance().getSchedulersHook();
@@ -92,22 +88,22 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		if (wrappedAction instanceof TraceAction) {
 			return action;
 		}
-		return super.onSchedule(new TraceAction(this.tracer, this.traceKeys, wrappedAction,
+		return super.onSchedule(new TraceAction(this.tracer, wrappedAction,
 				this.threadsToSample));
 	}
 
 	static class TraceAction implements Action0 {
 
+		private static final String THREAD_NAME_KEY = "thread";
+
 		private final Action0 actual;
 		private final Tracer tracer;
-		private final TraceKeys traceKeys;
 		private final Span parent;
 		private final List<String> threadsToIgnore;
 
-		public TraceAction(Tracer tracer, TraceKeys traceKeys, Action0 actual,
+		public TraceAction(Tracer tracer, Action0 actual,
 				List<String> threadsToIgnore) {
 			this.tracer = tracer;
-			this.traceKeys = traceKeys;
 			this.threadsToIgnore = threadsToIgnore;
 			this.parent = this.tracer.currentSpan();
 			this.actual = actual;
@@ -135,9 +131,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 				span = this.tracer.joinSpan(this.parent.context());
 			} else {
 				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
-				span.tag(this.traceKeys.getAsync().getPrefix()
-					+ this.traceKeys.getAsync().getThreadNameKey(),
-						Thread.currentThread().getName());
+				span.tag(THREAD_NAME_KEY, Thread.currentThread().getName());
 				created = true;
 			}
 			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {

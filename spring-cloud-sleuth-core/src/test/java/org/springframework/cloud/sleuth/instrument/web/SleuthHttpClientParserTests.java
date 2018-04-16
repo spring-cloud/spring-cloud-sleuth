@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
-import org.springframework.cloud.sleuth.TraceKeys;
 
 import brave.SpanCustomizer;
 import brave.http.HttpClientAdapter;

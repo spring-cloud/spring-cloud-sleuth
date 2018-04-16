@@ -21,7 +21,6 @@ import java.net.URI;
 import brave.SpanCustomizer;
 import brave.http.HttpAdapter;
 import brave.http.HttpClientParser;
-import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 /**
@@ -32,9 +31,14 @@ import org.springframework.cloud.sleuth.util.SpanNameUtil;
  */
 class SleuthHttpClientParser extends HttpClientParser {
 
+	private static final String HOST_KEY = "http.host";
+	private static final String METHOD_KEY = "http.method";
+	private static final String PATH_KEY = "http.path";
+	private static final String URL_KEY = "http.url";
+
 	private final TraceKeys traceKeys;
 
-	public SleuthHttpClientParser(TraceKeys traceKeys) {
+	SleuthHttpClientParser(TraceKeys traceKeys) {
 		this.traceKeys = traceKeys;
 	}
 
@@ -74,11 +78,11 @@ class SleuthHttpClientParser extends HttpClientParser {
 
 	private void addRequestTags(SpanCustomizer customizer, String url, String host,
 			String path, String method) {
-		customizer.tag(this.traceKeys.getHttp().getUrl(), url);
+		customizer.tag(URL_KEY, url);
 		if (host != null) {
-			customizer.tag(this.traceKeys.getHttp().getHost(), host);
+			customizer.tag(HOST_KEY, host);
 		}
-		customizer.tag(this.traceKeys.getHttp().getPath(), path);
-		customizer.tag(this.traceKeys.getHttp().getMethod(), method);
+		customizer.tag(PATH_KEY, path);
+		customizer.tag(METHOD_KEY, method);
 	}
 }

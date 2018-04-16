@@ -31,7 +31,6 @@ import feign.Request;
 import feign.RequestLine;
 import feign.Response;
 import okhttp3.mockwebserver.MockWebServer;
-import zipkin2.Span;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,6 +42,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import zipkin2.Span;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -63,9 +63,8 @@ public class FeignRetriesTests {
 			.currentTraceContext(new StrictCurrentTraceContext())
 			.spanReporter(this.reporter)
 			.build();
-	org.springframework.cloud.sleuth.TraceKeys traceKeys = new org.springframework.cloud.sleuth.TraceKeys();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient(this.traceKeys))
+			.clientParser(SleuthHttpParserAccessor.getClient())
 			.build();
 
 	@Before
