@@ -137,6 +137,17 @@ enum MessageHeaderPropagation
 		return null;
 	}
 
+	static Map<String, ?> propagationHeaders(Map<String, ?> headers,
+			List<String> propagationHeaders) {
+		Map<String, Object> headersToCopy = new HashMap<>();
+		for (Map.Entry<String, ?> entry : headers.entrySet()) {
+			if (propagationHeaders.contains(entry.getKey())) {
+				headersToCopy.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return headersToCopy;
+	}
+
 	static void removeAnyTraceHeaders(MessageHeaderAccessor accessor,
 			List<String> keysToRemove) {
 		for (String keyToRemove : keysToRemove) {
