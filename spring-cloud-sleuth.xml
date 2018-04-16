@@ -1602,7 +1602,7 @@ To disable the custom Hystrix Concurrency Strategy, set the <literal>spring.sleu
 };</programlisting>
 <simpara>To pass the tracing information, you have to wrap the same logic in the Sleuth version of the <literal>HystrixCommand</literal>, which is called
 <literal>TraceCommand</literal>, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">TraceCommand&lt;String&gt; traceCommand = new TraceCommand&lt;String&gt;(tracer, traceKeys, setter) {
+<programlisting language="java" linenumbering="unnumbered">TraceCommand&lt;String&gt; traceCommand = new TraceCommand&lt;String&gt;(tracer, setter) {
 	@Override
 	public String doRun() throws Exception {
 		return someLogic();

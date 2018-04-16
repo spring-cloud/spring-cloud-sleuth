@@ -42,7 +42,7 @@ To disable the custom Hystrix Concurrency Strategy, set the <code class="literal
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> someLogic();
 	}
 };</pre><p>To pass the tracing information, you have to wrap the same logic in the Sleuth version of the <code class="literal">HystrixCommand</code>, which is called
-<code class="literal">TraceCommand</code>, as shown in the following example:</p><pre class="programlisting">TraceCommand&lt;String&gt; traceCommand = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceCommand&lt;String&gt;(tracer, traceKeys, setter) {
+<code class="literal">TraceCommand</code>, as shown in the following example:</p><pre class="programlisting">TraceCommand&lt;String&gt; traceCommand = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceCommand&lt;String&gt;(tracer, setter) {
 	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String doRun() <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> Exception {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> someLogic();
