@@ -43,6 +43,8 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  */
 public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 
+	private static final String ASYNC_COMPONENT = "async";
+
 	private static final org.apache.commons.logging.Log log = LogFactory
 			.getLog(TraceChannelInterceptor.class);
 
@@ -61,8 +63,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		}
 		Message<?> retrievedMessage = getMessage(message);
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
-		Span currentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
-				: buildSpan(new MessagingTextMap(messageBuilder));
+		Span currentSpan = currentSpanOrFromHeaders(messageBuilder);
 		if (log.isDebugEnabled()) {
 			log.debug("Completed sending and current span is " + currentSpan);
 		}
@@ -83,6 +84,36 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		}
 	}
 
+	private Span extractSpanOrPickCurrent(MessageBuilder<?> messageBuilder,
+			MessageChannel channel) {
+		if (isDirectChannel(channel)) {
+			return currentSpanOrFromHeaders(messageBuilder);
+		}
+		Span spanFromMessage = spanFromHeaders(messageBuilder);
+		Span currentSpan = getTracer().getCurrentSpan();
+		if (currentSpan != null && currentSpan.equals(spanFromMessage)) {
+			return currentSpan;
+		} else if (spanComesFromAsync(currentSpan)) {
+			getTracer().detach(currentSpan);
+			getTracer().continueSpan(spanFromMessage);
+		}
+		return spanFromMessage;
+	}
+
+	private boolean spanComesFromAsync(Span currentSpan) {
+		return currentSpan != null && currentSpan.getSpanId() == currentSpan.getTraceId()
+				&& currentSpan.getName().equals(ASYNC_COMPONENT);
+	}
+
+	private Span currentSpanOrFromHeaders(MessageBuilder<?> messageBuilder) {
+		return getTracer().isTracing() ? getTracer().getCurrentSpan()
+				: spanFromHeaders(messageBuilder);
+	}
+
+	private Span spanFromHeaders(MessageBuilder<?> messageBuilder) {
+		return buildSpan(new MessagingTextMap(messageBuilder));
+	}
+
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		if (emptyMessage(message)) {
@@ -93,8 +124,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		}
 		Message<?> retrievedMessage = getMessage(message);
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
-		Span parentSpan = getTracer().isTracing() ? getTracer().getCurrentSpan()
-				: buildSpan(new MessagingTextMap(messageBuilder));
+		Span parentSpan = currentSpanOrFromHeaders(messageBuilder);
 		// Do not continue the parent (assume that this is handled by caller)
 		// getTracer().continueSpan(parentSpan);
 		if (log.isDebugEnabled()) {
@@ -184,8 +214,7 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 		}
 		Message<?> retrievedMessage = getMessage(message);
 		MessageBuilder<?> messageBuilder = MessageBuilder.fromMessage(retrievedMessage);
-		Span spanFromHeader = getTracer().isTracing() ? getTracer().getCurrentSpan()
-				: buildSpan(new MessagingTextMap(messageBuilder));
+		Span spanFromHeader = extractSpanOrPickCurrent(messageBuilder, channel);
 		if (log.isDebugEnabled()) {
 			log.debug("Continuing span " + spanFromHeader + " before handling message");
 		}
