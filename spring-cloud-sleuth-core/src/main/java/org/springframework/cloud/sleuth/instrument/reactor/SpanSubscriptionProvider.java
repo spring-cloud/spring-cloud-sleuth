@@ -19,9 +19,11 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 import java.util.function.Supplier;
 
 import brave.Tracing;
+import reactor.util.context.Context;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
 import org.springframework.beans.factory.BeanFactory;
-import reactor.util.context.Context;
 
 /**
  * Supplier to lazily start a {@link SpanSubscription}
@@ -29,6 +31,8 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  */
 class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
+
+	private static final Log log = LogFactory.getLog(SpanSubscriptionProvider.class);
 
 	final BeanFactory beanFactory;
 	final Subscriber<? super T> subscriber;
@@ -43,6 +47,9 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 		this.subscriber = subscriber;
 		this.context = context;
 		this.name = name;
+		if (log.isTraceEnabled()) {
+			log.trace("Context [" + context + "], name [" + name + "]");
+		}
 	}
 
 	@Override public SpanSubscription<T> get() {

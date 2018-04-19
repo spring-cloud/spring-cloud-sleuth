@@ -21,9 +21,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import reactor.util.context.Context;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import reactor.util.context.Context;
 
 /**
  * A trace representation of the {@link Subscriber} that always
@@ -33,6 +35,8 @@ import reactor.util.context.Context;
  * @since 2.0.0
  */
 final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<T> {
+
+	private static final Log log = LogFactory.getLog(ScopePassingSpanSubscriber.class);
 
 	private final Span span;
 	private final Subscriber<? super T> subscriber;
@@ -48,6 +52,9 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanS
 		this.span = root;
 		this.context = ctx != null && root != null ? ctx.put(Span.class, root) :
 				ctx != null ? ctx : Context.empty();
+		if (log.isTraceEnabled()) {
+			log.trace("Root span [" + root + "], context [" + this.context + "]");
+		}
 	}
 
 	@Override public void onSubscribe(Subscription subscription) {

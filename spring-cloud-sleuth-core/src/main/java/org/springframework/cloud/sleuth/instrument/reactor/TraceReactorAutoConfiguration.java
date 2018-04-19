@@ -16,11 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
 import javax.annotation.PreDestroy;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import brave.Tracing;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -35,11 +39,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import org.springframework.context.event.ContextRefreshedEvent;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -84,6 +87,10 @@ public class TraceReactorAutoConfiguration {
 		static HookRegisteringBeanDefinitionRegistryPostProcessor traceHookRegisteringBeanDefinitionRegistryPostProcessor() {
 			return new HookRegisteringBeanDefinitionRegistryPostProcessor();
 		}
+
+		@Bean ApplicationContextRefreshedListener traceApplicationContextRefreshedListener() {
+			return new ApplicationContextRefreshedListener();
+		}
 	}
 }
 
@@ -120,5 +127,20 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements
 						actual.get());
 			}
 		};
+	}
+}
+
+class ApplicationContextRefreshedListener implements
+		ApplicationListener<ContextRefreshedEvent> {
+
+	AtomicBoolean refreshed = new AtomicBoolean();
+
+	@Override
+	public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+		this.refreshed.set(true);
+	}
+
+	boolean isRefreshed() {
+		return this.refreshed.get();
 	}
 }
