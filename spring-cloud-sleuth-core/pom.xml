@@ -274,4 +274,27 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>fast</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>2.21.0</version>
+						<configuration>
+							<forkCount>4</forkCount>
+							<reuseForks>true</reuseForks>
+							<argLine>-Xmx1024m -XX:MaxPermSize=256m</argLine>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 </project>
