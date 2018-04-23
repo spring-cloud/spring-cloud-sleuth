@@ -384,6 +384,7 @@ class MyFilter extends GenericFilterBean {
 			FilterChain chain) throws IOException, ServletException {
 		Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan == null) {
+			chain.doFilter(request, response);
 			return;
 		}
 		// for readability we're returning trace id in a hex form
