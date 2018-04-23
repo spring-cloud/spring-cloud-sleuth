@@ -638,6 +638,7 @@ You can customize the tags or modify the response headers by registering your ow
 			FilterChain chain) <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> IOException, ServletException {
 		Span currentSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.currentSpan();
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">if</span> (currentSpan == null) {
+			chain.doFilter(request, response);
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span>;
 		}
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// for readability we're returning trace id in a hex form</span>
