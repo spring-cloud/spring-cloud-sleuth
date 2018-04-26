@@ -1,5 +1,7 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.lang.invoke.MethodHandles;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -16,8 +18,6 @@ import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.util.ClassUtils;
 
-import java.lang.invoke.MethodHandles;
-
 /**
  * Abstraction over classes related to channel intercepting
  *
@@ -27,6 +27,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 		implements ExecutorChannelInterceptor {
 
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private final boolean integrationObjectSupportPresent;
 
 	/**
 	 * If a span comes from messaging components then it will have this value as a prefix
@@ -47,6 +48,9 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	protected AbstractTraceChannelInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
+		this.integrationObjectSupportPresent = ClassUtils.isPresent(
+				"org.springframework.integration.context.IntegrationObjectSupport",
+				null);
 	}
 
 	protected Tracer getTracer() {
@@ -99,9 +103,7 @@ abstract class AbstractTraceChannelInterceptor extends ChannelInterceptorAdapter
 
 	String getChannelName(MessageChannel channel) {
 		String name = null;
-		if (ClassUtils.isPresent(
-				"org.springframework.integration.context.IntegrationObjectSupport",
-				null)) {
+		if (this.integrationObjectSupportPresent) {
 			if (channel instanceof IntegrationObjectSupport) {
 				name = ((IntegrationObjectSupport) channel).getComponentName();
 			}
