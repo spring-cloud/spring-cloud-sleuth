@@ -19,16 +19,20 @@ package org.springframework.cloud.sleuth.zipkin2.sender;
 import java.util.stream.Stream;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.web.client.RestTemplate;
 import zipkin2.Call;
 import zipkin2.Endpoint;
 import zipkin2.Span;
+import zipkin2.codec.Encoding;
+import zipkin2.codec.SpanBytesEncoder;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
+import static zipkin2.codec.SpanBytesEncoder.PROTO3;
 
 public class RestTemplateSenderTest {
   static final Span SPAN = Span.newBuilder()
@@ -64,9 +68,24 @@ public class RestTemplateSenderTest {
         .isEqualTo("[" + new String(JSON_V2.encode(SPAN), "UTF-8") + "]");
   }
 
+  @Test public void proto3() throws Exception {
+    server.enqueue(new MockResponse());
+    sender = new RestTemplateSender(new RestTemplate(), endpoint, PROTO3);
+
+    send(SPAN).execute();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getHeader("Content-Type"))
+        .isEqualTo("application/x-protobuf");
+
+    // proto3 encoding of ListOfSpan is simply a repeated span entry
+    assertThat(request.getBody().readByteArray())
+        .containsExactly(SpanBytesEncoder.PROTO3.encode(SPAN));
+  }
+
   Call<Void> send(Span... spans) {
-    return sender.sendSpans(Stream.of(spans)
-        .map(JSON_V2::encode)
-        .collect(toList()));
+    SpanBytesEncoder bytesEncoder = sender.encoding() == Encoding.JSON
+        ? SpanBytesEncoder.JSON_V2 : SpanBytesEncoder.PROTO3;
+    return sender.sendSpans(Stream.of(spans).map(bytesEncoder::encode).collect(toList()));
   }
 }

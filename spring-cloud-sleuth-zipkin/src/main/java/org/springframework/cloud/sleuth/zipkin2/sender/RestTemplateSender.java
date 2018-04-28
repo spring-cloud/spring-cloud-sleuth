@@ -51,6 +51,9 @@ final class RestTemplateSender extends Sender {
 		if (encoder.equals(JSON_V2)) {
 			this.mediaType = MediaType.APPLICATION_JSON;
 			this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v2/spans";
+		} else if (this.encoding == Encoding.PROTO3) {
+			this.mediaType = MediaType.parseMediaType("application/x-protobuf");
+			this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v2/spans";
 		} else if (this.encoding == Encoding.JSON) {
 			this.mediaType = MediaType.APPLICATION_JSON;
 			this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
