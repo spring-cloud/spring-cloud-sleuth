@@ -79,13 +79,7 @@
 				<artifactId>spring-cloud-starter-sleuth</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<!-- ZIPKIN -->
-			<dependency>
-				<groupId>io.zipkin.java</groupId>
-				<artifactId>zipkin</artifactId>
-				<!-- misaligned intentionally https://github.com/spring-projects/spring-boot/issues/10778-->
-				<version>2.7.0</version>
-			</dependency>
+			<!-- BRAVE -->
 			<dependency>
 				<groupId>io.opentracing.brave</groupId>
 				<artifactId>brave-opentracing</artifactId>

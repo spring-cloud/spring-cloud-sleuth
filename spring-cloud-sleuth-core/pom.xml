@@ -213,6 +213,8 @@
 		<dependency>
 			<groupId>io.zipkin.java</groupId>
 			<artifactId>zipkin</artifactId>
+			<!-- misaligned intentionally https://github.com/spring-projects/spring-boot/issues/10778-->
+                        <version>2.8.0</version>
 			<optional>true</optional>
 		</dependency>
 		<!-- BRAVE -->

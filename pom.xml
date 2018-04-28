@@ -273,8 +273,6 @@
 		<spring-cloud-netflix.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>4.19.0</brave.version>
-		<!-- Version set until zipkin-junit gets defined in Brave BOM -->
-		<zipkin.version>2.7.0</zipkin.version>
 		<spring-security-boot-autoconfigure.version>2.0.0.RELEASE</spring-security-boot-autoconfigure.version>
 	</properties>
 

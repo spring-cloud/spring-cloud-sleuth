@@ -23,15 +23,31 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.web.client.RestTemplate;
 import zipkin2.Call;
+import zipkin2.Endpoint;
 import zipkin2.Span;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static zipkin2.TestObjects.CLIENT_SPAN;
-import static zipkin2.TestObjects.UTF_8;
 import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
 
 public class RestTemplateSenderTest {
+  static final Span SPAN = Span.newBuilder()
+      .traceId("7180c278b62e8f6a216a2aea45d08fc9")
+      .parentId("6b221d5bc9e6496c")
+      .id("5b4185666d50f68b")
+      .name("get /backend")
+      .kind(Span.Kind.SERVER)
+      .shared(true)
+      .localEndpoint(Endpoint.newBuilder()
+          .serviceName("backend")
+          .ip("192.168.99.101")
+          .port(9000)
+          .build())
+      .timestamp(1472470996250000L)
+      .duration(100000L)
+      .putTag("http.method", "GET")
+      .putTag("http.path", "/backend")
+      .build();
 
   @Rule public MockWebServer server = new MockWebServer();
 
@@ -42,10 +58,10 @@ public class RestTemplateSenderTest {
   @Test public void jsonIsNormal() throws Exception {
     server.enqueue(new MockResponse());
 
-    send(CLIENT_SPAN).execute();
+    send(SPAN).execute();
 
     assertThat(server.takeRequest().getBody().readUtf8())
-        .isEqualTo("[" + new String(JSON_V2.encode(CLIENT_SPAN), UTF_8) + "]");
+        .isEqualTo("[" + new String(JSON_V2.encode(SPAN), "UTF-8") + "]");
   }
 
   Call<Void> send(Span... spans) {
