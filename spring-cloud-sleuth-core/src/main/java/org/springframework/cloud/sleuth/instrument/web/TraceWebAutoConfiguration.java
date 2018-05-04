@@ -117,7 +117,7 @@ public class TraceWebAutoConfiguration {
 			String skipPattern, String additionalSkipPattern) {
 		String combinedPattern = combinedPattern(skipPattern, additionalSkipPattern);
 		if (StringUtils.hasText(serverProperties.getServlet().getContextPath())) {
-			combinedPattern = serverProperties.getServlet().getContextPath() + "|" + combinedPattern;
+			combinedPattern = serverProperties.getServlet().getContextPath() + ".*" + "|" + combinedPattern;
 		}
 		return Pattern.compile(combinedPattern);
 	}
