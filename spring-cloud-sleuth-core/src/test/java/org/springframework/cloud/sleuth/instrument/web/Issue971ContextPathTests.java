@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
@@ -51,7 +52,7 @@ public class Issue971ContextPathTests {
 		then(this.accumulator.getSpans()).hasSize(0); // this fails
 	}
 
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = SecurityAutoConfiguration.class)
 	@Configuration
 	public static class Config {
 
