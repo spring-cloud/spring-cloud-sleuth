@@ -80,11 +80,18 @@ public class TraceWebAutoConfiguration {
 			String skipPattern = sleuthWebProperties.getSkipPattern();
 			String additionalSkipPattern = sleuthWebProperties.getAdditionalSkipPattern();
 			String contextPath = managementServerProperties.getServlet().getContextPath();
+			String servletContextPath = serverProperties.getServlet().getContextPath();
 			if (StringUtils.hasText(skipPattern) && StringUtils.hasText(contextPath)) {
-				return Pattern.compile(combinedPattern(skipPattern + "|" + contextPath + ".*", additionalSkipPattern));
+				String contextPathPattern = skipPattern + "|" + contextPath + ".*";
+				contextPathPattern = StringUtils.hasText(servletContextPath) ?
+						servletContextPath + ".*|" + contextPathPattern : contextPathPattern;
+				return Pattern.compile(combinedPattern(contextPathPattern, additionalSkipPattern));
 			}
 			else if (StringUtils.hasText(contextPath)) {
-				return Pattern.compile(combinedPattern(contextPath + ".*", additionalSkipPattern));
+				String contextPathPattern = contextPath + ".*";
+				contextPathPattern = StringUtils.hasText(servletContextPath) ?
+						servletContextPath + ".*|" + contextPathPattern : contextPathPattern;
+				return Pattern.compile(combinedPattern(contextPathPattern, additionalSkipPattern));
 			}
 			return defaultSkipPattern(serverProperties, skipPattern, additionalSkipPattern);
 		}
