@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -33,9 +34,21 @@ public class SkipPatternProviderConfigTest {
 		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
 		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				managementServerPropertiesWithContextPath(), sleuthWebProperties);
+				managementServerPropertiesWithContextPath(), sleuthWebProperties, new ServerProperties());
 
 		then(pattern.pattern()).isEqualTo("foo.*|bar.*|/management/context.*");
+	}
+
+	@Test
+	public void should_combine_skip_pattern_management_context_and_servlet_context() throws Exception {
+		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
+		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
+		ServerProperties serverProperties = new ServerProperties();
+		serverProperties.getServlet().setContextPath("baz");
+		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
+				managementServerPropertiesWithContextPath(), sleuthWebProperties, serverProperties);
+
+		then(pattern.pattern()).isEqualTo("baz.*|foo.*|bar.*|/management/context.*");
 	}
 
 	@Test
@@ -44,9 +57,22 @@ public class SkipPatternProviderConfigTest {
 		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
 		sleuthWebProperties.setAdditionalSkipPattern("baz.*|faz.*");
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				managementServerPropertiesWithContextPath(), sleuthWebProperties);
+				managementServerPropertiesWithContextPath(), sleuthWebProperties, new ServerProperties());
 
 		then(pattern.pattern()).isEqualTo("foo.*|bar.*|/management/context.*|baz.*|faz.*");
+	}
+
+	@Test
+	public void should_combine_skip_pattern_management_context_servlet_context_and_additional_pattern_when_all_are_not_empty() throws Exception {
+		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
+		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
+		sleuthWebProperties.setAdditionalSkipPattern("baz.*|faz.*");
+		ServerProperties serverProperties = new ServerProperties();
+		serverProperties.getServlet().setContextPath("bazzz");
+		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
+				managementServerPropertiesWithContextPath(), sleuthWebProperties, serverProperties);
+
+		then(pattern.pattern()).isEqualTo("bazzz.*|foo.*|bar.*|/management/context.*|baz.*|faz.*");
 	}
 
 	@Test
@@ -54,9 +80,23 @@ public class SkipPatternProviderConfigTest {
 		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
 		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
 
-		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), sleuthWebProperties);
+		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(),
+				sleuthWebProperties, new ServerProperties());
 
 		then(pattern.pattern()).isEqualTo("foo.*|bar.*");
+	}
+
+	@Test
+	public void should_pick_skip_pattern_with_servlet_context_path_when_its_not_empty_and_management_context_is_empty() throws Exception {
+		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
+		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
+		ServerProperties serverProperties = new ServerProperties();
+		serverProperties.getServlet().setContextPath("bla");
+
+		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(),
+				sleuthWebProperties, serverProperties);
+
+		then(pattern.pattern()).isEqualTo("bla.*|foo.*|bar.*");
 	}
 
 	@Test
@@ -65,7 +105,8 @@ public class SkipPatternProviderConfigTest {
 		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
 		sleuthWebProperties.setAdditionalSkipPattern("baz.*|faz.*");
 
-		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(), sleuthWebProperties);
+		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(new ManagementServerProperties(),
+				sleuthWebProperties, new ServerProperties());
 
 		then(pattern.pattern()).isEqualTo("foo.*|bar.*|baz.*|faz.*");
 	}
@@ -76,9 +117,22 @@ public class SkipPatternProviderConfigTest {
 		sleuthWebProperties.setSkipPattern("");
 
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				managementServerPropertiesWithContextPath(), sleuthWebProperties);
+				managementServerPropertiesWithContextPath(), sleuthWebProperties, new ServerProperties());
 
 		then(pattern.pattern()).isEqualTo("/management/context.*");
+	}
+
+	@Test
+	public void should_pick_management_context_and_servlet_context_when_skip_patterns_is_empty_and_context_path_is_not() throws Exception {
+		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
+		sleuthWebProperties.setSkipPattern("");
+		ServerProperties serverProperties = new ServerProperties();
+		serverProperties.getServlet().setContextPath("baz");
+
+		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
+				managementServerPropertiesWithContextPath(), sleuthWebProperties, serverProperties);
+
+		then(pattern.pattern()).isEqualTo("baz.*|/management/context.*");
 	}
 
 	@Test
@@ -88,7 +142,7 @@ public class SkipPatternProviderConfigTest {
 		sleuthWebProperties.setAdditionalSkipPattern("baz.*|faz.*");
 
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				managementServerPropertiesWithContextPath(), sleuthWebProperties);
+				managementServerPropertiesWithContextPath(), sleuthWebProperties, new ServerProperties());
 
 		then(pattern.pattern()).isEqualTo("/management/context.*|baz.*|faz.*");
 	}
@@ -101,7 +155,7 @@ public class SkipPatternProviderConfigTest {
 		managementServerProperties.getServlet().setContextPath("");
 
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				managementServerProperties, sleuthWebProperties);
+				managementServerProperties, sleuthWebProperties, new ServerProperties());
 
 		then(pattern.pattern()).isEqualTo(SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 	}
@@ -115,7 +169,7 @@ public class SkipPatternProviderConfigTest {
 		managementServerProperties.getServlet().setContextPath("");
 
 		Pattern pattern = TraceWebAutoConfiguration.SkipPatternProviderConfig.getPatternForManagementServerProperties(
-				managementServerProperties, sleuthWebProperties);
+				managementServerProperties, sleuthWebProperties, new ServerProperties());
 
 		then(pattern.pattern()).isEqualTo(SleuthWebProperties.DEFAULT_SKIP_PATTERN + "|baz.*|faz.*");
 	}
