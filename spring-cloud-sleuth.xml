@@ -940,10 +940,10 @@ injector = tracing.propagation().injector(Request.Builder::addHeader);
 injector.inject(span.context(), request);</programlisting>
 <simpara>The following example shows how server-side propagation might work:</simpara>
 <programlisting language="java" linenumbering="unnumbered">// configure a function that extracts the trace context from a request
-extracted = tracing.propagation().extractor(Request::getHeader);
+extractor = tracing.propagation().extractor(Request::getHeader);
 
 // when a server receives a request, it joins or starts a new trace
-span = tracer.nextSpan(extracted, request);</programlisting>
+span = tracer.nextSpan(extractor.extract(request));</programlisting>
 <section xml:id="_propagating_extra_fields">
 <title>Propagating extra fields</title>
 <simpara>Sometimes you need to propagate extra fields, such as a request ID or an alternate trace context.

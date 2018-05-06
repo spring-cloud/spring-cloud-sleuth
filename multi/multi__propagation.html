@@ -21,10 +21,10 @@ injector = tracing.propagation().injector(Request.Builder::addHeader);
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// before a request is sent, add the current span's context to it</span>
 injector.inject(span.context(), request);</pre><p>The following example shows how server-side propagation might work:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// configure a function that extracts the trace context from a request</span>
-extracted = tracing.propagation().extractor(Request::getHeader);
+extractor = tracing.propagation().extractor(Request::getHeader);
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// when a server receives a request, it joins or starts a new trace</span>
-span = tracer.nextSpan(extracted, request);</pre><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_propagating_extra_fields" href="#_propagating_extra_fields"></a>5.1&nbsp;Propagating extra fields</h2></div></div></div><p>Sometimes you need to propagate extra fields, such as a request ID or an alternate trace context.
+span = tracer.nextSpan(extractor.extract(request));</pre><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_propagating_extra_fields" href="#_propagating_extra_fields"></a>5.1&nbsp;Propagating extra fields</h2></div></div></div><p>Sometimes you need to propagate extra fields, such as a request ID or an alternate trace context.
 For example, if you are in a Cloud Foundry environment, you might want to pass the request ID, as shown in the following example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// when you initialize the builder, define the extra field you want to propagate</span>
 tracingBuilder.propagationFactory(
   ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"x-vcap-request-id"</span>)
