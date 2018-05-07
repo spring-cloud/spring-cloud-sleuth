@@ -33,6 +33,7 @@ import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.util.ClassUtils;
 
 /**
  * A channel interceptor that automatically starts / continues / closes and detaches
@@ -48,8 +49,12 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	private static final org.apache.commons.logging.Log log = LogFactory
 			.getLog(TraceChannelInterceptor.class);
 
+	private final boolean hasDirectChannelClass;
+
 	public TraceChannelInterceptor(BeanFactory beanFactory) {
 		super(beanFactory);
+		this.hasDirectChannelClass = ClassUtils
+				.isPresent("org.springframework.integration.channel.DirectChannel", null);
 	}
 
 	@Override
@@ -159,8 +164,8 @@ public class TraceChannelInterceptor extends AbstractTraceChannelInterceptor {
 	}
 
 	private boolean isDirectChannel(MessageChannel channel) {
-		return DirectChannel.class
-				.isAssignableFrom(AopUtils.getTargetClass(channel));
+		return this.hasDirectChannelClass &&
+				DirectChannel.class.isAssignableFrom(AopUtils.getTargetClass(channel));
 	}
 
 	private Message<?> outputMessage(Message<?> message, MessageBuilder<?> messageBuilder,
