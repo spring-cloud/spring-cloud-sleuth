@@ -21,6 +21,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
+import org.springframework.util.ClassUtils;
 
 /**
  * Class that wraps Feign related classes into their Trace representative
@@ -33,7 +34,13 @@ final class TraceFeignObjectWrapper {
 	private final BeanFactory beanFactory;
 
 	private CachingSpringLoadBalancerFactory cachingSpringLoadBalancerFactory;
-	private SpringClientFactory springClientFactory;
+	private Object springClientFactory;
+	private static final boolean hasLoadBalancerFeignClientClass;
+
+	static {
+		hasLoadBalancerFeignClientClass =
+				ClassUtils.isPresent("org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient", null);
+	}
 
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -41,13 +48,15 @@ final class TraceFeignObjectWrapper {
 
 	Object wrap(Object bean) {
 		if (bean instanceof Client && !(bean instanceof TracingFeignClient)) {
-			if (bean instanceof LoadBalancerFeignClient && !(bean instanceof TraceLoadBalancerFeignClient)) {
+			if (hasLoadBalancerFeignClientClass &&
+					bean instanceof LoadBalancerFeignClient && !(bean instanceof TraceLoadBalancerFeignClient)) {
 				LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
 				return new TraceLoadBalancerFeignClient(
 						(Client) new TraceFeignObjectWrapper(this.beanFactory)
 								.wrap(client.getDelegate()),
 						factory(), clientFactory(), this.beanFactory);
-			} else if (bean instanceof TraceLoadBalancerFeignClient) {
+			} else if (hasLoadBalancerFeignClientClass &&
+					bean instanceof TraceLoadBalancerFeignClient) {
 				return bean;
 			}
 			return new LazyTracingFeignClient(this.beanFactory, (Client) bean);
@@ -68,7 +77,7 @@ final class TraceFeignObjectWrapper {
 			this.springClientFactory = this.beanFactory
 					.getBean(SpringClientFactory.class);
 		}
-		return this.springClientFactory;
+		return (SpringClientFactory) this.springClientFactory;
 	}
 
 }
