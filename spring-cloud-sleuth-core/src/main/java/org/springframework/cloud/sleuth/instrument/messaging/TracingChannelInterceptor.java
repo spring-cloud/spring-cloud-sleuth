@@ -82,6 +82,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	final TraceContext.Injector<MessageHeaderAccessor> injector;
 	final TraceContext.Extractor<MessageHeaderAccessor> extractor;
 	final boolean integrationObjectSupportPresent;
+	private final boolean hasDirectChannelClass;
 
 	TracingChannelInterceptor(Tracing tracing) {
 		this.tracing = tracing;
@@ -94,6 +95,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		this.integrationObjectSupportPresent = ClassUtils.isPresent(
 				"org.springframework.integration.context.IntegrationObjectSupport",
 				null);
+		this.hasDirectChannelClass = ClassUtils
+				.isPresent("org.springframework.integration.channel.DirectChannel", null);
 	}
 
 	/**
@@ -158,8 +161,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	private boolean isDirectChannel(MessageChannel channel) {
-		return DirectChannel.class
-				.isAssignableFrom(AopUtils.getTargetClass(channel));
+		return this.hasDirectChannelClass &&
+				DirectChannel.class.isAssignableFrom(AopUtils.getTargetClass(channel));
 	}
 
 	@Override public void afterSendCompletion(Message<?> message, MessageChannel channel,
