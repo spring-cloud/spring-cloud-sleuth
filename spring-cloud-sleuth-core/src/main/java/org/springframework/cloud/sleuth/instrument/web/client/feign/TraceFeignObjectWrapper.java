@@ -35,11 +35,12 @@ final class TraceFeignObjectWrapper {
 
 	private CachingSpringLoadBalancerFactory cachingSpringLoadBalancerFactory;
 	private Object springClientFactory;
-	private static final boolean hasLoadBalancerFeignClientClass;
+	private static final boolean ribbonPresent;
 
 	static {
-		hasLoadBalancerFeignClientClass =
-				ClassUtils.isPresent("org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient", null);
+		ribbonPresent =
+				ClassUtils.isPresent("org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient", null) &&
+				ClassUtils.isPresent("org.springframework.cloud.netflix.ribbon.SpringClientFactory", null);
 	}
 
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {
@@ -48,14 +49,14 @@ final class TraceFeignObjectWrapper {
 
 	Object wrap(Object bean) {
 		if (bean instanceof Client && !(bean instanceof TracingFeignClient)) {
-			if (hasLoadBalancerFeignClientClass &&
+			if (ribbonPresent &&
 					bean instanceof LoadBalancerFeignClient && !(bean instanceof TraceLoadBalancerFeignClient)) {
 				LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
 				return new TraceLoadBalancerFeignClient(
 						(Client) new TraceFeignObjectWrapper(this.beanFactory)
 								.wrap(client.getDelegate()),
-						factory(), clientFactory(), this.beanFactory);
-			} else if (hasLoadBalancerFeignClientClass &&
+						factory(), (SpringClientFactory) clientFactory(), this.beanFactory);
+			} else if (ribbonPresent &&
 					bean instanceof TraceLoadBalancerFeignClient) {
 				return bean;
 			}
@@ -72,12 +73,12 @@ final class TraceFeignObjectWrapper {
 		return this.cachingSpringLoadBalancerFactory;
 	}
 
-	private SpringClientFactory clientFactory() {
+	private Object clientFactory() {
 		if (this.springClientFactory == null) {
 			this.springClientFactory = this.beanFactory
 					.getBean(SpringClientFactory.class);
 		}
-		return (SpringClientFactory) this.springClientFactory;
+		return this.springClientFactory;
 	}
 
 }
