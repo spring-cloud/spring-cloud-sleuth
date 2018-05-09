@@ -77,8 +77,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 		"spring.sleuth.http.legacy.enabled=true",
 		"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=60000"})
 @DirtiesContext
-// TODO: Investigate why they fail
-@Ignore("flakey")
 public class FeignClientServerErrorTests {
 
 	private static final Log log = LogFactory.getLog(FeignClientServerErrorTests.class);

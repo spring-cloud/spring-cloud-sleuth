@@ -20,17 +20,18 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import brave.Tracing;
-import reactor.core.CoreSubscriber;
-import reactor.core.Fuseable;
-import reactor.core.Scannable;
-import reactor.core.publisher.ConnectableFlux;
-import reactor.core.publisher.Operators;
-import reactor.util.context.Context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import reactor.core.CoreSubscriber;
+import reactor.core.Fuseable;
+import reactor.core.Scannable;
+import reactor.core.publisher.ConnectableFlux;
+import reactor.core.publisher.GroupedFlux;
+import reactor.core.publisher.Operators;
+import reactor.util.context.Context;
 
 /**
  * Reactive Span pointcuts factories
@@ -56,23 +57,28 @@ public abstract class ReactorSleuth {
 	 */
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanOperator(
 			BeanFactory beanFactory) {
-		return Operators.lift(POINTCUT_FILTER, ((scannable, sub) -> {
-			//do not trace fused flows
-			if(scannable instanceof Fuseable && sub instanceof Fuseable.QueueSubscription){
-				return sub;
+		return sourcePub -> {
+			//do the checks directly on actual original Publisher
+			if (sourcePub instanceof Fuseable //Sleuth can't handle that
+					|| sourcePub instanceof Fuseable.ScalarCallable //IIRC Sleuth can't handle that
+					|| sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
+					|| sourcePub instanceof GroupedFlux  //Operators.lift can't handle that
+					) {
+				return sourcePub;
 			}
-			if (log.isTraceEnabled()) {
-				log.trace("Creating a lazy span subscriber with context "
-						+ "[" + sub.currentContext() + "] and name [" + scannable.name() + "]");
-			}
-			return new LazySpanSubscriber<T>(
-					new SpanSubscriptionProvider(
-						beanFactory,
-						sub,
-						sub.currentContext(),
-						scannable.name())
-			);
-		}));
+			//no more POINTCUT_FILTER since mecanism is broken
+			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators.lift((scannable, sub) -> {
+				//rest of the logic unchanged...
+				return new LazySpanSubscriber<T>(
+						new SpanSubscriptionProvider(
+								beanFactory,
+								sub,
+								sub.currentContext(),
+								scannable.name())
+				);
+			});
+			return lift.apply(sourcePub);
+		};
 	}
 
 	/**
@@ -91,27 +97,35 @@ public abstract class ReactorSleuth {
 	@SuppressWarnings("unchecked")
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanOperator(
 			BeanFactory beanFactory) {
-		return Operators.lift(POINTCUT_FILTER, ((scannable, sub) -> {
-			//do not trace fused flows
-			if(scannable instanceof Fuseable && sub instanceof Fuseable.QueueSubscription){
-				return sub;
+		return sourcePub -> {
+			//do the checks directly on actual original Publisher
+			if (sourcePub instanceof Fuseable //Sleuth can't handle that
+					|| sourcePub instanceof Fuseable.ScalarCallable //IIRC Sleuth can't handle that
+					|| sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
+					|| sourcePub instanceof GroupedFlux  //Operators.lift can't handle that
+					) {
+				return sourcePub;
 			}
-			if (contextRefreshed(beanFactory)) {
-				if (log.isTraceEnabled()) {
-					log.trace("Spring Context already refreshed. Creating a scope "
-							+ "passing span subscriber with Reactor Context "
-							+ "[" + sub.currentContext() + "] and name [" + scannable.name() + "]");
+			//no more POINTCUT_FILTER since mecanism is broken
+			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators.lift((scannable, sub) -> {
+				//rest of the logic unchanged...
+				if (contextRefreshed(beanFactory)) {
+					if (log.isTraceEnabled()) {
+						log.trace("Spring Context already refreshed. Creating a scope " + "passing span subscriber with Reactor Context " + "[" + sub.currentContext() + "] and name [" + scannable.name() + "]");
+					}
+					return scopePassingSpanSubscription(beanFactory, scannable, sub).get();
 				}
-				return scopePassingSpanSubscription(beanFactory, scannable, sub).get();
-			}
-			if (log.isTraceEnabled()) {
-				log.trace("Spring Context is not yet refreshed, falling back to lazy span subscriber. "
-						+ "Reactor Context is [" + sub.currentContext() + "] and name is [" + scannable.name() + "]");
-			}
-			return new LazySpanSubscriber<T>(
-					scopePassingSpanSubscription(beanFactory, scannable, sub)
-			);
-		}));
+				if (log.isTraceEnabled()) {
+					log.trace(
+							"Spring Context is not yet refreshed, falling back to lazy span subscriber. " + "Reactor Context is [" + sub.currentContext() + "] and name is [" + scannable.name() + "]");
+				}
+				return new LazySpanSubscriber<T>(
+						scopePassingSpanSubscription(beanFactory, scannable, sub)
+				);
+			});
+
+			return lift.apply(sourcePub);
+		};
 	}
 
 	private static boolean contextRefreshed(BeanFactory beanFactory) {
@@ -122,9 +136,9 @@ public abstract class ReactorSleuth {
 		}
 	}
 
-	private static <T> SpanSubscriptionProvider scopePassingSpanSubscription(
+	private static <T> SpanSubscriptionProvider<T> scopePassingSpanSubscription(
 			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
-		return new SpanSubscriptionProvider(
+		return new SpanSubscriptionProvider<T>(
 				beanFactory,
 				sub,
 				sub.currentContext(),
