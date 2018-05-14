@@ -557,7 +557,7 @@ When would you like the span not to be exportable?
 When you want to wrap some operation in a Span and have it written to the logs only.
 
 * Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
-Spring Cloud Slwuth is loosely based on HTrace but is compatible with Zipkin (Dapper).
+Spring Cloud Sleuth is loosely based on HTrace but is compatible with Zipkin (Dapper).
 
 * Sleuth records timing information to aid in latency analysis.
 By using sleuth, you can pinpoint causes of latency in your applications.
