@@ -97,6 +97,7 @@ public class FeignClientServerErrorTests {
 			log.info("sending a request");
 			this.feignInterface.internalError();
 		} catch (HystrixRuntimeException e) {
+			log.info("Expected exception thrown", e);
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -117,6 +118,7 @@ public class FeignClientServerErrorTests {
 			log.info("sending a request");
 			this.feignInterface.notFound();
 		} catch (HystrixRuntimeException e) {
+			log.info("Expected exception thrown", e);
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -136,6 +138,7 @@ public class FeignClientServerErrorTests {
 			log.info("sending a request");
 			this.feignInterface.ok();
 		} catch (HystrixRuntimeException e) {
+			log.info("Expected exception thrown", e);
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -156,6 +159,7 @@ public class FeignClientServerErrorTests {
 			log.info("sending a request");
 			this.customConfFeignInterface.ok();
 		} catch (HystrixRuntimeException e) {
+			log.info("Expected exception thrown", e);
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -176,6 +180,7 @@ public class FeignClientServerErrorTests {
 			log.info("sending a request");
 			this.customConfFeignInterface.notFound();
 		} catch (HystrixRuntimeException e) {
+			log.info("Expected exception thrown", e);
 		}
 
 		Awaitility.await().untilAsserted(() -> {
