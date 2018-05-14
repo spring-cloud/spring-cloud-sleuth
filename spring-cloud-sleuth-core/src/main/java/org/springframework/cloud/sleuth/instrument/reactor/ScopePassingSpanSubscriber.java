@@ -83,15 +83,11 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanS
 	}
 
 	@Override public void onError(Throwable throwable) {
-		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
-			this.subscriber.onError(throwable);
-		}
+		this.subscriber.onError(throwable);
 	}
 
 	@Override public void onComplete() {
-		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
-			this.subscriber.onComplete();
-		}
+		this.subscriber.onComplete();
 	}
 
 	@Override public Context currentContext() {
