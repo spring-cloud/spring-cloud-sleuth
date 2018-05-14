@@ -615,7 +615,7 @@ When you want to wrap some operation in a Span and have it written to the logs o
 </listitem>
 <listitem>
 <simpara>Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
-Spring Cloud Slwuth is loosely based on HTrace but is compatible with Zipkin (Dapper).</simpara>
+Spring Cloud Sleuth is loosely based on HTrace but is compatible with Zipkin (Dapper).</simpara>
 </listitem>
 <listitem>
 <simpara>Sleuth records timing information to aid in latency analysis.
