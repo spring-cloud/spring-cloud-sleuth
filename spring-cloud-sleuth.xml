@@ -1205,7 +1205,7 @@ The name should be low cardinality, so it should not include identifiers.</simpa
 <simpara>Since there is a lot of instrumentation going on, some span names are artificial:</simpara>
 <itemizedlist>
 <listitem>
-<simpara><literal>controller-method-name</literal> when received by a Controller with a method name of <literal>conrollerMethodName</literal></simpara>
+<simpara><literal>controller-method-name</literal> when received by a Controller with a method name of <literal>controllerMethodName</literal></simpara>
 </listitem>
 <listitem>
 <simpara><literal>async</literal> for asynchronous operations done with wrapped <literal>Callable</literal> and <literal>Runnable</literal> interfaces.</simpara>
@@ -1217,7 +1217,7 @@ The name should be low cardinality, so it should not include identifiers.</simpa
 <simpara>Fortunately, for asynchronous processing, you can provide explicit naming.</simpara>
 <section xml:id="__literal_spanname_literal_annotation">
 <title><literal>@SpanName</literal> Annotation</title>
-<simpara>You can name the span explicitly by using the <literal>@SpanName</literal> annotation, as shown in the followwng example:</simpara>
+<simpara>You can name the span explicitly by using the <literal>@SpanName</literal> annotation, as shown in the following example:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@SpanName("calculateTax")
 class TaxCountingRunnable implements Runnable {
 
@@ -1459,7 +1459,7 @@ To achieve that, you can pass the following property to your application to over
 <title>Customization of Reported Spans</title>
 <simpara>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
 You can do so by using the <literal>SpanAdjuster</literal> interface.</simpara>
-<simpara>In Sleuth, we generat spans with a fixed name.
+<simpara>In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
 You can implement the <literal>SpanAdjuster</literal> interface to alter that name.</simpara>
 <simpara>The following example shows how to register two beans that implement <literal>SpanAdjuster</literal>:</simpara>
@@ -1533,7 +1533,7 @@ object, you will have to create a bean of <literal>zipkin2.reporter.Sender</lite
 Starting from the Edgware release, the Zipkin Stream server is deprecated.
 In the Finchley release, it got removed.</simpara>
 </important>
-<simpara>See the <link xl:href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentaion</link>
+<simpara>See the <link xl:href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentation</link>
 for how to create a Stream Zipkin server.</simpara>
 </chapter>
 <chapter xml:id="_integrations">
