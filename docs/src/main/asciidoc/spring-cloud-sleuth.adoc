@@ -585,7 +585,7 @@ The name should be low cardinality, so it should not include identifiers.
 
 Since there is a lot of instrumentation going on, some span names are artificial:
 
-* `controller-method-name` when received by a Controller with a method name of `conrollerMethodName`
+* `controller-method-name` when received by a Controller with a method name of `controllerMethodName`
 * `async` for asynchronous operations done with wrapped `Callable` and `Runnable` interfaces.
 * Methods annotated with `@Scheduled` return the simple name of the class.
 
@@ -593,7 +593,7 @@ Fortunately, for asynchronous processing, you can provide explicit naming.
 
 === `@SpanName` Annotation
 
-You can name the span explicitly by using the `@SpanName` annotation, as shown in the followwng example:
+You can name the span explicitly by using the `@SpanName` annotation, as shown in the following example:
 
 [source,java]
 ----
@@ -818,7 +818,7 @@ spring.zipkin.service.name: myService
 Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
 You can do so by using the `SpanAdjuster` interface.
 
-In Sleuth, we generat spans with a fixed name.
+In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
 You can implement the `SpanAdjuster` interface to alter that name.
 
@@ -924,7 +924,7 @@ IMPORTANT: We recommend using Zipkin's native support for message-based span sen
 Starting from the Edgware release, the Zipkin Stream server is deprecated.
 In the Finchley release, it got removed.
 
-See the http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer[Dalston Documentaion]
+See the http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer[Dalston Documentation]
 for how to create a Stream Zipkin server.
 
 == Integrations
