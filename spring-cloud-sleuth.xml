@@ -644,8 +644,7 @@ To that end, Sleuth:</simpara>
 </listitem>
 <listitem>
 <simpara>Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
-For example, HTTP propagation works over Zipkin-compatible request headers.
-This propagation logic is defined and customized through <literal>SpanInjector</literal> and <literal>SpanExtractor</literal> implementations.</simpara>
+For example, HTTP propagation works over Zipkin-compatible request headers.</simpara>
 </listitem>
 <listitem>
 <simpara>Sleuth can propagate context (also known as baggage) between processes.
