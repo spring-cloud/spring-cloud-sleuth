@@ -33,6 +33,7 @@ import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.messaging.support.ErrorMessage;
@@ -154,10 +155,17 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (originalMessage.getPayload() instanceof MessagingException) {
 			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
 					this.tracing.propagation().keys()));
-			return new ErrorMessage((MessagingException) originalMessage.getPayload(), headers.getMessageHeaders());
+			return new ErrorMessage((MessagingException) originalMessage.getPayload(),
+					isWebSockets(headers) ? headers.getMessageHeaders() : new MessageHeaders(headers.getMessageHeaders()));
 		}
 		headers.copyHeaders(additionalHeaders.getMessageHeaders());
-		return new GenericMessage<>(retrievedMessage.getPayload(), headers.getMessageHeaders());
+		return new GenericMessage<>(retrievedMessage.getPayload(),
+				isWebSockets(headers) ? headers.getMessageHeaders() : new MessageHeaders(headers.getMessageHeaders()));
+	}
+
+	private boolean isWebSockets(MessageHeaderAccessor headerAccessor) {
+		return headerAccessor.getMessageHeaders().containsKey("stompCommand") ||
+				headerAccessor.getMessageHeaders().containsKey("simpMessageType");
 	}
 
 	private boolean isDirectChannel(MessageChannel channel) {

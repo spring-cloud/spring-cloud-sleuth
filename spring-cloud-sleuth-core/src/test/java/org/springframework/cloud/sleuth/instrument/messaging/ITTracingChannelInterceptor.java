@@ -102,13 +102,30 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 		assertThat(currentSpan.isNoop()).isTrue();
 	}
 
-	@Test public void messageHeadersStillMutable() {
-		directChannel.send(MessageBuilder.withPayload("hi").setHeader("X-B3-Sampled", "0")
+	@Test public void messageHeadersStillMutableForStomp() {
+		directChannel.send(MessageBuilder.withPayload("hi").setHeader("stompCommand", "DISCONNECT")
 				.build());
 
 		assertThat(
 				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
 				.isNotNull();
+
+		message = null;
+		directChannel.send(MessageBuilder.withPayload("hi").setHeader("simpMessageType", "sth")
+				.build());
+
+		assertThat(
+				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
+				.isNotNull();
+	}
+
+	@Test public void messageHeadersImmutableForNonStomp() {
+		directChannel.send(MessageBuilder.withPayload("hi").setHeader("foo", "bar")
+				.build());
+
+		assertThat(
+				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
+				.isNull();
 	}
 
 	@Configuration @EnableAutoConfiguration static class App {
