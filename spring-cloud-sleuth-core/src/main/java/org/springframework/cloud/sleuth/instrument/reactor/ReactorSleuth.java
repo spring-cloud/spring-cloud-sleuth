@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import brave.Tracing;
 import org.apache.commons.logging.Log;
@@ -55,9 +54,11 @@ public abstract class ReactorSleuth {
 	 *
 	 * @return a new lazy span operator pointcut
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanOperator(
 			BeanFactory beanFactory) {
 		return sourcePub -> {
+			// TODO: Remove this once Reactor 3.1.8 is released
 			//do the checks directly on actual original Publisher
 			if (sourcePub instanceof Fuseable //Sleuth can't handle that
 					|| sourcePub instanceof Fuseable.ScalarCallable //IIRC Sleuth can't handle that
@@ -66,19 +67,34 @@ public abstract class ReactorSleuth {
 					) {
 				return sourcePub;
 			}
-			//no more POINTCUT_FILTER since mecanism is broken
+			//no more POINTCUT_FILTER since mechanism is broken
 			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators.lift((scannable, sub) -> {
+				if (contextRefreshed(beanFactory)) {
+					if (log.isTraceEnabled()) {
+						log.trace("Spring Context already refreshed. Creating a Sleuth span subscriber with Reactor Context " + "[" + sub.currentContext() + "] and name [" + scannable.name() + "]");
+					}
+					return spanSubscriptionProvider(beanFactory, scannable, sub).get();
+				}
+				if (log.isTraceEnabled()) {
+					log.trace(
+							"Spring Context is not yet refreshed, falling back to lazy span subscriber. Reactor Context is [" + sub.currentContext() + "] and name is [" + scannable.name() + "]");
+				}
 				//rest of the logic unchanged...
 				return new LazySpanSubscriber<T>(
-						new SpanSubscriptionProvider(
-								beanFactory,
-								sub,
-								sub.currentContext(),
-								scannable.name())
+						spanSubscriptionProvider(beanFactory, scannable, sub)
 				);
 			});
 			return lift.apply(sourcePub);
 		};
+	}
+
+	private static <T> SpanSubscriptionProvider spanSubscriptionProvider(
+			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
+		return new SpanSubscriptionProvider(
+				beanFactory,
+				sub,
+				sub.currentContext(),
+				scannable.name());
 	}
 
 	/**
@@ -98,6 +114,7 @@ public abstract class ReactorSleuth {
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanOperator(
 			BeanFactory beanFactory) {
 		return sourcePub -> {
+			// TODO: Remove this once Reactor 3.1.8 is released
 			//do the checks directly on actual original Publisher
 			if (sourcePub instanceof Fuseable //Sleuth can't handle that
 					|| sourcePub instanceof Fuseable.ScalarCallable //IIRC Sleuth can't handle that
@@ -106,7 +123,7 @@ public abstract class ReactorSleuth {
 					) {
 				return sourcePub;
 			}
-			//no more POINTCUT_FILTER since mecanism is broken
+			//no more POINTCUT_FILTER since mechanism is broken
 			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators.lift((scannable, sub) -> {
 				//rest of the logic unchanged...
 				if (contextRefreshed(beanFactory)) {
@@ -117,7 +134,7 @@ public abstract class ReactorSleuth {
 				}
 				if (log.isTraceEnabled()) {
 					log.trace(
-							"Spring Context is not yet refreshed, falling back to lazy span subscriber. " + "Reactor Context is [" + sub.currentContext() + "] and name is [" + scannable.name() + "]");
+							"Spring Context is not yet refreshed, falling back to lazy span subscriber. Reactor Context is [" + sub.currentContext() + "] and name is [" + scannable.name() + "]");
 				}
 				return new LazySpanSubscriber<T>(
 						scopePassingSpanSubscription(beanFactory, scannable, sub)
@@ -151,9 +168,6 @@ public abstract class ReactorSleuth {
 			}
 		};
 	}
-
-	private static final Predicate<Scannable> POINTCUT_FILTER =
-			s ->  !(s instanceof ConnectableFlux) && !(s instanceof Fuseable.ScalarCallable) && s.isScanAvailable();
 
 	private ReactorSleuth() {
 	}
