@@ -34,7 +34,6 @@ To that end, Sleuth:
 
 * Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
 For example, HTTP propagation works over Zipkin-compatible request headers.
-This propagation logic is defined and customized through `SpanInjector` and `SpanExtractor` implementations.
 
 * Sleuth can propagate context (also known as baggage) between processes.
 Consequently, if you set  a baggage element on a Span, it is sent downstream to other processes over either HTTP or messaging.

@@ -573,7 +573,6 @@ To that end, Sleuth:
 
 * Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
 For example, HTTP propagation works over Zipkin-compatible request headers.
-This propagation logic is defined and customized through `SpanInjector` and `SpanExtractor` implementations.
 
 * Sleuth can propagate context (also known as baggage) between processes.
 Consequently, if you set  a baggage element on a Span, it is sent downstream to other processes over either HTTP or messaging.
@@ -638,7 +637,7 @@ credentials and you already have those.
 
 The projects that require middleware generally include a
 `docker-compose.yml`, so consider using
-http://compose.docker.io/[Docker Compose] to run the middleware servers
+http://compose.docker.io/[Docker Compose] to run the middeware servers
 in Docker containers. See the README in the
 https://github.com/spring-cloud-samples/scripts[scripts demo
 repository] for specific instructions about the common cases of mongo,
