@@ -1414,11 +1414,11 @@ class Config {
   }
 }</programlisting>
 </section>
-<section xml:id="__literal_tracefilter_literal">
-<title><literal>TraceFilter</literal></title>
-<simpara>You can also modify the behavior of the <literal>TraceFilter</literal>, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
-You can customize the tags or modify the response headers by registering your own instance of the <literal>TraceFilter</literal> bean.</simpara>
-<simpara>In the following example, we register the <literal>TraceFilter</literal> bean, add the <literal>ZIPKIN-TRACE-ID</literal> response header containing the current Span&#8217;s trace id, and add a tag with key <literal>custom</literal> and a value <literal>tag</literal> to the span.</simpara>
+<section xml:id="__literal_tracingfilter_literal">
+<title><literal>TracingFilter</literal></title>
+<simpara>You can also modify the behavior of the <literal>TracingFilter</literal>, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
+You can customize the tags or modify the response headers by registering your own instance of the <literal>TracingFilter</literal> bean.</simpara>
+<simpara>In the following example, we register the <literal>TracingFilter</literal> bean, add the <literal>ZIPKIN-TRACE-ID</literal> response header containing the current Span&#8217;s trace id, and add a tag with key <literal>custom</literal> and a value <literal>tag</literal> to the span.</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Component
 @Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
 class MyFilter extends GenericFilterBean {
@@ -1627,7 +1627,7 @@ the Reactor support.</simpara>
 <simpara>Features from this section can be disabled by setting the <literal>spring.sleuth.web.enabled</literal> property with value equal to <literal>false</literal>.</simpara>
 <section xml:id="_http_filter">
 <title>HTTP Filter</title>
-<simpara>Through the <literal>TraceFilter</literal>, all sampled incoming requests result in creation of a Span.
+<simpara>Through the <literal>TracingFilter</literal>, all sampled incoming requests result in creation of a Span.
 That Span&#8217;s name is <literal>http:</literal> + the path to which the request was sent.
 For example, if the request was sent to <literal>/this/this</literal> then the name will be <literal>http:/this/that</literal>.
 You can configure which URIs you would like to skip by setting the <literal>spring.sleuth.web.skipPattern</literal> property.
@@ -1638,7 +1638,7 @@ If you want to reuse the Sleuth&#8217;s default skip patterns and just append yo
 <title>HandlerInterceptor</title>
 <simpara>Since we want the span names to be precise, we use a <literal>TraceHandlerInterceptor</literal> that either wraps an existing <literal>HandlerInterceptor</literal> or is added directly to the list of existing <literal>HandlerInterceptors</literal>.
 The <literal>TraceHandlerInterceptor</literal> adds a special request attribute to the given <literal>HttpServletRequest</literal>.
-If the the <literal>TraceFilter</literal> does not see this attribute, it creates a "<literal>fallback</literal>" span, which is an additional span created on the server side so that the trace is presented properly in the UI.
+If the the <literal>TracingFilter</literal> does not see this attribute, it creates a "<literal>fallback</literal>" span, which is an additional span created on the server side so that the trace is presented properly in the UI.
 If that happens, there is probably missing instrumentation.
 In that case, please file an issue in Spring Cloud Sleuth.</simpara>
 </section>
