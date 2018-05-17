@@ -789,12 +789,12 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 }
 ----
 
-=== `TraceFilter`
+=== `TracingFilter`
 
-You can also modify the behavior of the `TraceFilter`, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
-You can customize the tags or modify the response headers by registering your own instance of the `TraceFilter` bean.
+You can also modify the behavior of the `TracingFilter`, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
+You can customize the tags or modify the response headers by registering your own instance of the `TracingFilter` bean.
 
-In the following example, we register the `TraceFilter` bean, add the `ZIPKIN-TRACE-ID` response header containing the current Span's trace id, and add a tag with key `custom` and a value `tag` to the span.
+In the following example, we register the `TracingFilter` bean, add the `ZIPKIN-TRACE-ID` response header containing the current Span's trace id, and add a tag with key `custom` and a value `tag` to the span.
 
 [source,java]
 ----
@@ -996,7 +996,7 @@ Features from this section can be disabled by setting the `spring.sleuth.web.ena
 
 ==== HTTP Filter
 
-Through the `TraceFilter`, all sampled incoming requests result in creation of a Span.
+Through the `TracingFilter`, all sampled incoming requests result in creation of a Span.
 That Span's name is `http:` + the path to which the request was sent.
 For example, if the request was sent to `/this/this` then the name will be `http:/this/that`.
 You can configure which URIs you would like to skip by setting the `spring.sleuth.web.skipPattern` property.
@@ -1007,7 +1007,7 @@ If you want to reuse the Sleuth's default skip patterns and just append your own
 
 Since we want the span names to be precise, we use a `TraceHandlerInterceptor` that either wraps an existing `HandlerInterceptor` or is added directly to the list of existing `HandlerInterceptors`.
 The `TraceHandlerInterceptor` adds a special request attribute to the given `HttpServletRequest`.
-If the the `TraceFilter` does not see this attribute, it creates a "`fallback`" span, which is an additional span created on the server side so that the trace is presented properly in the UI.
+If the the `TracingFilter` does not see this attribute, it creates a "`fallback`" span, which is an additional span created on the server side so that the trace is presented properly in the UI.
 If that happens, there is probably missing instrumentation.
 In that case, please file an issue in Spring Cloud Sleuth.
 

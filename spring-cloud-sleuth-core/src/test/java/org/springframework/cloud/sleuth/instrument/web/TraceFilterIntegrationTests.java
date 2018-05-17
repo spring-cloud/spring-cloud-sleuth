@@ -192,7 +192,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			then(e).hasRootCauseInstanceOf(RuntimeException.class);
 		}
 
-		// we need to dump the span cause it's not in TraceFilter since TF
+		// we need to dump the span cause it's not in TracingFilter since TF
 		// has also error dispatch and the ErrorController would report the span
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags())

@@ -47,8 +47,8 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * method execution in {@link TraceCallable}
  * <p/>
  *
- * This aspect will continue a span created by the TraceFilter. It will not create
- * a new span - since the one in TraceFilter will wait until processing has been
+ * This aspect will continue a span created by the TracingFilter. It will not create
+ * a new span - since the one in TracingFilter will wait until processing has been
  * finished
  *
  * @author Tomasz Nurkewicz, 4financeIT

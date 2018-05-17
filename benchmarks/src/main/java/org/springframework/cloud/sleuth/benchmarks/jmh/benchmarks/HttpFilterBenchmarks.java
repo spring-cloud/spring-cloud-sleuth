@@ -25,6 +25,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import brave.servlet.TracingFilter;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -39,7 +40,6 @@ import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.benchmarks.app.SleuthBenchmarkingSpringApp;
-import org.springframework.cloud.sleuth.instrument.web.TraceFilter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -69,7 +69,7 @@ public class HttpFilterBenchmarks {
 	public static class BenchmarkContext {
 		volatile ConfigurableApplicationContext withSleuth;
 		volatile DummyFilter dummyFilter = new DummyFilter();
-		volatile TraceFilter traceFilter;
+		volatile TracingFilter tracingFilter;
 		volatile MockMvc mockMvcForTracedController;
 		volatile MockMvc mockMvcForUntracedController;
 
@@ -78,7 +78,7 @@ public class HttpFilterBenchmarks {
 					SleuthBenchmarkingSpringApp.class)
 					.run("--spring.jmx.enabled=false",
 							"--spring.application.name=withSleuth");
-			this.traceFilter = this.withSleuth.getBean(TraceFilter.class);
+			this.tracingFilter = this.withSleuth.getBean(TracingFilter.class);
 			this.mockMvcForTracedController = MockMvcBuilders.standaloneSetup(
 					this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
 					.build();
@@ -115,7 +115,7 @@ public class HttpFilterBenchmarks {
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-		context.traceFilter.doFilter(request, response, new MockFilterChain());
+		context.tracingFilter.doFilter(request, response, new MockFilterChain());
 	}
 
 	@Benchmark

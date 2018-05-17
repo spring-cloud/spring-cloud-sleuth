@@ -113,7 +113,7 @@ public class FlatMapTests {
 					.filter(s -> s.contains("Received a request to uri"))
 					.map(s -> s.split(",")[1])
 					.collect(Collectors.toList()))
-					.as("TraceFilter should not have any trace when receiving a request")
+					.as("TracingFilter should not have any trace when receiving a request")
 					.containsOnly("");
 			//and #866
 			then(factoryUser.wasSchedulerWrapped).isTrue();
