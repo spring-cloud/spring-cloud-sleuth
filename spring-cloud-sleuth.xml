@@ -1804,12 +1804,9 @@ You can disable this behavior by setting the value of <literal>spring.sleuth.sch
 <simpara>The span is tagged with the method&#8217;s class name and method name.</simpara>
 </listitem>
 </itemizedlist>
-<simpara>If you want to skip span creation for some <literal>@Scheduled</literal> annotated classes, you can set the <literal>spring.sleuth.scheduled.skipPattern</literal> with a regular expression that matches the fully qualified name of the <literal>@Scheduled</literal> annotated class.</simpara>
-<tip>
-<simpara>If you use <literal>spring-cloud-sleuth-stream</literal> and <literal>spring-cloud-netflix-hystrix-stream</literal> together, a span is created for each Hystrix metrics and sent to Zipkin.
-This behavior may be annoying.
-You can prevent it by setting <literal>spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask</literal>.</simpara>
-</tip>
+<simpara>If you want to skip span creation for some <literal>@Scheduled</literal> annotated classes, you can set the <literal>spring.sleuth.scheduled.skipPattern</literal> with a regular expression that matches the fully qualified name of the <literal>@Scheduled</literal> annotated class.
+If you use <literal>spring-cloud-sleuth-stream</literal> and <literal>spring-cloud-netflix-hystrix-stream</literal> together, a span is created for each Hystrix metrics and sent to Zipkin.
+This behavior may be annoying. That&#8217;s why, by default, <literal>spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask</literal>.</simpara>
 </section>
 <section xml:id="_executor_executorservice_and_scheduledexecutorservice">
 <title>Executor, ExecutorService, and ScheduledExecutorService</title>
@@ -1860,7 +1857,7 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 It creates spans for publish and subscribe events.
 To disable Spring Integration instrumentation, set <literal>spring.sleuth.integration.enabled</literal> to <literal>false</literal>.</simpara>
 <simpara>You can provide the <literal>spring.sleuth.integration.patterns</literal> pattern to explicitly provide the names of channels that you want to include for tracing.
-By default, all channels are included.</simpara>
+By default, all channels but <literal>hystrixStreamOutput</literal> channel are included.</simpara>
 <important>
 <simpara>When using the <literal>Executor</literal> to build a Spring Integration <literal>IntegrationFlow</literal>, you must use the untraced version of the <literal>Executor</literal>.
 Decorating the Spring Integration Executor Channel with <literal>TraceableExecutorService</literal> causes the spans to be improperly closed.</simpara>
