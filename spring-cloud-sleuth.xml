@@ -1503,6 +1503,10 @@ that you can set up the load balancing configuration e.g. via Ribbon.</simpara>
 To do so, set <literal>web</literal>, <literal>rabbit</literal>, or <literal>kafka</literal> to the <literal>spring.zipkin.sender.type</literal> property.
 The following example shows setting the sender type for <literal>web</literal>:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.sender.type: web</programlisting>
+<important>
+<simpara>If you have Kafka on the classpath, you need to set
+<literal>spring.zipkin.kafka.enabled</literal> to <literal>true</literal> apart from setting the sender type.</simpara>
+</important>
 <simpara>To customize the <literal>RestTemplate</literal> that sends spans to Zipkin via HTTP, you can register
 the <literal>ZipkinRestTemplateCustomizer</literal> bean.</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Configuration
