@@ -90,8 +90,4 @@ class TestSpanCustomizer implements SpanCustomizer {
 	@Override public SpanCustomizer annotate(String value) {
 		return this;
 	}
-
-	@Override public SpanCustomizer annotate(long timestamp, String value) {
-		return this;
-	}
 }
