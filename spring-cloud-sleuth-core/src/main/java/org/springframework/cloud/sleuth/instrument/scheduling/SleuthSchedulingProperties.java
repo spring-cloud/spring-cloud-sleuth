@@ -35,7 +35,7 @@ public class SleuthSchedulingProperties {
 	/**
 	 * Pattern for the fully qualified name of a class that should be skipped.
 	 */
-	private String skipPattern = "";
+	private String skipPattern = "org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask";
 
 	public boolean isEnabled() {
 		return this.enabled;

@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper;
 import org.springframework.integration.config.GlobalChannelInterceptor;
 
 /**
@@ -47,8 +48,16 @@ import org.springframework.integration.config.GlobalChannelInterceptor;
 public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
-	@GlobalChannelInterceptor(patterns = "${spring.sleuth.integration.patterns:*}")
-	public TracingChannelInterceptor traceChannelInterceptor(Tracing tracing) {
+	public GlobalChannelInterceptorWrapper tracingGlobalChannelInterceptorWrapper(
+			TracingChannelInterceptor interceptor,
+			SleuthMessagingProperties properties) {
+		GlobalChannelInterceptorWrapper wrapper = new GlobalChannelInterceptorWrapper(interceptor);
+		wrapper.setPatterns(properties.getIntegration().getPatterns());
+		return wrapper;
+	}
+
+	@Bean
+	TracingChannelInterceptor traceChannelInterceptor(Tracing tracing) {
 		return new TracingChannelInterceptor(tracing);
 	}
 

@@ -1161,10 +1161,8 @@ If you annotate your method with `@Scheduled`, we automatically create a new spa
 * The span is tagged with the method's class name and method name.
 
 If you want to skip span creation for some `@Scheduled` annotated classes, you can set the `spring.sleuth.scheduled.skipPattern` with a regular expression that matches the fully qualified name of the `@Scheduled` annotated class.
-
-TIP: If you use `spring-cloud-sleuth-stream` and `spring-cloud-netflix-hystrix-stream` together, a span is created for each Hystrix metrics and sent to Zipkin.
-This behavior may be annoying.
-You can prevent it by setting `spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask`.
+If you use `spring-cloud-sleuth-stream` and `spring-cloud-netflix-hystrix-stream` together, a span is created for each Hystrix metrics and sent to Zipkin.
+This behavior may be annoying. That's why, by default, `spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask`.
 
 ==== Executor, ExecutorService, and ScheduledExecutorService
 
@@ -1202,7 +1200,7 @@ It creates spans for publish and subscribe events.
 To disable Spring Integration instrumentation, set `spring.sleuth.integration.enabled` to `false`.
 
 You can provide the `spring.sleuth.integration.patterns` pattern to explicitly provide the names of channels that you want to include for tracing.
-By default, all channels are included.
+By default, all channels but `hystrixStreamOutput` channel are included.
 
 IMPORTANT: When using the `Executor` to build a Spring Integration `IntegrationFlow`, you must use the untraced version of the `Executor`.
 Decorating the Spring Integration Executor Channel with `TraceableExecutorService` causes the spans to be improperly closed.
