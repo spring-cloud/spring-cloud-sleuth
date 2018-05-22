@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -35,6 +36,7 @@ import zipkin2.reporter.kafka11.KafkaSender;
 @ConditionalOnBean(KafkaProperties.class)
 @ConditionalOnMissingBean(Sender.class)
 @Conditional(ZipkinSenderCondition.class)
+@ConditionalOnProperty(value = "spring.zipkin.kafka.enabled", havingValue = "true")
 class ZipkinKafkaSenderConfiguration {
 	@Value("${spring.zipkin.kafka.topic:zipkin}")
 	private String topic;

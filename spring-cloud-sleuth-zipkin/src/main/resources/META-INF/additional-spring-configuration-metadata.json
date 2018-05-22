@@ -1,0 +1,8 @@
+{"properties": [
+  {
+    "name": "spring.zipkin.kafka.enabled",
+    "type": "java.lang.Boolean",
+    "description": "Should Kafka Zipkin sender be enabled. With Kafka on the classpath you have to set this value to true to send spans to Zipkin via Kafka.",
+    "defaultValue": false
+  }
+]}

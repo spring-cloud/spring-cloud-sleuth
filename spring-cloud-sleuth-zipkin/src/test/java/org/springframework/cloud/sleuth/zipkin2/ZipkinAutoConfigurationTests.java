@@ -124,7 +124,8 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void overrideKafkaTopic() throws Exception {
 		context = new AnnotationConfigApplicationContext();
-		addEnvironment(context, "spring.zipkin.kafka.topic:zipkin2");
+		addEnvironment(context, "spring.zipkin.kafka.topic:zipkin2",
+				"spring.zipkin.kafka.enabled:true");
 		context.register(
 				PropertyPlaceholderAutoConfiguration.class,
 				KafkaAutoConfiguration.class,

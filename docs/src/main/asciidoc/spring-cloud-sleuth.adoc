@@ -887,6 +887,9 @@ The following example shows setting the sender type for `web`:
 spring.zipkin.sender.type: web
 ----
 
+IMPORTANT: If you have Kafka on the classpath, you need to set
+`spring.zipkin.kafka.enabled` to `true` apart from setting the sender type.
+
 To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can register
 the `ZipkinRestTemplateCustomizer` bean.
 
