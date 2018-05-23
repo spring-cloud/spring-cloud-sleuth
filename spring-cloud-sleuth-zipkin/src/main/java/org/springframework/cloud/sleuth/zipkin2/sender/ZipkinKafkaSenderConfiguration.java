@@ -36,7 +36,7 @@ import zipkin2.reporter.kafka11.KafkaSender;
 @ConditionalOnBean(KafkaProperties.class)
 @ConditionalOnMissingBean(Sender.class)
 @Conditional(ZipkinSenderCondition.class)
-@ConditionalOnProperty(value = "spring.zipkin.kafka.enabled", havingValue = "true")
+@ConditionalOnProperty(value = "spring.zipkin.sender.type", havingValue = "kafka")
 class ZipkinKafkaSenderConfiguration {
 	@Value("${spring.zipkin.kafka.topic:zipkin}")
 	private String topic;
