@@ -57,6 +57,7 @@ public class TraceAsyncIntegrationTests {
 
 	@Before
 	public void cleanup() {
+		this.reporter.clear();
 		this.classPerformingAsyncLogic.clear();
 	}
 
