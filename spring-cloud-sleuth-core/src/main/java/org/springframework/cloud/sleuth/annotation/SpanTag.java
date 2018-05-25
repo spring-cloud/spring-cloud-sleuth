@@ -45,6 +45,7 @@ public @interface SpanTag {
 	/**
 	 * The name of the key of the tag which should be created.
 	 */
+	@AliasFor("key")
 	String value() default "";
 
 	/**
