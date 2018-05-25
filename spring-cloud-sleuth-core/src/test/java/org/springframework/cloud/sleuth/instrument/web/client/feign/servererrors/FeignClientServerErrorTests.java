@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import brave.Tracer;
 import brave.Tracing;
 import brave.sampler.Sampler;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
@@ -86,6 +87,7 @@ public class FeignClientServerErrorTests {
 	@Autowired TestFeignInterface feignInterface;
 	@Autowired TestFeignWithCustomConfInterface customConfFeignInterface;
 	@Autowired ArrayListSpanReporter reporter;
+	@Autowired Tracer tracer;
 
 	@Before
 	public void setup() {
@@ -94,7 +96,7 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnInternalServerError(){
-		try {
+		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.internalError();
 			fail("Must throw an exception");
@@ -116,7 +118,7 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnNotFound() {
-		try {
+		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.notFound();
 			fail("Must throw an exception");
@@ -137,7 +139,7 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnOk() {
-		try {
+		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.ok();
 		} catch (HystrixRuntimeException e) {
@@ -158,7 +160,7 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnOkWithCustomFeignConfiguration(){
-		try {
+		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.customConfFeignInterface.ok();
 			fail("Must throw an exception");
@@ -180,7 +182,7 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration(){
-		try {
+		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.customConfFeignInterface.notFound();
 			fail("Must throw an exception");
@@ -258,7 +260,6 @@ public class FeignClientServerErrorTests {
 		@RequestMapping(method = RequestMethod.GET, value = "/ok")
 		ResponseEntity<String> ok();
 	}
-
 
 	@Configuration
 	public static class CustomFeignClientConfiguration {
