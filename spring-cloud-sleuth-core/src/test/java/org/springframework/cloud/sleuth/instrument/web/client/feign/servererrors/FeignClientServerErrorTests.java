@@ -72,7 +72,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = {
-		"spring.application.name=fooservice" ,
+		"spring.application.name=fooservice",
+		"spring.sleuth.sampler.probability=1.0",
 		"feign.hystrix.enabled=true",
 		"spring.sleuth.http.legacy.enabled=true",
 		"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=60000",
@@ -225,7 +226,7 @@ public class FeignClientServerErrorTests {
 		}
 
 		@Bean
-		Sampler testSampler() {
+		Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 

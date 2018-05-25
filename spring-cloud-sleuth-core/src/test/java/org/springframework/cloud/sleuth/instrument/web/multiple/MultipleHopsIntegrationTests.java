@@ -113,7 +113,9 @@ public class MultipleHopsIntegrationTests {
 			ExtraFieldPropagation.set("foo", "bar");
 			ExtraFieldPropagation.set("UPPER_CASE", "someValue");
 			//end::baggage[]
+		}
 
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
 			//tag::baggage_tag[]
 			initialSpan.tag("foo",
 					ExtraFieldPropagation.get(initialSpan.context(), "foo"));
