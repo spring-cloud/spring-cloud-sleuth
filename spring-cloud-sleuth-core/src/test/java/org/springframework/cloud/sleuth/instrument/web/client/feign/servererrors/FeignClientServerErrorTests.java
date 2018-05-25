@@ -22,13 +22,15 @@ import java.util.Optional;
 
 import brave.Tracing;
 import brave.sampler.Sampler;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
+import feign.Logger;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Ignore;
-import org.springframework.test.annotation.DirtiesContext;
-import zipkin2.Span;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,17 +39,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClients;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -55,12 +58,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import zipkin2.Span;
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -96,6 +96,7 @@ public class FeignClientServerErrorTests {
 		try {
 			log.info("sending a request");
 			this.feignInterface.internalError();
+			fail("Must throw an exception");
 		} catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
@@ -117,6 +118,7 @@ public class FeignClientServerErrorTests {
 		try {
 			log.info("sending a request");
 			this.feignInterface.notFound();
+			fail("Must throw an exception");
 		} catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
@@ -158,6 +160,7 @@ public class FeignClientServerErrorTests {
 		try {
 			log.info("sending a request");
 			this.customConfFeignInterface.ok();
+			fail("Must throw an exception");
 		} catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
@@ -179,6 +182,7 @@ public class FeignClientServerErrorTests {
 		try {
 			log.info("sending a request");
 			this.customConfFeignInterface.notFound();
+			fail("Must throw an exception");
 		} catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
@@ -225,6 +229,10 @@ public class FeignClientServerErrorTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
+		@Bean
+		Logger.Level feignLoggerLevel() {
+			return Logger.Level.FULL;
+		}
 	}
 
 	@FeignClient(value = "fooservice")
@@ -275,6 +283,7 @@ public class FeignClientServerErrorTests {
 				@RequestHeader("X-B3-SpanId") String spanId,
 				@RequestHeader("X-B3-ParentSpanId") String parentId) {
 			log.info("Will respond with internal error");
+			logHeaders(traceId, spanId, parentId);
 			throw new RuntimeException("Internal Error");
 		}
 
@@ -284,6 +293,7 @@ public class FeignClientServerErrorTests {
 				@RequestHeader("X-B3-SpanId") String spanId,
 				@RequestHeader("X-B3-ParentSpanId") String parentId) {
 			log.info("Will respond with not found");
+			logHeaders(traceId, spanId, parentId);
 			return new ResponseEntity<>("not found", HttpStatus.NOT_FOUND);
 		}
 
@@ -293,7 +303,12 @@ public class FeignClientServerErrorTests {
 				@RequestHeader("X-B3-SpanId") String spanId,
 				@RequestHeader("X-B3-ParentSpanId") String parentId) {
 			log.info("Will respond with OK");
+			logHeaders(traceId, spanId, parentId);
 			return new ResponseEntity<>("ok", HttpStatus.OK);
+		}
+
+		private void logHeaders(String traceId, String spanId, String parentId) {
+			log.info("Trace [" + traceId + "], span [" + spanId + "], parent [" + parentId + "]");
 		}
 	}
 
