@@ -76,7 +76,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 		"feign.hystrix.enabled=true",
 		"spring.sleuth.http.legacy.enabled=true",
 		"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=60000",
-		"hystrix.command.default.execution.isolation.strategy=SEMPAHORE"})
+		"hystrix.command.default.execution.isolation.strategy=SEMAPHORE"})
 @DirtiesContext
 public class FeignClientServerErrorTests {
 
