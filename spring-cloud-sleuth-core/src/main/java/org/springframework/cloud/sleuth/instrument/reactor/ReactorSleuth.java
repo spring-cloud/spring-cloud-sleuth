@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import java.util.function.Function;
-
 import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,12 +23,13 @@ import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import reactor.core.CoreSubscriber;
-import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
+
+import java.util.function.Function;
 
 /**
  * Reactive Span pointcuts factories
@@ -60,9 +59,7 @@ public abstract class ReactorSleuth {
 		return sourcePub -> {
 			// TODO: Remove this once Reactor 3.1.8 is released
 			//do the checks directly on actual original Publisher
-			if (sourcePub instanceof Fuseable //Sleuth can't handle that
-					|| sourcePub instanceof Fuseable.ScalarCallable //IIRC Sleuth can't handle that
-					|| sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
+			if (sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
 					|| sourcePub instanceof GroupedFlux  //Operators.lift can't handle that
 					) {
 				return sourcePub;
@@ -116,9 +113,7 @@ public abstract class ReactorSleuth {
 		return sourcePub -> {
 			// TODO: Remove this once Reactor 3.1.8 is released
 			//do the checks directly on actual original Publisher
-			if (sourcePub instanceof Fuseable //Sleuth can't handle that
-					|| sourcePub instanceof Fuseable.ScalarCallable //IIRC Sleuth can't handle that
-					|| sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
+			if (sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
 					|| sourcePub instanceof GroupedFlux  //Operators.lift can't handle that
 					) {
 				return sourcePub;
