@@ -480,6 +480,11 @@ Instead, look them up each time you need them.
 Brave supports a "`current span`" concept which represents the in-flight operation.
 You can use `Tracer.currentSpan()` to add custom tags to a span and `Tracer.nextSpan()` to create a child of whatever is in-flight.
 
+In Sleuth, you can autowire the `Tracer` bean to retrieve the current span via
+`tracer.currentSpan()` method. To retrieve the current context just call
+`tracer.currentSpan().context()`. To get the current trace id as String
+you can use the `traceIdString()` method like this: `tracer.currentSpan().context().traceIdString()`.
+
 === Setting a span in scope manually
 
 When writing new instrumentation, it is important to place a span you created in scope as the current span.
