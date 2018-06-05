@@ -179,7 +179,7 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					Span clientSpan = handler().handleSend(injector(), builder,
 							request, tracer().nextSpan());
 					if (log.isDebugEnabled()) {
-						log.debug("Created a client span for the WebClient " + clientSpan);
+						log.debug("Handled send of " + clientSpan);
 					}
 					if (parent == null) {
 						c = c.put(Span.class, clientSpan);

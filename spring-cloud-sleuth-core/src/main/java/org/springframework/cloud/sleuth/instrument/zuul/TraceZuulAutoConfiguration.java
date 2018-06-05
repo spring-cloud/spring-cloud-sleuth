@@ -23,7 +23,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.cloud.netflix.zuul.filters.route.RibbonCommand;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,14 +45,6 @@ public class TraceZuulAutoConfiguration {
 	@Bean
 	TracePostZuulFilter tracePostZuulFilter(HttpTracing httpTracing) {
 		return new TracePostZuulFilter(httpTracing);
-	}
-
-	@ConditionalOnClass(RibbonCommand.class)
-	static class RibbonConfig {
-		@Bean
-		static TraceRibbonCommandFactoryBeanPostProcessor traceRibbonCommandFactoryBeanPostProcessor(BeanFactory beanFactory) {
-			return new TraceRibbonCommandFactoryBeanPostProcessor(beanFactory);
-		}
 	}
 
 	@Bean

@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.zuul;
 
 import javax.servlet.http.HttpServletResponse;
 
+import brave.Span;
 import brave.Tracer;
 import brave.http.HttpServerHandler;
 import brave.http.HttpTracing;
@@ -67,7 +68,11 @@ class TracePostZuulFilter extends ZuulFilter {
 		}
 		HttpServletResponse response = RequestContext.getCurrentContext().getResponse();
 		Throwable exception = RequestContext.getCurrentContext().getThrowable();
-		this.handler.handleSend(response, exception, this.tracer.currentSpan());
+		Span currentSpan = this.tracer.currentSpan();
+		this.handler.handleSend(response, exception, currentSpan);
+		if (log.isDebugEnabled()) {
+			log.debug("Handled send of " + currentSpan);
+		}
 		return null;
 	}
 

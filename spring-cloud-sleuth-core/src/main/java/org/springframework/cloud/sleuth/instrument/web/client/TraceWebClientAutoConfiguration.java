@@ -383,6 +383,9 @@ class TracingHttpClientInstrumentation {
 						io.netty.handler.codec.http.HttpHeaders tracedHeaders = req
 								.requestHeaders();
 						span.set(this.handler.handleSend(this.injector, tracedHeaders, req));
+						if (log.isDebugEnabled()) {
+							log.debug("Handled send of " + span.get());
+						}
 						io.netty.handler.codec.http.HttpHeaders addedHeaders = tracedHeaders.copy();
 						originalHeaders.forEach(header -> addedHeaders.remove(header.getKey()));
 						try (Tracer.SpanInScope clientInScope = this.tracer.withSpanInScope(span.get())) {

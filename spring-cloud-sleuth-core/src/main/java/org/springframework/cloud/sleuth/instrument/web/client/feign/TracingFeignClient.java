@@ -34,6 +34,8 @@ import brave.propagation.TraceContext;
 import feign.Client;
 import feign.Request;
 import feign.Response;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Feign client wrapper
@@ -42,6 +44,9 @@ import feign.Response;
  * @since 2.0.0
  */
 final class TracingFeignClient implements Client {
+
+	private static final Log log = LogFactory.getLog(TracingFeignClient.class);
+
 	static final Propagation.Setter<Map<String, Collection<String>>, String> SETTER =
 			new Propagation.Setter<Map<String, Collection<String>>, String>() {
 		@Override public void put(Map<String, Collection<String>> carrier, String key,
@@ -82,6 +87,9 @@ final class TracingFeignClient implements Client {
 			throws IOException {
 		Map<String, Collection<String>> headers = new HashMap<>(request.headers());
 		Span span = this.handler.handleSend(this.injector, headers, request);
+		if (log.isDebugEnabled()) {
+			log.debug("Handled send of " + span);
+		}
 		Response response = null;
 		Throwable error = null;
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
@@ -93,6 +101,9 @@ final class TracingFeignClient implements Client {
 		}
 		finally {
 			this.handler.handleReceive(response, error, span);
+			if (log.isDebugEnabled()) {
+				log.debug("Handled receive of " + span);
+			}
 		}
 	}
 
