@@ -96,7 +96,7 @@ Trace Id = X
 Span Id = D
 Client Sent
 
-This note indicats thatthe current span has *Trace Id* set to *X* and *Span Id* set to *D*.
+This note indicates that the current span has *Trace Id* set to *X* and *Span Id* set to *D*.
 Also, the `Client Sent` event took place.
 
 The following image shows how parent-child relationships of spans look:
