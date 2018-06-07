@@ -1633,7 +1633,7 @@ the Reactor support.</simpara>
 <title>HTTP Filter</title>
 <simpara>Through the <literal>TracingFilter</literal>, all sampled incoming requests result in creation of a Span.
 That Span&#8217;s name is <literal>http:</literal> + the path to which the request was sent.
-For example, if the request was sent to <literal>/this/this</literal> then the name will be <literal>http:/this/that</literal>.
+For example, if the request was sent to <literal>/this/that</literal> then the name will be <literal>http:/this/that</literal>.
 You can configure which URIs you would like to skip by setting the <literal>spring.sleuth.web.skipPattern</literal> property.
 If you have <literal>ManagementServerProperties</literal> on classpath, its value of <literal>contextPath</literal> gets appended to the provided skip pattern.
 If you want to reuse the Sleuth&#8217;s default skip patterns and just append your own, pass those patterns by using the <literal>spring.sleuth.web.additionalSkipPattern</literal>.</simpara>
