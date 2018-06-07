@@ -1003,7 +1003,7 @@ Features from this section can be disabled by setting the `spring.sleuth.web.ena
 
 Through the `TracingFilter`, all sampled incoming requests result in creation of a Span.
 That Span's name is `http:` + the path to which the request was sent.
-For example, if the request was sent to `/this/this` then the name will be `http:/this/that`.
+For example, if the request was sent to `/this/that` then the name will be `http:/this/that`.
 You can configure which URIs you would like to skip by setting the `spring.sleuth.web.skipPattern` property.
 If you have `ManagementServerProperties` on classpath, its value of `contextPath` gets appended to the provided skip pattern.
 If you want to reuse the Sleuth's default skip patterns and just append your own, pass those patterns by using the `spring.sleuth.web.additionalSkipPattern`.
