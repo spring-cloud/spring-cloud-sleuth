@@ -21,4 +21,5 @@ org.springframework.cloud.sleuth.annotation.SleuthAnnotationAutoConfiguration
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor
+org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor,\
+org.springframework.cloud.sleuth.autoconfig.TraceStreamEnvironmentPostProcessor
