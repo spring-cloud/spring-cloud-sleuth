@@ -24,5 +24,4 @@ org.springframework.cloud.sleuth.instrument.opentracing.OpentracingAutoConfigura
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor,\
-org.springframework.cloud.sleuth.autoconfig.TraceStreamEnvironmentPostProcessor
+org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor   
