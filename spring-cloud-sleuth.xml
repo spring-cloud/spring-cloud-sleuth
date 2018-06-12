@@ -52,7 +52,7 @@ Subtracting the <literal>cs</literal> timestamp from this timestamp reveals the 
 Subtracting the <literal>sr</literal> timestamp from this timestamp reveals the time needed by the server side to process the request.</simpara>
 </listitem>
 <listitem>
-<simpara><emphasis role="strong">cr</emphasis>&gt; Client Received. Signifies the end of the span.
+<simpara><emphasis role="strong">cr</emphasis>: Client Received. Signifies the end of the span.
 The client has successfully received the response from the server side.
 Subtracting the <literal>cs</literal> timestamp from this timestamp reveals the whole time needed by the client to receive the response from the server.</simpara>
 </listitem>
@@ -693,6 +693,11 @@ If you do not use SLF4J, this pattern is NOT automatically applied.</simpara>
 <link xl:href="https://github.com/openzipkin/brave">Brave</link> as the tracing library.
 For your convenience, we embed part of the Brave&#8217;s docs here.</simpara>
 </important>
+<important>
+<simpara>In the vast majority of cases you need to just use the <literal>Tracer</literal>
+or <literal>SpanCustomizer</literal> beans from Brave that Sleuth provides. The documentation below contains
+a high overview of what Brave is and how it works.</simpara>
+</important>
 <simpara>Brave is a library used to capture and report latency information about distributed operations to Zipkin.
 Most users do not use Brave directly. They use libraries or frameworks rather than employ Brave on their behalf.</simpara>
 <simpara>This module includes a tracer that creates and joins spans that model the latency of potentially distributed work.
@@ -835,9 +840,8 @@ oneWayReceive.start().flush();
 // you can create children to represent follow-up work.
 next = tracer.newSpan(oneWayReceive.context()).name("step2").start();</programlisting>
 <note>
-<simpara>The propagation logic shown in the preceding example is a simplified version of our [http handlers](<link xl:href="https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server">https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server</link>).</simpara>
+<simpara>The propagation logic shown in the preceding example is a simplified version of our <link xl:href="https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server">http handlers</link>.</simpara>
 </note>
-<simpara>You can find a working example of a one-way span [here](src/test/java/sleuth/features/async/OneWaySpanTest.java).</simpara>
 </section>
 </section>
 </section>
@@ -987,7 +991,7 @@ You can also use the <literal>spring.sleuth.propagation-keys</literal> property 
 <title>Extracting a Propagated Context</title>
 <simpara>The <literal>TraceContext.Extractor&lt;C&gt;</literal> reads trace identifiers and sampling status from an incoming request or message.
 The carrier is usually a request object or headers.</simpara>
-<simpara>This utility is used in standard instrumentation (such as <literal>[HttpServerHandler](../instrumentation/http/src/main/java/sleuth/http/HttpServerHandler.java)</literal>) but can also be used for custom RPC or messaging code.</simpara>
+<simpara>This utility is used in standard instrumentation (such as <literal>HttpServerHandler`</literal>) but can also be used for custom RPC or messaging code.</simpara>
 <simpara><literal>TraceContextOrSamplingFlags</literal> is usually used only with <literal>Tracer.nextSpan(extracted)</literal>, unless you are
 sharing span IDs between a client and a server.</simpara>
 </section>
