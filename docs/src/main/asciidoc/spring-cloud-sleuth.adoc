@@ -25,6 +25,10 @@ IMPORTANT: Starting with version `2.0.0`, Spring Cloud Sleuth uses
 https://github.com/openzipkin/brave[Brave] as the tracing library.
 For your convenience, we embed part of the Brave's docs here.
 
+IMPORTANT: In the vast majority of cases you need to just use the `Tracer`
+or `SpanCustomizer` beans from Brave that Sleuth provides. The documentation below contains
+a high overview of what Brave is and how it works.
+
 // TODO: We should link, not include. We have no idea when that content will change and so no way to keep our copy current. I also have no idea what I should edit, because I don't know what is ours and what is Brave's.
 
 Brave is a library used to capture and report latency information about distributed operations to Zipkin.
@@ -209,9 +213,7 @@ oneWayReceive.start().flush();
 next = tracer.newSpan(oneWayReceive.context()).name("step2").start();
 ```
 
-NOTE: The propagation logic shown in the preceding example is a simplified version of our [http handlers](https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server).
-
-You can find a working example of a one-way span [here](src/test/java/sleuth/features/async/OneWaySpanTest.java).
+NOTE: The propagation logic shown in the preceding example is a simplified version of our https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server[http handlers].
 
 == Sampling
 
@@ -401,7 +403,7 @@ You can also use the `spring.sleuth.propagation-keys` property to pass a list of
 The `TraceContext.Extractor<C>` reads trace identifiers and sampling status from an incoming request or message.
 The carrier is usually a request object or headers.
 
-This utility is used in standard instrumentation (such as `[HttpServerHandler](../instrumentation/http/src/main/java/sleuth/http/HttpServerHandler.java)`) but can also be used for custom RPC or messaging code.
+This utility is used in standard instrumentation (such as `HttpServerHandler``) but can also be used for custom RPC or messaging code.
 
 `TraceContextOrSamplingFlags` is usually used only with `Tracer.nextSpan(extracted)`, unless you are
 sharing span IDs between a client and a server.

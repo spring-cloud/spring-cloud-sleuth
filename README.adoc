@@ -80,7 +80,7 @@ of an action took place.
 Subtracting the `cs` timestamp from this timestamp reveals the network latency.
 * *ss*: Server Sent. Annotated upon completion of request processing (when the response got sent back to the client).
 Subtracting the `sr` timestamp from this timestamp reveals the time needed by the server side to process the request.
-* *cr*> Client Received. Signifies the end of the span.
+* *cr*: Client Received. Signifies the end of the span.
 The client has successfully received the response from the server side.
 Subtracting the `cs` timestamp from this timestamp reveals the whole time needed by the client to receive the response from the server.
 
@@ -96,7 +96,7 @@ Trace Id = X
 Span Id = D
 Client Sent
 
-This note indicates that the current span has *Trace Id* set to *X* and *Span Id* set to *D*.
+This note indicats thatthe current span has *Trace Id* set to *X* and *Span Id* set to *D*.
 Also, the `Client Sent` event took place.
 
 The following image shows how parent-child relationships of spans look:
