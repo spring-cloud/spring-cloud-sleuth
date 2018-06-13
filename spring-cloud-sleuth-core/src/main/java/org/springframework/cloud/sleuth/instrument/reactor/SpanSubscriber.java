@@ -36,32 +36,7 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<T>, Fuseable.QueueSubscription<T> {
-
-	@Override
-	public T poll() {
-		return null;
-	}
-
-	@Override
-	public int requestFusion(int i) {
-		return Fuseable.NONE; //always negotiate to no fusion
-	}
-
-	@Override
-	public int size() {
-		return 0;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return true;
-	}
-
-	@Override
-	public void clear() {
-		//NO-OP
-	}
+final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<T> {
 
 	private static final Logger log = Loggers.getLogger(
 			SpanSubscriber.class);
