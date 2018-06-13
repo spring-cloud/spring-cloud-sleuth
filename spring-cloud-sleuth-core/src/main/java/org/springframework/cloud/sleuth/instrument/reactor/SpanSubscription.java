@@ -29,29 +29,29 @@ import reactor.core.Fuseable;
  */
 interface SpanSubscription<T> extends Subscription, CoreSubscriber<T>, Fuseable.QueueSubscription<T> {
 
-    @Override
-    default T poll() {
-        return null;
-    }
+	@Override
+	default T poll() {
+		return null;
+	}
 
-    @Override
-    default int requestFusion(int i) {
-        return Fuseable.NONE; //always negotiate to no fusion
-    }
+	@Override
+	default int requestFusion(int i) {
+		return Fuseable.NONE; //always negotiate to no fusion
+	}
 
-    @Override
-    default int size() {
-        return 0;
-    }
+	@Override
+	default int size() {
+		return 0;
+	}
 
-    @Override
-    default boolean isEmpty() {
-        return true;
-    }
+	@Override
+	default boolean isEmpty() {
+		return true;
+	}
 
-    @Override
-    default void clear() {
-        //NO-OP
-    }
+	@Override
+	default void clear() {
+		//NO-OP
+	}
 
 }

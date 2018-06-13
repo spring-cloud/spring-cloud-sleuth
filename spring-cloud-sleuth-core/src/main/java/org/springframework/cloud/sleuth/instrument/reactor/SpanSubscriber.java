@@ -16,18 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import reactor.core.Fuseable;
 import reactor.util.Logger;
 import reactor.util.Loggers;
 import reactor.util.context.Context;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A trace representation of the {@link Subscriber}
