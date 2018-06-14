@@ -17,14 +17,21 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
+import java.util.HashMap;
 
+import brave.Span;
+import brave.Tracer;
+import brave.http.HttpTracing;
+import com.netflix.client.ClientException;
 import feign.Client;
 import feign.Request;
 import feign.Response;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
-import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 
 /**
  * We need to wrap the {@link LoadBalancerFeignClient} into a trace representation
@@ -35,7 +42,12 @@ import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
  */
 class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 
+	private static final Log log = LogFactory.getLog(TraceLoadBalancerFeignClient.class);
+
 	private final BeanFactory beanFactory;
+	Tracer tracer;
+	HttpTracing httpTracing;
+	TracingFeignClient tracingFeignClient;
 
 	TraceLoadBalancerFeignClient(Client delegate,
 			CachingSpringLoadBalancerFactory lbClientFactory,
@@ -46,8 +58,54 @@ class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 
 	@Override public Response execute(Request request, Request.Options options)
 			throws IOException {
-		return ((Client) new TraceFeignObjectWrapper(this.beanFactory).wrap(
-				(Client) TraceLoadBalancerFeignClient.super::execute)).execute(request, options);
+		if (log.isDebugEnabled()) {
+			log.debug("Before send");
+		}
+		Response response = null;
+		Span fallbackSpan = tracer().nextSpan().start();
+		try {
+			response = super.execute(request, options);
+			if (log.isDebugEnabled()) {
+				log.debug("After receive");
+			}
+			return response;
+		} catch (Exception e){
+			if (log.isDebugEnabled()) {
+				log.debug("Exception thrown", e);
+			}
+			if (e instanceof IOException || e.getCause() != null &&
+					e.getCause() instanceof ClientException &&
+					((ClientException) e.getCause()).getErrorType() == ClientException.ErrorType.GENERAL ) {
+				if (log.isDebugEnabled()) {
+					log.debug("General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
+				}
+				fallbackSpan = tracingFeignClient().handleSend(new HashMap<>(request.headers()), request, fallbackSpan);
+				tracingFeignClient().handleReceive(fallbackSpan, response, e);
+			}
+			throw e;
+		}
+	}
+
+	private Tracer tracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
+		return this.tracer;
+	}
+
+	private HttpTracing httpTracing() {
+		if (this.httpTracing == null) {
+			this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
+		}
+		return this.httpTracing;
+	}
+
+	private TracingFeignClient tracingFeignClient() {
+		if (this.tracingFeignClient == null) {
+			this.tracingFeignClient =
+					(TracingFeignClient) TracingFeignClient.create(httpTracing(), getDelegate());
+		}
+		return this.tracingFeignClient;
 	}
 
 }

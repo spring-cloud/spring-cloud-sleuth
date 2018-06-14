@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.Logger;
+import org.junit.Before;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 import org.junit.Test;
@@ -58,6 +59,11 @@ public class Issue350Tests {
 	TestRestTemplate template = new TestRestTemplate();
 	@Autowired Tracing tracer;
 	@Autowired ArrayListSpanReporter reporter;
+
+	@Before
+	public void setup() {
+		this.reporter.clear();
+	}
 
 	@Test
 	public void should_successfully_work_without_hystrix() {

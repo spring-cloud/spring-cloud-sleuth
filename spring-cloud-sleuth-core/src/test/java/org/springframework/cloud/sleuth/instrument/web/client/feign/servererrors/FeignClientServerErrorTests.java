@@ -149,12 +149,13 @@ public class FeignClientServerErrorTests {
 		Awaitility.await().untilAsserted(() -> {
 			List<Span> spans = this.reporter.getSpans();
 			log.info("Spans " + spans);
-			then(spans.size()).isGreaterThanOrEqualTo(2);
+			then(spans.size()).isEqualTo(1);
 			Optional<Span> httpSpan = spans.stream()
 					.filter(span -> span.tags().containsKey("http.method")).findFirst();
 			then(httpSpan.isPresent()).isTrue();
 			then(httpSpan.get().tags())
-					.containsEntry("http.method", "GET");
+					.containsEntry("http.method", "GET")
+					.doesNotContainEntry("http.url", "http://fooservice/ok");
 		});
 	}
 
@@ -171,7 +172,7 @@ public class FeignClientServerErrorTests {
 		Awaitility.await().untilAsserted(() -> {
 			List<Span> spans = this.reporter.getSpans();
 			log.info("Spans " + spans);
-			then(spans.size()).isGreaterThanOrEqualTo(2);
+			then(spans.size()).isGreaterThanOrEqualTo(1);
 			Optional<Span> httpSpan = spans.stream()
 					.filter(span -> span.tags().containsKey("http.method")).findFirst();
 			then(httpSpan.isPresent()).isTrue();

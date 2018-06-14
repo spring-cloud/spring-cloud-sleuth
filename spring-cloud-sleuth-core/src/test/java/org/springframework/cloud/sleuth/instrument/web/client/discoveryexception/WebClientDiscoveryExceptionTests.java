@@ -89,7 +89,6 @@ public class WebClientDiscoveryExceptionTests {
 		// hystrix commands should finish at this point
 		Thread.sleep(200);
 		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(2);
 		then(spans.stream()
 				.filter(span1 -> span1.kind() == zipkin2.Span.Kind.CLIENT)
 				.findFirst()

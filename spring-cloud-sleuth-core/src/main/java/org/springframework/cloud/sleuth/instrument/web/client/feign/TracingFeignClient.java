@@ -26,7 +26,6 @@ import java.util.Map;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
 import brave.propagation.Propagation;
@@ -63,11 +62,7 @@ final class TracingFeignClient implements Client {
 		}
 	};
 
-	public static Client create(Tracing tracing, Client delegate) {
-		return create(HttpTracing.create(tracing), delegate);
-	}
-
-	public static Client create(HttpTracing httpTracing, Client delegate) {
+	static Client create(HttpTracing httpTracing, Client delegate) {
 		return new TracingFeignClient(httpTracing, delegate);
 	}
 
@@ -86,7 +81,7 @@ final class TracingFeignClient implements Client {
 	@Override public Response execute(Request request, Request.Options options)
 			throws IOException {
 		Map<String, Collection<String>> headers = new HashMap<>(request.headers());
-		Span span = this.handler.handleSend(this.injector, headers, request);
+		Span span = handleSend(headers, request, null);
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + span);
 		}
@@ -100,11 +95,22 @@ final class TracingFeignClient implements Client {
 			throw e;
 		}
 		finally {
-			this.handler.handleReceive(response, error, span);
+			handleReceive(span, response, error);
 			if (log.isDebugEnabled()) {
 				log.debug("Handled receive of " + span);
 			}
 		}
+	}
+
+	Span handleSend(Map<String, Collection<String>> headers, Request request, Span clientSpan) {
+		if (clientSpan != null) {
+			return this.handler.handleSend(this.injector, headers, request, clientSpan);
+		}
+		return this.handler.handleSend(this.injector, headers, request);
+	}
+
+	void handleReceive(Span span, Response response, Throwable error) {
+		this.handler.handleReceive(response, error, span);
 	}
 
 	private Request modifiedRequest(Request request, Map<String, Collection<String>> headers) {

@@ -28,6 +28,8 @@ class LazyClient implements Client {
 	private final BeanFactory beanFactory;
 	private final Client delegate;
 
+	private TraceFeignObjectWrapper wrapper;
+
 	LazyClient(BeanFactory beanFactory, Client delegate) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
@@ -39,6 +41,9 @@ class LazyClient implements Client {
 	}
 
 	private TraceFeignObjectWrapper wrapper() {
-		return new TraceFeignObjectWrapper(this.beanFactory);
+		if (this.wrapper == null) {
+			this.wrapper = new TraceFeignObjectWrapper(this.beanFactory);
+		}
+		return this.wrapper;
 	}
 }
