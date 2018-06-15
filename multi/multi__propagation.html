@@ -16,17 +16,22 @@ The most common propagation approach is to copy a trace context from a client by
 &#9474; &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496; &#9474;          &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;        &#9474; &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496; &#9474;
 &#9474;                  &#9474;                                       &#9474;                  &#9474;
 &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;                                       &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</pre><p>The names above are from <a class="link" href="https://github.com/openzipkin/b3-propagation" target="_top">B3 Propagation</a>, which is built-in to Brave and has implementations in many languages and frameworks.</p><p>Most users use a framework interceptor to automate propagation.
-The next two examples show how that might work for a client and a server.</p><p>The following example shows how client-side propagation might work:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// configure a function that injects a trace context into a request</span>
+The next two examples show how that might work for a client and a server.</p><p>The following example shows how client-side propagation might work:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracing tracing;
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// configure a function that injects a trace context into a request</span>
 injector = tracing.propagation().injector(Request.Builder::addHeader);
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// before a request is sent, add the current span's context to it</span>
-injector.inject(span.context(), request);</pre><p>The following example shows how server-side propagation might work:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// configure a function that extracts the trace context from a request</span>
+injector.inject(span.context(), request);</pre><p>The following example shows how server-side propagation might work:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracing tracing;
+<em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// configure a function that extracts the trace context from a request</span>
 extractor = tracing.propagation().extractor(Request::getHeader);
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// when a server receives a request, it joins or starts a new trace</span>
 span = tracer.nextSpan(extractor.extract(request));</pre><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_propagating_extra_fields" href="#_propagating_extra_fields"></a>5.1&nbsp;Propagating extra fields</h2></div></div></div><p>Sometimes you need to propagate extra fields, such as a request ID or an alternate trace context.
 For example, if you are in a Cloud Foundry environment, you might want to pass the request ID, as shown in the following example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// when you initialize the builder, define the extra field you want to propagate</span>
-tracingBuilder.propagationFactory(
+Tracing.newBuilder().propagationFactory(
   ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"x-vcap-request-id"</span>)
 );
 
@@ -35,8 +40,10 @@ requestId = ExtraFieldPropagation.get(<span xmlns:d="http://docbook.org/ns/docbo
 For example, you may be in an Amazon Web Services environment but not be reporting data to X-Ray.
 To ensure X-Ray can co-exist correctly, pass-through its tracing header, as shown in the following example:</p><pre class="programlisting">tracingBuilder.propagationFactory(
   ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"x-amzn-trace-id"</span>)
-);</pre><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_prefixed_fields" href="#_prefixed_fields"></a>5.1.1&nbsp;Prefixed fields</h3></div></div></div><p>If they follow a common pattern, you can also prefix fields.
-The following example shows how to propagate <code class="literal">x-vcap-request-id</code> the field as-is but send the <code class="literal">country-code</code> and <code class="literal">user-id</code> fields on the wire as <code class="literal">x-baggage-country-code</code> and <code class="literal">x-baggage-user-id</code>, respectively:</p><pre class="programlisting">tracingBuilder.propagationFactory(
+);</pre><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>In Spring Cloud Sleuth all elements of the tracing builder <code class="literal">Tracing.newBuilder()</code>
+are defined as beans. So if you want to pass a custom <code class="literal">PropagationFactory</code>, it&#8217;s enough
+for you to create a bean of that type and we will set it in the <code class="literal">Tracing</code> bean.</p></td></tr></table></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="prefixed-fields" href="#prefixed-fields"></a>5.1.1&nbsp;Prefixed fields</h3></div></div></div><p>If they follow a common pattern, you can also prefix fields.
+The following example shows how to propagate <code class="literal">x-vcap-request-id</code> the field as-is but send the <code class="literal">country-code</code> and <code class="literal">user-id</code> fields on the wire as <code class="literal">x-baggage-country-code</code> and <code class="literal">x-baggage-user-id</code>, respectively:</p><pre class="programlisting">Tracing.newBuilder().propagationFactory(
   ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY)
                        .addField(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"x-vcap-request-id"</span>)
                        .addPrefixedFields(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"baggage-"</span>, Arrays.asList(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"country-code"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"user-id"</span>))

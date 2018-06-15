@@ -71,7 +71,7 @@ Consider the following note:</simpara>
 <screen>Trace Id = X
 Span Id = D
 Client Sent</screen>
-<simpara>This note indicats thatthe current span has <emphasis role="strong">Trace Id</emphasis> set to <emphasis role="strong">X</emphasis> and <emphasis role="strong">Span Id</emphasis> set to <emphasis role="strong">D</emphasis>.
+<simpara>This note indicates that the current span has <emphasis role="strong">Trace Id</emphasis> set to <emphasis role="strong">X</emphasis> and <emphasis role="strong">Span Id</emphasis> set to <emphasis role="strong">D</emphasis>.
 Also, the <literal>Client Sent</literal> event took place.</simpara>
 <simpara>The following image shows how parent-child relationships of spans look:</simpara>
 <informalfigure>
@@ -372,6 +372,10 @@ try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
 <title>Baggage versus Span Tags</title>
 <simpara>Baggage travels with the trace (every child span contains the baggage of its parent).
 Zipkin has no knowledge of baggage and does not receive that information.</simpara>
+<important>
+<simpara>Starting from Sleuth 2.0.0 you have to pass the baggage key names explicitly
+in your project configuration. Read more about that setup <link linkend="prefixed-fields">here</link></simpara>
+</important>
 <simpara>Tags are attached to a specific span. In other words, they are presented only for that particular span.
 However, you can search by tag to find the trace, assuming a span having the searched tag value exists.</simpara>
 <simpara>If you want to be able to lookup a span based on baggage, you should add a corresponding entry as a tag in the root span.</simpara>
@@ -379,10 +383,27 @@ However, you can search by tag to find the trace, assuming a span having the sea
 <simpara>The span must be in scope.</simpara>
 </important>
 <simpara>The following listing shows integration tests that use baggage:</simpara>
+<formalpara>
+<title>The setup</title>
+<para>
+<programlisting language="yml" linenumbering="unnumbered">spring.sleuth:
+  baggage-keys:
+    - baz
+    - bizarrecase
+  propagation-keys:
+    - foo
+    - upper_case</programlisting>
+</para>
+</formalpara>
+<formalpara>
+<title>The code</title>
+<para>
 <programlisting language="java" linenumbering="unnumbered">initialSpan.tag("foo",
 		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
 initialSpan.tag("UPPER_CASE",
 		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));</programlisting>
+</para>
+</formalpara>
 </section>
 </section>
 </section>
@@ -583,9 +604,9 @@ dependencies {
 </chapter>
 <chapter xml:id="_additional_resources">
 <title>Additional Resources</title>
-<simpara>You can watch a video of Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin:</simpara>
-
-<simpara><link xl:href="https://www.youtube.com/watch?v=eQV71Mw1u1c">click here to see the video</link></simpara>
+<simpara>You can watch a video of <link xl:href="https://twitter.com/reshmi9k">Reshmi Krishna</link> and <link xl:href="https://twitter.com/mgrzejszczak">Marcin Grzejszczak</link> talking about Spring Cloud
+Sleuth and Zipkin <link xl:href="https://content.pivotal.io/springone-platform-2017/distributed-tracing-latency-analysis-for-your-microservices-grzejszczak-krishna">by clicking here</link>.</simpara>
+<simpara>You can check different setups of Sleuth and Brave <link xl:href="https://github.com/openzipkin/sleuth-webmvc-example">in the openzipkin/sleuth-webmvc-example repository</link>.</simpara>
 </chapter>
 <chapter xml:id="_features">
 <title>Features</title>
@@ -734,7 +755,9 @@ After starting a span, you can annotate events of interest or add tags containin
 <section xml:id="_local_tracing">
 <title>Local Tracing</title>
 <simpara>When tracing local code, you can run it inside a span, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Span span = tracer.newTrace().name("encode").start();
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+
+Span span = tracer.newTrace().name("encode").start();
 try {
   doSomethingExpensive();
 } finally {
@@ -743,7 +766,9 @@ try {
 <simpara>In the preceding example, the span is the root of the trace.
 In many cases, the span is part of an existing trace.
 When this is the case, call <literal>newChild</literal> instead of <literal>newTrace</literal>, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Span span = tracer.newChild(root.context()).name("encode").start();
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+
+Span span = tracer.newChild(root.context()).name("encode").start();
 try {
   doSomethingExpensive();
 } finally {
@@ -772,7 +797,7 @@ The former is simpler to understand and test and does not tempt users with span 
 <literal>brave.CurrentSpanCustomizer</literal> handles this problem by adding data to any span that&#8217;s in progress or drops, as shown in the following example:</simpara>
 <simpara>Ex.</simpara>
 <programlisting language="java" linenumbering="unnumbered">// The user code can then inject this without a chance of it being null.
-@Autowire SpanCustomizer span;
+@Autowired SpanCustomizer span;
 
 void userCode() {
   span.annotate("tx.started");
@@ -786,7 +811,9 @@ void userCode() {
 </tip>
 <simpara>RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.</simpara>
 <simpara>The following example shows how to add a client span:</simpara>
-<programlisting language="java" linenumbering="unnumbered">// before you send a request, add metadata that describes the operation
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+
+// before you send a request, add metadata that describes the operation
 span = tracer.newTrace().name("get").type(CLIENT);
 span.tag("clnt/finagle.version", "6.36.0");
 span.tag(TraceKeys.HTTP_PATH, "/api");
@@ -811,7 +838,9 @@ request but no response. In normal RPC tracing, you use <literal>span.finish()</
 to indicate that the response was received. In one-way tracing, you use
 <literal>span.flush()</literal> instead, as you do not expect a response.</simpara>
 <simpara>The following example shows how a client might model a one-way operation:</simpara>
-<programlisting language="java" linenumbering="unnumbered">// start a new span representing a client request
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+
+// start a new span representing a client request
 oneWaySend = tracer.newSpan(parent).kind(Span.Kind.CLIENT);
 
 // Add the trace context to the request, so it can be propagated in-band
@@ -824,7 +853,10 @@ request.execute();
 // start the client side and flush instead of finish
 oneWaySend.start().flush();</programlisting>
 <simpara>The following example shows how a server might handle a one-way operation:</simpara>
-<programlisting language="java" linenumbering="unnumbered">// pull the context out of the incoming request
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracing tracing;
+@Autowired Tracer tracer;
+
+// pull the context out of the incoming request
 extractor = tracing.propagation().extractor(Request::getHeader);
 
 // convert that context to a span which you can name and add tags to
@@ -839,9 +871,6 @@ oneWayReceive.start().flush();
 // you should not modify this span anymore as it is complete. However,
 // you can create children to represent follow-up work.
 next = tracer.newSpan(oneWayReceive.context()).name("step2").start();</programlisting>
-<note>
-<simpara>The propagation logic shown in the preceding example is a simplified version of our <link xl:href="https://github.com/openzipkin/sleuth/tree/master/instrumentation/http#http-server">http handlers</link>.</simpara>
-</note>
 </section>
 </section>
 </section>
@@ -858,7 +887,9 @@ When a span is not sampled, it adds no overhead (a noop).</simpara>
 <simpara>Some applications need to sample based on the type or annotations of a java method.</simpara>
 <simpara>Most users use a framework interceptor to automate this sort of policy.
 The following example shows how that might work internally:</simpara>
-<programlisting language="java" linenumbering="unnumbered">// derives a sample rate from an annotation on a java method
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracing tracing;
+
+// derives a sample rate from an annotation on a java method
 DeclarativeSampler&lt;Traced&gt; sampler = DeclarativeSampler.create(Traced::sampleRate);
 
 @Around("@annotation(traced)")
@@ -877,7 +908,9 @@ public Object traceThing(ProceedingJoinPoint pjp, Traced traced) throws Throwabl
 For example, you might not want to trace requests to static resources such as images, or you might want to trace all requests to a new api.</simpara>
 <simpara>Most users use a framework interceptor to automate this sort of policy.
 The following example shows how that might work internally:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Span newTrace(Request input) {
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+
+Span newTrace(Request input) {
   SamplingFlags flags = SamplingFlags.NONE;
   if (input.url().startsWith("/experimental")) {
     flags = SamplingFlags.SAMPLED;
@@ -886,9 +919,6 @@ The following example shows how that might work internally:</simpara>
   }
   return tracer.newTrace(flags);
 }</programlisting>
-<note>
-<simpara>The preceding example forms the basis for the built-in <link xl:href="https://github.com/openzipkin/sleuth/tree/master/instrumentation/http">http sampler</link>.</simpara>
-</note>
 </section>
 <section xml:id="_sampling_in_spring_cloud_sleuth">
 <title>Sampling in Spring Cloud Sleuth</title>
@@ -936,13 +966,18 @@ The most common propagation approach is to copy a trace context from a client by
 <simpara>Most users use a framework interceptor to automate propagation.
 The next two examples show how that might work for a client and a server.</simpara>
 <simpara>The following example shows how client-side propagation might work:</simpara>
-<programlisting language="java" linenumbering="unnumbered">// configure a function that injects a trace context into a request
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracing tracing;
+
+// configure a function that injects a trace context into a request
 injector = tracing.propagation().injector(Request.Builder::addHeader);
 
 // before a request is sent, add the current span's context to it
 injector.inject(span.context(), request);</programlisting>
 <simpara>The following example shows how server-side propagation might work:</simpara>
-<programlisting language="java" linenumbering="unnumbered">// configure a function that extracts the trace context from a request
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracing tracing;
+@Autowired Tracer tracer;
+
+// configure a function that extracts the trace context from a request
 extractor = tracing.propagation().extractor(Request::getHeader);
 
 // when a server receives a request, it joins or starts a new trace
@@ -952,7 +987,7 @@ span = tracer.nextSpan(extractor.extract(request));</programlisting>
 <simpara>Sometimes you need to propagate extra fields, such as a request ID or an alternate trace context.
 For example, if you are in a Cloud Foundry environment, you might want to pass the request ID, as shown in the following example:</simpara>
 <programlisting language="java" linenumbering="unnumbered">// when you initialize the builder, define the extra field you want to propagate
-tracingBuilder.propagationFactory(
+Tracing.newBuilder().propagationFactory(
   ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, "x-vcap-request-id")
 );
 
@@ -964,11 +999,16 @@ To ensure X-Ray can co-exist correctly, pass-through its tracing header, as show
 <programlisting language="java" linenumbering="unnumbered">tracingBuilder.propagationFactory(
   ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, "x-amzn-trace-id")
 );</programlisting>
-<section xml:id="_prefixed_fields">
+<tip>
+<simpara>In Spring Cloud Sleuth all elements of the tracing builder <literal>Tracing.newBuilder()</literal>
+are defined as beans. So if you want to pass a custom <literal>PropagationFactory</literal>, it&#8217;s enough
+for you to create a bean of that type and we will set it in the <literal>Tracing</literal> bean.</simpara>
+</tip>
+<section xml:id="prefixed-fields">
 <title>Prefixed fields</title>
 <simpara>If they follow a common pattern, you can also prefix fields.
 The following example shows how to propagate <literal>x-vcap-request-id</literal> the field as-is but send the <literal>country-code</literal> and <literal>user-id</literal> fields on the wire as <literal>x-baggage-country-code</literal> and <literal>x-baggage-user-id</literal>, respectively:</simpara>
-<programlisting language="java" linenumbering="unnumbered">tracingBuilder.propagationFactory(
+<programlisting language="java" linenumbering="unnumbered">Tracing.newBuilder().propagationFactory(
   ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY)
                        .addField("x-vcap-request-id")
                        .addPrefixedFields("baggage-", Arrays.asList("country-code", "user-id"))
@@ -1059,23 +1099,29 @@ Instead, look them up each time you need them.</simpara>
 <title>Current Span</title>
 <simpara>Brave supports a "<literal>current span</literal>" concept which represents the in-flight operation.
 You can use <literal>Tracer.currentSpan()</literal> to add custom tags to a span and <literal>Tracer.nextSpan()</literal> to create a child of whatever is in-flight.</simpara>
+<important>
 <simpara>In Sleuth, you can autowire the <literal>Tracer</literal> bean to retrieve the current span via
 <literal>tracer.currentSpan()</literal> method. To retrieve the current context just call
 <literal>tracer.currentSpan().context()</literal>. To get the current trace id as String
 you can use the <literal>traceIdString()</literal> method like this: <literal>tracer.currentSpan().context().traceIdString()</literal>.</simpara>
+</important>
 <section xml:id="_setting_a_span_in_scope_manually">
 <title>Setting a span in scope manually</title>
 <simpara>When writing new instrumentation, it is important to place a span you created in scope as the current span.
 Not only does doing so let users access it with <literal>Tracer.currentSpan()</literal>, but it also allows customizations such as SLF4J MDC to see the current trace IDs.</simpara>
 <simpara><literal>Tracer.withSpanInScope(Span)</literal> facilitates this and is most conveniently employed by using the try-with-resources idiom.
 Whenever external code might be invoked (such as proceeding an interceptor or otherwise), place the span in scope, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">try (SpanInScope ws = tracer.withSpanInScope(span)) {
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+
+try (SpanInScope ws = tracer.withSpanInScope(span)) {
   return inboundRequest.invoke();
 } finally { // note the scope is independent of the span
   span.finish();
 }</programlisting>
 <simpara>In edge cases, you may need to clear the current span temporarily (for example, launching a task that should not be associated with the current request). To do tso, pass null to <literal>withSpanInScope</literal>, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">try (SpanInScope cleared = tracer.withSpanInScope(null)) {
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+
+try (SpanInScope cleared = tracer.withSpanInScope(null)) {
   startBackgroundThread();
 }</programlisting>
 </section>
@@ -1540,8 +1586,7 @@ object, you will have to create a bean of <literal>zipkin2.reporter.Sender</lite
 Starting from the Edgware release, the Zipkin Stream server is deprecated.
 In the Finchley release, it got removed.</simpara>
 </important>
-<simpara>See the <link xl:href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentation</link>
-for how to create a Stream Zipkin server.</simpara>
+<simpara>If for some reason you need to create the deprecated Stream Zipkin server, see the <link xl:href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentation</link>.</simpara>
 </chapter>
 <chapter xml:id="_integrations">
 <title>Integrations</title>
@@ -1883,6 +1928,10 @@ into the message.</simpara>
 so that tracing headers get injected into the created Spring Kafka&#8217;s
 <literal>Producer</literal> and <literal>Consumer</literal>.</simpara>
 <simpara>To block this feature, set <literal>spring.sleuth.messaging.kafka.enabled</literal> to <literal>false</literal>.</simpara>
+<note>
+<simpara>We do not support context propagation via <literal>@KafkaListener</literal> annotation.
+Check <link xl:href="https://github.com/spring-cloud/spring-cloud-sleuth/issues/1001">this issue for more information</link>.</simpara>
+</note>
 </section>
 </section>
 <section xml:id="_zuul">
@@ -1897,10 +1946,13 @@ To disable Zuul support, set the <literal>spring.sleuth.zuul.enabled</literal> p
 Check them out at the following links:</simpara>
 <itemizedlist>
 <listitem>
-<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</link></simpara>
+<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</link>. First make
+a request to <link xl:href="http://docssleuth-service1.cfapps.io/start">Service 1</link> and then check out the trace in Zipkin.</simpara>
 </listitem>
 <listitem>
-<simpara><link xl:href="http://docsbrewing-zipkin-server.cfapps.io/">Zipkin for Brewery on PWS</link>, its <link xl:href="https://github.com/spring-cloud-samples/brewery">Github Code</link></simpara>
+<simpara><link xl:href="http://docsbrewing-zipkin-server.cfapps.io/">Zipkin for Brewery on PWS</link>, its <link xl:href="https://github.com/spring-cloud-samples/brewery">Github Code</link>.
+Ensure that you&#8217;ve picked the lookback period of 7 days. If there are no traces, go to <link xl:href="https://docsbrewing-presenting.cfapps.io/">Presenting application</link>
+and order some beers. Then check Zipkin for traces.</simpara>
 </listitem>
 </itemizedlist>
 </chapter>
