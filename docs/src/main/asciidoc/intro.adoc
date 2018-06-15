@@ -49,7 +49,7 @@ Trace Id = X
 Span Id = D
 Client Sent
 
-This note indicats thatthe current span has *Trace Id* set to *X* and *Span Id* set to *D*.
+This note indicates that the current span has *Trace Id* set to *X* and *Span Id* set to *D*.
 Also, the `Client Sent` event took place.
 
 The following image shows how parent-child relationships of spans look:
@@ -228,6 +228,9 @@ include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework
 Baggage travels with the trace (every child span contains the baggage of its parent).
 Zipkin has no knowledge of baggage and does not receive that information.
 
+IMPORTANT: Starting from Sleuth 2.0.0 you have to pass the baggage key names explicitly
+in your project configuration. Read more about that setup <<prefixed-fields,here>>
+
 Tags are attached to a specific span. In other words, they are presented only for that particular span.
 However, you can search by tag to find the trace, assuming a span having the searched tag value exists.
 
@@ -237,6 +240,13 @@ IMPORTANT: The span must be in scope.
 
 The following listing shows integration tests that use baggage:
 
+.The setup
+[source,yml]
+----
+include::{github-raw}/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]
+----
+
+.The code
 [source,java]
 ----
 include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
@@ -403,8 +413,7 @@ dependencies {
 
 == Additional Resources
 
-You can watch a video of Marcin Grzejszczak talking about Spring Cloud Sleuth and Zipkin:
+You can watch a video of https://twitter.com/reshmi9k[Reshmi Krishna] and https://twitter.com/mgrzejszczak[Marcin Grzejszczak] talking about Spring Cloud
+Sleuth and Zipkin https://content.pivotal.io/springone-platform-2017/distributed-tracing-latency-analysis-for-your-microservices-grzejszczak-krishna[by clicking here].
 
-video::eQV71Mw1u1c[youtube]
-
-https://www.youtube.com/watch?v=eQV71Mw1u1c[click here to see the video]
+You can check different setups of Sleuth and Brave https://github.com/openzipkin/sleuth-webmvc-example[in the openzipkin/sleuth-webmvc-example repository].
