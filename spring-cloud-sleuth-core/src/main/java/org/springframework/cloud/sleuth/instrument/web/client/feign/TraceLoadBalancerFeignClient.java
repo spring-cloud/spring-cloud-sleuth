@@ -83,6 +83,8 @@ class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 				tracingFeignClient().handleReceive(fallbackSpan, response, e);
 			}
 			throw e;
+		} finally {
+			fallbackSpan.abandon();
 		}
 	}
 
