@@ -531,6 +531,8 @@ dependencies { <co xml:id="CO4-2"/>
 <title>Sleuth with Zipkin over RabbitMQ or Kafka</title>
 <simpara>If you want to use RabbitMQ or Kafka instead of HTTP, add the <literal>spring-rabbit</literal> or <literal>spring-kafka</literal> dependency.
 The default destination name is <literal>zipkin</literal>.</simpara>
+<simpara>If using Kafka, you must set the property <literal>spring.zipkin.sender.type</literal> property accordingly:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.sender.type: kafka</programlisting>
 <caution>
 <simpara><literal>spring-cloud-sleuth-stream</literal> is deprecated and incompatible with these destinations.</simpara>
 </caution>
@@ -680,8 +682,10 @@ By default, it sends them over HTTP to a Zipkin server on localhost (port 9411).
 You can configure the location of the service by setting <literal>spring.zipkin.baseUrl</literal>.</simpara>
 <itemizedlist>
 <listitem>
-<simpara>If you depend on <literal>spring-rabbit</literal> or <literal>spring-kafka</literal>, your app sends traces to a broker instead of HTTP.
-**</simpara>
+<simpara>If you depend on <literal>spring-rabbit</literal>, your app sends traces to a RabbitMQ broker instead of HTTP.</simpara>
+</listitem>
+<listitem>
+<simpara>If you depend on <literal>spring-kafka</literal>, and set <literal>spring.zipkin.sender.type: kafka</literal>, your app sends traces to a Kafka broker instead of HTTP.</simpara>
 </listitem>
 </itemizedlist>
 </listitem>
