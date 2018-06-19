@@ -358,6 +358,13 @@ dependencies { <2>
 If you want to use RabbitMQ or Kafka instead of HTTP, add the `spring-rabbit` or `spring-kafka` dependency.
 The default destination name is `zipkin`.
 
+If using Kafka, you must set the property `spring.zipkin.sender.type` property accordingly:
+
+[source,yaml]
+----
+spring.zipkin.sender.type: kafka
+----
+
 CAUTION: `spring-cloud-sleuth-stream` is deprecated and incompatible with these destinations.
 
 If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-zipkin` and `spring-rabbit`
