@@ -62,7 +62,7 @@ public class TraceSchedulingAspect {
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
 		Span span = startOrContinueRenamedSpan(spanName);
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
 			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();

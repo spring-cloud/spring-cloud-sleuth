@@ -92,6 +92,7 @@ public class TracingOnScheduledTests {
 		then(this.reporter.getSpans().get(0).tags())
 				.contains(new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
 						new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
+		then(this.reporter.getSpans().get(0).durationAsLong()).isGreaterThan(0L);
 	}
 
 	private void differentSpanHasBeenSetThan(final Span spanToCompare) {
