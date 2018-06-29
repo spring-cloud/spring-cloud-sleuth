@@ -16,10 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign.servererrors;
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
+import feign.FeignException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import org.awaitility.Awaitility;
@@ -57,10 +61,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
@@ -71,7 +71,7 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=fooservice" ,
-"feign.hystrix.enabled=true"})
+"feign.hystrix.enabled=false"})
 public class FeignClientServerErrorTests {
 
 	@Autowired TestFeignInterface feignInterface;
@@ -89,7 +89,7 @@ public class FeignClientServerErrorTests {
 	public void shouldCloseSpanOnInternalServerError() throws InterruptedException {
 		try {
 			this.feignInterface.internalError();
-		} catch (HystrixRuntimeException e) {
+		} catch (FeignException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -98,7 +98,7 @@ public class FeignClientServerErrorTests {
 			then(ExceptionUtils.getLastException()).isNull();
 			then(new ListOfSpans(this.listener.getEvents()))
 					.hasASpanWithTagEqualTo(Span.SPAN_ERROR_TAG_NAME,
-							"Request processing failed; nested exception is java.lang.RuntimeException: Internal Error");
+							"Missing request header 'X-B3-ParentSpanId' for method parameter of type String");
 		});
 	}
 
@@ -106,7 +106,7 @@ public class FeignClientServerErrorTests {
 	public void shouldCloseSpanOnNotFound() throws InterruptedException {
 		try {
 			this.feignInterface.notFound();
-		} catch (HystrixRuntimeException e) {
+		} catch (FeignException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -120,7 +120,7 @@ public class FeignClientServerErrorTests {
 	public void shouldCloseSpanOnOk() throws InterruptedException {
 		try {
 			this.feignInterface.ok();
-		} catch (HystrixRuntimeException e) {
+		} catch (FeignException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -133,7 +133,7 @@ public class FeignClientServerErrorTests {
 	public void shouldCloseSpanOnOkWithCustomFeignConfiguration() throws InterruptedException {
 		try {
 			this.customConfFeignInterface.ok();
-		} catch (HystrixRuntimeException e) {
+		} catch (FeignException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -146,7 +146,7 @@ public class FeignClientServerErrorTests {
 	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() throws InterruptedException {
 		try {
 			this.customConfFeignInterface.notFound();
-		} catch (HystrixRuntimeException e) {
+		} catch (FeignException e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
