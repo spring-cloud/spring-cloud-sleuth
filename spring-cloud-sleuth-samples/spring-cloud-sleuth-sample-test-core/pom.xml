@@ -109,6 +109,14 @@
 			<groupId>io.zipkin.zipkin2</groupId>
 			<artifactId>zipkin</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.reactivestreams</groupId>
+			<artifactId>reactive-streams</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>
