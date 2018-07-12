@@ -16,17 +16,11 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
-import zipkin2.Annotation;
-import zipkin2.reporter.Reporter;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +30,21 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import reactor.core.publisher.Mono;
+import zipkin2.Annotation;
+import zipkin2.reporter.Reporter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectMonoTests.TestBean.TEST_STRING;
+import static reactor.core.publisher.Mono.just;
 
-@SpringBootTest(classes = SleuthSpanCreatorAspectTests.TestConfiguration.class)
+@SpringBootTest(classes = SleuthSpanCreatorAspectMonoTests.TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
-public class SleuthSpanCreatorAspectTests {
+public class SleuthSpanCreatorAspectMonoTests {
 	
 	@Autowired TestBeanInterface testBean;
 	@Autowired Tracer tracer;
@@ -54,7 +57,11 @@ public class SleuthSpanCreatorAspectTests {
 	
 	@Test
 	public void shouldCreateSpanWhenAnnotationOnInterfaceMethod() {
-		this.testBean.testMethod();
+		Mono<String> mono = this.testBean.testMethod();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		mono.block();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
@@ -65,77 +72,100 @@ public class SleuthSpanCreatorAspectTests {
 	
 	@Test
 	public void shouldCreateSpanWhenAnnotationOnClassMethod() {
-		this.testBean.testMethod2();
+		Mono<String> mono = this.testBean.testMethod2();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		mono.block();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("test-method2");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	@Test
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnClassMethod() {
-		this.testBean.testMethod3();
+		Mono<String> mono = this.testBean.testMethod3();
 
+		then(this.reporter.getSpans()).isEmpty();
+
+		String result = mono.block();
+
+		then(result).isEqualTo(TEST_STRING);
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	@Test
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnInterfaceMethod() {
-		this.testBean.testMethod4();
+		Mono<String> mono = this.testBean.testMethod4();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		mono.block();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnInterfaceMethod() {
 		// tag::execution[]
-		this.testBean.testMethod5("test");
+		Mono<String> mono = this.testBean.testMethod5("test");
+
 		// end::execution[]
+		then(this.reporter.getSpans()).isEmpty();
+
+		mono.block();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
 		then(spans.get(0).tags()).containsEntry("testTag", "test");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnClassMethod() {
-		this.testBean.testMethod6("test");
+		Mono<String> mono = this.testBean.testMethod6("test");
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		mono.block();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
 		then(spans.get(0).tags()).containsEntry("testTag6", "test");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnInterfaceMethod() {
-		this.testBean.testMethod8("test");
+		Mono<String> mono = this.testBean.testMethod8("test");
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		mono.block();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
-		this.testBean.testMethod9("test");
+		Mono<String> mono = this.testBean.testMethod9("test");
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		mono.block();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
@@ -144,7 +174,6 @@ public class SleuthSpanCreatorAspectTests {
 				.containsEntry("class", "TestBean")
 				.containsEntry("method", "testMethod9");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -152,7 +181,11 @@ public class SleuthSpanCreatorAspectTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.testBean.testMethod10("test");
+			Mono<String> mono = this.testBean.testMethod10("test");
+
+			then(this.reporter.getSpans()).isEmpty();
+
+			mono.block();
 		} finally {
 			span.finish();
 		}
@@ -166,7 +199,6 @@ public class SleuthSpanCreatorAspectTests {
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -174,7 +206,11 @@ public class SleuthSpanCreatorAspectTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.testBean.testMethod10_v2("test");
+			Mono<String> mono = this.testBean.testMethod10_v2("test");
+
+			then(this.reporter.getSpans()).isEmpty();
+
+			mono.block();
 		} finally {
 			span.finish();
 		}
@@ -188,7 +224,6 @@ public class SleuthSpanCreatorAspectTests {
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -197,8 +232,11 @@ public class SleuthSpanCreatorAspectTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			// tag::continue_span_execution[]
-			this.testBean.testMethod11("test");
+			Mono<String> mono = this.testBean.testMethod11("test");
 			// end::continue_span_execution[]
+			then(this.reporter.getSpans()).isEmpty();
+
+			mono.block();
 		} finally {
 			span.finish();
 		}
@@ -214,13 +252,16 @@ public class SleuthSpanCreatorAspectTests {
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldAddErrorTagWhenExceptionOccurredInNewSpan() {
 		try {
-			this.testBean.testMethod12("test");
+			Mono<String> mono = this.testBean.testMethod12("test");
+
+			then(this.reporter.getSpans()).isEmpty();
+
+			mono.block();
 		} catch (RuntimeException ignored) {
 		}
 
@@ -231,7 +272,6 @@ public class SleuthSpanCreatorAspectTests {
 				.containsEntry("testTag12", "test")
 				.containsEntry("error", "test exception 12");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -240,7 +280,11 @@ public class SleuthSpanCreatorAspectTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			// tag::continue_span_execution[]
-			this.testBean.testMethod13();
+			Mono<String> mono = this.testBean.testMethod13();
+
+			then(this.reporter.getSpans()).isEmpty();
+
+			mono.block();
 			// end::continue_span_execution[]
 		} catch (RuntimeException ignored) {
 		} finally {
@@ -257,139 +301,147 @@ public class SleuthSpanCreatorAspectTests {
 				.contains("testMethod13.before", "testMethod13.afterFailure",
 						"testMethod13.after");
 		then(spans.get(0).duration()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldNotCreateSpanWhenNotAnnotated() {
-		this.testBean.testMethod7();
+		Mono<String> mono = this.testBean.testMethod7();
+		mono.block();
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
 		then(spans).isEmpty();
-		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	protected interface TestBeanInterface {
 
 		// tag::annotated_method[]
 		@NewSpan
-		void testMethod();
+		Mono<String> testMethod();
 		// end::annotated_method[]
-		
-		void testMethod2();
+
+		Mono<String> testMethod2();
 
 		@NewSpan(name = "interfaceCustomNameOnTestMethod3")
-		void testMethod3();
+		Mono<String> testMethod3();
 
 		// tag::custom_name_on_annotated_method[]
 		@NewSpan("customNameOnTestMethod4")
-		void testMethod4();
+		Mono<String> testMethod4();
 		// end::custom_name_on_annotated_method[]
 
 		// tag::custom_name_and_tag_on_annotated_method[]
 		@NewSpan(name = "customNameOnTestMethod5")
-		void testMethod5(@SpanTag("testTag") String param);
+		Mono<String> testMethod5(@SpanTag("testTag") String param);
 		// end::custom_name_and_tag_on_annotated_method[]
 
-		void testMethod6(String test);
-		
-		void testMethod7();
+		Mono<String> testMethod6(String test);
+
+		Mono<String> testMethod7();
 
 		@NewSpan(name = "customNameOnTestMethod8")
-		void testMethod8(String param);
+		Mono<String> testMethod8(String param);
 
 		@NewSpan(name = "testMethod9")
-		void testMethod9(String param);
+		Mono<String> testMethod9(String param);
 
 		@ContinueSpan(log = "customTest")
-		void testMethod10(@SpanTag(value = "testTag10") String param);
+		Mono<String> testMethod10(@SpanTag(value = "testTag10") String param);
 
 		@ContinueSpan(log = "customTest")
-		void testMethod10_v2(@SpanTag(key = "testTag10") String param);
+		Mono<String> testMethod10_v2(@SpanTag(key = "testTag10") String param);
 
 		// tag::continue_span[]
 		@ContinueSpan(log = "testMethod11")
-		void testMethod11(@SpanTag("testTag11") String param);
+		Mono<String> testMethod11(@SpanTag("testTag11") String param);
 		// end::continue_span[]
 
 		@NewSpan
-		void testMethod12(@SpanTag("testTag12") String param);
+		Mono<String> testMethod12(@SpanTag("testTag12") String param);
 
 		@ContinueSpan(log = "testMethod13")
-		void testMethod13();
+		Mono<String> testMethod13();
 	}
 	
 	protected static class TestBean implements TestBeanInterface {
 
+		public static final String TEST_STRING = "Test String";
+		public static final Mono<String> TEST_MONO = Mono.defer(() -> just(TEST_STRING));
+
 		@Override
-		public void testMethod() {
+		public Mono<String> testMethod() {
+			return TEST_MONO;
 		}
 
 		@NewSpan
 		@Override
-		public void testMethod2() {
+		public Mono<String> testMethod2() {
+			return TEST_MONO;
 		}
 
 		// tag::name_on_implementation[]
 		@NewSpan(name = "customNameOnTestMethod3")
 		@Override
-		public void testMethod3() {
+		public Mono<String> testMethod3() {
+			return TEST_MONO;
 		}
 		// end::name_on_implementation[]
 
 		@Override
-		public void testMethod4() {
+		public Mono<String> testMethod4() {
+			return TEST_MONO;
 		}
 		
 		@Override
-		public void testMethod5(String test) {
+		public Mono<String> testMethod5(String test) {
+			return TEST_MONO;
 		}
 
 		@NewSpan(name = "customNameOnTestMethod6")
 		@Override
-		public void testMethod6(@SpanTag("testTag6") String test) {
-			
+		public Mono<String> testMethod6(@SpanTag("testTag6") String test) {
+			return TEST_MONO;
 		}
 
 		@Override
-		public void testMethod7() {
+		public Mono<String> testMethod7() {
+			return TEST_MONO;
 		}
 
 		@Override
-		public void testMethod8(String param) {
-
+		public Mono<String> testMethod8(String param) {
+			return TEST_MONO;
 		}
 
 		@NewSpan(name = "customNameOnTestMethod9")
 		@Override
-		public void testMethod9(String param) {
-
+		public Mono<String> testMethod9(String param) {
+			return TEST_MONO;
 		}
 
 		@Override
-		public void testMethod10(@SpanTag(value = "customTestTag10") String param) {
-
+		public Mono<String> testMethod10(@SpanTag(value = "customTestTag10") String param) {
+			return TEST_MONO;
 		}
 
 		@Override
-		public void testMethod10_v2(@SpanTag(key = "customTestTag10") String param) {
-
+		public Mono<String> testMethod10_v2(@SpanTag(key = "customTestTag10") String param) {
+			return TEST_MONO;
 		}
 
 		@ContinueSpan(log = "customTest")
 		@Override
-		public void testMethod11(@SpanTag("customTestTag11") String param) {
-
+		public Mono<String> testMethod11(@SpanTag("customTestTag11") String param) {
+			return TEST_MONO;
 		}
 
 		@Override
-		public void testMethod12(String param) {
-			throw new RuntimeException("test exception 12");
+		public Mono<String> testMethod12(String param) {
+			return Mono.defer(() -> Mono.error(new RuntimeException("test exception 12")));
 		}
 
 		@Override
-		public void testMethod13() {
-			throw new RuntimeException("test exception 13");
+		public Mono<String> testMethod13() {
+			return Mono.defer(() -> Mono.error(new RuntimeException("test exception 13")));
 		}
 	}
 	
