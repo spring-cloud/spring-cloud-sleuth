@@ -125,7 +125,7 @@ public class SleuthBenchmarkingSpringApp implements
 	@Bean SkipPatternProvider patternProvider() {
 		return new SkipPatternProvider() {
 			@Override public Pattern skipPattern() {
-				return null;
+				return Pattern.compile("");
 			}
 		};
 	}
