@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletException;
 
+import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -34,7 +35,6 @@ import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.benchmarks.app.SleuthBenchmarkingSpringApp;
-import org.springframework.cloud.sleuth.instrument.web.client.TraceRestTemplateInterceptor;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
 import org.springframework.test.web.servlet.MockMvc;
@@ -73,7 +73,7 @@ public class RestTemplateBenchmark {
 			this.tracedTemplate = new RestTemplate(
 					new MockMvcClientHttpRequestFactory(this.mockMvc));
 			this.tracedTemplate.setInterceptors(Collections.singletonList(
-					this.withSleuth.getBean(TraceRestTemplateInterceptor.class)));
+					this.withSleuth.getBean(TracingClientHttpRequestInterceptor.class)));
 			this.untracedTemplate = new RestTemplate(
 					new MockMvcClientHttpRequestFactory(this.mockMvc));
 		}
