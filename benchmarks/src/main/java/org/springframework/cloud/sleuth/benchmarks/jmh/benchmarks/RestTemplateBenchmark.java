@@ -63,7 +63,7 @@ public class RestTemplateBenchmark {
 		volatile RestTemplate untracedTemplate;
 
 		@Setup public void setup() {
-			this.withSleuth = new SpringApplication(
+			new SpringApplication(
 					SleuthBenchmarkingSpringApp.class)
 					.run("--spring.jmx.enabled=false",
 							"--spring.application.name=withSleuth");

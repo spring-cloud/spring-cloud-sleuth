@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
 import javax.annotation.PreDestroy;
 
 import brave.Span;
@@ -38,6 +39,7 @@ import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.cloud.sleuth.annotation.SpanTag;
+import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Async;
@@ -118,6 +120,14 @@ public class SleuthBenchmarkingSpringApp implements
 
 	@Bean AClass aClass() {
 		return new AClass(this.tracer, anotherClass());
+	}
+
+	@Bean SkipPatternProvider patternProvider() {
+		return new SkipPatternProvider() {
+			@Override public Pattern skipPattern() {
+				return null;
+			}
+		};
 	}
 
 	public ExecutorService getPool() {
