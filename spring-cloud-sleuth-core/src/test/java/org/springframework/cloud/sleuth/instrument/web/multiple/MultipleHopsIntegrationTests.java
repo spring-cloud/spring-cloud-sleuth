@@ -77,7 +77,7 @@ public class MultipleHopsIntegrationTests {
 		this.restTemplate.getForObject("http://localhost:" + this.config.port + "/greeting", String.class);
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(this.reporter.getSpans()).hasSize(13);
+			then(this.reporter.getSpans()).hasSize(14);
 		});
 		then(this.reporter.getSpans().stream().map(zipkin2.Span::name)
 				.collect(toList())).containsAll(asList("http:/greeting", "send"));

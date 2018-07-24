@@ -81,10 +81,10 @@ public class SpringDataInstrumentationTests {
 		then(noOfNames).isEqualTo(8);
 		then(this.reporter.getSpans()).isNotEmpty();
 		Awaitility.await().untilAsserted(() -> {
-			then(this.reporter.getSpans()).hasSize(1);
-			zipkin2.Span storedSpan = this.reporter.getSpans().get(0);
-			then(storedSpan.name()).isEqualTo("http:/reservations");
-			then(storedSpan.tags()).containsKey("mvc.controller.class");
+			then(this.reporter.getSpans()).hasSize(2 /* server completes, then client completes */);
+			zipkin2.Span clientSpan = this.reporter.getSpans().get(1);
+			then(clientSpan.name()).isEqualTo("http:/reservations");
+			then(clientSpan.tags()).containsKey("mvc.controller.class");
 		});
 		then(this.tracer.currentSpan()).isNull();
 	}
