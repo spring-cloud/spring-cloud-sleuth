@@ -46,7 +46,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
+import zipkin2.Span;
 
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -81,10 +83,13 @@ public class SpringDataInstrumentationTests {
 		then(noOfNames).isEqualTo(8);
 		then(this.reporter.getSpans()).isNotEmpty();
 		Awaitility.await().untilAsserted(() -> {
-			then(this.reporter.getSpans()).hasSize(1);
-			zipkin2.Span storedSpan = this.reporter.getSpans().get(0);
-			then(storedSpan.name()).isEqualTo("http:/reservations");
-			then(storedSpan.tags()).containsKey("mvc.controller.class");
+			// Make sure the data is attached to the right side of the span
+			then(this.reporter.getSpans())
+					.extracting(Span::kind, Span::name, s -> s.tags().get("mvc.controller.class"))
+					.containsExactlyInAnyOrder(
+							tuple(Span.Kind.CLIENT, "http:/reservations", null),
+							tuple(Span.Kind.SERVER, "http:/reservations", "RepositoryEntityController")
+					);
 		});
 		then(this.tracer.currentSpan()).isNull();
 	}

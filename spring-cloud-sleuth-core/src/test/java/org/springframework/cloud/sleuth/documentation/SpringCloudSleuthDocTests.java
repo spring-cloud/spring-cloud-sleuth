@@ -173,7 +173,7 @@ public class SpringCloudSleuthDocTests {
 						// tag::manual_span_continuation[]
 						// let's assume that we're in a thread Y and we've received
 						// the `initialSpan` from thread X
-						Span continuedSpan = this.tracer.joinSpan(newSpan.context());
+						Span continuedSpan = this.tracer.toSpan(newSpan.context());
 						try {
 							// ...
 							// You can tag a span
