@@ -538,7 +538,7 @@ Your names have to be explicit and concrete. Big names lead to latency issues an
 situation might be as follows:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><span class="strong"><strong>AOP</strong></span>: If there was already a span created before an aspect was reached, you might not want to create a new span.</li><li class="listitem"><span class="strong"><strong>Hystrix</strong></span>: Executing a Hystrix command is most likely a logical part of the current processing.
 It is in fact merely a technical implementation detail that you would not necessarily want to reflect in tracing as a separate being.</li></ul></div><p>To continue a span, you can use <code class="literal">brave.Tracer</code>, as shown in the following example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// let's assume that we're in a thread Y and we've received</span>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the `initialSpan` from thread X</span>
-Span continuedSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.joinSpan(newSpan.context());
+Span continuedSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.toSpan(newSpan.context());
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can tag a span</span>

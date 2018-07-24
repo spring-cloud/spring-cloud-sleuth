@@ -1210,7 +1210,7 @@ It is in fact merely a technical implementation detail that you would not necess
 <simpara>To continue a span, you can use <literal>brave.Tracer</literal>, as shown in the following example:</simpara>
 <programlisting language="java" linenumbering="unnumbered">// let's assume that we're in a thread Y and we've received
 // the `initialSpan` from thread X
-Span continuedSpan = this.tracer.joinSpan(newSpan.context());
+Span continuedSpan = this.tracer.toSpan(newSpan.context());
 try {
 	// ...
 	// You can tag a span
