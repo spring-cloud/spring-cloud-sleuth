@@ -8,6 +8,7 @@ org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.async.AsyncAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
