@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Settings for disable instrumentation of ThreadPoolTaskExecutors
  *
  * @author Jesus Alonso
- * @since 2.0.1
+ * @since 2.1.0
  */
 
 @ConfigurationProperties(prefix = "spring.sleuth.async")
@@ -34,7 +34,7 @@ public class AsyncProperties {
 	private List<String> ignoredBeans = Collections.emptyList();
 
 	public List<String> getIgnoredBeans() {
-		return ignoredBeans;
+		return this.ignoredBeans;
 	}
 	public void setIgnoredBeans(List<String> ignoredBeans) {
 		this.ignoredBeans = ignoredBeans;

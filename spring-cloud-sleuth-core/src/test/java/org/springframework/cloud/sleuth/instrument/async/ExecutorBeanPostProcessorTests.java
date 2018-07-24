@@ -20,15 +20,20 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ClassUtils;
 
+import com.google.common.collect.ImmutableList;
+
+import static org.junit.Assert.*;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
@@ -39,6 +44,13 @@ import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 public class ExecutorBeanPostProcessorTests {
 
 	@Mock BeanFactory beanFactory;
+	private AsyncProperties asyncProperties;
+	
+	@Before
+	public void setup() {
+		this.asyncProperties = new AsyncProperties();
+		Mockito.when(beanFactory.getBean(AsyncProperties.class)).thenReturn(this.asyncProperties);
+	}
 
 	@Test
 	public void should_create_a_cglib_proxy_by_default() throws Exception {
@@ -108,6 +120,33 @@ public class ExecutorBeanPostProcessorTests {
 		thenThrownBy(() -> bpp.postProcessAfterInitialization(taskExecutor, "foo"))
 				.isInstanceOf(AopConfigException.class)
 				.hasMessage("foo");
+	}
+	
+	@Test
+	public void proxy_is_not_needed() throws Exception {
+		this.asyncProperties.setIgnoredBeans(ImmutableList.of("fooExecutor"));
+		
+		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
+		
+		assertFalse(isProxyNeeded);
+	}
+	
+	@Test
+	public void proxy_is_needed() throws Exception {
+		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
+		
+		assertTrue(isProxyNeeded);
+	}
+	
+	@Test
+	public void should_not_create_proxy() throws Exception {
+		this.asyncProperties.setIgnoredBeans(ImmutableList.of("fooExecutor"));		
+		
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+			.postProcessAfterInitialization(new ThreadPoolTaskExecutor(), "fooExecutor");
+
+		then(o).isInstanceOf(ThreadPoolTaskExecutor.class);
+		then(ClassUtils.isCglibProxy(o)).isFalse();
 	}
 
 }

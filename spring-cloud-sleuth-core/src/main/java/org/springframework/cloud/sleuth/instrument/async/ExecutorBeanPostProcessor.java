@@ -80,17 +80,21 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				throw e;
 			}
 		} else if (bean instanceof ThreadPoolTaskExecutor) {
-			boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
-			boolean cglibProxy = !classFinal;
-			ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
-			AsyncProperties asyncProperties = asyncConfigurationProperties();
-			if (!asyncProperties.getIgnoredBeans().contains(beanName)) {
+			if (isProxyNeeded(beanName)) {
+				boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+				boolean cglibProxy = !classFinal;
+				ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
 				return createThreadPoolTaskExecutorProxy(bean, cglibProxy, executor);
 			} else {
 				log.info("Not instrumenting bean " + beanName);
 			}
 		}
 		return bean;
+	}
+
+	boolean isProxyNeeded(String beanName) {
+		AsyncProperties asyncProperties = asyncConfigurationProperties();
+		return !asyncProperties.getIgnoredBeans().contains(beanName);
 	}
 
 	Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
@@ -119,7 +123,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		if (this.asyncProperties == null) {
 			this.asyncProperties = this.beanFactory.getBean(AsyncProperties.class);
 		}
-		return asyncProperties;
+		return this.asyncProperties;
 	}
 }
 

@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
  * that wraps an existing custom {@link AsyncConfigurer} in a {@link LazyTraceAsyncCustomizer}
  *
  * @author Jesus Alonso
- * @since 2.0.1
+ * @since 2.1.0
  */
 
 @Configuration
