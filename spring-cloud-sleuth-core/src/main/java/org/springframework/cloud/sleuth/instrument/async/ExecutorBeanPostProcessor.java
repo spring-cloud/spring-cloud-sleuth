@@ -38,6 +38,7 @@ import org.springframework.util.ReflectionUtils;
  * method or is final.
  *
  * @author Marcin Grzejszczak
+ * @author Jesus Alonso
  * @since 1.1.4
  */
 class ExecutorBeanPostProcessor implements BeanPostProcessor {
@@ -46,6 +47,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			ExecutorBeanPostProcessor.class);
 
 	private final BeanFactory beanFactory;
+	private AsyncProperties asyncProperties;
 
 	ExecutorBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -78,12 +80,21 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				throw e;
 			}
 		} else if (bean instanceof ThreadPoolTaskExecutor) {
-			boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
-			boolean cglibProxy = !classFinal;
-			ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
-			return createThreadPoolTaskExecutorProxy(bean, cglibProxy, executor);
+			if (isProxyNeeded(beanName)) {
+				boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+				boolean cglibProxy = !classFinal;
+				ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
+				return createThreadPoolTaskExecutorProxy(bean, cglibProxy, executor);
+			} else {
+				log.info("Not instrumenting bean " + beanName);
+			}
 		}
 		return bean;
+	}
+
+	boolean isProxyNeeded(String beanName) {
+		AsyncProperties asyncProperties = asyncConfigurationProperties();
+		return !asyncProperties.getIgnoredBeans().contains(beanName);
 	}
 
 	Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
@@ -106,6 +117,13 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		factory.addAdvice(new ExecutorMethodInterceptor(executor, this.beanFactory));
 		factory.setTarget(bean);
 		return factory.getObject();
+	}
+	
+	private AsyncProperties asyncConfigurationProperties() {
+		if (this.asyncProperties == null) {
+			this.asyncProperties = this.beanFactory.getBean(AsyncProperties.class);
+		}
+		return this.asyncProperties;
 	}
 }
 
