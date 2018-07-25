@@ -29,6 +29,8 @@ import brave.propagation.CurrentTraceContext;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.sampler.Sampler;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -36,6 +38,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanAdjuster;
+import org.springframework.cloud.sleuth.SpanFilter;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,6 +58,8 @@ import zipkin2.reporter.Reporter;
 @EnableConfigurationProperties(SleuthProperties.class)
 public class TraceAutoConfiguration {
 
+	private static final Log log = LogFactory.getLog(TraceAutoConfiguration.class);
+
 	public static final String TRACER_BEAN_NAME = "tracer";
 
 	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
@@ -68,7 +73,8 @@ public class TraceAutoConfiguration {
 			Reporter<zipkin2.Span> reporter,
 			Sampler sampler,
 			ErrorParser errorParser,
-			SleuthProperties sleuthProperties
+			SleuthProperties sleuthProperties,
+			SpanFilter spanFilter
 	) {
 		return Tracing.newBuilder()
 				.sampler(sampler)
@@ -76,19 +82,25 @@ public class TraceAutoConfiguration {
 				.localServiceName(serviceName)
 				.propagationFactory(factory)
 				.currentTraceContext(currentTraceContext)
-				.spanReporter(adjustedReporter(reporter))
+				.spanReporter(adjustedReporter(reporter, spanFilter))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin())
 				.build();
 	}
 
-	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate) {
+	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate, SpanFilter spanFilter) {
 		return span -> {
 			Span spanToAdjust = span;
 			for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
 				spanToAdjust = spanAdjuster.adjust(spanToAdjust);
 			}
-			delegate.report(spanToAdjust);
+			if (spanFilter.accept(spanToAdjust)) {
+				delegate.report(spanToAdjust);
+			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("Span [" + spanToAdjust + "] filtered and will not be reported");
+				}
+			}
 		};
 	}
 
@@ -107,6 +119,11 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean SpanNamer sleuthSpanNamer() {
 		return new DefaultSpanNamer();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean SpanFilter noOpSpanFilter() {
+		return (span) -> true;
 	}
 
 	@Bean
