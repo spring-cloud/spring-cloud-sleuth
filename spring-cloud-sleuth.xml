@@ -4,7 +4,7 @@
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
-<date>2018-07-24</date>
+<date>2018-07-25</date>
 <author>
 <personname>
 <firstname>Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer, Jay Bryant</firstname>
@@ -14,7 +14,7 @@
 </info>
 <preface>
 <title></title>
-<simpara><emphasis role="strong">2.0.1.BUILD-SNAPSHOT</emphasis></simpara>
+<simpara><emphasis role="strong">2.1.0.BUILD-SNAPSHOT</emphasis></simpara>
 </preface>
 <chapter xml:id="_introduction">
 <title>Introduction</title>
@@ -1879,6 +1879,9 @@ This behavior may be annoying. That&#8217;s why, by default, <literal>spring.sle
 <simpara>Sleuth does not work with <literal>parallelStream()</literal> out of the box.
 If you want to have the tracing information propagated through the stream, you have to use the approach with <literal>supplyAsync(...)</literal>, as shown earlier.</simpara>
 </important>
+<simpara>If there are beans that implement the <literal>Executor</literal> interface that you would like
+to exclude from span creation, you can use the <literal>spring.sleuth.async.ignored-beans</literal>
+property where you can provide a list of bean names.</simpara>
 <section xml:id="_customization_of_executors">
 <title>Customization of Executors</title>
 <simpara>Sometimes, you need to set up a custom instance of the <literal>AsyncExecutor</literal>.
