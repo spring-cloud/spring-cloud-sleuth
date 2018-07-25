@@ -29,6 +29,6 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
  */
 
 @Configuration
-@EnableConfigurationProperties(AsyncProperties.class)
+@EnableConfigurationProperties(SleuthAsyncProperties.class)
 public class AsyncAutoConfiguration {
 }

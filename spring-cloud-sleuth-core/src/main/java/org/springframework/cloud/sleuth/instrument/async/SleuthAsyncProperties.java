@@ -29,13 +29,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 
 @ConfigurationProperties(prefix = "spring.sleuth.async")
-public class AsyncProperties {
-	
+public class SleuthAsyncProperties {
+
+	/**
+	 * List of {@link java.util.concurrent.Executor} bean names that should
+	 * be ignored and not wrapped in a trace representation
+	 */
 	private List<String> ignoredBeans = Collections.emptyList();
 
 	public List<String> getIgnoredBeans() {
 		return this.ignoredBeans;
 	}
+
 	public void setIgnoredBeans(List<String> ignoredBeans) {
 		this.ignoredBeans = ignoredBeans;
 	}

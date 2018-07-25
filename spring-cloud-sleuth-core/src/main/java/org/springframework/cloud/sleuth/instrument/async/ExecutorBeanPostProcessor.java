@@ -47,7 +47,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			ExecutorBeanPostProcessor.class);
 
 	private final BeanFactory beanFactory;
-	private AsyncProperties asyncProperties;
+	private SleuthAsyncProperties sleuthAsyncProperties;
 
 	ExecutorBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -93,8 +93,8 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	boolean isProxyNeeded(String beanName) {
-		AsyncProperties asyncProperties = asyncConfigurationProperties();
-		return !asyncProperties.getIgnoredBeans().contains(beanName);
+		SleuthAsyncProperties sleuthAsyncProperties = asyncConfigurationProperties();
+		return !sleuthAsyncProperties.getIgnoredBeans().contains(beanName);
 	}
 
 	Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
@@ -119,11 +119,11 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		return factory.getObject();
 	}
 	
-	private AsyncProperties asyncConfigurationProperties() {
-		if (this.asyncProperties == null) {
-			this.asyncProperties = this.beanFactory.getBean(AsyncProperties.class);
+	private SleuthAsyncProperties asyncConfigurationProperties() {
+		if (this.sleuthAsyncProperties == null) {
+			this.sleuthAsyncProperties = this.beanFactory.getBean(SleuthAsyncProperties.class);
 		}
-		return this.asyncProperties;
+		return this.sleuthAsyncProperties;
 	}
 }
 

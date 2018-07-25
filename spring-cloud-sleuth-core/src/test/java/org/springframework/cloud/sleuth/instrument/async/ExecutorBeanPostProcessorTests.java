@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,9 +32,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ClassUtils;
 
-import com.google.common.collect.ImmutableList;
-
-import static org.junit.Assert.*;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
@@ -44,12 +42,12 @@ import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 public class ExecutorBeanPostProcessorTests {
 
 	@Mock BeanFactory beanFactory;
-	private AsyncProperties asyncProperties;
+	private SleuthAsyncProperties sleuthAsyncProperties;
 	
 	@Before
 	public void setup() {
-		this.asyncProperties = new AsyncProperties();
-		Mockito.when(beanFactory.getBean(AsyncProperties.class)).thenReturn(this.asyncProperties);
+		this.sleuthAsyncProperties = new SleuthAsyncProperties();
+		Mockito.when(beanFactory.getBean(SleuthAsyncProperties.class)).thenReturn(this.sleuthAsyncProperties);
 	}
 
 	@Test
@@ -124,23 +122,23 @@ public class ExecutorBeanPostProcessorTests {
 	
 	@Test
 	public void proxy_is_not_needed() throws Exception {
-		this.asyncProperties.setIgnoredBeans(ImmutableList.of("fooExecutor"));
+		this.sleuthAsyncProperties.setIgnoredBeans(Collections.singletonList("fooExecutor"));
 		
 		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
 		
-		assertFalse(isProxyNeeded);
+		then(isProxyNeeded).isFalse();
 	}
 	
 	@Test
 	public void proxy_is_needed() throws Exception {
 		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
 		
-		assertTrue(isProxyNeeded);
+		then(isProxyNeeded).isTrue();
 	}
 	
 	@Test
 	public void should_not_create_proxy() throws Exception {
-		this.asyncProperties.setIgnoredBeans(ImmutableList.of("fooExecutor"));		
+		this.sleuthAsyncProperties.setIgnoredBeans(Collections.singletonList("fooExecutor"));
 		
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
 			.postProcessAfterInitialization(new ThreadPoolTaskExecutor(), "fooExecutor");
