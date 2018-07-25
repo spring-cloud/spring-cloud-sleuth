@@ -89,7 +89,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	@Before
 	@After
 	public void clear() {
-		this.mySpanFilter.enableAll = true;
+		this.mySpanFilter.disableAll = false;
 		this.reporter.clear();
 	}
 
@@ -230,7 +230,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	@Test
 	public void should_filter_out_a_span_and_not_report_it() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
-		this.mySpanFilter.enableAll = false;
+		this.mySpanFilter.disableAll = true;
 		this.mySpanFilter.wasCalled = false;
 
 		whenSentPongWithTraceId(expectedTraceId);
@@ -435,11 +435,11 @@ class MyFilter extends GenericFilterBean {
 
 class MySpanFilter implements SpanFilter {
 
-	boolean enableAll = true;
+	boolean disableAll = false;
 	boolean wasCalled = false;
 
-	@Override public boolean accept(zipkin2.Span span) {
+	@Override public boolean reject(zipkin2.Span span) {
 		this.wasCalled = true;
-		return this.enableAll;
+		return this.disableAll;
 	}
 }

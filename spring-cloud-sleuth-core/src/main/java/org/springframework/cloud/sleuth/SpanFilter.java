@@ -31,7 +31,7 @@ public interface SpanFilter {
 
 	/**
 	 * @param span - span to be reported
-	 * @return - {@code true} if span is to be reported, {@code false} otherwise
+	 * @return - {@code true} if span is to be rejected, {@code false} otherwise
 	 */
-	boolean accept(Span span);
+	boolean reject(Span span);
 }

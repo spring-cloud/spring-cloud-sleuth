@@ -951,17 +951,20 @@ object, you will have to create a bean of `zipkin2.reporter.Sender` type.
 
 There are cases when you might not want to report a given span e.g. to Zipkin.
 In order to filter out spans, you should implement the `SpanFilter` interface
-which returns `true` if a span should be reported and `false` otherwise. Example:
+which returns `true` if a span should be NOT be reported and `false` otherwise. Example:
 
 [source,java]
 ----
 	@Bean SpanFilter mySpanFilter() {
 		return (span) -> {
-		    // true - if we want span to be reported
+		    // true - if we want span NOT to be reported
 		    // false - otherwise
 		};
 	}
 ----
+
+You can have multiple `SpanFilter`s and the whole list of them will be applied
+against the span that is to be reported.
 
 == Zipkin Stream Span Consumer
 

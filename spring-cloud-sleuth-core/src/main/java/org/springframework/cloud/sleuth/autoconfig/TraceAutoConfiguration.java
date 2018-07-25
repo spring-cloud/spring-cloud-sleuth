@@ -63,6 +63,7 @@ public class TraceAutoConfiguration {
 	public static final String TRACER_BEAN_NAME = "tracer";
 
 	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
+	@Autowired(required = false) List<SpanFilter> spanFilters = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -73,8 +74,7 @@ public class TraceAutoConfiguration {
 			Reporter<zipkin2.Span> reporter,
 			Sampler sampler,
 			ErrorParser errorParser,
-			SleuthProperties sleuthProperties,
-			SpanFilter spanFilter
+			SleuthProperties sleuthProperties
 	) {
 		return Tracing.newBuilder()
 				.sampler(sampler)
@@ -82,26 +82,32 @@ public class TraceAutoConfiguration {
 				.localServiceName(serviceName)
 				.propagationFactory(factory)
 				.currentTraceContext(currentTraceContext)
-				.spanReporter(adjustedReporter(reporter, spanFilter))
+				.spanReporter(adjustedReporter(reporter))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin())
 				.build();
 	}
 
-	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate, SpanFilter spanFilter) {
+	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate) {
 		return span -> {
-			Span spanToAdjust = span;
-			for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
-				spanToAdjust = spanAdjuster.adjust(spanToAdjust);
-			}
-			if (spanFilter.accept(spanToAdjust)) {
-				delegate.report(spanToAdjust);
-			} else {
+			Span spanToAdjust = spanToAdjust(span);
+			if (this.spanFilters.stream()
+					.anyMatch(filter -> filter.reject(spanToAdjust))) {
 				if (log.isDebugEnabled()) {
 					log.debug("Span [" + spanToAdjust + "] filtered and will not be reported");
 				}
+			} else {
+				delegate.report(spanToAdjust);
 			}
 		};
+	}
+
+	private Span spanToAdjust(Span span) {
+		Span spanToAdjust = span;
+		for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
+			spanToAdjust = spanAdjuster.adjust(spanToAdjust);
+		}
+		return spanToAdjust;
 	}
 
 	@Bean(name = TRACER_BEAN_NAME)
@@ -123,7 +129,7 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean SpanFilter noOpSpanFilter() {
-		return (span) -> true;
+		return (span) -> false;
 	}
 
 	@Bean
