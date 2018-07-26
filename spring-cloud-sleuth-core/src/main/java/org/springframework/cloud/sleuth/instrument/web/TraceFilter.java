@@ -21,10 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -241,6 +238,11 @@ public class TraceFilter extends GenericFilterBean {
 				if (exception == null || !hasErrorController()) {
 					tracer().close(span);
 					clearTraceAttribute(request);
+				} else if (exception != null) {
+					if(isClientAbortExpcetion(exception)){
+						tracer().close(span);
+						clearTraceAttribute(request);
+					}
 				}
 			} else if (errorAlreadyHandled(request) && tracer().isTracing() && !shouldCloseSpan(request)) {
 				if (log.isDebugEnabled()) {
@@ -269,6 +271,13 @@ public class TraceFilter extends GenericFilterBean {
 				}
 			}
 		}
+	}
+
+	/**
+	 * check exception is org.apache.catalina.connector.ClientAbortException.
+	 */
+	private boolean isClientAbortExpcetion(Throwable exception) {
+		return exception.getClass().getName().equals("org.apache.catalina.connector.ClientAbortException");
 	}
 
 	// null check is only for tests

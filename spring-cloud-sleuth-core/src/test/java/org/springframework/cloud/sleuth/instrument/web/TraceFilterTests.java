@@ -16,10 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+import org.apache.catalina.connector.ClientAbortException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.ErrorParser;
 import org.springframework.cloud.sleuth.ExceptionMessageErrorParser;
@@ -53,6 +56,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+
+import javax.servlet.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -372,6 +377,56 @@ public class TraceFilterTests {
 
 		filter.doFilter(this.request, this.response, this.filterChain);
 
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	@Test
+	public void closesSpanWhenResponseStatusIs2xxAndExceptionIsClientAbortException() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(beanFactory());
+		BDDMockito.given(beanFactory.getBean(ErrorController.class)).willReturn(() -> "/error");
+		this.response = new MockHttpServletResponse(){
+			@Override
+			public ServletOutputStream getOutputStream() {
+				ServletOutputStream outputStream = super.getOutputStream();
+				return new ServletOutputStream() {
+					@Override
+					public boolean isReady() {
+						return outputStream.isReady();
+					}
+
+					@Override
+					public void setWriteListener(WriteListener listener) {
+						outputStream.setWriteListener(listener);
+					}
+
+					@Override
+					public void write(int b) throws IOException {
+						outputStream.write(b);
+					}
+
+					@Override
+					public void flush() throws IOException {
+						throw new ClientAbortException("Broken pipe");
+					}
+				};
+			}
+		};
+		response.setStatus(200);
+		this.filterChain = new MockFilterChain(){
+			@Override
+			public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException {
+				ServletOutputStream outputStream = response.getOutputStream();
+				outputStream.write(1);
+				outputStream.flush();
+			}
+		};
+		try {
+			filter.doFilter(this.request, this.response, this.filterChain);
+		}catch (ClientAbortException e){
+			// ig
+		}
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
 	}
 
