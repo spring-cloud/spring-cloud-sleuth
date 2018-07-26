@@ -16,17 +16,13 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.PostConstruct;
-
 import brave.Span;
 import brave.Tracer;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.aop.Pointcut;
@@ -40,9 +36,15 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import javax.annotation.PostConstruct;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Custom pointcut advisor that picks all classes / interfaces that
@@ -147,13 +149,13 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 		public boolean hasAnnotatedMethods(Class<?> clazz) {
 			final AtomicBoolean found = new AtomicBoolean(false);
 			ReflectionUtils.doWithMethods(clazz, method -> {
-						if (found.get()) {
-							return;
-						}
-						Annotation annotation = AnnotationUtils.findAnnotation(method,
-								AnnotationMethodsResolver.this.annotationType);
-						if (annotation != null) { found.set(true); }
-					});
+				if (found.get()) {
+					return;
+				}
+				Annotation annotation = AnnotationUtils.findAnnotation(method,
+						AnnotationMethodsResolver.this.annotationType);
+				if (annotation != null) { found.set(true); }
+			});
 			return found.get();
 		}
 
@@ -183,15 +185,14 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		}
 
 		Method mostSpecificMethod = AopUtils
-				.getMostSpecificMethod(invocation.getMethod(), invocation.getThis().getClass());
+				.getMostSpecificMethod(method, invocation.getThis().getClass());
 		NewSpan newSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, NewSpan.class);
 		ContinueSpan continueSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, ContinueSpan.class);
 		if (newSpan == null && continueSpan == null) {
 			return invocation.proceed();
 		}
 
-		Class<?> returnType = method.getReturnType();
-		if(isReactiveReturnType(returnType)){
+		if(isReactiveReturnType(method.getReturnType())){
 			return proceedUnderSpanReactively(invocation, newSpan, continueSpan);
 		} else {
 			return proceedUnderSpanSynchronously(invocation, newSpan, continueSpan);
@@ -204,14 +205,11 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 
 	private Object proceedUnderSpanSynchronously(
 			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
-		Span spanPrevious = tracer().currentSpan();
-		Span span;
-		if (newSpan != null || spanPrevious == null) {
+		Span span = tracer().currentSpan();
+		if (newSpan != null || span == null) {
 			span = tracer().nextSpan();
 			newSpanParser().parse(invocation, newSpan, span);
 			span = span.start();
-		} else {
-			span = spanPrevious;
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
@@ -245,50 +243,54 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 
 			Publisher<?> publisher = (Publisher) invocation.proceed();
 
-			Mono<Span> startSpan = Mono.defer(() -> {
-				try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
-					Span spanStarted;
-					if (isNewSpan || spanPrevious == null) {
-						spanStarted = span.start();
-					} else {
-						spanStarted = span;
-					}
-
-					before(invocation, spanStarted, log, hasLog);
-					return Mono.just(spanStarted);
+			Mono<Span> startSpan = Mono.defer(() -> withSpanInScope(span, () -> {
+				Span spanStarted;
+				if (isNewSpan || spanPrevious == null) {
+					spanStarted = span.start();
+				} else {
+					spanStarted = span;
 				}
-			});
+
+				before(invocation, spanStarted, log, hasLog);
+				return Mono.just(spanStarted);
+			}));
 
 			if(publisher instanceof Mono){
 				return startSpan.flatMap(spanStarted -> ((Mono<?>)publisher)
-						.doOnError(throwable -> {
-							try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(spanStarted)) {
-								onFailure(spanStarted, log, hasLog, throwable);
-							}
-						})
-						.doOnTerminate(() -> {
-							try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(spanStarted)) {
-								after(spanStarted, isNewSpan, log, hasLog);
-							}
-						}));
+						.doOnError(onFailureReactive(log, hasLog, spanStarted))
+						.doOnTerminate(afterReactive(isNewSpan, log, hasLog, spanStarted)));
 			}
 			else if(publisher instanceof Flux){
 				return startSpan.flatMapMany(spanStarted -> ((Flux<?>)publisher)
-						.doOnError(throwable -> {
-							try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(spanStarted)) {
-								onFailure(spanStarted, log, hasLog, throwable);
-							}
-						})
-						.doOnTerminate(() -> {
-							try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(spanStarted)) {
-								after(spanStarted, isNewSpan, log, hasLog);
-							}
-						}));
+						.doOnError(onFailureReactive(log, hasLog, spanStarted))
+						.doOnTerminate(afterReactive(isNewSpan, log, hasLog, spanStarted)));
 			}
 			else {
 				throw new IllegalArgumentException("Unexpected type of publisher: "+publisher.getClass());
 			}
 		}
+	}
+
+	private <T> T withSpanInScope(Span span, Supplier<T> supplier) {
+		try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
+			return supplier.get();
+		}
+	}
+
+	private Runnable afterReactive(boolean isNewSpan, String log, boolean hasLog, Span span) {
+		return () -> {
+			try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
+				after(span, isNewSpan, log, hasLog);
+			}
+		};
+	}
+
+	private Consumer<Throwable> onFailureReactive(String log, boolean hasLog, Span span) {
+		return throwable -> {
+			try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
+				onFailure(span, log, hasLog, throwable);
+			}
+		};
 	}
 
 	private void before(MethodInvocation invocation, Span span, String log, boolean hasLog) {
