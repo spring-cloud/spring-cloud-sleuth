@@ -209,7 +209,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		if (newSpan != null || span == null) {
 			span = tracer().nextSpan();
 			newSpanParser().parse(invocation, newSpan, span);
-			span = span.start();
+			span.start();
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
@@ -244,15 +244,12 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			Publisher<?> publisher = (Publisher) invocation.proceed();
 
 			Mono<Span> startSpan = Mono.defer(() -> withSpanInScope(span, () -> {
-				Span spanStarted;
 				if (isNewSpan || spanPrevious == null) {
-					spanStarted = span.start();
-				} else {
-					spanStarted = span;
+					span.start();
 				}
 
-				before(invocation, spanStarted, log, hasLog);
-				return Mono.just(spanStarted);
+				before(invocation, span, log, hasLog);
+				return Mono.just(span);
 			}));
 
 			if(publisher instanceof Mono){
