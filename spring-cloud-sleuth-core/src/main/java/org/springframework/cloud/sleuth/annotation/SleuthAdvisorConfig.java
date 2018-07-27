@@ -276,7 +276,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 
 	private Runnable afterReactive(boolean isNewSpan, String log, boolean hasLog, Span span) {
 		return () -> {
-			try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
+			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 				after(span, isNewSpan, log, hasLog);
 			}
 		};
@@ -284,7 +284,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 
 	private Consumer<Throwable> onFailureReactive(String log, boolean hasLog, Span span) {
 		return throwable -> {
-			try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
+			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 				onFailure(span, log, hasLog, throwable);
 			}
 		};
