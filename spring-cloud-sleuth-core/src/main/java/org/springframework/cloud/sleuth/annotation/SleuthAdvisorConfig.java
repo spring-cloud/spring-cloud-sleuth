@@ -203,7 +203,18 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			}
 			spanTagAnnotationHandler().addAnnotatedParameters(invocation);
 			addTags(invocation, span);
-			return invocation.proceed();
+
+			boolean invocationSucceeded = false;
+			Object res= null;
+			try {
+				res = invocation.proceed();
+				invocationSucceeded = true;
+				return res;
+			} finally {
+				if (invocationSucceeded) {
+					spanTagAnnotationHandler().addAnnotatedReturnValue(invocation, res);
+				}
+			}
 		} catch (Exception e) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Exception occurred while trying to continue the pointcut", e);

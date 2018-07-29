@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
 import zipkin2.Annotation;
 import zipkin2.reporter.Reporter;
@@ -248,6 +247,187 @@ public class SleuthSpanCreatorAspectTests {
 	}
 
 	@Test
+	public void shouldAddTagForReturnValueWhenAnnotationOnInterfaceMethod() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod14();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method14");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod14")
+				.containsEntry("testTag", "TestValue");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
+	public void shouldAddTagForReturnValueWhenAnnotationOnClassMethod() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod15();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method15");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod15")
+				.containsEntry("testTag", "TestValue");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
+	public void shouldNotAddTagForReturnValueWhenMethodIsVoidAndAnnotationOnInterfaceMethod() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod16();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method16");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod16")
+				.doesNotContainKey("testTag");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
+	public void shouldNotAddTagForReturnValueWhenMethodIsVoidAndAnnotationOnClassMethod() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod17();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method17");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod17")
+				.doesNotContainKey("testTag");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
+	public void shouldNotAddTagForReturnValueWhenMethodThrows() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod18();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method18");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod18")
+				.containsEntry("error", "test exception 18")
+				.doesNotContainKey("testTag");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
+	public void shouldAddEmptyTagForReturnValueWhenMethodReturnsNullAndNeitherResolverNorExpressionAreSpecified() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod19();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method19");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod19")
+				.containsEntry("testTag", "");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
+	public void shouldResolveEmptyTagValueForReturnValueWhenMethodReturnsNullAndResolverIsSpecified() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod20();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method20");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod20")
+				.containsEntry("testTag", "");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
+	public void shouldResolveEmptyTagValueForReturnValueWhenMethodReturnsNullAndExpressionIsSpecified() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod21();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method21");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod21")
+				.containsEntry("testTag", "");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
+	public void shouldResolveTagValueForReturnValueWhenResolverIsSpecified() {
+		Span span = this.tracer.nextSpan().name("foo");
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			this.testBean.testMethod22();
+		} catch (RuntimeException ignored) {
+		} finally {
+			span.finish();
+		}
+
+		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
+		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method22");
+		then(spans.get(0).tags())
+				.containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod22")
+				.containsEntry("testTag", "ciao");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
 	public void shouldNotCreateSpanWhenNotAnnotated() {
 		this.testBean.testMethod7();
 
@@ -303,6 +483,41 @@ public class SleuthSpanCreatorAspectTests {
 
 		@ContinueSpan(log = "testMethod13")
 		void testMethod13();
+
+		@NewSpan(name = "customNameOnTestMethod14")
+		@SpanTagFromReturnValue("testTag")
+		String testMethod14();
+
+		@NewSpan(name = "customNameOnTestMethod15")
+		String testMethod15();
+
+		@NewSpan(name = "customNameOnTestMethod16")
+		@SpanTagFromReturnValue("testTag")
+		void testMethod16();
+
+		@NewSpan(name = "customNameOnTestMethod17")
+		void testMethod17();
+
+		@NewSpan(name = "customNameOnTestMethod18")
+		@SpanTagFromReturnValue("testTag")
+		String testMethod18();
+
+		@NewSpan(name = "customNameOnTestMethod19")
+		@SpanTagFromReturnValue("testTag")
+		String testMethod19();
+
+		@NewSpan(name = "customNameOnTestMethod20")
+		@SpanTagFromReturnValue(value = "testTag", resolver = TagValueResolver.class)
+		String testMethod20();
+
+		@NewSpan(name = "customNameOnTestMethod21")
+		@SpanTagFromReturnValue(value = "testTag", expression = "#{== null}")
+		String testMethod21();
+
+		@NewSpan(name = "customNameOnTestMethod22")
+		@SpanTagFromReturnValue(value = "testTag", resolver = TagValueResolver.class)
+		String testMethod22();
+
 	}
 	
 	protected static class TestBean implements TestBeanInterface {
@@ -377,8 +592,53 @@ public class SleuthSpanCreatorAspectTests {
 		public void testMethod13() {
 			throw new RuntimeException("test exception 13");
 		}
+
+		@Override
+		public String testMethod14() {
+			return "TestValue";
+		}
+
+		@SpanTagFromReturnValue("testTag")
+		@Override
+		public String testMethod15() {
+			return "TestValue";
+		}
+
+		@NewSpan(name = "customNameOnTestMethod16")
+		@Override
+		public void testMethod16() {}
+
+		@NewSpan(name = "customNameOnTestMethod17")
+		@SpanTagFromReturnValue("testTag")
+		@Override
+		public void testMethod17() {}
+
+		@Override
+		public String testMethod18() {
+			throw new RuntimeException("test exception 18");
+		}
+
+		@Override
+		public String testMethod19() {
+			return null;
+		}
+
+		@Override
+		public String testMethod20() {
+			return null;
+		}
+
+		@Override
+		public String testMethod21() {
+			return null;
+		}
+
+		@Override
+		public String testMethod22() {
+			return "";
+		}
 	}
-	
+
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class TestConfiguration {
@@ -394,6 +654,10 @@ public class SleuthSpanCreatorAspectTests {
 
 		@Bean Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
+		}
+
+		@Bean TagValueResolver ciaoResolver() {
+			return parameter -> "ciao";
 		}
 	}
 }

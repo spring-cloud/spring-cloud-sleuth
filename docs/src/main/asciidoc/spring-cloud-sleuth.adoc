@@ -734,9 +734,10 @@ That way, the span gets continued and:
 * If an exception is thrown, a log entry named `testMethod11.afterFailure` is also created.
 * A tag with a key of `testTag11` and a value of `test` is created.
 
-=== Advanced Tag Setting
+=== Advanced Tag Setting for Method Parameters
 
-There are 3 different ways to add tags to a span. All of them are controlled by the `SpanTag` annotation.
+There are 3 different ways to add tags to a span to report invocation parameters of a method annotated with `@NewSpan`.
+All of them are controlled by the `SpanTag` annotation.
 The precedence is as follows:
 
 . Try with a bean of `TagValueResolver` type and a provided name.
@@ -745,6 +746,22 @@ We search for a `TagValueExpressionResolver` bean.
 The default implementation uses SPEL expression resolution.
 **IMPORTANT** You can only reference properties from the SPEL expression. Method execution is not allowed due to security constraints.
 . If we do not find any expression to evaluate, return the `toString()` value of the parameter.
+
+=== Advanced Tag Setting for Method Return Values
+
+The return value of a method invocation can be materialized as a tag in the span similarly to the invocation parameters.
+The creation of the tag for the return value is controlled by the `SpanTagFromReturnValue` annotation.
+The value set to the tag can be calculated in several ways, in order of precedence:
+
+. Try with a bean of `TagValueResolver` type and a provided name.
+. If the bean name has not been provided, try to evaluate an expression.
+We search for a `TagValueExpressionResolver` bean.
+The default implementation uses SPEL expression resolution.
+**IMPORTANT** You can only reference properties from the SPEL expression. Method execution is not allowed due to security constraints.
+. If we do not find any expression to evaluate, return the `toString()` value of the parameter.
+
+If the method has return type `void`, the tag representing the (non-existent) return value will not be created.
+If the method returns `null`, the value of the tag will be an empty string.
 
 ==== Custom extractor
 

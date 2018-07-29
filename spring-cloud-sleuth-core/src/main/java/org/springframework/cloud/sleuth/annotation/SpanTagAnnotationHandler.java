@@ -51,6 +51,28 @@ class SpanTagAnnotationHandler {
 		this.beanFactory = beanFactory;
 	}
 
+	void addAnnotatedReturnValue(MethodInvocation pjp, Object res) {
+		try {
+			Method method = pjp.getMethod();
+			if (Void.TYPE.equals(method.getReturnType())) {
+				return;
+			}
+
+			Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method, pjp.getThis().getClass());
+
+			SpanTagFromReturnValue annotation = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod,
+					SpanTagFromReturnValue.class);
+
+			if (annotation != null) {
+				String tagValue = resolveTagValue(annotation, res);
+				String tagKey = resolveTagKey(annotation);
+				span().tag(tagKey, tagValue);
+			}
+		} catch (SecurityException e) {
+			log.error("Exception occurred while trying to add tag for return value", e);
+		}
+	}
+
 	void addAnnotatedParameters(MethodInvocation pjp) {
 		try {
 			Method method = pjp.getMethod();
@@ -139,16 +161,28 @@ class SpanTagAnnotationHandler {
 				container.annotation.value() : container.annotation.key();
 	}
 
+	private String resolveTagKey(SpanTagFromReturnValue annotation) {
+		return StringUtils.hasText(annotation.value()) ? annotation.value() : annotation.key();
+	}
+
 	String resolveTagValue(SpanTag annotation, Object argument) {
+		return resolveTagValue(annotation.resolver(), annotation.expression(), argument);
+	}
+
+	String resolveTagValue(SpanTagFromReturnValue annotation, Object argument) {
+		return resolveTagValue(annotation.resolver(), annotation.expression(), argument);
+	}
+
+	private String resolveTagValue(Class<? extends TagValueResolver> resolver, String expression, Object argument) {
 		if (argument == null) {
 			return "";
 		}
-		if (annotation.resolver() != NoOpTagValueResolver.class) {
-			TagValueResolver tagValueResolver = this.beanFactory.getBean(annotation.resolver());
+		if (resolver != NoOpTagValueResolver.class) {
+			TagValueResolver tagValueResolver = this.beanFactory.getBean(resolver);
 			return tagValueResolver.resolve(argument);
-		} else if (StringUtils.hasText(annotation.expression())) {
+		} else if (StringUtils.hasText(expression)) {
 			return this.beanFactory.getBean(TagValueExpressionResolver.class)
-					.resolve(annotation.expression(), argument);
+					.resolve(expression, argument);
 		}
 		return argument.toString();
 	}
