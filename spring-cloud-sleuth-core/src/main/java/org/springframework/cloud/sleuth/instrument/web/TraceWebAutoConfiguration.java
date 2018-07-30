@@ -15,7 +15,11 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import org.apache.catalina.connector.ClientAbortException;
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -33,6 +37,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Role;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static javax.servlet.DispatcherType.ASYNC;
 import static javax.servlet.DispatcherType.ERROR;
@@ -96,6 +103,34 @@ public class TraceWebAutoConfiguration {
 	public TraceFilter traceFilter(BeanFactory beanFactory,
 			SkipPatternProvider skipPatternProvider) {
 		return new TraceFilter(beanFactory, skipPatternProvider.skipPattern());
+	}
+
+
+	@Configuration
+	@ConditionalOnClass(name = "org.apache.catalina.connector.ClientAbortException")
+	protected static class ClientAbortExceptionToIgnoreInTraceFilterConfig{
+		/**
+		 * Ignore the name of {@link ClientAbortException} when use tomcat. Because the tomcat will ignore this exception
+		 * in {@link org.apache.catalina.core.StandardHostValve#throwable(Request, Response, Throwable)}, Causes the current span to not close.
+		 * More detail see #1038.
+		 */
+		@Bean
+		public ExceptionToIgnoreInTraceFilter clientAbortExceptionToIgnoreInTraceFilter(){
+			return new ExceptionToIgnoreInTraceFilter() {
+				@Override
+				public String exceptionClassName() {
+					return ClientAbortException.class.getName();
+				}
+			};
+		}
+	}
+
+	@Autowired(required=false)
+	List<ExceptionToIgnoreInTraceFilter> exceptionsToIgnoreInTraceFilter = new ArrayList<>();
+
+	@Bean
+	ExceptionToIgnoreInTraceFilterProvider exceptionToIgnoreInTraceFilterProvider() {
+		return new ExceptionToIgnoreInTraceFilterProvider(this.exceptionsToIgnoreInTraceFilter);
 	}
 
 }
