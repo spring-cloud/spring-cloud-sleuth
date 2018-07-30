@@ -437,6 +437,32 @@ public class TraceFilterTests {
 			// ig
 		}
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(spanReporter.getSpans()).hasSize(1);
+	}
+	@Test
+	public void closesSpanWhenResponseStatusIs2xxAndClientAbortExceptionThrowAfterTraceFilter() throws Exception {
+		this.request = builder().header(Span.SPAN_ID_NAME, PARENT_ID)
+				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
+		TraceFilter filter = new TraceFilter(beanFactory());
+		BDDMockito.given(beanFactory.getBean(ErrorController.class)).willReturn(() -> "/error");
+		List<ExceptionToIgnoreInTraceFilter> filters = Lists.newArrayList(getClientAbortExpcetionToIgnoreInTraceFilter());
+		BDDMockito.given(beanFactory.getBean(ExceptionToIgnoreInTraceFilterProvider.class))
+				.willReturn(getExceptionToIgnoreInTraceFilterProvider(filters));
+		this.response = new MockHttpServletResponse();
+		response.setStatus(200);
+		this.filterChain = new MockFilterChain(){
+			@Override
+			public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException {
+				throw new ClientAbortException();
+			}
+		};
+		try {
+			filter.doFilter(this.request, this.response, this.filterChain);
+		}catch (ClientAbortException e){
+			// ig
+		}
+		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+		then(spanReporter.getSpans()).hasSize(1);
 	}
 
 	private ExceptionToIgnoreInTraceFilter getClientAbortExpcetionToIgnoreInTraceFilter() {

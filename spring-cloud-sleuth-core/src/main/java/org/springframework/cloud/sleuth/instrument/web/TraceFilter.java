@@ -241,7 +241,7 @@ public class TraceFilter extends GenericFilterBean {
 				if (exception == null || !hasErrorController()) {
 					tracer().close(span);
 					clearTraceAttribute(request);
-				} else if(exception != null && needIgnoreExpcetion(exception)){
+				} else if(exception != null && needIgnoreException(exception)){
 					tracer().close(span);
 					clearTraceAttribute(request);
 				}
@@ -275,7 +275,7 @@ public class TraceFilter extends GenericFilterBean {
 	}
 
 
-	private boolean needIgnoreExpcetion(Throwable exception) {
+	private boolean needIgnoreException(Throwable exception) {
 		for (ExceptionToIgnoreInTraceFilter filter : exceptionToIgnoreInTraceFilterProvider().exceptionsToIgnoreInTraceFilters()) {
 			if(exception.getClass().getName().equals(filter.exceptionClassName())){
 				return true;
