@@ -103,6 +103,7 @@ public class TraceFilter extends GenericFilterBean {
 	private ErrorParser errorParser;
 	private final BeanFactory beanFactory;
 	private Boolean hasErrorController;
+	private ExceptionToIgnoreInTraceFilterProvider exceptionToIgnoreInTraceFilterProvider;
 
 	private final UrlPathHelper urlPathHelper = new UrlPathHelper();
 
@@ -238,11 +239,9 @@ public class TraceFilter extends GenericFilterBean {
 				if (exception == null || !hasErrorController()) {
 					tracer().close(span);
 					clearTraceAttribute(request);
-				} else if (exception != null) {
-					if(isClientAbortExpcetion(exception)){
-						tracer().close(span);
-						clearTraceAttribute(request);
-					}
+				} else if(exception != null && needIgnoreExpcetion(exception)){
+					tracer().close(span);
+					clearTraceAttribute(request);
 				}
 			} else if (errorAlreadyHandled(request) && tracer().isTracing() && !shouldCloseSpan(request)) {
 				if (log.isDebugEnabled()) {
@@ -273,11 +272,14 @@ public class TraceFilter extends GenericFilterBean {
 		}
 	}
 
-	/**
-	 * check exception is org.apache.catalina.connector.ClientAbortException.
-	 */
-	private boolean isClientAbortExpcetion(Throwable exception) {
-		return exception.getClass().getName().equals("org.apache.catalina.connector.ClientAbortException");
+
+	private boolean needIgnoreExpcetion(Throwable exception) {
+		for (ExceptionToIgnoreInTraceFilter filter : exceptionToIgnoreInTraceFilterProvider().exceptionsToIgnoreInTraceFilters()) {
+			if(exception.getClass().getName().equals(filter.exceptionClassName())){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// null check is only for tests
@@ -510,6 +512,13 @@ public class TraceFilter extends GenericFilterBean {
 			this.errorParser = this.beanFactory.getBean(ErrorParser.class);
 		}
 		return this.errorParser;
+	}
+
+	ExceptionToIgnoreInTraceFilterProvider exceptionToIgnoreInTraceFilterProvider() {
+		if (this.exceptionToIgnoreInTraceFilterProvider == null) {
+			this.exceptionToIgnoreInTraceFilterProvider = this.beanFactory.getBean(ExceptionToIgnoreInTraceFilterProvider.class);
+		}
+		return this.exceptionToIgnoreInTraceFilterProvider;
 	}
 }
 

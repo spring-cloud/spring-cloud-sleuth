@@ -18,10 +18,12 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.apache.catalina.connector.ClientAbortException;
+import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +59,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import javax.servlet.*;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.WriteListener;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -386,6 +392,9 @@ public class TraceFilterTests {
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		TraceFilter filter = new TraceFilter(beanFactory());
 		BDDMockito.given(beanFactory.getBean(ErrorController.class)).willReturn(() -> "/error");
+		List<ExceptionToIgnoreInTraceFilter> filters = Lists.newArrayList(getClientAbortExpcetionToIgnoreInTraceFilter());
+		BDDMockito.given(beanFactory.getBean(ExceptionToIgnoreInTraceFilterProvider.class))
+				.willReturn(getExceptionToIgnoreInTraceFilterProvider(filters));
 		this.response = new MockHttpServletResponse(){
 			@Override
 			public ServletOutputStream getOutputStream() {
@@ -428,6 +437,19 @@ public class TraceFilterTests {
 			// ig
 		}
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();
+	}
+
+	private ExceptionToIgnoreInTraceFilter getClientAbortExpcetionToIgnoreInTraceFilter() {
+		return new ExceptionToIgnoreInTraceFilter(){
+			@Override
+			public String exceptionClassName() {
+				return ClientAbortException.class.getName();
+			}
+		};
+	}
+
+	private ExceptionToIgnoreInTraceFilterProvider getExceptionToIgnoreInTraceFilterProvider(List<ExceptionToIgnoreInTraceFilter> filters) {
+		return new ExceptionToIgnoreInTraceFilterProvider(filters);
 	}
 
 	@Test
