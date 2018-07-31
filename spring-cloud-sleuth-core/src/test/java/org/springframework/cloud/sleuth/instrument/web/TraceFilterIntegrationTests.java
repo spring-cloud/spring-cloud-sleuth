@@ -41,6 +41,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.SpanFilter;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
@@ -81,12 +82,14 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	@Autowired MyFilter myFilter;
 	@Autowired ArrayListSpanReporter reporter;
 	@Autowired Tracer tracer;
+	@Autowired MySpanFilter mySpanFilter;
 
 	private static Span span;
 
 	@Before
 	@After
-	public void clearSpans() {
+	public void clear() {
+		this.mySpanFilter.disableAll = false;
 		this.reporter.clear();
 	}
 
@@ -224,6 +227,18 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		then(this.reporter.getSpans().get(0).tags()).containsEntry("custom", "tag");
 	}
 
+	@Test
+	public void should_filter_out_a_span_and_not_report_it() throws Exception {
+		Long expectedTraceId = new Random().nextLong();
+		this.mySpanFilter.disableAll = true;
+		this.mySpanFilter.wasCalled = false;
+
+		whenSentPongWithTraceId(expectedTraceId);
+
+		then(this.mySpanFilter.wasCalled).isTrue();
+		then(this.reporter.getSpans()).isEmpty();
+	}
+
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 		mockMvcBuilder.addFilters(this.traceFilter, this.myFilter);
@@ -236,6 +251,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	private MvcResult whenSentPingWithTraceId(Long passedTraceId) throws Exception {
+		return sendPingWithTraceId(TRACE_ID_NAME, passedTraceId);
+	}
+
+	private MvcResult whenSentPongWithTraceId(Long passedTraceId) throws Exception {
 		return sendPingWithTraceId(TRACE_ID_NAME, passedTraceId);
 	}
 
@@ -263,6 +282,11 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	private MvcResult sendPingWithTraceId(String headerName, Long traceId)
 			throws Exception {
 		return sendRequestWithTraceId("/ping", headerName, traceId);
+	}
+
+	private MvcResult sendPongWithTraceId(String headerName, Long traceId)
+			throws Exception {
+		return sendRequestWithTraceId("/pong", headerName, traceId);
 	}
 
 	private MvcResult sendDeferredWithTraceId(String headerName, Long traceId)
@@ -319,6 +343,13 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				return "ping";
 			}
 
+			@RequestMapping("/pong")
+			public String pong() {
+				logger.info("ping");
+				span = this.tracer.currentSpan();
+				return "pong";
+			}
+
 			@RequestMapping("/throwsException")
 			public void throwsException() {
 				throw new RuntimeException();
@@ -350,6 +381,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				managementServerProperties.getServlet().setContextPath("/additionalContextPath");
 				return managementServerProperties;
 			}
+		}
+
+		@Bean SpanFilter spanFilter() {
+			return new MySpanFilter();
 		}
 
 		@Bean
@@ -397,3 +432,14 @@ class MyFilter extends GenericFilterBean {
 	}
 }
 //end::response_headers[]
+
+class MySpanFilter implements SpanFilter {
+
+	boolean disableAll = false;
+	boolean wasCalled = false;
+
+	@Override public boolean reject(zipkin2.Span span) {
+		this.wasCalled = true;
+		return this.disableAll;
+	}
+}
