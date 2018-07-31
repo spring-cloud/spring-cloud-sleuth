@@ -109,11 +109,9 @@ public class MultipleHopsIntegrationTests {
 	public void should_propagate_the_baggage() throws Exception {
 		//tag::baggage[]
 		Span initialSpan = this.tracer.nextSpan().name("span").start();
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
-			ExtraFieldPropagation.set("foo", "bar");
-			ExtraFieldPropagation.set("UPPER_CASE", "someValue");
-			//end::baggage[]
-		}
+		ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
+		ExtraFieldPropagation.set(initialSpan.context(),"UPPER_CASE", "someValue");
+		//end::baggage[]
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
 			//tag::baggage_tag[]
