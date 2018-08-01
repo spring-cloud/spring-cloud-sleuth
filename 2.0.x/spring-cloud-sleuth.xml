@@ -364,9 +364,8 @@ In extreme cases, too much baggage can crash the application, due to exceeding t
 </important>
 <simpara>The following example shows setting baggage on a span:</simpara>
 <programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.nextSpan().name("span").start();
-try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
-	ExtraFieldPropagation.set("foo", "bar");
-	ExtraFieldPropagation.set("UPPER_CASE", "someValue");
+ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
+ExtraFieldPropagation.set(initialSpan.context(),"UPPER_CASE", "someValue");
 }</programlisting>
 <section xml:id="_baggage_versus_span_tags">
 <title>Baggage versus Span Tags</title>
