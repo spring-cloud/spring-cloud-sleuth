@@ -85,7 +85,7 @@ public class SleuthWebProperties {
 		/**
 		 * Pattern for URLs that should be skipped in client side tracing
 		 */
-		private String skipPattern;
+		private String skipPattern = "";
 
 		/**
 		 * Enable interceptor injecting into {@link org.springframework.web.client.RestTemplate}

@@ -112,8 +112,7 @@ public class TraceHttpAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(name = ClientSampler.NAME)
 	HttpSampler sleuthClientSampler(SleuthWebProperties sleuthWebProperties) {
-		return new CompositeHttpSampler(new PathMatchingHttpSampler(
-				sleuthWebProperties), HttpSampler.TRACE_ID);
+		return new PathMatchingHttpSampler(sleuthWebProperties);
 	}
 }
 
