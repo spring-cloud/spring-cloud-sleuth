@@ -111,8 +111,9 @@ public class TraceHttpAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(name = ClientSampler.NAME)
-	HttpSampler sleuthClientSampler() {
-		return HttpSampler.TRACE_ID;
+	HttpSampler sleuthClientSampler(SleuthWebProperties sleuthWebProperties) {
+		return new CompositeHttpSampler(new PathMatchingHttpSampler(
+				sleuthWebProperties), HttpSampler.TRACE_ID);
 	}
 }
 
@@ -136,5 +137,21 @@ class CompositeHttpSampler extends HttpSampler {
 		if (rightDecision == null) return leftDecision;
 		// Neither are null and at least one is true
 		return leftDecision && rightDecision;
+	}
+}
+
+class PathMatchingHttpSampler extends HttpSampler {
+	private final SleuthWebProperties properties;
+
+	PathMatchingHttpSampler(SleuthWebProperties properties) {
+		this.properties = properties;
+	}
+
+	@Override public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
+		String path = adapter.path(request);
+		if (path == null) {
+			return null;
+		}
+		return path.matches(this.properties.getClient().getSkipPattern()) ? false : null;
 	}
 }
