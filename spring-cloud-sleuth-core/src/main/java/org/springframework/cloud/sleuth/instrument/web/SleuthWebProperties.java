@@ -47,7 +47,7 @@ public class SleuthWebProperties {
 	 */
 	private String additionalSkipPattern;
 
-	private Client client;
+	private Client client = new Client();
 
 	public boolean isEnabled() {
 		return this.enabled;
