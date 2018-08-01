@@ -20,12 +20,14 @@ import brave.Span;
 import brave.SpanCustomizer;
 import brave.Tracer;
 import brave.Tracing;
+import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalSpan;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
@@ -85,14 +87,20 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	final boolean integrationObjectSupportPresent;
 	private final boolean hasDirectChannelClass;
 
+	@Autowired
 	TracingChannelInterceptor(Tracing tracing) {
+		this(tracing, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
+	}
+
+	TracingChannelInterceptor(Tracing tracing, Propagation.Setter<MessageHeaderAccessor, String> setter,
+			Propagation.Getter<MessageHeaderAccessor, String> getter) {
 		this.tracing = tracing;
 		this.tracer = tracing.tracer();
 		this.threadLocalSpan = ThreadLocalSpan.create(this.tracer);
 		this.injector = tracing.propagation()
-				.injector(MessageHeaderPropagation.INSTANCE);
+				.injector(setter);
 		this.extractor = tracing.propagation()
-				.extractor(MessageHeaderPropagation.INSTANCE);
+				.extractor(getter);
 		this.integrationObjectSupportPresent = ClassUtils.isPresent(
 				"org.springframework.integration.context.IntegrationObjectSupport",
 				null);
