@@ -62,19 +62,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = RestTemplateTraceAspectIntegrationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) @DirtiesContext
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = "spring.sleuth.web.client.skipPattern=/issue.*")
+@DirtiesContext
 public class RestTemplateTraceAspectIntegrationTests {
 
 	@Autowired WebApplicationContext context;
 	@Autowired AspectTestingController controller;
 	@Autowired Tracing tracer;
 	@Autowired ArrayListSpanReporter reporter;
+	@Autowired RestTemplate restTemplate;
 
 	private MockMvc mockMvc;
 
 	@Before public void init() {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 		this.controller.reset();
+		this.reporter.clear();
 	}
 
 	@Before @After public void verify() {
@@ -116,6 +120,16 @@ public class RestTemplateTraceAspectIntegrationTests {
 		thenClientKindIsReported();
 	}
 
+	// issue #1047
+	@Test
+	public void should_not_create_a_client_span_for_filtered_out_paths()
+			throws Exception {
+		whenARequestIsSentToASyncEndpointThatShouldBeFilteredOut();
+
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.reporter.getSpans()).isEmpty();
+	}
+
 	private void whenARequestIsSentToAnAsyncRestTemplateEndpoint() throws Exception {
 		this.mockMvc.perform(MockMvcRequestBuilders.get("/asyncRestTemplate")
 				.accept(MediaType.TEXT_PLAIN)).andReturn();
@@ -124,6 +138,12 @@ public class RestTemplateTraceAspectIntegrationTests {
 	private void whenARequestIsSentToASyncEndpoint() throws Exception {
 		this.mockMvc.perform(
 				MockMvcRequestBuilders.get("/syncPing").accept(MediaType.TEXT_PLAIN))
+				.andReturn();
+	}
+
+	private void whenARequestIsSentToASyncEndpointThatShouldBeFilteredOut() throws Exception {
+		this.mockMvc.perform(
+				MockMvcRequestBuilders.get("/issue1047_start").accept(MediaType.TEXT_PLAIN))
 				.andReturn();
 	}
 
@@ -183,6 +203,16 @@ public class RestTemplateTraceAspectIntegrationTests {
 			this.traceId = null;
 		}
 
+		@RequestMapping(value = "/issue1047_end", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE) public String issue1047() {
+			return "should_filter_out_this_endpoint";
+		}
+
+		@RequestMapping(value = "/issue1047_start", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE) public String issue1047Start() {
+			return callAndReturnIssue1047();
+		}
+
 		@RequestMapping(value = "/", method = RequestMethod.GET,
 				produces = MediaType.TEXT_PLAIN_VALUE) public String home(
 				@RequestHeader(value = "X-B3-SpanId", required = false) String traceId) {
@@ -228,7 +258,10 @@ public class RestTemplateTraceAspectIntegrationTests {
 			});
 		}
 
-		;
+		private String callAndReturnIssue1047() {
+			this.restTemplate.getForObject("http://localhost:" + port() + "/issue1047_end", String.class);
+			return "OK";
+		}
 
 		private String callAndReturnOk() {
 			this.restTemplate.getForObject("http://localhost:" + port(), String.class);
