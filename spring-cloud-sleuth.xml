@@ -1921,6 +1921,16 @@ By default, all channels but <literal>hystrixStreamOutput</literal> channel are 
 <simpara>When using the <literal>Executor</literal> to build a Spring Integration <literal>IntegrationFlow</literal>, you must use the untraced version of the <literal>Executor</literal>.
 Decorating the Spring Integration Executor Channel with <literal>TraceableExecutorService</literal> causes the spans to be improperly closed.</simpara>
 </important>
+<simpara>If you want to customize the way tracing context is read from and written to message headers,
+it&#8217;s enough for you to register beans of types:</simpara>
+<itemizedlist>
+<listitem>
+<simpara><literal>Propagation.Setter&lt;MessageHeaderAccessor, String&gt;</literal> - for writing headers to the message</simpara>
+</listitem>
+<listitem>
+<simpara><literal>Propagation.Getter&lt;MessageHeaderAccessor, String&gt;</literal> - for reading headers from the message</simpara>
+</listitem>
+</itemizedlist>
 </section>
 <section xml:id="_spring_rabbitmq">
 <title>Spring RabbitMq</title>
