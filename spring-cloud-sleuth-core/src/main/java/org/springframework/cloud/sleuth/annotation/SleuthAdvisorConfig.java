@@ -192,18 +192,18 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			return invocation.proceed();
 		}
 
-		if(isReactiveReturnType(method.getReturnType())){
-			return proceedUnderSpanReactively(invocation, newSpan, continueSpan);
+		if(isReactorReturnType(method.getReturnType())){
+			return proceedUnderReactorSpan(invocation, newSpan, continueSpan);
 		} else {
-			return proceedUnderSpanSynchronously(invocation, newSpan, continueSpan);
+			return proceedUnderSynchronousSpan(invocation, newSpan, continueSpan);
 		}
 	}
 
-	private boolean isReactiveReturnType(Class<?> returnType) {
+	private boolean isReactorReturnType(Class<?> returnType) {
 		return Flux.class.equals(returnType) || Mono.class.equals(returnType);
 	}
 
-	private Object proceedUnderSpanSynchronously(
+	private Object proceedUnderSynchronousSpan(
 			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
 		Span span = tracer().currentSpan();
 		if (newSpan != null || span == null) {
@@ -224,7 +224,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		}
 	}
 
-	private Object proceedUnderSpanReactively(
+	private Object proceedUnderReactorSpan(
 			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable{
 		boolean isNewSpan = newSpan != null;
 		Span spanPrevious = tracer().currentSpan();
