@@ -206,7 +206,9 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 	private Object proceedUnderSynchronousSpan(
 			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
 		Span span = tracer().currentSpan();
-		if (newSpan != null || span == null) {
+		//in case of @ContinueSpan and no span in tracer we start new span and should close it on completion
+		boolean startNewSpan = newSpan != null || span == null;
+		if (startNewSpan) {
 			span = tracer().nextSpan();
 			newSpanParser().parse(invocation, newSpan, span);
 			span.start();
@@ -220,16 +222,17 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			onFailure(span, log, hasLog, e);
 			throw e;
 		} finally {
-			after(span, newSpan != null, log, hasLog);
+			after(span, startNewSpan, log, hasLog);
 		}
 	}
 
 	private Object proceedUnderReactorSpan(
 			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable{
-		boolean isNewSpan = newSpan != null;
 		Span spanPrevious = tracer().currentSpan();
+		//in case of @ContinueSpan and no span in tracer we start new span and should close it on completion
+		boolean startNewSpan = newSpan != null || spanPrevious == null;
 		Span span;
-		if (isNewSpan || spanPrevious == null) {
+		if (startNewSpan) {
 			span = tracer().nextSpan();
 			newSpanParser().parse(invocation, newSpan, span);
 		} else {
@@ -244,7 +247,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			Publisher<?> publisher = (Publisher) invocation.proceed();
 
 			Mono<Span> startSpan = Mono.defer(() -> withSpanInScope(span, () -> {
-				if (isNewSpan || spanPrevious == null) {
+				if (startNewSpan) {
 					span.start();
 				}
 
@@ -255,12 +258,12 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			if(publisher instanceof Mono){
 				return startSpan.flatMap(spanStarted -> ((Mono<?>)publisher)
 						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doOnTerminate(afterReactor(isNewSpan, log, hasLog, spanStarted)));
+						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)));
 			}
 			else if(publisher instanceof Flux){
 				return startSpan.flatMapMany(spanStarted -> ((Flux<?>)publisher)
 						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doOnTerminate(afterReactor(isNewSpan, log, hasLog, spanStarted)));
+						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)));
 			}
 			else {
 				throw new IllegalArgumentException("Unexpected type of publisher: "+publisher.getClass());

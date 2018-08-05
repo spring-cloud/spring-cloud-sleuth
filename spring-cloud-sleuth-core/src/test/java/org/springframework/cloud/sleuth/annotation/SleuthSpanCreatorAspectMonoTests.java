@@ -202,6 +202,21 @@ public class SleuthSpanCreatorAspectMonoTests {
 	}
 
 	@Test
+	public void shouldStartAndCloseSpanOnContinueSpanIfSpanNotSet() {
+		this.testBean.testMethod10("test").block();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("test-method10");
+		then(spans.get(0).tags())
+				.containsEntry("customTestTag10", "test");
+		then(spans.get(0).annotations()
+				.stream().map(Annotation::value).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
 	public void shouldContinueSpanWhenKeyIsUsedOnSpanTagWhenAnnotationOnInterfaceMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 

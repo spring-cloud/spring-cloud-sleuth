@@ -187,6 +187,22 @@ public class SleuthSpanCreatorAspectFluxTests {
 	}
 
 	@Test
+	public void shouldStartAndCloseSpanOnContinueSpanIfSpanNotSet() {
+		Flux<String> flux = this.testBean.testMethod10("test");
+		verifyNoSpansUntilFluxComplete(flux);
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("test-method10");
+		then(spans.get(0).tags())
+				.containsEntry("customTestTag10", "test");
+		then(spans.get(0).annotations()
+				.stream().map(Annotation::value).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).duration()).isNotZero();
+	}
+
+	@Test
 	public void shouldContinueSpanWhenKeyIsUsedOnSpanTagWhenAnnotationOnInterfaceMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
@@ -358,6 +374,9 @@ public class SleuthSpanCreatorAspectFluxTests {
 		@ContinueSpan(log = "testMethod13")
 		Flux<String> testMethod13();
 
+		@ContinueSpan
+		Flux<String> testMethod14(String param);
+
 		void proceed();
 
 		void reset();
@@ -458,6 +477,11 @@ public class SleuthSpanCreatorAspectFluxTests {
 		@Override
 		public Flux<String> testMethod13() {
 			return Flux.defer(() -> Flux.error(new RuntimeException("test exception 13")));
+		}
+
+		@Override
+		public Flux<String> testMethod14(String param) {
+			return Flux.just(TEST_STRING1, TEST_STRING2);
 		}
 	}
 	
