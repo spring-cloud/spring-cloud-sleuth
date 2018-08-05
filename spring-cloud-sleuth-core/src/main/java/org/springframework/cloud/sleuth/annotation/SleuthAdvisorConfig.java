@@ -254,13 +254,13 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 
 			if(publisher instanceof Mono){
 				return startSpan.flatMap(spanStarted -> ((Mono<?>)publisher)
-						.doOnError(onFailureReactive(log, hasLog, spanStarted))
-						.doOnTerminate(afterReactive(isNewSpan, log, hasLog, spanStarted)));
+						.doOnError(onFailureReactor(log, hasLog, spanStarted))
+						.doOnTerminate(afterReactor(isNewSpan, log, hasLog, spanStarted)));
 			}
 			else if(publisher instanceof Flux){
 				return startSpan.flatMapMany(spanStarted -> ((Flux<?>)publisher)
-						.doOnError(onFailureReactive(log, hasLog, spanStarted))
-						.doOnTerminate(afterReactive(isNewSpan, log, hasLog, spanStarted)));
+						.doOnError(onFailureReactor(log, hasLog, spanStarted))
+						.doOnTerminate(afterReactor(isNewSpan, log, hasLog, spanStarted)));
 			}
 			else {
 				throw new IllegalArgumentException("Unexpected type of publisher: "+publisher.getClass());
@@ -274,7 +274,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		}
 	}
 
-	private Runnable afterReactive(boolean isNewSpan, String log, boolean hasLog, Span span) {
+	private Runnable afterReactor(boolean isNewSpan, String log, boolean hasLog, Span span) {
 		return () -> {
 			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 				after(span, isNewSpan, log, hasLog);
@@ -282,7 +282,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		};
 	}
 
-	private Consumer<Throwable> onFailureReactive(String log, boolean hasLog, Span span) {
+	private Consumer<Throwable> onFailureReactor(String log, boolean hasLog, Span span) {
 		return throwable -> {
 			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 				onFailure(span, log, hasLog, throwable);
