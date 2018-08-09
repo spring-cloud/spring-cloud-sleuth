@@ -16,17 +16,13 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.PostConstruct;
-
 import brave.Span;
 import brave.Tracer;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.aop.Pointcut;
@@ -40,6 +36,15 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import javax.annotation.PostConstruct;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Custom pointcut advisor that picks all classes / interfaces that
@@ -143,19 +148,14 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 
 		public boolean hasAnnotatedMethods(Class<?> clazz) {
 			final AtomicBoolean found = new AtomicBoolean(false);
-			ReflectionUtils.doWithMethods(clazz,
-					new ReflectionUtils.MethodCallback() {
-						@Override
-						public void doWith(Method method) throws IllegalArgumentException,
-								IllegalAccessException {
-							if (found.get()) {
-								return;
-							}
-							Annotation annotation = AnnotationUtils.findAnnotation(method,
-									SleuthAdvisorConfig.AnnotationMethodsResolver.this.annotationType);
-							if (annotation != null) { found.set(true); }
-						}
-					});
+			ReflectionUtils.doWithMethods(clazz, method -> {
+				if (found.get()) {
+					return;
+				}
+				Annotation annotation = AnnotationUtils.findAnnotation(method,
+						AnnotationMethodsResolver.this.annotationType);
+				if (annotation != null) { found.set(true); }
+			});
 			return found.get();
 		}
 
@@ -183,6 +183,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		if (method == null) {
 			return invocation.proceed();
 		}
+
 		Method mostSpecificMethod = AopUtils
 				.getMostSpecificMethod(method, invocation.getThis().getClass());
 		NewSpan newSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, NewSpan.class);
@@ -190,37 +191,133 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		if (newSpan == null && continueSpan == null) {
 			return invocation.proceed();
 		}
+
+		if(isReactorReturnType(method.getReturnType())){
+			return proceedUnderReactorSpan(invocation, newSpan, continueSpan);
+		} else {
+			return proceedUnderSynchronousSpan(invocation, newSpan, continueSpan);
+		}
+	}
+
+	private boolean isReactorReturnType(Class<?> returnType) {
+		return Flux.class.equals(returnType) || Mono.class.equals(returnType);
+	}
+
+	private Object proceedUnderSynchronousSpan(
+			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
 		Span span = tracer().currentSpan();
-		if (newSpan != null || span == null) {
-			span = tracer().nextSpan().start();
+		//in case of @ContinueSpan and no span in tracer we start new span and should close it on completion
+		boolean startNewSpan = newSpan != null || span == null;
+		if (startNewSpan) {
+			span = tracer().nextSpan();
 			newSpanParser().parse(invocation, newSpan, span);
+			span.start();
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
 		try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
-			if (hasLog) {
-				logEvent(span, log + ".before");
-			}
-			spanTagAnnotationHandler().addAnnotatedParameters(invocation);
-			addTags(invocation, span);
+			before(invocation, span, log, hasLog);
 			return invocation.proceed();
 		} catch (Exception e) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Exception occurred while trying to continue the pointcut", e);
-			}
-			if (hasLog) {
-				logEvent(span, log + ".afterFailure");
-			}
-			span.error(e);
+			onFailure(span, log, hasLog, e);
 			throw e;
 		} finally {
-			if (hasLog) {
-				logEvent(span, log + ".after");
+			after(span, startNewSpan, log, hasLog);
+		}
+	}
+
+	private Object proceedUnderReactorSpan(
+			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable{
+		Span spanPrevious = tracer().currentSpan();
+		//in case of @ContinueSpan and no span in tracer we start new span and should close it on completion
+		boolean startNewSpan = newSpan != null || spanPrevious == null;
+		Span span;
+		if (startNewSpan) {
+			span = tracer().nextSpan();
+			newSpanParser().parse(invocation, newSpan, span);
+		} else {
+			span = spanPrevious;
+		}
+
+		String log = log(continueSpan);
+		boolean hasLog = StringUtils.hasText(log);
+
+		try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
+
+			Publisher<?> publisher = (Publisher) invocation.proceed();
+
+			Mono<Span> startSpan = Mono.defer(() -> withSpanInScope(span, () -> {
+				if (startNewSpan) {
+					span.start();
+				}
+
+				before(invocation, span, log, hasLog);
+				return Mono.just(span);
+			}));
+
+			if(publisher instanceof Mono){
+				return startSpan.flatMap(spanStarted -> ((Mono<?>)publisher)
+						.doOnError(onFailureReactor(log, hasLog, spanStarted))
+						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)));
 			}
-			if (newSpan != null) {
-				span.finish();
+			else if(publisher instanceof Flux){
+				return startSpan.flatMapMany(spanStarted -> ((Flux<?>)publisher)
+						.doOnError(onFailureReactor(log, hasLog, spanStarted))
+						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)));
+			}
+			else {
+				throw new IllegalArgumentException("Unexpected type of publisher: "+publisher.getClass());
 			}
 		}
+	}
+
+	private <T> T withSpanInScope(Span span, Supplier<T> supplier) {
+		try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
+			return supplier.get();
+		}
+	}
+
+	private Runnable afterReactor(boolean isNewSpan, String log, boolean hasLog, Span span) {
+		return () -> {
+			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
+				after(span, isNewSpan, log, hasLog);
+			}
+		};
+	}
+
+	private Consumer<Throwable> onFailureReactor(String log, boolean hasLog, Span span) {
+		return throwable -> {
+			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
+				onFailure(span, log, hasLog, throwable);
+			}
+		};
+	}
+
+	private void before(MethodInvocation invocation, Span span, String log, boolean hasLog) {
+		if (hasLog) {
+			logEvent(span, log + ".before");
+		}
+		spanTagAnnotationHandler().addAnnotatedParameters(invocation);
+		addTags(invocation, span);
+	}
+
+	private void after(Span span, boolean isNewSpan, String log, boolean hasLog) {
+		if (hasLog) {
+			logEvent(span, log + ".after");
+		}
+		if (isNewSpan) {
+			span.finish();
+		}
+	}
+
+	private void onFailure(Span span, String log, boolean hasLog, Throwable e) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Exception occurred while trying to continue the pointcut", e);
+		}
+		if (hasLog) {
+			logEvent(span, log + ".afterFailure");
+		}
+		span.error(e);
 	}
 
 	private void addTags(MethodInvocation invocation, Span span) {
