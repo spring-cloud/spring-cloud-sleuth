@@ -105,7 +105,7 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 
 		@Override
 		public boolean matches(Method method, Class<?> targetClass, Object... args) {
-			return getClassFilter().matches(targetClass);
+			return true;
 		}
 
 		@Override public ClassFilter getClassFilter() {
