@@ -20,7 +20,6 @@ import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -326,6 +325,34 @@ public class SleuthSpanCreatorAspectMonoTests {
 		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
 		then(spans).isEmpty();
 	}
+
+	@Test
+	public void shouldReturnNewSpanFromTraceContext() {
+		Mono<Long> mono = this.testBean.newSpanInTraceContext();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		Long newSpanId = mono.block();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("span-in-trace-context");
+		then(spans.get(0).id()).isEqualTo(Long.toHexString(newSpanId));
+	}
+
+	@Test
+	public void shouldReturnNewSpanFromSubscriberContext() {
+		Mono<Long> mono = this.testBean.newSpanInSubscriberContext();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		Long newSpanId = mono.block();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("span-in-subscriber-context");
+		then(spans.get(0).id()).isEqualTo(Long.toHexString(newSpanId));
+	}
 	
 	protected interface TestBeanInterface {
 
@@ -375,6 +402,12 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		@ContinueSpan(log = "testMethod13")
 		Mono<String> testMethod13();
+
+		@NewSpan(name = "spanInTraceContext")
+		Mono<Long> newSpanInTraceContext();
+
+		@NewSpan(name = "spanInSubscriberContext")
+		Mono<Long> newSpanInSubscriberContext();
 	}
 	
 	protected static class TestBean implements TestBeanInterface {
@@ -457,6 +490,23 @@ public class SleuthSpanCreatorAspectMonoTests {
 		@Override
 		public Mono<String> testMethod13() {
 			return Mono.defer(() -> Mono.error(new RuntimeException("test exception 13")));
+		}
+
+		@Override
+		public Mono<Long> newSpanInTraceContext() {
+			return Mono.defer(() -> {
+				final TraceContext traceContext = Tracing.current().currentTraceContext().get();
+				return Mono.just(traceContext.spanId());
+			});
+		}
+
+		@Override
+		public Mono<Long> newSpanInSubscriberContext() {
+			return Mono.subscriberContext()
+					.flatMap(context -> {
+						final TraceContext traceContext = Tracing.current().currentTraceContext().get();
+						return Mono.just(traceContext.spanId());
+					});
 		}
 	}
 	

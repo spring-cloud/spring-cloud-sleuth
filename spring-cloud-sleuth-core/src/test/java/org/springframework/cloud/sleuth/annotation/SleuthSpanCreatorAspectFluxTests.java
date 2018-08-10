@@ -18,9 +18,10 @@ package org.springframework.cloud.sleuth.annotation;
 
 import brave.Span;
 import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -309,6 +310,28 @@ public class SleuthSpanCreatorAspectFluxTests {
 		then(spans).isEmpty();
 	}
 
+	@Test
+	public void shouldReturnNewSpanFromTraceContext() {
+		Flux<Long> flux = this.testBean.newSpanInTraceContext();
+	    Long newSpanId = flux.blockFirst();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("span-in-trace-context");
+		then(spans.get(0).id()).isEqualTo(Long.toHexString(newSpanId));
+	}
+
+	@Test
+	public void shouldReturnNewSpanFromSubscriberContext() {
+		Flux<Long> flux = this.testBean.newSpanInSubscriberContext();
+    	Long newSpanId = flux.blockFirst();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("span-in-subscriber-context");
+		then(spans.get(0).id()).isEqualTo(Long.toHexString(newSpanId));
+	}
+
 	private void verifyNoSpansUntilFluxComplete(Flux<String> flux) {
 		Iterator<String> iterator = flux.toIterable().iterator();
 
@@ -376,6 +399,12 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		@ContinueSpan
 		Flux<String> testMethod14(String param);
+
+		@NewSpan(name = "spanInTraceContext")
+		Flux<Long> newSpanInTraceContext();
+
+		@NewSpan(name = "spanInSubscriberContext")
+		Flux<Long> newSpanInSubscriberContext();
 
 		void proceed();
 
@@ -482,6 +511,23 @@ public class SleuthSpanCreatorAspectFluxTests {
 		@Override
 		public Flux<String> testMethod14(String param) {
 			return Flux.just(TEST_STRING1, TEST_STRING2);
+		}
+
+		@Override
+		public Flux<Long> newSpanInTraceContext() {
+			return Flux.defer(() -> {
+				final TraceContext traceContext = Tracing.current().currentTraceContext().get();
+				return Flux.just(traceContext.spanId());
+			});
+		}
+
+		@Override
+		public Flux<Long> newSpanInSubscriberContext() {
+			return Mono.subscriberContext()
+					.flatMapMany(context -> {
+						final TraceContext traceContext = Tracing.current().currentTraceContext().get();
+						return Flux.just(traceContext.spanId());
+					});
 		}
 	}
 	
