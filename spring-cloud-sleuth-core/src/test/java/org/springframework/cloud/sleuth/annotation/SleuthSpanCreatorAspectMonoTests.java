@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.annotation;
 
 import brave.Span;
 import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.junit.Before;
 import org.junit.Test;
