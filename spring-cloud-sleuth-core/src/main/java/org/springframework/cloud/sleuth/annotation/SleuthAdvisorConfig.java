@@ -105,6 +105,7 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 
 		@Override
 		public boolean matches(Method method, Class<?> targetClass, Object... args) {
+			 //Skip check here as actual check takes place in SleuthInterceptor.invoke(MethodInvocation)
 			return true;
 		}
 
