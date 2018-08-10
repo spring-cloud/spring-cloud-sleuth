@@ -313,7 +313,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 	@Test
 	public void shouldReturnNewSpanFromTraceContext() {
 		Flux<Long> flux = this.testBean.newSpanInTraceContext();
-	    Long newSpanId = flux.blockFirst();
+		Long newSpanId = flux.blockFirst();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
@@ -324,7 +324,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 	@Test
 	public void shouldReturnNewSpanFromSubscriberContext() {
 		Flux<Long> flux = this.testBean.newSpanInSubscriberContext();
-    	Long newSpanId = flux.blockFirst();
+		Long newSpanId = flux.blockFirst();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
