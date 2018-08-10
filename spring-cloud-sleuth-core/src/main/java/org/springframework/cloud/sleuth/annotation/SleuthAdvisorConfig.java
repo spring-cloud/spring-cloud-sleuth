@@ -16,6 +16,13 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import javax.annotation.PostConstruct;
+
 import brave.Span;
 import brave.Tracer;
 import org.aopalliance.aop.Advice;
@@ -38,13 +45,6 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import javax.annotation.PostConstruct;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Custom pointcut advisor that picks all classes / interfaces that
@@ -105,7 +105,7 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 
 		@Override
 		public boolean matches(Method method, Class<?> targetClass, Object... args) {
-			 //Skip check here as actual check takes place in SleuthInterceptor.invoke(MethodInvocation)
+			//Skip check here as actual check takes place in SleuthInterceptor.invoke(MethodInvocation)
 			return true;
 		}
 
