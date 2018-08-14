@@ -16,15 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import javax.annotation.PreDestroy;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
-
 import brave.Tracing;
-import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -34,15 +26,21 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import javax.annotation.PreDestroy;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -64,19 +62,8 @@ public class TraceReactorAutoConfiguration {
 
 		static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class.getName();
 
-		@Bean
-		@ConditionalOnNotWebApplication LastOperatorWrapper spanOperator() {
-			return beanFactory -> Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.spanOperator(beanFactory));
-		}
-
-		@Bean
-		@ConditionalOnWebApplication LastOperatorWrapper noOpLastOperatorWrapper() {
-			return beanFactory -> { };
-		}
-
 		@PreDestroy
 		public void cleanupHooks() {
-			Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 			Schedulers.resetFactory();
 		}
@@ -94,10 +81,6 @@ public class TraceReactorAutoConfiguration {
 	}
 }
 
-interface LastOperatorWrapper {
-	void wrapLastOperator(BeanFactory beanFactory);
-}
-
 class HookRegisteringBeanDefinitionRegistryPostProcessor implements
 		BeanDefinitionRegistryPostProcessor {
 
@@ -107,12 +90,10 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements
 
 	@Override public void postProcessBeanFactory(
 			ConfigurableListableBeanFactory beanFactory) throws BeansException {
-		LastOperatorWrapper wrapper = beanFactory.getBean(LastOperatorWrapper.class);
-		setupHooks(wrapper, beanFactory);
+		setupHooks(beanFactory);
 	}
 
-	void setupHooks(LastOperatorWrapper wrapper, BeanFactory beanFactory) {
-		wrapper.wrapLastOperator(beanFactory);
+	void setupHooks(BeanFactory beanFactory) {
 		Hooks.onEachOperator(
 				TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY,
 				ReactorSleuth.scopePassingSpanOperator(beanFactory));

@@ -20,13 +20,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
-import org.junit.BeforeClass;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Schedulers;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -65,8 +64,7 @@ public class SpanSubscriberTests {
 					.map( d -> d + 1)
 					.map( d -> d + 1)
 					.map( (d) -> {
-						spanInOperation.set(
-								SpanSubscriberTests.this.tracer.currentSpan());
+						spanInOperation.set(this.tracer.currentSpan());
 						return d + 1;
 					})
 					.map( d -> d + 1)
@@ -76,8 +74,8 @@ public class SpanSubscriberTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(spanInOperation.get().context().traceId())
-				.isEqualTo(span.context().traceId());
+		then(spanInOperation.get().context().spanId())
+				.isEqualTo(span.context().spanId());
 	}
 
 	@Test public void should_support_reactor_fusion_optimization() {
@@ -88,7 +86,7 @@ public class SpanSubscriberTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			Mono.just(1).flatMap(d -> Flux.just(d + 1).collectList().map(p -> p.get(0)))
 					.map(d -> d + 1).map((d) -> {
-				spanInOperation.set(SpanSubscriberTests.this.tracer.currentSpan());
+				spanInOperation.set(this.tracer.currentSpan());
 				return d + 1;
 			}).map(d -> d + 1).subscribe(System.out::println);
 		} finally {
@@ -96,7 +94,7 @@ public class SpanSubscriberTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(spanInOperation.get().context().traceId()).isEqualTo(span.context().traceId());
+		then(spanInOperation.get().context().spanId()).isEqualTo(span.context().spanId());
 	}
 
 	@Test public void should_not_trace_scalar_flows() {
@@ -112,7 +110,7 @@ public class SpanSubscriberTests {
 			});
 
 			then(this.tracer.currentSpan()).isNotNull();
-			then(spanInOperation.get()).isNotInstanceOf(SpanSubscriber.class);
+			then(spanInOperation.get()).isInstanceOf(ScopePassingSpanSubscriber.class);
 
 			Mono.<Integer>error(new Exception())
 					.subscribe(new BaseSubscriber<Integer>() {
@@ -127,7 +125,7 @@ public class SpanSubscriberTests {
 					});
 
 			then(this.tracer.currentSpan()).isNotNull();
-			then(spanInOperation.get()).isNotInstanceOf(SpanSubscriber.class);
+			then(spanInOperation.get()).isInstanceOf(ScopePassingSpanSubscriber.class);
 
 			Mono.<Integer>empty()
 					.subscribe(new BaseSubscriber<Integer>() {
@@ -138,7 +136,7 @@ public class SpanSubscriberTests {
 					});
 
 			then(this.tracer.currentSpan()).isNotNull();
-			then(spanInOperation.get()).isNotInstanceOf(SpanSubscriber.class);
+			then(spanInOperation.get()).isEqualTo(Operators.emptySubscription());
 		} finally {
 			span.finish();
 		}
@@ -156,12 +154,12 @@ public class SpanSubscriberTests {
 			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.1")
 					.map(d -> d + 1).map(d -> d + 1).publishOn(Schedulers.newSingle("secondThread")).log("reactor.2")
 					.map((d) -> {
-						spanInOperation.set(SpanSubscriberTests.this.tracer.currentSpan());
+						spanInOperation.set(this.tracer.currentSpan());
 						return d + 1;
 					}).map(d -> d + 1).blockLast();
 
 			Awaitility.await().untilAsserted(() -> {
-				then(spanInOperation.get().context().traceId()).isEqualTo(span.context().traceId());
+				then(spanInOperation.get().context().spanId()).isEqualTo(span.context().spanId());
 			});
 			then(this.tracer.currentSpan()).isEqualTo(span);
 		} finally {
@@ -173,13 +171,13 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(foo2)) {
 			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.").map(d -> d + 1).map(d -> d + 1).map((d) -> {
-				spanInOperation.set(SpanSubscriberTests.this.tracer.currentSpan());
+				spanInOperation.set(this.tracer.currentSpan());
 				return d + 1;
 			}).map(d -> d + 1).blockLast();
 
 			then(this.tracer.currentSpan()).isEqualTo(foo2);
 			// parent cause there's an async span in the meantime
-			then(spanInOperation.get().context().traceId()).isEqualTo(foo2.context().traceId());
+			then(spanInOperation.get().context().spanId()).isEqualTo(foo2.context().spanId());
 		} finally {
 			foo2.finish();
 		}
@@ -192,15 +190,15 @@ public class SpanSubscriberTests {
 		Span parentSpan = this.tracer.nextSpan().name("foo").start();
 		log.info("Hello");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(parentSpan)) {
-			final Long traceId = Mono.fromCallable(tracer::currentSpan)
-					.map(span -> span.context().traceId())
+			final Long spanId = Mono.fromCallable(tracer::currentSpan)
+					.map(span -> span.context().spanId())
 					.block();
-			then(traceId).isNotNull();
+			then(spanId).isNotNull();
 
-			final Long secondTraceId = Mono.fromCallable(tracer::currentSpan)
-					.map(span -> span.context().traceId())
+			final Long secondSpanId = Mono.fromCallable(tracer::currentSpan)
+					.map(span -> span.context().spanId())
 					.block();
-			then(secondTraceId).isEqualTo(traceId); // different trace ids here
+			then(secondSpanId).isEqualTo(spanId); // different trace ids here
 		}
 	}
 
@@ -212,17 +210,17 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
 			Mono.fromCallable(tracer::currentSpan)
-					.map(span -> span.context().traceId())
+					.map(span -> span.context().spanId())
 					.doOnNext(spanInOperation::set)
 					.zipWith(
 							Mono.fromCallable(tracer::currentSpan)
-									.map(span -> span.context().traceId())
+									.map(span -> span.context().spanId())
 									.doOnNext(spanInZipOperation::set))
 					.block();
 		}
 
-		then(spanInZipOperation).hasValue(initSpan.context().traceId()); // ok here
-		then(spanInOperation).hasValue(initSpan.context().traceId()); // Expecting <AtomicReference[null]> to have value: <1L> but did not.
+		then(spanInZipOperation).hasValue(initSpan.context().spanId()); // ok here
+		then(spanInOperation).hasValue(initSpan.context().spanId()); // Expecting <AtomicReference[null]> to have value: <1L> but did not.
 	}
 
 	// #646
@@ -237,9 +235,24 @@ public class SpanSubscriberTests {
 		}
 	}
 
+	//#1030
+	@Test
+	public void checkTraceIdFromSubscriberContext() {
+		Span initSpan = this.tracer.nextSpan().name("foo").start();
+		final AtomicReference<Long> spanInSubscriberContext = new AtomicReference<>();
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
+			Mono.subscriberContext()
+					.map(context -> tracer.currentSpan().context().spanId())
+					.doOnNext(spanInSubscriberContext::set)
+					.block();
+		}
+
+		then(spanInSubscriberContext).hasValue(initSpan.context().spanId()); // ok here
+	}
+
 	@AfterClass
 	public static void cleanup() {
-		Hooks.resetOnLastOperator();
 		Hooks.resetOnEachOperator();
 		Schedulers.resetFactory();
 	}

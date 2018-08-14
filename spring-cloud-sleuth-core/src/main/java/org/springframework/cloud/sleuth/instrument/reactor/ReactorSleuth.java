@@ -48,14 +48,22 @@ public abstract class ReactorSleuth {
 	 * reactor.core.publisher.Hooks#onEachOperator(Function)} or {@link
 	 * reactor.core.publisher.Hooks#onLastOperator(Function)}.
 	 *
+	 * @deprecated use {@link ReactorSleuth#scopePassingSpanOperator} instead
 	 * @param beanFactory
 	 * @param <T> an arbitrary type that is left unchanged by the span operator
 	 *
 	 * @return a new lazy span operator pointcut
 	 */
 	@SuppressWarnings("unchecked")
+	@Deprecated
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanOperator(
 			BeanFactory beanFactory) {
+
+		if(log.isWarnEnabled()){
+			log.warn("spanOperator method will be deleted in the next major release. " +
+					"Use scopePassingSpanOperator() method instead");
+		}
+
 		return sourcePub -> {
 			// TODO: Remove this once Reactor 3.1.8 is released
 			//do the checks directly on actual original Publisher

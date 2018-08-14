@@ -18,9 +18,11 @@ package org.springframework.cloud.sleuth.annotation;
 
 import brave.Span;
 import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import reactor.core.publisher.Mono;
 import zipkin2.Annotation;
@@ -47,6 +50,7 @@ import static reactor.core.publisher.Mono.just;
 public class SleuthSpanCreatorAspectMonoTests {
 	
 	@Autowired TestBeanInterface testBean;
+	@Autowired TestBeanOuter testBeanOuter;
 	@Autowired Tracer tracer;
 	@Autowired ArrayListSpanReporter reporter;
 	
@@ -82,6 +86,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("test-method2");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	@Test
@@ -97,6 +102,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	@Test
@@ -111,6 +117,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	@Test
@@ -128,6 +135,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
 		then(spans.get(0).tags()).containsEntry("testTag", "test");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 	
 	@Test
@@ -143,6 +151,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
 		then(spans.get(0).tags()).containsEntry("testTag6", "test");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -157,6 +166,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -174,6 +184,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 				.containsEntry("class", "TestBean")
 				.containsEntry("method", "testMethod9");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -199,6 +210,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -214,6 +226,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -239,6 +252,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -267,6 +281,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 				.stream().map(Annotation::value).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -287,6 +302,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 				.containsEntry("testTag12", "test")
 				.containsEntry("error", "test exception 12");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -316,6 +332,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 				.contains("testMethod13.before", "testMethod13.afterFailure",
 						"testMethod13.after");
 		then(spans.get(0).duration()).isNotZero();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -325,8 +342,87 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		List<zipkin2.Span> spans = new ArrayList<>(this.reporter.getSpans());
 		then(spans).isEmpty();
+		then(this.tracer.currentSpan()).isNull();
 	}
-	
+
+	@Test
+	public void shouldReturnNewSpanFromTraceContext() {
+		Mono<Long> mono = this.testBean.newSpanInTraceContext();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		Long newSpanId = mono.block();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("span-in-trace-context");
+		then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+		then(this.tracer.currentSpan()).isNull();
+	}
+
+	@Test
+	public void shouldReturnNewSpanFromTraceContextOuter() {
+		Mono<Pair<Pair<Long, Long>, Long>> mono = this.testBeanOuter.outerNewSpanInTraceContext();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		Pair<Pair<Long, Long>, Long> pair = mono.block();
+		Long outerSpanIdBefore = pair.getFirst().getFirst();
+		Long outerSpanIdAfter = pair.getFirst().getSecond();
+		Long innerSpanId = pair.getSecond();
+
+		then(outerSpanIdBefore).isEqualTo(outerSpanIdAfter).isNotEqualTo(innerSpanId);
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(2);
+		then(spans.get(0).name()).isEqualTo("outer-span-in-trace-context");
+		then(spans.get(0).id()).isEqualTo(toHexString(outerSpanIdBefore));
+		then(spans.get(1).name()).isEqualTo("span-in-trace-context");
+		then(spans.get(1).id()).isEqualTo(toHexString(innerSpanId));
+		then(this.tracer.currentSpan()).isNull();
+	}
+
+	@Test
+	public void shouldReturnNewSpanFromSubscriberContext() {
+		Mono<Long> mono = this.testBean.newSpanInSubscriberContext();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		Long newSpanId = mono.block();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("span-in-subscriber-context");
+		then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+		then(this.tracer.currentSpan()).isNull();
+	}
+
+	@Test
+	public void shouldReturnNewSpanFromSubscriberContextOuter() {
+		Mono<Pair<Pair<Long, Long>, Long>> mono = this.testBeanOuter.outerNewSpanInSubscriberContext();
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		Pair<Pair<Long, Long>, Long> pair = mono.block();
+		Long outerSpanIdBefore = pair.getFirst().getFirst();
+		Long outerSpanIdAfter = pair.getFirst().getSecond();
+		Long innerSpanId = pair.getSecond();
+
+		then(outerSpanIdBefore).isEqualTo(outerSpanIdAfter).isNotEqualTo(innerSpanId);
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(2);
+		then(spans.get(0).name()).isEqualTo("outer-span-in-subscriber-context");
+		then(spans.get(0).id()).isEqualTo(toHexString(outerSpanIdBefore));
+		then(spans.get(1).name()).isEqualTo("span-in-subscriber-context");
+		then(spans.get(1).id()).isEqualTo(toHexString(innerSpanId));
+		then(this.tracer.currentSpan()).isNull();
+	}
+
+	private static String toHexString(long value){
+		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
+	}
+
 	protected interface TestBeanInterface {
 
 		// tag::annotated_method[]
@@ -375,12 +471,24 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		@ContinueSpan(log = "testMethod13")
 		Mono<String> testMethod13();
+
+		@NewSpan(name = "spanInTraceContext")
+		Mono<Long> newSpanInTraceContext();
+
+		@NewSpan(name = "spanInSubscriberContext")
+		Mono<Long> newSpanInSubscriberContext();
 	}
 	
 	protected static class TestBean implements TestBeanInterface {
 
 		public static final String TEST_STRING = "Test String";
 		public static final Mono<String> TEST_MONO = Mono.defer(() -> just(TEST_STRING));
+
+		private final Tracer tracer;
+
+		public TestBean(Tracer tracer) {
+			this.tracer = tracer;
+		}
 
 		@Override
 		public Mono<String> testMethod() {
@@ -458,6 +566,43 @@ public class SleuthSpanCreatorAspectMonoTests {
 		public Mono<String> testMethod13() {
 			return Mono.defer(() -> Mono.error(new RuntimeException("test exception 13")));
 		}
+
+		@Override
+		public Mono<Long> newSpanInTraceContext() {
+			return Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId()));
+		}
+
+		@Override
+		public Mono<Long> newSpanInSubscriberContext() {
+			return Mono.subscriberContext()
+					.flatMap(context -> Mono.just(tracer.currentSpan().context().spanId()));
+		}
+	}
+
+	protected static class TestBeanOuter {
+
+		private final Tracer tracer;
+		private final TestBeanInterface testBeanInterface;
+
+		public TestBeanOuter(Tracer tracer, TestBeanInterface testBeanInterface) {
+			this.tracer = tracer;
+			this.testBeanInterface = testBeanInterface;
+		}
+
+		@NewSpan(name = "outerSpanInTraceContext")
+		public Mono<Pair<Pair<Long, Long>, Long>> outerNewSpanInTraceContext() {
+			return Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId())
+					.zipWith(testBeanInterface.newSpanInTraceContext())
+					.map(pair -> Pair.of(Pair.of(pair.getT1(), tracer.currentSpan().context().spanId()), pair.getT2())));
+		}
+
+		@NewSpan(name = "outerSpanInSubscriberContext")
+		public Mono<Pair<Pair<Long, Long>, Long>> outerNewSpanInSubscriberContext() {
+			return Mono.subscriberContext()
+					.flatMap(context -> Mono.just(tracer.currentSpan().context().spanId())
+							.zipWith(testBeanInterface.newSpanInSubscriberContext())
+							.map(pair -> Pair.of(Pair.of(pair.getT1(), tracer.currentSpan().context().spanId()), pair.getT2())));
+		}
 	}
 	
 	@Configuration
@@ -465,8 +610,13 @@ public class SleuthSpanCreatorAspectMonoTests {
 	protected static class TestConfiguration {
 
 		@Bean
-		public TestBeanInterface testBean() {
-			return new TestBean();
+		public TestBeanInterface testBean(Tracer tracer) {
+			return new TestBean(tracer);
+		}
+
+		@Bean
+		public TestBeanOuter testBeanOuter(Tracer tracer, TestBeanInterface testBean) {
+			return new TestBeanOuter(tracer, testBean);
 		}
 
 		@Bean Reporter<zipkin2.Span> spanReporter() {

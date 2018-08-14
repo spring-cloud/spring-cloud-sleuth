@@ -259,12 +259,16 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			if(publisher instanceof Mono){
 				return startSpan.flatMap(spanStarted -> ((Mono<?>)publisher)
 						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)));
+						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)))
+						//put span in context so it can be used by ScopePassingSpanSubscriber
+						.subscriberContext(context -> context.put(Span.class, span));
 			}
 			else if(publisher instanceof Flux){
 				return startSpan.flatMapMany(spanStarted -> ((Flux<?>)publisher)
 						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)));
+						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)))
+						//put span in context so it can be used by ScopePassingSpanSubscriber
+						.subscriberContext(context -> context.put(Span.class, span));
 			}
 			else {
 				throw new IllegalArgumentException("Unexpected type of publisher: "+publisher.getClass());

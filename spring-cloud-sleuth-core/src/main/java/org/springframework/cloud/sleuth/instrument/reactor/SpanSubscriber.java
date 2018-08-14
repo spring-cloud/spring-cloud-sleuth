@@ -31,10 +31,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * A trace representation of the {@link Subscriber}
  *
+ * @deprecated use {@link ScopePassingSpanSubscriber} instead
  * @author Stephane Maldini
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
+@Deprecated
 final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<T> {
 
 	private static final Logger log = Loggers.getLogger(

@@ -38,7 +38,7 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	final Subscriber<? super T> subscriber;
 	final Context context;
 	final String name;
-	private Tracing tracing;
+	private volatile Tracing tracing;
 
 	SpanSubscriptionProvider(BeanFactory beanFactory,
 			Subscriber<? super T> subscriber,
