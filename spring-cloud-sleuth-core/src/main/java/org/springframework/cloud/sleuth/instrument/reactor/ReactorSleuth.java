@@ -27,6 +27,7 @@ import reactor.core.Scannable;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Operators;
+import reactor.util.context.Context;
 
 import java.util.function.Function;
 
@@ -39,6 +40,67 @@ import java.util.function.Function;
 public abstract class ReactorSleuth {
 
 	private static final Log log = LogFactory.getLog(ReactorSleuth.class);
+
+	/**
+	 * Return a span operator pointcut given a {@link BeanFactory}. This can be used in reactor
+	 * via {@link reactor.core.publisher.Flux#transform(Function)}, {@link
+	 * reactor.core.publisher.Mono#transform(Function)}, {@link
+	 * reactor.core.publisher.Hooks#onEachOperator(Function)} or {@link
+	 * reactor.core.publisher.Hooks#onLastOperator(Function)}.
+	 *
+	 * @deprecated use {@link ReactorSleuth#scopePassingSpanOperator} instead
+	 * @param beanFactory
+	 * @param <T> an arbitrary type that is left unchanged by the span operator
+	 *
+	 * @return a new lazy span operator pointcut
+	 */
+	@SuppressWarnings("unchecked")
+	@Deprecated
+	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanOperator(
+			BeanFactory beanFactory) {
+
+		if(log.isWarnEnabled()){
+			log.warn("spanOperator method will be deleted in the next major release. " +
+					"Use scopePassingSpanOperator() method instead");
+		}
+
+		return sourcePub -> {
+			// TODO: Remove this once Reactor 3.1.8 is released
+			//do the checks directly on actual original Publisher
+			if (sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
+					|| sourcePub instanceof GroupedFlux  //Operators.lift can't handle that
+					) {
+				return sourcePub;
+			}
+			//no more POINTCUT_FILTER since mechanism is broken
+			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators.lift((scannable, sub) -> {
+				if (contextRefreshed(beanFactory)) {
+					if (log.isTraceEnabled()) {
+						log.trace("Spring Context already refreshed. Creating a Sleuth span subscriber with Reactor Context " + "[" + sub.currentContext() + "] and name [" + scannable.name() + "]");
+					}
+					return spanSubscriptionProvider(beanFactory, scannable, sub).get();
+				}
+				if (log.isTraceEnabled()) {
+					log.trace(
+							"Spring Context is not yet refreshed, falling back to lazy span subscriber. Reactor Context is [" + sub.currentContext() + "] and name is [" + scannable.name() + "]");
+				}
+				//rest of the logic unchanged...
+				return new LazySpanSubscriber<T>(
+						spanSubscriptionProvider(beanFactory, scannable, sub)
+				);
+			});
+			return lift.apply(sourcePub);
+		};
+	}
+
+	private static <T> SpanSubscriptionProvider spanSubscriptionProvider(
+			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
+		return new SpanSubscriptionProvider(
+				beanFactory,
+				sub,
+				sub.currentContext(),
+				scannable.name());
+	}
 
 	/**
 	 * Return a span operator pointcut given a {@link Tracing}. This can be used in reactor
@@ -100,7 +162,14 @@ public abstract class ReactorSleuth {
 				beanFactory,
 				sub,
 				sub.currentContext(),
-				scannable.name());
+				scannable.name()) {
+			@Override SpanSubscription newCoreSubscriber(Tracing tracing) {
+				return new ScopePassingSpanSubscriber<T>(
+						sub,
+						sub != null ? sub.currentContext() : Context.empty(),
+						tracing);
+			}
+		};
 	}
 
 	private ReactorSleuth() {

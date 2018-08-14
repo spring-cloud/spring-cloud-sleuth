@@ -57,7 +57,7 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	}
 
 	SpanSubscription<T> newCoreSubscriber(Tracing tracing) {
-		return new ScopePassingSpanSubscriber<>(this.subscriber, this.context, tracing);
+		return new SpanSubscriber<>(this.subscriber, this.context, tracing, this.name);
 	}
 
 	private Tracing tracing() {
