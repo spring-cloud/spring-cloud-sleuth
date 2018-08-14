@@ -149,7 +149,7 @@ void userCode() {
 
 ==== RPC tracing
 
-TIP: Check for https://github.com/openzipkin/sleuth/tree/master/instrumentation[instrumentation written here] and http://zipkin.io/pages/existing_instrumentations.html[Zipkin's list] before rolling your own RPC instrumentation.
+TIP: Check for https://github.com/openzipkin/brave/tree/master/instrumentation[instrumentation written here] and http://zipkin.io/pages/existing_instrumentations.html[Zipkin's list] before rolling your own RPC instrumentation.
 
 RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.
 
