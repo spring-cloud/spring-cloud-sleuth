@@ -20,10 +20,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
-import org.junit.BeforeClass;
-import reactor.core.publisher.*;
+import reactor.core.publisher.BaseSubscriber;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Schedulers;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
