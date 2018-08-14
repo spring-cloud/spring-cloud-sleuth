@@ -810,7 +810,7 @@ void userCode() {
 <section xml:id="_rpc_tracing">
 <title>RPC tracing</title>
 <tip>
-<simpara>Check for <link xl:href="https://github.com/openzipkin/sleuth/tree/master/instrumentation">instrumentation written here</link> and <link xl:href="http://zipkin.io/pages/existing_instrumentations.html">Zipkin&#8217;s list</link> before rolling your own RPC instrumentation.</simpara>
+<simpara>Check for <link xl:href="https://github.com/openzipkin/brave/tree/master/instrumentation">instrumentation written here</link> and <link xl:href="http://zipkin.io/pages/existing_instrumentations.html">Zipkin&#8217;s list</link> before rolling your own RPC instrumentation.</simpara>
 </tip>
 <simpara>RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.</simpara>
 <simpara>The following example shows how to add a client span:</simpara>
