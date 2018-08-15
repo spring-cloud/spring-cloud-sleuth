@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +26,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.trace.http.HttpTrace;
+import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
@@ -38,21 +44,20 @@ import reactor.core.publisher.Mono;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
-import java.util.List;
-
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {
+@SpringBootTest(
+		properties = {"spring.main.web-application-type=reactive"},
+		classes = {
 		SleuthSpanCreatorAspectWebFluxTests.TestEndpoint.class,
 		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class}
 		, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@EnableAutoConfiguration
 public class SleuthSpanCreatorAspectWebFluxTests {
-	
+
 	@Autowired Tracer tracer;
 	@Autowired ArrayListSpanReporter reporter;
-	
+
 	@Before
 	public void setup() {
 		this.reporter.clear();
@@ -60,11 +65,15 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@LocalServerPort
 	private int port;
+
+	private final WebClient webClient = WebClient.create();
+
+	private static final ConcurrentLinkedQueue<Long> spanIdsInHttpTrace = new ConcurrentLinkedQueue<>();
 	
 	@Test
 	public void shouldReturnSpanFromWebFluxTraceContext() {
 
-		Mono<Long> mono = WebClient.create().get().uri("http://localhost:"+port+"/test/ping")
+		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/ping")
 				.retrieve().bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
@@ -82,7 +91,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldReturnSpanFromWebFluxSubscriptionContext() {
 
-		Mono<Long> mono = WebClient.create().get().uri("http://localhost:"+port+"/test/pingFromContext")
+		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/pingFromContext")
 				.retrieve().bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
@@ -100,7 +109,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldContinueSpanInWebFlux() {
 
-		Mono<Long> mono = WebClient.create().get().uri("http://localhost:"+port+"/test/continueSpan")
+		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/continueSpan")
 				.retrieve().bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
@@ -118,7 +127,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldCreateNewSpanInWebFlux() {
 
-		Mono<Long> mono = WebClient.create().get().uri("http://localhost:"+port+"/test/newSpan1")
+		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/newSpan1")
 				.retrieve().bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
@@ -137,7 +146,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldCreateNewSpanInWebFluxInSubscriberContext() {
 
-		Mono<Long> mono = WebClient.create().get().uri("http://localhost:"+port+"/test/newSpan2")
+		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/newSpan2")
 				.retrieve().bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
@@ -153,6 +162,28 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		then(this.tracer.currentSpan()).isNull();
 	}
 
+	@Test
+	public void shouldSetupCorrectSpanInHttpTrace() {
+
+		spanIdsInHttpTrace.clear();
+
+		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/ping")
+				.retrieve().bodyToMono(Long.class);
+
+		then(this.reporter.getSpans()).isEmpty();
+
+		Long newSpanId = mono.block();
+
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		then(spans).hasSize(1);
+		then(spans.get(0).kind()).isEqualTo(Span.Kind.SERVER);
+		then(spans.get(0).name()).isEqualTo("get /test/ping");
+		then(spans.get(0).id())
+				.isEqualTo(toHexString(newSpanId))
+				.isEqualTo(toHexString(spanIdsInHttpTrace.poll()));
+		then(this.tracer.currentSpan()).isNull();
+	}
+
 
 	private static String toHexString(long value){
 		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
@@ -160,7 +191,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = {org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 	protected static class TestConfiguration {
 
 		@Bean
@@ -174,6 +205,25 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		@Bean Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
+		}
+
+		@Bean AccessLoggingHttpTraceRepository accessLoggingHttpTraceRepository(){
+			return new AccessLoggingHttpTraceRepository();
+		}
+	}
+
+	static class AccessLoggingHttpTraceRepository implements HttpTraceRepository {
+
+		@Autowired Tracer tracer;
+
+		@Override
+		public List<HttpTrace> findAll() {
+			return null;
+		}
+
+		@Override
+		public void add(HttpTrace trace) {
+			spanIdsInHttpTrace.add(tracer.currentSpan().context().spanId());
 		}
 	}
 
