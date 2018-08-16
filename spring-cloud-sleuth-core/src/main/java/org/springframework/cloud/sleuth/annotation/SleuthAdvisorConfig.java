@@ -45,6 +45,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 
 /**
  * Custom pointcut advisor that picks all classes / interfaces that
@@ -259,14 +260,14 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 			if(publisher instanceof Mono){
 				return startSpan.flatMap(spanStarted -> ((Mono<?>)publisher)
 						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)))
+						.doFinally(afterReactor(startNewSpan, log, hasLog, spanStarted)))
 						//put span in context so it can be used by ScopePassingSpanSubscriber
 						.subscriberContext(context -> context.put(Span.class, span));
 			}
 			else if(publisher instanceof Flux){
 				return startSpan.flatMapMany(spanStarted -> ((Flux<?>)publisher)
 						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doOnTerminate(afterReactor(startNewSpan, log, hasLog, spanStarted)))
+						.doFinally(afterReactor(startNewSpan, log, hasLog, spanStarted)))
 						//put span in context so it can be used by ScopePassingSpanSubscriber
 						.subscriberContext(context -> context.put(Span.class, span));
 			}
@@ -282,8 +283,8 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		}
 	}
 
-	private Runnable afterReactor(boolean isNewSpan, String log, boolean hasLog, Span span) {
-		return () -> {
+	private Consumer<SignalType> afterReactor(boolean isNewSpan, String log, boolean hasLog, Span span) {
+		return signalType -> {
 			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 				after(span, isNewSpan, log, hasLog);
 			}
