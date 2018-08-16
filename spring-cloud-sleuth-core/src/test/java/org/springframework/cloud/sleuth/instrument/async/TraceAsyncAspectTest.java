@@ -46,5 +46,6 @@ public class TraceAsyncAspectTest {
 
 		BDDAssertions.then(this.reporter.getSpans()).hasSize(1);
 		BDDAssertions.then(this.reporter.getSpans().get(0).name()).isEqualTo("foo-bar");
+		BDDAssertions.then(this.reporter.getSpans().get(0).timestamp()).isPositive();
 	}
 }
