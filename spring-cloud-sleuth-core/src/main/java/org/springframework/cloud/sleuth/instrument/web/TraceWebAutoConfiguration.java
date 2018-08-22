@@ -89,12 +89,12 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Bean
-	public FilterRegistrationBean traceWebFilter(TraceFilter traceFilter) {
+	public FilterRegistrationBean traceWebFilter(TraceFilter traceFilter, SleuthWebProperties sleuthWebProperties) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
 				traceFilter);
 		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE,
 				REQUEST);
-		filterRegistrationBean.setOrder(TraceFilter.ORDER);
+		filterRegistrationBean.setOrder(sleuthWebProperties.getFilterOrder());
 		return filterRegistrationBean;
 	}
 

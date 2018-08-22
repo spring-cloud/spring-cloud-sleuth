@@ -25,6 +25,12 @@ public class SleuthWebProperties {
 	 */
 	private String skipPattern = DEFAULT_SKIP_PATTERN;
 
+	/**
+	 * Order in which the {@link TraceFilter} should be registered.
+	 * Defaults to {@link TraceFilter#ORDER}
+	 */
+	private int filterOrder = TraceFilter.ORDER;
+
 	private Client client;
 
 	public boolean isEnabled() {
@@ -41,6 +47,18 @@ public class SleuthWebProperties {
 
 	public void setSkipPattern(String skipPattern) {
 		this.skipPattern = skipPattern;
+	}
+
+	public static String getDefaultSkipPattern() {
+		return DEFAULT_SKIP_PATTERN;
+	}
+
+	public int getFilterOrder() {
+		return this.filterOrder;
+	}
+
+	public void setFilterOrder(int filterOrder) {
+		this.filterOrder = filterOrder;
 	}
 
 	public Client getClient() {

@@ -438,6 +438,9 @@ add to the Span a tag with key `custom` and a value `tag`.
 include::../../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]
 ----
 
+To change the order of `TraceFilter` registration, please set the
+`spring.sleuth.web.filter-order` property.
+
 === Custom SA tag in Zipkin
 
 Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
