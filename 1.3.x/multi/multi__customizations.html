@@ -117,7 +117,8 @@ TraceFilter myTraceFilter(BeanFactory beanFactory, <span xmlns:d="http://docbook
 			tracer.addTag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"custom"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"tag"</span>);
 		}
 	};
-}</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_sa_tag_in_zipkin" href="#_custom_sa_tag_in_zipkin"></a>9.5&nbsp;Custom SA tag in Zipkin</h2></div></div></div><p>Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
+}</pre><p>To change the order of <code class="literal">TraceFilter</code> registration, please set the
+<code class="literal">spring.sleuth.web.filter-order</code> property.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_sa_tag_in_zipkin" href="#_custom_sa_tag_in_zipkin"></a>9.5&nbsp;Custom SA tag in Zipkin</h2></div></div></div><p>Sometimes you want to create a manual Span that will wrap a call to an external service which is not instrumented.
 What you can do is to create a span with the <code class="literal">peer.service</code> tag that will contain a value of the service that you want to call.
 Below you can see an example of a call to Redis that is wrapped in such a span.</p><pre class="programlisting">org.springframework.cloud.sleuth.Span newSpan = tracer.createSpan(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"redis"</span>);
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> {

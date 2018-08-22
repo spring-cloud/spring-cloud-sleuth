@@ -1229,6 +1229,8 @@ TraceFilter myTraceFilter(BeanFactory beanFactory, final Tracer tracer) {
 		}
 	};
 }</programlisting>
+<simpara>To change the order of <literal>TraceFilter</literal> registration, please set the
+<literal>spring.sleuth.web.filter-order</literal> property.</simpara>
 </section>
 <section xml:id="_custom_sa_tag_in_zipkin">
 <title>Custom SA tag in Zipkin</title>
