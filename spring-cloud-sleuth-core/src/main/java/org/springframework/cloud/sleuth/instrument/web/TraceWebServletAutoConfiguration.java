@@ -32,7 +32,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.Ordered;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import static javax.servlet.DispatcherType.ASYNC;
@@ -57,7 +56,7 @@ import static javax.servlet.DispatcherType.REQUEST;
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
 public class TraceWebServletAutoConfiguration {
 
-	public static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
+	public static final int TRACING_FILTER_ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
 
 	/**
 	 * Nested config that configures Web MVC if it's present (without adding a runtime
@@ -83,18 +82,19 @@ public class TraceWebServletAutoConfiguration {
 	
 	@Bean
 	public FilterRegistrationBean traceWebFilter(
-			TracingFilter tracingFilter) {
+			TracingFilter tracingFilter, SleuthWebProperties webProperties) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(tracingFilter);
 		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
-		filterRegistrationBean.setOrder(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER);
+		filterRegistrationBean.setOrder(webProperties.getFilterOrder());
 		return filterRegistrationBean;
 	}
 
 	@Bean
-	public FilterRegistrationBean exceptionThrowingFilter() {
+	@ConditionalOnProperty(value = "spring.sleuth.web.exceptionThrowingFilterEnabled", matchIfMissing = true)
+	public FilterRegistrationBean exceptionThrowingFilter(SleuthWebProperties webProperties) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new ExceptionLoggingFilter());
 		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
-		filterRegistrationBean.setOrder(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1);
+		filterRegistrationBean.setOrder(webProperties.getFilterOrder());
 		return filterRegistrationBean;
 	}
 

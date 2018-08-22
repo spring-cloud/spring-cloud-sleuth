@@ -31,6 +31,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -45,6 +46,8 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(TraceWebAutoConfiguration.class)
 @EnableConfigurationProperties({TraceKeys.class, SleuthHttpLegacyProperties.class})
 public class TraceHttpAutoConfiguration {
+
+	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
 	@Autowired HttpClientParser clientParser;
 	@Autowired HttpServerParser serverParser;

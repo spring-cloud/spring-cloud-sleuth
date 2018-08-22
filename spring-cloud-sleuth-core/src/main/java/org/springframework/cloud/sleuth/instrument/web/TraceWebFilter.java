@@ -63,7 +63,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	 * have the tracing context passed for you out of the box. That means that e.g. your
 	 * logs will not get correlated.
 	 */
-	public static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
+	public static final int ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
 
 	static final Propagation.Getter<HttpHeaders, String> GETTER =
 			new Propagation.Getter<HttpHeaders, String>() {
@@ -84,6 +84,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	Tracer tracer;
 	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
 	TraceContext.Extractor<HttpHeaders> extractor;
+	SleuthWebProperties webProperties;
 	private final BeanFactory beanFactory;
 
 	TraceWebFilter(BeanFactory beanFactory) {
@@ -113,6 +114,13 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 					.tracing().propagation().extractor(GETTER);
 		}
 		return this.extractor;
+	}
+
+	SleuthWebProperties sleuthWebProperties() {
+		if (this.webProperties == null) {
+			this.webProperties = this.beanFactory.getBean(SleuthWebProperties.class);
+		}
+		return this.webProperties;
 	}
 
 	@Override public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -251,7 +259,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	@Override public int getOrder() {
-		return ORDER;
+		return sleuthWebProperties().getFilterOrder();
 	}
 
 	static final class DecoratedServerHttpResponse extends ServerHttpResponseDecorator {
