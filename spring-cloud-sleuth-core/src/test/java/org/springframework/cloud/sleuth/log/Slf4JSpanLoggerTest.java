@@ -40,8 +40,7 @@ public class Slf4JSpanLoggerTest {
 			.build();
 
 	Span span = this.tracing.tracer().nextSpan().name("span").start();
-	Slf4jCurrentTraceContext slf4jCurrentTraceContext =
-			new Slf4jCurrentTraceContext(new StrictCurrentTraceContext());
+	Slf4jScopeDecorator slf4jScopeDecorator = new Slf4jScopeDecorator();
 
 	@Before
 	@After
@@ -51,7 +50,7 @@ public class Slf4JSpanLoggerTest {
 
 	@Test
 	public void should_set_entries_to_mdc_from_span() throws Exception {
-		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
+		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> { });
 
 		assertThat(MDC.get("X-B3-TraceId")).isEqualTo(span.context().traceIdString());
 		assertThat(MDC.get("traceId")).isEqualTo(span.context().traceIdString());
@@ -67,8 +66,7 @@ public class Slf4JSpanLoggerTest {
 		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");
 
-		Scope scope = this.slf4jCurrentTraceContext
-				.newScope(null);
+		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> { });
 
 		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
 		assertThat(MDC.get("traceId")).isNullOrEmpty();

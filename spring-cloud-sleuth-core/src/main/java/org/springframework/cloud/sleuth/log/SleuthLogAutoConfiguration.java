@@ -18,12 +18,8 @@ package org.springframework.cloud.sleuth.log;
 
 import brave.propagation.CurrentTraceContext;
 import org.slf4j.MDC;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -51,32 +47,8 @@ public class SleuthLogAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
-		@ConditionalOnMissingBean
-		public CurrentTraceContext slf4jSpanLogger() {
-			return Slf4jCurrentTraceContext.create();
-		}
-
-		@Bean
-		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
-		@ConditionalOnBean(CurrentTraceContext.class)
-		public static BeanPostProcessor slf4jSpanLoggerBPP() {
-			return new Slf4jBeanPostProcessor();
-		}
-
-		static class Slf4jBeanPostProcessor implements BeanPostProcessor {
-
-			@Override public Object postProcessBeforeInitialization(Object bean,
-					String beanName) throws BeansException {
-				return bean;
-			}
-
-			@Override public Object postProcessAfterInitialization(Object bean,
-					String beanName) throws BeansException {
-				if (bean instanceof CurrentTraceContext && !(bean instanceof Slf4jCurrentTraceContext)) {
-					return Slf4jCurrentTraceContext.create((CurrentTraceContext) bean);
-				}
-				return bean;
-			}
+		public CurrentTraceContext.ScopeDecorator slf4jSpanDecorator() {
+			return new Slf4jScopeDecorator();
 		}
 	}
 }
