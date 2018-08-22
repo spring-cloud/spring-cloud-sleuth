@@ -56,7 +56,6 @@ import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.listener.adapter.MessagingMessageListenerAdapter;
-import org.springframework.kafka.support.converter.RecordMessageConverter;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -206,14 +205,6 @@ class SleuthKafkaAspect {
 			}
 		}
 		return listener;
-	}
-
-	private RecordMessageConverter currentRecordMessageConverter(MessagingMessageListenerAdapter adapter)
-			throws IllegalAccessException {
-		if (this.recordMessageConverter != null) {
-			return (RecordMessageConverter) this.recordMessageConverter.get(adapter);
-		}
-		return null;
 	}
 
 	@SuppressWarnings("unchecked")

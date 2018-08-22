@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.Collections;
+import java.util.List;
+
 import brave.Span;
 import brave.SpanCustomizer;
 import brave.Tracer;
@@ -28,10 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.util.SpanNameUtil;
-import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
-import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
@@ -75,6 +75,11 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 */
 	private static final String REMOTE_SERVICE_NAME = "broker";
 
+	public static TracingChannelInterceptor create(Tracing tracing,
+			List<TracingChannelInterceptorCustomizer> customizers) {
+		return new TracingChannelInterceptor(tracing, customizers);
+	}
+
 	public static TracingChannelInterceptor create(Tracing tracing) {
 		return new TracingChannelInterceptor(tracing);
 	}
@@ -84,16 +89,21 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	final ThreadLocalSpan threadLocalSpan;
 	final TraceContext.Injector<MessageHeaderAccessor> injector;
 	final TraceContext.Extractor<MessageHeaderAccessor> extractor;
-	final boolean integrationObjectSupportPresent;
 	private final boolean hasDirectChannelClass;
+	final List<TracingChannelInterceptorCustomizer> customizers;
 
 	@Autowired
 	TracingChannelInterceptor(Tracing tracing) {
-		this(tracing, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
+		this(tracing, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE,
+				Collections.singletonList(new DefaultTracingChannelInterceptorCustomizer()));
+	}
+
+	TracingChannelInterceptor(Tracing tracing, List<TracingChannelInterceptorCustomizer> customizers) {
+		this(tracing, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE, customizers);
 	}
 
 	TracingChannelInterceptor(Tracing tracing, Propagation.Setter<MessageHeaderAccessor, String> setter,
-			Propagation.Getter<MessageHeaderAccessor, String> getter) {
+			Propagation.Getter<MessageHeaderAccessor, String> getter, List<TracingChannelInterceptorCustomizer> customizers) {
 		this.tracing = tracing;
 		this.tracer = tracing.tracer();
 		this.threadLocalSpan = ThreadLocalSpan.create(this.tracer);
@@ -101,11 +111,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 				.injector(setter);
 		this.extractor = tracing.propagation()
 				.extractor(getter);
-		this.integrationObjectSupportPresent = ClassUtils.isPresent(
-				"org.springframework.integration.context.IntegrationObjectSupport",
-				null);
 		this.hasDirectChannelClass = ClassUtils
 				.isPresent("org.springframework.integration.channel.DirectChannel", null);
+		this.customizers = customizers;
 	}
 
 	/**
@@ -121,7 +129,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		headers.setImmutable();
 		Span result = this.tracer.nextSpan(extracted);
 		if (extracted.context() == null && !result.isNoop()) {
-			addTags(message, result, null);
+			customize(message, result, null);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span " + result);
@@ -146,7 +154,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.PRODUCER).name("send").start();
 			span.remoteEndpoint(Endpoint.newBuilder().serviceName(REMOTE_SERVICE_NAME).build());
-			addTags(message, span, channel);
+			customize(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in pre send" + span);
@@ -212,7 +220,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.CONSUMER).name("receive").start();
 			span.remoteEndpoint(Endpoint.newBuilder().serviceName(REMOTE_SERVICE_NAME).build());
-			addTags(message, span, channel);
+			customize(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in post receive " + span);
@@ -249,7 +257,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (!consumerSpan.isNoop()) {
 			consumerSpan.kind(Span.Kind.CONSUMER).start();
 			consumerSpan.remoteEndpoint(Endpoint.newBuilder().serviceName(REMOTE_SERVICE_NAME).build());
-			addTags(message, consumerSpan, channel);
+			customize(message, consumerSpan, channel);
 			consumerSpan.finish();
 		}
 		// create and scope a span for the message processor
@@ -283,31 +291,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	/**
 	 * When an upstream context was not present, lookup keys are unlikely added
 	 */
-	void addTags(Message<?> message, SpanCustomizer result, MessageChannel channel) {
-		// TODO topic etc
-		if (channel != null) {
-			result.tag("channel", messageChannelName(channel));
-		}
-	}
-
-	private String channelName(MessageChannel channel) {
-		String name = null;
-		if (this.integrationObjectSupportPresent) {
-			if (channel instanceof IntegrationObjectSupport) {
-				name = ((IntegrationObjectSupport) channel).getComponentName();
-			}
-			if (name == null && channel instanceof AbstractMessageChannel) {
-				name = ((AbstractMessageChannel) channel).getFullChannelName();
-			}
-		}
-		if (name == null) {
-			name = channel.toString();
-		}
-		return name;
-	}
-
-	private String messageChannelName(MessageChannel channel) {
-		return SpanNameUtil.shorten(channelName(channel));
+	void customize(Message<?> message, SpanCustomizer result, MessageChannel channel) {
+		this.customizers.forEach(customizer -> customizer.customize(message, result, channel));
 	}
 
 	void finishSpan(Exception error) {
@@ -342,3 +327,4 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		return message == null;
 	}
 }
+

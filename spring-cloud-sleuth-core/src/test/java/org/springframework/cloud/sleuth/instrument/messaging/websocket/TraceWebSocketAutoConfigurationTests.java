@@ -27,10 +27,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -57,7 +57,7 @@ public class TraceWebSocketAutoConfigurationTests {
 	}
 
 	@EnableAutoConfiguration @Configuration @EnableWebSocketMessageBroker
-	public static class Config extends AbstractWebSocketMessageBrokerConfigurer {
+	public static class Config implements WebSocketMessageBrokerConfigurer {
 
 		@Override public void configureMessageBroker(MessageBrokerRegistry config) {
 			config.enableSimpleBroker("/topic");

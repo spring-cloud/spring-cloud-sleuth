@@ -1252,6 +1252,10 @@ it's enough for you to register beans of types:
 * `Propagation.Setter<MessageHeaderAccessor, String>` - for writing headers to the message
 * `Propagation.Getter<MessageHeaderAccessor, String>` - for reading headers from the message
 
+If you want to customize the messaging spans, it's enough to register a bean of type
+`org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptorCustomizer` and
+apply the customization on the span. You can have multiple such implementations.
+
 ==== Spring RabbitMq
 
 We instrument the `RabbitTemplate` so that tracing headers get injected

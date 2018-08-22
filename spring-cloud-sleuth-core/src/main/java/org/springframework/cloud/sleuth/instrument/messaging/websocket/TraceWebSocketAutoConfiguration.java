@@ -16,18 +16,22 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging.websocket;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import brave.Tracing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
+import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptorCustomizer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -36,17 +40,20 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
  * @author Dave Syer
  * @since 1.0.0
  *
- * @see AbstractWebSocketMessageBrokerConfigurer
+ * @see WebSocketMessageBrokerConfigurer
  */
 @Configuration
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(value = "spring.sleuth.integration.websockets.enabled", matchIfMissing = true)
 public class TraceWebSocketAutoConfiguration
-		extends AbstractWebSocketMessageBrokerConfigurer {
+		implements WebSocketMessageBrokerConfigurer {
 
 	@Autowired
 	Tracing tracing;
+
+	@Autowired(required = false)
+	List<TracingChannelInterceptorCustomizer> customizers = new ArrayList<>();
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -55,16 +62,16 @@ public class TraceWebSocketAutoConfiguration
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.configureBrokerChannel().setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registry.configureBrokerChannel().setInterceptors(TracingChannelInterceptor.create(this.tracing, this.customizers));
 	}
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing, this.customizers));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing, this.customizers));
 	}
 }
