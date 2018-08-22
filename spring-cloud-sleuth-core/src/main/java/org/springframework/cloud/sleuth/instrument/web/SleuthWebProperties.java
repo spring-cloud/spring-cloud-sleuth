@@ -47,6 +47,18 @@ public class SleuthWebProperties {
 	 */
 	private String additionalSkipPattern;
 
+
+	/**
+	 * Order in which the tracing filters should be registered.
+	 * Defaults to {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}
+	 */
+	private int filterOrder = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
+
+	/**
+	 * Flag to toggle the presence of a filter that logs thrown exceptions
+	 */
+	private boolean exceptionThrowingFilterEnabled = true;
+
 	private Client client = new Client();
 
 	public boolean isEnabled() {
@@ -71,6 +83,27 @@ public class SleuthWebProperties {
 
 	public void setAdditionalSkipPattern(String additionalSkipPattern) {
 		this.additionalSkipPattern = additionalSkipPattern;
+	}
+
+	public static String getDefaultSkipPattern() {
+		return DEFAULT_SKIP_PATTERN;
+	}
+
+	public int getFilterOrder() {
+		return this.filterOrder;
+	}
+
+	public void setFilterOrder(int filterOrder) {
+		this.filterOrder = filterOrder;
+	}
+
+	public boolean isExceptionThrowingFilterEnabled() {
+		return this.exceptionThrowingFilterEnabled;
+	}
+
+	public void setExceptionThrowingFilterEnabled(
+			boolean exceptionThrowingFilterEnabled) {
+		this.exceptionThrowingFilterEnabled = exceptionThrowingFilterEnabled;
 	}
 
 	public Client getClient() {
