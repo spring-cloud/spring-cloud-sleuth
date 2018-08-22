@@ -23,11 +23,11 @@ import brave.CurrentSpanCustomizer;
 import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
-import brave.context.log4j2.ThreadContextCurrentTraceContext;
 import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,6 +58,7 @@ public class TraceAutoConfiguration {
 	public static final String TRACER_BEAN_NAME = "tracer";
 
 	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
+	@Autowired(required = false) List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -133,9 +134,17 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
+	CurrentTraceContext currentTraceContext(CurrentTraceContext.Builder builder) {
+		for (CurrentTraceContext.ScopeDecorator scopeDecorator : this.scopeDecorators) {
+			builder.addScopeDecorator(scopeDecorator);
+		}
+		return builder.build();
+	}
+
+	@Bean
 	@ConditionalOnMissingBean
-	CurrentTraceContext sleuthCurrentTraceContext() {
-		return ThreadContextCurrentTraceContext.create();
+	CurrentTraceContext.Builder sleuthCurrentTraceContextBuilder() {
+		return ThreadLocalCurrentTraceContext.newBuilder();
 	}
 
 	@Bean

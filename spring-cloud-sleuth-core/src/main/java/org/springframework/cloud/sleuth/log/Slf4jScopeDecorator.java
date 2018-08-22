@@ -25,22 +25,16 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 /**
- * Adds {@linkplain org.slf4j.MDC} properties "traceId", "parentId", "spanId" and "spanExportable" when a {@link
+ * Adds {@linkplain MDC} properties "traceId", "parentId", "spanId" and "spanExportable" when a {@link
  * brave.Tracer#currentSpan() span is current}. These can be used in log correlation.
  * Supports backward compatibility of MDC entries by adding legacy "X-B3" entries to MDC context
  * "X-B3-TraceId", "X-B3-ParentSpanId", "X-B3-SpanId" and "X-B3-Sampled"
  *
- * Due to the migration to {@link brave.propagation.CurrentTraceContext.ScopeDecorator} approach,
- * we are making the default implementation package scope since you can register your
- * own implementation of the Scope Decorator.
- *
  * @author Marcin Grzejszczak
  *
- * @since 2.0.0
- * @deprecated {@link Slf4jScopeDecorator} will be used
+ * @since 2.1.0
  */
-@Deprecated
-public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
+final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 
 	// Backward compatibility for all logging patterns
 	private static final String LEGACY_EXPORTABLE_NAME = "X-Span-Export";
@@ -48,30 +42,10 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 	private static final String LEGACY_TRACE_ID_NAME = "X-B3-TraceId";
 	private static final String LEGACY_SPAN_ID_NAME = "X-B3-SpanId";
 
-	private static final Logger log = LoggerFactory
-			.getLogger(Slf4jCurrentTraceContext.class);
+	private static final Logger log = LoggerFactory.getLogger(Slf4jScopeDecorator.class);
 
-	public static Slf4jCurrentTraceContext create() {
-		return create(CurrentTraceContext.Default.inheritable());
-	}
-
-	public static Slf4jCurrentTraceContext create(CurrentTraceContext delegate) {
-		return new Slf4jCurrentTraceContext(delegate);
-	}
-
-	final CurrentTraceContext delegate;
-
-	Slf4jCurrentTraceContext(CurrentTraceContext delegate) {
-		if (delegate == null)
-			throw new NullPointerException("delegate == null");
-		this.delegate = delegate;
-	}
-
-	@Override public TraceContext get() {
-		return this.delegate.get();
-	}
-
-	@Override public Scope newScope(@Nullable TraceContext currentSpan) {
+	@Override public CurrentTraceContext.Scope decorateScope(TraceContext currentSpan,
+			CurrentTraceContext.Scope scope) {
 		final String previousTraceId = MDC.get("traceId");
 		final String previousParentId = MDC.get("parentId");
 		final String previousSpanId = MDC.get("spanId");
@@ -114,9 +88,7 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 			MDC.remove(LEGACY_EXPORTABLE_NAME);
 		}
 
-		Scope scope = this.delegate.newScope(currentSpan);
-
-		class ThreadContextCurrentTraceContextScope implements Scope {
+		class ThreadContextCurrentTraceContextScope implements CurrentTraceContext.Scope {
 			@Override public void close() {
 				log("Closing scope for span: {}", currentSpan);
 				scope.close();
