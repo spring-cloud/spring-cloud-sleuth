@@ -16,8 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import brave.Tracing;
 import brave.propagation.Propagation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -62,8 +66,15 @@ public class TraceSpringIntegrationAutoConfiguration {
 	@Bean
 	TracingChannelInterceptor traceChannelInterceptor(Tracing tracing,
 			Propagation.Setter<MessageHeaderAccessor, String> traceMessagePropagationSetter,
-			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
-		return new TracingChannelInterceptor(tracing, traceMessagePropagationSetter, traceMessagePropagationGetter);
+			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter,
+			@Autowired(required = false) List<TracingChannelInterceptorCustomizer> customizers) {
+		return new TracingChannelInterceptor(tracing, traceMessagePropagationSetter,
+				traceMessagePropagationGetter, customizers == null ? new ArrayList<>() : customizers);
+	}
+
+	@Bean
+	DefaultTracingChannelInterceptorCustomizer defaultTracingChannelInterceptorCustomizer() {
+		return new DefaultTracingChannelInterceptorCustomizer();
 	}
 
 	@Bean
