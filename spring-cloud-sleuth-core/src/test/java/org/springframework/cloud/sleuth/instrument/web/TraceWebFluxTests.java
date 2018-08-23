@@ -242,9 +242,6 @@ public class TraceWebFluxTests {
 
 		@GetMapping("/api/unauthorized/{id}")
 		public Flux<String> unauthorized(@PathVariable Long id) {
-//			 #786
-			then(MDC.get("X-B3-TraceId")).isNotEmpty();
-			this.span = this.tracer.currentSpan();
 			return Flux.just(id.toString());
 		}
 
