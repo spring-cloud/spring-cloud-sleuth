@@ -25,7 +25,7 @@ import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -36,8 +36,12 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
+
+import java.util.Collection;
+import java.util.Optional;
 
 /**
  * A {@link WebFilter} that creates / continues / closes and detaches spans
@@ -77,16 +81,17 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 				}
 			};
 
-	public static WebFilter create(BeanFactory beanFactory) {
+	public static WebFilter create(ListableBeanFactory beanFactory) {
 		return new TraceWebFilter(beanFactory);
 	}
 
 	Tracer tracer;
 	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
 	TraceContext.Extractor<HttpHeaders> extractor;
-	private final BeanFactory beanFactory;
+	Collection<HandlerMapping> handlerMappings;
+	private final ListableBeanFactory beanFactory;
 
-	TraceWebFilter(BeanFactory beanFactory) {
+	TraceWebFilter(ListableBeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
@@ -113,6 +118,13 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 					.tracing().propagation().extractor(GETTER);
 		}
 		return this.extractor;
+	}
+
+	Collection<HandlerMapping> handlerMappings() {
+		if (this.handlerMappings == null) {
+			this.handlerMappings = this.beanFactory.getBeansOfType(HandlerMapping.class).values();
+		}
+		return this.handlerMappings;
 	}
 
 	@Override public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -142,26 +154,20 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 							} else {
 								continuation = Mono.empty();
 							}
-							String httpRoute = null;
-							Object attribute = exchange
-									.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
-							if (attribute instanceof HandlerMethod) {
-								HandlerMethod handlerMethod = (HandlerMethod) attribute;
-								addClassMethodTag(handlerMethod, span);
-								addClassNameTag(handlerMethod, span);
-								Object pattern = exchange
-										.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-								httpRoute = pattern != null ? pattern.toString() : "";
-							}
+
 							addResponseTagsForSpanWithoutParent(exchange, exchange.getResponse(), span);
-							DecoratedServerHttpResponse delegate = new DecoratedServerHttpResponse(
-									exchange.getResponse(), exchange.getRequest().getMethodValue(),
-									httpRoute);
-							handler().handleSend(delegate, t, span);
-							if (log.isDebugEnabled()) {
-								log.debug("Handled send of " + span);
-							}
-							return continuation;
+
+							return getHttpRoute(exchange, span)
+									.flatMap(httpRoute -> {
+										DecoratedServerHttpResponse delegate = new DecoratedServerHttpResponse(
+												exchange.getResponse(), exchange.getRequest().getMethodValue(),
+												httpRoute.orElse(null));
+										handler().handleSend(delegate, c.getOrDefault(CONTEXT_ERROR, null), span);
+										if (log.isDebugEnabled()) {
+											log.debug("Handled send of " + span);
+										}
+										return continuation;
+							});
 						})
 						.subscriberContext(c -> {
 							Span span;
@@ -190,6 +196,38 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 							}
 							return c.put(Span.class, span);
 						}));
+	}
+
+	private Mono<Optional<String>> getHttpRoute(ServerWebExchange exchange, Span span) {
+		Optional<String> httpRoute = extractRouteFromHandlerMethod(exchange, span);
+		return Mono.just(httpRoute)
+				.flatMap(route -> {
+					if (route.isPresent()) {
+						return Mono.just(route);
+					}
+
+					// Request may have been cut short before getting to the handler
+					// by a filter (like spring security), let's try to find the proper handler for this
+					// request manually
+					return Flux.fromIterable(handlerMappings())
+							.concatMap(mapping -> mapping.getHandler(exchange))
+							.next()
+							.flatMap(o -> Mono.just(extractRouteFromHandlerMethod(exchange, span)));
+				});
+	}
+
+	private Optional<String> extractRouteFromHandlerMethod(ServerWebExchange exchange, Span span) {
+		Object attribute = exchange
+				.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+		if (attribute instanceof HandlerMethod) {
+			HandlerMethod handlerMethod = (HandlerMethod) attribute;
+			addClassMethodTag(handlerMethod, span);
+			addClassNameTag(handlerMethod, span);
+			Object pattern = exchange
+					.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+			return Optional.of(pattern != null ? pattern.toString() : "");
+		}
+		return Optional.empty();
 	}
 
 	private Span spanFromContext(Context c) {

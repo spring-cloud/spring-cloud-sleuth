@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.Random;
-
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
@@ -36,12 +34,17 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.reactive.function.server.RequestPredicates;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -74,7 +77,8 @@ public class TraceWebFluxTests {
 		// when
 		ClientResponse response = whenRequestIsSent(port);
 		//then
-		thenSpanWasReportedWithTags(accumulator, response);
+		thenSpanWasReportedWithTags(accumulator, response,
+				"get /api/c2/{id}", "successful", "Controller2", 200);
 		clean(accumulator, controller2);
 
 		// when
@@ -93,6 +97,13 @@ public class TraceWebFluxTests {
 		// then
 		thenNoSpanWasReported(accumulator, skippedPatternResponse, controller2);
 
+		// when
+		ClientResponse unauthorizedResponse = whenRequestIsSentToUnauthorizedUrl(port);
+		//then
+		thenSpanWasReportedWithTags(accumulator, unauthorizedResponse,
+				"get /api/unauthorized/{id}", "unauthorized", "Controller2", 401);
+		clean(accumulator, controller2);
+
 		// cleanup
 		context.close();
 	}
@@ -103,15 +114,15 @@ public class TraceWebFluxTests {
 	}
 
 	private void thenSpanWasReportedWithTags(ArrayListSpanReporter accumulator,
-			ClientResponse response) {
+											 ClientResponse response, String spanName, String methodName, String className, int statusCode) {
 		Awaitility.await().untilAsserted(() -> {
-			then(response.statusCode().value()).isEqualTo(200);
+			then(response.statusCode().value()).isEqualTo(statusCode);
 			then(accumulator.getSpans()).hasSize(1);
 		});
-		then(accumulator.getSpans().get(0).name()).isEqualTo("get /api/c2/{id}");
+		then(accumulator.getSpans().get(0).name()).isEqualTo(spanName);
 		then(accumulator.getSpans().get(0).tags())
-				.containsEntry("mvc.controller.method", "successful")
-				.containsEntry("mvc.controller.class", "Controller2");
+				.containsEntry("mvc.controller.method", methodName)
+				.containsEntry("mvc.controller.class", className);
 	}
 
 	private void thenSpanWasReportedForFunction(ArrayListSpanReporter accumulator,
@@ -148,6 +159,12 @@ public class TraceWebFluxTests {
 	private ClientResponse whenRequestIsSentToSkippedPattern(int port) {
 		Mono<ClientResponse> exchange = WebClient.create().get()
 				.uri("http://localhost:" + port + "/skipped").exchange();
+		return exchange.block();
+	}
+
+	private ClientResponse whenRequestIsSentToUnauthorizedUrl(int port) {
+		Mono<ClientResponse> exchange = WebClient.create().get()
+				.uri("http://localhost:" + port + "/api/unauthorized/123").exchange();
 		return exchange.block();
 	}
 
@@ -190,6 +207,18 @@ public class TraceWebFluxTests {
 				return ServerResponse.ok().syncBody("functionOk");
 			});
 		}
+
+		@Bean
+		WebFilter securityWebFilter() {
+			return (exchange, chain) -> {
+				if (exchange.getRequest().getPath().pathWithinApplication().value().contains("unauthorized")) {
+					exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+					return Mono.empty();
+				}
+
+				return chain.filter(exchange);
+			};
+		}
 	}
 
 	@RestController
@@ -206,6 +235,14 @@ public class TraceWebFluxTests {
 		@GetMapping("/api/c2/{id}")
 		public Flux<String> successful(@PathVariable Long id) {
 			// #786
+			then(MDC.get("X-B3-TraceId")).isNotEmpty();
+			this.span = this.tracer.currentSpan();
+			return Flux.just(id.toString());
+		}
+
+		@GetMapping("/api/unauthorized/{id}")
+		public Flux<String> unauthorized(@PathVariable Long id) {
+//			 #786
 			then(MDC.get("X-B3-TraceId")).isNotEmpty();
 			this.span = this.tracer.currentSpan();
 			return Flux.just(id.toString());

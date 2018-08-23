@@ -16,7 +16,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Tracing;
-import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Configuration;
 public class TraceWebFluxAutoConfiguration {
 
 	@Bean
-	public TraceWebFilter traceFilter(BeanFactory beanFactory) {
+	public TraceWebFilter traceFilter(ListableBeanFactory beanFactory) {
 		return new TraceWebFilter(beanFactory);
 	}
 
