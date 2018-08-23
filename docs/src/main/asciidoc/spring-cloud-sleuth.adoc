@@ -420,6 +420,11 @@ There are two properties to achieve this.
 With the `spring.sleuth.baggage-keys`, you set keys that get prefixed with `baggage-` for HTTP calls and `baggage_` for messaging.
 You can also use the `spring.sleuth.propagation-keys` property to pass a list of prefixed keys that are whitelisted without any prefix.
 
+In order to automatically set the baggage values to Slf4j's MDC, you have to set
+the `spring.sleuth.log.slf4j.whitelisted-mdc-keys` property with a list of whitelisted
+baggage keys. E.g. `spring.sleuth.log.slf4j.whitelisted-mdc-keys=foo` will set the value of the
+`foo` baggage into MDC.
+
 ==== Extracting a Propagated Context
 
 The `TraceContext.Extractor<C>` reads trace identifiers and sampling status from an incoming request or message.

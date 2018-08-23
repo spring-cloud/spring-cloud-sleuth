@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,8 +48,9 @@ public class SleuthLogAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
-		public CurrentTraceContext.ScopeDecorator slf4jSpanDecorator() {
-			return new Slf4jScopeDecorator();
+		public CurrentTraceContext.ScopeDecorator slf4jSpanDecorator(SleuthProperties sleuthProperties,
+				SleuthSlf4jProperties sleuthSlf4jProperties) {
+			return new Slf4jScopeDecorator(sleuthProperties, sleuthSlf4jProperties);
 		}
 	}
 }

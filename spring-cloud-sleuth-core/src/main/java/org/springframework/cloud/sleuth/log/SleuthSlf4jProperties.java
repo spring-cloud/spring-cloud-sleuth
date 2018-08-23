@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -28,9 +31,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthSlf4jProperties {
 
 	/**
-	 * Enable a {@link Slf4jCurrentTraceContext} that prints tracing information in the logs.
+	 * Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.
 	 */
 	private boolean enabled = true;
+
+	/**
+	 * A list of keys to be put from baggage to MDC
+	 */
+	private List<String> whitelistedMdcKeys = new ArrayList<>();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -38,5 +46,13 @@ public class SleuthSlf4jProperties {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public List<String> getWhitelistedMdcKeys() {
+		return this.whitelistedMdcKeys;
+	}
+
+	public void setWhitelistedMdcKeys(List<String> whitelistedMdcKeys) {
+		this.whitelistedMdcKeys = whitelistedMdcKeys;
 	}
 }

@@ -16,13 +16,21 @@
 
 package org.springframework.cloud.sleuth.log;
 
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import brave.internal.HexCodec;
 import brave.internal.Nullable;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
+import org.springframework.util.StringUtils;
 
 /**
  * Adds {@linkplain MDC} properties "traceId", "parentId", "spanId" and "spanExportable" when a {@link
@@ -44,6 +52,14 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 
 	private static final Logger log = LoggerFactory.getLogger(Slf4jScopeDecorator.class);
 
+	private final SleuthProperties sleuthProperties;
+	private final SleuthSlf4jProperties sleuthSlf4jProperties;
+
+	Slf4jScopeDecorator(SleuthProperties sleuthProperties, SleuthSlf4jProperties sleuthSlf4jProperties) {
+		this.sleuthProperties = sleuthProperties;
+		this.sleuthSlf4jProperties = sleuthSlf4jProperties;
+	}
+
 	@Override public CurrentTraceContext.Scope decorateScope(TraceContext currentSpan,
 			CurrentTraceContext.Scope scope) {
 		final String previousTraceId = MDC.get("traceId");
@@ -54,6 +70,10 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		final String legacyPreviousParentId = MDC.get(LEGACY_PARENT_ID_NAME);
 		final String legacyPreviousSpanId = MDC.get(LEGACY_SPAN_ID_NAME);
 		final String legacySpanExportable = MDC.get(LEGACY_EXPORTABLE_NAME);
+		final List<AbstractMap.SimpleEntry<String, String>> previousMdc =
+				whitelistedBaggageKeys(currentSpan)
+				.map(s -> new AbstractMap.SimpleEntry<>(s, MDC.get(s)))
+				.collect(Collectors.toList());
 
 		if (currentSpan != null) {
 			String traceIdString = currentSpan.traceIdString();
@@ -76,6 +96,8 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 					log.trace("With parent: {}", currentSpan.parentId());
 				}
 			}
+			whitelistedBaggageKeys(currentSpan)
+					.forEach(s -> MDC.put(s, ExtraFieldPropagation.get(currentSpan, s)));
 		}
 		else {
 			MDC.remove("traceId");
@@ -86,6 +108,7 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			MDC.remove(LEGACY_PARENT_ID_NAME);
 			MDC.remove(LEGACY_SPAN_ID_NAME);
 			MDC.remove(LEGACY_EXPORTABLE_NAME);
+			whitelistedBaggageKeys(currentSpan).forEach(MDC::remove);
 		}
 
 		class ThreadContextCurrentTraceContextScope implements CurrentTraceContext.Scope {
@@ -100,9 +123,16 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 				replace(LEGACY_PARENT_ID_NAME, legacyPreviousParentId);
 				replace(LEGACY_SPAN_ID_NAME, legacyPreviousSpanId);
 				replace(LEGACY_EXPORTABLE_NAME, legacySpanExportable);
+				previousMdc.forEach(e -> replace(e.getKey(), e.getValue()));
 			}
 		}
 		return new ThreadContextCurrentTraceContextScope();
+	}
+
+	private Stream<String> whitelistedBaggageKeys(TraceContext context) {
+		return this.sleuthProperties.getBaggageKeys().stream()
+				.filter(s -> this.sleuthSlf4jProperties.getWhitelistedMdcKeys().contains(s) &&
+						context != null && StringUtils.hasText(ExtraFieldPropagation.get(context, s)));
 	}
 
 	private void log(String text, TraceContext span) {
