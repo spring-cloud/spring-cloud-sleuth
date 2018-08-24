@@ -134,7 +134,7 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
-	CurrentTraceContext currentTraceContext(CurrentTraceContext.Builder builder) {
+	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder) {
 		for (CurrentTraceContext.ScopeDecorator scopeDecorator : this.scopeDecorators) {
 			builder.addScopeDecorator(scopeDecorator);
 		}

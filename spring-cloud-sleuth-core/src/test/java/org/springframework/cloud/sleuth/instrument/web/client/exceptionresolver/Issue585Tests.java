@@ -16,12 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.exceptionresolver;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
+import javax.servlet.http.HttpServletRequest;
 
 import brave.Span;
 import brave.Tracing;
 import brave.sampler.Sampler;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
@@ -43,8 +45,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -71,6 +71,7 @@ public class Issue585Tests {
 }
 
 @SpringBootApplication
+@DisableSecurity
 class TestConfig {
 
 	@Bean ArrayListSpanReporter testSpanReporter() {

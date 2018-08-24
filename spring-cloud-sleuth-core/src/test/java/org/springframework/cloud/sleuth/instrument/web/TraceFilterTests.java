@@ -507,7 +507,7 @@ public class TraceFilterTests {
 			then(this.reporter.getSpans())
 					.hasSize(1);
 			then(this.reporter.getSpans().get(0).tags())
-					.containsEntry("http.status_code", status.toString());
+					.containsEntry("http.status_code", "500");
 		}
 	}
 }

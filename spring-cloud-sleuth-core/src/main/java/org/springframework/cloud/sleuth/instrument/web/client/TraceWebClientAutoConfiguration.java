@@ -17,15 +17,12 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import brave.Span;
 import brave.Tracer;
@@ -36,8 +33,6 @@ import brave.httpclient.TracingHttpClientBuilder;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
@@ -51,7 +46,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -76,9 +70,8 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.netty.Connection;
+import reactor.netty.NettyOutbound;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
@@ -305,17 +298,16 @@ class NettyAspect {
 		this.instrumentation = TracingHttpClientInstrumentation.create(httpTracing);
 	}
 
-	@Pointcut("execution(public * reactor.ipc.netty.http.client.HttpClient.request(..)) && args(method, url, handler)")
-	private void anyHttpClientRequestSending(HttpMethod method,
-			String url, Function<? super HttpClientRequest, ? extends Publisher<Void>> handler) { } // NOSONAR
+	@Pointcut("execution(public * reactor.netty.http.client.HttpClient.RequestSender.send(..)) && args(function)")
+	private void anyHttpClientRequestSending(
+			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) { } // NOSONAR
 
-	@Around("anyHttpClientRequestSending(method, url, handler)")
+	@Around("anyHttpClientRequestSending(function)")
 	public Object wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
-			HttpMethod method,
-			String url, Function<? super HttpClientRequest, ? extends Publisher<Void>> handler) throws Throwable {
+			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) throws Throwable {
 		return Mono.defer(() -> {
 			try {
-				return this.instrumentation.wrapHttpClientRequestSending(pjp, method, url, handler);
+				return this.instrumentation.wrapHttpClientRequestSending(pjp, function);
 			}
 			catch (Throwable e) {
 				return Mono.error(e);
@@ -366,13 +358,12 @@ class TracingHttpClientInstrumentation {
 	}
 
 	Mono<HttpClientResponse> wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
-			HttpMethod method,
-			String url, Function<? super HttpClientRequest, ? extends Publisher<Void>> handler) throws Throwable {
+			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) throws Throwable {
 		// add headers and set CS
 		final Span currentSpan = this.tracer.currentSpan();
 		final AtomicReference<Span> span = new AtomicReference<>();
-		Function<HttpClientRequest, Publisher<Void>> combinedFunction =
-				req -> {
+		BiFunction<HttpClientRequest, NettyOutbound, Publisher<Void>> combinedFunction =
+				(req, nettyOutbound) -> {
 					try (Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(currentSpan)) {
 						io.netty.handler.codec.http.HttpHeaders originalHeaders = req
 								.requestHeaders().copy();
@@ -388,13 +379,13 @@ class TracingHttpClientInstrumentation {
 							if (log.isDebugEnabled()) {
 								log.debug("Created a new client span for Netty client");
 							}
-							return handle(handler, new TracedHttpClientRequest(req, addedHeaders));
+							return handle(function, new TracedHttpClientRequest(req, addedHeaders), nettyOutbound);
 						}
 					}
 				};
 		// run
 		Mono<HttpClientResponse> responseMono =
-				(Mono<HttpClientResponse>) pjp.proceed(new Object[] { method , url, combinedFunction });
+				(Mono<HttpClientResponse>) pjp.proceed(new Object[] { combinedFunction });
 		// get response
 		return responseMono.doOnSuccessOrError((httpClientResponse, throwable) -> {
 			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.get())) {
@@ -500,12 +491,12 @@ class TracingHttpClientInstrumentation {
 	}
 
 	private Publisher<Void> handle(
-			Function<? super HttpClientRequest, ? extends Publisher<Void>> handler,
-			HttpClientRequest req) {
+			BiFunction<? super HttpClientRequest, ? super NettyOutbound, ? extends Publisher<Void>> handler,
+			HttpClientRequest req, NettyOutbound nettyOutbound) {
 		if (handler != null) {
-			return handler.apply(req);
+			return handler.apply(req, nettyOutbound);
 		}
-		return req;
+		return nettyOutbound;
 	}
 
 	static final class HttpAdapter
