@@ -78,14 +78,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.ipc.netty.NettyContext;
-import reactor.ipc.netty.NettyOutbound;
-import reactor.ipc.netty.NettyPipeline;
-import reactor.ipc.netty.channel.data.FileChunkedStrategy;
-import reactor.ipc.netty.http.client.HttpClient;
-import reactor.ipc.netty.http.client.HttpClientRequest;
-import reactor.ipc.netty.http.client.HttpClientResponse;
-import reactor.ipc.netty.http.websocket.WebsocketOutbound;
+import reactor.netty.Connection;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.HttpClientRequest;
+import reactor.netty.http.client.HttpClientResponse;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -441,38 +437,6 @@ class TracingHttpClientInstrumentation {
 			return this;
 		}
 
-		@Override public HttpClientRequest context(
-				Consumer<NettyContext> contextCallback) {
-			this.delegate = this.delegate.context(contextCallback);
-			return this;
-		}
-
-		@Override public HttpClientRequest chunkedTransfer(boolean chunked) {
-			this.delegate = this.delegate.chunkedTransfer(chunked);
-			return this;
-		}
-
-		@Override public HttpClientRequest options(
-				Consumer<? super NettyPipeline.SendOptions> configurator) {
-			this.delegate = this.delegate.options(configurator);
-			return this;
-		}
-
-		@Override public HttpClientRequest followRedirect() {
-			this.delegate = this.delegate.followRedirect();
-			return this;
-		}
-
-		@Override public HttpClientRequest failOnClientError(boolean shouldFail) {
-			this.delegate = this.delegate.failOnClientError(shouldFail);
-			return this;
-		}
-
-		@Override public HttpClientRequest failOnServerError(boolean shouldFail) {
-			this.delegate = this.delegate.failOnServerError(shouldFail);
-			return this;
-		}
-
 		@Override public boolean hasSentHeaders() {
 			return this.delegate.hasSentHeaders();
 		}
@@ -498,111 +462,12 @@ class TracingHttpClientInstrumentation {
 			return this;
 		}
 
-		@Override public HttpClientRequest onWriteIdle(long idleTimeout,
-				Runnable onWriteIdle) {
-			this.delegate = this.delegate.onWriteIdle(idleTimeout, onWriteIdle);
-			return this;
-		}
-
 		@Override public String[] redirectedFrom() {
 			return this.delegate.redirectedFrom();
 		}
 
 		@Override public HttpHeaders requestHeaders() {
 			return this.delegate.requestHeaders();
-		}
-
-		@Override public Mono<Void> send() {
-			return this.delegate.send();
-		}
-
-		@Override public Flux<Long> sendForm(Consumer<Form> formCallback) {
-			return this.delegate.sendForm(formCallback);
-		}
-
-		@Override public NettyOutbound sendHeaders() {
-			return this.delegate.sendHeaders();
-		}
-
-		@Override public WebsocketOutbound sendWebsocket() {
-			return this.delegate.sendWebsocket();
-		}
-
-		@Override public WebsocketOutbound sendWebsocket(String subprotocols) {
-			return this.delegate.sendWebsocket(subprotocols);
-		}
-
-		@Override public ByteBufAllocator alloc() {
-			return this.delegate.alloc();
-		}
-
-		@Override public NettyContext context() {
-			return this.delegate.context();
-		}
-
-		@Override public FileChunkedStrategy getFileChunkedStrategy() {
-			return this.delegate.getFileChunkedStrategy();
-		}
-
-		@Override public Mono<Void> neverComplete() {
-			return this.delegate.neverComplete();
-		}
-
-		@Override public NettyOutbound send(Publisher<? extends ByteBuf> dataStream) {
-			return this.delegate.send(dataStream);
-		}
-
-		@Override public NettyOutbound sendByteArray(
-				Publisher<? extends byte[]> dataStream) {
-			return this.delegate.sendByteArray(dataStream);
-		}
-
-		@Override public NettyOutbound sendFile(Path file) {
-			return this.delegate.sendFile(file);
-		}
-
-		@Override public NettyOutbound sendFile(Path file, long position, long count) {
-			return this.delegate.sendFile(file, position, count);
-		}
-
-		@Override public NettyOutbound sendFileChunked(Path file, long position,
-				long count) {
-			return this.delegate.sendFileChunked(file, position, count);
-		}
-
-		@Override public NettyOutbound sendGroups(
-				Publisher<? extends Publisher<? extends ByteBuf>> dataStreams) {
-			return this.delegate.sendGroups(dataStreams);
-		}
-
-		@Override public NettyOutbound sendObject(Publisher<?> dataStream) {
-			return this.delegate.sendObject(dataStream);
-		}
-
-		@Override public NettyOutbound sendObject(Object msg) {
-			return this.delegate.sendObject(msg);
-		}
-
-		@Override public NettyOutbound sendString(
-				Publisher<? extends String> dataStream) {
-			return this.delegate.sendString(dataStream);
-		}
-
-		@Override public NettyOutbound sendString(Publisher<? extends String> dataStream,
-				Charset charset) {
-			return this.delegate.sendString(dataStream, charset);
-		}
-
-		@Override public void subscribe(Subscriber<? super Void> s) {
-			this.delegate.subscribe(s);
-		}
-
-		@Override public Mono<Void> then() {
-			return this.delegate.then();
-		}
-
-		@Override public NettyOutbound then(Publisher<Void> other) {
-			return this.delegate.then(other);
 		}
 
 		@Override public Map<CharSequence, Set<Cookie>> cookies() {
