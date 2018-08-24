@@ -342,9 +342,8 @@ The following example shows setting baggage on a span:
 [source,java]
 ----
 Span initialSpan = this.tracer.nextSpan().name("span").start();
-try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
-    ExtraFieldPropagation.set("foo", "bar");
-    ExtraFieldPropagation.set("UPPER_CASE", "someValue");
+ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
+ExtraFieldPropagation.set(initialSpan.context(),"UPPER_CASE", "someValue");
 }
 ----
 
@@ -492,6 +491,13 @@ dependencies { <2>
 If you want to use RabbitMQ or Kafka instead of HTTP, add the `spring-rabbit` or `spring-kafka` dependency.
 The default destination name is `zipkin`.
 
+If using Kafka, you must set the property `spring.zipkin.sender.type` property accordingly:
+
+[source,yaml]
+----
+spring.zipkin.sender.type: kafka
+----
+
 CAUTION: `spring-cloud-sleuth-stream` is deprecated and incompatible with these destinations.
 
 If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-zipkin` and `spring-rabbit`
@@ -597,8 +603,8 @@ Consequently, if you set  a baggage element on a Span, it is sent downstream to 
 * If `spring-cloud-sleuth-zipkin` is on the classpath, the app generates and collects Zipkin-compatible traces.
 By default, it sends them over HTTP to a Zipkin server on localhost (port 9411).
 You can configure the location of the service by setting `spring.zipkin.baseUrl`.
-** If you depend on `spring-rabbit` or `spring-kafka`, your app sends traces to a broker instead of HTTP.
-**
+** If you depend on `spring-rabbit`, your app sends traces to a RabbitMQ broker instead of HTTP.
+** If you depend on `spring-kafka`, and set `spring.zipkin.sender.type: kafka`, your app sends traces to a Kafka broker instead of HTTP.
 
 CAUTION: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
 
