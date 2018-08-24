@@ -403,9 +403,11 @@ class TracingHttpClientInstrumentation {
 		return responseMono.doOnSuccessOrError((httpClientResponse, throwable) -> {
 			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.get())) {
 				// status codes and CR
-				this.handler.handleReceive(httpClientResponse, throwable, span.get());
-				if (log.isDebugEnabled()) {
-					log.debug("Setting client sent spans");
+				if (span.get() != null) {
+					this.handler.handleReceive(httpClientResponse, throwable, span.get());
+					if (log.isDebugEnabled()) {
+						log.debug("Setting client sent spans");
+					}
 				}
 			}
 		});
