@@ -33,7 +33,7 @@
 		<sonar.skip>true</sonar.skip>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
-		<spring-boot.version>2.0.4.RELEASE</spring-boot.version>
+		<spring-boot.version>2.1.0.M1</spring-boot.version>
 	</properties>
 
 	<dependencyManagement>
