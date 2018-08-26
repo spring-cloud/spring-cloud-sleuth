@@ -115,8 +115,7 @@ public class Issue362Tests {
 
 @Configuration
 @EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
-@EnableFeignClients(basePackageClasses = {
-		SleuthTestController.class})
+@EnableFeignClients(basePackageClasses = { SleuthTestController.class})
 class Application {
 
 	@Bean

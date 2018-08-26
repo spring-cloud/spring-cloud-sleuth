@@ -35,7 +35,6 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurity
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.rule.OutputCapture;
-import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -148,10 +147,7 @@ public class FlatMapTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(
-			exclude = { ReactiveUserDetailsServiceAutoConfiguration.class,
-					ReactiveSecurityAutoConfiguration.class })
-	@DisableSecurity
+	@EnableAutoConfiguration
 	static class TestConfiguration {
 
 		brave.Span spanInFoo;

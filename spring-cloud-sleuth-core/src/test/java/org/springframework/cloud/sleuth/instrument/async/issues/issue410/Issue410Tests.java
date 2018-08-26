@@ -38,7 +38,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.cloud.sleuth.instrument.async.LazyTraceExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -287,7 +286,6 @@ class AsyncTask {
 
 @SpringBootApplication(exclude = SpringDataWebAutoConfiguration.class)
 @RestController
-@DisableSecurity
 class Application {
 
 	private static final Log log = LogFactory.getLog(

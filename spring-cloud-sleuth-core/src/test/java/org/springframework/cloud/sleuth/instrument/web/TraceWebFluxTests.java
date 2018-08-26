@@ -163,9 +163,7 @@ public class TraceWebFluxTests {
 
 	@Configuration
 	@EnableAutoConfiguration(
-			exclude = { TraceWebClientAutoConfiguration.class,
-					ReactiveUserDetailsServiceAutoConfiguration.class,
-					ReactiveSecurityAutoConfiguration.class })
+			exclude = { TraceWebClientAutoConfiguration.class })
 	static class Config {
 
 		@Bean WebClient webClient() {

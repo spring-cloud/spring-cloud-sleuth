@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import javax.annotation.PreDestroy;
 
 import brave.Span;
@@ -128,7 +127,9 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 				.isNull();
 	}
 
-	@Configuration @EnableAutoConfiguration static class App {
+	@Configuration
+	@EnableAutoConfiguration
+	static class App {
 
 		@Bean List<zipkin2.Span> spans() {
 			return new ArrayList<>();

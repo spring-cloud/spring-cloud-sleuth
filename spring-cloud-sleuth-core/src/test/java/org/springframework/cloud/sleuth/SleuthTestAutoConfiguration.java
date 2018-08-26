@@ -16,20 +16,31 @@
 
 package org.springframework.cloud.sleuth;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 /**
  * @author Marcin Grzejszczak
  */
-@Import(PermitAllServletConfiguration.class)
-@Target({ ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface DisableSecurity {
+@Configuration
+public class SleuthTestAutoConfiguration {
+
+	@Configuration
+	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+	static class ReactiveConfiguration {
+		@Import(PermitAllWebFluxSecurityConfiguration.class)
+		static class ImportConfiguration {
+
+		}
+	}
+
+	@Configuration
+	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+	static class ServletConfiguration {
+		@Import(PermitAllServletConfiguration.class)
+		static class ImportConfiguration {
+
+		}
+	}
 }

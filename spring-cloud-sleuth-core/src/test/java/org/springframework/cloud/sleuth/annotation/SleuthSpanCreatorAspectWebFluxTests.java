@@ -192,7 +192,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	
 	@Configuration
-	@EnableAutoConfiguration(exclude = {org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+	@EnableAutoConfiguration
 	@DisableWebFluxSecurity
 	protected static class TestConfiguration {
 
