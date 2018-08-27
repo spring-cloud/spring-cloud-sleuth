@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
@@ -53,7 +54,7 @@ public class SpanAdjusterTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = IntegrationAutoConfiguration.class)
 	static class SpanAdjusterAspectTestsConfig {
 		@Bean Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;

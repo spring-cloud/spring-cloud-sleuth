@@ -53,8 +53,7 @@ public class Issue307Tests {
 }
 
 @EnableAutoConfiguration
-@Import({
-		ParticipantsBean.class, ParticipantsClient.class})
+@Import({ ParticipantsBean.class})
 @RestController
 @EnableFeignClients
 @EnableCircuitBreaker

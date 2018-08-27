@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.multiple;
+package org.springframework.cloud.sleuth.instrument.multiple;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,8 +43,7 @@ import org.springframework.web.bind.annotation.RestController;
 @IntegrationComponentScan
 public class DemoApplication {
 
-	private static final Log log = LogFactory.getLog(
-			DemoApplication.class);
+	private static final Log log = LogFactory.getLog(DemoApplication.class);
 
 	Span httpSpan;
 	Span splitterSpan;
@@ -98,6 +97,7 @@ public class DemoApplication {
 	public List<Span> allSpans() {
 		return Arrays.asList(this.httpSpan, this.splitterSpan, this.aggregatorSpan, this.serviceActivatorSpan);
 	}
+
 }
 
 @MessagingGateway(name = "greeter")
