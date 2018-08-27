@@ -53,10 +53,9 @@ public class TraceNoWebEnvironmentTests {
 
 	@Configuration
 	@EnableAutoConfiguration
-	@EnableFeignClients
+	@EnableFeignClients(clients = Config.SomeFeignClient.class)
 	@EnableCircuitBreaker
 	public static class Config  {
-
 
 		@FeignClient(name = "google", url = "https://www.google.com/")
 		public interface SomeFeignClient {
