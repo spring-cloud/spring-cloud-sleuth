@@ -26,6 +26,7 @@ import org.slf4j.MDC;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -162,6 +163,7 @@ public class TraceWebFluxTests {
 
 	@Configuration
 	@EnableAutoConfiguration(exclude = { TraceWebClientAutoConfiguration.class })
+	@DisableWebFluxSecurity
 	static class Config {
 
 		@Bean WebClient webClient() {
