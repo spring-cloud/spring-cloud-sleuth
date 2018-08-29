@@ -22,7 +22,6 @@ import brave.sampler.Sampler;
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
 import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.Sender;
@@ -104,7 +103,7 @@ public class ZipkinAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	ReporterMetrics sleuthReporterMetrics() {
-		return new InMemoryReporterMetrics(); 
+		return ReporterMetrics.NOOP_METRICS;
 	}
 	
 	@Configuration
