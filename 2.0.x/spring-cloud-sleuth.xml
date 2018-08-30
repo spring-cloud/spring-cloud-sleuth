@@ -363,9 +363,7 @@ However, keep in mind that too many can decrease system throughput or increase R
 In extreme cases, too much baggage can crash the application, due to exceeding transport-level message or header capacity.</simpara>
 </important>
 <simpara>The following example shows setting baggage on a span:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.nextSpan().name("span").start();
-ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
-ExtraFieldPropagation.set(initialSpan.context(),"UPPER_CASE", "someValue");
+<programlisting language="java" linenumbering="unnumbered">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
 }</programlisting>
 <section xml:id="_baggage_versus_span_tags">
 <title>Baggage versus Span Tags</title>
@@ -397,10 +395,7 @@ However, you can search by tag to find the trace, assuming a span having the sea
 <formalpara>
 <title>The code</title>
 <para>
-<programlisting language="java" linenumbering="unnumbered">initialSpan.tag("foo",
-		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
-initialSpan.tag("UPPER_CASE",
-		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));</programlisting>
+<programlisting language="java" linenumbering="unnumbered">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]</programlisting>
 </para>
 </formalpara>
 </section>
