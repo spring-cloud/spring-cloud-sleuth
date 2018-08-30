@@ -27,7 +27,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @SpringBootApplication
-@EnableAsyncFeignClientServerErrorTests
+@EnableAsync
 public class SampleSleuthApplication {
 
 	@Bean
