@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth;
 
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.AsyncConfigurer;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.springframework.context.annotation.Import;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * that wraps an existing custom {@link AsyncConfigurer} in a {@link LazyTraceAsyncCustomizer}
- *
- * @author Jesus Alonso
- * @since 2.1.0
+ * @author Marcin Grzejszczak
  */
-@Configuration
-@EnableConfigurationProperties(SleuthAsyncProperties.class)
-public class AsyncAutoConfiguration {
+@Import(PermitAllServletConfiguration.class)
+@Target({ ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface DisableSecurity {
 }

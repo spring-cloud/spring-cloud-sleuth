@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.multiple;
+package org.springframework.cloud.sleuth.instrument.multiple;
 
 import java.net.URI;
 import java.util.Collections;
@@ -184,5 +184,6 @@ public class MultipleHopsIntegrationTests {
 		@Bean Sampler defaultTraceSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
 }

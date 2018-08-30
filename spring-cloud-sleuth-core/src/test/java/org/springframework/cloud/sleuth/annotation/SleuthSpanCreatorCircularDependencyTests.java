@@ -47,7 +47,8 @@ public class SleuthSpanCreatorCircularDependencyTests {
 		}
 	}
 
-	@Configuration @EnableAutoConfiguration
+	@Configuration
+	@EnableAutoConfiguration
 	protected static class TestConfiguration {
 		@Bean Reporter<Span> spanReporter() {
 			return new ArrayListSpanReporter();

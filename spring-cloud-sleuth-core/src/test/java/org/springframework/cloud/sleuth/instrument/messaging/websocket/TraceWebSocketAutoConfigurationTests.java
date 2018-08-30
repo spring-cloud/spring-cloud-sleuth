@@ -56,7 +56,9 @@ public class TraceWebSocketAutoConfigurationTests {
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 	}
 
-	@EnableAutoConfiguration @Configuration @EnableWebSocketMessageBroker
+	@EnableAutoConfiguration
+	@Configuration
+	@EnableWebSocketMessageBroker
 	public static class Config extends AbstractWebSocketMessageBrokerConfigurer {
 
 		@Override public void configureMessageBroker(MessageBrokerRegistry config) {

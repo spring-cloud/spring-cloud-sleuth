@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth;
 
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
-/**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * that wraps an existing custom {@link AsyncConfigurer} in a {@link LazyTraceAsyncCustomizer}
- *
- * @author Jesus Alonso
- * @since 2.1.0
- */
 @Configuration
-@EnableConfigurationProperties(SleuthAsyncProperties.class)
-public class AsyncAutoConfiguration {
+@EnableWebSecurity
+@Order(99)
+public class PermitAllServletConfiguration extends WebSecurityConfigurerAdapter {
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http
+				.authorizeRequests()
+				.antMatchers("/*").permitAll();
+	}
 }

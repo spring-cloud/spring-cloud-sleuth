@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.Random;
-
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
@@ -27,9 +25,8 @@ import org.junit.Test;
 import org.slf4j.MDC;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -41,7 +38,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.reactive.function.server.RequestPredicates;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -162,10 +162,8 @@ public class TraceWebFluxTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(
-			exclude = { TraceWebClientAutoConfiguration.class,
-					ReactiveUserDetailsServiceAutoConfiguration.class,
-					ReactiveSecurityAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = { TraceWebClientAutoConfiguration.class })
+	@DisableWebFluxSecurity
 	static class Config {
 
 		@Bean WebClient webClient() {

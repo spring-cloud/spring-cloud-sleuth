@@ -88,8 +88,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Hooks;
 import reactor.core.scheduler.Schedulers;
-import reactor.ipc.netty.http.client.HttpClient;
-import reactor.ipc.netty.http.client.HttpClientResponse;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.HttpClientResponse;
 import zipkin2.Annotation;
 import zipkin2.reporter.Reporter;
 
@@ -246,7 +246,10 @@ public class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			HttpClientResponse response = this.nettyHttpClient
-					.get("http://localhost:" + port).block();
+					.get()
+					.uri("http://localhost:" + port)
+					.response()
+					.block();
 
 			then(response).isNotNull();
 		}

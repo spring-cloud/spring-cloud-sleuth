@@ -274,7 +274,7 @@
 		<spring-cloud-netflix.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.2.0</brave.version>
-		<spring-security-boot-autoconfigure.version>2.0.0.RELEASE</spring-security-boot-autoconfigure.version>
+		<spring-security-boot-autoconfigure.version>2.0.4.RELEASE</spring-security-boot-autoconfigure.version>
 	</properties>
 
 	<profiles>
