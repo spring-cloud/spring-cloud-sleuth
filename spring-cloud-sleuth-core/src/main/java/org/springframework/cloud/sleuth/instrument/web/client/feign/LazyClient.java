@@ -23,7 +23,7 @@ import feign.Request;
 import feign.Response;
 import org.springframework.beans.factory.BeanFactory;
 
-class LazyClient implements Client {
+class  LazyClient implements Client {
 
 	private final BeanFactory beanFactory;
 	private final Client delegate;
