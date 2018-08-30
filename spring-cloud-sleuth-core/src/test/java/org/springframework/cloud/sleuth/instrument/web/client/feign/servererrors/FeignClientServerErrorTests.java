@@ -76,7 +76,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 		"spring.application.name=fooservice",
 		"feign.hystrix.enabled=true",
 		"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=60000",
-		"hystrix.command.default.execution.isolation.strategy=SEMAPHORE"})
+		"hystrix.command.default.execution.isolation.strategy=SEMAPHORE",
+		"hystrix.execution.isolation.strategy=SEMAPHORE"})
 public class FeignClientServerErrorTests {
 
 	private static final Log log = LogFactory.getLog(FeignClientServerErrorTests.class);
