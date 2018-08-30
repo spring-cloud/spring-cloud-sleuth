@@ -36,11 +36,6 @@ public class SampleSleuthApplication {
 	}
 
 	@Bean
-	public SampleController sampleController() {
-		return new SampleController();
-	}
-
-	@Bean
 	public Sampler sampler() {
 		return Sampler.ALWAYS_SAMPLE;
 	}

@@ -35,12 +35,12 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.mock.env.MockEnvironment;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.amqp.RabbitMQSender;
 import zipkin2.reporter.kafka11.KafkaSender;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 /**
  * Not using {@linkplain SpringBootTest} as we need to change properties per test.
@@ -49,6 +49,7 @@ public class ZipkinAutoConfigurationTests {
 
 	@Rule public ExpectedException thrown = ExpectedException.none();
 	@Rule public MockWebServer server = new MockWebServer();
+	MockEnvironment environment = new MockEnvironment();
 
 	AnnotationConfigApplicationContext context;
 
@@ -62,7 +63,7 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void defaultsToV2Endpoint() throws Exception {
 		context = new AnnotationConfigApplicationContext();
-		addEnvironment(context, "spring.zipkin.base-url:" + server.url("/"));
+		environment().setProperty("spring.zipkin.base-url", server.url("/").toString());
 		context.register(
 				ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,
@@ -82,11 +83,16 @@ public class ZipkinAutoConfigurationTests {
 		then(request.getBody().readUtf8()).contains("localEndpoint");
 	}
 
+	private MockEnvironment environment() {
+		context.setEnvironment(environment);
+		return environment;
+	}
+
 	@Test
 	public void encoderDirectsEndpoint() throws Exception {
 		context = new AnnotationConfigApplicationContext();
-		addEnvironment(
-				context, "spring.zipkin.base-url:" + server.url("/"), "spring.zipkin.encoder:JSON_V1");
+		environment().setProperty("spring.zipkin.base-url", server.url("/").toString());
+		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
 		context.register(
 				ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,
@@ -109,7 +115,7 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void overrideRabbitMQQueue() throws Exception {
 		context = new AnnotationConfigApplicationContext();
-		addEnvironment(context, "spring.zipkin.rabbitmq.queue:zipkin2");
+		environment().setProperty("spring.zipkin.rabbitmq.queue", "zipkin2");
 		context.register(
 				PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class,
@@ -124,8 +130,8 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void overrideKafkaTopic() throws Exception {
 		context = new AnnotationConfigApplicationContext();
-		addEnvironment(context, "spring.zipkin.kafka.topic:zipkin2",
-				"spring.zipkin.sender.type:kafka");
+		environment().setProperty("spring.zipkin.kafka.topic", "zipkin2");
+		environment().setProperty("spring.zipkin.sender.type", "kafka");
 		context.register(
 				PropertyPlaceholderAutoConfiguration.class,
 				KafkaAutoConfiguration.class,
@@ -140,7 +146,7 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void canOverrideBySender() throws Exception {
 		context = new AnnotationConfigApplicationContext();
-		addEnvironment(context, "spring.zipkin.sender.type:web");
+		environment().setProperty("spring.zipkin.sender.type", "web");
 		context.register(
 				PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class,
@@ -156,7 +162,7 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void canOverrideBySenderAndIsCaseInsensitive() throws Exception {
 		context = new AnnotationConfigApplicationContext();
-		addEnvironment(context, "spring.zipkin.sender.type:WEB");
+		environment().setProperty("spring.zipkin.sender.type", "WEB");
 		context.register(
 				PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class,
