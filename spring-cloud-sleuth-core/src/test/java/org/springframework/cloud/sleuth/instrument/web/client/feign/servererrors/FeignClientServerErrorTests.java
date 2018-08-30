@@ -77,7 +77,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 		"spring.application.name=fooservice",
 		"feign.hystrix.enabled=true"})
 // TODO: TRY TO REPLICATE IT LOCALLY
-//@Ignore("FAILS ON CI. DOESN'T PROPAGATE TRACING HEADERS TO ANOTHER THREAD")
+@Ignore("FAILS ON CI. DOESN'T PROPAGATE TRACING HEADERS TO ANOTHER THREAD")
 public class FeignClientServerErrorTests {
 
 	private static final Log log = LogFactory.getLog(FeignClientServerErrorTests.class);
