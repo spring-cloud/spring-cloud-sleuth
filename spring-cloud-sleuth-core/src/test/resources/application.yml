@@ -17,6 +17,7 @@ spring.sleuth.scheduled.skipPattern: "^org.*TestBeanWithScheduledMethodToBeIgnor
 spring.sleuth.rxjava.schedulers.ignoredthreads: HystixMetricPoller,^MyCustomThread.*$,^RxComputation.*$
 
 logging.level.org.springframework.cloud: DEBUG
+logging.level.org.springframework.cloud.sleuth.instrument.web.client.feign: TRACE
 
 #disable hibernate by default
 spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration

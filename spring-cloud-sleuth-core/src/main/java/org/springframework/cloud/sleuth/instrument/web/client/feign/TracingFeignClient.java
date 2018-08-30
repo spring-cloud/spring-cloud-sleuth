@@ -18,10 +18,9 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import brave.Span;
@@ -51,9 +50,14 @@ final class TracingFeignClient implements Client {
 		@Override public void put(Map<String, Collection<String>> carrier, String key,
 				String value) {
 			if (!carrier.containsKey(key)) {
-				List<String> list = new ArrayList<>();
-				list.add(value);
-				carrier.put(key, list);
+				carrier.put(key, Collections.singletonList(value));
+				if (log.isTraceEnabled()) {
+					log.trace("Added key [" + key + "] and header value [" + value + "]");
+				}
+			} else {
+				if (log.isTraceEnabled()) {
+					log.trace("Key [" + key + "] already there in the headers");
+				}
 			}
 		}
 
