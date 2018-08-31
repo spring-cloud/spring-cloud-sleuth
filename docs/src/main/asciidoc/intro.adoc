@@ -219,7 +219,7 @@ The following example shows setting baggage on a span:
 
 [source,java]
 ----
-include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
 }
 ----
 
@@ -249,7 +249,7 @@ include::{github-raw}/spring-cloud-sleuth-core/src/test/resources/application-ba
 .The code
 [source,java]
 ----
-include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
+include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
 ----
 
 [[sleuth-adding-project]]
