@@ -49,7 +49,6 @@ import org.springframework.context.annotation.Scope;
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
 @AutoConfigureAfter({SleuthHystrixAutoConfiguration.class, TraceHttpAutoConfiguration.class})
-@EnableConfigurationProperties(SleuthFeignProperties.class)
 public class TraceFeignClientAutoConfiguration {
 
 	@Bean
