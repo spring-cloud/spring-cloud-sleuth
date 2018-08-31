@@ -26,11 +26,10 @@ import org.junit.Test;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessageHeaders;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.mock.env.MockEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,14 +49,24 @@ public class TraceStreamEnvironmentPostProcessorTests {
 			return Collections.singleton("test");
 		}
 	};
-	private ConfigurableEnvironment environment = new StandardEnvironment();
+	private MockEnvironment environment = new MockEnvironment();
 
 	@Test
 	public void should_append_tracing_headers() {
+		this.environment.setProperty("spring.cloud.stream.test.binder.headers", "foo,bar,baz");
 		postProcess();
 		assertThat(this.environment
 				.getProperty("spring.cloud.stream.test.binder.HEADERS[0]"))
-						.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
+					.isEqualTo("foo");
+		assertThat(this.environment
+				.getProperty("spring.cloud.stream.test.binder.HEADERS[1]"))
+					.isEqualTo("bar");
+		assertThat(this.environment
+				.getProperty("spring.cloud.stream.test.binder.HEADERS[2]"))
+					.isEqualTo("baz");
+		assertThat(this.environment
+				.getProperty("spring.cloud.stream.test.binder.HEADERS[3]"))
+					.isEqualTo(TraceMessageHeaders.SPAN_ID_NAME);
 	}
 
 	@Test

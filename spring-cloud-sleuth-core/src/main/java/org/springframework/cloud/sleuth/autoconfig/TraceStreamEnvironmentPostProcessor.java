@@ -17,9 +17,12 @@
 package org.springframework.cloud.sleuth.autoconfig;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -64,8 +67,10 @@ class TraceStreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		try {
 			for (Resource resource : getAllSpringBinders(resolver)) {
 				for (String binderType : parseBinderConfigurations(resource)) {
+					List<String> existingHeaders = existingHeaders(environment, binderType);
 					int startIndex = findStartIndex(environment, binderType);
-					addHeaders(map, environment.getPropertySources(), binderType, startIndex);
+					startIndex = startIndex + existingHeaders.size();
+					addHeaders(map, environment.getPropertySources(), binderType, startIndex, existingHeaders);
 				}
 			}
 		}
@@ -79,6 +84,15 @@ class TraceStreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 			throws IOException {
 		return resolver
 				.getResources("classpath*:META-INF/spring.binders");
+	}
+
+	private List<String> existingHeaders(ConfigurableEnvironment environment, String binder) {
+		String prefix = "spring.cloud.stream." + binder + ".binder.headers";
+		String oldHeaders = environment.getProperty(prefix);
+		if (oldHeaders != null) {
+			return Arrays.asList(oldHeaders.split(","));
+		}
+		return new ArrayList<>();
 	}
 
 	private int findStartIndex(ConfigurableEnvironment environment, String binder) {
@@ -130,22 +144,46 @@ class TraceStreamEnvironmentPostProcessor implements EnvironmentPostProcessor {
 	}
 
 	private void addHeaders(Map<String, Object> map, MutablePropertySources propertySources,
-			String binder, int startIndex) {
+			String binder, int startIndex, List<String> existingHeaders) {
 		String stem = "spring.cloud.stream." + binder + ".binder.HEADERS";
+		for (int i = 0; i < existingHeaders.size(); i++) {
+			String header = existingHeaders.get(i);
+			if (!hasHeaderKey(propertySources, header)) {
+				putHeader(map, stem, i, header);
+			}
+		}
 		for (int i = 0; i < HEADERS.length; i++) {
-			if (!hasTracingHeadersValue(propertySources, HEADERS[i])) {
-				map.put(stem + "[" + (i + startIndex) + "]", HEADERS[i]);
+			boolean hasHeader = hasHeaderKey(propertySources, HEADERS[i]);
+			if (!hasHeader) {
+				putHeader(map, stem, i + startIndex, HEADERS[i]);
+			} else if (!existingHeaders.isEmpty() && hasHeader) {
+				removeEntryWithHeader(propertySources, HEADERS[i]);
+				putHeader(map, stem, i + startIndex, HEADERS[i]);
 			}
 		}
 	}
 
-	private boolean hasTracingHeadersValue(MutablePropertySources propertySources, String header) {
+	private void putHeader(Map<String, Object> map, String stem, int i2, String header2) {
+		map.put(stem + "[" + (i2) + "]", header2);
+	}
+
+	private boolean hasHeaderKey(MutablePropertySources propertySources, String header) {
 		PropertySource<?> source = propertySources.get(PROPERTY_SOURCE_NAME);
 		if (source instanceof MapPropertySource) {
 			Collection<Object> values = ((MapPropertySource) source).getSource().values();
 			return values.contains(header);
 		}
 		return false;
+	}
+
+	private void removeEntryWithHeader(MutablePropertySources propertySources, String header) {
+		PropertySource<?> source = propertySources.get(PROPERTY_SOURCE_NAME);
+		if (source instanceof MapPropertySource) {
+			Collection<Object> values = ((MapPropertySource) source).getSource().values();
+			if (values.contains(header)) {
+				values.remove(header);
+			}
+		}
 	}
 
 }
