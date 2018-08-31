@@ -16,6 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
+import javax.annotation.PreDestroy;
+
 import brave.Tracing;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -27,6 +32,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
 import org.springframework.context.ApplicationListener;
@@ -36,11 +42,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import javax.annotation.PreDestroy;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -54,6 +55,7 @@ import java.util.function.Supplier;
 @ConditionalOnProperty(value="spring.sleuth.reactor.enabled", matchIfMissing=true)
 @ConditionalOnClass(Mono.class)
 @AutoConfigureAfter(TraceWebFluxAutoConfiguration.class)
+@EnableConfigurationProperties(SleuthReactorProperties.class)
 public class TraceReactorAutoConfiguration {
 
 	@Configuration
