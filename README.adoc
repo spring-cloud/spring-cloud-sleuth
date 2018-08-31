@@ -45,7 +45,7 @@ NOTE: Set `spring.application.name=myService` (for instance) to see the service 
 IMPORTANT: If you use Zipkin, configure the probability of spans exported by setting `spring.sleuth.sampler.probability`
 (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working be cause it omits some spans.
 
-:branch: 2.0.x
+:branch: master
 
 == Introduction
 
