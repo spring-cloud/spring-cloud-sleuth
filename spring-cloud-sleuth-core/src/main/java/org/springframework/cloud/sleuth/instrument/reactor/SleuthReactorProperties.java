@@ -26,6 +26,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth.reactor.enabled")
 public class SleuthReactorProperties {
 
+	/**
+	 * When true enables instrumentation for reactor
+	 */
 	private boolean enabled = true;
 
 	public boolean isEnabled() {
