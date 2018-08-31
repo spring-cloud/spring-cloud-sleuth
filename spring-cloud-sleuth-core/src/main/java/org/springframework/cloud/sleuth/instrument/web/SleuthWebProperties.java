@@ -58,7 +58,7 @@ public class SleuthWebProperties {
 	 */
 	private boolean exceptionThrowingFilterEnabled = true;
 
-	private Client client;
+	private Client client = new Client();
 
 	public boolean isEnabled() {
 		return this.enabled;

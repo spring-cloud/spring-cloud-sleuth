@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignContext;
 import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
@@ -48,6 +49,7 @@ import org.springframework.context.annotation.Scope;
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
 @AutoConfigureAfter({SleuthHystrixAutoConfiguration.class, TraceHttpAutoConfiguration.class})
+@EnableConfigurationProperties(SleuthFeignProperties.class)
 public class TraceFeignClientAutoConfiguration {
 
 	@Bean

@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import brave.Tracing;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -56,6 +57,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 @ConditionalOnProperty(value="spring.sleuth.reactor.enabled", matchIfMissing=true)
 @ConditionalOnClass(Mono.class)
 @AutoConfigureAfter(TraceWebFluxAutoConfiguration.class)
+@EnableConfigurationProperties(SleuthReactorProperties.class)
 public class TraceReactorAutoConfiguration {
 
 	@Configuration
