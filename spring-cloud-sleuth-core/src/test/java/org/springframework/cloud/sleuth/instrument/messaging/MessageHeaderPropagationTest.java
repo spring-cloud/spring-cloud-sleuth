@@ -22,6 +22,7 @@ import brave.propagation.Propagation;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -74,5 +75,32 @@ public class MessageHeaderPropagationTest
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "non existent key");
 		assertNull(value);
+	}
+
+	@Test
+	public void testSkipWrongValueTypeForGet() {
+		MessageHeaderAccessor carrier = carrier();
+		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
+				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}"
+		);
+		MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-SpanId");
+	}
+
+	@Test
+	public void testSkipWrongValueTypeForRemoval() {
+		MessageHeaderAccessor carrier = carrier();
+		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
+				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}"
+		);
+		MessageHeaderPropagation.removeAnyTraceHeaders(carrier, Collections.singletonList("X-B3-SpanId"));
+	}
+
+	@Test
+	public void testSkipWrongValueTypeForPut() {
+		MessageHeaderAccessor carrier = carrier();
+		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
+				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}"
+		);
+		MessageHeaderPropagation.INSTANCE.put(carrier, "X-B3-SpanId", "1234");
 	}
 }
