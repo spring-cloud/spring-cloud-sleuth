@@ -20,9 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
-import org.junit.BeforeClass;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;

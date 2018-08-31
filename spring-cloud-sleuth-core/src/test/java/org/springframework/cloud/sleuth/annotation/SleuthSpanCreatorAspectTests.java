@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
 import zipkin2.Annotation;
 import zipkin2.reporter.Reporter;

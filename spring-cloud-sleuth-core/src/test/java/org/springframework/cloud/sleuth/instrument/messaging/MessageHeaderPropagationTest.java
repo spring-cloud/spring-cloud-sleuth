@@ -19,11 +19,9 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.Collections;
 
 import brave.propagation.Propagation;
-import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 public class MessageHeaderPropagationTest

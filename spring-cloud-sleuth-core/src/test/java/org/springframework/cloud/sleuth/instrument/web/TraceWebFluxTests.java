@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.Random;
-
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
