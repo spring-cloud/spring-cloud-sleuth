@@ -19,7 +19,9 @@ import brave.Tracing;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -63,6 +65,20 @@ public class SleuthAnnotationAutoConfiguration {
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE) SleuthAdvisorConfig sleuthAdvisorConfig() {
 		return new SleuthAdvisorConfig();
+	}
+
+	@Bean
+	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+	@ConditionalOnClass(name = "reactor.core.publisher.Flux")
+	SleuthMethodInvocationProcessor reactorSleuthMethodInvocationProcessor() {
+		return new ReactorSleuthMethodInvocationProcessor();
+	}
+
+	@Bean
+	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+	@ConditionalOnMissingClass("reactor.core.publisher.Flux")
+	SleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor() {
+		return new NonReactorSleuthMethodInvocationProcessor();
 	}
 
 }

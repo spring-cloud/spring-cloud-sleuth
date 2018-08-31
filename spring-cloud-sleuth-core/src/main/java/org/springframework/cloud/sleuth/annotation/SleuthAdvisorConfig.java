@@ -19,17 +19,10 @@ package org.springframework.cloud.sleuth.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 
-import brave.Span;
-import brave.Tracer;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.aop.Pointcut;
@@ -42,10 +35,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.SignalType;
 
 /**
  * Custom pointcut advisor that picks all classes / interfaces that
@@ -170,14 +159,8 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
  */
 class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 
-	private static final Log logger = LogFactory.getLog(SleuthInterceptor.class);
-	private static final String CLASS_KEY = "class";
-	private static final String METHOD_KEY = "method";
-
 	private BeanFactory beanFactory;
-	private NewSpanParser newSpanParser;
-	private Tracer tracer;
-	private SpanTagAnnotationHandler spanTagAnnotationHandler;
+	private SleuthMethodInvocationProcessor methodInvocationProcessor;
 
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -185,7 +168,6 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		if (method == null) {
 			return invocation.proceed();
 		}
-
 		Method mostSpecificMethod = AopUtils
 				.getMostSpecificMethod(method, invocation.getThis().getClass());
 		NewSpan newSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, NewSpan.class);
@@ -193,180 +175,14 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		if (newSpan == null && continueSpan == null) {
 			return invocation.proceed();
 		}
-
-		if(isReactorReturnType(method.getReturnType())){
-			return proceedUnderReactorSpan(invocation, newSpan, continueSpan);
-		} else {
-			return proceedUnderSynchronousSpan(invocation, newSpan, continueSpan);
-		}
+		return methodInvocationProcessor().process(invocation, newSpan, continueSpan);
 	}
 
-	private boolean isReactorReturnType(Class<?> returnType) {
-		return Flux.class.equals(returnType) || Mono.class.equals(returnType);
-	}
-
-	private Object proceedUnderSynchronousSpan(
-			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
-		Span span = tracer().currentSpan();
-		//in case of @ContinueSpan and no span in tracer we start new span and should close it on completion
-		boolean startNewSpan = newSpan != null || span == null;
-		if (startNewSpan) {
-			span = tracer().nextSpan();
-			newSpanParser().parse(invocation, newSpan, span);
-			span.start();
+	private SleuthMethodInvocationProcessor methodInvocationProcessor() {
+		if (this.methodInvocationProcessor == null) {
+			this.methodInvocationProcessor = this.beanFactory.getBean(SleuthMethodInvocationProcessor.class);
 		}
-		String log = log(continueSpan);
-		boolean hasLog = StringUtils.hasText(log);
-		try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
-			before(invocation, span, log, hasLog);
-			return invocation.proceed();
-		} catch (Exception e) {
-			onFailure(span, log, hasLog, e);
-			throw e;
-		} finally {
-			after(span, startNewSpan, log, hasLog);
-		}
-	}
-
-	private Object proceedUnderReactorSpan(
-			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable{
-		Span spanPrevious = tracer().currentSpan();
-		//in case of @ContinueSpan and no span in tracer we start new span and should close it on completion
-		boolean startNewSpan = newSpan != null || spanPrevious == null;
-		Span span;
-		if (startNewSpan) {
-			span = tracer().nextSpan();
-			newSpanParser().parse(invocation, newSpan, span);
-		} else {
-			span = spanPrevious;
-		}
-
-		String log = log(continueSpan);
-		boolean hasLog = StringUtils.hasText(log);
-
-		try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
-
-			Publisher<?> publisher = (Publisher) invocation.proceed();
-
-			Mono<Span> startSpan = Mono.defer(() -> withSpanInScope(span, () -> {
-				if (startNewSpan) {
-					span.start();
-				}
-
-				before(invocation, span, log, hasLog);
-				return Mono.just(span);
-			}));
-
-			if(publisher instanceof Mono){
-				return startSpan.flatMap(spanStarted -> ((Mono<?>)publisher)
-						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doFinally(afterReactor(startNewSpan, log, hasLog, spanStarted)))
-						//put span in context so it can be used by ScopePassingSpanSubscriber
-						.subscriberContext(context -> context.put(Span.class, span));
-			}
-			else if(publisher instanceof Flux){
-				return startSpan.flatMapMany(spanStarted -> ((Flux<?>)publisher)
-						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doFinally(afterReactor(startNewSpan, log, hasLog, spanStarted)))
-						//put span in context so it can be used by ScopePassingSpanSubscriber
-						.subscriberContext(context -> context.put(Span.class, span));
-			}
-			else {
-				throw new IllegalArgumentException("Unexpected type of publisher: "+publisher.getClass());
-			}
-		}
-	}
-
-	private <T> T withSpanInScope(Span span, Supplier<T> supplier) {
-		try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
-			return supplier.get();
-		}
-	}
-
-	private Consumer<SignalType> afterReactor(boolean isNewSpan, String log, boolean hasLog, Span span) {
-		return signalType -> {
-			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
-				after(span, isNewSpan, log, hasLog);
-			}
-		};
-	}
-
-	private Consumer<Throwable> onFailureReactor(String log, boolean hasLog, Span span) {
-		return throwable -> {
-			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
-				onFailure(span, log, hasLog, throwable);
-			}
-		};
-	}
-
-	private void before(MethodInvocation invocation, Span span, String log, boolean hasLog) {
-		if (hasLog) {
-			logEvent(span, log + ".before");
-		}
-		spanTagAnnotationHandler().addAnnotatedParameters(invocation);
-		addTags(invocation, span);
-	}
-
-	private void after(Span span, boolean isNewSpan, String log, boolean hasLog) {
-		if (hasLog) {
-			logEvent(span, log + ".after");
-		}
-		if (isNewSpan) {
-			span.finish();
-		}
-	}
-
-	private void onFailure(Span span, String log, boolean hasLog, Throwable e) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Exception occurred while trying to continue the pointcut", e);
-		}
-		if (hasLog) {
-			logEvent(span, log + ".afterFailure");
-		}
-		span.error(e);
-	}
-
-	private void addTags(MethodInvocation invocation, Span span) {
-		span.tag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
-		span.tag(METHOD_KEY, invocation.getMethod().getName());
-	}
-
-	private void logEvent(Span span, String name) {
-		if (span == null) {
-			logger.warn("You were trying to continue a span which was null. Please "
-					+ "remember that if two proxied methods are calling each other from "
-					+ "the same class then the aspect will not be properly resolved");
-			return;
-		}
-		span.annotate(name);
-	}
-
-	private String log(ContinueSpan continueSpan) {
-		if (continueSpan != null) {
-			return continueSpan.log();
-		}
-		return "";
-	}
-
-	private Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
-		}
-		return this.tracer;
-	}
-
-	private NewSpanParser newSpanParser() {
-		if (this.newSpanParser == null) {
-			this.newSpanParser = this.beanFactory.getBean(NewSpanParser.class);
-		}
-		return this.newSpanParser;
-	}
-
-	private SpanTagAnnotationHandler spanTagAnnotationHandler() {
-		if (this.spanTagAnnotationHandler == null) {
-			this.spanTagAnnotationHandler = new SpanTagAnnotationHandler(this.beanFactory);
-		}
-		return this.spanTagAnnotationHandler;
+		return this.methodInvocationProcessor;
 	}
 
 	@Override public boolean implementsInterface(Class<?> intf) {
