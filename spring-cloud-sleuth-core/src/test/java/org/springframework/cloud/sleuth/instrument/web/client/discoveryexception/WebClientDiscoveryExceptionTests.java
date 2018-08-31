@@ -22,7 +22,6 @@ import java.util.Map;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
 import zipkin2.reporter.Reporter;
 import org.assertj.core.api.Assertions;

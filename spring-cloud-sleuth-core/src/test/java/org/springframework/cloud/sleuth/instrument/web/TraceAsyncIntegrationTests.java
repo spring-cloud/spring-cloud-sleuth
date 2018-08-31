@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
 import org.junit.After;

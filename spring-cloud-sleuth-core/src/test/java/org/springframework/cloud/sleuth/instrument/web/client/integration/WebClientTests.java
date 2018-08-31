@@ -47,7 +47,6 @@ import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.BeforeClass;
