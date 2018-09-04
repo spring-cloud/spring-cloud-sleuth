@@ -79,13 +79,14 @@ enum MessageHeaderPropagation
 			nativeAccessor.setNativeHeader(key, value);
 		}
 		else {
-			Map<String, List<String>> nativeHeaders = (Map) accessor
-					.getHeader(NATIVE_HEADERS);
+			Object nativeHeaders = accessor.getHeader(NATIVE_HEADERS);
 			if (nativeHeaders == null) {
 				accessor.setHeader(NATIVE_HEADERS,
 						nativeHeaders = new LinkedMultiValueMap<>());
 			}
-			nativeHeaders.put(key, Collections.singletonList(value));
+			if (nativeHeaders instanceof Map<?, ?>) {
+				((Map) nativeHeaders).put(key, Collections.singletonList(value));
+			}
 		}
 	}
 
@@ -115,16 +116,16 @@ enum MessageHeaderPropagation
 		if (accessor instanceof NativeMessageHeaderAccessor) {
 			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
 			String result = nativeAccessor.getFirstNativeHeader(key);
-			if (result != null)
+			if (result != null) {
 				return result;
-		}
-		else {
-			Map<String, List<String>> nativeHeaders = (Map) accessor
-					.getHeader(NATIVE_HEADERS);
-			if (nativeHeaders != null) {
-				List<String> result = nativeHeaders.get(key);
-				if (result != null && !result.isEmpty())
-					return result.get(0);
+			}
+		} else {
+			Object nativeHeaders = accessor.getHeader(NATIVE_HEADERS);
+			if (nativeHeaders instanceof Map) {
+				Object result = ((Map) nativeHeaders).get(key);
+				if (result instanceof List && !((List) result).isEmpty()) {
+					return String.valueOf(((List) result).get(0));
+				}
 			}
 		}
 		Object result = accessor.getHeader(key);
@@ -155,13 +156,11 @@ enum MessageHeaderPropagation
 			if (accessor instanceof NativeMessageHeaderAccessor) {
 				NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
 				nativeAccessor.removeNativeHeader(keyToRemove);
-			}
-			else {
-				Map<String, List<String>> nativeHeaders = (Map) accessor
-						.getHeader(NATIVE_HEADERS);
-				if (nativeHeaders == null)
-					continue;
-				nativeHeaders.remove(keyToRemove);
+			} else {
+				Object nativeHeaders = accessor.getHeader(NATIVE_HEADERS);
+				if (nativeHeaders instanceof Map) {
+					((Map) nativeHeaders).remove(keyToRemove);
+				}
 			}
 		}
 	}
