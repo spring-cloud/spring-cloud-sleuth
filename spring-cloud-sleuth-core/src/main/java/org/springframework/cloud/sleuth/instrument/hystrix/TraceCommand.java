@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import brave.Span;
 import brave.Tracer;
 import com.netflix.hystrix.HystrixCommand;
@@ -36,30 +38,53 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 	private static final String COMMAND_KEY = "commandKey";
 	private static final String COMMAND_GROUP_KEY = "commandGroup";
 	private static final String THREAD_POOL_KEY = "threadPoolKey";
+	private static final String FALLBACK_METHOD_NAME_KEY = "fallbackMethodName";
 
 	private final Tracer tracer;
-	private final Span span;
+	private final AtomicReference<Span> span;
 
 	protected TraceCommand(Tracer tracer, Setter setter) {
 		super(setter);
 		this.tracer = tracer;
-		this.span = this.tracer.nextSpan();
+		this.span = new AtomicReference<>(this.tracer.nextSpan());
 	}
 
 	@Override
 	protected R run() throws Exception {
 		String commandKeyName = getCommandKey().name();
-		Span span = this.span.name(commandKeyName);
+		Span span = this.span.get().name(commandKeyName);
 		span.tag(COMMAND_KEY, commandKeyName);
 		span.tag(COMMAND_GROUP_KEY, getCommandGroup().name());
 		span.tag(THREAD_POOL_KEY, getThreadPoolKey().name());
+		Throwable throwable = null;
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			return doRun();
-		}
-		finally {
-			span.finish();
+		} catch (Throwable t) {
+			throwable = t;
+			throw t;
+		} finally {
+			if (throwable == null) {
+				span.finish();
+				this.span.set(null);
+			}
+			// else there will be fallback
 		}
 	}
 
 	public abstract R doRun() throws Exception;
+
+	@Override protected R getFallback() {
+		Span span = this.span.get();
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			span.tag(FALLBACK_METHOD_NAME_KEY, getFallbackMethodName());
+			return doGetFallback();
+		} finally {
+			span.finish();
+			this.span.set(null);
+		}
+	}
+
+	public R doGetFallback() {
+		return super.getFallback();
+	}
 }
