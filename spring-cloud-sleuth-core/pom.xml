@@ -205,6 +205,15 @@
 			<artifactId>brave-instrumentation-spring-webmvc</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.zipkin.brave</groupId>
+			<artifactId>brave-instrumentation-jms</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax.jms</groupId>
+			<artifactId>javax.jms-api</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>io.opentracing.brave</groupId>
 			<artifactId>brave-opentracing</artifactId>
 			<optional>true</optional>
@@ -219,7 +228,11 @@
 			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- BRAVE -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jms</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure-processor</artifactId>

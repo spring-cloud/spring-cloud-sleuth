@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -100,7 +101,7 @@ public class TraceMessagingAutoConfigurationTests {
 	}
 }
 
-class TestSleuthRabbitBeanPostProcessor  extends SleuthRabbitBeanPostProcessor {
+class TestSleuthRabbitBeanPostProcessor extends SleuthRabbitBeanPostProcessor {
 
 	boolean rabbitTracingCalled = false;
 
@@ -140,5 +141,20 @@ class MySleuthKafkaAspect extends SleuthKafkaAspect {
 			throws Throwable {
 		this.adapterWrapped = true;
 		return Mockito.mock(MessageListenerContainer.class);
+	}
+}
+
+class TestSleuthJmsBeanPostProcessor extends TracingConnectionFactoryBeanPostProcessor {
+
+	boolean tracingCalled = false;
+
+	TestSleuthJmsBeanPostProcessor(BeanFactory beanFactory) {
+		super(beanFactory);
+	}
+
+	@Override public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
+		this.tracingCalled = true;
+		return super.postProcessAfterInitialization(bean, beanName);
 	}
 }
