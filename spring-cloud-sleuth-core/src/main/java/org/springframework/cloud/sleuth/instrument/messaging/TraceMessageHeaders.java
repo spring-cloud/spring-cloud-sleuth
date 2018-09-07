@@ -29,6 +29,7 @@ import java.util.List;
  */
 public class TraceMessageHeaders {
 
+	public static final String B3_NAME = "b3";
 	public static final String SPAN_ID_NAME = "spanId";
 	public static final String SAMPLED_NAME = "spanSampled";
 	public static final String PROCESS_ID_NAME = "spanProcessId";

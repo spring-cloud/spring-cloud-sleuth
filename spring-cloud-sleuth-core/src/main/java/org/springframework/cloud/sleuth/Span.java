@@ -75,6 +75,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class Span implements SpanContext {
 
+	public static final String B3_NAME = "b3";
 	public static final String SAMPLED_NAME = "X-B3-Sampled";
 	public static final String PROCESS_ID_NAME = "X-Process-Id";
 	public static final String PARENT_ID_NAME = "X-B3-ParentSpanId";

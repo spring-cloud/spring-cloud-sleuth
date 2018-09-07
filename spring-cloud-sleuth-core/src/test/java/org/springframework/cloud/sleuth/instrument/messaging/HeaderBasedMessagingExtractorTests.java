@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,10 +24,48 @@ import org.junit.Test;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
+
 /**
  * @author Marcin Grzejszczak
  */
 public class HeaderBasedMessagingExtractorTests {
+
+	@Test
+	public void b3HeadersTakePrecedenceOverAnyOtherHeaders() {
+		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
+		SpanTextMap spanTextMap = spanTextMap();
+		spanTextMap.put(TraceMessageHeaders.B3_NAME, "0000000000000005-0000000000000004-1");
+		spanTextMap.put(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L));
+		spanTextMap.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(30L));
+		spanTextMap.put(TraceMessageHeaders.SAMPLED_NAME, "0");
+
+		Span span = extractor.joinTrace(spanTextMap);
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(5L)
+				.hasSpanIdEqualTo(4L)
+				.isExportable();
+	}
+
+	@Test
+	public void legacyHeadersTakePrecedenceOverB3WhenB3IsInvalid() {
+		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
+		SpanTextMap spanTextMap = spanTextMap();
+		spanTextMap.put(TraceMessageHeaders.B3_NAME, "invalid");
+		spanTextMap.put(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L));
+		spanTextMap.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(30L));
+		spanTextMap.put(TraceMessageHeaders.SAMPLED_NAME, "0");
+
+		Span span = extractor.joinTrace(spanTextMap);
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(30L)
+				.hasSpanIdEqualTo(20L)
+				.isNotExportable();
+	}
 
 	@Test
 	public void overridesTheSampleFlagWithSpanFlagForSampledScenario() {

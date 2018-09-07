@@ -38,6 +38,8 @@ public class ZipkinHttpSpanInjectorTests {
 		injector.inject(span, map);
 
 		then(map)
+				.contains(new AbstractMap.SimpleEntry<String, String>(Span.B3_NAME,
+						"0000000000000002-0000000000000001-1"))
 				.contains(new AbstractMap.SimpleEntry<String, String>(Span.SPAN_ID_NAME, Span.idToHex(10L)))
 				.contains(new AbstractMap.SimpleEntry<String, String>(Span.TRACE_ID_NAME, Span.idToHex(20L)))
 				.contains(new AbstractMap.SimpleEntry<String, String>(Span.PARENT_ID_NAME, Span.idToHex(30L)))

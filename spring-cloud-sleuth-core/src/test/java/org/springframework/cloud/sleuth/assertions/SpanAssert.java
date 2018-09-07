@@ -45,6 +45,16 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		return this;
 	}
 
+	public SpanAssert hasSpanIdEqualTo(Long spanId) {
+		isNotNull();
+		if (!Objects.equals(this.actual.getSpanId(), spanId)) {
+			String message = String.format("Expected span's spanId to be <%s> but was <%s>", spanId, this.actual.getSpanId());
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
 	public SpanAssert hasNameEqualTo(String name) {
 		isNotNull();
 		if (!Objects.equals(this.actual.getName(), name)) {

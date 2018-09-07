@@ -40,6 +40,7 @@ public class HeaderBasedMessagingInjectorTests {
 		injector.inject(span, map);
 
 		then(map)
+				.contains(new AbstractMap.SimpleEntry<String, String>(TraceMessageHeaders.B3_NAME, "0000000000000002-0000000000000001-1"))
 				.contains(new AbstractMap.SimpleEntry<String, String>(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(10L)))
 				.contains(new AbstractMap.SimpleEntry<String, String>(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(20L)))
 				.contains(new AbstractMap.SimpleEntry<String, String>(TraceMessageHeaders.PARENT_ID_NAME, Span.idToHex(30L)))

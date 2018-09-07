@@ -16,13 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
-
-import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Vector;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +29,8 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.cloud.sleuth.Span;
+
+import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HttpServletRequestExtractorTests {
@@ -81,9 +81,60 @@ public class HttpServletRequestExtractorTests {
 	}
 
 	@Test
+	public void should_pick_values_from_b3_if_present() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.B3_NAME, Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME, Span.PARENT_ID_NAME, Span.SAMPLED_NAME,
+						Span.SPAN_FLAGS)).elements());
+		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(Span.idToHex(10L));
+		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(Span.idToHex(20L));
+		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
+				.willReturn(Span.idToHex(30L));
+		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
+				.willReturn(Span.SPAN_NOT_SAMPLED);
+		BDDMockito.given(this.request.getHeader(Span.B3_NAME))
+				.willReturn("0000000000000005-0000000000000004-1");
+
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(5L)
+				.hasSpanIdEqualTo(4L)
+				.isExportable();
+	}
+
+	@Test
+	public void should_pick_values_from_old_headers_when_b3_is_invalid() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.B3_NAME, Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME, Span.PARENT_ID_NAME, Span.SAMPLED_NAME,
+						Span.SPAN_FLAGS)).elements());
+		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(Span.idToHex(10L));
+		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(Span.idToHex(20L));
+		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
+				.willReturn(Span.idToHex(30L));
+		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
+				.willReturn(Span.SPAN_NOT_SAMPLED);
+		BDDMockito.given(this.request.getHeader(Span.B3_NAME))
+				.willReturn("invalid");
+
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(10L)
+				.hasSpanIdEqualTo(20L)
+				.isNotExportable();
+	}
+
+	@Test
 	public void should_accept_128bit_trace_id() {
 		String hex128Bits = spanInHeaders();
-
 
 		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
 

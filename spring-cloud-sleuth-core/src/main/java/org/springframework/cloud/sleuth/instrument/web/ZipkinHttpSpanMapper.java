@@ -52,7 +52,8 @@ class ZipkinHttpSpanMapper {
 
 	static {
 		TreeSet<String> fields = new TreeSet<>(IGNORE_CASE_COMPARATOR);
-		Collections.addAll(fields, Span.SPAN_FLAGS, Span.TRACE_ID_NAME, Span.SPAN_ID_NAME,
+		Collections.addAll(fields, Span.B3_NAME,
+				Span.SPAN_FLAGS, Span.TRACE_ID_NAME, Span.SPAN_ID_NAME,
 				Span.PROCESS_ID_NAME, Span.SPAN_NAME_NAME, Span.PARENT_ID_NAME,
 				Span.SAMPLED_NAME, URI_HEADER);
 		SPAN_FIELDS = Collections.unmodifiableSet(fields);
