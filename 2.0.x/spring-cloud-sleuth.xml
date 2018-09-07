@@ -1015,7 +1015,7 @@ The following example shows how to propagate <literal>x-vcap-request-id</literal
 <programlisting language="java" linenumbering="unnumbered">Tracing.newBuilder().propagationFactory(
   ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY)
                        .addField("x-vcap-request-id")
-                       .addPrefixedFields("baggage-", Arrays.asList("country-code", "user-id"))
+                       .addPrefixedFields("x-baggage-", Arrays.asList("country-code", "user-id"))
                        .build()
 );</programlisting>
 <simpara>Later, you can call the following code to affect the country code of the current trace context:</simpara>
