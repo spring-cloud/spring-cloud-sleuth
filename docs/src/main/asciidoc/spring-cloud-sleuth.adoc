@@ -1273,9 +1273,6 @@ so that tracing headers get injected into the created Spring Kafka's
 
 To block this feature, set `spring.sleuth.messaging.kafka.enabled` to `false`.
 
-NOTE: We do not support context propagation via `@KafkaListener` annotation.
-Check https://github.com/spring-cloud/spring-cloud-sleuth/issues/1001[this issue for more information].
-
 ==== Spring JMS
 
 We instrument the `JmsTemplate` so that tracing headers get injected
