@@ -1280,6 +1280,8 @@ into the message. We also support `@JmsListener` annotated methods on the consum
 
 To block this feature, set `spring.sleuth.messaging.jms.enabled` to `false`.
 
+IMPORTANT: We don't support baggage propagation for JMS
+
 === Zuul
 
 We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
