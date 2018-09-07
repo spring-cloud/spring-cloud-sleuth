@@ -422,7 +422,11 @@ of the bean.</p></div><div class="section"><div class="titlepage"><div><div><h3 
 }</pre><p>if executed with a value of <code class="literal">15</code> will lead to setting of a tag with a String value of <code class="literal">"15"</code>.</p></div></div></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_customizations" href="#_customizations"></a>9.&nbsp;Customizations</h1></div></div></div><p>Thanks to the <code class="literal">SpanInjector</code> and <code class="literal">SpanExtractor</code> you can customize the way spans
 are created and propagated.</p><p>There are currently two built-in ways to pass tracing information between processes:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">via Spring Integration</li><li class="listitem">via HTTP</li></ul></div><p>Span ids are extracted from Zipkin-compatible (B3) headers (either <code class="literal">Message</code>
 or HTTP headers), to start or join an existing trace. Trace information is
-injected into any outbound requests so the next hop can extract them.</p><p>The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
+injected into any outbound requests so the next hop can extract them.</p><p>The default way of coding tracing context is done via the <code class="literal">b3</code> header that contains the
+<code class="literal">traceId-spanId-sampled</code> notation (e.g. <code class="literal">0000000000000005-0000000000000004-1</code>).
+For backward compatibility, if the <code class="literal">b3</code> header is not present, we also check if
+<code class="literal">X-B3</code> entries are present, and retrieve tracing context from there e.g.
+(<code class="literal">X-B3-TraceId: 0000000000000005</code>, <code class="literal">X-B3-SpanId: 0000000000000004</code>, <code class="literal">X-B3-Sampled: 1</code>).</p><p>The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
 the Open Tracing&#8217;s <code class="literal">TextMap</code> notion. In Sleuth it&#8217;s called <code class="literal">SpanTextMap</code>. Basically the idea
 is that any means of communication (e.g. message, http request, etc.) can be abstracted via
 a <code class="literal">SpanTextMap</code>. This abstraction defines how one can insert data into the carrier and

@@ -1063,6 +1063,11 @@ are created and propagated.</simpara>
 <simpara>Span ids are extracted from Zipkin-compatible (B3) headers (either <literal>Message</literal>
 or HTTP headers), to start or join an existing trace. Trace information is
 injected into any outbound requests so the next hop can extract them.</simpara>
+<simpara>The default way of coding tracing context is done via the <literal>b3</literal> header that contains the
+<literal>traceId-spanId-sampled</literal> notation (e.g. <literal>0000000000000005-0000000000000004-1</literal>).
+For backward compatibility, if the <literal>b3</literal> header is not present, we also check if
+<literal>X-B3</literal> entries are present, and retrieve tracing context from there e.g.
+(<literal>X-B3-TraceId: 0000000000000005</literal>, <literal>X-B3-SpanId: 0000000000000004</literal>, <literal>X-B3-Sampled: 1</literal>).</simpara>
 <simpara>The key change in comparison to the previous versions of Sleuth is that Sleuth is implementing
 the Open Tracing&#8217;s <literal>TextMap</literal> notion. In Sleuth it&#8217;s called <literal>SpanTextMap</literal>. Basically the idea
 is that any means of communication (e.g. message, http request, etc.) can be abstracted via
