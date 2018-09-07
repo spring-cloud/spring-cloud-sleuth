@@ -1959,6 +1959,12 @@ so that tracing headers get injected into the created Spring Kafka&#8217;s
 Check <link xl:href="https://github.com/spring-cloud/spring-cloud-sleuth/issues/1001">this issue for more information</link>.</simpara>
 </note>
 </section>
+<section xml:id="_spring_jms">
+<title>Spring JMS</title>
+<simpara>We instrument the <literal>JmsTemplate</literal> so that tracing headers get injected
+into the message. We also support <literal>@JmsListener</literal> annotated methods on the consumer side.</simpara>
+<simpara>To block this feature, set <literal>spring.sleuth.messaging.jms.enabled</literal> to <literal>false</literal>.</simpara>
+</section>
 </section>
 <section xml:id="_zuul">
 <title>Zuul</title>
