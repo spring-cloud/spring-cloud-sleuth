@@ -1019,16 +1019,17 @@ The following example shows how to propagate <literal>x-vcap-request-id</literal
                        .build()
 );</programlisting>
 <simpara>Later, you can call the following code to affect the country code of the current trace context:</simpara>
-<programlisting language="java" linenumbering="unnumbered">ExtraFieldPropagation.set("country-code", "FO");
-String countryCode = ExtraFieldPropagation.get("country-code");</programlisting>
+<programlisting language="java" linenumbering="unnumbered">ExtraFieldPropagation.set("x-country-code", "FO");
+String countryCode = ExtraFieldPropagation.get("x-country-code");</programlisting>
 <simpara>Alternatively, if you have a reference to a trace context, you can use it explicitly, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">ExtraFieldPropagation.set(span.context(), "country-code", "FO");
-String countryCode = ExtraFieldPropagation.get(span.context(), "country-code");</programlisting>
+<programlisting language="java" linenumbering="unnumbered">ExtraFieldPropagation.set(span.context(), "x-country-code", "FO");
+String countryCode = ExtraFieldPropagation.get(span.context(), "x-country-code");</programlisting>
 <important>
 <simpara>A difference from previous versions of Sleuth is that, with Brave, you must pass the list of baggage keys.
 There are two properties to achieve this.
 With the <literal>spring.sleuth.baggage-keys</literal>, you set keys that get prefixed with <literal>baggage-</literal> for HTTP calls and <literal>baggage_</literal> for messaging.
-You can also use the <literal>spring.sleuth.propagation-keys</literal> property to pass a list of prefixed keys that are whitelisted without any prefix.</simpara>
+You can also use the <literal>spring.sleuth.propagation-keys</literal> property to pass a list of prefixed keys that are whitelisted without any prefix.
+Notice that there&#8217;s no <literal>x-</literal> in front of the header keys.</simpara>
 </important>
 </section>
 <section xml:id="_extracting_a_propagated_context">
