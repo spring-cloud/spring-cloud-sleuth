@@ -396,7 +396,7 @@ The following example shows how to propagate `x-vcap-request-id` the field as-is
 Tracing.newBuilder().propagationFactory(
   ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY)
                        .addField("x-vcap-request-id")
-                       .addPrefixedFields("baggage-", Arrays.asList("country-code", "user-id"))
+                       .addPrefixedFields("x-baggage-", Arrays.asList("country-code", "user-id"))
                        .build()
 );
 ```
