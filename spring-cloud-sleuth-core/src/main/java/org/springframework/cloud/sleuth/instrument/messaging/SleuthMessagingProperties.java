@@ -82,6 +82,8 @@ public class SleuthMessagingProperties {
 
 		private Kafka kafka = new Kafka();
 
+		private Jms jms = new Jms();
+
 		public boolean isEnabled() {
 			return this.enabled;
 		}
@@ -104,6 +106,14 @@ public class SleuthMessagingProperties {
 
 		public void setKafka(Kafka kafka) {
 			this.kafka = kafka;
+		}
+
+		public Jms getJms() {
+			return this.jms;
+		}
+
+		public void setJms(Jms jms) {
+			this.jms = jms;
 		}
 	}
 
@@ -133,6 +143,28 @@ public class SleuthMessagingProperties {
 		private boolean enabled;
 
 		private String remoteServiceName = "kafka";
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public String getRemoteServiceName() {
+			return this.remoteServiceName;
+		}
+
+		public void setRemoteServiceName(String remoteServiceName) {
+			this.remoteServiceName = remoteServiceName;
+		}
+	}
+
+	public static class Jms {
+		private boolean enabled;
+
+		private String remoteServiceName = "jms";
 
 		public boolean isEnabled() {
 			return this.enabled;

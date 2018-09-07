@@ -23,7 +23,9 @@ import java.util.Optional;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.jms.JmsTracing;
 import brave.kafka.clients.KafkaTracing;
+import brave.propagation.CurrentTraceContext;
 import brave.spring.rabbit.SpringRabbitTracing;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -51,12 +53,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jms.annotation.JmsListenerConfigurer;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.listener.adapter.MessagingMessageListenerAdapter;
-import org.springframework.kafka.support.converter.RecordMessageConverter;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -114,6 +116,39 @@ public class TraceMessagingAutoConfiguration {
 		@ConditionalOnMissingBean
 		SleuthKafkaAspect sleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
 			return new SleuthKafkaAspect(kafkaTracing, tracer);
+		}
+	}
+
+	@Configuration
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.jms.enabled", matchIfMissing = true)
+	@ConditionalOnClass(JmsListenerConfigurer.class)
+	protected static class SleuthJmsConfiguration {
+
+		@Bean
+		@ConditionalOnMissingBean
+		JmsTracing jmsTracing(Tracing tracing, SleuthMessagingProperties properties) {
+			return JmsTracing.newBuilder(tracing)
+					.remoteServiceName(properties.getMessaging().getJms().getRemoteServiceName())
+					.build();
+		}
+
+		@Bean
+		// for tests
+		@ConditionalOnMissingBean
+		TracingConnectionFactoryBeanPostProcessor tracingConnectionFactoryBeanPostProcessor(BeanFactory beanFactory) {
+			return new TracingConnectionFactoryBeanPostProcessor(beanFactory);
+		}
+
+		/** Choose the tracing endpoint registry */
+		@Bean
+		TracingJmsListenerEndpointRegistry tracingJmsListenerEndpointRegistry(JmsTracing jmsTracing, CurrentTraceContext current) {
+			return new TracingJmsListenerEndpointRegistry(jmsTracing, current);
+		}
+
+		/** Setup the tracing endpoint registry */
+		@Bean
+		JmsListenerConfigurer configureTracing(TracingJmsListenerEndpointRegistry registry) {
+			return registrar -> registrar.setEndpointRegistry(registry);
 		}
 	}
 }
@@ -206,14 +241,6 @@ class SleuthKafkaAspect {
 			}
 		}
 		return listener;
-	}
-
-	private RecordMessageConverter currentRecordMessageConverter(MessagingMessageListenerAdapter adapter)
-			throws IllegalAccessException {
-		if (this.recordMessageConverter != null) {
-			return (RecordMessageConverter) this.recordMessageConverter.get(adapter);
-		}
-		return null;
 	}
 
 	@SuppressWarnings("unchecked")

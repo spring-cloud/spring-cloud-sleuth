@@ -316,9 +316,5 @@ public class BraveTracerTest {
     @Bean ArrayListSpanReporter reporter() {
       return new ArrayListSpanReporter();
     }
-
-    @Bean CurrentTraceContext currentTraceContext() {
-      return new StrictCurrentTraceContext();
-    }
   }
 }

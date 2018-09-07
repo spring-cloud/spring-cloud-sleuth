@@ -1275,6 +1275,13 @@ To block this feature, set `spring.sleuth.messaging.kafka.enabled` to `false`.
 NOTE: We do not support context propagation via `@KafkaListener` annotation.
 Check https://github.com/spring-cloud/spring-cloud-sleuth/issues/1001[this issue for more information].
 
+==== Spring JMS
+
+We instrument the `JmsTemplate` so that tracing headers get injected
+into the message. We also support `@JmsListener` annotated methods on the consumer side.
+
+To block this feature, set `spring.sleuth.messaging.jms.enabled` to `false`.
+
 === Zuul
 
 We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
