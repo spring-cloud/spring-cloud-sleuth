@@ -404,21 +404,22 @@ Tracing.newBuilder().propagationFactory(
 Later, you can call the following code to affect the country code of the current trace context:
 
 ```java
-ExtraFieldPropagation.set("country-code", "FO");
-String countryCode = ExtraFieldPropagation.get("country-code");
+ExtraFieldPropagation.set("x-country-code", "FO");
+String countryCode = ExtraFieldPropagation.get("x-country-code");
 ```
 
 Alternatively, if you have a reference to a trace context, you can use it explicitly, as shown in the following example:
 
 ```java
-ExtraFieldPropagation.set(span.context(), "country-code", "FO");
-String countryCode = ExtraFieldPropagation.get(span.context(), "country-code");
+ExtraFieldPropagation.set(span.context(), "x-country-code", "FO");
+String countryCode = ExtraFieldPropagation.get(span.context(), "x-country-code");
 ```
 
 IMPORTANT: A difference from previous versions of Sleuth is that, with Brave, you must pass the list of baggage keys.
 There are two properties to achieve this.
 With the `spring.sleuth.baggage-keys`, you set keys that get prefixed with `baggage-` for HTTP calls and `baggage_` for messaging.
 You can also use the `spring.sleuth.propagation-keys` property to pass a list of prefixed keys that are whitelisted without any prefix.
+Notice that there's no `x-` in front of the header keys.
 
 In order to automatically set the baggage values to Slf4j's MDC, you have to set
 the `spring.sleuth.log.slf4j.whitelisted-mdc-keys` property with a list of whitelisted
