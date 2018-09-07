@@ -16,21 +16,13 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import java.util.concurrent.TimeUnit;
-
 import brave.sampler.Sampler;
-import zipkin2.Span;
-import zipkin2.codec.BytesEncoder;
-import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.InMemoryReporterMetrics;
-import zipkin2.reporter.Reporter;
-import zipkin2.reporter.ReporterMetrics;
-import zipkin2.reporter.Sender;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -46,6 +38,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.web.client.RestTemplate;
+import zipkin2.Span;
+import zipkin2.codec.BytesEncoder;
+import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.InMemoryReporterMetrics;
+import zipkin2.reporter.Reporter;
+import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.Sender;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
@@ -67,6 +68,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties({ZipkinProperties.class, SamplerProperties.class})
 @ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
+@AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
 @Import(ZipkinSenderConfigurationImportSelector.class)
 public class ZipkinAutoConfiguration {
 
@@ -104,11 +106,11 @@ public class ZipkinAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	ReporterMetrics sleuthReporterMetrics() {
-		return new InMemoryReporterMetrics(); 
+		return new InMemoryReporterMetrics();
 	}
-	
+
 	@Configuration
-	@ConditionalOnClass(RefreshScope.class)
+	@ConditionalOnBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class RefreshScopedProbabilityBasedSamplerConfiguration {
 		@Bean
 		@RefreshScope
@@ -119,7 +121,7 @@ public class ZipkinAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnMissingClass("org.springframework.cloud.context.config.annotation.RefreshScope")
+	@ConditionalOnMissingBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class NonRefreshScopeProbabilityBasedSamplerConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
