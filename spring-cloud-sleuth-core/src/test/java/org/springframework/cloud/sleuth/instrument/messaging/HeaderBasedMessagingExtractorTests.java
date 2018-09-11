@@ -32,7 +32,25 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 public class HeaderBasedMessagingExtractorTests {
 
 	@Test
-	public void b3HeadersTakePrecedenceOverAnyOtherHeaders() {
+	public void simpleB3HeadersTakePrecedenceOverAnyOtherHeaders() {
+		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
+		SpanTextMap spanTextMap = spanTextMap();
+		spanTextMap.put(TraceMessageHeaders.B3_NAME, "0000000000000005-0000000000000004");
+		spanTextMap.put(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L));
+		spanTextMap.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(30L));
+		spanTextMap.put(TraceMessageHeaders.SAMPLED_NAME, "1");
+
+		Span span = extractor.joinTrace(spanTextMap);
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(5L)
+				.hasSpanIdEqualTo(4L)
+				.isExportable();
+	}
+
+	@Test
+	public void b3HeadersWithSampledTakePrecedenceOverAnyOtherHeaders() {
 		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
 		SpanTextMap spanTextMap = spanTextMap();
 		spanTextMap.put(TraceMessageHeaders.B3_NAME, "0000000000000005-0000000000000004-1");
@@ -46,6 +64,45 @@ public class HeaderBasedMessagingExtractorTests {
 				.isNotNull()
 				.hasTraceIdEqualTo(5L)
 				.hasSpanIdEqualTo(4L)
+				.isExportable();
+	}
+
+	@Test
+	public void b3HeadersWithDebugSampledTakePrecedenceOverAnyOtherHeaders() {
+		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
+		SpanTextMap spanTextMap = spanTextMap();
+		spanTextMap.put(TraceMessageHeaders.B3_NAME, "0000000000000005-0000000000000004-d");
+		spanTextMap.put(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L));
+		spanTextMap.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(30L));
+		spanTextMap.put(TraceMessageHeaders.SAMPLED_NAME, "0");
+		spanTextMap.put(TraceMessageHeaders.SPAN_FLAGS_NAME, "0");
+
+		Span span = extractor.joinTrace(spanTextMap);
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(5L)
+				.hasSpanIdEqualTo(4L)
+				.isExportable();
+	}
+
+	@Test
+	public void b3HeadersWithParentSpanIdTakePrecedenceOverAnyOtherHeaders() {
+		HeaderBasedMessagingExtractor extractor = new HeaderBasedMessagingExtractor();
+		SpanTextMap spanTextMap = spanTextMap();
+		spanTextMap.put(TraceMessageHeaders.B3_NAME, "0000000000000005-0000000000000004-1-0000000000000003");
+		spanTextMap.put(TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(20L));
+		spanTextMap.put(TraceMessageHeaders.TRACE_ID_NAME, Span.idToHex(30L));
+		spanTextMap.put(TraceMessageHeaders.PARENT_ID_NAME, Span.idToHex(60L));
+		spanTextMap.put(TraceMessageHeaders.SAMPLED_NAME, "0");
+
+		Span span = extractor.joinTrace(spanTextMap);
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(5L)
+				.hasSpanIdEqualTo(4L)
+				.hasParentSpanIdEqualTo(3L)
 				.isExportable();
 	}
 

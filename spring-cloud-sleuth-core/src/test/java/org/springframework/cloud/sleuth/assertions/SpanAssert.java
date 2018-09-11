@@ -21,6 +21,7 @@ import java.util.Objects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.Assertions;
 import org.springframework.cloud.sleuth.Span;
 
 public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
@@ -39,6 +40,18 @@ public class SpanAssert extends AbstractAssert<SpanAssert, Span> {
 		isNotNull();
 		if (!Objects.equals(this.actual.getTraceId(), traceId)) {
 			String message = String.format("Expected span's traceId to be <%s> but was <%s>", traceId, this.actual.getTraceId());
+			log.error(message);
+			failWithMessage(message);
+		}
+		return this;
+	}
+
+	public SpanAssert hasParentSpanIdEqualTo(Long spanId) {
+		isNotNull();
+		Assertions.assertThat(this.actual.getParents()).isNotEmpty();
+		Long parentSpanId = this.actual.getParents().get(0);
+		if (!Objects.equals(parentSpanId, spanId)) {
+			String message = String.format("Expected span's parent spanId to be <%s> but was <%s>", spanId, parentSpanId);
 			log.error(message);
 			failWithMessage(message);
 		}

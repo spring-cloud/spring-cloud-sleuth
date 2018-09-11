@@ -3,6 +3,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.cloud.sleuth.B3Utils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.TraceKeys;
@@ -43,8 +44,7 @@ public class HeaderBasedMessagingInjector implements MessagingSpanTextMapInjecto
 	private void addHeaders(Map<String, String> map, Span span, SpanTextMap textMap) {
 		addHeader(map, textMap, TraceMessageHeaders.TRACE_ID_NAME, span.traceIdString());
 		addHeader(map, textMap, TraceMessageHeaders.SPAN_ID_NAME, Span.idToHex(span.getSpanId()));
-		addHeader(map, textMap, TraceMessageHeaders.B3_NAME, span.traceIdString() + "-" +
-				Span.idToHex(span.getSpanId()) + "-" + (span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED));
+		addHeader(map, textMap, TraceMessageHeaders.B3_NAME, B3Utils.toB3String(span));
 		if (span.isExportable()) {
 			addAnnotations(this.traceKeys, textMap, span);
 			Long parentId = getFirst(span.getParents());

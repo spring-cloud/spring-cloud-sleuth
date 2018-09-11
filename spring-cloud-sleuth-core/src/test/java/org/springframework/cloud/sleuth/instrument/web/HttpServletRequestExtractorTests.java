@@ -93,6 +93,60 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
 				.willReturn(Span.idToHex(30L));
 		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
+				.willReturn(Span.SPAN_SAMPLED);
+		BDDMockito.given(this.request.getHeader(Span.B3_NAME))
+				.willReturn("0000000000000005-0000000000000004");
+
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(5L)
+				.hasSpanIdEqualTo(4L)
+				.hasParentSpanIdEqualTo(30L)
+				.isExportable();
+	}
+
+	@Test
+	public void should_pick_values_from_b3_with_debug_flag_if_present() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.B3_NAME, Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME, Span.PARENT_ID_NAME, Span.SAMPLED_NAME,
+						Span.SPAN_FLAGS)).elements());
+		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(Span.idToHex(10L));
+		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(Span.idToHex(20L));
+		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
+				.willReturn(Span.idToHex(30L));
+		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
+				.willReturn(Span.SPAN_NOT_SAMPLED);
+		BDDMockito.given(this.request.getHeader(Span.B3_NAME))
+				.willReturn("0000000000000005-0000000000000004-d");
+
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(5L)
+				.hasSpanIdEqualTo(4L)
+				.hasParentSpanIdEqualTo(30L)
+				.isExportable();
+	}
+
+	@Test
+	public void should_pick_values_from_b3_with_sampled_flag_if_present() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.B3_NAME, Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME, Span.PARENT_ID_NAME, Span.SAMPLED_NAME,
+						Span.SPAN_FLAGS)).elements());
+		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(Span.idToHex(10L));
+		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(Span.idToHex(20L));
+		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
+				.willReturn(Span.idToHex(30L));
+		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
 				.willReturn(Span.SPAN_NOT_SAMPLED);
 		BDDMockito.given(this.request.getHeader(Span.B3_NAME))
 				.willReturn("0000000000000005-0000000000000004-1");
@@ -103,6 +157,34 @@ public class HttpServletRequestExtractorTests {
 				.isNotNull()
 				.hasTraceIdEqualTo(5L)
 				.hasSpanIdEqualTo(4L)
+				.hasParentSpanIdEqualTo(30L)
+				.isExportable();
+	}
+
+	@Test
+	public void should_pick_values_from_b3_with_parent_id_if_present() {
+		BDDMockito.given(this.request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.B3_NAME, Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME, Span.PARENT_ID_NAME, Span.SAMPLED_NAME,
+						Span.SPAN_FLAGS)).elements());
+		BDDMockito.given(this.request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(Span.idToHex(10L));
+		BDDMockito.given(this.request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(Span.idToHex(20L));
+		BDDMockito.given(this.request.getHeader(Span.PARENT_ID_NAME))
+				.willReturn(Span.idToHex(30L));
+		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
+				.willReturn(Span.SPAN_NOT_SAMPLED);
+		BDDMockito.given(this.request.getHeader(Span.B3_NAME))
+				.willReturn("0000000000000005-0000000000000004-1-0000000000000006");
+
+		Span span = this.extractor.joinTrace(new HttpServletRequestTextMap(this.request));
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(5L)
+				.hasSpanIdEqualTo(4L)
+				.hasParentSpanIdEqualTo(6L)
 				.isExportable();
 	}
 

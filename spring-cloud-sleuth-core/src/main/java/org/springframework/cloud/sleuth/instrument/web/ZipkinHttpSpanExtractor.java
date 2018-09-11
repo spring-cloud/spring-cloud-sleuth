@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.sleuth.B3Utils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.util.StringUtils;
@@ -82,36 +83,16 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 	}
 
 	private String traceId(Map<String, String> carrier) {
-		String b3 = carrier.get(Span.B3_NAME);
-		if (StringUtils.hasText(b3)) {
-			String[] split = b3.split("-");
-			if (split.length == 3) {
-				return split[0];
-			}
-		}
-		return carrier.get(Span.TRACE_ID_NAME);
+		return B3Utils.traceId(Span.B3_NAME, Span.TRACE_ID_NAME, carrier);
 	}
 
 	private String spanId(Map<String, String> carrier) {
-		String b3 = carrier.get(Span.B3_NAME);
-		if (StringUtils.hasText(b3)) {
-			String[] split = b3.split("-");
-			if (split.length == 3) {
-				return split[1];
-			}
-		}
-		return carrier.get(Span.SPAN_ID_NAME);
+		return B3Utils.spanId(Span.B3_NAME, Span.SPAN_ID_NAME, carrier);
 	}
 
-	private String sampled(Map<String, String> carrier) {
-		String b3 = carrier.get(Span.B3_NAME);
-		if (StringUtils.hasText(b3)) {
-			String[] split = b3.split("-");
-			if (split.length == 3) {
-				return split[2];
-			}
-		}
-		return carrier.get(Span.SAMPLED_NAME);
+	private B3Utils.Sampled sampled(Map<String, String> carrier) {
+		return B3Utils.sampled(Span.B3_NAME,
+				Span.SAMPLED_NAME, Span.SPAN_FLAGS, carrier);
 	}
 
 	private String traceIdOrDefaut(Map<String, String> carrier) {
@@ -139,18 +120,18 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 		if (StringUtils.hasText(processId)) {
 			span.processId(processId);
 		}
-		String parentId = carrier.get(Span.PARENT_ID_NAME);
+		String parentId = B3Utils.parentSpanId(Span.B3_NAME, Span.PARENT_ID_NAME, carrier);
 		if (parentId != null) {
 			span.parent(Span.hexToId(parentId));
 		}
 		span.remote(true);
-
+		B3Utils.Sampled sampled = sampled(carrier);
 		boolean skip = this.skipPattern
 				.matcher(carrier.get(ZipkinHttpSpanMapper.URI_HEADER)).matches()
-				|| Span.SPAN_NOT_SAMPLED.equals(sampled(carrier));
+				|| sampled == B3Utils.Sampled.NOT_SAMPLED;
 		// trace, span id were retrieved from the headers and span is sampled
 		span.shared(!(skip || idToBeGenerated));
-		boolean debug = Span.SPAN_SAMPLED.equals(carrier.get(Span.SPAN_FLAGS));
+		boolean debug = sampled == B3Utils.Sampled.DEBUG;
 		if (debug) {
 			span.exportable(true);
 		} else if (skip) {

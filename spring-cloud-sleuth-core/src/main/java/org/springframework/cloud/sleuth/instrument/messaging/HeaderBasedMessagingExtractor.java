@@ -3,10 +3,10 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.util.Map;
 import java.util.Random;
 
+import org.springframework.cloud.sleuth.B3Utils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.cloud.sleuth.util.TextMapUtil;
-import org.springframework.util.StringUtils;
 
 /**
  * Default implementation for messaging
@@ -62,9 +62,9 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 				.traceIdHigh(traceId.length() == 32 ? Span.hexToId(traceId, 0) : 0)
 				.traceId(Span.hexToId(traceId))
 				.spanId(Span.hexToId(spanId(carrier)));
-		String flags = carrier.get(TraceMessageHeaders.SPAN_FLAGS_NAME);
-		boolean debug = Span.SPAN_SAMPLED.equals(flags);
-		boolean spanSampled = Span.SPAN_SAMPLED.equals(sampled(carrier));
+		B3Utils.Sampled sampled = sampled(carrier);
+		boolean debug = sampled == B3Utils.Sampled.DEBUG;
+		boolean spanSampled = sampled == B3Utils.Sampled.SAMPLED;
 		if (debug) {
 			spanBuilder.exportable(true);
 		} else {
@@ -90,36 +90,19 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 	}
 
 	private String traceId(Map<String, String> carrier) {
-		String b3 = carrier.get(TraceMessageHeaders.B3_NAME);
-		if (StringUtils.hasText(b3)) {
-			String[] split = b3.split("-");
-			if (split.length == 3) {
-				return split[0];
-			}
-		}
-		return carrier.get(TraceMessageHeaders.TRACE_ID_NAME);
+		return B3Utils.traceId(TraceMessageHeaders.B3_NAME,
+				TraceMessageHeaders.TRACE_ID_NAME, carrier);
 	}
 
 	private String spanId(Map<String, String> carrier) {
-		String b3 = carrier.get(TraceMessageHeaders.B3_NAME);
-		if (StringUtils.hasText(b3)) {
-			String[] split = b3.split("-");
-			if (split.length == 3) {
-				return split[1];
-			}
-		}
-		return carrier.get(TraceMessageHeaders.SPAN_ID_NAME);
+		return B3Utils.spanId(TraceMessageHeaders.B3_NAME,
+				TraceMessageHeaders.SPAN_ID_NAME, carrier);
 	}
 
-	private String sampled(Map<String, String> carrier) {
-		String b3 = carrier.get(TraceMessageHeaders.B3_NAME);
-		if (StringUtils.hasText(b3)) {
-			String[] split = b3.split("-");
-			if (split.length == 3) {
-				return split[2];
-			}
-		}
-		return carrier.get(TraceMessageHeaders.SAMPLED_NAME);
+	private B3Utils.Sampled sampled(Map<String, String> carrier) {
+		return B3Utils.sampled(TraceMessageHeaders.B3_NAME,
+				TraceMessageHeaders.SAMPLED_NAME,
+				TraceMessageHeaders.SPAN_FLAGS_NAME, carrier);
 	}
 
 	boolean hasHeader(Map<String, String> message, String name) {
@@ -128,7 +111,7 @@ public class HeaderBasedMessagingExtractor implements MessagingSpanTextMapExtrac
 
 	private void setParentIdIfApplicable(Map<String, String> carrier, Span.SpanBuilder spanBuilder,
 			String spanParentIdHeader) {
-		String parentId = carrier.get(spanParentIdHeader);
+		String parentId = B3Utils.parentSpanId(TraceMessageHeaders.B3_NAME, spanParentIdHeader, carrier);
 		if (parentId != null) {
 			spanBuilder.parent(Span.hexToId(parentId));
 		}

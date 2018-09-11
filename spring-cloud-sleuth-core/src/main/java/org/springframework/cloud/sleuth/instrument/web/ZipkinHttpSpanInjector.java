@@ -2,6 +2,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.Map;
 
+import org.springframework.cloud.sleuth.B3Utils;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
 import org.springframework.util.StringUtils;
@@ -19,7 +20,7 @@ public class ZipkinHttpSpanInjector implements HttpSpanInjector {
 	@Override
 	public void inject(Span span, SpanTextMap map) {
 		Map<String, String> carrier = SPAN_CARRIER_MAPPER.convert(map);
-		setHeader(map, carrier, Span.B3_NAME, b3(span));
+		setHeader(map, carrier, Span.B3_NAME, B3Utils.toB3String(span));
 		setHeader(map, carrier, Span.TRACE_ID_NAME, span.traceIdString());
 		setIdHeader(map, carrier, Span.SPAN_ID_NAME, span.getSpanId());
 		setHeader(map, carrier, Span.SAMPLED_NAME, span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
@@ -29,11 +30,6 @@ public class ZipkinHttpSpanInjector implements HttpSpanInjector {
 		for (Map.Entry<String, String> entry : span.baggageItems()) {
 			map.put(prefixedKey(entry.getKey()), entry.getValue());
 		}
-	}
-
-	private String b3(Span span) {
-		return span.traceIdString() + "-" + Span.idToHex(span.getSpanId()) + "-" +
-				(span.isExportable() ? Span.SPAN_SAMPLED : Span.SPAN_NOT_SAMPLED);
 	}
 
 	private String prefixedKey(String key) {
