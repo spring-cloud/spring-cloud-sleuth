@@ -22,7 +22,7 @@ import java.util.Map;
 import org.springframework.util.StringUtils;
 
 /**
- * Utility class to retrieve tracing ids from headers
+ * Utility class to operate on the B3 dash separated string header
  *
  * @author Marcin Grzejszczak
  * @since 1.3.5
@@ -30,8 +30,7 @@ import org.springframework.util.StringUtils;
 public final class B3Utils {
 
 	/**
-	 * Tries to retrieve trace id from b3 header. Falls back to standard header
-	 * if there's nothing there in b3 header
+	 * Converts the span to a B3 String
 	 */
 	public static String toB3String(Span span) {
 		String traceId = span.traceIdString();
