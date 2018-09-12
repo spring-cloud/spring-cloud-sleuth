@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
 import brave.Span;
@@ -37,14 +36,11 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.util.AttributeKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -70,7 +66,6 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import reactor.netty.NettyOutbound;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
@@ -149,8 +144,8 @@ public class TraceWebClientAutoConfiguration {
 	@ConditionalOnClass(HttpClient.class)
 	static class NettyConfiguration {
 		@Bean
-		public NettyAspect traceNetyAspect(HttpTracing httpTracing) {
-			return new NettyAspect(httpTracing);
+		public NettyClientBeanPostProcessor nettyClientBeanPostProcessor(BeanFactory beanFactory) {
+			return new NettyClientBeanPostProcessor(beanFactory);
 		}
 	}
 
@@ -289,30 +284,21 @@ class LazyTracingClientHttpRequestInterceptor implements ClientHttpRequestInterc
 	}
 }
 
-@Aspect
-class NettyAspect {
+class NettyClientBeanPostProcessor implements BeanPostProcessor {
 
-	private final TracingHttpClientInstrumentation instrumentation;
+	private final BeanFactory beanFactory;
 
-	NettyAspect(HttpTracing httpTracing) {
-		this.instrumentation = TracingHttpClientInstrumentation.create(httpTracing);
+	NettyClientBeanPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
-	@Pointcut("execution(public * reactor.netty.http.client.HttpClient.RequestSender.send(..)) && args(function)")
-	private void anyHttpClientRequestSending(
-			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) { } // NOSONAR
-
-	@Around("anyHttpClientRequestSending(function)")
-	public Object wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
-			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) throws Throwable {
-		return Mono.defer(() -> {
-			try {
-				return this.instrumentation.wrapHttpClientRequestSending(pjp, function);
-			}
-			catch (Throwable e) {
-				return Mono.error(e);
-			}
-		});
+	@Override public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
+		if (bean instanceof HttpClient) {
+			HttpClient httpClient = (HttpClient) bean;
+			return TracingHttpClientInstrumentation.create(this.beanFactory).wrap(httpClient);
+		}
+		return bean;
 	}
 }
 
@@ -341,65 +327,80 @@ class TracingHttpClientInstrumentation {
 		}
 	};
 
-	static TracingHttpClientInstrumentation create(HttpTracing httpTracing) {
-		return new TracingHttpClientInstrumentation(httpTracing);
+	static TracingHttpClientInstrumentation create(BeanFactory beanFactory) {
+		return new TracingHttpClientInstrumentation(beanFactory);
 	}
 
-	final Tracer tracer;
-	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
-	final TraceContext.Injector<HttpHeaders> injector;
-	final HttpTracing httpTracing;
+	final BeanFactory beanFactory;
+	Tracer tracer;
+	HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+	TraceContext.Injector<HttpHeaders> injector;
+	HttpTracing httpTracing;
 
-	TracingHttpClientInstrumentation(HttpTracing httpTracing) {
-		this.tracer = httpTracing.tracing().tracer();
-		this.handler = HttpClientHandler.create(httpTracing, new HttpAdapter());
-		this.injector = httpTracing.tracing().propagation().injector(SETTER);
-		this.httpTracing = httpTracing;
+	TracingHttpClientInstrumentation(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
-	Mono<HttpClientResponse> wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
-			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) throws Throwable {
-		// add headers and set CS
-		final Span currentSpan = this.tracer.currentSpan();
-		final AtomicReference<Span> span = new AtomicReference<>();
-		BiFunction<HttpClientRequest, NettyOutbound, Publisher<Void>> combinedFunction =
-				(req, nettyOutbound) -> {
-					try (Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(currentSpan)) {
-						io.netty.handler.codec.http.HttpHeaders originalHeaders = req
-								.requestHeaders().copy();
-						io.netty.handler.codec.http.HttpHeaders tracedHeaders = req
-								.requestHeaders();
-						span.set(this.handler.handleSend(this.injector, tracedHeaders, req));
+	private HttpTracing httpTracing() {
+		if (this.httpTracing == null) {
+			this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
+		}
+		return this.httpTracing;
+	}
+
+	private Tracer tracer() {
+		if (this.tracer == null) {
+			this.tracer = httpTracing().tracing().tracer();
+		}
+		return this.tracer;
+	}
+
+	private HttpClientHandler<HttpClientRequest, HttpClientResponse> handler() {
+		if (this.handler == null) {
+			this.handler = HttpClientHandler.create(httpTracing(), new HttpAdapter());
+		}
+		return this.handler;
+	}
+
+	private TraceContext.Injector<HttpHeaders> injector() {
+		if (this.injector == null) {
+			this.injector = httpTracing().tracing().propagation().injector(SETTER);
+		}
+		return this.injector;
+	}
+
+	private AttributeKey<Span> spanAttribute() {
+		return AttributeKey.valueOf("span");
+	}
+
+	HttpClient wrap(HttpClient httpClient) {
+		return httpClient
+				.tcpConfiguration(tcp -> tcp.bootstrap(c ->
+						c.attr(spanAttribute(), tracer().currentSpan())))
+				.doOnRequest((httpClientRequest, connection) -> {
+					Span spanFromAttribute = connection.channel().attr(spanAttribute()).get();
+					try (Tracer.SpanInScope spanInScope = tracer().withSpanInScope(spanFromAttribute)) {
+						handler().handleSend(injector(), httpClientRequest.requestHeaders(), httpClientRequest);
 						if (log.isDebugEnabled()) {
-							log.debug("Handled send of " + span.get());
+							log.debug("Handled send of " + spanFromAttribute);
 						}
-						io.netty.handler.codec.http.HttpHeaders addedHeaders = tracedHeaders.copy();
-						originalHeaders.forEach(header -> addedHeaders.remove(header.getKey()));
-						try (Tracer.SpanInScope clientInScope = this.tracer.withSpanInScope(span.get())) {
+					}
+				})
+				.doAfterResponse((httpClientResponse, connection) -> {
+					Span spanFromAttribute = connection.channel().attr(spanAttribute()).getAndSet(null);
+					try (Tracer.SpanInScope ws = tracer().withSpanInScope(spanFromAttribute)) {
+						if (spanFromAttribute != null) {
+							// TODO: What about throwable
+							handler().handleReceive(httpClientResponse, null, spanFromAttribute);
 							if (log.isDebugEnabled()) {
-								log.debug("Created a new client span for Netty client");
+								log.debug("Setting client sent spans");
 							}
-							return handle(function, new TracedHttpClientRequest(req, addedHeaders), nettyOutbound);
 						}
 					}
-				};
-		// run
-		Mono<HttpClientResponse> responseMono =
-				(Mono<HttpClientResponse>) pjp.proceed(new Object[] { combinedFunction });
-		// get response
-		return responseMono.doOnSuccessOrError((httpClientResponse, throwable) -> {
-			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.get())) {
-				// status codes and CR
-				if (span.get() != null) {
-					this.handler.handleReceive(httpClientResponse, throwable, span.get());
-					if (log.isDebugEnabled()) {
-						log.debug("Setting client sent spans");
-					}
-				}
-			}
-		});
+				});
 	}
 
+	// TODO: What about the gateway
 	/**
 	 * The `org.springframework.cloud.gateway.filter.NettyRoutingFilter` in SC Gateway
 	 * is adding only these headers that were set when the request came in. That means
