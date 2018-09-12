@@ -15,16 +15,21 @@
  */
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import brave.Tracing;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -46,82 +51,93 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(SleuthWebProperties.class)
 public class TraceWebAutoConfiguration {
 
+	@Autowired(required = false) List<SingleSkipPattern> patterns = new ArrayList<>();
+
+	@Bean
+	@ConditionalOnMissingBean
+	SkipPatternProvider sleuthSkipPatternProvider() {
+		return () -> Pattern.compile(this.patterns
+				.stream()
+				.map(SingleSkipPattern::skipPattern)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.map(Pattern::pattern)
+				.collect(Collectors.joining("|")));
+	}
+
 	@Configuration
 	@ConditionalOnClass(ManagementServerProperties.class)
-	@ConditionalOnMissingBean(SkipPatternProvider.class)
-	@EnableConfigurationProperties(SleuthWebProperties.class)
-	protected static class SkipPatternProviderConfig {
+	protected static class ManagementSkipPatternProviderConfig {
 
 		@Bean
 		@ConditionalOnBean(ManagementServerProperties.class)
-		public SkipPatternProvider skipPatternForManagementServerProperties(
-				final ManagementServerProperties managementServerProperties,
-				final SleuthWebProperties sleuthWebProperties) {
-			return new SkipPatternProvider() {
-				@Override
-				public Pattern skipPattern() {
-					return getPatternForManagementServerProperties(
-							managementServerProperties,
-							sleuthWebProperties);
-				}
-			};
+		public SingleSkipPattern skipPatternForManagementServerProperties(
+				final ManagementServerProperties managementServerProperties) {
+			return () -> getPatternForManagementServerProperties(managementServerProperties);
 		}
 
 		/**
 		 * Sets or appends {@link ManagementServerProperties#getServlet()#getContextPath()} to the skip
 		 * pattern. If neither is available then sets the default one
 		 */
-		static Pattern getPatternForManagementServerProperties(
-				ManagementServerProperties managementServerProperties,
-				SleuthWebProperties sleuthWebProperties) {
-			String skipPattern = sleuthWebProperties.getSkipPattern();
-			String additionalSkipPattern = sleuthWebProperties.getAdditionalSkipPattern();
+		static Optional<Pattern> getPatternForManagementServerProperties(
+				ManagementServerProperties managementServerProperties) {
 			String contextPath = managementServerProperties.getServlet().getContextPath();
-
-			if (StringUtils.hasText(skipPattern) && StringUtils.hasText(contextPath)) {
-				return Pattern.compile(combinedPattern(skipPattern + "|" + contextPath + ".*", additionalSkipPattern));
+			if (StringUtils.hasText(contextPath)) {
+				return Optional.of(Pattern.compile(contextPath + ".*"));
 			}
-			else if (StringUtils.hasText(contextPath)) {
-				return Pattern.compile(combinedPattern(contextPath + ".*", additionalSkipPattern));
-			}
-			return defaultSkipPattern(skipPattern, additionalSkipPattern);
+			return Optional.empty();
 		}
+	}
+
+	@Configuration
+	@ConditionalOnClass(ServerProperties.class)
+	protected static class ServerSkipPatternProviderConfig {
 
 		@Bean
-		@ConditionalOnMissingBean(ManagementServerProperties.class)
-		public SkipPatternProvider defaultSkipPatternBeanIfManagementServerPropsArePresent(SleuthWebProperties sleuthWebProperties) {
-			return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern(),
-					sleuthWebProperties.getAdditionalSkipPattern());
+		@ConditionalOnBean(ServerProperties.class)
+		public SingleSkipPattern skipPatternForServerProperties(
+				final ServerProperties serverProperties) {
+			return () -> getPatternForServerProperties(serverProperties);
+		}
+
+		/**
+		 * Sets or appends {@link ServerProperties#getServlet()#getContextPath()} to the skip
+		 * pattern. If neither is available then sets the default one
+		 */
+		static Optional<Pattern> getPatternForServerProperties(
+				ServerProperties serverProperties) {
+			String contextPath = serverProperties.getServlet().getContextPath();
+			if (StringUtils.hasText(contextPath)) {
+				return Optional.of(Pattern.compile(contextPath + ".*"));
+			}
+			return Optional.empty();
 		}
 	}
 
-	@Bean
-	@ConditionalOnMissingClass("org.springframework.boot.actuate.autoconfigure.ManagementServerProperties")
-	@ConditionalOnMissingBean(
-			SkipPatternProvider.class)
-	public SkipPatternProvider defaultSkipPatternBean(SleuthWebProperties sleuthWebProperties) {
-		return defaultSkipPatternProvider(sleuthWebProperties.getSkipPattern(),
-				sleuthWebProperties.getAdditionalSkipPattern());
-	}
+	@Configuration
+	static class DefaultSkipPatternConfig {
 
-	private static SkipPatternProvider defaultSkipPatternProvider(
-			final String skipPattern, final String additionalSkipPattern) {
-		return () -> defaultSkipPattern(skipPattern, additionalSkipPattern);
-	}
-
-	private static Pattern defaultSkipPattern(String skipPattern, String additionalSkipPattern) {
-		return Pattern.compile(combinedPattern(skipPattern, additionalSkipPattern));
-	}
-
-	private static String combinedPattern(String skipPattern, String additionalSkipPattern) {
-		String pattern = skipPattern;
-		if (!StringUtils.hasText(skipPattern)) {
-			pattern = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
+		@Bean
+		SingleSkipPattern defaultSkipPatternBean(SleuthWebProperties sleuthWebProperties) {
+			return () -> Optional.of(
+					Pattern.compile(
+							combinedPattern(sleuthWebProperties.getSkipPattern(),
+									sleuthWebProperties.getAdditionalSkipPattern())
+					)
+			);
 		}
-		if (StringUtils.hasText(additionalSkipPattern)) {
-			return pattern + "|" + additionalSkipPattern;
+
+		private static String combinedPattern(String skipPattern, String additionalSkipPattern) {
+			String pattern = skipPattern;
+			if (!StringUtils.hasText(skipPattern)) {
+				pattern = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
+			}
+			if (StringUtils.hasText(additionalSkipPattern)) {
+				return pattern + "|" + additionalSkipPattern;
+			}
+			return pattern;
 		}
-		return pattern;
 	}
 
 }
