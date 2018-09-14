@@ -25,8 +25,9 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
+import brave.propagation.StrictScopeDecorator;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
@@ -60,7 +61,9 @@ public class TraceRestTemplateInterceptorTests {
 			new MockMvcClientHttpRequestFactory(this.mockMvc));
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(new StrictCurrentTraceContext())
+			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+					.addScopeDecorator(StrictScopeDecorator.create())
+					.build())
 			.spanReporter(this.reporter)
 			.build();
 	Tracer tracer = this.tracing.tracer();
@@ -136,7 +139,9 @@ public class TraceRestTemplateInterceptorTests {
 	@Test
 	public void notSampledHeaderAddedWhenNotExportable() {
 		Tracing tracing = Tracing.newBuilder()
-				.currentTraceContext(new StrictCurrentTraceContext())
+				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+						.addScopeDecorator(StrictScopeDecorator.create())
+						.build())
 				.spanReporter(this.reporter)
 				.sampler(Sampler.NEVER_SAMPLE)
 				.build();

@@ -23,7 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictCurrentTraceContext;
+import brave.propagation.StrictScopeDecorator;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import feign.Client;
 import feign.Feign;
 import feign.FeignException;
@@ -60,7 +61,9 @@ public class FeignRetriesTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(new StrictCurrentTraceContext())
+			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+					.addScopeDecorator(StrictScopeDecorator.create())
+					.build())
 			.spanReporter(this.reporter)
 			.build();
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)

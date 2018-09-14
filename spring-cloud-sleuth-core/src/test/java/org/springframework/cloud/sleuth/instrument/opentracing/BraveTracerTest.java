@@ -24,8 +24,6 @@ import brave.Tracing;
 import brave.opentracing.BraveSpan;
 import brave.opentracing.BraveSpanContext;
 import brave.opentracing.BraveTracer;
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import io.opentracing.Scope;
