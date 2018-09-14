@@ -75,34 +75,46 @@ Spans have a context that includes trace identifiers that place the span at the 
 
 ==== Local Tracing
 
-When tracing local code, you can run it inside a span, as shown in the following example:
-
-```java
-
-@Autowired Tracer tracer;
-
-Span span = tracer.newTrace().name("encode").start();
-try {
-  doSomethingExpensive();
-} finally {
-  span.finish();
-}
-```
-
-In the preceding example, the span is the root of the trace.
-In many cases, the span is part of an existing trace.
-When this is the case, call `newChild` instead of `newTrace`, as shown in the following example:
+When tracing code that never leaves your process, run it inside a scoped span.
 
 ```java
 @Autowired Tracer tracer;
 
-Span span = tracer.newChild(root.context()).name("encode").start();
+// Start a new trace or a span within an existing trace representing an operation
+ScopedSpan span = tracer.startScopedSpan("encode");
 try {
-  doSomethingExpensive();
+  // The span is in "scope" meaning downstream code such as loggers can see trace IDs
+  return encoder.encode();
+} catch (RuntimeException | Error e) {
+  span.error(e); // Unless you handle exceptions, you might not know the operation failed!
+  throw e;
 } finally {
-  span.finish();
+  span.finish(); // always finish the span
 }
 ```
+
+When you need more features, or finer control, use the `Span` type:
+```java
+@Autowired Tracer tracer;
+
+// Start a new trace or a span within an existing trace representing an operation
+Span span = tracer.nextSpan().name("encode").start();
+// Put the span in "scope" so that downstream code such as loggers can see trace IDs
+try (SpanInScope ws = tracer.withSpanInScope(span)) {
+  return encoder.encode();
+} catch (RuntimeException | Error e) {
+  span.error(e); // Unless you handle exceptions, you might not know the operation failed!
+  throw e;
+} finally {
+  span.finish(); // note the scope is independent of the span. Always finish a span.
+}
+```
+
+Both of the above examples report the exact same span on finish!
+
+In the above example, the span will be either a new root span or the
+next child in an existing trace.
+
 
 ==== Customizing Spans
 
@@ -156,23 +168,26 @@ RPC tracing is often done automatically by interceptors. Behind the scenes, they
 The following example shows how to add a client span:
 
 ```java
+@Autowired Tracing tracing;
 @Autowired Tracer tracer;
 
 // before you send a request, add metadata that describes the operation
-span = tracer.newTrace().name("get").type(CLIENT);
-span.tag("clnt/finagle.version", "6.36.0");
-span.tag(TraceKeys.HTTP_PATH, "/api");
-span.remoteEndpoint(Endpoint.builder()
-    .serviceName("backend")
-    .ipv4(127 << 24 | 1)
-    .port(8080).build());
+span = tracer.nextSpan().name(service + "/" + method).kind(CLIENT);
+span.tag("myrpc.version", "1.0.0");
+span.remoteServiceName("backend");
+span.remoteIpAndPort("172.3.4.1", 8108);
+
+// Add the trace context to the request, so it can be propagated in-band
+tracing.propagation().injector(Request::addHeader)
+                     .inject(span.context(), request);
 
 // when the request is scheduled, start the span
 span.start();
 
-// if you have callbacks for when data is on the wire, note those events
-span.annotate(Constants.WIRE_SEND);
-span.annotate(Constants.WIRE_RECV);
+// if there is an error, tag the span
+span.tag("error", error.getCode());
+// or if there is an exception
+span.error(exception);
 
 // when the response is complete, finish the span
 span.finish();
@@ -187,10 +202,11 @@ to indicate that the response was received. In one-way tracing, you use
 
 The following example shows how a client might model a one-way operation:
 ```java
+@Autowired Tracing tracing;
 @Autowired Tracer tracer;
 
 // start a new span representing a client request
-oneWaySend = tracer.newSpan(parent).kind(Span.Kind.CLIENT);
+oneWaySend = tracer.nextSpan().name(service + "/" + method).kind(CLIENT);
 
 // Add the trace context to the request, so it can be propagated in-band
 tracing.propagation().injector(Request::addHeader)
@@ -243,16 +259,24 @@ Most users use a framework interceptor to automate this sort of policy.
 The following example shows how that might work internally:
 
 ```java
-@Autowired Tracing tracing;
+@Autowired Tracer tracer;
 
 // derives a sample rate from an annotation on a java method
 DeclarativeSampler<Traced> sampler = DeclarativeSampler.create(Traced::sampleRate);
 
 @Around("@annotation(traced)")
 public Object traceThing(ProceedingJoinPoint pjp, Traced traced) throws Throwable {
-  Span span = tracing.tracer().newTrace(sampler.sample(traced))...
+  // When there is no trace in progress, this decides using an annotation
+  Sampler decideUsingAnnotation = declarativeSampler.toSampler(traced);
+  Tracer tracer = tracer.withSampler(decideUsingAnnotation);
+
+  // This code looks the same as if there was no declarative override
+  ScopedSpan span = tracer.startScopedSpan(spanName(pjp));
   try {
     return pjp.proceed();
+  } catch (RuntimeException | Error e) {
+    span.error(e);
+    throw e;
   } finally {
     span.finish();
   }
@@ -269,15 +293,20 @@ The following example shows how that might work internally:
 
 ```java
 @Autowired Tracer tracer;
+@Autowired Sampler fallback;
 
-Span newTrace(Request input) {
-  SamplingFlags flags = SamplingFlags.NONE;
-  if (input.url().startsWith("/experimental")) {
-    flags = SamplingFlags.SAMPLED;
-  } else if (input.url().startsWith("/static")) {
-    flags = SamplingFlags.NOT_SAMPLED;
-  }
-  return tracer.newTrace(flags);
+Span nextSpan(final Request input) {
+  Sampler requestBased = Sampler() {
+    @Override public boolean isSampled(long traceId) {
+      if (input.url().startsWith("/experimental")) {
+        return true;
+      } else if (input.url().startsWith("/static")) {
+        return false;
+      }
+      return fallback.isSampled(traceId);
+    }
+  };
+  return tracer.withSampler(requestBased).nextSpan();
 }
 ```
 

@@ -15,9 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.opentracing;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import brave.Span;
 import brave.Tracer.SpanInScope;
 import brave.Tracing;
@@ -25,13 +22,16 @@ import brave.opentracing.BraveSpan;
 import brave.opentracing.BraveSpanContext;
 import brave.opentracing.BraveTracer;
 import brave.propagation.CurrentTraceContext;
-import brave.propagation.StrictCurrentTraceContext;
+import brave.propagation.StrictScopeDecorator;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import io.opentracing.Scope;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapExtractAdapter;
 import io.opentracing.propagation.TextMapInjectAdapter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -318,7 +318,9 @@ public class BraveTracerTest {
     }
 
     @Bean CurrentTraceContext currentTraceContext() {
-      return new StrictCurrentTraceContext();
+      return ThreadLocalCurrentTraceContext.newBuilder()
+          .addScopeDecorator(StrictScopeDecorator.create())
+          .build();
     }
   }
 }

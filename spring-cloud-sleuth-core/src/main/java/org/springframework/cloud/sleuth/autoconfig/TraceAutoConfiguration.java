@@ -23,7 +23,8 @@ import brave.CurrentSpanCustomizer;
 import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
-import brave.context.log4j2.ThreadContextCurrentTraceContext;
+import brave.context.log4j2.ThreadContextScopeDecorator;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.ExtraFieldPropagation;
@@ -135,7 +136,9 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	CurrentTraceContext sleuthCurrentTraceContext() {
-		return ThreadContextCurrentTraceContext.create();
+		return ThreadLocalCurrentTraceContext.newBuilder()
+				.addScopeDecorator(ThreadContextScopeDecorator.create())
+				.build();
 	}
 
 	@Bean

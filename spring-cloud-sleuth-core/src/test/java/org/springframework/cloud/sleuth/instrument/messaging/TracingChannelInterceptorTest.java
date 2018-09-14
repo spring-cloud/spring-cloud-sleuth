@@ -23,7 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 import brave.Tracing;
-import brave.propagation.StrictCurrentTraceContext;
+import brave.propagation.StrictScopeDecorator;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.integration.channel.DirectChannel;
@@ -49,7 +50,10 @@ public class TracingChannelInterceptorTest {
 
 	List<Span> spans = new ArrayList<>();
 	ChannelInterceptor interceptor = TracingChannelInterceptor.create(Tracing.newBuilder()
-			.currentTraceContext(new StrictCurrentTraceContext()).spanReporter(spans::add)
+			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+					.addScopeDecorator(StrictScopeDecorator.create())
+					.build())
+			.spanReporter(spans::add)
 			.build());
 
 	QueueChannel channel = new QueueChannel();
