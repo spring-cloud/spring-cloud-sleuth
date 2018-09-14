@@ -25,7 +25,8 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictCurrentTraceContext;
+import brave.propagation.StrictScopeDecorator;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.servlet.TracingFilter;
 import org.junit.After;
@@ -60,7 +61,9 @@ public class TraceFilterTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(new StrictCurrentTraceContext())
+			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+					.addScopeDecorator(StrictScopeDecorator.create())
+					.build())
 			.spanReporter(this.reporter)
 			.build();
 	Tracer tracer = this.tracing.tracer();
@@ -108,7 +111,9 @@ public class TraceFilterTests {
 
 	private Filter neverSampleFilter() {
 		Tracing tracing = Tracing.newBuilder()
-				.currentTraceContext(new StrictCurrentTraceContext())
+				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+						.addScopeDecorator(StrictScopeDecorator.create())
+						.build())
 				.spanReporter(this.reporter)
 				.sampler(Sampler.NEVER_SAMPLE)
 				.supportsJoin(false)
@@ -235,7 +240,9 @@ public class TraceFilterTests {
 	@Test
 	public void createsChildFromHeadersWhenJoinUnsupported() throws Exception {
 		Tracing tracing = Tracing.newBuilder()
-				.currentTraceContext(new StrictCurrentTraceContext())
+				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+						.addScopeDecorator(StrictScopeDecorator.create())
+						.build())
 				.spanReporter(this.reporter)
 				.supportsJoin(false)
 				.build();
