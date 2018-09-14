@@ -758,26 +758,37 @@ After starting a span, you can annotate events of interest or add tags containin
 </section>
 <section xml:id="_local_tracing">
 <title>Local Tracing</title>
-<simpara>When tracing local code, you can run it inside a span, as shown in the following example:</simpara>
+<simpara>When tracing code that never leaves your process, run it inside a scoped span.</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
 
-Span span = tracer.newTrace().name("encode").start();
+// Start a new trace or a span within an existing trace representing an operation
+ScopedSpan span = tracer.startScopedSpan("encode");
 try {
-  doSomethingExpensive();
+  // The span is in "scope" meaning downstream code such as loggers can see trace IDs
+  return encoder.encode();
+} catch (RuntimeException | Error e) {
+  span.error(e); // Unless you handle exceptions, you might not know the operation failed!
+  throw e;
 } finally {
-  span.finish();
+  span.finish(); // always finish the span
 }</programlisting>
-<simpara>In the preceding example, the span is the root of the trace.
-In many cases, the span is part of an existing trace.
-When this is the case, call <literal>newChild</literal> instead of <literal>newTrace</literal>, as shown in the following example:</simpara>
+<simpara>When you need more features, or finer control, use the <literal>Span</literal> type:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
 
-Span span = tracer.newChild(root.context()).name("encode").start();
-try {
-  doSomethingExpensive();
+// Start a new trace or a span within an existing trace representing an operation
+Span span = tracer.nextSpan().name("encode").start();
+// Put the span in "scope" so that downstream code such as loggers can see trace IDs
+try (SpanInScope ws = tracer.withSpanInScope(span)) {
+  return encoder.encode();
+} catch (RuntimeException | Error e) {
+  span.error(e); // Unless you handle exceptions, you might not know the operation failed!
+  throw e;
 } finally {
-  span.finish();
+  span.finish(); // note the scope is independent of the span. Always finish a span.
 }</programlisting>
+<simpara>Both of the above examples report the exact same span on finish!</simpara>
+<simpara>In the above example, the span will be either a new root span or the
+next child in an existing trace.</simpara>
 </section>
 <section xml:id="_customizing_spans">
 <title>Customizing Spans</title>
@@ -815,23 +826,26 @@ void userCode() {
 </tip>
 <simpara>RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.</simpara>
 <simpara>The following example shows how to add a client span:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracing tracing;
+@Autowired Tracer tracer;
 
 // before you send a request, add metadata that describes the operation
-span = tracer.newTrace().name("get").type(CLIENT);
-span.tag("clnt/finagle.version", "6.36.0");
-span.tag(TraceKeys.HTTP_PATH, "/api");
-span.remoteEndpoint(Endpoint.builder()
-    .serviceName("backend")
-    .ipv4(127 &lt;&lt; 24 | 1)
-    .port(8080).build());
+span = tracer.nextSpan().name(service + "/" + method).kind(CLIENT);
+span.tag("myrpc.version", "1.0.0");
+span.remoteServiceName("backend");
+span.remoteIpAndPort("172.3.4.1", 8108);
+
+// Add the trace context to the request, so it can be propagated in-band
+tracing.propagation().injector(Request::addHeader)
+                     .inject(span.context(), request);
 
 // when the request is scheduled, start the span
 span.start();
 
-// if you have callbacks for when data is on the wire, note those events
-span.annotate(Constants.WIRE_SEND);
-span.annotate(Constants.WIRE_RECV);
+// if there is an error, tag the span
+span.tag("error", error.getCode());
+// or if there is an exception
+span.error(exception);
 
 // when the response is complete, finish the span
 span.finish();</programlisting>
@@ -842,10 +856,11 @@ request but no response. In normal RPC tracing, you use <literal>span.finish()</
 to indicate that the response was received. In one-way tracing, you use
 <literal>span.flush()</literal> instead, as you do not expect a response.</simpara>
 <simpara>The following example shows how a client might model a one-way operation:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracing tracing;
+@Autowired Tracer tracer;
 
 // start a new span representing a client request
-oneWaySend = tracer.newSpan(parent).kind(Span.Kind.CLIENT);
+oneWaySend = tracer.nextSpan().name(service + "/" + method).kind(CLIENT);
 
 // Add the trace context to the request, so it can be propagated in-band
 tracing.propagation().injector(Request::addHeader)
@@ -891,16 +906,24 @@ When a span is not sampled, it adds no overhead (a noop).</simpara>
 <simpara>Some applications need to sample based on the type or annotations of a java method.</simpara>
 <simpara>Most users use a framework interceptor to automate this sort of policy.
 The following example shows how that might work internally:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Autowired Tracing tracing;
+<programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
 
 // derives a sample rate from an annotation on a java method
 DeclarativeSampler&lt;Traced&gt; sampler = DeclarativeSampler.create(Traced::sampleRate);
 
 @Around("@annotation(traced)")
 public Object traceThing(ProceedingJoinPoint pjp, Traced traced) throws Throwable {
-  Span span = tracing.tracer().newTrace(sampler.sample(traced))...
+  // When there is no trace in progress, this decides using an annotation
+  Sampler decideUsingAnnotation = declarativeSampler.toSampler(traced);
+  Tracer tracer = tracer.withSampler(decideUsingAnnotation);
+
+  // This code looks the same as if there was no declarative override
+  ScopedSpan span = tracer.startScopedSpan(spanName(pjp));
   try {
     return pjp.proceed();
+  } catch (RuntimeException | Error e) {
+    span.error(e);
+    throw e;
   } finally {
     span.finish();
   }
@@ -913,15 +936,20 @@ For example, you might not want to trace requests to static resources such as im
 <simpara>Most users use a framework interceptor to automate this sort of policy.
 The following example shows how that might work internally:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Autowired Tracer tracer;
+@Autowired Sampler fallback;
 
-Span newTrace(Request input) {
-  SamplingFlags flags = SamplingFlags.NONE;
-  if (input.url().startsWith("/experimental")) {
-    flags = SamplingFlags.SAMPLED;
-  } else if (input.url().startsWith("/static")) {
-    flags = SamplingFlags.NOT_SAMPLED;
-  }
-  return tracer.newTrace(flags);
+Span nextSpan(final Request input) {
+  Sampler requestBased = Sampler() {
+    @Override public boolean isSampled(long traceId) {
+      if (input.url().startsWith("/experimental")) {
+        return true;
+      } else if (input.url().startsWith("/static")) {
+        return false;
+      }
+      return fallback.isSampled(traceId);
+    }
+  };
+  return tracer.withSampler(requestBased).nextSpan();
 }</programlisting>
 </section>
 <section xml:id="_sampling_in_spring_cloud_sleuth">
