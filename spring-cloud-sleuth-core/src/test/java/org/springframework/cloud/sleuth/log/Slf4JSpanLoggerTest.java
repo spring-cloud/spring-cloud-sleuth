@@ -19,7 +19,8 @@ package org.springframework.cloud.sleuth.log;
 import brave.Span;
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext.Scope;
-import brave.propagation.StrictCurrentTraceContext;
+import brave.propagation.StrictScopeDecorator;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,13 +36,17 @@ public class Slf4JSpanLoggerTest {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(new StrictCurrentTraceContext())
+			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+					.addScopeDecorator(StrictScopeDecorator.create())
+					.build())
 			.spanReporter(this.reporter)
 			.build();
 
 	Span span = this.tracing.tracer().nextSpan().name("span").start();
 	Slf4jCurrentTraceContext slf4jCurrentTraceContext =
-			new Slf4jCurrentTraceContext(new StrictCurrentTraceContext());
+			new Slf4jCurrentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
+					.addScopeDecorator(StrictScopeDecorator.create())
+					.build());
 
 	@Before
 	@After
