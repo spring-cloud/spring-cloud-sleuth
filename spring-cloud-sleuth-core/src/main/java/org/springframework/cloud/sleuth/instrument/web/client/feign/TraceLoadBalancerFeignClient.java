@@ -40,7 +40,7 @@ import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
  * @author Marcin Grzejszczak
  * @since 1.0.7
  */
-class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
+public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 
 	private static final Log log = LogFactory.getLog(TraceLoadBalancerFeignClient.class);
 
@@ -49,7 +49,7 @@ class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 	HttpTracing httpTracing;
 	TracingFeignClient tracingFeignClient;
 
-	TraceLoadBalancerFeignClient(Client delegate,
+	public TraceLoadBalancerFeignClient(Client delegate,
 			CachingSpringLoadBalancerFactory lbClientFactory,
 			SpringClientFactory clientFactory, BeanFactory beanFactory) {
 		super(delegate, lbClientFactory, clientFactory);
