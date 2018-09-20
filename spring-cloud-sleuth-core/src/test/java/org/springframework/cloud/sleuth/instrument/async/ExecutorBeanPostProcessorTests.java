@@ -18,14 +18,20 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 
+import brave.Tracing;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ClassUtils;
 
@@ -34,6 +40,7 @@ import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
 /**
  * @author Marcin Grzejszczak
+ * @author Denys Ivano
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ExecutorBeanPostProcessorTests {
@@ -108,6 +115,30 @@ public class ExecutorBeanPostProcessorTests {
 		thenThrownBy(() -> bpp.postProcessAfterInitialization(taskExecutor, "foo"))
 				.isInstanceOf(AopConfigException.class)
 				.hasMessage("foo");
+	}
+
+	@Test
+	public void should_throw_real_exception_when_using_proxy() throws Exception {
+		// for LazyTraceExecutor
+		Mockito.when(this.beanFactory.getBean(Tracing.class))
+			.thenReturn(Tracing.newBuilder().build());
+		Mockito.when(this.beanFactory.getBean(SpanNamer.class))
+			.thenReturn(new DefaultSpanNamer());
+
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+			.postProcessAfterInitialization(new RejectedExecutionExecutor(), "fooExecutor");
+
+		then(o).isInstanceOf(RejectedExecutionExecutor.class);
+		then(ClassUtils.isCglibProxy(o)).isTrue();
+		thenThrownBy(() -> ((RejectedExecutionExecutor) o).execute(() -> {}))
+			.isInstanceOf(RejectedExecutionException.class)
+			.hasMessage("rejected");
+	}
+
+	class RejectedExecutionExecutor implements Executor {
+		@Override public void execute(Runnable task) {
+			throw new RejectedExecutionException("rejected");
+		}
 	}
 
 }

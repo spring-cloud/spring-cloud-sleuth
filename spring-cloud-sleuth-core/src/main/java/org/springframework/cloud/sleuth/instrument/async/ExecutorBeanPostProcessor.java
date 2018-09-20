@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.Executor;
@@ -38,6 +39,8 @@ import org.springframework.util.ReflectionUtils;
  * method or is final.
  *
  * @author Marcin Grzejszczak
+ * @author Jesus Alonso
+ * @author Denys Ivano
  * @since 1.1.4
  */
 class ExecutorBeanPostProcessor implements BeanPostProcessor {
@@ -124,7 +127,13 @@ class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor
 		Executor executor = executor(this.beanFactory, this.delegate);
 		Method methodOnTracedBean = getMethod(invocation, executor);
 		if (methodOnTracedBean != null) {
-			return methodOnTracedBean.invoke(executor, invocation.getArguments());
+			try {
+				return methodOnTracedBean.invoke(executor, invocation.getArguments());
+			} catch (InvocationTargetException ex) {
+				// gh-1092: throw the target exception (if present)
+				Throwable cause = ex.getCause();
+				throw (cause != null) ? cause : ex;
+			}
 		}
 		return invocation.proceed();
 	}
