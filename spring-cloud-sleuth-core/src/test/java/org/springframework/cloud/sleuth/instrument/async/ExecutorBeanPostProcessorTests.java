@@ -176,28 +176,4 @@ public class ExecutorBeanPostProcessorTests {
 		}
 	}
 
-	@Test
-	public void should_throw_real_exception_when_using_proxy() throws Exception {
-		// for LazyTraceExecutor
-		Mockito.when(this.beanFactory.getBean(Tracing.class))
-			.thenReturn(Tracing.newBuilder().build());
-		Mockito.when(this.beanFactory.getBean(SpanNamer.class))
-			.thenReturn(new DefaultSpanNamer());
-
-		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
-			.postProcessAfterInitialization(new RejectedExecutionExecutor(), "fooExecutor");
-
-		then(o).isInstanceOf(RejectedExecutionExecutor.class);
-		then(ClassUtils.isCglibProxy(o)).isTrue();
-		thenThrownBy(() -> ((RejectedExecutionExecutor) o).execute(() -> {}))
-			.isInstanceOf(RejectedExecutionException.class)
-			.hasMessage("rejected");
-	}
-
-	class RejectedExecutionExecutor implements Executor {
-		@Override public void execute(Runnable task) {
-			throw new RejectedExecutionException("rejected");
-		}
-	}
-
 }
