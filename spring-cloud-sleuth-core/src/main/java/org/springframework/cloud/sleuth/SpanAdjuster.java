@@ -19,16 +19,9 @@ package org.springframework.cloud.sleuth;
 import zipkin2.Span;
 
 /**
- * Adds ability to adjust a span before reporting it.
- *
- * <b>IMPORTANT</b> - if you override the default {@link brave.Tracing} implementation,
- * remember to ensure that you pass to it an adjusted version of the {@link zipkin2.reporter.Reporter<zipkin2.Span>}
- * bean. In other words you must reuse the list of available {@link SpanAdjuster}s and
- * wrap the provided {@link zipkin2.reporter.Reporter} interface with it.
- *
- * @author Marcin Grzejszczak
- * @since 1.1.4
+ * @deprecated use {@link brave.handler.FinishedSpanHandler}
  */
+@Deprecated
 public interface SpanAdjuster {
 	/**
 	 * You can adjust the {@link zipkin2.Span} by creating a new one using the {@link Span#toBuilder()}
