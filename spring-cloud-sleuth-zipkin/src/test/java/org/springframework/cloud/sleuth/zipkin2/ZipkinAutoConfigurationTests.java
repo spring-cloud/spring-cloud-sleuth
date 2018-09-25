@@ -18,6 +18,9 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import brave.Span;
 import brave.Tracing;
+import brave.handler.FinishedSpanHandler;
+import brave.handler.MutableSpan;
+import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -30,7 +33,6 @@ import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -198,13 +200,23 @@ public class ZipkinAutoConfigurationTests {
 	}
 
 	@Configuration
-	protected static class AdjustersConfig {
-		@Bean SpanAdjuster adjusterOne() {
-			return span -> span.toBuilder().name("foo").build();
+	protected static class HandlerHanldersConfig {
+		@Bean FinishedSpanHandler handlerOne() {
+			return new FinishedSpanHandler() {
+				@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+					span.name("foo");
+					return true; // keep this span
+				}
+			};
 		}
 
-		@Bean SpanAdjuster adjusterTwo() {
-			return span -> span.toBuilder().name(span.name() + " bar").build();
+		@Bean FinishedSpanHandler handlerTwo() {
+			return new FinishedSpanHandler() {
+				@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+					span.name(span.name() + " bar");
+					return true; // keep this span
+				}
+			};
 		}
 	}
 }

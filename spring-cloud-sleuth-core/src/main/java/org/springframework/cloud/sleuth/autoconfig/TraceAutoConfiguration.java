@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import brave.handler.FinishedSpanHandler;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +59,7 @@ public class TraceAutoConfiguration {
 	public static final String TRACER_BEAN_NAME = "tracer";
 
 	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
+	@Autowired(required = false) List<FinishedSpanHandler> finishedSpanHandlers = new ArrayList<>();
 	@Autowired(required = false) List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
 
 	@Bean
@@ -71,7 +73,7 @@ public class TraceAutoConfiguration {
 			ErrorParser errorParser,
 			SleuthProperties sleuthProperties
 	) {
-		return Tracing.newBuilder()
+		Tracing.Builder builder = Tracing.newBuilder()
 				.sampler(sampler)
 				.errorParser(errorParser)
 				.localServiceName(serviceName)
@@ -79,8 +81,11 @@ public class TraceAutoConfiguration {
 				.currentTraceContext(currentTraceContext)
 				.spanReporter(adjustedReporter(reporter))
 				.traceId128Bit(sleuthProperties.isTraceId128())
-				.supportsJoin(sleuthProperties.isSupportsJoin())
-				.build();
+				.supportsJoin(sleuthProperties.isSupportsJoin());
+		for (FinishedSpanHandler finishedSpanHandlerFactory : this.finishedSpanHandlers) {
+			builder.addFinishedSpanHandler(finishedSpanHandlerFactory);
+		}
+		return builder.build();
 	}
 
 	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate) {
