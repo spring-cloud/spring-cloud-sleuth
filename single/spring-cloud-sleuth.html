@@ -723,14 +723,24 @@ You can customize the tags or modify the response headers by registering your ow
 That is not always the case, though.
 There are situations in which you want to explicitly provide a different service name for all spans coming from your application.
 To achieve that, you can pass the following property to your application to override that value (the example is for a service named <code class="literal">myService</code>):</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.service.name</span>: myService</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_customization_of_reported_spans" href="#_customization_of_reported_spans"></a>12.4&nbsp;Customization of Reported Spans</h2></div></div></div><p>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
-You can do so by using the <code class="literal">SpanAdjuster</code> interface.</p><p>In Sleuth, we generate spans with a fixed name.
+You can do so by using the <code class="literal">FinishedSpanHandler</code> interface.</p><p>In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
-You can implement the <code class="literal">SpanAdjuster</code> interface to alter that name.</p><p>The following example shows how to register two beans that implement <code class="literal">SpanAdjuster</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em> SpanAdjuster adjusterOne() {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> span -&gt; span.toBuilder().name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"foo"</span>).build();
+You can implement the <code class="literal">FinishedSpanHandler</code> interface to alter that name.</p><p>The following example shows how to register two beans that implement <code class="literal">FinishedSpanHandler</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em> FinishedSpanHandler handlerOne() {
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> FinishedSpanHandler() {
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
+			span.name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"foo"</span>);
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// keep this span</span>
+		}
+	};
 }
 
-<em><span class="hl-annotation" style="color: gray">@Bean</span></em> SpanAdjuster adjusterTwo() {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> span -&gt; span.toBuilder().name(span.name() + <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">" bar"</span>).build();
+<em><span class="hl-annotation" style="color: gray">@Bean</span></em> FinishedSpanHandler handlerTwo() {
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> FinishedSpanHandler() {
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
+			span.name(span.name() + <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">" bar"</span>);
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// keep this span</span>
+		}
+	};
 }</pre><p>The preceding example results in changing the name of the reported span to <code class="literal">foo bar</code>, just before it gets reported (for example, to Zipkin).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_host_locator" href="#_host_locator"></a>12.5&nbsp;Host Locator</h2></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>This section is about defining <span class="strong"><strong>host</strong></span> from service discovery.
 It is <span class="strong"><strong>NOT</strong></span> about finding Zipkin through service discovery.</p></td></tr></table></div><p>To define the host that corresponds to a particular span, we need to resolve the host name and port.
 The default approach is to take these values from server properties.

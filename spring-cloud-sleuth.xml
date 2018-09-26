@@ -1547,17 +1547,27 @@ To achieve that, you can pass the following property to your application to over
 <section xml:id="_customization_of_reported_spans">
 <title>Customization of Reported Spans</title>
 <simpara>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
-You can do so by using the <literal>SpanAdjuster</literal> interface.</simpara>
+You can do so by using the <literal>FinishedSpanHandler</literal> interface.</simpara>
 <simpara>In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
-You can implement the <literal>SpanAdjuster</literal> interface to alter that name.</simpara>
-<simpara>The following example shows how to register two beans that implement <literal>SpanAdjuster</literal>:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Bean SpanAdjuster adjusterOne() {
-	return span -&gt; span.toBuilder().name("foo").build();
+You can implement the <literal>FinishedSpanHandler</literal> interface to alter that name.</simpara>
+<simpara>The following example shows how to register two beans that implement <literal>FinishedSpanHandler</literal>:</simpara>
+<programlisting language="java" linenumbering="unnumbered">@Bean FinishedSpanHandler handlerOne() {
+	return new FinishedSpanHandler() {
+		@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+			span.name("foo");
+			return true; // keep this span
+		}
+	};
 }
 
-@Bean SpanAdjuster adjusterTwo() {
-	return span -&gt; span.toBuilder().name(span.name() + " bar").build();
+@Bean FinishedSpanHandler handlerTwo() {
+	return new FinishedSpanHandler() {
+		@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+			span.name(span.name() + " bar");
+			return true; // keep this span
+		}
+	};
 }</programlisting>
 <simpara>The preceding example results in changing the name of the reported span to <literal>foo bar</literal>, just before it gets reported (for example, to Zipkin).</simpara>
 </section>
