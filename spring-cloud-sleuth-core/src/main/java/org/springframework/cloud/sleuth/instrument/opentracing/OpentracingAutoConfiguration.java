@@ -44,6 +44,7 @@ public class OpentracingAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@ConditionalOnClass(name = "brave.opentracing.BraveTracer")
 	Tracer sleuthOpenTracing(brave.Tracing braveTracing) {
 		return BraveTracer.create(braveTracing);
 	}
