@@ -114,29 +114,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>${checkstyle.version}</version>
-				<dependencies>
-					<dependency>
-						<groupId>org.springframework.cloud</groupId>
-						<artifactId>spring-cloud-build-tools</artifactId>
-						<version>${spring-cloud-build.version}</version>
-					</dependency>
-				</dependencies>
-				<executions>
-					<execution>
-						<id>validate</id>
-						<phase>validate</phase>
-						<configuration>
-							<configLocation>checkstyle.xml</configLocation>
-							<headerLocation>LICENSE.txt</headerLocation>
-							<consoleOutput>true</consoleOutput>
-							<failsOnError>true</failsOnError>
-						</configuration>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -146,11 +123,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>${checkstyle.version}</version>
-				<configuration>
-					<configLocation>checkstyle.xml</configLocation>
-					<headerLocation>LICENSE.txt</headerLocation>
-				</configuration>
 			</plugin>
 		</plugins>
 	</reporting>
@@ -266,8 +238,6 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
-		<surefire.plugin.version>2.19.1</surefire.plugin.version>
-		<checkstyle.version>2.17</checkstyle.version>
 		<spring-cloud-build.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-build.version>
 		<spring-cloud-commons.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-commons.version>
 		<spring-cloud-stream.version>Fishtown.BUILD-SNAPSHOT</spring-cloud-stream.version>
@@ -413,7 +383,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-						<version>${surefire.plugin.version}</version>
 						<configuration>
 							<!-- Sets the VM argument line used when unit tests are run. -->
 							<argLine>${surefireArgLine}</argLine>
