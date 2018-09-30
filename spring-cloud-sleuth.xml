@@ -4,7 +4,7 @@
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
-<date>2018-09-29</date>
+<date>2018-09-30</date>
 <author>
 <personname>
 <firstname>Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer, Jay Bryant</firstname>
@@ -1304,7 +1304,7 @@ The name should be low cardinality, so it should not include identifiers.</simpa
 </listitem>
 </itemizedlist>
 <simpara>Fortunately, for asynchronous processing, you can provide explicit naming.</simpara>
-<section xml:id="__literal_spanname_literal_annotation">
+<section xml:id="_spanname_annotation">
 <title><literal>@SpanName</literal> Annotation</title>
 <simpara>You can name the span explicitly by using the <literal>@SpanName</literal> annotation, as shown in the following example:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@SpanName("calculateTax")
@@ -1321,7 +1321,7 @@ Future&lt;?&gt; future = executorService.submit(runnable);
 // ... some additional logic ...
 future.get();</programlisting>
 </section>
-<section xml:id="__literal_tostring_literal_method">
+<section xml:id="_tostring_method">
 <title><literal>toString()</literal> method</title>
 <simpara>It is pretty rare to create separate classes for <literal>Runnable</literal> or <literal>Callable</literal>.
 Typically, one creates an anonymous instance of those classes.
@@ -1458,7 +1458,7 @@ public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression
 <simpara>No custom implementation of a <literal>TagValueExpressionResolver</literal> leads to evaluation of the SPEL expression, and a tag with a value of <literal>4 characters</literal> is set on the span.
 If you want to use some other expression resolution mechanism, you can create your own implementation of the bean.</simpara>
 </section>
-<section xml:id="_using_the_literal_tostring_literal_method">
+<section xml:id="_using_the_tostring_method">
 <title>Using the <literal>toString()</literal> method</title>
 <simpara>Consider the following annotated method:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@NewSpan
@@ -1504,7 +1504,7 @@ class Config {
   }
 }</programlisting>
 </section>
-<section xml:id="__literal_tracingfilter_literal">
+<section xml:id="_tracingfilter">
 <title><literal>TracingFilter</literal></title>
 <simpara>You can also modify the behavior of the <literal>TracingFilter</literal>, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
 You can customize the tags or modify the response headers by registering your own instance of the <literal>TracingFilter</literal> bean.</simpara>
@@ -1534,7 +1534,8 @@ class MyFilter extends GenericFilterBean {
 		currentSpan.tag("custom", "tag");
 		chain.doFilter(request, response);
 	}
-}</programlisting>
+}
+//end::response_headers[]</programlisting>
 </section>
 <section xml:id="_custom_service_name">
 <title>Custom service name</title>
@@ -1826,7 +1827,7 @@ static class Config {
 }</programlisting>
 </section>
 </section>
-<section xml:id="__literal_webclient_literal">
+<section xml:id="_webclient">
 <title><literal>WebClient</literal></title>
 <simpara>We inject a <literal>ExchangeFilterFunction</literal> implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.</simpara>
 <simpara>To block this feature, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
@@ -1846,13 +1847,13 @@ Traverson traverson = new Traverson(URI.create("http://some/address"),
     MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
 // use Traverson</programlisting>
 </section>
-<section xml:id="_apache_literal_httpclientbuilder_literal_and_literal_httpasyncclientbuilder_literal">
+<section xml:id="_apache_httpclientbuilder_and_httpasyncclientbuilder">
 <title>Apache <literal>HttpClientBuilder</literal> and <literal>HttpAsyncClientBuilder</literal></title>
 <simpara>We instrument the <literal>HttpClientBuilder</literal> and <literal>HttpAsyncClientBuilder</literal> so that
 tracing context gets injected to the sent requests.</simpara>
 <simpara>To block these features, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
 </section>
-<section xml:id="_netty_literal_httpclient_literal">
+<section xml:id="_netty_httpclient">
 <title>Netty <literal>HttpClient</literal></title>
 <simpara>We instrument the Netty&#8217;s <literal>HttpClient</literal>.</simpara>
 <simpara>To block this feature, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
@@ -1861,7 +1862,7 @@ tracing context gets injected to the sent requests.</simpara>
 If you create a <literal>HttpClient</literal> instance with a <literal>new</literal> keyword, the instrumentation does NOT work.</simpara>
 </important>
 </section>
-<section xml:id="__literal_userinforesttemplatecustomizer_literal">
+<section xml:id="_userinforesttemplatecustomizer">
 <title><literal>UserInfoRestTemplateCustomizer</literal></title>
 <simpara>We instrument the Spring Security&#8217;s <literal>UserInfoRestTemplateCustomizer</literal>.</simpara>
 <simpara>To block this feature, set <literal>spring.sleuth.web.client.enabled</literal> to <literal>false</literal>.</simpara>
@@ -1879,7 +1880,7 @@ However, all the default instrumentation is still there.</simpara>
 </section>
 <section xml:id="_asynchronous_communication">
 <title>Asynchronous Communication</title>
-<section xml:id="__literal_async_literal_annotated_methods">
+<section xml:id="_async_annotated_methods">
 <title><literal>@Async</literal> Annotated methods</title>
 <simpara>In Spring Cloud Sleuth, we instrument async-related components so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of <literal>spring.sleuth.async.enabled</literal> to <literal>false</literal>.</simpara>
@@ -1896,7 +1897,7 @@ You can disable this behavior by setting the value of <literal>spring.sleuth.asy
 </listitem>
 </itemizedlist>
 </section>
-<section xml:id="__literal_scheduled_literal_annotated_methods">
+<section xml:id="_scheduled_annotated_methods">
 <title><literal>@Scheduled</literal> Annotated Methods</title>
 <simpara>In Spring Cloud Sleuth, we instrument scheduled method execution so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of <literal>spring.sleuth.scheduled.enabled</literal> to <literal>false</literal>.</simpara>
