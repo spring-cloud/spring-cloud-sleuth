@@ -12,7 +12,8 @@ Span newSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
 	newSpan.annotate(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"taxCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+}
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to finish the span. This will allow collecting</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the span to send it to Zipkin</span>
 	newSpan.finish();
@@ -30,7 +31,8 @@ Span continuedSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-key
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
 	continuedSpan.annotate(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"taxCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+}
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to flush the span. That means that</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// it will get reported but the span itself is not yet finished</span>
 	continuedSpan.flush();
@@ -49,7 +51,8 @@ Span newSpan = null;
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
 	newSpan.annotate(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"commissionCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+}
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to finish the span. This will allow collecting</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the span to send it to Zipkin. The tags and events set on the</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// newSpan will not be present on the parent</span>

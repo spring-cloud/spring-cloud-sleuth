@@ -137,7 +137,7 @@ Spring Cloud Sleuth understands that a header is baggage-related if the HTTP hea
 However, keep in mind that too many can decrease system throughput or increase RPC latency.
 In extreme cases, too much baggage can crash the application, due to exceeding transport-level message or header capacity.</p></td></tr></table></div><p>The following example shows setting baggage on a span:</p><pre class="programlisting">Span initialSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.nextSpan().name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"span"</span>).start();
 ExtraFieldPropagation.set(initialSpan.context(), <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"foo"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"bar"</span>);
-ExtraFieldPropagation.set(initialSpan.context(),<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"UPPER_CASE"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"someValue"</span>);
+ExtraFieldPropagation.set(initialSpan.context(), <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"UPPER_CASE"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"someValue"</span>);
 }</pre><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_baggage_versus_span_tags" href="#_baggage_versus_span_tags"></a>Baggage versus Span Tags</h4></div></div></div><p>Baggage travels with the trace (every child span contains the baggage of its parent).
 Zipkin has no knowledge of baggage and does not receive that information.</p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>Starting from Sleuth 2.0.0 you have to pass the baggage key names explicitly
 in your project configuration. Read more about that setup <a class="link" href="#prefixed-fields" title="5.1.1&nbsp;Prefixed fields">here</a></p></td></tr></table></div><p>Tags are attached to a specific span. In other words, they are presented only for that particular span.
@@ -557,7 +557,8 @@ Span newSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
 	newSpan.annotate(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"taxCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+}
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to finish the span. This will allow collecting</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the span to send it to Zipkin</span>
 	newSpan.finish();
@@ -575,7 +576,8 @@ Span continuedSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-key
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
 	continuedSpan.annotate(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"taxCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+}
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to flush the span. That means that</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// it will get reported but the span itself is not yet finished</span>
 	continuedSpan.flush();
@@ -594,7 +596,8 @@ Span newSpan = null;
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
 	newSpan.annotate(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"commissionCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+}
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to finish the span. This will allow collecting</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the span to send it to Zipkin. The tags and events set on the</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// newSpan will not be present on the parent</span>
@@ -605,9 +608,11 @@ Span newSpan = null;
 The name should be low cardinality, so it should not include identifiers.</p><p>Since there is a lot of instrumentation going on, some span names are artificial:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><code class="literal">controller-method-name</code> when received by a Controller with a method name of <code class="literal">controllerMethodName</code></li><li class="listitem"><code class="literal">async</code> for asynchronous operations done with wrapped <code class="literal">Callable</code> and <code class="literal">Runnable</code> interfaces.</li><li class="listitem">Methods annotated with <code class="literal">@Scheduled</code> return the simple name of the class.</li></ul></div><p>Fortunately, for asynchronous processing, you can provide explicit naming.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_spanname_annotation" href="#_spanname_annotation"></a>10.1&nbsp;<code class="literal">@SpanName</code> Annotation</h2></div></div></div><p>You can name the span explicitly by using the <code class="literal">@SpanName</code> annotation, as shown in the following example:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@SpanName("calculateTax")</span></em>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> TaxCountingRunnable <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">implements</span> Runnable {
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> run() {
+	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> run() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// perform logic</span>
 	}
+
 }</pre><p>In this case, when processed in the following manner, the span is named <code class="literal">calculateTax</code>:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(tracing, spanNamer,
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TaxCountingRunnable());
 Future&lt;?&gt; future = executorService.submit(runnable);
@@ -616,11 +621,13 @@ future.get();</pre></div><div class="section"><div class="titlepage"><div><div><
 Typically, one creates an anonymous instance of those classes.
 You cannot annotate such classes.
 To overcome that limitation, if there is no <code class="literal">@SpanName</code> annotation present, we check whether the class has a custom implementation of the <code class="literal">toString()</code> method.</p><p>Running such code leads to creating a span named <code class="literal">calculateTax</code>, as shown in the following example:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(tracing, spanNamer, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Runnable() {
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> run() {
+	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> run() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// perform logic</span>
 	}
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String toString() {
+	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String toString() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateTax"</span>;
 	}
 });
@@ -657,12 +664,14 @@ We search for a <code class="literal">TagValueExpressionResolver</code> bean.
 The default implementation uses SPEL expression resolution.
 <span class="strong"><strong>IMPORTANT</strong></span> You can only reference properties from the SPEL expression. Method execution is not allowed due to security constraints.</li><li class="listitem">If we do not find any expression to evaluate, return the <code class="literal">toString()</code> value of the parameter.</li></ol></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_custom_extractor" href="#_custom_extractor"></a>11.4.1&nbsp;Custom extractor</h3></div></div></div><p>The value of the tag for the following method is computed by an implementation of <code class="literal">TagValueResolver</code> interface.
 Its class name has to be passed as the value of the <code class="literal">resolver</code> attribute.</p><p>Consider the following annotated method:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@NewSpan</span></em>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> getAnnotationForTagValueResolver(<em><span class="hl-annotation" style="color: gray">@SpanTag(key = "test", resolver = TagValueResolver.class)</span></em> String test) {
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> getAnnotationForTagValueResolver(
+		<em><span class="hl-annotation" style="color: gray">@SpanTag(key = "test", resolver = TagValueResolver.class)</span></em> String test) {
 }</pre><p>Now further consider the following <code class="literal">TagValueResolver</code> bean implementation:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean(name = "myCustomTagValueResolver")</span></em>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> TagValueResolver tagValueResolver() {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> parameter -&gt; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"Value from myCustomTagValueResolver"</span>;
 }</pre><p>The two preceding examples lead to setting a tag value equal to <code class="literal">Value from myCustomTagValueResolver</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_resolving_expressions_for_a_value" href="#_resolving_expressions_for_a_value"></a>11.4.2&nbsp;Resolving Expressions for a Value</h3></div></div></div><p>Consider the following annotated method:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@NewSpan</span></em>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> getAnnotationForTagValueExpression(<em><span class="hl-annotation" style="color: gray">@SpanTag(key = "test", expression = "'hello' + ' characters'")</span></em> String test) {
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> getAnnotationForTagValueExpression(
+		<em><span class="hl-annotation" style="color: gray">@SpanTag(key = "test", expression = "'hello' + ' characters'")</span></em> String test) {
 }</pre><p>No custom implementation of a <code class="literal">TagValueExpressionResolver</code> leads to evaluation of the SPEL expression, and a tag with a value of <code class="literal">4 characters</code> is set on the span.
 If you want to use some other expression resolution mechanism, you can create your own implementation of the bean.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_using_the_tostring_method" href="#_using_the_tostring_method"></a>11.4.3&nbsp;Using the <code class="literal">toString()</code> method</h3></div></div></div><p>Consider the following annotated method:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@NewSpan</span></em>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> getAnnotationForArgumentToString(<em><span class="hl-annotation" style="color: gray">@SpanTag("test")</span></em> Long param) {
@@ -683,7 +692,8 @@ an example of usage of <code class="literal">SkipPatternProvider</code> inside a
   	Pattern pattern = provider.skipPattern();
   	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> HttpSampler() {
 
-  		<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
+  		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+  		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
   			String url = adapter.path(request);
   			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> shouldSkip = pattern.matcher(url).matches();
   			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">if</span> (shouldSkip) {
@@ -704,7 +714,8 @@ You can customize the tags or modify the response headers by registering your ow
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer = tracer;
 	}
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> doFilter(ServletRequest request, ServletResponse response,
+	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> IOException, ServletException {
 		Span currentSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.currentSpan();
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">if</span> (currentSpan == null) {
@@ -712,32 +723,36 @@ You can customize the tags or modify the response headers by registering your ow
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span>;
 		}
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// for readability we're returning trace id in a hex form</span>
-		((HttpServletResponse) response)
-				.addHeader(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"ZIPKIN-TRACE-ID"</span>,
-						currentSpan.context().traceIdString());
+		((HttpServletResponse) response).addHeader(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"ZIPKIN-TRACE-ID"</span>,
+				currentSpan.context().traceIdString());
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// we can also add some custom tags</span>
 		currentSpan.tag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"custom"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"tag"</span>);
 		chain.doFilter(request, response);
 	}
+
 }
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">//end::response_headers[]</span></pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_service_name" href="#_custom_service_name"></a>12.3&nbsp;Custom service name</h2></div></div></div><p>By default, Sleuth assumes that, when you send a span to Zipkin, you want the span&#8217;s service name to be equal to the value of the <code class="literal">spring.application.name</code> property.
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// end::response_headers[]</span></pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_service_name" href="#_custom_service_name"></a>12.3&nbsp;Custom service name</h2></div></div></div><p>By default, Sleuth assumes that, when you send a span to Zipkin, you want the span&#8217;s service name to be equal to the value of the <code class="literal">spring.application.name</code> property.
 That is not always the case, though.
 There are situations in which you want to explicitly provide a different service name for all spans coming from your application.
 To achieve that, you can pass the following property to your application to override that value (the example is for a service named <code class="literal">myService</code>):</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.service.name</span>: myService</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_customization_of_reported_spans" href="#_customization_of_reported_spans"></a>12.4&nbsp;Customization of Reported Spans</h2></div></div></div><p>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
 You can do so by using the <code class="literal">FinishedSpanHandler</code> interface.</p><p>In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
-You can implement the <code class="literal">FinishedSpanHandler</code> interface to alter that name.</p><p>The following example shows how to register two beans that implement <code class="literal">FinishedSpanHandler</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em> FinishedSpanHandler handlerOne() {
+You can implement the <code class="literal">FinishedSpanHandler</code> interface to alter that name.</p><p>The following example shows how to register two beans that implement <code class="literal">FinishedSpanHandler</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em>
+FinishedSpanHandler handlerOne() {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> FinishedSpanHandler() {
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
 			span.name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"foo"</span>);
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// keep this span</span>
 		}
 	};
 }
 
-<em><span class="hl-annotation" style="color: gray">@Bean</span></em> FinishedSpanHandler handlerTwo() {
+<em><span class="hl-annotation" style="color: gray">@Bean</span></em>
+FinishedSpanHandler handlerTwo() {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> FinishedSpanHandler() {
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
 			span.name(span.name() + <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">" bar"</span>);
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// keep this span</span>
 		}
@@ -806,7 +821,8 @@ Callable&lt;String&gt; traceCallable = <span xmlns:d="http://docbook.org/ns/docb
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateTax"</span>);
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Wrapping `Callable` with `Tracing`. That way the current span will be available</span>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// in the thread of `Callable`</span>
-Callable&lt;String&gt; traceCallableFromTracer = tracing.currentTraceContext().wrap(callable);</pre><p>That way, you ensure that a new span is created and closed for each execution.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_hystrix" href="#_hystrix"></a>15.3&nbsp;Hystrix</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_custom_concurrency_strategy" href="#_custom_concurrency_strategy"></a>15.3.1&nbsp;Custom Concurrency Strategy</h3></div></div></div><p>We register a custom <a class="link" href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy" target="_top"><code class="literal">HystrixConcurrencyStrategy</code></a> called <code class="literal">TraceCallable</code> that wraps all <code class="literal">Callable</code> instances in their Sleuth representative.
+Callable&lt;String&gt; traceCallableFromTracer = tracing.currentTraceContext()
+		.wrap(callable);</pre><p>That way, you ensure that a new span is created and closed for each execution.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_hystrix" href="#_hystrix"></a>15.3&nbsp;Hystrix</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_custom_concurrency_strategy" href="#_custom_concurrency_strategy"></a>15.3.1&nbsp;Custom Concurrency Strategy</h3></div></div></div><p>We register a custom <a class="link" href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy" target="_top"><code class="literal">HystrixConcurrencyStrategy</code></a> called <code class="literal">TraceCallable</code> that wraps all <code class="literal">Callable</code> instances in their Sleuth representative.
 The strategy either starts or continues a span, depending on whether tracing was already going on before the Hystrix command was called.
 To disable the custom Hystrix Concurrency Strategy, set the <code class="literal">spring.sleuth.hystrix.strategy.enabled</code> to <code class="literal">false</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_manual_command_setting" href="#_manual_command_setting"></a>15.3.2&nbsp;Manual Command setting</h3></div></div></div><p>Assume that you have the following <code class="literal">HystrixCommand</code>:</p><pre class="programlisting">HystrixCommand&lt;String&gt; hystrixCommand = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> HystrixCommand&lt;String&gt;(setter) {
 	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
@@ -862,20 +878,22 @@ In the following snippet, you can see an example of how to set up such a custom 
 
 	<em><span class="hl-annotation" style="color: gray">@Bean(name = "customAsyncRestTemplate")</span></em>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> AsyncRestTemplate traceAsyncRestTemplate() {
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> AsyncRestTemplate(asyncClientFactory(), clientHttpRequestFactory());
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> AsyncRestTemplate(asyncClientFactory(),
+				clientHttpRequestFactory());
 	}
 
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">private</span> ClientHttpRequestFactory clientHttpRequestFactory() {
 		ClientHttpRequestFactory clientHttpRequestFactory = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> CustomClientHttpRequestFactory();
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">//CUSTOMIZE HERE</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// CUSTOMIZE HERE</span>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> clientHttpRequestFactory;
 	}
 
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">private</span> AsyncClientHttpRequestFactory asyncClientFactory() {
 		AsyncClientHttpRequestFactory factory = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> CustomAsyncClientHttpRequestFactory();
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">//CUSTOMIZE HERE</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// CUSTOMIZE HERE</span>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> factory;
 	}
+
 }</pre></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_webclient" href="#_webclient"></a>15.6.3&nbsp;<code class="literal">WebClient</code></h3></div></div></div><p>We inject a <code class="literal">ExchangeFilterFunction</code> implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.</p><p>To block this feature, set <code class="literal">spring.sleuth.web.client.enabled</code> to <code class="literal">false</code>.</p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>You have to register <code class="literal">WebClient</code> as a bean so that the tracing instrumentation gets applied.
 If you create a <code class="literal">WebClient</code> instance with a <code class="literal">new</code> keyword,  the instrumentation does NOT work.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_traverson" href="#_traverson"></a>15.6.4&nbsp;Traverson</h3></div></div></div><p>If you use the <a class="link" href="http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson" target="_top">Traverson</a> library, you can inject a <code class="literal">RestTemplate</code> as a bean into your Traverson object.
 Since <code class="literal">RestTemplate</code> is already intercepted, you get full support for tracing in your client. The following pseudo code
@@ -908,9 +926,11 @@ The following example shows how to set up such a custom <code class="literal">Ex
 <em><span class="hl-annotation" style="color: gray">@EnableAsync</span></em>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> CustomExecutorConfig <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">extends</span> AsyncConfigurerSupport {
 
-	<em><span class="hl-annotation" style="color: gray">@Autowired</span></em> BeanFactory beanFactory;
+	<em><span class="hl-annotation" style="color: gray">@Autowired</span></em>
+	BeanFactory beanFactory;
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Executor getAsyncExecutor() {
+	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Executor getAsyncExecutor() {
 		ThreadPoolTaskExecutor executor = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> ThreadPoolTaskExecutor();
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// CUSTOMIZE HERE</span>
 		executor.setCorePoolSize(<span class="hl-number">7</span>);
@@ -921,6 +941,7 @@ The following example shows how to set up such a custom <code class="literal">Ex
 		executor.initialize();
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> LazyTraceExecutor(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.beanFactory, executor);
 	}
+
 }</pre></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_messaging" href="#_messaging"></a>15.9&nbsp;Messaging</h2></div></div></div><p>Features from this section can be disabled by setting the <code class="literal">spring.sleuth.messaging.enabled</code> property with value equal to <code class="literal">false</code>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_spring_integration_and_spring_cloud_stream" href="#_spring_integration_and_spring_cloud_stream"></a>15.9.1&nbsp;Spring Integration and Spring Cloud Stream</h3></div></div></div><p>Spring Cloud Sleuth integrates with <a class="link" href="http://projects.spring.io/spring-integration/" target="_top">Spring Integration</a>.
 It creates spans for publish and subscribe events.
 To disable Spring Integration instrumentation, set <code class="literal">spring.sleuth.integration.enabled</code> to <code class="literal">false</code>.</p><p>You can provide the <code class="literal">spring.sleuth.integration.patterns</code> pattern to explicitly provide the names of channels that you want to include for tracing.

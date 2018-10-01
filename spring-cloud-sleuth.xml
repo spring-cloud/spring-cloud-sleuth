@@ -365,7 +365,7 @@ In extreme cases, too much baggage can crash the application, due to exceeding t
 <simpara>The following example shows setting baggage on a span:</simpara>
 <programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.nextSpan().name("span").start();
 ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
-ExtraFieldPropagation.set(initialSpan.context(),"UPPER_CASE", "someValue");
+ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");
 }</programlisting>
 <section xml:id="_baggage_versus_span_tags">
 <title>Baggage versus Span Tags</title>
@@ -1211,7 +1211,8 @@ try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(newSpan.start())) {
 	// ...
 	// You can log an event on a span
 	newSpan.annotate("taxCalculated");
-} finally {
+}
+finally {
 	// Once done remember to finish the span. This will allow collecting
 	// the span to send it to Zipkin
 	newSpan.finish();
@@ -1250,7 +1251,8 @@ try {
 	// ...
 	// You can log an event on a span
 	continuedSpan.annotate("taxCalculated");
-} finally {
+}
+finally {
 	// Once done remember to flush the span. That means that
 	// it will get reported but the span itself is not yet finished
 	continuedSpan.flush();
@@ -1274,7 +1276,8 @@ try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
 	// ...
 	// You can log an event on a span
 	newSpan.annotate("commissionCalculated");
-} finally {
+}
+finally {
 	// Once done remember to finish the span. This will allow collecting
 	// the span to send it to Zipkin. The tags and events set on the
 	// newSpan will not be present on the parent
@@ -1310,9 +1313,11 @@ The name should be low cardinality, so it should not include identifiers.</simpa
 <programlisting language="java" linenumbering="unnumbered">@SpanName("calculateTax")
 class TaxCountingRunnable implements Runnable {
 
-	@Override public void run() {
+	@Override
+	public void run() {
 		// perform logic
 	}
+
 }</programlisting>
 <simpara>In this case, when processed in the following manner, the span is named <literal>calculateTax</literal>:</simpara>
 <programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracing, spanNamer,
@@ -1329,11 +1334,13 @@ You cannot annotate such classes.
 To overcome that limitation, if there is no <literal>@SpanName</literal> annotation present, we check whether the class has a custom implementation of the <literal>toString()</literal> method.</simpara>
 <simpara>Running such code leads to creating a span named <literal>calculateTax</literal>, as shown in the following example:</simpara>
 <programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracing, spanNamer, new Runnable() {
-	@Override public void run() {
+	@Override
+	public void run() {
 		// perform logic
 	}
 
-	@Override public String toString() {
+	@Override
+	public String toString() {
 		return "calculateTax";
 	}
 });
@@ -1440,7 +1447,8 @@ The default implementation uses SPEL expression resolution.
 Its class name has to be passed as the value of the <literal>resolver</literal> attribute.</simpara>
 <simpara>Consider the following annotated method:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@NewSpan
-public void getAnnotationForTagValueResolver(@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
+public void getAnnotationForTagValueResolver(
+		@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
 }</programlisting>
 <simpara>Now further consider the following <literal>TagValueResolver</literal> bean implementation:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Bean(name = "myCustomTagValueResolver")
@@ -1453,7 +1461,8 @@ public TagValueResolver tagValueResolver() {
 <title>Resolving Expressions for a Value</title>
 <simpara>Consider the following annotated method:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@NewSpan
-public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
+public void getAnnotationForTagValueExpression(
+		@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
 }</programlisting>
 <simpara>No custom implementation of a <literal>TagValueExpressionResolver</literal> leads to evaluation of the SPEL expression, and a tag with a value of <literal>4 characters</literal> is set on the span.
 If you want to use some other expression resolution mechanism, you can create your own implementation of the bean.</simpara>
@@ -1492,7 +1501,8 @@ class Config {
   	Pattern pattern = provider.skipPattern();
   	return new HttpSampler() {
 
-  		@Override public &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
+  		@Override
+  		public &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
   			String url = adapter.path(request);
   			boolean shouldSkip = pattern.matcher(url).matches();
   			if (shouldSkip) {
@@ -1519,7 +1529,8 @@ class MyFilter extends GenericFilterBean {
 		this.tracer = tracer;
 	}
 
-	@Override public void doFilter(ServletRequest request, ServletResponse response,
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
 		Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan == null) {
@@ -1527,15 +1538,15 @@ class MyFilter extends GenericFilterBean {
 			return;
 		}
 		// for readability we're returning trace id in a hex form
-		((HttpServletResponse) response)
-				.addHeader("ZIPKIN-TRACE-ID",
-						currentSpan.context().traceIdString());
+		((HttpServletResponse) response).addHeader("ZIPKIN-TRACE-ID",
+				currentSpan.context().traceIdString());
 		// we can also add some custom tags
 		currentSpan.tag("custom", "tag");
 		chain.doFilter(request, response);
 	}
+
 }
-//end::response_headers[]</programlisting>
+// end::response_headers[]</programlisting>
 </section>
 <section xml:id="_custom_service_name">
 <title>Custom service name</title>
@@ -1553,18 +1564,22 @@ You can do so by using the <literal>FinishedSpanHandler</literal> interface.</si
 Some users want to modify the name depending on values of tags.
 You can implement the <literal>FinishedSpanHandler</literal> interface to alter that name.</simpara>
 <simpara>The following example shows how to register two beans that implement <literal>FinishedSpanHandler</literal>:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@Bean FinishedSpanHandler handlerOne() {
+<programlisting language="java" linenumbering="unnumbered">@Bean
+FinishedSpanHandler handlerOne() {
 	return new FinishedSpanHandler() {
-		@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+		@Override
+		public boolean handle(TraceContext traceContext, MutableSpan span) {
 			span.name("foo");
 			return true; // keep this span
 		}
 	};
 }
 
-@Bean FinishedSpanHandler handlerTwo() {
+@Bean
+FinishedSpanHandler handlerTwo() {
 	return new FinishedSpanHandler() {
-		@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+		@Override
+		public boolean handle(TraceContext traceContext, MutableSpan span) {
 			span.name(span.name() + " bar");
 			return true; // keep this span
 		}
@@ -1680,7 +1695,8 @@ Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(tracing, spanNa
 		"calculateTax");
 // Wrapping `Callable` with `Tracing`. That way the current span will be available
 // in the thread of `Callable`
-Callable&lt;String&gt; traceCallableFromTracer = tracing.currentTraceContext().wrap(callable);</programlisting>
+Callable&lt;String&gt; traceCallableFromTracer = tracing.currentTraceContext()
+		.wrap(callable);</programlisting>
 <simpara>That way, you ensure that a new span is created and closed for each execution.</simpara>
 </section>
 <section xml:id="_hystrix">
@@ -1810,20 +1826,22 @@ static class Config {
 
 	@Bean(name = "customAsyncRestTemplate")
 	public AsyncRestTemplate traceAsyncRestTemplate() {
-		return new AsyncRestTemplate(asyncClientFactory(), clientHttpRequestFactory());
+		return new AsyncRestTemplate(asyncClientFactory(),
+				clientHttpRequestFactory());
 	}
 
 	private ClientHttpRequestFactory clientHttpRequestFactory() {
 		ClientHttpRequestFactory clientHttpRequestFactory = new CustomClientHttpRequestFactory();
-		//CUSTOMIZE HERE
+		// CUSTOMIZE HERE
 		return clientHttpRequestFactory;
 	}
 
 	private AsyncClientHttpRequestFactory asyncClientFactory() {
 		AsyncClientHttpRequestFactory factory = new CustomAsyncClientHttpRequestFactory();
-		//CUSTOMIZE HERE
+		// CUSTOMIZE HERE
 		return factory;
 	}
+
 }</programlisting>
 </section>
 </section>
@@ -1940,9 +1958,11 @@ The following example shows how to set up such a custom <literal>Executor</liter
 @EnableAsync
 static class CustomExecutorConfig extends AsyncConfigurerSupport {
 
-	@Autowired BeanFactory beanFactory;
+	@Autowired
+	BeanFactory beanFactory;
 
-	@Override public Executor getAsyncExecutor() {
+	@Override
+	public Executor getAsyncExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		// CUSTOMIZE HERE
 		executor.setCorePoolSize(7);
@@ -1953,6 +1973,7 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 		executor.initialize();
 		return new LazyTraceExecutor(this.beanFactory, executor);
 	}
+
 }</programlisting>
 </section>
 </section>

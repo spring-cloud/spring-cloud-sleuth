@@ -17,7 +17,8 @@ an example of usage of <code class="literal">SkipPatternProvider</code> inside a
   	Pattern pattern = provider.skipPattern();
   	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> HttpSampler() {
 
-  		<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
+  		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+  		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
   			String url = adapter.path(request);
   			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> shouldSkip = pattern.matcher(url).matches();
   			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">if</span> (shouldSkip) {
@@ -38,7 +39,8 @@ You can customize the tags or modify the response headers by registering your ow
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer = tracer;
 	}
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> doFilter(ServletRequest request, ServletResponse response,
+	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> IOException, ServletException {
 		Span currentSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.currentSpan();
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">if</span> (currentSpan == null) {
@@ -46,32 +48,36 @@ You can customize the tags or modify the response headers by registering your ow
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span>;
 		}
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// for readability we're returning trace id in a hex form</span>
-		((HttpServletResponse) response)
-				.addHeader(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"ZIPKIN-TRACE-ID"</span>,
-						currentSpan.context().traceIdString());
+		((HttpServletResponse) response).addHeader(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"ZIPKIN-TRACE-ID"</span>,
+				currentSpan.context().traceIdString());
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// we can also add some custom tags</span>
 		currentSpan.tag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"custom"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"tag"</span>);
 		chain.doFilter(request, response);
 	}
+
 }
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">//end::response_headers[]</span></pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_service_name" href="#_custom_service_name"></a>12.3&nbsp;Custom service name</h2></div></div></div><p>By default, Sleuth assumes that, when you send a span to Zipkin, you want the span&#8217;s service name to be equal to the value of the <code class="literal">spring.application.name</code> property.
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// end::response_headers[]</span></pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_service_name" href="#_custom_service_name"></a>12.3&nbsp;Custom service name</h2></div></div></div><p>By default, Sleuth assumes that, when you send a span to Zipkin, you want the span&#8217;s service name to be equal to the value of the <code class="literal">spring.application.name</code> property.
 That is not always the case, though.
 There are situations in which you want to explicitly provide a different service name for all spans coming from your application.
 To achieve that, you can pass the following property to your application to override that value (the example is for a service named <code class="literal">myService</code>):</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.service.name</span>: myService</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_customization_of_reported_spans" href="#_customization_of_reported_spans"></a>12.4&nbsp;Customization of Reported Spans</h2></div></div></div><p>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
 You can do so by using the <code class="literal">FinishedSpanHandler</code> interface.</p><p>In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
-You can implement the <code class="literal">FinishedSpanHandler</code> interface to alter that name.</p><p>The following example shows how to register two beans that implement <code class="literal">FinishedSpanHandler</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em> FinishedSpanHandler handlerOne() {
+You can implement the <code class="literal">FinishedSpanHandler</code> interface to alter that name.</p><p>The following example shows how to register two beans that implement <code class="literal">FinishedSpanHandler</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em>
+FinishedSpanHandler handlerOne() {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> FinishedSpanHandler() {
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
 			span.name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"foo"</span>);
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// keep this span</span>
 		}
 	};
 }
 
-<em><span class="hl-annotation" style="color: gray">@Bean</span></em> FinishedSpanHandler handlerTwo() {
+<em><span class="hl-annotation" style="color: gray">@Bean</span></em>
+FinishedSpanHandler handlerTwo() {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> FinishedSpanHandler() {
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
 			span.name(span.name() + <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">" bar"</span>);
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// keep this span</span>
 		}
