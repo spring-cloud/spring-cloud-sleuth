@@ -35,8 +35,7 @@ public class SpanNameUtilTests {
 
 	@Test
 	public void should_not_shorten_a_name_that_is_below_max_threshold() throws Exception {
-		BDDAssertions.then(SpanNameUtil.shorten("someName"))
-				.isEqualTo("someName");
+		BDDAssertions.then(SpanNameUtil.shorten("someName")).isEqualTo("someName");
 	}
 
 	@Test
@@ -53,4 +52,5 @@ public class SpanNameUtilTests {
 		BDDAssertions.then(SpanNameUtil.shorten(sb.toString()).length())
 				.isEqualTo(SpanNameUtil.MAX_NAME_LENGTH);
 	}
+
 }

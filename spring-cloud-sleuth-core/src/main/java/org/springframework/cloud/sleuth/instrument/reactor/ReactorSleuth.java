@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.function.Function;
+
 import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,10 +31,8 @@ import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
-import java.util.function.Function;
-
 /**
- * Reactive Span pointcuts factories
+ * Reactive Span pointcuts factories.
  *
  * @author Stephane Maldini
  * @since 2.0.0
@@ -41,17 +41,18 @@ public abstract class ReactorSleuth {
 
 	private static final Log log = LogFactory.getLog(ReactorSleuth.class);
 
+	private ReactorSleuth() {
+	}
+
 	/**
-	 * Return a span operator pointcut given a {@link BeanFactory}. This can be used in reactor
-	 * via {@link reactor.core.publisher.Flux#transform(Function)}, {@link
-	 * reactor.core.publisher.Mono#transform(Function)}, {@link
-	 * reactor.core.publisher.Hooks#onEachOperator(Function)} or {@link
-	 * reactor.core.publisher.Hooks#onLastOperator(Function)}.
-	 *
+	 * Return a span operator pointcut given a {@link BeanFactory}. This can be used in
+	 * reactor via {@link reactor.core.publisher.Flux#transform(Function)},
+	 * {@link reactor.core.publisher.Mono#transform(Function)},
+	 * {@link reactor.core.publisher.Hooks#onEachOperator(Function)} or
+	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)}.
 	 * @deprecated use {@link ReactorSleuth#scopePassingSpanOperator} instead
-	 * @param beanFactory
+	 * @param beanFactory - {@link BeanFactory}
 	 * @param <T> an arbitrary type that is left unchanged by the span operator
-	 *
 	 * @return a new lazy span operator pointcut
 	 */
 	@SuppressWarnings("unchecked")
@@ -59,119 +60,127 @@ public abstract class ReactorSleuth {
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> spanOperator(
 			BeanFactory beanFactory) {
 
-		if(log.isWarnEnabled()){
-			log.warn("spanOperator method will be deleted in the next major release. " +
-					"Use scopePassingSpanOperator() method instead");
+		if (log.isWarnEnabled()) {
+			log.warn("spanOperator method will be deleted in the next major release. "
+					+ "Use scopePassingSpanOperator() method instead");
 		}
 
-		return sourcePub -> {
+		return (sourcePub -> {
 			// TODO: Remove this once Reactor 3.1.8 is released
-			//do the checks directly on actual original Publisher
-			if (sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
-					|| sourcePub instanceof GroupedFlux  //Operators.lift can't handle that
-					) {
+			// do the checks directly on actual original Publisher
+			if (sourcePub instanceof ConnectableFlux // Operators.lift can't handle that
+					|| sourcePub instanceof GroupedFlux // Operators.lift can't handle
+														// that
+			) {
 				return sourcePub;
 			}
-			//no more POINTCUT_FILTER since mechanism is broken
-			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators.lift((scannable, sub) -> {
-				if (contextRefreshed(beanFactory)) {
-					if (log.isTraceEnabled()) {
-						log.trace("Spring Context already refreshed. Creating a Sleuth span subscriber with Reactor Context " + "[" + sub.currentContext() + "] and name [" + scannable.name() + "]");
-					}
-					return spanSubscriptionProvider(beanFactory, scannable, sub).get();
-				}
-				if (log.isTraceEnabled()) {
-					log.trace(
-							"Spring Context is not yet refreshed, falling back to lazy span subscriber. Reactor Context is [" + sub.currentContext() + "] and name is [" + scannable.name() + "]");
-				}
-				//rest of the logic unchanged...
-				return new LazySpanSubscriber<T>(
-						spanSubscriptionProvider(beanFactory, scannable, sub)
-				);
-			});
+			// no more POINTCUT_FILTER since mechanism is broken
+			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators
+					.lift((scannable, sub) -> {
+						if (contextRefreshed(beanFactory)) {
+							if (log.isTraceEnabled()) {
+								log.trace(
+										"Spring Context already refreshed. Creating a Sleuth span subscriber with Reactor Context "
+												+ "[" + sub.currentContext()
+												+ "] and name [" + scannable.name()
+												+ "]");
+							}
+							return spanSubscriptionProvider(beanFactory, scannable, sub)
+									.get();
+						}
+						if (log.isTraceEnabled()) {
+							log.trace(
+									"Spring Context is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
+											+ sub.currentContext() + "] and name is ["
+											+ scannable.name() + "]");
+						}
+						// rest of the logic unchanged...
+						return new LazySpanSubscriber<T>(
+								spanSubscriptionProvider(beanFactory, scannable, sub));
+					});
 			return lift.apply(sourcePub);
-		};
+		});
 	}
 
 	private static <T> SpanSubscriptionProvider spanSubscriptionProvider(
 			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
-		return new SpanSubscriptionProvider(
-				beanFactory,
-				sub,
-				sub.currentContext(),
+		return new SpanSubscriptionProvider(beanFactory, sub, sub.currentContext(),
 				scannable.name());
 	}
 
 	/**
-	 * Return a span operator pointcut given a {@link Tracing}. This can be used in reactor
-	 * via {@link reactor.core.publisher.Flux#transform(Function)}, {@link
-	 * reactor.core.publisher.Mono#transform(Function)}, {@link
-	 * reactor.core.publisher.Hooks#onEachOperator(Function)} or {@link
-	 * reactor.core.publisher.Hooks#onLastOperator(Function)}. The Span operator
+	 * Return a span operator pointcut given a {@link Tracing}. This can be used in
+	 * reactor via {@link reactor.core.publisher.Flux#transform(Function)},
+	 * {@link reactor.core.publisher.Mono#transform(Function)},
+	 * {@link reactor.core.publisher.Hooks#onEachOperator(Function)} or
+	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)}. The Span operator
 	 * pointcut will pass the Scope of the Span without ever creating any new spans.
-	 *
-	 * @param beanFactory
+	 * @param beanFactory - {@link BeanFactory}
 	 * @param <T> an arbitrary type that is left unchanged by the span operator
-	 *
 	 * @return a new lazy span operator pointcut
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanOperator(
 			BeanFactory beanFactory) {
-		return sourcePub -> {
+		return (sourcePub -> {
 			// TODO: Remove this once Reactor 3.1.8 is released
-			//do the checks directly on actual original Publisher
-			if (sourcePub instanceof ConnectableFlux //Operators.lift can't handle that
-					|| sourcePub instanceof GroupedFlux  //Operators.lift can't handle that
-					) {
+			// do the checks directly on actual original Publisher
+			if (sourcePub instanceof ConnectableFlux // Operators.lift can't handle that
+					|| sourcePub instanceof GroupedFlux // Operators.lift can't handle
+														// that
+			) {
 				return sourcePub;
 			}
-			//no more POINTCUT_FILTER since mechanism is broken
-			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators.lift((scannable, sub) -> {
-				//rest of the logic unchanged...
-				if (contextRefreshed(beanFactory)) {
-					if (log.isTraceEnabled()) {
-						log.trace("Spring Context already refreshed. Creating a scope " + "passing span subscriber with Reactor Context " + "[" + sub.currentContext() + "] and name [" + scannable.name() + "]");
-					}
-					return scopePassingSpanSubscription(beanFactory, scannable, sub).get();
-				}
-				if (log.isTraceEnabled()) {
-					log.trace(
-							"Spring Context is not yet refreshed, falling back to lazy span subscriber. Reactor Context is [" + sub.currentContext() + "] and name is [" + scannable.name() + "]");
-				}
-				return new LazySpanSubscriber<T>(
-						scopePassingSpanSubscription(beanFactory, scannable, sub)
-				);
-			});
+			// no more POINTCUT_FILTER since mechanism is broken
+			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators
+					.lift((scannable, sub) -> {
+						// rest of the logic unchanged...
+						if (contextRefreshed(beanFactory)) {
+							if (log.isTraceEnabled()) {
+								log.trace(
+										"Spring Context already refreshed. Creating a scope "
+												+ "passing span subscriber with Reactor Context "
+												+ "[" + sub.currentContext()
+												+ "] and name [" + scannable.name()
+												+ "]");
+							}
+							return scopePassingSpanSubscription(beanFactory, scannable,
+									sub).get();
+						}
+						if (log.isTraceEnabled()) {
+							log.trace(
+									"Spring Context is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
+											+ sub.currentContext() + "] and name is ["
+											+ scannable.name() + "]");
+						}
+						return new LazySpanSubscriber<T>(scopePassingSpanSubscription(
+								beanFactory, scannable, sub));
+					});
 
 			return lift.apply(sourcePub);
-		};
+		});
 	}
 
 	private static boolean contextRefreshed(BeanFactory beanFactory) {
 		try {
-			return beanFactory.getBean(ApplicationContextRefreshedListener.class).isRefreshed();
-		} catch (NoSuchBeanDefinitionException e) {
+			return beanFactory.getBean(ApplicationContextRefreshedListener.class)
+					.isRefreshed();
+		}
+		catch (NoSuchBeanDefinitionException ex) {
 			return false;
 		}
 	}
 
 	private static <T> SpanSubscriptionProvider<T> scopePassingSpanSubscription(
 			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
-		return new SpanSubscriptionProvider<T>(
-				beanFactory,
-				sub,
-				sub.currentContext(),
+		return new SpanSubscriptionProvider<T>(beanFactory, sub, sub.currentContext(),
 				scannable.name()) {
-			@Override SpanSubscription newCoreSubscriber(Tracing tracing) {
-				return new ScopePassingSpanSubscriber<T>(
-						sub,
-						sub != null ? sub.currentContext() : Context.empty(),
-						tracing);
+			@Override
+			SpanSubscription newCoreSubscriber(Tracing tracing) {
+				return new ScopePassingSpanSubscriber<T>(sub,
+						sub != null ? sub.currentContext() : Context.empty(), tracing);
 			}
 		};
 	}
 
-	private ReactorSleuth() {
-	}
 }

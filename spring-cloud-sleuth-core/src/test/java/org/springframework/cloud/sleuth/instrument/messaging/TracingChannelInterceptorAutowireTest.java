@@ -26,13 +26,18 @@ import org.springframework.messaging.support.ChannelInterceptor;
 
 public class TracingChannelInterceptorAutowireTest {
 
-	@Configuration static class TracingConfiguration {
-		@Bean Tracing tracing() {
+	@Configuration
+	static class TracingConfiguration {
+
+		@Bean
+		Tracing tracing() {
 			return Tracing.newBuilder().build();
 		}
+
 	}
 
-	@Test public void autowiredWithBeanConfig() {
+	@Test
+	public void autowiredWithBeanConfig() {
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
 		ctx.register(TracingConfiguration.class);
 		ctx.register(TracingChannelInterceptor.class);
@@ -41,7 +46,9 @@ public class TracingChannelInterceptorAutowireTest {
 		ctx.getBean(ChannelInterceptor.class);
 	}
 
-	@After public void close() {
+	@After
+	public void close() {
 		Tracing.current().close();
 	}
+
 }

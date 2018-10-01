@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.annotation;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth annotation settings
+ * Sleuth annotation settings.
  *
  * @author Marcin Grzejszczak
  * @since 1.2.0
@@ -36,4 +36,5 @@ public class SleuthAnnotationProperties {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+
 }

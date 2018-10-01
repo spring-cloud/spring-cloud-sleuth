@@ -52,8 +52,12 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class Issue585Tests {
 
 	TestRestTemplate testRestTemplate = new TestRestTemplate();
-	@Autowired ArrayListSpanReporter reporter;
-	@LocalServerPort int port;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
+
+	@LocalServerPort
+	int port;
 
 	@Test
 	public void should_report_span_when_using_custom_exception_resolver() {
@@ -63,52 +67,56 @@ public class Issue585Tests {
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(entity.getStatusCode().value()).isEqualTo(500);
-		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("custom", "tag")
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("custom", "tag")
 				.containsKeys("error");
 	}
+
 }
 
 @SpringBootApplication
 class TestConfig {
 
-	@Bean ArrayListSpanReporter testSpanReporter() {
+	@Bean
+	ArrayListSpanReporter testSpanReporter() {
 		return new ArrayListSpanReporter();
 	}
 
-	@Bean Sampler testSampler() {
+	@Bean
+	Sampler testSampler() {
 		return Sampler.ALWAYS_SAMPLE;
 	}
+
 }
 
 @RestController
 class TestController {
 
-	private final static Logger logger = LoggerFactory.getLogger(
-			TestController.class);
+	private final static Logger logger = LoggerFactory.getLogger(TestController.class);
 
 	@RequestMapping(value = "sleuthtest", method = RequestMethod.GET)
 	public ResponseEntity<String> testSleuth(@RequestParam String greeting) {
 		if (greeting.equalsIgnoreCase("hello")) {
 			return new ResponseEntity<>("Hello World", HttpStatus.OK);
-		} else {
+		}
+		else {
 			throw new RuntimeException("This is a test error");
 		}
 	}
+
 }
 
 @ControllerAdvice
 class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
 	private final static Logger logger = LoggerFactory
-			.getLogger(
-					CustomExceptionHandler.class);
+			.getLogger(CustomExceptionHandler.class);
 
-	@Autowired private Tracing tracer;
+	@Autowired
+	private Tracing tracer;
 
 	@ExceptionHandler(value = { Exception.class })
-	protected ResponseEntity<ExceptionResponse> handleDefaultError(
-			Exception ex, HttpServletRequest request) {
+	protected ResponseEntity<ExceptionResponse> handleDefaultError(Exception ex,
+			HttpServletRequest request) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse("ERR-01",
 				ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR,
 				request.getRequestURI(), Instant.now().toEpochMilli());
@@ -127,10 +135,15 @@ class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class ExceptionResponse {
+
 	private String errorCode;
+
 	private String errorMessage;
+
 	private HttpStatus httpStatus;
+
 	private String path;
+
 	private Long epochTime;
 
 	ExceptionResponse(String errorCode, String errorMessage, HttpStatus httpStatus,

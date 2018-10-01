@@ -53,13 +53,17 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = {"spring.application.name=demo-feign-uri",
-		"server.port=9978", "eureka.client.enabled=true", "ribbon.eureka.enabled=true"})
+@TestPropertySource(properties = { "spring.application.name=demo-feign-uri",
+		"server.port=9978", "eureka.client.enabled=true", "ribbon.eureka.enabled=true" })
 public class Issue393Tests {
 
 	RestTemplate template = new RestTemplate();
-	@Autowired ArrayListSpanReporter reporter;
-	@Autowired Tracing tracer;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
+
+	@Autowired
+	Tracing tracer;
 
 	@Before
 	public void open() {
@@ -76,9 +80,10 @@ public class Issue393Tests {
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(2);
-		then(spans.stream().map(span -> span.tags().get("http.path")).collect(
-				Collectors.toList())).containsOnly("/name/mikesarver");
+		then(spans.stream().map(span -> span.tags().get("http.path"))
+				.collect(Collectors.toList())).containsOnly("/name/mikesarver");
 	}
+
 }
 
 @Configuration
@@ -88,8 +93,7 @@ public class Issue393Tests {
 class Application {
 
 	@Bean
-	public DemoController demoController(
-			MyNameRemote myNameRemote) {
+	public DemoController demoController(MyNameRemote myNameRemote) {
 		return new DemoController(myNameRemote);
 	}
 
@@ -116,12 +120,12 @@ class Application {
 
 }
 
-@FeignClient(name="no-name",
-		url="http://localhost:9978")
+@FeignClient(name = "no-name", url = "http://localhost:9978")
 interface MyNameRemote {
 
 	@RequestMapping(value = "/name/{id}", method = RequestMethod.GET)
 	String getName(@PathVariable("id") String id);
+
 }
 
 @RestController
@@ -129,8 +133,7 @@ class DemoController {
 
 	private final MyNameRemote myNameRemote;
 
-	public DemoController(
-			MyNameRemote myNameRemote) {
+	public DemoController(MyNameRemote myNameRemote) {
 		this.myNameRemote = myNameRemote;
 	}
 
@@ -143,4 +146,5 @@ class DemoController {
 	public String getName(@PathVariable("name") String name) {
 		return name;
 	}
+
 }

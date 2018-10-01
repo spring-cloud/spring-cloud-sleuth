@@ -16,10 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import javax.annotation.PostConstruct;
 
 import brave.http.HttpTracing;
 import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
@@ -36,9 +37,9 @@ import org.springframework.http.client.AsyncClientHttpRequestInterceptor;
 import org.springframework.web.client.AsyncRestTemplate;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables span information propagation for {@link AsyncClientHttpRequestFactory} and
- * {@link AsyncRestTemplate}
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} enables span information propagation for
+ * {@link AsyncClientHttpRequestFactory} and {@link AsyncRestTemplate}
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
@@ -55,8 +56,10 @@ public class TraceWebAsyncClientAutoConfiguration {
 	static class AsyncRestTemplateConfig {
 
 		@Bean
-		public TracingAsyncClientHttpRequestInterceptor asyncTracingClientHttpRequestInterceptor(HttpTracing httpTracing) {
-			return (TracingAsyncClientHttpRequestInterceptor) TracingAsyncClientHttpRequestInterceptor.create(httpTracing);
+		public TracingAsyncClientHttpRequestInterceptor asyncTracingClientHttpRequestInterceptor(
+				HttpTracing httpTracing) {
+			return (TracingAsyncClientHttpRequestInterceptor) TracingAsyncClientHttpRequestInterceptor
+					.create(httpTracing);
 		}
 
 		@Configuration
@@ -79,6 +82,9 @@ public class TraceWebAsyncClientAutoConfiguration {
 					}
 				}
 			}
+
 		}
+
 	}
+
 }

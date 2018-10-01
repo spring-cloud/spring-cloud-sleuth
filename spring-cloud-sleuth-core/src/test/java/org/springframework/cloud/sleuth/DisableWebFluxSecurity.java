@@ -28,8 +28,9 @@ import org.springframework.context.annotation.Import;
  * @author Marcin Grzejszczak
  */
 @Import(PermitAllWebFluxSecurityConfiguration.class)
-@Target({ ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface DisableWebFluxSecurity {
+
 }

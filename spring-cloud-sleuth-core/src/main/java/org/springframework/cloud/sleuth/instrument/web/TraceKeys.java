@@ -22,12 +22,10 @@ import java.util.LinkedHashSet;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Well-known {@link brave.Span#tag(String, String) span tag} keys.
- * With the deprecation we only left the option to pass a list of
- * HTTP request headers that will be set as tags
+ * Well-known {@link brave.Span#tag(String, String) span tag} keys. With the deprecation
+ * we only left the option to pass a list of HTTP request headers that will be set as tags
  *
  * @since 1.0.0
- *
  * @deprecated the Brave's defaults are suggested to be used
  */
 @ConfigurationProperties("spring.sleuth.keys")
@@ -62,16 +60,18 @@ class TraceKeys {
 			return this.prefix;
 		}
 
-		public Collection<String> getHeaders() {
-			return this.headers;
-		}
-
 		public void setPrefix(String prefix) {
 			this.prefix = prefix;
+		}
+
+		public Collection<String> getHeaders() {
+			return this.headers;
 		}
 
 		public void setHeaders(Collection<String> headers) {
 			this.headers = headers;
 		}
+
 	}
+
 }

@@ -53,13 +53,12 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class SpringCloudSleuthDocTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.sampler(Sampler.ALWAYS_SAMPLE)
-			.spanReporter(this.reporter)
-			.build();
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.sampler(Sampler.ALWAYS_SAMPLE).spanReporter(this.reporter).build();
+
 	Tracer tracer = tracing.tracer();
 
 	@Before
@@ -69,21 +68,25 @@ public class SpringCloudSleuthDocTests {
 
 	@Configuration
 	public class SamplingConfiguration {
+
 		// tag::always_sampler[]
 		@Bean
 		public Sampler defaultSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 		// end::always_sampler[]
+
 	}
 
 	// tag::span_name_annotation[]
 	@SpanName("calculateTax")
 	class TaxCountingRunnable implements Runnable {
 
-		@Override public void run() {
+		@Override
+		public void run() {
 			// perform logic
 		}
+
 	}
 	// end::span_name_annotation[]
 
@@ -103,8 +106,7 @@ public class SpringCloudSleuthDocTests {
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
-		then(spans.get(0).name())
-				.isEqualTo("calculatetax");
+		then(spans.get(0).name()).isEqualTo("calculatetax");
 	}
 
 	@Test
@@ -115,11 +117,13 @@ public class SpringCloudSleuthDocTests {
 
 		// tag::span_name_to_string_runnable_execution[]
 		Runnable runnable = new TraceRunnable(tracing, spanNamer, new Runnable() {
-			@Override public void run() {
+			@Override
+			public void run() {
 				// perform logic
 			}
 
-			@Override public String toString() {
+			@Override
+			public String toString() {
 				return "calculateTax";
 			}
 		});
@@ -130,8 +134,7 @@ public class SpringCloudSleuthDocTests {
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
-		then(spans.get(0).name())
-				.isEqualTo("calculatetax");
+		then(spans.get(0).name()).isEqualTo("calculatetax");
 		executorService.shutdown();
 	}
 
@@ -150,7 +153,8 @@ public class SpringCloudSleuthDocTests {
 			// ...
 			// You can log an event on a span
 			newSpan.annotate("taxCalculated");
-		} finally {
+		}
+		finally {
 			// Once done remember to finish the span. This will allow collecting
 			// the span to send it to Zipkin
 			newSpan.finish();
@@ -159,10 +163,8 @@ public class SpringCloudSleuthDocTests {
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
-		then(spans.get(0).name())
-				.isEqualTo("calculatetax");
-		then(spans.get(0).tags())
-				.containsEntry("taxValue", "10");
+		then(spans.get(0).name()).isEqualTo("calculatetax");
+		then(spans.get(0).tags()).containsEntry("taxValue", "10");
 		then(spans.get(0).annotations()).hasSize(1);
 	}
 
@@ -173,35 +175,34 @@ public class SpringCloudSleuthDocTests {
 		Span newSpan = this.tracer.nextSpan().name("calculateTax");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(newSpan.start())) {
 			executorService.submit(() -> {
-						// tag::manual_span_continuation[]
-						// let's assume that we're in a thread Y and we've received
-						// the `initialSpan` from thread X
-						Span continuedSpan = this.tracer.toSpan(newSpan.context());
-						try {
-							// ...
-							// You can tag a span
-							continuedSpan.tag("taxValue", taxValue);
-							// ...
-							// You can log an event on a span
-							continuedSpan.annotate("taxCalculated");
-						} finally {
-							// Once done remember to flush the span. That means that
-							// it will get reported but the span itself is not yet finished
-							continuedSpan.flush();
-						}
-						// end::manual_span_continuation[]
-					}
-			).get();
-		} finally {
+				// tag::manual_span_continuation[]
+				// let's assume that we're in a thread Y and we've received
+				// the `initialSpan` from thread X
+				Span continuedSpan = this.tracer.toSpan(newSpan.context());
+				try {
+					// ...
+					// You can tag a span
+					continuedSpan.tag("taxValue", taxValue);
+					// ...
+					// You can log an event on a span
+					continuedSpan.annotate("taxCalculated");
+				}
+				finally {
+					// Once done remember to flush the span. That means that
+					// it will get reported but the span itself is not yet finished
+					continuedSpan.flush();
+				}
+				// end::manual_span_continuation[]
+			}).get();
+		}
+		finally {
 			newSpan.finish();
 		}
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		BDDAssertions.then(spans).hasSize(1);
-		BDDAssertions.then(spans.get(0).name())
-				.isEqualTo("calculatetax");
-		BDDAssertions.then(spans.get(0).tags())
-				.containsEntry("taxValue", "10");
+		BDDAssertions.then(spans.get(0).name()).isEqualTo("calculatetax");
+		BDDAssertions.then(spans.get(0).tags()).containsEntry("taxValue", "10");
 		BDDAssertions.then(spans.get(0).annotations()).hasSize(1);
 		executorService.shutdown();
 	}
@@ -213,37 +214,37 @@ public class SpringCloudSleuthDocTests {
 		Span initialSpan = this.tracer.nextSpan().name("calculateTax").start();
 
 		executorService.submit(() -> {
-					// tag::manual_span_joining[]
-					// let's assume that we're in a thread Y and we've received
-					// the `initialSpan` from thread X. `initialSpan` will be the parent
-					// of the `newSpan`
-					Span newSpan = null;
-					try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
-						newSpan = this.tracer.nextSpan().name("calculateCommission");
-						// ...
-						// You can tag a span
-						newSpan.tag("commissionValue", commissionValue);
-						// ...
-						// You can log an event on a span
-						newSpan.annotate("commissionCalculated");
-					} finally {
-						// Once done remember to finish the span. This will allow collecting
-						// the span to send it to Zipkin. The tags and events set on the
-						// newSpan will not be present on the parent
-						if (newSpan != null) {
-							newSpan.finish();
-						}
-					}
-					// end::manual_span_joining[]
+			// tag::manual_span_joining[]
+			// let's assume that we're in a thread Y and we've received
+			// the `initialSpan` from thread X. `initialSpan` will be the parent
+			// of the `newSpan`
+			Span newSpan = null;
+			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+				newSpan = this.tracer.nextSpan().name("calculateCommission");
+				// ...
+				// You can tag a span
+				newSpan.tag("commissionValue", commissionValue);
+				// ...
+				// You can log an event on a span
+				newSpan.annotate("commissionCalculated");
+			}
+			finally {
+				// Once done remember to finish the span. This will allow collecting
+				// the span to send it to Zipkin. The tags and events set on the
+				// newSpan will not be present on the parent
+				if (newSpan != null) {
+					newSpan.finish();
 				}
-		).get();
+			}
+			// end::manual_span_joining[]
+		}).get();
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		Optional<zipkin2.Span> calculateTax = spans.stream()
 				.filter(span -> span.name().equals("calculatecommission")).findFirst();
 		BDDAssertions.then(calculateTax).isPresent();
-		BDDAssertions.then(calculateTax.get().tags())
-				.containsEntry("commissionValue", "10");
+		BDDAssertions.then(calculateTax.get().tags()).containsEntry("commissionValue",
+				"10");
 		BDDAssertions.then(calculateTax.get().annotations()).hasSize(1);
 		executorService.shutdown();
 	}
@@ -294,11 +295,13 @@ public class SpringCloudSleuthDocTests {
 				"calculateTax");
 		// Wrapping `Callable` with `Tracing`. That way the current span will be available
 		// in the thread of `Callable`
-		Callable<String> traceCallableFromTracer = tracing.currentTraceContext().wrap(callable);
+		Callable<String> traceCallableFromTracer = tracing.currentTraceContext()
+				.wrap(callable);
 		// end::trace_callable[]
 	}
 
 	private String someLogic() {
 		return "some logic";
 	}
+
 }

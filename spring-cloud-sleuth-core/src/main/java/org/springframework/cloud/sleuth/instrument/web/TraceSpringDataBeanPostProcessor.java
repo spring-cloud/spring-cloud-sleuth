@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.Collections;
+
 import javax.servlet.http.HttpServletRequest;
 
 import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
@@ -30,28 +31,31 @@ import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 
 /**
- * Bean post processor that wraps Spring Data REST Controllers in named Spans
+ * Bean post processor that wraps Spring Data REST Controllers in named Spans.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.3
  */
 class TraceSpringDataBeanPostProcessor implements BeanPostProcessor {
 
-	private static final Log log = LogFactory.getLog(TraceSpringDataBeanPostProcessor.class);
+	private static final Log log = LogFactory
+			.getLog(TraceSpringDataBeanPostProcessor.class);
 
 	private final ApplicationContext applicationContext;
 
-	public TraceSpringDataBeanPostProcessor(ApplicationContext applicationContext) {
+	TraceSpringDataBeanPostProcessor(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 	}
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof DelegatingHandlerMapping && !(bean instanceof TraceDelegatingHandlerMapping)) {
+		if (bean instanceof DelegatingHandlerMapping
+				&& !(bean instanceof TraceDelegatingHandlerMapping)) {
 			if (log.isDebugEnabled()) {
-				log.debug("Wrapping bean [" + beanName + "] of type [" + bean.getClass().getSimpleName() +
-						"] in its trace representation");
+				log.debug("Wrapping bean [" + beanName + "] of type ["
+						+ bean.getClass().getSimpleName()
+						+ "] in its trace representation");
 			}
 			return new TraceDelegatingHandlerMapping((DelegatingHandlerMapping) bean,
 					this.applicationContext);
@@ -68,9 +72,10 @@ class TraceSpringDataBeanPostProcessor implements BeanPostProcessor {
 	private static class TraceDelegatingHandlerMapping extends DelegatingHandlerMapping {
 
 		private final DelegatingHandlerMapping delegate;
+
 		private final ApplicationContext applicationContext;
 
-		public TraceDelegatingHandlerMapping(DelegatingHandlerMapping delegate,
+		TraceDelegatingHandlerMapping(DelegatingHandlerMapping delegate,
 				ApplicationContext beanFactory) {
 			super(Collections.<HandlerMapping>emptyList());
 			this.delegate = delegate;
@@ -85,12 +90,16 @@ class TraceSpringDataBeanPostProcessor implements BeanPostProcessor {
 		@Override
 		public HandlerExecutionChain getHandler(HttpServletRequest request)
 				throws Exception {
-			HandlerExecutionChain handlerExecutionChain = this.delegate.getHandler(request);
+			HandlerExecutionChain handlerExecutionChain = this.delegate
+					.getHandler(request);
 			if (handlerExecutionChain == null) {
 				return null;
 			}
-			handlerExecutionChain.addInterceptor(this.applicationContext.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
+			handlerExecutionChain.addInterceptor(this.applicationContext
+					.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
 			return handlerExecutionChain;
 		}
+
 	}
+
 }

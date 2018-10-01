@@ -29,6 +29,7 @@ import zipkin2.reporter.Reporter;
  * @since 2.0.0
  */
 public class ArrayListSpanReporter implements Reporter<Span> {
+
 	private final List<Span> spans = new ArrayList<>();
 
 	public List<Span> getSpans() {
@@ -39,9 +40,7 @@ public class ArrayListSpanReporter implements Reporter<Span> {
 
 	@Override
 	public String toString() {
-		return "ArrayListSpanAccumulator{" +
-				"spans=" + getSpans() +
-				'}';
+		return "ArrayListSpanAccumulator{" + "spans=" + getSpans() + '}';
 	}
 
 	@Override
@@ -56,4 +55,5 @@ public class ArrayListSpanReporter implements Reporter<Span> {
 			this.spans.clear();
 		}
 	}
+
 }

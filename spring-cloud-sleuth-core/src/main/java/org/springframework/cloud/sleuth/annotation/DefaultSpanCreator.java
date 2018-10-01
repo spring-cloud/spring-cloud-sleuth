@@ -23,24 +23,24 @@ import org.springframework.cloud.sleuth.util.SpanNameUtil;
 import org.springframework.util.StringUtils;
 
 /**
- * Default implementation of the {@link NewSpanParser} that parses only the
- * span name.
+ * Default implementation of the {@link NewSpanParser} that parses only the span name.
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
-class DefaultNewSpanParser implements NewSpanParser {
+class DefaultSpanCreator implements NewSpanParser {
 
-	private static final Log log = LogFactory.getLog(DefaultNewSpanParser.class);
+	private static final Log log = LogFactory.getLog(DefaultSpanCreator.class);
 
 	@Override
 	public void parse(MethodInvocation pjp, NewSpan newSpan, SpanCustomizer span) {
-		String name = newSpan == null || StringUtils.isEmpty(newSpan.name()) ?
-				pjp.getMethod().getName() : newSpan.name();
+		String name = newSpan == null || StringUtils.isEmpty(newSpan.name())
+				? pjp.getMethod().getName() : newSpan.name();
 		String changedName = SpanNameUtil.toLowerHyphen(name);
 		if (log.isDebugEnabled()) {
-			log.debug("For the class [" + pjp.getThis().getClass() + "] method "
-					+ "[" + pjp.getMethod().getName() + "] will name the span [" + changedName + "]");
+			log.debug("For the class [" + pjp.getThis().getClass() + "] method " + "["
+					+ pjp.getMethod().getName() + "] will name the span [" + changedName
+					+ "]");
 		}
 		span.name(changedName);
 	}

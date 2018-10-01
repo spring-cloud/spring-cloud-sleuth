@@ -52,20 +52,26 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@TestPropertySource(properties = {
-		"spring.application.name=multiplehopsintegrationtests",
-		"spring.sleuth.http.legacy.enabled=true"
-})
-@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = { "spring.application.name=multiplehopsintegrationtests",
+		"spring.sleuth.http.legacy.enabled=true" })
+@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("baggage")
 public class MultipleHopsIntegrationTests {
 
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanReporter reporter;
-	@Autowired RestTemplate restTemplate;
-	@Autowired Config config;
-	@Autowired DemoApplication application;
+	@Autowired
+	Tracer tracer;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
+
+	@Autowired
+	RestTemplate restTemplate;
+
+	@Autowired
+	Config config;
+
+	@Autowired
+	DemoApplication application;
 
 	@Before
 	public void setup() {
@@ -74,52 +80,52 @@ public class MultipleHopsIntegrationTests {
 
 	@Test
 	public void should_prepare_spans_for_export() throws Exception {
-		this.restTemplate.getForObject("http://localhost:" + this.config.port + "/greeting", String.class);
+		this.restTemplate.getForObject(
+				"http://localhost:" + this.config.port + "/greeting", String.class);
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(this.reporter.getSpans()).hasSize(14);
 		});
-		then(this.reporter.getSpans().stream().map(zipkin2.Span::name)
-				.collect(toList())).containsAll(asList("http:/greeting", "send"));
+		then(this.reporter.getSpans().stream().map(zipkin2.Span::name).collect(toList()))
+				.containsAll(asList("http:/greeting", "send"));
 		then(this.reporter.getSpans().stream().map(zipkin2.Span::kind)
 				// no server kind due to test constraints
-				.collect(toList())).containsAll(asList(zipkin2.Span.Kind.CONSUMER,
-				zipkin2.Span.Kind.PRODUCER, zipkin2.Span.Kind.SERVER));
-		then(this.reporter.getSpans().stream()
-				.map(span -> span.tags().get("channel"))
-				.filter(Objects::nonNull)
-				.distinct()
 				.collect(toList()))
-				.hasSize(3)
-				.containsAll(asList("words", "counts", "greetings"));
+						.containsAll(asList(zipkin2.Span.Kind.CONSUMER,
+								zipkin2.Span.Kind.PRODUCER, zipkin2.Span.Kind.SERVER));
+		then(this.reporter.getSpans().stream().map(span -> span.tags().get("channel"))
+				.filter(Objects::nonNull).distinct().collect(toList())).hasSize(3)
+						.containsAll(asList("words", "counts", "greetings"));
 	}
 
 	// issue #237 - baggage
 	@Test
 	// Notes:
-	// * path-prefix header propagation can't reliably support mixed case, due to http/2 downcasing
-	//   * Since not all tokenizers are case insensitive, mixed case can break correlation
-	//   * Brave's ExtraFieldPropagation downcases due to the above
-	//   * This code should probably test the side-effect on http headers
-	// * the assumption all correlation fields (baggage) are saved to a span is an interesting one
-	//   * should all correlation fields (baggage) be added to the MDC context?
+	// * path-prefix header propagation can't reliably support mixed case, due to http/2
+	// downcasing
+	// * Since not all tokenizers are case insensitive, mixed case can break correlation
+	// * Brave's ExtraFieldPropagation downcases due to the above
+	// * This code should probably test the side-effect on http headers
+	// * the assumption all correlation fields (baggage) are saved to a span is an
+	// interesting one
+	// * should all correlation fields (baggage) be added to the MDC context?
 	// * Until below, a configuration item of a correlation field whitelist is needed
-	//   * https://github.com/openzipkin/brave/pull/577
-	//   * probably needed anyway as an empty whitelist is a nice way to disable the feature
+	// * https://github.com/openzipkin/brave/pull/577
+	// * probably needed anyway as an empty whitelist is a nice way to disable the feature
 	public void should_propagate_the_baggage() throws Exception {
-		//tag::baggage[]
+		// tag::baggage[]
 		Span initialSpan = this.tracer.nextSpan().name("span").start();
 		ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
-		ExtraFieldPropagation.set(initialSpan.context(),"UPPER_CASE", "someValue");
-		//end::baggage[]
+		ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");
+		// end::baggage[]
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
-			//tag::baggage_tag[]
+			// tag::baggage_tag[]
 			initialSpan.tag("foo",
 					ExtraFieldPropagation.get(initialSpan.context(), "foo"));
 			initialSpan.tag("UPPER_CASE",
 					ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
-			//end::baggage_tag[]
+			// end::baggage_tag[]
 
 			HttpHeaders headers = new HttpHeaders();
 			headers.put("baggage-baz", Collections.singletonList("baz"));
@@ -127,7 +133,8 @@ public class MultipleHopsIntegrationTests {
 			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
 					URI.create("http://localhost:" + this.config.port + "/greeting"));
 			this.restTemplate.exchange(requestEntity, String.class);
-		} finally {
+		}
+		finally {
 			initialSpan.finish();
 		}
 		await().atMost(5, SECONDS).untilAsserted(() -> {
@@ -138,23 +145,17 @@ public class MultipleHopsIntegrationTests {
 				.allMatch(span -> "bar".equals(baggage(span, "foo")));
 		then(this.application.allSpans()).as("All have UPPER_CASE")
 				.allMatch(span -> "someValue".equals(baggage(span, "UPPER_CASE")));
-		then(this.application.allSpans()
-				.stream()
+		then(this.application.allSpans().stream()
 				.filter(span -> "baz".equals(baggage(span, "baz")))
-				.collect(Collectors.toList()))
-				.as("Someone has baz")
-				.isNotEmpty();
-		then(this.reporter.getSpans()
-				.stream()
-				.filter(span -> span.tags().containsKey("foo") && span.tags().containsKey("UPPER_CASE"))
-				.collect(Collectors.toList()))
-				.as("Someone has foo and UPPER_CASE tags")
-				.isNotEmpty();
-		then(this.application.allSpans()
-				.stream()
+				.collect(Collectors.toList())).as("Someone has baz").isNotEmpty();
+		then(this.reporter.getSpans().stream()
+				.filter(span -> span.tags().containsKey("foo")
+						&& span.tags().containsKey("UPPER_CASE"))
+				.collect(Collectors.toList())).as("Someone has foo and UPPER_CASE tags")
+						.isNotEmpty();
+		then(this.application.allSpans().stream()
 				.filter(span -> "value".equals(baggage(span, "bizarreCASE")))
-				.collect(Collectors.toList()))
-				.isNotEmpty();
+				.collect(Collectors.toList())).isNotEmpty();
 	}
 
 	private String baggage(Span span, String name) {
@@ -163,8 +164,9 @@ public class MultipleHopsIntegrationTests {
 
 	@Configuration
 	@SpringBootApplication(exclude = JmxAutoConfiguration.class)
-	public static class Config implements
-			ApplicationListener<ServletWebServerInitializedEvent> {
+	public static class Config
+			implements ApplicationListener<ServletWebServerInitializedEvent> {
+
 		int port;
 
 		@Override
@@ -177,13 +179,16 @@ public class MultipleHopsIntegrationTests {
 			return new RestTemplate();
 		}
 
-		@Bean ArrayListSpanReporter arrayListSpanAccumulator() {
+		@Bean
+		ArrayListSpanReporter arrayListSpanAccumulator() {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean Sampler defaultTraceSampler() {
+		@Bean
+		Sampler defaultTraceSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}
+
 }

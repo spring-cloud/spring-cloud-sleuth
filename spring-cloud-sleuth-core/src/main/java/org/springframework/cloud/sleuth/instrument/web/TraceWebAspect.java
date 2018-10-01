@@ -34,29 +34,25 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * Aspect that adds tracing to
  * <p/>
  * <ul>
- * <li>{@code RestController} annotated classes
- * with public {@link Callable} methods</li>
+ * <li>{@code RestController} annotated classes with public {@link Callable} methods</li>
  * <li>{@link org.springframework.stereotype.Controller} annotated classes with public
  * {@link Callable} methods</li>
- * <li>{@link org.springframework.stereotype.Controller} or
- * {@code RestController} annotated classes with
- * public {@link WebAsyncTask} methods</li>
+ * <li>{@link org.springframework.stereotype.Controller} or {@code RestController}
+ * annotated classes with public {@link WebAsyncTask} methods</li>
  * </ul>
  * <p/>
  * For controllers an around aspect is created that wraps the {@link Callable#call()}
  * method execution in {@link TraceCallable}
  * <p/>
  *
- * This aspect will continue a span created by the TracingFilter. It will not create
- * a new span - since the one in TracingFilter will wait until processing has been
- * finished
+ * This aspect will continue a span created by the TracingFilter. It will not create a new
+ * span - since the one in TracingFilter will wait until processing has been finished
  *
  * @author Tomasz Nurkewicz, 4financeIT
  * @author Michal Chmielarz, 4financeIT
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  * @since 1.0.0
- *
  * @see org.springframework.stereotype.Controller
  * @see org.springframework.web.client.RestOperations
  */
@@ -68,6 +64,7 @@ public class TraceWebAspect {
 			.getLog(TraceWebAspect.class);
 
 	private final Tracing tracing;
+
 	private final SpanNamer spanNamer;
 
 	public TraceWebAspect(Tracing tracing, SpanNamer spanNamer) {
@@ -76,22 +73,28 @@ public class TraceWebAspect {
 	}
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
-	private void anyRestControllerAnnotated() { }// NOSONAR
+	private void anyRestControllerAnnotated() {
+	}// NOSONAR
 
 	@Pointcut("@within(org.springframework.stereotype.Controller)")
-	private void anyControllerAnnotated() { } // NOSONAR
+	private void anyControllerAnnotated() {
+	} // NOSONAR
 
 	@Pointcut("execution(public java.util.concurrent.Callable *(..))")
-	private void anyPublicMethodReturningCallable() { } // NOSONAR
+	private void anyPublicMethodReturningCallable() {
+	} // NOSONAR
 
 	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethodReturningCallable()")
-	private void anyControllerOrRestControllerWithPublicAsyncMethod() { } // NOSONAR
+	private void anyControllerOrRestControllerWithPublicAsyncMethod() {
+	} // NOSONAR
 
 	@Pointcut("execution(public org.springframework.web.context.request.async.WebAsyncTask *(..))")
-	private void anyPublicMethodReturningWebAsyncTask() { } // NOSONAR
+	private void anyPublicMethodReturningWebAsyncTask() {
+	} // NOSONAR
 
 	@Pointcut("(anyRestControllerAnnotated() || anyControllerAnnotated()) && anyPublicMethodReturningWebAsyncTask()")
-	private void anyControllerOrRestControllerWithPublicWebAsyncTaskMethod() { } // NOSONAR
+	private void anyControllerOrRestControllerWithPublicWebAsyncTaskMethod() {
+	} // NOSONAR
 
 	@Around("anyControllerOrRestControllerWithPublicAsyncMethod()")
 	@SuppressWarnings("unchecked")
@@ -108,7 +111,8 @@ public class TraceWebAspect {
 	}
 
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
-	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
+	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp)
+			throws Throwable {
 		final WebAsyncTask<?> webAsyncTask = (WebAsyncTask<?>) pjp.proceed();
 		TraceContext currentSpan = this.tracing.currentTraceContext().get();
 		if (currentSpan == null) {
@@ -120,9 +124,10 @@ public class TraceWebAspect {
 			}
 			Field callableField = WebAsyncTask.class.getDeclaredField("callable");
 			callableField.setAccessible(true);
-			callableField.set(webAsyncTask, new TraceCallable<>(this.tracing, this.spanNamer,
-					webAsyncTask.getCallable()));
-		} catch (NoSuchFieldException ex) {
+			callableField.set(webAsyncTask, new TraceCallable<>(this.tracing,
+					this.spanNamer, webAsyncTask.getCallable()));
+		}
+		catch (NoSuchFieldException ex) {
 			log.warn("Cannot wrap webAsyncTask's callable with TraceCallable", ex);
 		}
 		return webAsyncTask;

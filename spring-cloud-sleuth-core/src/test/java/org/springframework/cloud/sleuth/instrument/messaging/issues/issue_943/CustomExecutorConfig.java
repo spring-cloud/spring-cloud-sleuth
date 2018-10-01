@@ -30,9 +30,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 public class CustomExecutorConfig extends AsyncConfigurerSupport {
 
-	@Autowired BeanFactory beanFactory;
+	@Autowired
+	BeanFactory beanFactory;
 
-	@Override public Executor getAsyncExecutor() {
+	@Override
+	public Executor getAsyncExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		// CUSTOMIZE HERE
 		executor.setCorePoolSize(7);
@@ -43,4 +45,5 @@ public class CustomExecutorConfig extends AsyncConfigurerSupport {
 		executor.initialize();
 		return new LazyTraceExecutor(this.beanFactory, executor);
 	}
+
 }

@@ -35,22 +35,26 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = DemoSleuthSkipApplicationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "management.endpoints.web.exposure.include:*",
-				"server.servlet.context-path:/context-path",
-				"spring.sleuth.http.legacy.enabled:true"})
+@SpringBootTest(classes = DemoSleuthSkipApplicationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+		"management.endpoints.web.exposure.include:*",
+		"server.servlet.context-path:/context-path",
+		"spring.sleuth.http.legacy.enabled:true" })
 public class DemoSleuthSkipApplicationTests {
 
-	@Autowired ArrayListSpanReporter accumulator;
-	@Autowired Tracer tracer;
+	@Autowired
+	ArrayListSpanReporter accumulator;
 
-	@LocalServerPort int port;
+	@Autowired
+	Tracer tracer;
+
+	@LocalServerPort
+	int port;
 
 	@Test
 	public void should_not_sample_skipped_endpoint_with_context_path() {
-		new RestTemplate().getForObject("http://localhost:" +
-				this.port + "/context-path/actuator/health", String.class);
+		new RestTemplate().getForObject(
+				"http://localhost:" + this.port + "/context-path/actuator/health",
+				String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.accumulator.getSpans()).hasSize(0);
@@ -61,12 +65,16 @@ public class DemoSleuthSkipApplicationTests {
 	@DisableSecurity
 	public static class Config {
 
-		@Bean ArrayListSpanReporter reporter() {
+		@Bean
+		ArrayListSpanReporter reporter() {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean Sampler sampler() {
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
+
 }

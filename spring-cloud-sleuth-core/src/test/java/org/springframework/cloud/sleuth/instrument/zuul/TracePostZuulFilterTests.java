@@ -49,21 +49,25 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class TracePostZuulFilterTests {
 
-	@Mock HttpServletRequest httpServletRequest;
-	@Mock HttpServletResponse httpServletResponse;
+	@Mock
+	HttpServletRequest httpServletRequest;
+
+	@Mock
+	HttpServletResponse httpServletResponse;
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.spanReporter(this.reporter)
-			.build();
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.spanReporter(this.reporter).build();
+
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(SleuthHttpParserAccessor.getClient())
-			.serverParser(SleuthHttpParserAccessor.getServer(new ErrorParser()))
-			.build();
+			.serverParser(SleuthHttpParserAccessor.getServer(new ErrorParser())).build();
+
 	private TracePostZuulFilter filter = new TracePostZuulFilter(this.httpTracing);
+
 	RequestContext requestContext = new RequestContext();
 
 	@After
@@ -103,16 +107,17 @@ public class TracePostZuulFilterTests {
 
 		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
 			this.filter.runFilter();
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		// initial span
-		then(spans.get(0).tags())
-				.containsEntry("http.status_code", "456");
+		then(spans.get(0).tags()).containsEntry("http.status_code", "456");
 		then(spans.get(0).name()).isEqualTo("http:start");
 		then(this.tracing.tracer().currentSpan()).isNull();
 	}
+
 }

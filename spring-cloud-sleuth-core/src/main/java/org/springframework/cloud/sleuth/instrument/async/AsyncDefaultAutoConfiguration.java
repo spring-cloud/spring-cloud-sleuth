@@ -35,13 +35,12 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enabling async related processing.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} enabling async related processing.
  *
  * @author Dave Syer
  * @author Marcin Grzejszczak
  * @since 1.0.0
- *
  * @see LazyTraceExecutor
  * @see TraceAsyncAspect
  */
@@ -50,18 +49,10 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 @ConditionalOnBean(Tracing.class)
 public class AsyncDefaultAutoConfiguration {
 
-	@Configuration
-	@ConditionalOnMissingBean(AsyncConfigurer.class)
-	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled", matchIfMissing = true)
-	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-	static class DefaultAsyncConfigurerSupport extends AsyncConfigurerSupport {
-
-		@Autowired private BeanFactory beanFactory;
-
-		@Override
-		public Executor getAsyncExecutor() {
-			return new LazyTraceExecutor(this.beanFactory, new SimpleAsyncTaskExecutor());
-		}
+	@Bean
+	public static ExecutorBeanPostProcessor executorBeanPostProcessor(
+			BeanFactory beanFactory) {
+		return new ExecutorBeanPostProcessor(beanFactory);
 	}
 
 	@Bean
@@ -69,9 +60,23 @@ public class AsyncDefaultAutoConfiguration {
 		return new TraceAsyncAspect(tracer, spanNamer);
 	}
 
-	@Bean
-	public static ExecutorBeanPostProcessor executorBeanPostProcessor(BeanFactory beanFactory) {
-		return new ExecutorBeanPostProcessor(beanFactory);
+	/**
+	 * Wrapper for the async executor.
+	 */
+	@Configuration
+	@ConditionalOnMissingBean(AsyncConfigurer.class)
+	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled", matchIfMissing = true)
+	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+	static class DefaultAsyncConfigurerSupport extends AsyncConfigurerSupport {
+
+		@Autowired
+		private BeanFactory beanFactory;
+
+		@Override
+		public Executor getAsyncExecutor() {
+			return new LazyTraceExecutor(this.beanFactory, new SimpleAsyncTaskExecutor());
+		}
+
 	}
 
 }

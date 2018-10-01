@@ -19,8 +19,9 @@ package org.springframework.cloud.sleuth.instrument.opentracing;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth Opentracing settings
+ * Sleuth Opentracing settings.
  *
+ * @author Marcin Grzejszczak
  * @since 2.0.0
  */
 @ConfigurationProperties("spring.sleuth.opentracing")

@@ -44,23 +44,25 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Issue546TestsApp.class,
-		properties = {"ribbon.eureka.enabled=false", "feign.hystrix.enabled=false", "server.port=0"},
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = Issue546TestsApp.class, properties = {
+		"ribbon.eureka.enabled=false", "feign.hystrix.enabled=false",
+		"server.port=0" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class Issue546Tests {
 
-	@Autowired Environment environment;
+	@Autowired
+	Environment environment;
 
 	@Test
 	public void should_pass_tracing_info_when_using_callbacks() {
-		new RestTemplate()
-				.getForObject("http://localhost:" + port() + "/trace-async-rest-template",
-						String.class);
+		new RestTemplate().getForObject(
+				"http://localhost:" + port() + "/trace-async-rest-template",
+				String.class);
 	}
 
 	private int port() {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
+
 }
 
 @SpringBootApplication
@@ -75,9 +77,12 @@ class Issue546TestsApp {
 
 @RestController
 class Controller {
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+
+	private static final Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 
 	private final AsyncRestTemplate traceAsyncRestTemplate;
+
 	private final Tracing tracer;
 
 	public Controller(AsyncRestTemplate traceAsyncRestTemplate, Tracing tracer) {
@@ -85,9 +90,11 @@ class Controller {
 		this.tracer = tracer;
 	}
 
-	@Value("${server.port}") private String port;
+	@Value("${server.port}")
+	private String port;
 
-	@RequestMapping(value = "/bean") public HogeBean bean() {
+	@RequestMapping(value = "/bean")
+	public HogeBean bean() {
 		log.info("(/bean) I got a request!");
 		return new HogeBean("test", 18);
 	}
@@ -120,7 +127,9 @@ class Controller {
 }
 
 class HogeBean {
+
 	private String name;
+
 	private int age;
 
 	public HogeBean(String name, int age) {
@@ -143,4 +152,5 @@ class HogeBean {
 	public void setAge(int age) {
 		this.age = age;
 	}
+
 }

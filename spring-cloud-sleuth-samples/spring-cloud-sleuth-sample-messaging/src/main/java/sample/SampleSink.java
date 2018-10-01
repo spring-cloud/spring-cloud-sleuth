@@ -26,7 +26,7 @@ import org.springframework.integration.annotation.MessagingGateway;
 @MessagingGateway
 public interface SampleSink {
 
-	@Gateway(requestChannel="messages")
+	@Gateway(requestChannel = "messages")
 	void send(String message);
 
 }

@@ -41,6 +41,9 @@ public class ZipkinSenderProperties {
 	}
 
 	public enum SenderType {
+
 		RABBIT, KAFKA, WEB
+
 	}
+
 }

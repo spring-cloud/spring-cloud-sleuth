@@ -70,21 +70,26 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author ryarabori
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = {
-		"spring.application.name=fooservice",
-		"feign.hystrix.enabled=true"})
+@SpringBootTest(classes = FeignClientServerErrorTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = { "spring.application.name=fooservice",
+		"feign.hystrix.enabled=true" })
 // TODO: TRY TO REPLICATE IT LOCALLY
 @Ignore("FAILS ON CI. DOESN'T PROPAGATE TRACING HEADERS TO ANOTHER THREAD")
 public class FeignClientServerErrorTests {
 
 	private static final Log log = LogFactory.getLog(FeignClientServerErrorTests.class);
 
-	@Autowired TestFeignInterface feignInterface;
-	@Autowired TestFeignWithCustomConfInterface customConfFeignInterface;
-	@Autowired ArrayListSpanReporter reporter;
-	@Autowired Tracer tracer;
+	@Autowired
+	TestFeignInterface feignInterface;
+
+	@Autowired
+	TestFeignWithCustomConfInterface customConfFeignInterface;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
+
+	@Autowired
+	Tracer tracer;
 
 	@Before
 	public void setup() {
@@ -92,12 +97,14 @@ public class FeignClientServerErrorTests {
 	}
 
 	@Test
-	public void shouldCloseSpanOnInternalServerError(){
-		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+	public void shouldCloseSpanOnInternalServerError() {
+		try (Tracer.SpanInScope ws = tracer
+				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.internalError();
 			fail("Must throw an exception");
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
 
@@ -107,19 +114,20 @@ public class FeignClientServerErrorTests {
 			Optional<Span> spanWithError = spans.stream()
 					.filter(span -> span.tags().containsKey("error")).findFirst();
 			then(spanWithError.isPresent()).isTrue();
-			then(spanWithError.get().tags())
-					.containsEntry("error", "500")
+			then(spanWithError.get().tags()).containsEntry("error", "500")
 					.containsEntry("http.status_code", "500");
 		});
 	}
 
 	@Test
 	public void shouldCloseSpanOnNotFound() {
-		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+		try (Tracer.SpanInScope ws = tracer
+				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.notFound();
 			fail("Must throw an exception");
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
 
@@ -127,19 +135,21 @@ public class FeignClientServerErrorTests {
 			List<Span> spans = this.reporter.getSpans();
 			log.info("Spans " + spans);
 			Optional<Span> spanWithError = spans.stream()
-					.filter(span -> span.tags().containsKey("http.status_code")).findFirst();
+					.filter(span -> span.tags().containsKey("http.status_code"))
+					.findFirst();
 			then(spanWithError.isPresent()).isTrue();
-			then(spanWithError.get().tags())
-					.containsEntry("http.status_code", "404");
+			then(spanWithError.get().tags()).containsEntry("http.status_code", "404");
 		});
 	}
 
 	@Test
 	public void shouldCloseSpanOnOk() {
-		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+		try (Tracer.SpanInScope ws = tracer
+				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.ok();
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
 
@@ -149,19 +159,20 @@ public class FeignClientServerErrorTests {
 			Optional<Span> httpSpan = spans.stream()
 					.filter(span -> span.tags().containsKey("http.method")).findFirst();
 			then(httpSpan.isPresent()).isTrue();
-			then(httpSpan.get().tags())
-					.containsEntry("http.method", "GET")
+			then(httpSpan.get().tags()).containsEntry("http.method", "GET")
 					.doesNotContainEntry("http.url", "http://fooservice/ok");
 		});
 	}
 
 	@Test
-	public void shouldCloseSpanOnOkWithCustomFeignConfiguration(){
-		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+	public void shouldCloseSpanOnOkWithCustomFeignConfiguration() {
+		try (Tracer.SpanInScope ws = tracer
+				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.customConfFeignInterface.ok();
 			fail("Must throw an exception");
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
 
@@ -172,18 +183,19 @@ public class FeignClientServerErrorTests {
 			Optional<Span> httpSpan = spans.stream()
 					.filter(span -> span.tags().containsKey("http.method")).findFirst();
 			then(httpSpan.isPresent()).isTrue();
-			then(httpSpan.get().tags())
-					.containsEntry("http.method", "GET");
+			then(httpSpan.get().tags()).containsEntry("http.method", "GET");
 		});
 	}
 
 	@Test
-	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration(){
-		try(Tracer.SpanInScope ws = tracer.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() {
+		try (Tracer.SpanInScope ws = tracer
+				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.customConfFeignInterface.notFound();
 			fail("Must throw an exception");
-		} catch (HystrixRuntimeException e) {
+		}
+		catch (HystrixRuntimeException e) {
 			log.info("Expected exception thrown", e);
 		}
 
@@ -193,8 +205,7 @@ public class FeignClientServerErrorTests {
 			Optional<Span> spanWithError = spans.stream()
 					.filter(span -> span.tags().containsKey("error")).findFirst();
 			then(spanWithError.isPresent()).isTrue();
-			then(spanWithError.get().tags())
-					.containsEntry("error", "404")
+			then(spanWithError.get().tags()).containsEntry("error", "404")
 					.containsEntry("http.status_code", "404");
 		});
 	}
@@ -202,10 +213,9 @@ public class FeignClientServerErrorTests {
 	@Configuration
 	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
 	@EnableFeignClients
-	@RibbonClients({@RibbonClient(value = "fooservice",
-			configuration = SimpleRibbonClientConfiguration.class),
-			@RibbonClient(value = "customConfFooService",
-			configuration = SimpleRibbonClientConfiguration.class)})
+	@RibbonClients({
+			@RibbonClient(value = "fooservice", configuration = SimpleRibbonClientConfiguration.class),
+			@RibbonClient(value = "customConfFooService", configuration = SimpleRibbonClientConfiguration.class) })
 	public static class TestConfiguration {
 
 		@Bean
@@ -233,6 +243,7 @@ public class FeignClientServerErrorTests {
 		Logger.Level feignLoggerLevel() {
 			return Logger.Level.FULL;
 		}
+
 	}
 
 	@FeignClient(value = "fooservice")
@@ -246,6 +257,7 @@ public class FeignClientServerErrorTests {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/ok")
 		ResponseEntity<String> ok();
+
 	}
 
 	@FeignClient(value = "customConfFooService", configuration = CustomFeignClientConfiguration.class)
@@ -256,10 +268,12 @@ public class FeignClientServerErrorTests {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/ok")
 		ResponseEntity<String> ok();
+
 	}
 
 	@Configuration
 	public static class CustomFeignClientConfiguration {
+
 		@Bean
 		Decoder decoder() {
 			return new Decoder.Default();
@@ -269,12 +283,14 @@ public class FeignClientServerErrorTests {
 		ErrorDecoder errorDecoder() {
 			return new ErrorDecoder.Default();
 		}
+
 	}
 
 	@RestController
 	public static class FooController {
 
-		@Autowired Tracing tracer;
+		@Autowired
+		Tracing tracer;
 
 		@RequestMapping("/internalerror")
 		public ResponseEntity<String> internalError(
@@ -297,8 +313,7 @@ public class FeignClientServerErrorTests {
 		}
 
 		@RequestMapping("/ok")
-		public ResponseEntity<String> ok(
-				@RequestHeader("X-B3-TraceId") String traceId,
+		public ResponseEntity<String> ok(@RequestHeader("X-B3-TraceId") String traceId,
 				@RequestHeader("X-B3-SpanId") String spanId,
 				@RequestHeader("X-B3-ParentSpanId") String parentId) {
 			log.info("Will respond with OK");
@@ -307,8 +322,10 @@ public class FeignClientServerErrorTests {
 		}
 
 		private void logHeaders(String traceId, String spanId, String parentId) {
-			log.info("Trace [" + traceId + "], span [" + spanId + "], parent [" + parentId + "]");
+			log.info("Trace [" + traceId + "], span [" + spanId + "], parent [" + parentId
+					+ "]");
 		}
+
 	}
 
 	@Configuration
@@ -324,6 +341,7 @@ public class FeignClientServerErrorTests {
 					Collections.singletonList(new Server("localhost", this.port)));
 			return balancer;
 		}
+
 	}
 
 }

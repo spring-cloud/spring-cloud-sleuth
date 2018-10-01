@@ -52,13 +52,20 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {
-		TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class },
-		webEnvironment = RANDOM_PORT)
+		TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
 public class TraceWebAsyncClientAutoConfigurationTests {
-	@Autowired AsyncRestTemplate asyncRestTemplate;
-	@Autowired Environment environment;
-	@Autowired ArrayListSpanReporter accumulator;
-	@Autowired Tracing tracer;
+
+	@Autowired
+	AsyncRestTemplate asyncRestTemplate;
+
+	@Autowired
+	Environment environment;
+
+	@Autowired
+	ArrayListSpanReporter accumulator;
+
+	@Autowired
+	Tracing tracer;
 
 	@Before
 	public void setup() {
@@ -70,19 +77,22 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 			throws ExecutionException, InterruptedException {
 		brave.Span initialSpan = this.tracer.tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.tracer().withSpanInScope(initialSpan.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.tracer()
+				.withSpanInScope(initialSpan.start())) {
 			ListenableFuture<ResponseEntity<String>> future = this.asyncRestTemplate
 					.getForEntity("http://localhost:" + port() + "/foo", String.class);
 			String result = future.get().getBody();
 
 			then(result).isEqualTo("foo");
-		} finally {
+		}
+		finally {
 			initialSpan.finish();
 		}
 
-		then(this.accumulator.getSpans().stream()
-				.filter(span -> Span.Kind.CLIENT == span.kind()).findFirst().get())
-				.matches(span -> span.duration() >= TimeUnit.MILLISECONDS.toMicros(100));
+		then(this.accumulator
+				.getSpans().stream().filter(span -> Span.Kind.CLIENT == span.kind())
+				.findFirst().get()).matches(
+						span -> span.duration() >= TimeUnit.MILLISECONDS.toMicros(100));
 		then(this.tracer.tracer().currentSpan()).isNull();
 	}
 
@@ -91,11 +101,12 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 			throws ExecutionException, InterruptedException {
 		ListenableFuture<ResponseEntity<String>> future;
 		try {
-			future = this.asyncRestTemplate
-					.getForEntity("http://localhost:" + port() + "/blowsup", String.class);
+			future = this.asyncRestTemplate.getForEntity(
+					"http://localhost:" + port() + "/blowsup", String.class);
 			future.get();
 			BDDAssertions.fail("should throw an exception from the controller");
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -113,14 +124,15 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 	}
 
 	@EnableAutoConfiguration(
-			// spring boot test will otherwise instrument the client and server with the same bean factory
+			// spring boot test will otherwise instrument the client and server with the
+			// same bean factory
 			// which isn't expected
-			exclude = TraceWebServletAutoConfiguration.class
-	)
+			exclude = TraceWebServletAutoConfiguration.class)
 	@Configuration
 	public static class TestConfiguration {
 
-		@Bean ArrayListSpanReporter reporter() {
+		@Bean
+		ArrayListSpanReporter reporter() {
 			return new ArrayListSpanReporter();
 		}
 
@@ -129,7 +141,8 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 			return new MyController();
 		}
 
-		@Bean Sampler sampler() {
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
@@ -137,6 +150,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 		AsyncRestTemplate restTemplate() {
 			return new AsyncRestTemplate();
 		}
+
 	}
 
 	@RestController
@@ -153,6 +167,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 			Thread.sleep(100);
 			throw new RuntimeException("boom");
 		}
+
 	}
 
 }

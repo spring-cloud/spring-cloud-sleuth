@@ -52,17 +52,22 @@ import org.springframework.web.filter.GenericFilterBean;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = TraceCustomFilterResponseInjectorTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TraceCustomFilterResponseInjectorTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class TraceCustomFilterResponseInjectorTests {
+
 	static final String TRACE_ID_NAME = "X-B3-TraceId";
 	static final String SPAN_ID_NAME = "X-B3-SpanId";
-	
-	@Autowired RestTemplate restTemplate;
-	@Autowired Config config;
-	@Autowired CustomRestController customRestController;
-	
+
+	@Autowired
+	RestTemplate restTemplate;
+
+	@Autowired
+	Config config;
+
+	@Autowired
+	CustomRestController customRestController;
+
 	@Test
 	@SuppressWarnings("unchecked")
 	public void should_inject_trace_and_span_ids_in_response_headers() {
@@ -71,22 +76,23 @@ public class TraceCustomFilterResponseInjectorTests {
 				.build();
 
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity, Map.class);
+		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity,
+				Map.class);
 
-		then(responseEntity.getHeaders())
-				.containsKeys(TRACE_ID_NAME, SPAN_ID_NAME)
+		then(responseEntity.getHeaders()).containsKeys(TRACE_ID_NAME, SPAN_ID_NAME)
 				.as("Trace headers must be present in response headers");
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
-	static class Config
-			implements ApplicationListener<ServletWebServerInitializedEvent> {
+	static class Config implements ApplicationListener<ServletWebServerInitializedEvent> {
+
 		int port;
 
 		// tag::configuration[]
 		@Bean
-		HttpResponseInjectingTraceFilter responseInjectingTraceFilter(HttpTracing httpTracing) {
+		HttpResponseInjectingTraceFilter responseInjectingTraceFilter(
+				HttpTracing httpTracing) {
 			return new HttpResponseInjectingTraceFilter(httpTracing);
 		}
 		// end::configuration[]
@@ -106,7 +112,6 @@ public class TraceCustomFilterResponseInjectorTests {
 			return new CustomRestController();
 		}
 
-
 	}
 
 	// tag::injector[]
@@ -119,15 +124,16 @@ public class TraceCustomFilterResponseInjectorTests {
 		}
 
 		@Override
-		public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+		public void doFilter(ServletRequest request, ServletResponse servletResponse,
+				FilterChain filterChain) throws IOException, ServletException {
 			HttpServletResponse response = (HttpServletResponse) servletResponse;
 			Span currentSpan = this.httpTracing.tracing().tracer().currentSpan();
-			response.addHeader("X-B3-TraceId",
-					currentSpan.context().traceIdString());
+			response.addHeader("X-B3-TraceId", currentSpan.context().traceIdString());
 			response.addHeader("X-B3-SpanId",
 					SpanUtil.idToHex(currentSpan.context().spanId()));
 			filterChain.doFilter(request, response);
 		}
+
 	}
 	// end::injector[]
 
@@ -142,5 +148,7 @@ public class TraceCustomFilterResponseInjectorTests {
 			}
 			return map;
 		}
+
 	}
+
 }

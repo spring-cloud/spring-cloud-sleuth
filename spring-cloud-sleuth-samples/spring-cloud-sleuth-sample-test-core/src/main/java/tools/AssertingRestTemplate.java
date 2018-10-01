@@ -30,7 +30,8 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  *
- * RestTemplate that logs erroneous responses and throws AssertionsError on any connection issues
+ * RestTemplate that logs erroneous responses and throws AssertionsError on any connection
+ * issues
  *
  * @author Marcin Grzejszczak
  */
@@ -43,19 +44,24 @@ public class AssertingRestTemplate extends RestTemplate {
 			@Override
 			public void handleError(ClientHttpResponse response) throws IOException {
 				if (hasError(response)) {
-					log.error("Response has status code [" + response.getStatusCode() + "] and text [" + response.getStatusText() + "])");
+					log.error("Response has status code [" + response.getStatusCode()
+							+ "] and text [" + response.getStatusText() + "])");
 				}
 			}
 		});
 	}
 
 	@Override
-	protected <T> T doExecute(URI url, HttpMethod method, RequestCallback requestCallback, ResponseExtractor<T> responseExtractor) throws RestClientException {
+	protected <T> T doExecute(URI url, HttpMethod method, RequestCallback requestCallback,
+			ResponseExtractor<T> responseExtractor) throws RestClientException {
 		try {
 			return super.doExecute(url, method, requestCallback, responseExtractor);
-		} catch (Exception e) {
-			log.error("Exception occurred while sending the message to uri [" + url +"]. Exception [" + e.getCause() + "]");
+		}
+		catch (Exception e) {
+			log.error("Exception occurred while sending the message to uri [" + url
+					+ "]. Exception [" + e.getCause() + "]");
 			throw new AssertionError(e);
 		}
 	}
+
 }

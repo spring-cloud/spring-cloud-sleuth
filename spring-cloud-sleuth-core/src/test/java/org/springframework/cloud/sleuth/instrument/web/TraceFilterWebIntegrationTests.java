@@ -58,16 +58,24 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = "spring.sleuth.http.legacy.enabled=true")
+@SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.sleuth.http.legacy.enabled=true")
 public class TraceFilterWebIntegrationTests {
 
-	@Autowired Tracing tracer;
-	@Autowired ArrayListSpanReporter accumulator;
-	@Autowired @ServerSampler HttpSampler sampler;
-	@Autowired Environment environment;
-	@Rule public OutputCapture capture = new OutputCapture();
+	@Autowired
+	Tracing tracer;
+
+	@Autowired
+	ArrayListSpanReporter accumulator;
+
+	@Autowired
+	@ServerSampler
+	HttpSampler sampler;
+
+	@Autowired
+	Environment environment;
+
+	@Rule
+	public OutputCapture capture = new OutputCapture();
 
 	@Before
 	@After
@@ -78,24 +86,26 @@ public class TraceFilterWebIntegrationTests {
 	@Test
 	public void should_not_create_a_span_for_error_controller() {
 		try {
-			new RestTemplate().getForObject("http://localhost:" + port() + "/", String.class);
+			new RestTemplate().getForObject("http://localhost:" + port() + "/",
+					String.class);
 			BDDAssertions.fail("should fail due to runtime exception");
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.accumulator.getSpans()).hasSize(1);
 		Span fromFirstTraceFilterFlow = this.accumulator.getSpans().get(0);
-		then(fromFirstTraceFilterFlow.tags())
-				.containsEntry("http.status_code", "500")
+		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.status_code", "500")
 				.containsEntry("http.method", "GET")
 				.containsEntry("mvc.controller.class", "ExceptionThrowingController")
-				.containsEntry("error", "Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
+				.containsEntry("error",
+						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		// issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
 		String[] split = capture.toString().split("\n");
-		List<String> list = Arrays.stream(split).filter(s -> s.contains(
-				"Uncaught exception thrown"))
+		List<String> list = Arrays.stream(split)
+				.filter(s -> s.contains("Uncaught exception thrown"))
 				.filter(s -> s.contains(hex + "," + hex + ",true]"))
 				.collect(Collectors.toList());
 		then(list).isNotEmpty();
@@ -104,16 +114,21 @@ public class TraceFilterWebIntegrationTests {
 	@Test
 	public void should_create_spans_for_endpoint_returning_unsuccessful_result() {
 		try {
-			new RestTemplate().getForObject("http://localhost:" + port() + "/test_bad_request", String.class);
+			new RestTemplate().getForObject(
+					"http://localhost:" + port() + "/test_bad_request", String.class);
 			fail("should throw exception");
-		} catch (HttpClientErrorException e) {
+		}
+		catch (HttpClientErrorException e) {
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.accumulator.getSpans()).hasSize(1);
-		then(this.accumulator.getSpans().get(0).kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
-		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.status_code", "400");
-		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.path", "/test_bad_request");
+		then(this.accumulator.getSpans().get(0).kind().ordinal())
+				.isEqualTo(Span.Kind.SERVER.ordinal());
+		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.status_code",
+				"400");
+		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.path",
+				"/test_bad_request");
 	}
 
 	@Test
@@ -129,15 +144,18 @@ public class TraceFilterWebIntegrationTests {
 	@Configuration
 	public static class Config {
 
-		@Bean ExceptionThrowingController controller() {
+		@Bean
+		ExceptionThrowingController controller() {
 			return new ExceptionThrowingController();
 		}
 
-		@Bean ArrayListSpanReporter reporter() {
+		@Bean
+		ArrayListSpanReporter reporter() {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean Sampler alwaysSampler() {
+		@Bean
+		Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
@@ -147,7 +165,8 @@ public class TraceFilterWebIntegrationTests {
 			Pattern pattern = provider.skipPattern();
 			return new HttpSampler() {
 
-				@Override public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
+				@Override
+				public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
 					String url = adapter.path(request);
 					boolean shouldSkip = pattern.matcher(url).matches();
 					if (shouldSkip) {
@@ -159,15 +178,17 @@ public class TraceFilterWebIntegrationTests {
 		}
 		// end::custom_server_sampler[]
 
-		@Bean RestTemplate restTemplate() {
+		@Bean
+		RestTemplate restTemplate() {
 			RestTemplate restTemplate = new RestTemplate();
 			restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
-				@Override public void handleError(ClientHttpResponse response)
-						throws IOException {
+				@Override
+				public void handleError(ClientHttpResponse response) throws IOException {
 				}
 			});
 			return restTemplate;
 		}
+
 	}
 
 	@RestController
@@ -182,5 +203,7 @@ public class TraceFilterWebIntegrationTests {
 		public ResponseEntity<?> processFail() {
 			return ResponseEntity.badRequest().build();
 		}
+
 	}
+
 }

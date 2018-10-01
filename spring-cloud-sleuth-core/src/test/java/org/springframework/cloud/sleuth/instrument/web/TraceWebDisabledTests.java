@@ -39,5 +39,7 @@ public class TraceWebDisabledTests {
 	@Configuration
 	@EnableAutoConfiguration
 	public static class Config {
+
 	}
+
 }

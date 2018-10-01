@@ -41,4 +41,5 @@ public class SampleWebsocketApplication extends AbstractWebSocketMessageBrokerCo
 	public static void main(String[] args) {
 		SpringApplication.run(SampleWebsocketApplication.class, args);
 	}
+
 }

@@ -49,8 +49,12 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public class ZipkinAutoConfigurationTests {
 
-	@Rule public ExpectedException thrown = ExpectedException.none();
-	@Rule public MockWebServer server = new MockWebServer();
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
+
+	@Rule
+	public MockWebServer server = new MockWebServer();
+
 	MockEnvironment environment = new MockEnvironment();
 
 	AnnotationConfigApplicationContext context;
@@ -66,20 +70,17 @@ public class ZipkinAutoConfigurationTests {
 	public void defaultsToV2Endpoint() throws Exception {
 		context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url", server.url("/").toString());
-		context.register(
-				ZipkinAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class,
+		context.register(ZipkinAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
 				Config.class);
 		context.refresh();
-		Span span =
-				context.getBean(Tracing.class).tracer().nextSpan()
-						.name("foo").tag("foo", "bar")
-						.start();
+		Span span = context.getBean(Tracing.class).tracer().nextSpan().name("foo")
+				.tag("foo", "bar").start();
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(() -> then(server.getRequestCount()).isGreaterThan(0));
+		Awaitility.await()
+				.untilAsserted(() -> then(server.getRequestCount()).isGreaterThan(0));
 		RecordedRequest request = server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v2/spans");
 		then(request.getBody().readUtf8()).contains("localEndpoint");
@@ -95,20 +96,17 @@ public class ZipkinAutoConfigurationTests {
 		context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url", server.url("/").toString());
 		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
-		context.register(
-				ZipkinAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class,
+		context.register(ZipkinAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
 				Config.class);
 		context.refresh();
-		Span span =
-				context.getBean(Tracing.class).tracer().nextSpan()
-						.name("foo").tag("foo", "bar")
-						.start();
+		Span span = context.getBean(Tracing.class).tracer().nextSpan().name("foo")
+				.tag("foo", "bar").start();
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(() -> then(server.getRequestCount()).isGreaterThan(0));
+		Awaitility.await()
+				.untilAsserted(() -> then(server.getRequestCount()).isGreaterThan(0));
 		RecordedRequest request = server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v1/spans");
 		then(request.getBody().readUtf8()).contains("binaryAnnotations");
@@ -118,10 +116,8 @@ public class ZipkinAutoConfigurationTests {
 	public void overrideRabbitMQQueue() throws Exception {
 		context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.rabbitmq.queue", "zipkin2");
-		context.register(
-				PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class,
-				ZipkinAutoConfiguration.class);
+		context.register(PropertyPlaceholderAutoConfiguration.class,
+				RabbitAutoConfiguration.class, ZipkinAutoConfiguration.class);
 		context.refresh();
 
 		then(context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
@@ -134,10 +130,8 @@ public class ZipkinAutoConfigurationTests {
 		context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.kafka.topic", "zipkin2");
 		environment().setProperty("spring.zipkin.sender.type", "kafka");
-		context.register(
-				PropertyPlaceholderAutoConfiguration.class,
-				KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class);
+		context.register(PropertyPlaceholderAutoConfiguration.class,
+				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class);
 		context.refresh();
 
 		then(context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
@@ -149,14 +143,13 @@ public class ZipkinAutoConfigurationTests {
 	public void canOverrideBySender() throws Exception {
 		context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.sender.type", "web");
-		context.register(
-				PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class,
-				KafkaAutoConfiguration.class,
+		context.register(PropertyPlaceholderAutoConfiguration.class,
+				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
 				ZipkinAutoConfiguration.class);
 		context.refresh();
 
-		then(context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender");
+		then(context.getBean(Sender.class).getClass().getName())
+				.contains("RestTemplateSender");
 
 		context.close();
 	}
@@ -165,14 +158,13 @@ public class ZipkinAutoConfigurationTests {
 	public void canOverrideBySenderAndIsCaseInsensitive() throws Exception {
 		context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.sender.type", "WEB");
-		context.register(
-				PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class,
-				KafkaAutoConfiguration.class,
+		context.register(PropertyPlaceholderAutoConfiguration.class,
+				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
 				ZipkinAutoConfiguration.class);
 		context.refresh();
 
-		then(context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender");
+		then(context.getBean(Sender.class).getClass().getName())
+				.contains("RestTemplateSender");
 
 		context.close();
 	}
@@ -180,10 +172,8 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void rabbitWinsWhenKafkaPresent() throws Exception {
 		context = new AnnotationConfigApplicationContext();
-		context.register(
-				PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class,
-				KafkaAutoConfiguration.class,
+		context.register(PropertyPlaceholderAutoConfiguration.class,
+				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
 				ZipkinAutoConfiguration.class);
 		context.refresh();
 
@@ -194,29 +184,39 @@ public class ZipkinAutoConfigurationTests {
 
 	@Configuration
 	protected static class Config {
-		@Bean Sampler sampler() {
+
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
 
 	@Configuration
 	protected static class HandlerHanldersConfig {
-		@Bean FinishedSpanHandler handlerOne() {
+
+		@Bean
+		FinishedSpanHandler handlerOne() {
 			return new FinishedSpanHandler() {
-				@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+				@Override
+				public boolean handle(TraceContext traceContext, MutableSpan span) {
 					span.name("foo");
 					return true; // keep this span
 				}
 			};
 		}
 
-		@Bean FinishedSpanHandler handlerTwo() {
+		@Bean
+		FinishedSpanHandler handlerTwo() {
 			return new FinishedSpanHandler() {
-				@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+				@Override
+				public boolean handle(TraceContext traceContext, MutableSpan span) {
 					span.name(span.name() + " bar");
 					return true; // keep this span
 				}
 			};
 		}
+
 	}
+
 }

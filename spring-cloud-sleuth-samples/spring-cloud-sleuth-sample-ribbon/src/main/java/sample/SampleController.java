@@ -28,10 +28,11 @@ import org.springframework.web.client.RestTemplate;
  * @author Dave Syer
  */
 @RestController
-public class SampleController  {
+public class SampleController {
 
 	@Autowired
 	private RestTemplate restTemplate;
+
 	private Random random = new Random();
 
 	@RequestMapping("/")

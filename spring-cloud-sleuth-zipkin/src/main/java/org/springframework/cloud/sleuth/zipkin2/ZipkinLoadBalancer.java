@@ -28,8 +28,8 @@ public interface ZipkinLoadBalancer {
 
 	/**
 	 * Returns a concrete {@link URI} of a Zipkin instance.
-	 *
 	 * @return {@link URI} of the picked instance
 	 */
 	URI instance();
+
 }

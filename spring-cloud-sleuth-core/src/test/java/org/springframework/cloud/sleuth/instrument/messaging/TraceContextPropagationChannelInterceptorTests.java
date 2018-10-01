@@ -50,37 +50,45 @@ import static org.junit.Assert.assertNotNull;
 @DirtiesContext
 public class TraceContextPropagationChannelInterceptorTests {
 
-	@Autowired @Qualifier("channel") private PollableChannel channel;
+	@Autowired
+	@Qualifier("channel")
+	private PollableChannel channel;
 
-	@Autowired private Tracing tracing;
-	@Autowired private ArrayListSpanReporter reporter;
+	@Autowired
+	private Tracing tracing;
 
-	@After public void close() {
+	@Autowired
+	private ArrayListSpanReporter reporter;
+
+	@After
+	public void close() {
 		this.reporter.clear();
 	}
 
-	@Test public void testSpanPropagation() {
+	@Test
+	public void testSpanPropagation() {
 		Span span = this.tracing.tracer().nextSpan().name("http:testSendMessage").start();
 		String expectedSpanId = SpanUtil.idToHex(span.context().spanId());
 		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
 			this.channel.send(MessageBuilder.withPayload("hi").build());
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
 		Message<?> message = this.channel.receive(0);
 		assertNotNull("message was null", message);
 
-		String spanId =
-				message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		String spanId = message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME,
+				String.class);
 		assertNotEquals("spanId was equal to parent's id", expectedSpanId, spanId);
 
-		String traceId = message.getHeaders()
-				.get(TraceMessageHeaders.TRACE_ID_NAME, String.class);
+		String traceId = message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME,
+				String.class);
 		assertNotNull("traceId was null", traceId);
 
-		String parentId = message.getHeaders()
-				.get(TraceMessageHeaders.PARENT_ID_NAME, String.class);
+		String parentId = message.getHeaders().get(TraceMessageHeaders.PARENT_ID_NAME,
+				String.class);
 		assertEquals("parentId was not equal to parent's id",
 				this.reporter.getSpans().get(0).id(), parentId);
 
@@ -90,16 +98,21 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@EnableAutoConfiguration
 	static class App {
 
-		@Bean public QueueChannel channel() {
+		@Bean
+		public QueueChannel channel() {
 			return new QueueChannel();
 		}
 
-		@Bean Sampler testSampler() {
+		@Bean
+		Sampler testSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean ArrayListSpanReporter reporter() {
+		@Bean
+		ArrayListSpanReporter reporter() {
 			return new ArrayListSpanReporter();
 		}
+
 	}
+
 }

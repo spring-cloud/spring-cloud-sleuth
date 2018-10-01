@@ -48,9 +48,14 @@ import static org.awaitility.Awaitility.await;
 @DirtiesContext
 public class TracingOnScheduledTests {
 
-	@Autowired TestBeanWithScheduledMethod beanWithScheduledMethod;
-	@Autowired TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
-	@Autowired ArrayListSpanReporter reporter;
+	@Autowired
+	TestBeanWithScheduledMethod beanWithScheduledMethod;
+
+	@Autowired
+	TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
@@ -60,7 +65,7 @@ public class TracingOnScheduledTests {
 
 	@Test
 	public void should_have_span_set_after_scheduled_method_has_been_executed() {
-		await().atMost(	10, SECONDS).untilAsserted(() -> {
+		await().atMost(10, SECONDS).untilAsserted(() -> {
 			then(this.beanWithScheduledMethod.isExecuted()).isTrue();
 			spanIsSetOnAScheduledMethod();
 		});
@@ -85,13 +90,12 @@ public class TracingOnScheduledTests {
 	}
 
 	private void spanIsSetOnAScheduledMethod() {
-		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod
-				.getSpan();
+		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
 		then(storedSpan).isNotNull();
 		then(storedSpan.context().traceId()).isNotNull();
-		then(this.reporter.getSpans().get(0).tags())
-				.contains(new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
-						new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
+		then(this.reporter.getSpans().get(0).tags()).contains(
+				new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
+				new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
 		then(this.reporter.getSpans().get(0).durationAsLong()).isGreaterThan(0L);
 	}
 
@@ -107,19 +111,24 @@ public class TracingOnScheduledTests {
 @EnableScheduling
 class ScheduledTestConfiguration {
 
-	@Bean Reporter<zipkin2.Span> testRepoter() {
+	@Bean
+	Reporter<zipkin2.Span> testRepoter() {
 		return new ArrayListSpanReporter();
 	}
 
-	@Bean TestBeanWithScheduledMethod testBeanWithScheduledMethod(Tracing tracing) {
+	@Bean
+	TestBeanWithScheduledMethod testBeanWithScheduledMethod(Tracing tracing) {
 		return new TestBeanWithScheduledMethod(tracing);
 	}
 
-	@Bean TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored(Tracing tracing) {
+	@Bean
+	TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored(
+			Tracing tracing) {
 		return new TestBeanWithScheduledMethodToBeIgnored(tracing);
 	}
 
-	@Bean Sampler alwaysSampler() {
+	@Bean
+	Sampler alwaysSampler() {
 		return Sampler.ALWAYS_SAMPLE;
 	}
 
@@ -159,6 +168,7 @@ class TestBeanWithScheduledMethod {
 		this.span = null;
 		this.executed.set(false);
 	}
+
 }
 
 class TestBeanWithScheduledMethodToBeIgnored {
@@ -166,6 +176,7 @@ class TestBeanWithScheduledMethodToBeIgnored {
 	private final Tracing tracing;
 
 	Span span;
+
 	AtomicBoolean executed = new AtomicBoolean(false);
 
 	TestBeanWithScheduledMethodToBeIgnored(Tracing tracing) {
@@ -189,4 +200,5 @@ class TestBeanWithScheduledMethodToBeIgnored {
 	public void clear() {
 		this.executed.set(false);
 	}
+
 }

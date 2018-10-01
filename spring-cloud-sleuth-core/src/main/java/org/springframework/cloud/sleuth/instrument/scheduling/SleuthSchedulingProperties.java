@@ -19,7 +19,8 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration properties for {@link org.springframework.scheduling.annotation.Scheduled} tracing
+ * Configuration properties for
+ * {@link org.springframework.scheduling.annotation.Scheduled} tracing.
  *
  * @author Arthur Gavlyukovskiy
  * @since 1.0.12
@@ -52,4 +53,5 @@ public class SleuthSchedulingProperties {
 	public void setSkipPattern(String skipPattern) {
 		this.skipPattern = skipPattern;
 	}
+
 }

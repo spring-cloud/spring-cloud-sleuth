@@ -24,6 +24,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 public class SpelTagValueExpressionResolverTests {
+
 	@Test
 	public void should_use_spel_to_resolve_a_value() throws Exception {
 		SpelTagValueExpressionResolver resolver = new SpelTagValueExpressionResolver();
@@ -36,21 +37,28 @@ public class SpelTagValueExpressionResolverTests {
 	}
 
 	public static class MyObject {
+
 		public String name;
+
 	}
 
 	@Test
-	public void should_use_to_string_if_expression_is_not_analyzed_properly() throws Exception {
+	public void should_use_to_string_if_expression_is_not_analyzed_properly()
+			throws Exception {
 		SpelTagValueExpressionResolver resolver = new SpelTagValueExpressionResolver();
 
 		String resolved = resolver.resolve("invalid() structure + 1", new Foo());
 
 		then(resolved).isEqualTo("BAR");
 	}
+
 }
 
 class Foo {
-	@Override public String toString() {
+
+	@Override
+	public String toString() {
 		return "BAR";
 	}
+
 }

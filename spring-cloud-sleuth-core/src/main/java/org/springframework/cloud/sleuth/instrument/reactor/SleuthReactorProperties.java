@@ -19,15 +19,16 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth Reactor settings
+ * Sleuth Reactor settings.
  *
+ * @author Marcin Grzejszczak
  * @since 2.0.2
  */
 @ConfigurationProperties("spring.sleuth.reactor.enabled")
 public class SleuthReactorProperties {
 
 	/**
-	 * When true enables instrumentation for reactor
+	 * When true enables instrumentation for reactor.
 	 */
 	private boolean enabled = true;
 
@@ -38,4 +39,5 @@ public class SleuthReactorProperties {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+
 }

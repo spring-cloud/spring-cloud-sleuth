@@ -50,8 +50,10 @@ public class TraceAsyncIntegrationTests {
 
 	@Autowired
 	ClassPerformingAsyncLogic classPerformingAsyncLogic;
-	@Autowired 
+
+	@Autowired
 	Tracing tracer;
+
 	@Autowired
 	ArrayListSpanReporter reporter;
 
@@ -83,7 +85,8 @@ public class TraceAsyncIntegrationTests {
 			whenAsyncProcessingTakesPlace();
 
 			thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOne(span);
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 	}
@@ -95,8 +98,10 @@ public class TraceAsyncIntegrationTests {
 		try (Tracer.SpanInScope ws = this.tracer.tracer().withSpanInScope(span.start())) {
 			whenAsyncProcessingTakesPlaceWithCustomSpanName();
 
-			thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOneAndSpanHasCustomName(span);
-		} finally {
+			thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOneAndSpanHasCustomName(
+					span);
+		}
+		finally {
 			span.finish();
 		}
 	}
@@ -114,65 +119,72 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOne(final Span span) {
-		Awaitility.await().atMost(5, SECONDS).untilAsserted(
-				() -> {
-					Span asyncSpan = TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan();
-					then(asyncSpan.context().traceId()).isEqualTo(span.context().traceId());
-					List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
-							.getSpans();
-					then(spans).hasSize(1);
-					zipkin2.Span reportedAsyncSpan = spans.get(0);
-					then(reportedAsyncSpan.traceId()).isEqualTo(span.context().traceIdString());
-					then(reportedAsyncSpan.name()).isEqualTo("invoke-asynchronous-logic");
-					then(reportedAsyncSpan.tags())
-							.contains(new AbstractMap.SimpleEntry<>("class", "ClassPerformingAsyncLogic"))
-							.contains(new AbstractMap.SimpleEntry<>("method", "invokeAsynchronousLogic"));
-				});
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
+			Span asyncSpan = TraceAsyncIntegrationTests.this.classPerformingAsyncLogic
+					.getSpan();
+			then(asyncSpan.context().traceId()).isEqualTo(span.context().traceId());
+			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
+					.getSpans();
+			then(spans).hasSize(1);
+			zipkin2.Span reportedAsyncSpan = spans.get(0);
+			then(reportedAsyncSpan.traceId()).isEqualTo(span.context().traceIdString());
+			then(reportedAsyncSpan.name()).isEqualTo("invoke-asynchronous-logic");
+			then(reportedAsyncSpan.tags())
+					.contains(new AbstractMap.SimpleEntry<>("class",
+							"ClassPerformingAsyncLogic"))
+					.contains(new AbstractMap.SimpleEntry<>("method",
+							"invokeAsynchronousLogic"));
+		});
 	}
 
 	private void thenANewAsyncSpanGetsCreated() {
-		Awaitility.await().atMost(5, SECONDS).untilAsserted(
-				() -> {
-					List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
-							.getSpans();
-					then(spans).hasSize(1);
-					zipkin2.Span reportedAsyncSpan = spans.get(0);
-					then(reportedAsyncSpan.name()).isEqualTo("invoke-asynchronous-logic");
-					then(reportedAsyncSpan.tags())
-							.contains(new AbstractMap.SimpleEntry<>("class", "ClassPerformingAsyncLogic"))
-							.contains(new AbstractMap.SimpleEntry<>("method", "invokeAsynchronousLogic"));
-				});
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
+			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
+					.getSpans();
+			then(spans).hasSize(1);
+			zipkin2.Span reportedAsyncSpan = spans.get(0);
+			then(reportedAsyncSpan.name()).isEqualTo("invoke-asynchronous-logic");
+			then(reportedAsyncSpan.tags())
+					.contains(new AbstractMap.SimpleEntry<>("class",
+							"ClassPerformingAsyncLogic"))
+					.contains(new AbstractMap.SimpleEntry<>("method",
+							"invokeAsynchronousLogic"));
+		});
 	}
 
-	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOneAndSpanHasCustomName(final Span span) {
-		Awaitility.await().atMost(5, SECONDS).untilAsserted(
-				() -> {
-					Span asyncSpan = TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan();
-					then(asyncSpan.context().traceId()).isEqualTo(span.context().traceId());
-					List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
-							.getSpans();
-					then(spans).hasSize(1);
-					zipkin2.Span reportedAsyncSpan = spans.get(0);
-					then(reportedAsyncSpan.traceId()).isEqualTo(span.context().traceIdString());
-					then(reportedAsyncSpan.name()).isEqualTo("foo");
-					then(reportedAsyncSpan.tags())
-							.contains(new AbstractMap.SimpleEntry<>("class", "ClassPerformingAsyncLogic"))
-							.contains(new AbstractMap.SimpleEntry<>("method", "customNameInvokeAsynchronousLogic"));
-				});
+	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOneAndSpanHasCustomName(
+			final Span span) {
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
+			Span asyncSpan = TraceAsyncIntegrationTests.this.classPerformingAsyncLogic
+					.getSpan();
+			then(asyncSpan.context().traceId()).isEqualTo(span.context().traceId());
+			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
+					.getSpans();
+			then(spans).hasSize(1);
+			zipkin2.Span reportedAsyncSpan = spans.get(0);
+			then(reportedAsyncSpan.traceId()).isEqualTo(span.context().traceIdString());
+			then(reportedAsyncSpan.name()).isEqualTo("foo");
+			then(reportedAsyncSpan.tags())
+					.contains(new AbstractMap.SimpleEntry<>("class",
+							"ClassPerformingAsyncLogic"))
+					.contains(new AbstractMap.SimpleEntry<>("method",
+							"customNameInvokeAsynchronousLogic"));
+		});
 	}
 
 	private void thenAsyncSpanHasCustomName() {
-		Awaitility.await().atMost(5, SECONDS).untilAsserted(
-				() -> {
-					List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
-							.getSpans();
-					then(spans).hasSize(1);
-					zipkin2.Span reportedAsyncSpan = spans.get(0);
-					then(reportedAsyncSpan.name()).isEqualTo("foo");
-					then(reportedAsyncSpan.tags())
-							.contains(new AbstractMap.SimpleEntry<>("class", "ClassPerformingAsyncLogic"))
-							.contains(new AbstractMap.SimpleEntry<>("method", "customNameInvokeAsynchronousLogic"));
-				});
+		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
+			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
+					.getSpans();
+			then(spans).hasSize(1);
+			zipkin2.Span reportedAsyncSpan = spans.get(0);
+			then(reportedAsyncSpan.name()).isEqualTo("foo");
+			then(reportedAsyncSpan.tags())
+					.contains(new AbstractMap.SimpleEntry<>("class",
+							"ClassPerformingAsyncLogic"))
+					.contains(new AbstractMap.SimpleEntry<>("method",
+							"customNameInvokeAsynchronousLogic"));
+		});
 	}
 
 	@DefaultTestAutoConfiguration
@@ -185,7 +197,8 @@ public class TraceAsyncIntegrationTests {
 			return new ClassPerformingAsyncLogic(tracer);
 		}
 
-		@Bean Sampler defaultSampler() {
+		@Bean
+		Sampler defaultSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
@@ -224,5 +237,7 @@ public class TraceAsyncIntegrationTests {
 		public void clear() {
 			this.span.set(null);
 		}
+
 	}
+
 }

@@ -36,7 +36,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  * @author Michal Chmielarz, 4financeIT
  * @author Spencer Gibb
  * @since 1.0.0
- *
  * @see TraceSchedulingAspect
  */
 @Configuration
@@ -54,4 +53,5 @@ public class TraceSchedulingAutoConfiguration {
 		return new TraceSchedulingAspect(tracer,
 				Pattern.compile(sleuthSchedulingProperties.getSkipPattern()));
 	}
+
 }

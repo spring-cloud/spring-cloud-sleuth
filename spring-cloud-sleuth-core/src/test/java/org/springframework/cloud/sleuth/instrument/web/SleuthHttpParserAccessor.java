@@ -25,6 +25,7 @@ import brave.http.HttpServerParser;
  * @since
  */
 public class SleuthHttpParserAccessor {
+
 	public static HttpClientParser getClient() {
 		return new SleuthHttpClientParser(new TraceKeys());
 	}
@@ -32,4 +33,5 @@ public class SleuthHttpParserAccessor {
 	public static HttpServerParser getServer(ErrorParser errorParser) {
 		return new SleuthHttpServerParser(new TraceKeys(), errorParser);
 	}
+
 }

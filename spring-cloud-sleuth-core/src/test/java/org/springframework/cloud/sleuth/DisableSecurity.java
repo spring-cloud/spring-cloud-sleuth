@@ -28,8 +28,9 @@ import org.springframework.context.annotation.Import;
  * @author Marcin Grzejszczak
  */
 @Import(PermitAllServletConfiguration.class)
-@Target({ ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface DisableSecurity {
+
 }

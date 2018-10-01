@@ -45,31 +45,28 @@ final class TracingFeignClient implements Client {
 
 	private static final Log log = LogFactory.getLog(TracingFeignClient.class);
 
-	static final Propagation.Setter<Map<String, Collection<String>>, String> SETTER =
-			new Propagation.Setter<Map<String, Collection<String>>, String>() {
-		@Override public void put(Map<String, Collection<String>> carrier, String key,
+	static final Propagation.Setter<Map<String, Collection<String>>, String> SETTER = new Propagation.Setter<Map<String, Collection<String>>, String>() {
+		@Override
+		public void put(Map<String, Collection<String>> carrier, String key,
 				String value) {
 			if (!carrier.containsKey(key)) {
 				carrier.put(key, Collections.singletonList(value));
 				if (log.isTraceEnabled()) {
 					log.trace("Added key [" + key + "] and header value [" + value + "]");
 				}
-			} else {
+			}
+			else {
 				if (log.isTraceEnabled()) {
 					log.trace("Key [" + key + "] already there in the headers");
 				}
 			}
 		}
 
-		@Override public String toString() {
+		@Override
+		public String toString() {
 			return "Map::set";
 		}
 	};
-
-	static Client create(HttpTracing httpTracing, Client delegate) {
-		return new TracingFeignClient(httpTracing, delegate);
-	}
-
 	final Tracer tracer;
 	final Client delegate;
 	final HttpClientHandler<Request, Response> handler;
@@ -82,8 +79,12 @@ final class TracingFeignClient implements Client {
 		this.delegate = delegate;
 	}
 
-	@Override public Response execute(Request request, Request.Options options)
-			throws IOException {
+	static Client create(HttpTracing httpTracing, Client delegate) {
+		return new TracingFeignClient(httpTracing, delegate);
+	}
+
+	@Override
+	public Response execute(Request request, Request.Options options) throws IOException {
 		Map<String, Collection<String>> headers = new HashMap<>(request.headers());
 		Span span = handleSend(headers, request, null);
 		if (log.isDebugEnabled()) {
@@ -92,7 +93,8 @@ final class TracingFeignClient implements Client {
 		Response response = null;
 		Throwable error = null;
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			return response = this.delegate.execute(modifiedRequest(request, headers), options);
+			return response = this.delegate.execute(modifiedRequest(request, headers),
+					options);
 		}
 		catch (IOException | RuntimeException | Error e) {
 			error = e;
@@ -106,7 +108,8 @@ final class TracingFeignClient implements Client {
 		}
 	}
 
-	Span handleSend(Map<String, Collection<String>> headers, Request request, Span clientSpan) {
+	Span handleSend(Map<String, Collection<String>> headers, Request request,
+			Span clientSpan) {
 		if (clientSpan != null) {
 			return this.handler.handleSend(this.injector, headers, request, clientSpan);
 		}
@@ -117,7 +120,8 @@ final class TracingFeignClient implements Client {
 		this.handler.handleReceive(response, error, span);
 	}
 
-	private Request modifiedRequest(Request request, Map<String, Collection<String>> headers) {
+	private Request modifiedRequest(Request request,
+			Map<String, Collection<String>> headers) {
 		String method = request.method();
 		String url = request.url();
 		byte[] body = request.body();
@@ -128,23 +132,28 @@ final class TracingFeignClient implements Client {
 	static final class HttpAdapter
 			extends brave.http.HttpClientAdapter<Request, Response> {
 
-		@Override public String method(Request request) {
+		@Override
+		public String method(Request request) {
 			return request.method();
 		}
 
-		@Override public String url(Request request) {
+		@Override
+		public String url(Request request) {
 			return request.url();
 		}
 
-		@Override public String requestHeader(Request request, String name) {
+		@Override
+		public String requestHeader(Request request, String name) {
 			Collection<String> result = request.headers().get(name);
-			return result != null && result.iterator().hasNext() ?
-					result.iterator().next() :
-					null;
+			return result != null && result.iterator().hasNext()
+					? result.iterator().next() : null;
 		}
 
-		@Override public Integer statusCode(Response response) {
+		@Override
+		public Integer statusCode(Response response) {
 			return response.status();
 		}
+
 	}
+
 }

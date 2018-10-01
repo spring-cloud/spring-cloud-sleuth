@@ -46,33 +46,40 @@ public class DemoApplication {
 	private static final Log log = LogFactory.getLog(DemoApplication.class);
 
 	Span httpSpan;
+
 	Span splitterSpan;
+
 	Span aggregatorSpan;
+
 	Span serviceActivatorSpan;
 
-	@Autowired Sender sender;
-	@Autowired Tracer tracer;
+	@Autowired
+	Sender sender;
+
+	@Autowired
+	Tracer tracer;
 
 	@RequestMapping("/greeting")
-	public Greeting greeting(@RequestParam(defaultValue="Hello World!") String message, @RequestHeader HttpHeaders headers) {
+	public Greeting greeting(@RequestParam(defaultValue = "Hello World!") String message,
+			@RequestHeader HttpHeaders headers) {
 		this.sender.send(message);
 		this.httpSpan = this.tracer.currentSpan();
 		return new Greeting(message);
 	}
 
-	@Splitter(inputChannel="greetings", outputChannel="words")
+	@Splitter(inputChannel = "greetings", outputChannel = "words")
 	public List<String> words(String greeting) {
 		this.splitterSpan = this.tracer.currentSpan();
 		return Arrays.asList(StringUtils.delimitedListToStringArray(greeting, " "));
 	}
 
-	@Aggregator(inputChannel="words", outputChannel="counts")
+	@Aggregator(inputChannel = "words", outputChannel = "counts")
 	public int count(List<String> greeting) {
 		this.aggregatorSpan = this.tracer.currentSpan();
 		return greeting.size();
 	}
 
-	@ServiceActivator(inputChannel="counts")
+	@ServiceActivator(inputChannel = "counts")
 	public void report(int count) {
 		this.serviceActivatorSpan = this.tracer.currentSpan();
 		log.info("Count: " + count);
@@ -95,18 +102,22 @@ public class DemoApplication {
 	}
 
 	public List<Span> allSpans() {
-		return Arrays.asList(this.httpSpan, this.splitterSpan, this.aggregatorSpan, this.serviceActivatorSpan);
+		return Arrays.asList(this.httpSpan, this.splitterSpan, this.aggregatorSpan,
+				this.serviceActivatorSpan);
 	}
 
 }
 
 @MessagingGateway(name = "greeter")
 interface Sender {
+
 	@Gateway(requestChannel = "greetings")
 	void send(String message);
+
 }
 
 class Greeting {
+
 	private String message;
 
 	Greeting() {

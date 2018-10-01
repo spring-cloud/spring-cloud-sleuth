@@ -25,6 +25,8 @@ import java.lang.annotation.Target;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 /**
+ * Verifies if messaging property was enabled.
+ *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
@@ -33,4 +35,5 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 @Documented
 @ConditionalOnProperty(value = "spring.sleuth.messaging.enabled", matchIfMissing = true)
 @interface OnMessagingEnabled {
+
 }

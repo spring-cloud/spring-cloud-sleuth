@@ -35,9 +35,9 @@ import zipkin2.Endpoint;
  * {@link EndpointLocator} implementation that:
  *
  * <ul>
- *     <li><b>serviceName</b> - from {@link ServerProperties} or {@link Registration}</li>
- *     <li><b>ip</b> - from {@link ServerProperties}</li>
- *     <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
+ * <li><b>serviceName</b> - from {@link ServerProperties} or {@link Registration}</li>
+ * <li><b>ip</b> - from {@link ServerProperties}</li>
+ * <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
  * </ul>
  *
  * You can override the name using {@link ZipkinProperties.Service#setName(String)}
@@ -48,18 +48,26 @@ import zipkin2.Endpoint;
 public class DefaultEndpointLocator implements EndpointLocator,
 		ApplicationListener<ServletWebServerInitializedEvent> {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
+
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 
 	private final Registration registration;
+
 	private final ServerProperties serverProperties;
+
 	private final Environment environment;
+
 	private final ZipkinProperties zipkinProperties;
+
 	private Integer port;
+
 	private InetAddress firstNonLoopbackAddress;
 
-	public DefaultEndpointLocator(Registration registration, ServerProperties serverProperties,
-			Environment environment, ZipkinProperties zipkinProperties, InetUtils inetUtils) {
+	public DefaultEndpointLocator(Registration registration,
+			ServerProperties serverProperties, Environment environment,
+			ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.registration = registration;
 		this.serverProperties = serverProperties;
 		this.environment = environment;
@@ -80,8 +88,7 @@ public class DefaultEndpointLocator implements EndpointLocator,
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");
 		}
-		Endpoint.Builder builder = Endpoint.newBuilder()
-				.serviceName(serviceName)
+		Endpoint.Builder builder = Endpoint.newBuilder().serviceName(serviceName)
 				.port(getPort());
 		return addAddress(builder).build();
 	}
@@ -89,10 +96,12 @@ public class DefaultEndpointLocator implements EndpointLocator,
 	private String getLocalServiceName() {
 		if (StringUtils.hasText(this.zipkinProperties.getService().getName())) {
 			return this.zipkinProperties.getService().getName();
-		} else if (this.registration != null) {
+		}
+		else if (this.registration != null) {
 			try {
 				return this.registration.getServiceId();
-			} catch (RuntimeException e) {
+			}
+			catch (RuntimeException e) {
 				log.warn("error getting service name from registration", e);
 			}
 		}
@@ -105,11 +114,12 @@ public class DefaultEndpointLocator implements EndpointLocator,
 	}
 
 	private Integer getPort() {
-		if (this.port!=null) {
+		if (this.port != null) {
 			return this.port;
 		}
 		Integer port;
-		if (this.serverProperties!=null && this.serverProperties.getPort() != null && this.serverProperties.getPort() > 0) {
+		if (this.serverProperties != null && this.serverProperties.getPort() != null
+				&& this.serverProperties.getPort() > 0) {
 			port = this.serverProperties.getPort();
 		}
 		else {
@@ -124,11 +134,13 @@ public class DefaultEndpointLocator implements EndpointLocator,
 			return builder;
 		}
 		else if (this.environment.containsProperty(IP_ADDRESS_PROP_NAME)
-				&& builder.parseIp(this.environment.getProperty(IP_ADDRESS_PROP_NAME, String.class))) {
+				&& builder.parseIp(this.environment.getProperty(IP_ADDRESS_PROP_NAME,
+						String.class))) {
 			return builder;
 		}
 		else {
 			return builder.ip(this.firstNonLoopbackAddress);
 		}
 	}
+
 }

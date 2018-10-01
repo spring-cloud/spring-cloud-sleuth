@@ -37,12 +37,14 @@ import rx.plugins.RxJavaSchedulersHook;
  */
 class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
-	private static final Log log = LogFactory.getLog(
-			SleuthRxJavaSchedulersHook.class);
+	private static final Log log = LogFactory.getLog(SleuthRxJavaSchedulersHook.class);
 
 	private static final String RXJAVA_COMPONENT = "rxjava";
+
 	private final Tracer tracer;
+
 	private final List<String> threadsToSample;
+
 	private RxJavaSchedulersHook delegate;
 
 	SleuthRxJavaSchedulersHook(Tracer tracer, List<String> threadsToSample) {
@@ -53,27 +55,28 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			if (this.delegate instanceof SleuthRxJavaSchedulersHook) {
 				return;
 			}
-			RxJavaErrorHandler errorHandler = RxJavaPlugins.getInstance().getErrorHandler();
-			RxJavaObservableExecutionHook observableExecutionHook
-				= RxJavaPlugins.getInstance().getObservableExecutionHook();
+			RxJavaErrorHandler errorHandler = RxJavaPlugins.getInstance()
+					.getErrorHandler();
+			RxJavaObservableExecutionHook observableExecutionHook = RxJavaPlugins
+					.getInstance().getObservableExecutionHook();
 			logCurrentStateOfRxJavaPlugins(errorHandler, observableExecutionHook);
 			RxJavaPlugins.getInstance().reset();
 			RxJavaPlugins.getInstance().registerSchedulersHook(this);
 			RxJavaPlugins.getInstance().registerErrorHandler(errorHandler);
-			RxJavaPlugins.getInstance().registerObservableExecutionHook(observableExecutionHook);
-		} catch (Exception e) {
-			log.error("Failed to register Sleuth RxJava SchedulersHook", e);
+			RxJavaPlugins.getInstance()
+					.registerObservableExecutionHook(observableExecutionHook);
+		}
+		catch (Exception ex) {
+			log.error("Failed to register Sleuth RxJava SchedulersHook", ex);
 		}
 	}
 
 	private void logCurrentStateOfRxJavaPlugins(RxJavaErrorHandler errorHandler,
-		RxJavaObservableExecutionHook observableExecutionHook) {
+			RxJavaObservableExecutionHook observableExecutionHook) {
 		if (log.isDebugEnabled()) {
-			log.debug("Current RxJava plugins configuration is ["
-					+ "schedulersHook [" + this.delegate + "],"
-					+ "errorHandler [" + errorHandler + "],"
-					+ "observableExecutionHook [" + observableExecutionHook + "],"
-					+ "]");
+			log.debug("Current RxJava plugins configuration is [" + "schedulersHook ["
+					+ this.delegate + "]," + "errorHandler [" + errorHandler + "],"
+					+ "observableExecutionHook [" + observableExecutionHook + "]," + "]");
 			log.debug("Registering Sleuth RxJava Schedulers Hook.");
 		}
 	}
@@ -83,26 +86,32 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		if (action instanceof TraceAction) {
 			return action;
 		}
-		Action0 wrappedAction = this.delegate != null
-			? this.delegate.onSchedule(action) : action;
+		Action0 wrappedAction = this.delegate != null ? this.delegate.onSchedule(action)
+				: action;
 		if (wrappedAction instanceof TraceAction) {
 			return action;
 		}
-		return super.onSchedule(new TraceAction(this.tracer, wrappedAction,
-				this.threadsToSample));
+		return super.onSchedule(
+				new TraceAction(this.tracer, wrappedAction, this.threadsToSample));
 	}
 
+	/**
+	 * Wrapped Action element.
+	 * @author Marcin Grzejszczak
+	 */
 	static class TraceAction implements Action0 {
 
 		private static final String THREAD_NAME_KEY = "thread";
 
 		private final Action0 actual;
+
 		private final Tracer tracer;
+
 		private final Span parent;
+
 		private final List<String> threadsToIgnore;
 
-		public TraceAction(Tracer tracer, Action0 actual,
-				List<String> threadsToIgnore) {
+		TraceAction(Tracer tracer, Action0 actual, List<String> threadsToIgnore) {
 			this.tracer = tracer;
 			this.threadsToIgnore = threadsToIgnore;
 			this.parent = this.tracer.currentSpan();
@@ -129,18 +138,22 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			boolean created = false;
 			if (span != null) {
 				span = this.tracer.toSpan(this.parent.context());
-			} else {
+			}
+			else {
 				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
 				span.tag(THREAD_NAME_KEY, Thread.currentThread().getName());
 				created = true;
 			}
 			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 				this.actual.call();
-			} finally {
+			}
+			finally {
 				if (created) {
 					span.finish();
 				}
 			}
 		}
+
 	}
+
 }

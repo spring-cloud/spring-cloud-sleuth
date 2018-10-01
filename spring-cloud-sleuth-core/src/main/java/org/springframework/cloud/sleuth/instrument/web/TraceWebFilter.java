@@ -40,23 +40,13 @@ import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
 /**
- * A {@link WebFilter} that creates / continues / closes and detaches spans
- * for a reactive web application.
+ * A {@link WebFilter} that creates / continues / closes and detaches spans for a reactive
+ * web application.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
 public final class TraceWebFilter implements WebFilter, Ordered {
-
-	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
-	private static final String STATUS_CODE_KEY = "http.status_code";
-	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
-	static final String MVC_CONTROLLER_METHOD_KEY = "mvc.controller.method";
-
-	protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
-			+ ".TRACE";
-	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName()
-			+ ".SPAN_WITH_NO_PARENT";
 
 	/**
 	 * If you register your filter before the {@link TraceWebFilter} then you will not
@@ -64,39 +54,49 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	 * logs will not get correlated.
 	 */
 	public static final int ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
+	protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
+			+ ".TRACE";
+	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
+	static final String MVC_CONTROLLER_METHOD_KEY = "mvc.controller.method";
+	static final Propagation.Getter<HttpHeaders, String> GETTER = new Propagation.Getter<HttpHeaders, String>() {
 
-	static final Propagation.Getter<HttpHeaders, String> GETTER =
-			new Propagation.Getter<HttpHeaders, String>() {
+		@Override
+		public String get(HttpHeaders carrier, String key) {
+			return carrier.getFirst(key);
+		}
 
-				@Override public String get(HttpHeaders carrier, String key) {
-					return carrier.getFirst(key);
-				}
-
-				@Override public String toString() {
-					return "HttpHeaders::getFirst";
-				}
-			};
-
-	public static WebFilter create(BeanFactory beanFactory) {
-		return new TraceWebFilter(beanFactory);
-	}
-
-	Tracer tracer;
-	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
-	TraceContext.Extractor<HttpHeaders> extractor;
-	SleuthWebProperties webProperties;
+		@Override
+		public String toString() {
+			return "HttpHeaders::getFirst";
+		}
+	};
+	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
+	private static final String STATUS_CODE_KEY = "http.status_code";
+	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName()
+			+ ".SPAN_WITH_NO_PARENT";
 	private final BeanFactory beanFactory;
+	Tracer tracer;
+
+	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
+
+	TraceContext.Extractor<HttpHeaders> extractor;
+
+	SleuthWebProperties webProperties;
 
 	TraceWebFilter(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
+	public static WebFilter create(BeanFactory beanFactory) {
+		return new TraceWebFilter(beanFactory);
+	}
+
 	@SuppressWarnings("unchecked")
 	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler() {
 		if (this.handler == null) {
-			this.handler = HttpServerHandler
-					.create(this.beanFactory.getBean(HttpTracing.class),
-							new TraceWebFilter.HttpAdapter());
+			this.handler = HttpServerHandler.create(
+					this.beanFactory.getBean(HttpTracing.class),
+					new TraceWebFilter.HttpAdapter());
 		}
 		return this.handler;
 	}
@@ -110,8 +110,8 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	TraceContext.Extractor<HttpHeaders> extractor() {
 		if (this.extractor == null) {
-			this.extractor = this.beanFactory.getBean(HttpTracing.class)
-					.tracing().propagation().extractor(GETTER);
+			this.extractor = this.beanFactory.getBean(HttpTracing.class).tracing()
+					.propagation().extractor(GETTER);
 		}
 		return this.extractor;
 	}
@@ -123,7 +123,8 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		return this.webProperties;
 	}
 
-	@Override public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+	@Override
+	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		if (tracer().currentSpan() != null) {
 			// clear any previous trace
 			tracer().withSpanInScope(null);
@@ -134,62 +135,63 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		}
 		Span spanFromAttribute = getSpanFromAttribute(exchange);
 		final String CONTEXT_ERROR = "sleuth.webfilter.context.error";
-		return chain
-				.filter(exchange)
-				.compose(f -> f.then(Mono.subscriberContext())
-						.onErrorResume(t -> Mono.subscriberContext()
-								.map(c -> c.put(CONTEXT_ERROR, t)))
+		return chain.filter(exchange)
+				.compose(f -> f.then(Mono.subscriberContext()).onErrorResume(
+						t -> Mono.subscriberContext().map(c -> c.put(CONTEXT_ERROR, t)))
 						.flatMap(c -> {
-							//reactivate span from context
+							// reactivate span from context
 							Span span = spanFromContext(c);
 							Mono<Void> continuation;
 							Throwable t = null;
 							if (c.hasKey(CONTEXT_ERROR)) {
 								t = c.get(CONTEXT_ERROR);
 								continuation = Mono.error(t);
-							} else {
+							}
+							else {
 								continuation = Mono.empty();
 							}
 							String httpRoute = null;
-							Object attribute = exchange
-									.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+							Object attribute = exchange.getAttribute(
+									HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
 							if (attribute instanceof HandlerMethod) {
 								HandlerMethod handlerMethod = (HandlerMethod) attribute;
 								addClassMethodTag(handlerMethod, span);
 								addClassNameTag(handlerMethod, span);
-								Object pattern = exchange
-										.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+								Object pattern = exchange.getAttribute(
+										HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
 								httpRoute = pattern != null ? pattern.toString() : "";
 							}
-							addResponseTagsForSpanWithoutParent(exchange, exchange.getResponse(), span);
+							addResponseTagsForSpanWithoutParent(exchange,
+									exchange.getResponse(), span);
 							DecoratedServerHttpResponse delegate = new DecoratedServerHttpResponse(
-									exchange.getResponse(), exchange.getRequest().getMethodValue(),
-									httpRoute);
+									exchange.getResponse(),
+									exchange.getRequest().getMethodValue(), httpRoute);
 							handler().handleSend(delegate, t, span);
 							if (log.isDebugEnabled()) {
 								log.debug("Handled send of " + span);
 							}
 							return continuation;
-						})
-						.subscriberContext(c -> {
+						}).subscriberContext(c -> {
 							Span span;
 							if (c.hasKey(Span.class)) {
 								Span parent = c.get(Span.class);
-								span = tracer()
-										.nextSpan(TraceContextOrSamplingFlags.create(parent.context()))
-										.start();
+								span = tracer().nextSpan(TraceContextOrSamplingFlags
+										.create(parent.context())).start();
 								if (log.isDebugEnabled()) {
 									log.debug("Found span in reactor context" + span);
 								}
-							} else {
+							}
+							else {
 								if (spanFromAttribute != null) {
 									span = spanFromAttribute;
 									if (log.isDebugEnabled()) {
 										log.debug("Found span in attribute " + span);
 									}
-								} else {
+								}
+								else {
 									span = handler().handleReceive(extractor(),
-											exchange.getRequest().getHeaders(), exchange.getRequest());
+											exchange.getRequest().getHeaders(),
+											exchange.getRequest());
 									if (log.isDebugEnabled()) {
 										log.debug("Handled receive of span " + span);
 									}
@@ -240,7 +242,8 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			String methodName = ((HandlerMethod) handler).getMethod().getName();
 			span.tag(MVC_CONTROLLER_METHOD_KEY, methodName);
 			if (log.isDebugEnabled()) {
-				log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
+				log.debug("Adding a method tag with value [" + methodName + "] to a span "
+						+ span);
 			}
 		}
 	}
@@ -249,16 +252,19 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		String className;
 		if (handler instanceof HandlerMethod) {
 			className = ((HandlerMethod) handler).getBeanType().getSimpleName();
-		} else {
+		}
+		else {
 			className = handler.getClass().getSimpleName();
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("Adding a class tag with value [" + className + "] to a span " + span);
+			log.debug("Adding a class tag with value [" + className + "] to a span "
+					+ span);
 		}
 		span.tag(MVC_CONTROLLER_CLASS_KEY, className);
 	}
 
-	@Override public int getOrder() {
+	@Override
+	public int getOrder() {
 		return sleuthWebProperties().getFilterOrder();
 	}
 
@@ -266,47 +272,56 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		final String method, httpRoute;
 
-		DecoratedServerHttpResponse(ServerHttpResponse delegate, String method, String httpRoute) {
+		DecoratedServerHttpResponse(ServerHttpResponse delegate, String method,
+				String httpRoute) {
 			super(delegate);
 			this.method = method;
 			this.httpRoute = httpRoute;
 		}
+
 	}
 
 	static final class HttpAdapter
 			extends brave.http.HttpServerAdapter<ServerHttpRequest, ServerHttpResponse> {
 
-		@Override public String method(ServerHttpRequest request) {
+		@Override
+		public String method(ServerHttpRequest request) {
 			return request.getMethodValue();
 		}
 
-		@Override public String url(ServerHttpRequest request) {
+		@Override
+		public String url(ServerHttpRequest request) {
 			return request.getURI().toString();
 		}
 
-		@Override public String requestHeader(ServerHttpRequest request, String name) {
+		@Override
+		public String requestHeader(ServerHttpRequest request, String name) {
 			Object result = request.getHeaders().getFirst(name);
 			return result != null ? result.toString() : null;
 		}
 
-		@Override public Integer statusCode(ServerHttpResponse response) {
-			return response.getStatusCode() != null ?
-					response.getStatusCode().value() : null;
+		@Override
+		public Integer statusCode(ServerHttpResponse response) {
+			return response.getStatusCode() != null ? response.getStatusCode().value()
+					: null;
 		}
 
-		@Override public String methodFromResponse(ServerHttpResponse response) {
+		@Override
+		public String methodFromResponse(ServerHttpResponse response) {
 			if (response instanceof DecoratedServerHttpResponse) {
 				return ((DecoratedServerHttpResponse) response).method;
 			}
 			return null;
 		}
 
-		@Override public String route(ServerHttpResponse response) {
+		@Override
+		public String route(ServerHttpResponse response) {
 			if (response instanceof DecoratedServerHttpResponse) {
 				return ((DecoratedServerHttpResponse) response).httpRoute;
 			}
 			return null;
 		}
-	}
-}
 
+	}
+
+}

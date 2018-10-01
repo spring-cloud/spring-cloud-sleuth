@@ -34,7 +34,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.concurrent.ListenableFuture;
 
 /**
- * Trace representation of {@link ThreadPoolTaskExecutor}
+ * Trace representation of {@link ThreadPoolTaskExecutor}.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.10
@@ -42,11 +42,15 @@ import org.springframework.util.concurrent.ListenableFuture;
 @SuppressWarnings("serial")
 public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
-	private static final Log log = LogFactory.getLog(LazyTraceThreadPoolTaskExecutor.class);
+	private static final Log log = LogFactory
+			.getLog(LazyTraceThreadPoolTaskExecutor.class);
 
 	private final BeanFactory beanFactory;
+
 	private final ThreadPoolTaskExecutor delegate;
+
 	private Tracing tracing;
+
 	private SpanNamer spanNamer;
 
 	public LazyTraceThreadPoolTaskExecutor(BeanFactory beanFactory,
@@ -62,7 +66,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	@Override
 	public void execute(Runnable task, long startTimeout) {
-		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task), startTimeout);
+		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task),
+				startTimeout);
 	}
 
 	@Override
@@ -77,41 +82,46 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
-		return this.delegate.submitListenable(new TraceRunnable(tracing(), spanNamer(), task));
+		return this.delegate
+				.submitListenable(new TraceRunnable(tracing(), spanNamer(), task));
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
-		return this.delegate.submitListenable(new TraceCallable<>(tracing(), spanNamer(), task));
+		return this.delegate
+				.submitListenable(new TraceCallable<>(tracing(), spanNamer(), task));
 	}
 
-	@Override public boolean prefersShortLivedTasks() {
+	@Override
+	public boolean prefersShortLivedTasks() {
 		return this.delegate.prefersShortLivedTasks();
 	}
 
-	@Override public void setThreadFactory(ThreadFactory threadFactory) {
+	@Override
+	public void setThreadFactory(ThreadFactory threadFactory) {
 		this.delegate.setThreadFactory(threadFactory);
 	}
 
-	@Override public void setThreadNamePrefix(String threadNamePrefix) {
-		this.delegate.setThreadNamePrefix(threadNamePrefix);
-	}
-
-	@Override public void setRejectedExecutionHandler(
+	@Override
+	public void setRejectedExecutionHandler(
 			RejectedExecutionHandler rejectedExecutionHandler) {
 		this.delegate.setRejectedExecutionHandler(rejectedExecutionHandler);
 	}
 
-	@Override public void setWaitForTasksToCompleteOnShutdown(
+	@Override
+	public void setWaitForTasksToCompleteOnShutdown(
 			boolean waitForJobsToCompleteOnShutdown) {
-		this.delegate.setWaitForTasksToCompleteOnShutdown(waitForJobsToCompleteOnShutdown);
+		this.delegate
+				.setWaitForTasksToCompleteOnShutdown(waitForJobsToCompleteOnShutdown);
 	}
 
-	@Override public void setAwaitTerminationSeconds(int awaitTerminationSeconds) {
+	@Override
+	public void setAwaitTerminationSeconds(int awaitTerminationSeconds) {
 		this.delegate.setAwaitTerminationSeconds(awaitTerminationSeconds);
 	}
 
-	@Override public void setBeanName(String name) {
+	@Override
+	public void setBeanName(String name) {
 		this.delegate.setBeanName(name);
 	}
 
@@ -120,11 +130,13 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		return this.delegate.getThreadPoolExecutor();
 	}
 
-	@Override public int getPoolSize() {
+	@Override
+	public int getPoolSize() {
 		return this.delegate.getPoolSize();
 	}
 
-	@Override public int getActiveCount() {
+	@Override
+	public int getActiveCount() {
 		return this.delegate.getActiveCount();
 	}
 
@@ -140,7 +152,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		super.afterPropertiesSet();
 	}
 
-	@Override public void initialize() {
+	@Override
+	public void initialize() {
 		this.delegate.initialize();
 	}
 
@@ -150,79 +163,103 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		super.shutdown();
 	}
 
-	@Override public Thread newThread(Runnable runnable) {
+	@Override
+	public Thread newThread(Runnable runnable) {
 		return this.delegate.newThread(runnable);
 	}
 
-	@Override public String getThreadNamePrefix() {
+	@Override
+	public String getThreadNamePrefix() {
 		return this.delegate.getThreadNamePrefix();
 	}
 
-	@Override public void setThreadPriority(int threadPriority) {
-		this.delegate.setThreadPriority(threadPriority);
+	@Override
+	public void setThreadNamePrefix(String threadNamePrefix) {
+		this.delegate.setThreadNamePrefix(threadNamePrefix);
 	}
 
-	@Override public int getThreadPriority() {
+	@Override
+	public int getThreadPriority() {
 		return this.delegate.getThreadPriority();
 	}
 
-	@Override public void setDaemon(boolean daemon) {
-		this.delegate.setDaemon(daemon);
+	@Override
+	public void setThreadPriority(int threadPriority) {
+		this.delegate.setThreadPriority(threadPriority);
 	}
 
-	@Override public boolean isDaemon() {
+	@Override
+	public boolean isDaemon() {
 		return this.delegate.isDaemon();
 	}
 
-	@Override public void setThreadGroupName(String name) {
+	@Override
+	public void setDaemon(boolean daemon) {
+		this.delegate.setDaemon(daemon);
+	}
+
+	@Override
+	public void setThreadGroupName(String name) {
 		this.delegate.setThreadGroupName(name);
 	}
 
-	@Override public void setThreadGroup(ThreadGroup threadGroup) {
-		this.delegate.setThreadGroup(threadGroup);
-	}
-
-	@Override public ThreadGroup getThreadGroup() {
+	@Override
+	public ThreadGroup getThreadGroup() {
 		return this.delegate.getThreadGroup();
 	}
 
-	@Override public Thread createThread(Runnable runnable) {
+	@Override
+	public void setThreadGroup(ThreadGroup threadGroup) {
+		this.delegate.setThreadGroup(threadGroup);
+	}
+
+	@Override
+	public Thread createThread(Runnable runnable) {
 		return this.delegate.createThread(runnable);
 	}
 
-	@Override public void setCorePoolSize(int corePoolSize) {
-		this.delegate.setCorePoolSize(corePoolSize);
-	}
-
-	@Override public int getCorePoolSize() {
+	@Override
+	public int getCorePoolSize() {
 		return this.delegate.getCorePoolSize();
 	}
 
-	@Override public void setMaxPoolSize(int maxPoolSize) {
-		this.delegate.setMaxPoolSize(maxPoolSize);
+	@Override
+	public void setCorePoolSize(int corePoolSize) {
+		this.delegate.setCorePoolSize(corePoolSize);
 	}
 
-	@Override public int getMaxPoolSize() {
+	@Override
+	public int getMaxPoolSize() {
 		return this.delegate.getMaxPoolSize();
 	}
 
-	@Override public void setKeepAliveSeconds(int keepAliveSeconds) {
-		this.delegate.setKeepAliveSeconds(keepAliveSeconds);
+	@Override
+	public void setMaxPoolSize(int maxPoolSize) {
+		this.delegate.setMaxPoolSize(maxPoolSize);
 	}
 
-	@Override public int getKeepAliveSeconds() {
+	@Override
+	public int getKeepAliveSeconds() {
 		return this.delegate.getKeepAliveSeconds();
 	}
 
-	@Override public void setQueueCapacity(int queueCapacity) {
+	@Override
+	public void setKeepAliveSeconds(int keepAliveSeconds) {
+		this.delegate.setKeepAliveSeconds(keepAliveSeconds);
+	}
+
+	@Override
+	public void setQueueCapacity(int queueCapacity) {
 		this.delegate.setQueueCapacity(queueCapacity);
 	}
 
-	@Override public void setAllowCoreThreadTimeOut(boolean allowCoreThreadTimeOut) {
+	@Override
+	public void setAllowCoreThreadTimeOut(boolean allowCoreThreadTimeOut) {
 		this.delegate.setAllowCoreThreadTimeOut(allowCoreThreadTimeOut);
 	}
 
-	@Override public void setTaskDecorator(TaskDecorator taskDecorator) {
+	@Override
+	public void setTaskDecorator(TaskDecorator taskDecorator) {
 		this.delegate.setTaskDecorator(taskDecorator);
 	}
 
@@ -238,11 +275,13 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 			try {
 				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 			}
-			catch (NoSuchBeanDefinitionException e) {
-				log.warn("SpanNamer bean not found - will provide a manually created instance");
+			catch (NoSuchBeanDefinitionException ex) {
+				log.warn(
+						"SpanNamer bean not found - will provide a manually created instance");
 				return new DefaultSpanNamer();
 			}
 		}
 		return this.spanNamer;
 	}
+
 }

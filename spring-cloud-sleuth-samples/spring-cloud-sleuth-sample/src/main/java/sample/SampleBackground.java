@@ -30,10 +30,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class SampleBackground {
+
 	private static final Log log = LogFactory.getLog(SampleBackground.class);
 
 	@Autowired
 	private Tracer tracer;
+
 	private Random random = new Random();
 
 	@Async

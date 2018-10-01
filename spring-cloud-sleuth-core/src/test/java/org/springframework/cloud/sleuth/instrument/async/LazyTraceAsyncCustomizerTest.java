@@ -34,9 +34,14 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class LazyTraceAsyncCustomizerTest {
 
-	@Mock BeanFactory beanFactory;
-	@Mock AsyncConfigurer asyncConfigurer;
-	@InjectMocks LazyTraceAsyncCustomizer lazyTraceAsyncCustomizer;
+	@Mock
+	BeanFactory beanFactory;
+
+	@Mock
+	AsyncConfigurer asyncConfigurer;
+
+	@InjectMocks
+	LazyTraceAsyncCustomizer lazyTraceAsyncCustomizer;
 
 	@Test
 	public void should_wrap_async_executor_in_trace_version() throws Exception {
@@ -44,4 +49,5 @@ public class LazyTraceAsyncCustomizerTest {
 
 		then(executor).isExactlyInstanceOf(LazyTraceExecutor.class);
 	}
+
 }

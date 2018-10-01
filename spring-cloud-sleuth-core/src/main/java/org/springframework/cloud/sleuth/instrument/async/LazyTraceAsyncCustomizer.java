@@ -24,8 +24,8 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 
 /**
- * {@link AsyncConfigurerSupport} that creates a tracing data passing version
- * of the {@link Executor}
+ * {@link AsyncConfigurerSupport} that creates a tracing data passing version of the
+ * {@link Executor}.
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -33,6 +33,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 public class LazyTraceAsyncCustomizer extends AsyncConfigurerSupport {
 
 	private final BeanFactory beanFactory;
+
 	private final AsyncConfigurer delegate;
 
 	public LazyTraceAsyncCustomizer(BeanFactory beanFactory, AsyncConfigurer delegate) {

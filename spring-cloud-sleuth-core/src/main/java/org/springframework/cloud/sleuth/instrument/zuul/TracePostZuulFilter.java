@@ -40,11 +40,11 @@ class TracePostZuulFilter extends ZuulFilter {
 	private static final Log log = LogFactory.getLog(TracePostZuulFilter.class);
 
 	private final HttpServerHandler handler;
+
 	private final Tracer tracer;
 
 	TracePostZuulFilter(HttpTracing httpTracing) {
-		this.handler = HttpServerHandler.create(httpTracing,
-				new HttpServletAdapter());
+		this.handler = HttpServerHandler.create(httpTracing, new HttpServletAdapter());
 		this.tracer = httpTracing.tracing().tracer();
 	}
 
@@ -57,8 +57,10 @@ class TracePostZuulFilter extends ZuulFilter {
 		if (response.getStatus() == 0) {
 			return false;
 		}
-		HttpStatus.Series httpStatusSeries = HttpStatus.Series.valueOf(response.getStatus());
-		return httpStatusSeries == HttpStatus.Series.SUCCESSFUL || httpStatusSeries == HttpStatus.Series.REDIRECTION;
+		HttpStatus.Series httpStatusSeries = HttpStatus.Series
+				.valueOf(response.getStatus());
+		return httpStatusSeries == HttpStatus.Series.SUCCESSFUL
+				|| httpStatusSeries == HttpStatus.Series.REDIRECTION;
 	}
 
 	@Override

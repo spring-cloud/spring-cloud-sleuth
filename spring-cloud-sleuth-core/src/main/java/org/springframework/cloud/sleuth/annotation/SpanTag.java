@@ -25,43 +25,46 @@ import java.lang.annotation.Target;
 import org.springframework.core.annotation.AliasFor;
 
 /**
- * There are 3 different ways to add tags to a span. All of them are controlled by the annotation values.
- * Precedence is:
+ * There are 3 different ways to add tags to a span. All of them are controlled by the
+ * annotation values. Precedence is:
  *
- *  <ul>
- *      <li>try with the {@link TagValueResolver} bean</li>
- *      <li>if the value of the bean wasn't set, try to evaluate a SPEL expression</li>
- *      <li>if there’s no SPEL expression just return a {@code toString()} value of the parameter</li>
- *  </ul>
+ * <ul>
+ * <li>try with the {@link TagValueResolver} bean</li>
+ * <li>if the value of the bean wasn't set, try to evaluate a SPEL expression</li>
+ * <li>if there’s no SPEL expression just return a {@code toString()} value of the
+ * parameter</li>
+ * </ul>
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-@Target(value = { ElementType.PARAMETER })
+@Target(value = {
+		ElementType.PARAMETER
+})
 public @interface SpanTag {
 
 	/**
-	 * The name of the key of the tag which should be created.
+	 * @return - The name of the key of the tag which should be created.
 	 */
 	@AliasFor("key")
 	String value() default "";
 
 	/**
-	 * The name of the key of the tag which should be created.
+	 * @return - The name of the key of the tag which should be created.
 	 */
 	@AliasFor("value")
 	String key() default "";
 
 	/**
-	 * Execute this SPEL expression to calculate the tag value. Will be analyzed if no value of the
-	 * {@link SpanTag#resolver()} was set.
+	 * @return - Execute this SPEL expression to calculate the tag value. Will be analyzed if no
+	 * value of the {@link SpanTag#resolver()} was set.
 	 */
 	String expression() default "";
 
 	/**
-	 * Use this bean to resolve the tag value. Has the highest precedence.
+	 * @return - Use this bean to resolve the tag value. Has the highest precedence.
 	 */
 	Class<? extends TagValueResolver> resolver() default NoOpTagValueResolver.class;
 

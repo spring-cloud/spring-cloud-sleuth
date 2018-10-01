@@ -34,9 +34,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * Bean post processor that wraps a call to an {@link Executor} either in a
- * JDK or CGLIB proxy. Depending on whether the implementation has a final
- * method or is final.
+ * Bean post processor that wraps a call to an {@link Executor} either in a JDK or CGLIB
+ * proxy. Depending on whether the implementation has a final method or is final.
  *
  * @author Marcin Grzejszczak
  * @author Jesus Alonso
@@ -45,10 +44,10 @@ import org.springframework.util.ReflectionUtils;
  */
 class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
-	private static final Log log = LogFactory.getLog(
-			ExecutorBeanPostProcessor.class);
+	private static final Log log = LogFactory.getLog(ExecutorBeanPostProcessor.class);
 
 	private final BeanFactory beanFactory;
+
 	private SleuthAsyncProperties sleuthAsyncProperties;
 
 	ExecutorBeanPostProcessor(BeanFactory beanFactory) {
@@ -65,29 +64,35 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
 		if (bean instanceof Executor && !(bean instanceof ThreadPoolTaskExecutor)) {
-			Method execute = ReflectionUtils.findMethod(bean.getClass(), "execute", Runnable.class);
+			Method execute = ReflectionUtils.findMethod(bean.getClass(), "execute",
+					Runnable.class);
 			boolean methodFinal = Modifier.isFinal(execute.getModifiers());
 			boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
 			boolean cglibProxy = !methodFinal && !classFinal;
 			Executor executor = (Executor) bean;
 			try {
 				return createProxy(bean, cglibProxy, executor);
-			} catch (AopConfigException e) {
+			}
+			catch (AopConfigException ex) {
 				if (cglibProxy) {
 					if (log.isDebugEnabled()) {
-						log.debug("Exception occurred while trying to create a proxy, falling back to JDK proxy", e);
+						log.debug(
+								"Exception occurred while trying to create a proxy, falling back to JDK proxy",
+								ex);
 					}
 					return createProxy(bean, false, executor);
 				}
-				throw e;
+				throw ex;
 			}
-		} else if (bean instanceof ThreadPoolTaskExecutor) {
+		}
+		else if (bean instanceof ThreadPoolTaskExecutor) {
 			if (isProxyNeeded(beanName)) {
 				boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
 				boolean cglibProxy = !classFinal;
 				ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
 				return createThreadPoolTaskExecutorProxy(bean, cglibProxy, executor);
-			} else {
+			}
+			else {
 				log.info("Not instrumenting bean " + beanName);
 			}
 		}
@@ -103,8 +108,10 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			ThreadPoolTaskExecutor executor) {
 		ProxyFactoryBean factory = new ProxyFactoryBean();
 		factory.setProxyTargetClass(cglibProxy);
-		factory.addAdvice(new ExecutorMethodInterceptor<ThreadPoolTaskExecutor>(executor, this.beanFactory) {
-			@Override Executor executor(BeanFactory beanFactory, ThreadPoolTaskExecutor executor) {
+		factory.addAdvice(new ExecutorMethodInterceptor<ThreadPoolTaskExecutor>(executor,
+				this.beanFactory) {
+			@Override
+			Executor executor(BeanFactory beanFactory, ThreadPoolTaskExecutor executor) {
 				return new LazyTraceThreadPoolTaskExecutor(beanFactory, executor);
 			}
 		});
@@ -120,18 +127,27 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		factory.setTarget(bean);
 		return factory.getObject();
 	}
-	
+
 	private SleuthAsyncProperties asyncConfigurationProperties() {
 		if (this.sleuthAsyncProperties == null) {
-			this.sleuthAsyncProperties = this.beanFactory.getBean(SleuthAsyncProperties.class);
+			this.sleuthAsyncProperties = this.beanFactory
+					.getBean(SleuthAsyncProperties.class);
 		}
 		return this.sleuthAsyncProperties;
 	}
+
 }
 
+/**
+ * Interceptor for executor methods.
+ *
+ * @param <T> - executor type
+ * @author Marcin Grzejszczak
+ */
 class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor {
 
 	private final T delegate;
+
 	private final BeanFactory beanFactory;
 
 	ExecutorMethodInterceptor(T delegate, BeanFactory beanFactory) {
@@ -139,14 +155,15 @@ class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor
 		this.beanFactory = beanFactory;
 	}
 
-	@Override public Object invoke(MethodInvocation invocation)
-			throws Throwable {
+	@Override
+	public Object invoke(MethodInvocation invocation) throws Throwable {
 		Executor executor = executor(this.beanFactory, this.delegate);
 		Method methodOnTracedBean = getMethod(invocation, executor);
 		if (methodOnTracedBean != null) {
 			try {
 				return methodOnTracedBean.invoke(executor, invocation.getArguments());
-			} catch (InvocationTargetException ex) {
+			}
+			catch (InvocationTargetException ex) {
 				// gh-1092: throw the target exception (if present)
 				Throwable cause = ex.getCause();
 				throw (cause != null) ? cause : ex;
@@ -157,11 +174,12 @@ class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor
 
 	private Method getMethod(MethodInvocation invocation, Object object) {
 		Method method = invocation.getMethod();
-		return ReflectionUtils
-				.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
+		return ReflectionUtils.findMethod(object.getClass(), method.getName(),
+				method.getParameterTypes());
 	}
 
 	Executor executor(BeanFactory beanFactory, T executor) {
 		return new LazyTraceExecutor(beanFactory, executor);
 	}
+
 }

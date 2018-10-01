@@ -38,9 +38,14 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(classes = SleuthSpanCreatorAspectNegativeTests.TestConfiguration.class)
 public class SleuthSpanCreatorAspectNegativeTests {
 
-	@Autowired NotAnnotatedTestBeanInterface testBean;
-	@Autowired TestBeanInterface annotatedTestBean;
-	@Autowired ArrayListSpanReporter reporter;
+	@Autowired
+	NotAnnotatedTestBeanInterface testBean;
+
+	@Autowired
+	TestBeanInterface annotatedTestBean;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
@@ -62,10 +67,11 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("test-method");
 	}
-	
+
 	protected interface NotAnnotatedTestBeanInterface {
 
 		void testMethod();
+
 	}
 
 	protected static class NotAnnotatedTestBean implements NotAnnotatedTestBeanInterface {
@@ -75,27 +81,28 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		}
 
 	}
-	
+
 	protected interface TestBeanInterface {
-		
+
 		@NewSpan
 		void testMethod();
-		
+
 		void testMethod2();
-		
+
 		void testMethod3();
-		
+
 		@NewSpan(name = "testMethod4")
 		void testMethod4();
-		
+
 		@NewSpan(name = "testMethod5")
 		void testMethod5(@SpanTag("testTag") String test);
-		
+
 		void testMethod6(String test);
-		
+
 		void testMethod7();
+
 	}
-	
+
 	protected static class TestBean implements TestBeanInterface {
 
 		@Override
@@ -115,7 +122,7 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		@Override
 		public void testMethod4() {
 		}
-		
+
 		@Override
 		public void testMethod5(String test) {
 		}
@@ -123,18 +130,21 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		@NewSpan(name = "testMethod6")
 		@Override
 		public void testMethod6(@SpanTag("testTag6") String test) {
-			
+
 		}
 
 		@Override
 		public void testMethod7() {
 		}
+
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class TestConfiguration {
-		@Bean Reporter<Span> spanReporter() {
+
+		@Bean
+		Reporter<Span> spanReporter() {
 			return new ArrayListSpanReporter();
 		}
 
@@ -152,5 +162,7 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		public Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
+
 }

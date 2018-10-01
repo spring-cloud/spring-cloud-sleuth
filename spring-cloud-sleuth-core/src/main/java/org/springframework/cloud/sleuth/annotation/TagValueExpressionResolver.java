@@ -25,12 +25,11 @@ package org.springframework.cloud.sleuth.annotation;
 public interface TagValueExpressionResolver {
 
 	/**
-	 * Returns the tag value for the given parameter and the provided expression
-	 *
+	 * Returns the tag value for the given parameter and the provided expression.
 	 * @param expression - the expression coming from {@link SpanTag#expression()}
 	 * @param parameter - parameter annotated with {@link SpanTag}
 	 * @return the value of the tag
 	 */
 	String resolve(String expression, Object parameter);
-	
+
 }

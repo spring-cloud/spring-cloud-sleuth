@@ -36,17 +36,24 @@ import org.springframework.cloud.sleuth.SpanNamer;
  * @since 1.0.0
  */
 public class TraceableExecutorService implements ExecutorService {
+
 	final ExecutorService delegate;
+
 	private final String spanName;
+
 	Tracing tracing;
+
 	SpanNamer spanNamer;
+
 	BeanFactory beanFactory;
 
-	public TraceableExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
+	public TraceableExecutorService(BeanFactory beanFactory,
+			final ExecutorService delegate) {
 		this(beanFactory, delegate, null);
 	}
 
-	public TraceableExecutorService(BeanFactory beanFactory, final ExecutorService delegate, String spanName) {
+	public TraceableExecutorService(BeanFactory beanFactory,
+			final ExecutorService delegate, String spanName) {
 		this.delegate = delegate;
 		this.beanFactory = beanFactory;
 		this.spanName = spanName;
@@ -54,7 +61,8 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new TraceRunnable(tracing(), spanNamer(), command, this.spanName);
+		final Runnable r = new TraceRunnable(tracing(), spanNamer(), command,
+				this.spanName);
 		this.delegate.execute(r);
 	}
 
@@ -79,7 +87,8 @@ public class TraceableExecutorService implements ExecutorService {
 	}
 
 	@Override
-	public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+	public boolean awaitTermination(long timeout, TimeUnit unit)
+			throws InterruptedException {
 		return this.delegate.awaitTermination(timeout, unit);
 	}
 
@@ -102,28 +111,32 @@ public class TraceableExecutorService implements ExecutorService {
 	}
 
 	@Override
-	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
+			throws InterruptedException {
 		return this.delegate.invokeAll(wrapCallableCollection(tasks));
 	}
 
 	@Override
-	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
-			throws InterruptedException {
+	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
+			long timeout, TimeUnit unit) throws InterruptedException {
 		return this.delegate.invokeAll(wrapCallableCollection(tasks), timeout, unit);
 	}
 
 	@Override
-	public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+	public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
+			throws InterruptedException, ExecutionException {
 		return this.delegate.invokeAny(wrapCallableCollection(tasks));
 	}
 
 	@Override
-	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
+	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout,
+			TimeUnit unit)
 			throws InterruptedException, ExecutionException, TimeoutException {
 		return this.delegate.invokeAny(wrapCallableCollection(tasks), timeout, unit);
 	}
 
-	private <T> Collection<? extends Callable<T>> wrapCallableCollection(Collection<? extends Callable<T>> tasks) {
+	private <T> Collection<? extends Callable<T>> wrapCallableCollection(
+			Collection<? extends Callable<T>> tasks) {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
 			if (!(task instanceof TraceCallable)) {
@@ -146,4 +159,5 @@ public class TraceableExecutorService implements ExecutorService {
 		}
 		return this.spanNamer;
 	}
+
 }

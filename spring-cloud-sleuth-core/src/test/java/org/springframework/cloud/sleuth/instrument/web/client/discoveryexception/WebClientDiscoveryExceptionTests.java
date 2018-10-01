@@ -60,10 +60,18 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @DirtiesContext
 public class WebClientDiscoveryExceptionTests {
 
-	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
-	@Autowired @LoadBalanced RestTemplate template;
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanReporter reporter;
+	@Autowired
+	TestFeignInterfaceWithException testFeignInterfaceWithException;
+
+	@Autowired
+	@LoadBalanced
+	RestTemplate template;
+
+	@Autowired
+	Tracer tracer;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
 
 	@Before
 	public void close() {
@@ -88,10 +96,8 @@ public class WebClientDiscoveryExceptionTests {
 		// hystrix commands should finish at this point
 		Thread.sleep(200);
 		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans.stream()
-				.filter(span1 -> span1.kind() == zipkin2.Span.Kind.CLIENT)
-				.findFirst()
-				.get().tags()).containsKey("error");
+		then(spans.stream().filter(span1 -> span1.kind() == zipkin2.Span.Kind.CLIENT)
+				.findFirst().get().tags()).containsKey("error");
 	}
 
 	@Test
@@ -109,13 +115,15 @@ public class WebClientDiscoveryExceptionTests {
 
 	@FeignClient("exceptionservice")
 	public interface TestFeignInterfaceWithException {
+
 		@RequestMapping(method = RequestMethod.GET, value = "/")
 		ResponseEntity<String> shouldFailToConnect();
+
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(exclude = {EurekaClientAutoConfiguration.class,
-			TraceWebServletAutoConfiguration.class})
+	@EnableAutoConfiguration(exclude = { EurekaClientAutoConfiguration.class,
+			TraceWebServletAutoConfiguration.class })
 	@EnableDiscoveryClient
 	@EnableFeignClients
 	@RibbonClient("exceptionservice")
@@ -127,18 +135,23 @@ public class WebClientDiscoveryExceptionTests {
 			return new RestTemplate();
 		}
 
-		@Bean Sampler alwaysSampler() {
+		@Bean
+		Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean Reporter<zipkin2.Span> mySpanReporter() {
+		@Bean
+		Reporter<zipkin2.Span> mySpanReporter() {
 			return new ArrayListSpanReporter();
 		}
+
 	}
 
 	@FunctionalInterface
 	interface ResponseEntityProvider {
-		ResponseEntity<?> get(
-				WebClientDiscoveryExceptionTests webClientTests);
+
+		ResponseEntity<?> get(WebClientDiscoveryExceptionTests webClientTests);
+
 	}
+
 }

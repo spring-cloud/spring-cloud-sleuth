@@ -26,6 +26,7 @@ import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 class LoadBalancerClientZipkinLoadBalancer implements ZipkinLoadBalancer {
 
 	private final LoadBalancerClient loadBalancerClient;
+
 	private final ZipkinProperties zipkinProperties;
 
 	LoadBalancerClientZipkinLoadBalancer(LoadBalancerClient loadBalancerClient,
@@ -46,4 +47,5 @@ class LoadBalancerClientZipkinLoadBalancer implements ZipkinLoadBalancer {
 		}
 		return URI.create(this.zipkinProperties.getBaseUrl());
 	}
+
 }

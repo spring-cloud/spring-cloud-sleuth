@@ -25,5 +25,7 @@ import java.util.regex.Pattern;
  * @since 2.0.0
  */
 public interface SkipPatternProvider {
+
 	Pattern skipPattern();
+
 }

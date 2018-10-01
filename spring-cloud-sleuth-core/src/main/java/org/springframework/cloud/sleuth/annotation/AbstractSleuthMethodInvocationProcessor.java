@@ -26,18 +26,26 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 
 /**
+ * Sleuth annotation processor
+ *
  * @author Marcin Grzejszczak
  */
 abstract class AbstractSleuthMethodInvocationProcessor
 		implements SleuthMethodInvocationProcessor, BeanFactoryAware {
+
 	private static final Log logger = LogFactory
 			.getLog(AbstractSleuthMethodInvocationProcessor.class);
+
 	private static final String CLASS_KEY = "class";
+
 	private static final String METHOD_KEY = "method";
 
 	BeanFactory beanFactory;
+
 	private NewSpanParser newSpanParser;
+
 	private Tracer tracer;
+
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 
 	void before(MethodInvocation invocation, Span span, String log, boolean hasLog) {
@@ -111,7 +119,9 @@ abstract class AbstractSleuthMethodInvocationProcessor
 		return this.spanTagAnnotationHandler;
 	}
 
-	@Override public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+	@Override
+	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 		this.beanFactory = beanFactory;
 	}
+
 }

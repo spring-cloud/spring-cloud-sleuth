@@ -96,23 +96,32 @@ public class TraceWebClientAutoConfiguration {
 	static class RestTemplateConfig {
 
 		@Bean
-		public TracingClientHttpRequestInterceptor tracingClientHttpRequestInterceptor(HttpTracing httpTracing) {
-			return (TracingClientHttpRequestInterceptor) TracingClientHttpRequestInterceptor.create(httpTracing);
+		public TracingClientHttpRequestInterceptor tracingClientHttpRequestInterceptor(
+				HttpTracing httpTracing) {
+			return (TracingClientHttpRequestInterceptor) TracingClientHttpRequestInterceptor
+					.create(httpTracing);
 		}
 
 		@Configuration
 		protected static class TraceInterceptorConfiguration {
 
-			@Autowired private TracingClientHttpRequestInterceptor clientInterceptor;
+			@Autowired
+			private TracingClientHttpRequestInterceptor clientInterceptor;
 
-			@Bean @Order RestTemplateCustomizer traceRestTemplateCustomizer() {
+			@Bean
+			static TraceRestTemplateBeanPostProcessor traceRestTemplateBPP(
+					ListableBeanFactory beanFactory) {
+				return new TraceRestTemplateBeanPostProcessor(beanFactory);
+			}
+
+			@Bean
+			@Order
+			RestTemplateCustomizer traceRestTemplateCustomizer() {
 				return new TraceRestTemplateCustomizer(this.clientInterceptor);
 			}
 
-			@Bean static TraceRestTemplateBeanPostProcessor traceRestTemplateBPP(ListableBeanFactory beanFactory) {
-				return new TraceRestTemplateBeanPostProcessor(beanFactory);
-			}
 		}
+
 	}
 
 	@Configuration
@@ -124,6 +133,7 @@ public class TraceWebClientAutoConfiguration {
 		HttpClientBuilder traceHttpClientBuilder(HttpTracing httpTracing) {
 			return TracingHttpClientBuilder.create(httpTracing);
 		}
+
 	}
 
 	@Configuration
@@ -135,41 +145,51 @@ public class TraceWebClientAutoConfiguration {
 		HttpAsyncClientBuilder traceHttpAsyncClientBuilder(HttpTracing httpTracing) {
 			return TracingHttpAsyncClientBuilder.create(httpTracing);
 		}
+
 	}
 
 	@ConditionalOnClass(WebClient.class)
 	static class WebClientConfig {
 
-		@Bean static TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(BeanFactory beanFactory) {
+		@Bean
+		static TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(
+				BeanFactory beanFactory) {
 			return new TraceWebClientBeanPostProcessor(beanFactory);
 		}
+
 	}
 
 	@Configuration
 	@ConditionalOnClass(HttpClient.class)
 	static class NettyConfiguration {
+
 		@Bean
 		public NettyAspect traceNetyAspect(HttpTracing httpTracing) {
 			return new NettyAspect(httpTracing);
 		}
+
 	}
 
 	@Configuration
-	@ConditionalOnClass({ UserInfoRestTemplateCustomizer.class, OAuth2RestTemplate.class })
+	@ConditionalOnClass({ UserInfoRestTemplateCustomizer.class,
+			OAuth2RestTemplate.class })
 	protected static class TraceOAuthConfiguration {
 
 		@Bean
-		UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor(BeanFactory beanFactory) {
+		UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor(
+				BeanFactory beanFactory) {
 			return new UserInfoRestTemplateCustomizerBPP(beanFactory);
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
-		UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer(BeanFactory beanFactory) {
+		UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer(
+				BeanFactory beanFactory) {
 			return new TraceUserInfoRestTemplateCustomizer(beanFactory);
 		}
 
-		private static class UserInfoRestTemplateCustomizerBPP implements BeanPostProcessor {
+		private static class UserInfoRestTemplateCustomizerBPP
+				implements BeanPostProcessor {
 
 			private final BeanFactory beanFactory;
 
@@ -178,8 +198,8 @@ public class TraceWebClientAutoConfiguration {
 			}
 
 			@Override
-			public Object postProcessBeforeInitialization(Object bean,
-					String beanName) throws BeansException {
+			public Object postProcessBeforeInitialization(Object bean, String beanName)
+					throws BeansException {
 				return bean;
 			}
 
@@ -187,17 +207,21 @@ public class TraceWebClientAutoConfiguration {
 			public Object postProcessAfterInitialization(final Object bean,
 					String beanName) throws BeansException {
 				final BeanFactory beanFactory = this.beanFactory;
-				if (bean instanceof UserInfoRestTemplateCustomizer &&
-						!(bean instanceof TraceUserInfoRestTemplateCustomizer)) {
+				if (bean instanceof UserInfoRestTemplateCustomizer
+						&& !(bean instanceof TraceUserInfoRestTemplateCustomizer)) {
 					return new TraceUserInfoRestTemplateCustomizer(beanFactory, bean);
 				}
 				return bean;
 			}
+
 		}
+
 	}
+
 }
 
 class RestTemplateInterceptorInjector {
+
 	private final ClientHttpRequestInterceptor interceptor;
 
 	RestTemplateInterceptorInjector(ClientHttpRequestInterceptor interceptor) {
@@ -215,14 +239,14 @@ class RestTemplateInterceptorInjector {
 	}
 
 	private boolean hasTraceInterceptor(RestTemplate restTemplate) {
-		for (ClientHttpRequestInterceptor interceptor : restTemplate
-				.getInterceptors()) {
+		for (ClientHttpRequestInterceptor interceptor : restTemplate.getInterceptors()) {
 			if (interceptor instanceof TracingClientHttpRequestInterceptor) {
 				return true;
 			}
 		}
 		return false;
 	}
+
 }
 
 class TraceRestTemplateCustomizer implements RestTemplateCustomizer {
@@ -233,10 +257,11 @@ class TraceRestTemplateCustomizer implements RestTemplateCustomizer {
 		this.interceptor = interceptor;
 	}
 
-	@Override public void customize(RestTemplate restTemplate) {
-		new RestTemplateInterceptorInjector(this.interceptor)
-				.inject(restTemplate);
+	@Override
+	public void customize(RestTemplate restTemplate) {
+		new RestTemplateInterceptorInjector(this.interceptor).inject(restTemplate);
 	}
+
 }
 
 class TraceRestTemplateBeanPostProcessor implements BeanPostProcessor {
@@ -247,14 +272,16 @@ class TraceRestTemplateBeanPostProcessor implements BeanPostProcessor {
 		this.beanFactory = beanFactory;
 	}
 
-	@Override public Object postProcessBeforeInitialization(Object bean, String beanName)
+	@Override
+	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
 		return bean;
 	}
 
-	@Override public Object postProcessAfterInitialization(Object bean, String beanName)
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof RestTemplate)  {
+		if (bean instanceof RestTemplate) {
 			RestTemplate rt = (RestTemplate) bean;
 			new RestTemplateInterceptorInjector(interceptor()).inject(rt);
 		}
@@ -270,23 +297,27 @@ class TraceRestTemplateBeanPostProcessor implements BeanPostProcessor {
 class LazyTracingClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
 
 	private final BeanFactory beanFactory;
+
 	private TracingClientHttpRequestInterceptor interceptor;
 
 	public LazyTracingClientHttpRequestInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
-	@Override public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+	@Override
+	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
 		return interceptor().intercept(request, body, execution);
 	}
 
 	private TracingClientHttpRequestInterceptor interceptor() {
 		if (this.interceptor == null) {
-			this.interceptor = this.beanFactory.getBean(TracingClientHttpRequestInterceptor.class);
+			this.interceptor = this.beanFactory
+					.getBean(TracingClientHttpRequestInterceptor.class);
 		}
 		return this.interceptor;
 	}
+
 }
 
 @Aspect
@@ -300,11 +331,13 @@ class NettyAspect {
 
 	@Pointcut("execution(public * reactor.netty.http.client.HttpClient.RequestSender.send(..)) && args(function)")
 	private void anyHttpClientRequestSending(
-			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) { } // NOSONAR
+			BiFunction<? super HttpClientRequest, ? super NettyOutbound, ? extends Publisher<Void>> function) {
+	} // NOSONAR
 
 	@Around("anyHttpClientRequestSending(function)")
 	public Object wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
-			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) throws Throwable {
+			BiFunction<? super HttpClientRequest, ? super NettyOutbound, ? extends Publisher<Void>> function)
+			throws Throwable {
 		return Mono.defer(() -> {
 			try {
 				return this.instrumentation.wrapHttpClientRequestSending(pjp, function);
@@ -314,37 +347,37 @@ class NettyAspect {
 			}
 		});
 	}
+
 }
 
 class TracingHttpClientInstrumentation {
-	private static final Log log = LogFactory.getLog(TracingHttpClientInstrumentation.class);
 
 	static final Propagation.Setter<HttpHeaders, String> SETTER = new Propagation.Setter<HttpHeaders, String>() {
-		@Override public void put(HttpHeaders carrier, String key, String value) {
+		@Override
+		public void put(HttpHeaders carrier, String key, String value) {
 			if (!carrier.contains(key)) {
 				carrier.add(key, value);
 			}
 		}
 
-		@Override public String toString() {
+		@Override
+		public String toString() {
 			return "HttpHeaders::add";
 		}
 	};
-
 	static final Propagation.Getter<HttpHeaders, String> GETTER = new Propagation.Getter<HttpHeaders, String>() {
-		@Override public String get(HttpHeaders carrier, String key) {
+		@Override
+		public String get(HttpHeaders carrier, String key) {
 			return carrier.get(key);
 		}
 
-		@Override public String toString() {
+		@Override
+		public String toString() {
 			return "HttpHeaders::get";
 		}
 	};
-
-	static TracingHttpClientInstrumentation create(HttpTracing httpTracing) {
-		return new TracingHttpClientInstrumentation(httpTracing);
-	}
-
+	private static final Log log = LogFactory
+			.getLog(TracingHttpClientInstrumentation.class);
 	final Tracer tracer;
 	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 	final TraceContext.Injector<HttpHeaders> injector;
@@ -357,35 +390,45 @@ class TracingHttpClientInstrumentation {
 		this.httpTracing = httpTracing;
 	}
 
+	static TracingHttpClientInstrumentation create(HttpTracing httpTracing) {
+		return new TracingHttpClientInstrumentation(httpTracing);
+	}
+
 	Mono<HttpClientResponse> wrapHttpClientRequestSending(ProceedingJoinPoint pjp,
-			BiFunction<? super HttpClientRequest,? super NettyOutbound,? extends Publisher<Void>> function) throws Throwable {
+			BiFunction<? super HttpClientRequest, ? super NettyOutbound, ? extends Publisher<Void>> function)
+			throws Throwable {
 		// add headers and set CS
 		final Span currentSpan = this.tracer.currentSpan();
 		final AtomicReference<Span> span = new AtomicReference<>();
-		BiFunction<HttpClientRequest, NettyOutbound, Publisher<Void>> combinedFunction =
-				(req, nettyOutbound) -> {
-					try (Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(currentSpan)) {
-						io.netty.handler.codec.http.HttpHeaders originalHeaders = req
-								.requestHeaders().copy();
-						io.netty.handler.codec.http.HttpHeaders tracedHeaders = req
-								.requestHeaders();
-						span.set(this.handler.handleSend(this.injector, tracedHeaders, req));
-						if (log.isDebugEnabled()) {
-							log.debug("Handled send of " + span.get());
-						}
-						io.netty.handler.codec.http.HttpHeaders addedHeaders = tracedHeaders.copy();
-						originalHeaders.forEach(header -> addedHeaders.remove(header.getKey()));
-						try (Tracer.SpanInScope clientInScope = this.tracer.withSpanInScope(span.get())) {
-							if (log.isDebugEnabled()) {
-								log.debug("Created a new client span for Netty client");
-							}
-							return handle(function, new TracedHttpClientRequest(req, addedHeaders), nettyOutbound);
-						}
+		BiFunction<HttpClientRequest, NettyOutbound, Publisher<Void>> combinedFunction = (
+				req, nettyOutbound) -> {
+			try (Tracer.SpanInScope spanInScope = this.tracer
+					.withSpanInScope(currentSpan)) {
+				io.netty.handler.codec.http.HttpHeaders originalHeaders = req
+						.requestHeaders().copy();
+				io.netty.handler.codec.http.HttpHeaders tracedHeaders = req
+						.requestHeaders();
+				span.set(this.handler.handleSend(this.injector, tracedHeaders, req));
+				if (log.isDebugEnabled()) {
+					log.debug("Handled send of " + span.get());
+				}
+				io.netty.handler.codec.http.HttpHeaders addedHeaders = tracedHeaders
+						.copy();
+				originalHeaders.forEach(header -> addedHeaders.remove(header.getKey()));
+				try (Tracer.SpanInScope clientInScope = this.tracer
+						.withSpanInScope(span.get())) {
+					if (log.isDebugEnabled()) {
+						log.debug("Created a new client span for Netty client");
 					}
-				};
+					return handle(function,
+							new TracedHttpClientRequest(req, addedHeaders),
+							nettyOutbound);
+				}
+			}
+		};
 		// run
-		Mono<HttpClientResponse> responseMono =
-				(Mono<HttpClientResponse>) pjp.proceed(new Object[] { combinedFunction });
+		Mono<HttpClientResponse> responseMono = (Mono<HttpClientResponse>) pjp
+				.proceed(new Object[] { combinedFunction });
 		// get response
 		return responseMono.doOnSuccessOrError((httpClientResponse, throwable) -> {
 			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.get())) {
@@ -400,96 +443,6 @@ class TracingHttpClientInstrumentation {
 		});
 	}
 
-	/**
-	 * The `org.springframework.cloud.gateway.filter.NettyRoutingFilter` in SC Gateway
-	 * is adding only these headers that were set when the request came in. That means
-	 * that adding any additional headers (via instrumentation) is completely ignored.
-	 * That's why we're wrapping the `HttpClientRequest` in such a wrapper that
-	 * when `setHeaders` is called (that clears any current headers), will also add
-	 * the tracing headers
-	 */
-	static class TracedHttpClientRequest implements HttpClientRequest {
-		private HttpClientRequest delegate;
-		private final io.netty.handler.codec.http.HttpHeaders addedHeaders;
-
-		TracedHttpClientRequest(HttpClientRequest delegate, HttpHeaders addedHeaders) {
-			this.delegate = delegate;
-			this.addedHeaders = addedHeaders;
-		}
-
-		@Override public HttpClientRequest addCookie(Cookie cookie) {
-			this.delegate = this.delegate.addCookie(cookie);
-			return this;
-		}
-
-		@Override public HttpClientRequest addHeader(CharSequence name,
-				CharSequence value) {
-			this.delegate = this.delegate.addHeader(name, value);
-			return this;
-		}
-
-		@Override public boolean hasSentHeaders() {
-			return this.delegate.hasSentHeaders();
-		}
-
-		@Override public HttpClientRequest header(CharSequence name, CharSequence value) {
-			this.delegate = this.delegate.header(name, value);
-			return this;
-		}
-
-		@Override public HttpClientRequest headers(HttpHeaders headers) {
-			HttpHeaders copy = headers.copy();
-			copy.add(this.addedHeaders);
-			this.delegate = this.delegate.headers(copy);
-			return this;
-		}
-
-		@Override public boolean isFollowRedirect() {
-			return this.delegate.isFollowRedirect();
-		}
-
-		@Override public HttpClientRequest keepAlive(boolean keepAlive) {
-			this.delegate = this.delegate.keepAlive(keepAlive);
-			return this;
-		}
-
-		@Override public String[] redirectedFrom() {
-			return this.delegate.redirectedFrom();
-		}
-
-		@Override public HttpHeaders requestHeaders() {
-			return this.delegate.requestHeaders();
-		}
-
-		@Override public Map<CharSequence, Set<Cookie>> cookies() {
-			return this.delegate.cookies();
-		}
-
-		@Override public boolean isKeepAlive() {
-			return this.delegate.isKeepAlive();
-		}
-
-		@Override public boolean isWebsocket() {
-			return this.delegate.isWebsocket();
-		}
-
-		@Override public HttpMethod method() {
-			return this.delegate.method();
-		}
-
-		@Override public String path() {
-			return this.delegate.path();
-		}
-
-		@Override public String uri() {
-			return this.delegate.uri();
-		}
-
-		@Override public HttpVersion version() {
-			return this.delegate.version();
-		}
-	}
-
 	private Publisher<Void> handle(
 			BiFunction<? super HttpClientRequest, ? super NettyOutbound, ? extends Publisher<Void>> handler,
 			HttpClientRequest req, NettyOutbound nettyOutbound) {
@@ -499,31 +452,144 @@ class TracingHttpClientInstrumentation {
 		return nettyOutbound;
 	}
 
+	/**
+	 * The `org.springframework.cloud.gateway.filter.NettyRoutingFilter` in SC Gateway is
+	 * adding only these headers that were set when the request came in. That means that
+	 * adding any additional headers (via instrumentation) is completely ignored. That's
+	 * why we're wrapping the `HttpClientRequest` in such a wrapper that when `setHeaders`
+	 * is called (that clears any current headers), will also add the tracing headers
+	 */
+	static class TracedHttpClientRequest implements HttpClientRequest {
+
+		private final io.netty.handler.codec.http.HttpHeaders addedHeaders;
+		private HttpClientRequest delegate;
+
+		TracedHttpClientRequest(HttpClientRequest delegate, HttpHeaders addedHeaders) {
+			this.delegate = delegate;
+			this.addedHeaders = addedHeaders;
+		}
+
+		@Override
+		public HttpClientRequest addCookie(Cookie cookie) {
+			this.delegate = this.delegate.addCookie(cookie);
+			return this;
+		}
+
+		@Override
+		public HttpClientRequest addHeader(CharSequence name, CharSequence value) {
+			this.delegate = this.delegate.addHeader(name, value);
+			return this;
+		}
+
+		@Override
+		public boolean hasSentHeaders() {
+			return this.delegate.hasSentHeaders();
+		}
+
+		@Override
+		public HttpClientRequest header(CharSequence name, CharSequence value) {
+			this.delegate = this.delegate.header(name, value);
+			return this;
+		}
+
+		@Override
+		public HttpClientRequest headers(HttpHeaders headers) {
+			HttpHeaders copy = headers.copy();
+			copy.add(this.addedHeaders);
+			this.delegate = this.delegate.headers(copy);
+			return this;
+		}
+
+		@Override
+		public boolean isFollowRedirect() {
+			return this.delegate.isFollowRedirect();
+		}
+
+		@Override
+		public HttpClientRequest keepAlive(boolean keepAlive) {
+			this.delegate = this.delegate.keepAlive(keepAlive);
+			return this;
+		}
+
+		@Override
+		public String[] redirectedFrom() {
+			return this.delegate.redirectedFrom();
+		}
+
+		@Override
+		public HttpHeaders requestHeaders() {
+			return this.delegate.requestHeaders();
+		}
+
+		@Override
+		public Map<CharSequence, Set<Cookie>> cookies() {
+			return this.delegate.cookies();
+		}
+
+		@Override
+		public boolean isKeepAlive() {
+			return this.delegate.isKeepAlive();
+		}
+
+		@Override
+		public boolean isWebsocket() {
+			return this.delegate.isWebsocket();
+		}
+
+		@Override
+		public HttpMethod method() {
+			return this.delegate.method();
+		}
+
+		@Override
+		public String path() {
+			return this.delegate.path();
+		}
+
+		@Override
+		public String uri() {
+			return this.delegate.uri();
+		}
+
+		@Override
+		public HttpVersion version() {
+			return this.delegate.version();
+		}
+
+	}
+
 	static final class HttpAdapter
 			extends brave.http.HttpClientAdapter<HttpClientRequest, HttpClientResponse> {
 
-		@Override public String method(HttpClientRequest request) {
+		@Override
+		public String method(HttpClientRequest request) {
 			return request.method().name();
 		}
 
-		@Override public String url(HttpClientRequest request) {
+		@Override
+		public String url(HttpClientRequest request) {
 			return request.uri();
 		}
 
-		@Override public String requestHeader(HttpClientRequest request, String name) {
+		@Override
+		public String requestHeader(HttpClientRequest request, String name) {
 			Object result = request.requestHeaders().get(name);
 			return result != null ? result.toString() : "";
 		}
 
-		@Override public Integer statusCode(HttpClientResponse response) {
+		@Override
+		public Integer statusCode(HttpClientResponse response) {
 			return response.status().code();
 		}
+
 	}
+
 }
 
 class TraceUserInfoRestTemplateCustomizer implements UserInfoRestTemplateCustomizer {
 
 	private final BeanFactory beanFactory;
+
 	private final Object delegate;
 
 	TraceUserInfoRestTemplateCustomizer(BeanFactory beanFactory) {
@@ -536,12 +602,14 @@ class TraceUserInfoRestTemplateCustomizer implements UserInfoRestTemplateCustomi
 		this.delegate = bean;
 	}
 
-	@Override public void customize(OAuth2RestTemplate template) {
-		final TracingClientHttpRequestInterceptor interceptor =
-				this.beanFactory.getBean(TracingClientHttpRequestInterceptor.class);
+	@Override
+	public void customize(OAuth2RestTemplate template) {
+		final TracingClientHttpRequestInterceptor interceptor = this.beanFactory
+				.getBean(TracingClientHttpRequestInterceptor.class);
 		new RestTemplateInterceptorInjector(interceptor).inject(template);
 		if (this.delegate != null) {
 			((UserInfoRestTemplateCustomizer) this.delegate).customize(template);
 		}
 	}
+
 }

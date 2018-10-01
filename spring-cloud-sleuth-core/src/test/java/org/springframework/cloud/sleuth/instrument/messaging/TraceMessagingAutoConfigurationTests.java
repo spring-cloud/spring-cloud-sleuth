@@ -48,17 +48,29 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceMessagingAutoConfigurationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = TraceMessagingAutoConfigurationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TraceMessagingAutoConfigurationTests {
 
-	@Autowired RabbitTemplate rabbitTemplate;
-	@Autowired ArrayListSpanReporter reporter;
-	@Autowired TestSleuthRabbitBeanPostProcessor postProcessor;
-	@Autowired TestSleuthJmsBeanPostProcessor jmsBeanPostProcessor;
-	@Autowired MySleuthKafkaAspect mySleuthKafkaAspect;
-	@Autowired ProducerFactory producerFactory;
-	@Autowired ConsumerFactory consumerFactory;
+	@Autowired
+	RabbitTemplate rabbitTemplate;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
+
+	@Autowired
+	TestSleuthRabbitBeanPostProcessor postProcessor;
+
+	@Autowired
+	TestSleuthJmsBeanPostProcessor jmsBeanPostProcessor;
+
+	@Autowired
+	MySleuthKafkaAspect mySleuthKafkaAspect;
+
+	@Autowired
+	ProducerFactory producerFactory;
+
+	@Autowired
+	ConsumerFactory consumerFactory;
 
 	@Test
 	public void should_wrap_rabbit_template() {
@@ -86,21 +98,31 @@ public class TraceMessagingAutoConfigurationTests {
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class Config {
-		@Bean Sampler sampler() {
+
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean ArrayListSpanReporter reporter() {
+		@Bean
+		ArrayListSpanReporter reporter() {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
+		@Bean
+		SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(
+				BeanFactory beanFactory) {
 			return new TestSleuthRabbitBeanPostProcessor(beanFactory);
 		}
-		@Bean SleuthKafkaAspect sleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
+
+		@Bean
+		SleuthKafkaAspect sleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
 			return new MySleuthKafkaAspect(kafkaTracing, tracer);
 		}
-		@Bean TestSleuthJmsBeanPostProcessor sleuthJmsBeanPostProcessor(BeanFactory beanFactory) {
+
+		@Bean
+		TestSleuthJmsBeanPostProcessor sleuthJmsBeanPostProcessor(
+				BeanFactory beanFactory) {
 			return new TestSleuthJmsBeanPostProcessor(beanFactory);
 		}
 
@@ -108,7 +130,9 @@ public class TraceMessagingAutoConfigurationTests {
 		public void onMessage(ConsumerRecord<?, ?> message) {
 			System.err.println(message);
 		}
+
 	}
+
 }
 
 class TestSleuthRabbitBeanPostProcessor extends SleuthRabbitBeanPostProcessor {
@@ -119,39 +143,45 @@ class TestSleuthRabbitBeanPostProcessor extends SleuthRabbitBeanPostProcessor {
 		super(beanFactory);
 	}
 
-	@Override SpringRabbitTracing rabbitTracing() {
+	@Override
+	SpringRabbitTracing rabbitTracing() {
 		this.rabbitTracingCalled = true;
 		return super.rabbitTracing();
 	}
+
 }
 
 class MySleuthKafkaAspect extends SleuthKafkaAspect {
 
 	boolean producerWrapped;
+
 	boolean consumerWrapped;
+
 	boolean adapterWrapped;
 
 	MySleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
 		super(kafkaTracing, tracer);
 	}
 
-	@Override public Object wrapProducerFactory(ProceedingJoinPoint pjp)
-			throws Throwable {
+	@Override
+	public Object wrapProducerFactory(ProceedingJoinPoint pjp) throws Throwable {
 		this.producerWrapped = true;
 		return Mockito.mock(Producer.class);
 	}
 
-	@Override public Object wrapConsumerFactory(ProceedingJoinPoint pjp)
-			throws Throwable {
+	@Override
+	public Object wrapConsumerFactory(ProceedingJoinPoint pjp) throws Throwable {
 		this.consumerWrapped = true;
 		return Mockito.mock(Consumer.class);
 	}
 
-	@Override public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp)
+	@Override
+	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp)
 			throws Throwable {
 		this.adapterWrapped = true;
 		return Mockito.mock(MessageListenerContainer.class);
 	}
+
 }
 
 class TestSleuthJmsBeanPostProcessor extends TracingConnectionFactoryBeanPostProcessor {
@@ -162,9 +192,11 @@ class TestSleuthJmsBeanPostProcessor extends TracingConnectionFactoryBeanPostPro
 		super(beanFactory);
 	}
 
-	@Override public Object postProcessAfterInitialization(Object bean, String beanName)
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
 		this.tracingCalled = true;
 		return super.postProcessAfterInitialization(bean, beanName);
 	}
+
 }

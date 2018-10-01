@@ -59,21 +59,27 @@ public class TraceWebFluxTests {
 		Schedulers.resetFactory();
 	}
 
-	@Test public void should_instrument_web_filter() throws Exception {
+	@Test
+	public void should_instrument_web_filter() throws Exception {
 		// setup
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				TraceWebFluxTests.Config.class).web(WebApplicationType.REACTIVE)
-				.properties("server.port=0", "spring.jmx.enabled=false", "spring.sleuth.web.skipPattern=/skipped",
-						"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
-								"management.security.enabled=false").run();
+				TraceWebFluxTests.Config.class)
+						.web(WebApplicationType.REACTIVE)
+						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.sleuth.web.skipPattern=/skipped",
+								"spring.application.name=TraceWebFluxTests",
+								"security.basic.enabled=false",
+								"management.security.enabled=false")
+						.run();
 		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
-		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
+		int port = context.getBean(Environment.class).getProperty("local.server.port",
+				Integer.class);
 		Controller2 controller2 = context.getBean(Controller2.class);
 		clean(accumulator, controller2);
 
 		// when
 		ClientResponse response = whenRequestIsSent(port);
-		//then
+		// then
 		thenSpanWasReportedWithTags(accumulator, response);
 		clean(accumulator, controller2);
 
@@ -155,8 +161,7 @@ public class TraceWebFluxTests {
 		Mono<ClientResponse> exchange = WebClient.create().get()
 				.uri("http://localhost:" + port + "/api/c2/10")
 				.header("X-B3-SpanId", EXPECTED_TRACE_ID)
-				.header("X-B3-TraceId", EXPECTED_TRACE_ID)
-				.header("X-B3-Sampled", "0")
+				.header("X-B3-TraceId", EXPECTED_TRACE_ID).header("X-B3-Sampled", "0")
 				.exchange();
 		return exchange.block();
 	}
@@ -166,28 +171,34 @@ public class TraceWebFluxTests {
 	@DisableWebFluxSecurity
 	static class Config {
 
-		@Bean WebClient webClient() {
+		@Bean
+		WebClient webClient() {
 			return WebClient.create();
 		}
 
-		@Bean Sampler sampler() {
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean ArrayListSpanReporter spanReporter() {
+		@Bean
+		ArrayListSpanReporter spanReporter() {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean Controller2 controller2(Tracer tracer) {
+		@Bean
+		Controller2 controller2(Tracer tracer) {
 			return new Controller2(tracer);
 		}
 
-		@Bean RouterFunction<ServerResponse> function() {
+		@Bean
+		RouterFunction<ServerResponse> function() {
 			return RouterFunctions.route(RequestPredicates.GET("/function"), r -> {
 				then(MDC.get("X-B3-TraceId")).isNotEmpty();
 				return ServerResponse.ok().syncBody("functionOk");
 			});
 		}
+
 	}
 
 	@RestController
@@ -215,6 +226,7 @@ public class TraceWebFluxTests {
 			then(sampled).isFalse();
 			return Flux.just(sampled.toString());
 		}
-	}
-}
 
+	}
+
+}

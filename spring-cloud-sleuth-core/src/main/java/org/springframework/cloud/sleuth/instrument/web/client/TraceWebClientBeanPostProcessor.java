@@ -39,8 +39,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 /**
- * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into
- * its trace representation
+ * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into its trace
+ * representation
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
@@ -53,20 +53,21 @@ class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 		this.beanFactory = beanFactory;
 	}
 
-	@Override public Object postProcessBeforeInitialization(Object bean, String beanName)
+	@Override
+	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
 		return bean;
 	}
 
-	@Override public Object postProcessAfterInitialization(Object bean, String beanName)
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
 		if (bean instanceof WebClient) {
 			WebClient webClient = (WebClient) bean;
-			return webClient
-					.mutate()
-					.filters(addTraceExchangeFilterFunctionIfNotPresent())
-					.build();
-		} else if (bean instanceof WebClient.Builder) {
+			return webClient.mutate()
+					.filters(addTraceExchangeFilterFunctionIfNotPresent()).build();
+		}
+		else if (bean instanceof WebClient.Builder) {
 			WebClient.Builder webClientBuilder = (WebClient.Builder) bean;
 			return webClientBuilder.filters(addTraceExchangeFilterFunctionIfNotPresent());
 		}
@@ -75,46 +76,41 @@ class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 
 	private Consumer<List<ExchangeFilterFunction>> addTraceExchangeFilterFunctionIfNotPresent() {
 		return functions -> {
-			if (functions
-					.stream()
+			if (functions.stream()
 					.noneMatch(f -> f instanceof TraceExchangeFilterFunction)) {
 				functions.add(new TraceExchangeFilterFunction(this.beanFactory));
 			}
 		};
 	}
+
 }
 
 class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
-	private static final Log log = LogFactory.getLog(
-			TraceExchangeFilterFunction.class);
-	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
+	static final Propagation.Setter<ClientRequest.Builder, String> SETTER = new Propagation.Setter<ClientRequest.Builder, String>() {
+		@Override
+		public void put(ClientRequest.Builder carrier, String key, String value) {
+			carrier.header(key, value);
+		}
 
-	static final Propagation.Setter<ClientRequest.Builder, String> SETTER =
-			new Propagation.Setter<ClientRequest.Builder, String>() {
-				@Override public void put(ClientRequest.Builder carrier, String key, String value) {
-					carrier.header(key, value);
-				}
-
-				@Override public String toString() {
-					return "ClientRequest.Builder::header";
-				}
-			};
-
+		@Override
+		public String toString() {
+			return "ClientRequest.Builder::header";
+		}
+	};
 	static final Propagation.Getter<ClientRequest, String> GETTER = new Propagation.Getter<ClientRequest, String>() {
-		@Override public String get(ClientRequest carrier, String key) {
+		@Override
+		public String get(ClientRequest carrier, String key) {
 			return carrier.headers().getFirst(key);
 		}
 
-		@Override public String toString() {
+		@Override
+		public String toString() {
 			return "HttpHeaders::getFirst";
 		}
 	};
-
-	public static ExchangeFilterFunction create(BeanFactory beanFactory) {
-		return new TraceExchangeFilterFunction(beanFactory);
-	}
-
+	private static final Log log = LogFactory.getLog(TraceExchangeFilterFunction.class);
+	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
 	final BeanFactory beanFactory;
 	Tracer tracer;
 	HttpTracing httpTracing;
@@ -125,38 +121,43 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		this.beanFactory = beanFactory;
 	}
 
-	@Override public Mono<ClientResponse> filter(ClientRequest request,
-			ExchangeFunction next) {
+	public static ExchangeFilterFunction create(BeanFactory beanFactory) {
+		return new TraceExchangeFilterFunction(beanFactory);
+	}
+
+	@Override
+	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
 		final ClientRequest.Builder builder = ClientRequest.from(request);
-		Mono<ClientResponse> exchange = Mono
-				.defer(() -> next.exchange(builder.build()))
-				.cast(Object.class)
-				.onErrorResume(Mono::just)
-				.zipWith(Mono.subscriberContext())
-				.flatMap(anyAndContext -> {
+		Mono<ClientResponse> exchange = Mono.defer(() -> next.exchange(builder.build()))
+				.cast(Object.class).onErrorResume(Mono::just)
+				.zipWith(Mono.subscriberContext()).flatMap(anyAndContext -> {
 					Object any = anyAndContext.getT1();
 					Span clientSpan = anyAndContext.getT2().get(CLIENT_SPAN_KEY);
 					Mono<ClientResponse> continuation;
 					final Tracer.SpanInScope ws = tracer().withSpanInScope(clientSpan);
-						if (any instanceof Throwable) {
-							continuation = Mono.error((Throwable) any);
-						} else {
-							continuation = Mono.just((ClientResponse) any);
-						}
-					return continuation.doAfterSuccessOrError(
-							(clientResponse, throwable1) -> {
+					if (any instanceof Throwable) {
+						continuation = Mono.error((Throwable) any);
+					}
+					else {
+						continuation = Mono.just((ClientResponse) any);
+					}
+					return continuation
+							.doAfterSuccessOrError((clientResponse, throwable1) -> {
 								Throwable throwable = throwable1;
-								if (clientResponse == null || clientResponse.statusCode() == null) {
+								if (clientResponse == null
+										|| clientResponse.statusCode() == null) {
 									if (log.isDebugEnabled()) {
 										log.debug(
 												"No response was returned. Will close the span ["
 														+ clientSpan + "]");
 									}
-									handleReceive(clientSpan, ws, clientResponse, throwable);
+									handleReceive(clientSpan, ws, clientResponse,
+											throwable);
 									return;
 								}
-								boolean error = clientResponse.statusCode().is4xxClientError() ||
-										clientResponse.statusCode().is5xxServerError();
+								boolean error = clientResponse.statusCode()
+										.is4xxClientError()
+										|| clientResponse.statusCode().is5xxServerError();
 								if (error) {
 									if (log.isDebugEnabled()) {
 										log.debug(
@@ -164,27 +165,30 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 														+ clientSpan + "]");
 									}
 									throwable = new RestClientException(
-											"Status code of the response is [" + clientResponse.statusCode()
-													.value() + "] and the reason is [" + clientResponse
-													.statusCode().getReasonPhrase() + "]");
+											"Status code of the response is ["
+													+ clientResponse.statusCode().value()
+													+ "] and the reason is ["
+													+ clientResponse.statusCode()
+															.getReasonPhrase()
+													+ "]");
 								}
 								handleReceive(clientSpan, ws, clientResponse, throwable);
 							});
-				})
-				.subscriberContext(c -> {
+				}).subscriberContext(c -> {
 					if (log.isDebugEnabled()) {
 						log.debug("Instrumenting WebClient call");
 					}
 					Span parent = c.getOrDefault(Span.class, null);
-					Span clientSpan = handler().handleSend(injector(), builder,
-							request, tracer().nextSpan());
+					Span clientSpan = handler().handleSend(injector(), builder, request,
+							tracer().nextSpan());
 					if (log.isDebugEnabled()) {
 						log.debug("Handled send of " + clientSpan);
 					}
 					if (parent == null) {
 						c = c.put(Span.class, clientSpan);
 						if (log.isDebugEnabled()) {
-							log.debug("Reactor Context got injected with the client span " + clientSpan);
+							log.debug("Reactor Context got injected with the client span "
+									+ clientSpan);
 						}
 					}
 					return c.put(CLIENT_SPAN_KEY, clientSpan);
@@ -201,8 +205,9 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 	@SuppressWarnings("unchecked")
 	HttpClientHandler<ClientRequest, ClientResponse> handler() {
 		if (this.handler == null) {
-			this.handler = HttpClientHandler
-					.create(this.beanFactory.getBean(HttpTracing.class), new TraceExchangeFilterFunction.HttpAdapter());
+			this.handler = HttpClientHandler.create(
+					this.beanFactory.getBean(HttpTracing.class),
+					new TraceExchangeFilterFunction.HttpAdapter());
 		}
 		return this.handler;
 	}
@@ -223,31 +228,36 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	TraceContext.Injector<ClientRequest.Builder> injector() {
 		if (this.injector == null) {
-			this.injector = this.beanFactory.getBean(HttpTracing.class)
-					.tracing().propagation().injector(SETTER);
+			this.injector = this.beanFactory.getBean(HttpTracing.class).tracing()
+					.propagation().injector(SETTER);
 		}
 		return this.injector;
 	}
 
-
 	static final class HttpAdapter
 			extends brave.http.HttpClientAdapter<ClientRequest, ClientResponse> {
 
-		@Override public String method(ClientRequest request) {
+		@Override
+		public String method(ClientRequest request) {
 			return request.method().name();
 		}
 
-		@Override public String url(ClientRequest request) {
+		@Override
+		public String url(ClientRequest request) {
 			return request.url().toString();
 		}
 
-		@Override public String requestHeader(ClientRequest request, String name) {
+		@Override
+		public String requestHeader(ClientRequest request, String name) {
 			Object result = request.headers().getFirst(name);
 			return result != null ? result.toString() : null;
 		}
 
-		@Override public Integer statusCode(ClientResponse response) {
+		@Override
+		public Integer statusCode(ClientResponse response) {
 			return response.statusCode().value();
 		}
+
 	}
+
 }

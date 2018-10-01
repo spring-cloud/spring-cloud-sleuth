@@ -23,24 +23,28 @@ import brave.Tracer;
 import com.netflix.hystrix.HystrixCommand;
 
 /**
- * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting
+ * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting.
  *
- * @see HystrixCommand
- * @see Tracer
- *
+ * @param <R> - return type of Hystrix Command
  * @author Tomasz Nurkiewicz, 4financeIT
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  * @since 1.0.0
+ * @see HystrixCommand
+ * @see Tracer
  */
 public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
 	private static final String COMMAND_KEY = "commandKey";
+
 	private static final String COMMAND_GROUP_KEY = "commandGroup";
+
 	private static final String THREAD_POOL_KEY = "threadPoolKey";
+
 	private static final String FALLBACK_METHOD_NAME_KEY = "fallbackMethodName";
 
 	private final Tracer tracer;
+
 	private final AtomicReference<Span> span;
 
 	protected TraceCommand(Tracer tracer, Setter setter) {
@@ -59,10 +63,12 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 		Throwable throwable = null;
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			return doRun();
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			throwable = t;
 			throw t;
-		} finally {
+		}
+		finally {
 			if (throwable == null) {
 				span.finish();
 				this.span.set(null);
@@ -73,12 +79,14 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 
 	public abstract R doRun() throws Exception;
 
-	@Override protected R getFallback() {
+	@Override
+	protected R getFallback() {
 		Span span = this.span.get();
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			span.tag(FALLBACK_METHOD_NAME_KEY, getFallbackMethodName());
 			return doGetFallback();
-		} finally {
+		}
+		finally {
 			span.finish();
 			this.span.set(null);
 		}
@@ -87,4 +95,5 @@ public abstract class TraceCommand<R> extends HystrixCommand<R> {
 	public R doGetFallback() {
 		return super.getFallback();
 	}
+
 }

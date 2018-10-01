@@ -22,7 +22,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration properties for slf4j
+ * Configuration properties for slf4j.
  *
  * @author Arthur Gavlyukovskiy
  * @since 1.0.12
@@ -36,7 +36,7 @@ public class SleuthSlf4jProperties {
 	private boolean enabled = true;
 
 	/**
-	 * A list of keys to be put from baggage to MDC
+	 * A list of keys to be put from baggage to MDC.
 	 */
 	private List<String> whitelistedMdcKeys = new ArrayList<>();
 
@@ -55,4 +55,5 @@ public class SleuthSlf4jProperties {
 	public void setWhitelistedMdcKeys(List<String> whitelistedMdcKeys) {
 		this.whitelistedMdcKeys = whitelistedMdcKeys;
 	}
+
 }

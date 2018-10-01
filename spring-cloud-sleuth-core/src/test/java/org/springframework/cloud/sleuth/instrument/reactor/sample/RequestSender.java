@@ -27,33 +27,34 @@ import reactor.core.publisher.Mono;
 
 class RequestSender {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RequestSender.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(RequestSender.class);
 
-    private final WebClient webClient;
-    private final Tracer tracer;
-    int port;
-    Span span;
+	private final WebClient webClient;
 
-    public RequestSender(WebClient webClient, Tracer tracer) {
-        this.webClient = webClient;
-        this.tracer = tracer;
-    }
+	private final Tracer tracer;
 
-    public Mono<String> get(Integer someParameterNotUsedNow){
-        LOGGER.info("getting for parameter {}", someParameterNotUsedNow);
-        this.span = this.tracer.currentSpan();
-        return webClient
-                .method(HttpMethod.GET)
-                .uri("http://localhost:" + this.port + "/foo")
-                .retrieve().bodyToMono(String.class);
-    }
+	int port;
 
-    public Flux<String> getAll(){
-        LOGGER.info("Before merge");
-        Flux<String> merge = Flux.merge(get(1), get(2), get(3));
-        LOGGER.info("after merge");
-        return merge;
-    }
+	Span span;
 
+	public RequestSender(WebClient webClient, Tracer tracer) {
+		this.webClient = webClient;
+		this.tracer = tracer;
+	}
+
+	public Mono<String> get(Integer someParameterNotUsedNow) {
+		LOGGER.info("getting for parameter {}", someParameterNotUsedNow);
+		this.span = this.tracer.currentSpan();
+		return webClient.method(HttpMethod.GET)
+				.uri("http://localhost:" + this.port + "/foo").retrieve()
+				.bodyToMono(String.class);
+	}
+
+	public Flux<String> getAll() {
+		LOGGER.info("Before merge");
+		Flux<String> merge = Flux.merge(get(1), get(2), get(3));
+		LOGGER.info("after merge");
+		return merge;
+	}
 
 }

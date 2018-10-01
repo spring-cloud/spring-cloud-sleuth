@@ -38,8 +38,8 @@ import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} that sets up common building blocks for both reactive
- * and servlet based web application.
+ * Auto-configuration} that sets up common building blocks for both reactive and servlet
+ * based web application.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
@@ -51,33 +51,25 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(SleuthWebProperties.class)
 public class TraceWebAutoConfiguration {
 
-	@Autowired(required = false) List<SingleSkipPattern> patterns = new ArrayList<>();
+	@Autowired(required = false)
+	List<SingleSkipPattern> patterns = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
 	SkipPatternProvider sleuthSkipPatternProvider() {
-		return () -> Pattern.compile(this.patterns
-				.stream()
-				.map(SingleSkipPattern::skipPattern)
-				.filter(Optional::isPresent)
-				.map(Optional::get)
-				.map(Pattern::pattern)
-				.collect(Collectors.joining("|")));
+		return () -> Pattern
+				.compile(this.patterns.stream().map(SingleSkipPattern::skipPattern)
+						.filter(Optional::isPresent).map(Optional::get)
+						.map(Pattern::pattern).collect(Collectors.joining("|")));
 	}
 
 	@Configuration
 	@ConditionalOnClass(ManagementServerProperties.class)
 	protected static class ManagementSkipPatternProviderConfig {
 
-		@Bean
-		@ConditionalOnBean(ManagementServerProperties.class)
-		public SingleSkipPattern skipPatternForManagementServerProperties(
-				final ManagementServerProperties managementServerProperties) {
-			return () -> getPatternForManagementServerProperties(managementServerProperties);
-		}
-
 		/**
-		 * Sets or appends {@link ManagementServerProperties#getServlet()#getContextPath()} to the skip
+		 * Sets or appends
+		 * {@link ManagementServerProperties#getServlet()#getContextPath()} to the skip
 		 * pattern. If neither is available then sets the default one
 		 */
 		static Optional<Pattern> getPatternForManagementServerProperties(
@@ -88,22 +80,24 @@ public class TraceWebAutoConfiguration {
 			}
 			return Optional.empty();
 		}
+
+		@Bean
+		@ConditionalOnBean(ManagementServerProperties.class)
+		public SingleSkipPattern skipPatternForManagementServerProperties(
+				final ManagementServerProperties managementServerProperties) {
+			return () -> getPatternForManagementServerProperties(
+					managementServerProperties);
+		}
+
 	}
 
 	@Configuration
 	@ConditionalOnClass(ServerProperties.class)
 	protected static class ServerSkipPatternProviderConfig {
 
-		@Bean
-		@ConditionalOnBean(ServerProperties.class)
-		public SingleSkipPattern skipPatternForServerProperties(
-				final ServerProperties serverProperties) {
-			return () -> getPatternForServerProperties(serverProperties);
-		}
-
 		/**
-		 * Sets or appends {@link ServerProperties#getServlet()#getContextPath()} to the skip
-		 * pattern. If neither is available then sets the default one
+		 * Sets or appends {@link ServerProperties#getServlet()#getContextPath()} to the
+		 * skip pattern. If neither is available then sets the default one
 		 */
 		static Optional<Pattern> getPatternForServerProperties(
 				ServerProperties serverProperties) {
@@ -113,22 +107,21 @@ public class TraceWebAutoConfiguration {
 			}
 			return Optional.empty();
 		}
+
+		@Bean
+		@ConditionalOnBean(ServerProperties.class)
+		public SingleSkipPattern skipPatternForServerProperties(
+				final ServerProperties serverProperties) {
+			return () -> getPatternForServerProperties(serverProperties);
+		}
+
 	}
 
 	@Configuration
 	static class DefaultSkipPatternConfig {
 
-		@Bean
-		SingleSkipPattern defaultSkipPatternBean(SleuthWebProperties sleuthWebProperties) {
-			return () -> Optional.of(
-					Pattern.compile(
-							combinedPattern(sleuthWebProperties.getSkipPattern(),
-									sleuthWebProperties.getAdditionalSkipPattern())
-					)
-			);
-		}
-
-		private static String combinedPattern(String skipPattern, String additionalSkipPattern) {
+		private static String combinedPattern(String skipPattern,
+				String additionalSkipPattern) {
 			String pattern = skipPattern;
 			if (!StringUtils.hasText(skipPattern)) {
 				pattern = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
@@ -138,7 +131,15 @@ public class TraceWebAutoConfiguration {
 			}
 			return pattern;
 		}
+
+		@Bean
+		SingleSkipPattern defaultSkipPatternBean(
+				SleuthWebProperties sleuthWebProperties) {
+			return () -> Optional.of(
+					Pattern.compile(combinedPattern(sleuthWebProperties.getSkipPattern(),
+							sleuthWebProperties.getAdditionalSkipPattern())));
+		}
+
 	}
 
 }
-

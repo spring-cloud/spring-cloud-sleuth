@@ -28,8 +28,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables span information propagation when using Zuul.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} enables span information propagation when using Zuul.
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -43,13 +43,14 @@ import org.springframework.context.annotation.Configuration;
 public class TraceZuulAutoConfiguration {
 
 	@Bean
-	TracePostZuulFilter tracePostZuulFilter(HttpTracing httpTracing) {
-		return new TracePostZuulFilter(httpTracing);
+	static TraceZuulHandlerMappingBeanPostProcessor traceHandlerMappingBeanPostProcessor(
+			BeanFactory beanFactory) {
+		return new TraceZuulHandlerMappingBeanPostProcessor(beanFactory);
 	}
 
 	@Bean
-	static TraceZuulHandlerMappingBeanPostProcessor traceHandlerMappingBeanPostProcessor(BeanFactory beanFactory) {
-		return new TraceZuulHandlerMappingBeanPostProcessor(beanFactory);
+	TracePostZuulFilter tracePostZuulFilter(HttpTracing httpTracing) {
+		return new TracePostZuulFilter(httpTracing);
 	}
 
 }

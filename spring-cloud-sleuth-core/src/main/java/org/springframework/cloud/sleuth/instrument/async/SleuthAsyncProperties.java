@@ -22,7 +22,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Settings for disable instrumentation of ThreadPoolTaskExecutors
+ * Settings for disable instrumentation of ThreadPoolTaskExecutors.
  *
  * @author Jesus Alonso
  * @since 2.1.0
@@ -32,8 +32,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthAsyncProperties {
 
 	/**
-	 * List of {@link java.util.concurrent.Executor} bean names that should
-	 * be ignored and not wrapped in a trace representation
+	 * List of {@link java.util.concurrent.Executor} bean names that should be ignored and
+	 * not wrapped in a trace representation.
 	 */
 	private List<String> ignoredBeans = Collections.emptyList();
 
@@ -44,4 +44,5 @@ public class SleuthAsyncProperties {
 	public void setIgnoredBeans(List<String> ignoredBeans) {
 		this.ignoredBeans = ignoredBeans;
 	}
+
 }

@@ -50,17 +50,23 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = { WaitUntilZipkinIsUpConfig.class, SampleZipkinApplication.class },
-		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = {"sample.zipkin.enabled=true"})
+@SpringBootTest(classes = { WaitUntilZipkinIsUpConfig.class,
+		SampleZipkinApplication.class }, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestPropertySource(properties = { "sample.zipkin.enabled=true" })
 public class ZipkinTests extends AbstractIntegrationTest {
-	@ClassRule public static final MockWebServer zipkin = new MockWebServer();
+
+	@ClassRule
+	public static final MockWebServer zipkin = new MockWebServer();
 
 	private static final String APP_NAME = "testsleuthzipkin";
+
 	@Value("${local.server.port}")
 	private int port = 3380;
+
 	private String sampleAppUrl = "http://localhost:" + this.port;
-	@Autowired ZipkinProperties zipkinProperties;
+
+	@Autowired
+	ZipkinProperties zipkinProperties;
 
 	@Test
 	public void should_propagate_spans_to_zipkin() throws Exception {
@@ -68,15 +74,14 @@ public class ZipkinTests extends AbstractIntegrationTest {
 
 		long traceId = new Random().nextLong();
 
-		await().atMost(10, SECONDS).untilAsserted(() ->
-				httpMessageWithTraceIdInHeadersIsSuccessfullySent(
-						this.sampleAppUrl + "/hi2", traceId).run()
-		);
+		await().atMost(10, SECONDS)
+				.untilAsserted(() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(
+						this.sampleAppUrl + "/hi2", traceId).run());
 
 		spansSentToZipkin(zipkin, traceId);
 	}
 
-  String getAppName() {
+	String getAppName() {
 		return APP_NAME;
 	}
 
@@ -91,21 +96,27 @@ public class ZipkinTests extends AbstractIntegrationTest {
 			return zipkinProperties;
 		}
 
-		@Bean Sampler sampler() {
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
 
 	void spansSentToZipkin(MockWebServer zipkin, long traceId)
 			throws InterruptedException {
 		RecordedRequest request = zipkin.takeRequest();
-		List<Span> spans = SpanBytesDecoder.JSON_V2.decodeList(request.getBody().readByteArray());
+		List<Span> spans = SpanBytesDecoder.JSON_V2
+				.decodeList(request.getBody().readByteArray());
 		List<String> traceIdsNotFoundInZipkin = traceIdsNotFoundInZipkin(spans, traceId);
 		List<String> serviceNamesNotFoundInZipkin = serviceNamesNotFoundInZipkin(spans);
 		List<String> tagsNotFoundInZipkin = hasRequiredTag(spans);
-		log.info(String.format("The following trace IDs were not found in Zipkin [%s]", traceIdsNotFoundInZipkin));
-		log.info(String.format("The following services were not found in Zipkin [%s]", serviceNamesNotFoundInZipkin));
-		log.info(String.format("The following tags were not found in Zipkin [%s]", tagsNotFoundInZipkin));
+		log.info(String.format("The following trace IDs were not found in Zipkin [%s]",
+				traceIdsNotFoundInZipkin));
+		log.info(String.format("The following services were not found in Zipkin [%s]",
+				serviceNamesNotFoundInZipkin));
+		log.info(String.format("The following tags were not found in Zipkin [%s]",
+				tagsNotFoundInZipkin));
 		then(traceIdsNotFoundInZipkin).isEmpty();
 		then(serviceNamesNotFoundInZipkin).isEmpty();
 		then(tagsNotFoundInZipkin).isEmpty();
@@ -114,24 +125,17 @@ public class ZipkinTests extends AbstractIntegrationTest {
 
 	List<String> traceIdsNotFoundInZipkin(List<Span> spans, long traceId) {
 		String traceIdString = SpanUtil.idToHex(traceId);
-		Optional<String> traceIds = spans.stream()
-				.map(Span::traceId)
-				.filter(traceIdString::equals)
-				.findFirst();
-		return traceIds.isPresent() ? Collections.emptyList() : Collections.singletonList(traceIdString);
+		Optional<String> traceIds = spans.stream().map(Span::traceId)
+				.filter(traceIdString::equals).findFirst();
+		return traceIds.isPresent() ? Collections.emptyList()
+				: Collections.singletonList(traceIdString);
 	}
 
 	List<String> serviceNamesNotFoundInZipkin(List<Span> spans) {
-		List<String> localServiceNames = spans.stream()
-				.map(Span::localServiceName)
-				.filter(Objects::nonNull)
-				.distinct()
-				.collect(Collectors.toList());
-		List<String> remoteServiceNames = spans.stream()
-				.map(Span::remoteServiceName)
-				.filter(Objects::nonNull)
-				.distinct()
-				.collect(Collectors.toList());
+		List<String> localServiceNames = spans.stream().map(Span::localServiceName)
+				.filter(Objects::nonNull).distinct().collect(Collectors.toList());
+		List<String> remoteServiceNames = spans.stream().map(Span::remoteServiceName)
+				.filter(Objects::nonNull).distinct().collect(Collectors.toList());
 		List<String> names = new ArrayList<>();
 		names.addAll(localServiceNames);
 		names.addAll(remoteServiceNames);
@@ -141,13 +145,14 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	List<String> hasRequiredTag(List<Span> spans) {
 		String key = getRequiredTagKey();
 		Optional<String> keys = spans.stream()
-				.flatMap(span -> span.tags().keySet().stream())
-				.filter(key::equals)
+				.flatMap(span -> span.tags().keySet().stream()).filter(key::equals)
 				.findFirst();
-		return keys.isPresent() ? Collections.emptyList() : Collections.singletonList(key);
+		return keys.isPresent() ? Collections.emptyList()
+				: Collections.singletonList(key);
 	}
 
 	String getRequiredTagKey() {
 		return "random-sleep-millis";
 	}
+
 }

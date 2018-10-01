@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.io.IOException;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -28,8 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Filter running after {@link brave.servlet.TracingFilter}
- * that logs uncaught exceptions
+ * Filter running after {@link brave.servlet.TracingFilter} that logs uncaught exceptions.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
@@ -38,23 +38,28 @@ class ExceptionLoggingFilter implements Filter {
 
 	private static final Log log = LogFactory.getLog(ExceptionLoggingFilter.class);
 
-	@Override public void init(FilterConfig filterConfig) throws ServletException {
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException {
 
 	}
 
-	@Override public void doFilter(ServletRequest request, ServletResponse response,
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
 		try {
 			chain.doFilter(request, response);
-		} catch (Exception e) {
+		}
+		catch (Exception ex) {
 			if (log.isErrorEnabled()) {
-				log.error("Uncaught exception thrown", e);
+				log.error("Uncaught exception thrown", ex);
 			}
-			throw e;
+			throw ex;
 		}
 	}
 
-	@Override public void destroy() {
+	@Override
+	public void destroy() {
 
 	}
+
 }

@@ -50,15 +50,18 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = {"ribbon.eureka.enabled=false",
-		"feign.hystrix.enabled=false", "server.port=9988"})
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestPropertySource(properties = { "ribbon.eureka.enabled=false",
+		"feign.hystrix.enabled=false", "server.port=9988" })
 public class Issue350Tests {
 
 	TestRestTemplate template = new TestRestTemplate();
-	@Autowired Tracing tracer;
-	@Autowired ArrayListSpanReporter reporter;
+
+	@Autowired
+	Tracing tracer;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
@@ -67,17 +70,19 @@ public class Issue350Tests {
 
 	@Test
 	public void should_successfully_work_without_hystrix() {
-		this.template.getForEntity("http://localhost:9988/sleuth/test-not-ok", String.class);
+		this.template.getForEntity("http://localhost:9988/sleuth/test-not-ok",
+				String.class);
 
 		List<Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).tags()).containsEntry("http.status_code", "406");
 	}
+
 }
 
 @Configuration
 @EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
-@EnableFeignClients(basePackageClasses = { SleuthTestController.class})
+@EnableFeignClients(basePackageClasses = { SleuthTestController.class })
 class Application {
 
 	@Bean
@@ -104,6 +109,7 @@ class Application {
 	public Reporter<Span> spanReporter() {
 		return new ArrayListSpanReporter();
 	}
+
 }
 
 @RestController
@@ -120,9 +126,10 @@ class ServiceTestController {
 	public String notOk() throws InterruptedException, ExecutionException {
 		return "Not OK";
 	}
+
 }
 
-@FeignClient(name="myFeignClient", url="localhost:9988")
+@FeignClient(name = "myFeignClient", url = "localhost:9988")
 interface MyFeignClient {
 
 	@RequestMapping("/service/ok")
@@ -130,6 +137,7 @@ interface MyFeignClient {
 
 	@RequestMapping("/service/not-ok")
 	String exp();
+
 }
 
 @RestController
@@ -148,5 +156,5 @@ class SleuthTestController {
 	public String notOk() throws InterruptedException, ExecutionException {
 		return myFeignClient.exp();
 	}
-}
 
+}

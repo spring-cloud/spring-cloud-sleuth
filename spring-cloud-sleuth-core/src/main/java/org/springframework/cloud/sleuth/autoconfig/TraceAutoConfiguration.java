@@ -44,41 +44,43 @@ import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * to enable tracing via Spring Cloud Sleuth.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} to enable tracing via Spring Cloud Sleuth.
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
 @Configuration
-@ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
+@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
 public class TraceAutoConfiguration {
 
+	/**
+	 * Tracer bean name. Name of the bean matters for some instrumentations.
+	 */
 	public static final String TRACER_BEAN_NAME = "tracer";
 
-	@Autowired(required = false) List<SpanAdjuster> spanAdjusters = new ArrayList<>();
-	@Autowired(required = false) List<FinishedSpanHandler> finishedSpanHandlers = new ArrayList<>();
-	@Autowired(required = false) List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
+	@Autowired(required = false)
+	List<SpanAdjuster> spanAdjusters = new ArrayList<>();
+
+	@Autowired(required = false)
+	List<FinishedSpanHandler> finishedSpanHandlers = new ArrayList<>();
+
+	@Autowired(required = false)
+	List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
-	Tracing tracing(@Value("${spring.zipkin.service.name:${spring.application.name:default}}") String serviceName,
-			Propagation.Factory factory,
-			CurrentTraceContext currentTraceContext,
-			Reporter<zipkin2.Span> reporter,
-			Sampler sampler,
-			ErrorParser errorParser,
-			SleuthProperties sleuthProperties
-	) {
-		Tracing.Builder builder = Tracing.newBuilder()
-				.sampler(sampler)
-				.errorParser(errorParser)
-				.localServiceName(serviceName)
-				.propagationFactory(factory)
-				.currentTraceContext(currentTraceContext)
+	Tracing tracing(
+			@Value("${spring.zipkin.service.name:${spring.application.name:default}}") String serviceName,
+			Propagation.Factory factory, CurrentTraceContext currentTraceContext,
+			Reporter<zipkin2.Span> reporter, Sampler sampler, ErrorParser errorParser,
+			SleuthProperties sleuthProperties) {
+		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
+				.errorParser(errorParser).localServiceName(serviceName)
+				.propagationFactory(factory).currentTraceContext(currentTraceContext)
 				.spanReporter(adjustedReporter(reporter))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin());
@@ -89,7 +91,7 @@ public class TraceAutoConfiguration {
 	}
 
 	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate) {
-		return span -> {
+		return (span) -> {
 			Span spanToAdjust = span;
 			for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
 				spanToAdjust = spanAdjuster.adjust(spanToAdjust);
@@ -111,14 +113,16 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean SpanNamer sleuthSpanNamer() {
+	@ConditionalOnMissingBean
+	SpanNamer sleuthSpanNamer() {
 		return new DefaultSpanNamer();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
-		if (sleuthProperties.getBaggageKeys().isEmpty() && sleuthProperties.getPropagationKeys().isEmpty()) {
+		if (sleuthProperties.getBaggageKeys().isEmpty()
+				&& sleuthProperties.getPropagationKeys().isEmpty()) {
 			return B3Propagation.FACTORY;
 		}
 		ExtraFieldPropagation.FactoryBuilder factoryBuilder = ExtraFieldPropagation
@@ -170,4 +174,5 @@ public class TraceAutoConfiguration {
 	CurrentSpanCustomizer spanCustomizer(Tracing tracing) {
 		return CurrentSpanCustomizer.create(tracing);
 	}
+
 }

@@ -24,29 +24,30 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
- * Contains {@link Feign.Builder} implementation with tracing components
- * that close spans on completion of request processing.
+ * Contains {@link Feign.Builder} implementation with tracing components that close spans
+ * on completion of request processing.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.0
  */
 final class SleuthFeignBuilder {
 
-	private SleuthFeignBuilder() {}
+	private SleuthFeignBuilder() {
+	}
 
 	static Feign.Builder builder(BeanFactory beanFactory) {
-		return Feign.builder().retryer(Retryer.NEVER_RETRY)
-				.client(client(beanFactory));
+		return Feign.builder().retryer(Retryer.NEVER_RETRY).client(client(beanFactory));
 	}
 
 	private static Client client(BeanFactory beanFactory) {
 		try {
 			Client client = beanFactory.getBean(Client.class);
 			return new LazyClient(beanFactory, client);
-		} catch (BeansException e) {
+		}
+		catch (BeansException ex) {
 			return TracingFeignClient.create(beanFactory.getBean(HttpTracing.class),
 					new Client.Default(null, null));
 		}
 	}
+
 }

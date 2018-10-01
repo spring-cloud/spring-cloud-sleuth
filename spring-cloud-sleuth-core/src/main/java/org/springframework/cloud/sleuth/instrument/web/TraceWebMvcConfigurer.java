@@ -28,16 +28,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * MVC Adapter that adds the {@link SpanCustomizingAsyncHandlerInterceptor}
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.3
  */
 @Configuration
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
 class TraceWebMvcConfigurer implements WebMvcConfigurer {
-	@Autowired ApplicationContext applicationContext;
+
+	@Autowired
+	ApplicationContext applicationContext;
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(this.applicationContext.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
+		registry.addInterceptor(this.applicationContext
+				.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
 	}
+
 }

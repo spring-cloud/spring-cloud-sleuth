@@ -23,9 +23,15 @@ import feign.Request;
 import feign.Response;
 import org.springframework.beans.factory.BeanFactory;
 
-class  LazyClient implements Client {
+/**
+ * Lazy implementation of the Feign Client.
+ *
+ * @author Marcin Grzejszczak
+ */
+class LazyClient implements Client {
 
 	private final BeanFactory beanFactory;
+
 	private final Client delegate;
 
 	private TraceFeignObjectWrapper wrapper;
@@ -35,8 +41,8 @@ class  LazyClient implements Client {
 		this.delegate = delegate;
 	}
 
-	@Override public Response execute(Request request, Request.Options options)
-			throws IOException {
+	@Override
+	public Response execute(Request request, Request.Options options) throws IOException {
 		return ((Client) wrapper().wrap(this.delegate)).execute(request, options);
 	}
 
@@ -46,4 +52,5 @@ class  LazyClient implements Client {
 		}
 		return this.wrapper;
 	}
+
 }

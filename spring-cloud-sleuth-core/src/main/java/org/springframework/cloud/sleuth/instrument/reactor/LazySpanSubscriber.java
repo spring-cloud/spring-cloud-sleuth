@@ -23,8 +23,9 @@ import org.reactivestreams.Subscription;
 import reactor.util.context.Context;
 
 /**
- * A lazy representation of the {@link SpanSubscription}
+ * A lazy representation of the {@link SpanSubscription}.
  *
+ * @param - type of what subscription returns
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
@@ -36,32 +37,39 @@ final class LazySpanSubscriber<T> extends AtomicBoolean implements SpanSubscript
 		this.supplier = supplier;
 	}
 
-	@Override public void onSubscribe(Subscription subscription) {
+	@Override
+	public void onSubscribe(Subscription subscription) {
 		this.supplier.get().onSubscribe(subscription);
 	}
 
-	@Override public void request(long n) {
+	@Override
+	public void request(long n) {
 		this.supplier.get().request(n);
 	}
 
-	@Override public void cancel() {
+	@Override
+	public void cancel() {
 		this.supplier.get().cancel();
 	}
 
-	@Override public void onNext(T o) {
+	@Override
+	public void onNext(T o) {
 		this.supplier.get().onNext(o);
 	}
 
-	@Override public void onError(Throwable throwable) {
+	@Override
+	public void onError(Throwable throwable) {
 		this.supplier.get().onError(throwable);
 	}
 
-	@Override public void onComplete() {
+	@Override
+	public void onComplete() {
 		this.supplier.get().onComplete();
 	}
 
-	@Override public Context currentContext() {
+	@Override
+	public Context currentContext() {
 		return this.supplier.get().currentContext();
 	}
-}
 
+}

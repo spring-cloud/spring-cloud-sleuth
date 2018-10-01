@@ -22,20 +22,25 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.util.StringUtils;
 
 /**
+ * Method Invocation processor for non reactor apps.
+ *
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
+class NonReactorSleuthMethodInvocationProcessor
+		extends AbstractSleuthMethodInvocationProcessor {
 
-	@Override public Object process(MethodInvocation invocation, NewSpan newSpan,
-			ContinueSpan continueSpan) throws Throwable  {
+	@Override
+	public Object process(MethodInvocation invocation, NewSpan newSpan,
+			ContinueSpan continueSpan) throws Throwable {
 		return proceedUnderSynchronousSpan(invocation, newSpan, continueSpan);
 	}
 
-	private Object proceedUnderSynchronousSpan(
-			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
+	private Object proceedUnderSynchronousSpan(MethodInvocation invocation,
+			NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
 		Span span = tracer().currentSpan();
-		//in case of @ContinueSpan and no span in tracer we start new span and should close it on completion
+		// in case of @ContinueSpan and no span in tracer we start new span and should
+		// close it on completion
 		boolean startNewSpan = newSpan != null || span == null;
 		if (startNewSpan) {
 			span = tracer().nextSpan();
@@ -47,11 +52,14 @@ class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvo
 		try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 			before(invocation, span, log, hasLog);
 			return invocation.proceed();
-		} catch (Exception e) {
-			onFailure(span, log, hasLog, e);
-			throw e;
-		} finally {
+		}
+		catch (Exception ex) {
+			onFailure(span, log, hasLog, ex);
+			throw ex;
+		}
+		finally {
 			after(span, startNewSpan, log, hasLog);
 		}
 	}
+
 }

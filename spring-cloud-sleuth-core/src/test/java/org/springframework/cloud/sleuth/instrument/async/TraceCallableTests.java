@@ -39,13 +39,14 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceCallableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.spanReporter(this.reporter)
-			.build();
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.spanReporter(this.reporter).build();
+
 	Tracer tracer = this.tracing.tracer();
 
 	@After
@@ -56,16 +57,12 @@ public class TraceCallableTests {
 	}
 
 	@Test
-	public void should_not_see_same_trace_id_in_successive_tasks()
-			throws Exception {
-		Span firstSpan = givenCallableGetsSubmitted(
-				thatRetrievesTraceFromThreadLocal());
+	public void should_not_see_same_trace_id_in_successive_tasks() throws Exception {
+		Span firstSpan = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
-		Span secondSpan = whenCallableGetsSubmitted(
-				thatRetrievesTraceFromThreadLocal());
+		Span secondSpan = whenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
-		then(secondSpan.context().traceId())
-				.isNotEqualTo(firstSpan.context().traceId());
+		then(secondSpan.context().traceId()).isNotEqualTo(firstSpan.context().traceId());
 	}
 
 	@Test
@@ -83,7 +80,7 @@ public class TraceCallableTests {
 	public void should_remove_parent_span_from_thread_local_after_finishing_work()
 			throws Exception {
 		Span parent = this.tracer.nextSpan().name("http:parent");
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(parent)){
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(parent)) {
 			Span child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 			then(parent).as("parent").isNotNull();
 			then(child.context().parentId()).isEqualTo(parent.context().spanId());
@@ -97,22 +94,22 @@ public class TraceCallableTests {
 	}
 
 	@Test
-	public void should_take_name_of_span_from_span_name_annotation()
-			throws Exception {
+	public void should_take_name_of_span_from_span_name_annotation() throws Exception {
 		whenATraceKeepingCallableGetsSubmitted();
 
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).name()).isEqualTo("some-callable-name-from-annotation");
+		then(this.reporter.getSpans().get(0).name())
+				.isEqualTo("some-callable-name-from-annotation");
 	}
 
 	@Test
 	public void should_take_name_of_span_from_to_string_if_span_name_annotation_is_missing()
 			throws Exception {
-		whenCallableGetsSubmitted(
-				thatRetrievesTraceFromThreadLocal());
+		whenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).name()).isEqualTo("some-callable-name-from-to-string");
+		then(this.reporter.getSpans().get(0).name())
+				.isEqualTo("some-callable-name-from-to-string");
 	}
 
 	private Callable<Span> thatRetrievesTraceFromThreadLocal() {
@@ -136,13 +133,15 @@ public class TraceCallableTests {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
-				callable)).get();
+		return this.executor.submit(
+				new TraceCallable<>(this.tracing, new DefaultSpanNamer(), callable))
+				.get();
 	}
+
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(),
-				new TraceKeepingCallable())).get();
+		return this.executor.submit(new TraceCallable<>(this.tracing,
+				new DefaultSpanNamer(), new TraceKeepingCallable())).get();
 	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)
@@ -152,6 +151,7 @@ public class TraceCallableTests {
 
 	@SpanName("some-callable-name-from-annotation")
 	static class TraceKeepingCallable implements Callable<Span> {
+
 		public Span span;
 
 		@Override
@@ -159,6 +159,7 @@ public class TraceCallableTests {
 			this.span = Tracing.currentTracer().currentSpan();
 			return this.span;
 		}
+
 	}
 
 }

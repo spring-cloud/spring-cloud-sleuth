@@ -19,19 +19,27 @@ package org.springframework.cloud.sleuth;
 import zipkin2.Span;
 
 /**
+ * Deprecated Span Adjuster.
+ *
  * @deprecated use {@link brave.handler.FinishedSpanHandler}
+ * @author Marcin Grzejszczak
  */
 @Deprecated
 public interface SpanAdjuster {
+
 	/**
-	 * You can adjust the {@link zipkin2.Span} by creating a new one using the {@link Span#toBuilder()}
-	 * before reporting it.
+	 * You can adjust the {@link zipkin2.Span} by creating a new one using the
+	 * {@link Span#toBuilder()} before reporting it.
 	 *
-	 * With the legacy Sleuth approach we're generating spans with a fixed name. Some users want to modify the name
-	 * depending on some values of tags. Implementation of this interface can be used to alter
-	 * then name. Example:
+	 * With the legacy Sleuth approach we're generating spans with a fixed name. Some
+	 * users want to modify the name depending on some values of tags. Implementation of
+	 * this interface can be used to alter then name. Example:
 	 *
 	 * {@code span -> span.toBuilder().name(scrub(span.getName())).build();}
+	 *
+	 * @param - span to adjust
+	 * @return - adjusted span
 	 */
 	Span adjust(Span span);
+
 }

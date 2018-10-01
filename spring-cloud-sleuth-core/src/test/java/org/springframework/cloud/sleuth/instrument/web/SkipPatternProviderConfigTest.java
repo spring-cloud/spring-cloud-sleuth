@@ -35,27 +35,31 @@ public class SkipPatternProviderConfigTest {
 	public void should_pick_skip_pattern_from_sleuth_properties() throws Exception {
 		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
 		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
-		Pattern pattern = new TraceWebAutoConfiguration.DefaultSkipPatternConfig().defaultSkipPatternBean(sleuthWebProperties)
-				.skipPattern().get();
+		Pattern pattern = new TraceWebAutoConfiguration.DefaultSkipPatternConfig()
+				.defaultSkipPatternBean(sleuthWebProperties).skipPattern().get();
 
 		then(pattern.pattern()).isEqualTo("foo.*|bar.*");
 	}
 
 	@Test
-	public void should_combine_skip_pattern_and_additional_pattern_when_all_are_not_empty() throws Exception {
+	public void should_combine_skip_pattern_and_additional_pattern_when_all_are_not_empty()
+			throws Exception {
 		SleuthWebProperties sleuthWebProperties = new SleuthWebProperties();
 		sleuthWebProperties.setSkipPattern("foo.*|bar.*");
 		sleuthWebProperties.setAdditionalSkipPattern("baz.*|faz.*");
-		Pattern pattern = new TraceWebAutoConfiguration.DefaultSkipPatternConfig().defaultSkipPatternBean(sleuthWebProperties)
-				.skipPattern().get();
+		Pattern pattern = new TraceWebAutoConfiguration.DefaultSkipPatternConfig()
+				.defaultSkipPatternBean(sleuthWebProperties).skipPattern().get();
 
 		then(pattern.pattern()).isEqualTo("foo.*|bar.*|baz.*|faz.*");
 	}
 
 	@Test
-	public void should_return_empty_when_management_context_has_no_context_path() throws Exception {
+	public void should_return_empty_when_management_context_has_no_context_path()
+			throws Exception {
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ManagementSkipPatternProviderConfig()
-				.skipPatternForManagementServerProperties(new ManagementServerProperties()).skipPattern();
+				.skipPatternForManagementServerProperties(
+						new ManagementServerProperties())
+				.skipPattern();
 
 		then(pattern).isEmpty();
 	}
@@ -73,7 +77,8 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	@Test
-	public void should_return_empty_when_server_props_have_no_context_path() throws Exception {
+	public void should_return_empty_when_server_props_have_no_context_path()
+			throws Exception {
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ServerSkipPatternProviderConfig()
 				.skipPatternForServerProperties(new ServerProperties()).skipPattern();
 
@@ -109,4 +114,5 @@ public class SkipPatternProviderConfigTest {
 	private SingleSkipPattern bar() {
 		return () -> Optional.of(Pattern.compile("bar"));
 	}
+
 }

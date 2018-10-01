@@ -49,17 +49,22 @@ import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspec
 @SpringBootTest(classes = SleuthSpanCreatorAspectFluxTests.TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SleuthSpanCreatorAspectFluxTests {
-	
-	@Autowired TestBeanInterface testBean;
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanReporter reporter;
-	
+
+	@Autowired
+	TestBeanInterface testBean;
+
+	@Autowired
+	Tracer tracer;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
+
 	@Before
 	public void setup() {
 		this.reporter.clear();
 		testBean.reset();
 	}
-	
+
 	@Test
 	public void shouldCreateSpanWhenAnnotationOnInterfaceMethod() {
 		Flux<String> flux = this.testBean.testMethod();
@@ -85,7 +90,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		then(spans.get(0).duration()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
-	
+
 	@Test
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnClassMethod() {
 		Flux<String> flux = this.testBean.testMethod3();
@@ -164,8 +169,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
-		then(spans.get(0).tags())
-				.containsEntry("class", "TestBean")
+		then(spans.get(0).tags()).containsEntry("class", "TestBean")
 				.containsEntry("method", "testMethod9");
 		then(spans.get(0).duration()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
@@ -179,18 +183,18 @@ public class SleuthSpanCreatorAspectFluxTests {
 			Flux<String> flux = this.testBean.testMethod10("test");
 
 			verifyNoSpansUntilFluxComplete(flux);
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("foo");
-		then(spans.get(0).tags())
-				.containsEntry("customTestTag10", "test");
-		then(spans.get(0).annotations()
-				.stream().map(Annotation::value).collect(Collectors.toList()))
-				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
+		then(spans.get(0).annotations().stream().map(Annotation::value)
+				.collect(Collectors.toList())).contains("customTest.before",
+						"customTest.after");
 		then(spans.get(0).duration()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -203,11 +207,10 @@ public class SleuthSpanCreatorAspectFluxTests {
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("test-method10");
-		then(spans.get(0).tags())
-				.containsEntry("customTestTag10", "test");
-		then(spans.get(0).annotations()
-				.stream().map(Annotation::value).collect(Collectors.toList()))
-				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
+		then(spans.get(0).annotations().stream().map(Annotation::value)
+				.collect(Collectors.toList())).contains("customTest.before",
+						"customTest.after");
 		then(spans.get(0).duration()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -220,18 +223,18 @@ public class SleuthSpanCreatorAspectFluxTests {
 			Flux<String> flux = this.testBean.testMethod10_v2("test");
 
 			verifyNoSpansUntilFluxComplete(flux);
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("foo");
-		then(spans.get(0).tags())
-				.containsEntry("customTestTag10", "test");
-		then(spans.get(0).annotations()
-				.stream().map(Annotation::value).collect(Collectors.toList()))
-				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
+		then(spans.get(0).annotations().stream().map(Annotation::value)
+				.collect(Collectors.toList())).contains("customTest.before",
+						"customTest.after");
 		then(spans.get(0).duration()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -245,20 +248,20 @@ public class SleuthSpanCreatorAspectFluxTests {
 			Flux<String> flux = this.testBean.testMethod11("test");
 			// end::continue_span_execution[]
 			verifyNoSpansUntilFluxComplete(flux);
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("foo");
-		then(spans.get(0).tags())
-				.containsEntry("class", "TestBean")
+		then(spans.get(0).tags()).containsEntry("class", "TestBean")
 				.containsEntry("method", "testMethod11")
 				.containsEntry("customTestTag11", "test");
-		then(spans.get(0).annotations()
-				.stream().map(Annotation::value).collect(Collectors.toList()))
-				.contains("customTest.before", "customTest.after");
+		then(spans.get(0).annotations().stream().map(Annotation::value)
+				.collect(Collectors.toList())).contains("customTest.before",
+						"customTest.after");
 		then(spans.get(0).duration()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -271,14 +274,14 @@ public class SleuthSpanCreatorAspectFluxTests {
 			then(this.reporter.getSpans()).isEmpty();
 
 			flux.toIterable().iterator().next();
-		} catch (RuntimeException ignored) {
+		}
+		catch (RuntimeException ignored) {
 		}
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("test-method12");
-		then(spans.get(0).tags())
-				.containsEntry("testTag12", "test")
+		then(spans.get(0).tags()).containsEntry("testTag12", "test")
 				.containsEntry("error", "test exception 12");
 		then(spans.get(0).duration()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
@@ -296,20 +299,20 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 			flux.toIterable().iterator().next();
 			// end::continue_span_execution[]
-		} catch (RuntimeException ignored) {
-		} finally {
+		}
+		catch (RuntimeException ignored) {
+		}
+		finally {
 			span.finish();
 		}
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("foo");
-		then(spans.get(0).tags())
-				.containsEntry("error", "test exception 13");
-		then(spans.get(0).annotations()
-				.stream().map(Annotation::value).collect(Collectors.toList()))
-				.contains("testMethod13.before", "testMethod13.afterFailure",
-						"testMethod13.after");
+		then(spans.get(0).tags()).containsEntry("error", "test exception 13");
+		then(spans.get(0).annotations().stream().map(Annotation::value)
+				.collect(Collectors.toList())).contains("testMethod13.before",
+						"testMethod13.afterFailure", "testMethod13.after");
 		then(spans.get(0).duration()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -348,7 +351,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		then(this.tracer.currentSpan()).isNull();
 	}
 
-	private static String toHexString(long value){
+	private static String toHexString(long value) {
 		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
 	}
 
@@ -429,18 +432,22 @@ public class SleuthSpanCreatorAspectFluxTests {
 		void proceed();
 
 		void reset();
+
 	}
-	
+
 	protected static class TestBean implements TestBeanInterface {
 
 		public static final String TEST_STRING1 = "Test String 1";
+
 		public static final String TEST_STRING2 = "Test String 2";
 
 		private final Tracer tracer;
 
-		private AtomicReference<CompletableFuture<Void>> proceed
-				= new AtomicReference<>(new CompletableFuture<>());
-		private Flux<String> testFlux = Flux.defer(() -> Flux.just(TEST_STRING1, TEST_STRING2))
+		private AtomicReference<CompletableFuture<Void>> proceed = new AtomicReference<>(
+				new CompletableFuture<>());
+
+		private Flux<String> testFlux = Flux
+				.defer(() -> Flux.just(TEST_STRING1, TEST_STRING2))
 				.delayUntil(s -> Mono.fromFuture(proceed.get()))
 				.doOnNext(s -> proceed.set(new CompletableFuture<>()));
 
@@ -449,11 +456,11 @@ public class SleuthSpanCreatorAspectFluxTests {
 		}
 
 		@Override
-		public void reset(){
+		public void reset() {
 			proceed.set(new CompletableFuture<>());
 		}
 
-		public void proceed(){
+		public void proceed() {
 			proceed.get().complete(null);
 		}
 
@@ -480,7 +487,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		public Flux<String> testMethod4() {
 			return testFlux;
 		}
-		
+
 		@Override
 		public Flux<String> testMethod5(String test) {
 			return testFlux;
@@ -509,12 +516,14 @@ public class SleuthSpanCreatorAspectFluxTests {
 		}
 
 		@Override
-		public Flux<String> testMethod10(@SpanTag(value = "customTestTag10") String param) {
+		public Flux<String> testMethod10(
+				@SpanTag(value = "customTestTag10") String param) {
 			return testFlux;
 		}
 
 		@Override
-		public Flux<String> testMethod10_v2(@SpanTag(key = "customTestTag10") String param) {
+		public Flux<String> testMethod10_v2(
+				@SpanTag(key = "customTestTag10") String param) {
 			return testFlux;
 		}
 
@@ -526,12 +535,14 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		@Override
 		public Flux<String> testMethod12(String param) {
-			return Flux.defer(() -> Flux.error(new RuntimeException("test exception 12")));
+			return Flux
+					.defer(() -> Flux.error(new RuntimeException("test exception 12")));
 		}
 
 		@Override
 		public Flux<String> testMethod13() {
-			return Flux.defer(() -> Flux.error(new RuntimeException("test exception 13")));
+			return Flux
+					.defer(() -> Flux.error(new RuntimeException("test exception 13")));
 		}
 
 		@Override
@@ -546,11 +557,12 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		@Override
 		public Flux<Long> newSpanInSubscriberContext() {
-			return Mono.subscriberContext()
-					.flatMapMany(context -> Flux.just(tracer.currentSpan().context().spanId()));
+			return Mono.subscriberContext().flatMapMany(
+					context -> Flux.just(tracer.currentSpan().context().spanId()));
 		}
+
 	}
-	
+
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class TestConfiguration {
@@ -560,12 +572,16 @@ public class SleuthSpanCreatorAspectFluxTests {
 			return new TestBean(tracer);
 		}
 
-		@Bean Reporter<zipkin2.Span> spanReporter() {
+		@Bean
+		Reporter<zipkin2.Span> spanReporter() {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean Sampler alwaysSampler() {
+		@Bean
+		Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
+
 }

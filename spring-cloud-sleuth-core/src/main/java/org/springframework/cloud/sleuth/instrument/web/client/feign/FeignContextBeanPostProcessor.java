@@ -25,7 +25,6 @@ import org.springframework.cloud.openfeign.FeignContext;
  * Post processor that wraps Feign Context in its tracing representations.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.0.2
  */
 final class FeignContextBeanPostProcessor implements BeanPostProcessor {
@@ -54,4 +53,5 @@ final class FeignContextBeanPostProcessor implements BeanPostProcessor {
 	private TraceFeignObjectWrapper traceFeignObjectWrapper() {
 		return new TraceFeignObjectWrapper(this.beanFactory);
 	}
+
 }

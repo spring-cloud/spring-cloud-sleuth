@@ -49,15 +49,21 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = {"feign.hystrix.enabled=false"})
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
+		"feign.hystrix.enabled=false" })
 public class Issue502Tests {
 
-	@Autowired MyClient myClient;
-	@Autowired MyNameRemote myNameRemote;
-	@Autowired ArrayListSpanReporter reporter;
-	@Autowired Tracing tracer;
+	@Autowired
+	MyClient myClient;
+
+	@Autowired
+	MyNameRemote myNameRemote;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
+
+	@Autowired
+	Tracing tracer;
 
 	@Before
 	public void open() {
@@ -75,6 +81,7 @@ public class Issue502Tests {
 		then(spans).hasSize(1);
 		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
 	}
+
 }
 
 @Configuration
@@ -99,28 +106,27 @@ class Application {
 
 }
 
-@FeignClient(name="foo",
-		url="http://non.existing.url")
+@FeignClient(name = "foo", url = "http://non.existing.url")
 interface MyNameRemote {
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	String get();
+
 }
 
 class MyClient implements Client {
 
 	boolean wasCalled;
 
-	@Override public Response execute(Request request, Request.Options options)
-			throws IOException {
+	@Override
+	public Response execute(Request request, Request.Options options) throws IOException {
 		this.wasCalled = true;
-		return Response.builder()
-				.body("foo", Charset.forName("UTF-8"))
-				.headers(new HashMap<>())
-				.status(200).build();
+		return Response.builder().body("foo", Charset.forName("UTF-8"))
+				.headers(new HashMap<>()).status(200).build();
 	}
 
 	boolean wasCalled() {
 		return this.wasCalled;
 	}
+
 }

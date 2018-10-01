@@ -33,7 +33,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class SleuthHttpSamplerTests {
 
-	@Mock HttpAdapter adapter;
+	@Mock
+	HttpAdapter adapter;
 
 	@Test
 	public void should_delegate_sampling_decision_if_pattern_is_not_matched() {
@@ -52,4 +53,5 @@ public class SleuthHttpSamplerTests {
 
 		then(sampler.trySample(this.adapter, new Object())).isFalse();
 	}
+
 }

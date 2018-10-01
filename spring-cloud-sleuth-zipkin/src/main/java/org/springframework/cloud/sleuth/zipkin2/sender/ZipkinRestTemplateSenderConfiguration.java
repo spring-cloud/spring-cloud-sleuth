@@ -46,7 +46,9 @@ import zipkin2.reporter.Sender;
 @Conditional(ZipkinSenderCondition.class)
 @EnableConfigurationProperties(ZipkinSenderProperties.class)
 class ZipkinRestTemplateSenderConfiguration {
-	@Autowired ZipkinUrlExtractor extractor;
+
+	@Autowired
+	ZipkinUrlExtractor extractor;
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -54,19 +56,23 @@ class ZipkinRestTemplateSenderConfiguration {
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, this.extractor);
 		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
+		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(),
+				zipkin.getEncoder());
 	}
 
 	@Configuration
 	@ConditionalOnMissingClass("org.springframework.cloud.client.loadbalancer.LoadBalancerClient")
 	static class DefaultZipkinUrlExtractorConfiguration {
-		@Autowired(required = false) LoadBalancerClient client;
+
+		@Autowired(required = false)
+		LoadBalancerClient client;
 
 		@Bean
 		@ConditionalOnMissingBean
 		ZipkinLoadBalancer noOpLoadBalancer(final ZipkinProperties zipkinProperties) {
 			return new NoOpZipkinLoadBalancer(zipkinProperties);
 		}
+
 	}
 
 	@Configuration
@@ -76,24 +82,32 @@ class ZipkinRestTemplateSenderConfiguration {
 		@Configuration
 		@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "true", matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
-			@Autowired(required = false) LoadBalancerClient client;
+
+			@Autowired(required = false)
+			LoadBalancerClient client;
 
 			@Bean
 			@ConditionalOnMissingBean
-			ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(ZipkinProperties zipkinProperties) {
-				return new LoadBalancerClientZipkinLoadBalancer(this.client, zipkinProperties);
+			ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(
+					ZipkinProperties zipkinProperties) {
+				return new LoadBalancerClientZipkinLoadBalancer(this.client,
+						zipkinProperties);
 			}
+
 		}
 
 		@Configuration
 		@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {
+
 			@Bean
 			@ConditionalOnMissingBean
 			ZipkinLoadBalancer noOpLoadBalancer(final ZipkinProperties zipkinProperties) {
 				return new NoOpZipkinLoadBalancer(zipkinProperties);
 			}
+
 		}
+
 	}
 
 	@Bean
@@ -105,17 +119,20 @@ class ZipkinRestTemplateSenderConfiguration {
 			}
 		};
 	}
+
 }
 
 /**
- * Resolves at runtime where the Zipkin server is. If there's no discovery client then {@link URI}
- * from the properties is taken. Otherwise service discovery is pinged for current Zipkin address.
+ * Resolves at runtime where the Zipkin server is. If there's no discovery client then
+ * {@link URI} from the properties is taken. Otherwise service discovery is pinged for
+ * current Zipkin address.
  */
 class ZipkinRestTemplateWrapper extends RestTemplate {
 
 	private static final Log log = LogFactory.getLog(ZipkinRestTemplateWrapper.class);
 
 	private final ZipkinProperties zipkinProperties;
+
 	private final ZipkinUrlExtractor extractor;
 
 	ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties,
@@ -124,9 +141,10 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 		this.extractor = extractor;
 	}
 
-	@Override protected <T> T doExecute(URI originalUrl, HttpMethod method,
-			RequestCallback requestCallback,
-			ResponseExtractor<T> responseExtractor) throws RestClientException {
+	@Override
+	protected <T> T doExecute(URI originalUrl, HttpMethod method,
+			RequestCallback requestCallback, ResponseExtractor<T> responseExtractor)
+			throws RestClientException {
 		URI uri = this.extractor.zipkinUrl(this.zipkinProperties);
 		URI newUri = resolvedZipkinUri(originalUrl, uri);
 		return super.doExecute(newUri, method, requestCallback, responseExtractor);
@@ -135,27 +153,30 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 	private URI resolvedZipkinUri(URI originalUrl, URI resolvedZipkinUri) {
 		try {
 			return new URI(resolvedZipkinUri.getScheme(), resolvedZipkinUri.getUserInfo(),
-					resolvedZipkinUri.getHost(), resolvedZipkinUri.getPort(), originalUrl.getPath(),
-					originalUrl.getQuery(), originalUrl.getFragment());
-		} catch (URISyntaxException e) {
+					resolvedZipkinUri.getHost(), resolvedZipkinUri.getPort(),
+					originalUrl.getPath(), originalUrl.getQuery(),
+					originalUrl.getFragment());
+		}
+		catch (URISyntaxException e) {
 			if (log.isDebugEnabled()) {
-				log.debug("Failed to create the new URI from original ["
-						+ originalUrl
-						+ "] and new one ["
-						+ resolvedZipkinUri
-						+ "]");
+				log.debug("Failed to create the new URI from original [" + originalUrl
+						+ "] and new one [" + resolvedZipkinUri + "]");
 			}
 			return originalUrl;
 		}
 	}
+
 }
 
 /**
- * Internal interface to provide a way to retrieve Zipkin URI. If there's no discovery client then
- * this value will be taken from the properties. Otherwise host will be assumed to be a service id.
+ * Internal interface to provide a way to retrieve Zipkin URI. If there's no discovery
+ * client then this value will be taken from the properties. Otherwise host will be
+ * assumed to be a service id.
  */
 interface ZipkinUrlExtractor {
+
 	URI zipkinUrl(ZipkinProperties zipkinProperties);
+
 }
 
 class NoOpZipkinLoadBalancer implements ZipkinLoadBalancer {
@@ -166,7 +187,9 @@ class NoOpZipkinLoadBalancer implements ZipkinLoadBalancer {
 		this.zipkinProperties = zipkinProperties;
 	}
 
-	@Override public URI instance() {
+	@Override
+	public URI instance() {
 		return URI.create(this.zipkinProperties.getBaseUrl());
 	}
+
 }

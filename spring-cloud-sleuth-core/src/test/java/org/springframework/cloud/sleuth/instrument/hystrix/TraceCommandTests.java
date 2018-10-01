@@ -42,13 +42,12 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceCommandTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.spanReporter(this.reporter)
-			.sampler(Sampler.ALWAYS_SAMPLE)
-			.build();
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.spanReporter(this.reporter).sampler(Sampler.ALWAYS_SAMPLE).build();
+
 	Tracer tracer = this.tracing.tracer();
 
 	@Before
@@ -65,18 +64,19 @@ public class TraceCommandTests {
 		Span secondSpanFromHystrix = whenCommandIsExecuted(traceReturningCommand());
 
 		then(secondSpanFromHystrix.context().traceId()).as("second trace id")
-				.isNotEqualTo(firstSpanFromHystrix.context().traceId()).as("first trace id");
+				.isNotEqualTo(firstSpanFromHystrix.context().traceId())
+				.as("first trace id");
 	}
+
 	@Test
 	public void should_create_a_local_span_with_proper_tags_when_hystrix_command_gets_executed()
 			throws Exception {
 		whenCommandIsExecuted(traceReturningCommand());
 
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("commandKey", "traceCommandKey");
-		then(this.reporter.getSpans().get(0).duration())
-				.isGreaterThan(0L);
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("commandKey",
+				"traceCommandKey");
+		then(this.reporter.getSpans().get(0).duration()).isGreaterThan(0L);
 	}
 
 	@Test
@@ -86,15 +86,15 @@ public class TraceCommandTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			TraceCommand<Span> command = traceReturningCommand();
 			whenCommandIsExecuted(command);
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(2);
 		then(spans.get(0).traceId()).isEqualTo(span.context().traceIdString());
-		then(spans.get(0).tags())
-				.containsEntry("commandKey", "traceCommandKey")
+		then(spans.get(0).tags()).containsEntry("commandKey", "traceCommandKey")
 				.containsEntry("commandGroup", "group")
 				.containsEntry("threadPoolKey", "group");
 	}
@@ -140,11 +140,13 @@ public class TraceCommandTests {
 				throw new FooException();
 			}
 
-			@Override public Span doGetFallback() {
+			@Override
+			public Span doGetFallback() {
 				return tracer.currentSpan();
 			}
 
-			@Override protected String getFallbackMethodName() {
+			@Override
+			protected String getFallbackMethodName() {
 				return super.getFallbackMethodName() + "_foobar";
 			}
 		};
@@ -156,24 +158,22 @@ public class TraceCommandTests {
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).traceId()).isEqualTo(span.context().traceIdString());
-		then(spans.get(0).tags())
-				.containsEntry("commandKey", "command")
+		then(spans.get(0).tags()).containsEntry("commandKey", "command")
 				.containsEntry("commandGroup", "group")
 				.containsEntry("threadPoolKey", "group")
 				.containsEntry("fallbackMethodName", "getFallback_foobar");
 	}
 
-	private String someLogic(){
+	private String someLogic() {
 		return "some logic";
 	}
 
 	private TraceCommand<Span> traceReturningCommand() {
-		return new TraceCommand<Span>(this.tracer,
-				withGroupKey(asKey("group"))
-						.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties
-								.Setter().withCoreSize(1).withMaxQueueSize(1))
-						.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-								.withExecutionTimeoutEnabled(false))
+		return new TraceCommand<Span>(this.tracer, withGroupKey(asKey("group"))
+				.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties.Setter()
+						.withCoreSize(1).withMaxQueueSize(1))
+				.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+						.withExecutionTimeoutEnabled(false))
 				.andCommandKey(HystrixCommandKey.Factory.asKey("traceCommandKey"))) {
 			@Override
 			public Span doRun() throws Exception {
@@ -189,6 +189,9 @@ public class TraceCommandTests {
 	private Span givenACommandWasExecuted(TraceCommand<Span> command) {
 		return whenCommandIsExecuted(command);
 	}
+
 }
 
-class FooException extends RuntimeException {}
+class FooException extends RuntimeException {
+
+}

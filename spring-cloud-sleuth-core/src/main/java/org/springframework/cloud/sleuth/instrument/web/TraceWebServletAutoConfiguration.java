@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import javax.servlet.DispatcherType;
+
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.servlet.TracingFilter;
@@ -34,12 +36,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import static javax.servlet.DispatcherType.ASYNC;
-import static javax.servlet.DispatcherType.ERROR;
-import static javax.servlet.DispatcherType.FORWARD;
-import static javax.servlet.DispatcherType.INCLUDE;
-import static javax.servlet.DispatcherType.REQUEST;
-
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} enables tracing to HTTP requests.
@@ -56,16 +52,16 @@ import static javax.servlet.DispatcherType.REQUEST;
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
 public class TraceWebServletAutoConfiguration {
 
+	/**
+	 * Default filter order for the Http tracing filter.
+	 */
 	public static final int TRACING_FILTER_ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
 
-	/**
-	 * Nested config that configures Web MVC if it's present (without adding a runtime
-	 * dependency to it)
-	 */
-	@Configuration
-	@ConditionalOnClass(WebMvcConfigurer.class)
-	@Import(TraceWebMvcConfigurer.class)
-	protected static class TraceWebMvcAutoConfiguration {
+	@Bean
+	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
+	public static TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
+			ApplicationContext applicationContext) {
+		return new TraceSpringDataBeanPostProcessor(applicationContext);
 	}
 
 	@Bean
@@ -74,26 +70,26 @@ public class TraceWebServletAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
-	public static TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
-			ApplicationContext applicationContext) {
-		return new TraceSpringDataBeanPostProcessor(applicationContext);
-	}
-	
-	@Bean
-	public FilterRegistrationBean traceWebFilter(
-			TracingFilter tracingFilter, SleuthWebProperties webProperties) {
-		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(tracingFilter);
-		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
+	public FilterRegistrationBean traceWebFilter(TracingFilter tracingFilter,
+			SleuthWebProperties webProperties) {
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
+				tracingFilter);
+		filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC,
+				DispatcherType.ERROR, DispatcherType.FORWARD, DispatcherType.INCLUDE,
+				DispatcherType.REQUEST);
 		filterRegistrationBean.setOrder(webProperties.getFilterOrder());
 		return filterRegistrationBean;
 	}
 
 	@Bean
 	@ConditionalOnProperty(value = "spring.sleuth.web.exceptionThrowingFilterEnabled", matchIfMissing = true)
-	public FilterRegistrationBean exceptionThrowingFilter(SleuthWebProperties webProperties) {
-		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new ExceptionLoggingFilter());
-		filterRegistrationBean.setDispatcherTypes(ASYNC, ERROR, FORWARD, INCLUDE, REQUEST);
+	public FilterRegistrationBean exceptionThrowingFilter(
+			SleuthWebProperties webProperties) {
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
+				new ExceptionLoggingFilter());
+		filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC,
+				DispatcherType.ERROR, DispatcherType.FORWARD, DispatcherType.INCLUDE,
+				DispatcherType.REQUEST);
 		filterRegistrationBean.setOrder(webProperties.getFilterOrder());
 		return filterRegistrationBean;
 	}
@@ -103,4 +99,16 @@ public class TraceWebServletAutoConfiguration {
 	public TracingFilter tracingFilter(HttpTracing tracing) {
 		return (TracingFilter) TracingFilter.create(tracing);
 	}
+
+	/**
+	 * Nested config that configures Web MVC if it's present (without adding a runtime
+	 * dependency to it).
+	 */
+	@Configuration
+	@ConditionalOnClass(WebMvcConfigurer.class)
+	@Import(TraceWebMvcConfigurer.class)
+	protected static class TraceWebMvcAutoConfiguration {
+
+	}
+
 }

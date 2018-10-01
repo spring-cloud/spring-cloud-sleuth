@@ -28,15 +28,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @Configuration
 public class Issue469 extends WebMvcConfigurerAdapter {
 
-	@Override public void addViewControllers(ViewControllerRegistry registry) {
+	@Override
+	public void addViewControllers(ViewControllerRegistry registry) {
 		registry.addViewController("/welcome").setViewName("welcome");
 	}
 
-	@Bean ArrayListSpanReporter reporter() {
+	@Bean
+	ArrayListSpanReporter reporter() {
 		return new ArrayListSpanReporter();
 	}
 
-	@Bean Sampler sampler() {
+	@Bean
+	Sampler sampler() {
 		return Sampler.ALWAYS_SAMPLE;
 	}
+
 }

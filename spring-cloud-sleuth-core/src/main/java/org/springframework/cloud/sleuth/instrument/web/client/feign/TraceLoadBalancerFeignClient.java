@@ -34,8 +34,8 @@ import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFacto
 import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
 
 /**
- * We need to wrap the {@link LoadBalancerFeignClient} into a trace representation
- * due to casts in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}.
+ * We need to wrap the {@link LoadBalancerFeignClient} into a trace representation due to
+ * casts in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.7
@@ -45,8 +45,11 @@ public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 	private static final Log log = LogFactory.getLog(TraceLoadBalancerFeignClient.class);
 
 	private final BeanFactory beanFactory;
+
 	Tracer tracer;
+
 	HttpTracing httpTracing;
+
 	TracingFeignClient tracingFeignClient;
 
 	public TraceLoadBalancerFeignClient(Client delegate,
@@ -56,8 +59,8 @@ public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 		this.beanFactory = beanFactory;
 	}
 
-	@Override public Response execute(Request request, Request.Options options)
-			throws IOException {
+	@Override
+	public Response execute(Request request, Request.Options options) throws IOException {
 		if (log.isDebugEnabled()) {
 			log.debug("Before send");
 		}
@@ -69,21 +72,26 @@ public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 				log.debug("After receive");
 			}
 			return response;
-		} catch (Exception e){
+		}
+		catch (Exception e) {
 			if (log.isDebugEnabled()) {
 				log.debug("Exception thrown", e);
 			}
-			if (e instanceof IOException || e.getCause() != null &&
-					e.getCause() instanceof ClientException &&
-					((ClientException) e.getCause()).getErrorType() == ClientException.ErrorType.GENERAL ) {
+			if (e instanceof IOException || e.getCause() != null
+					&& e.getCause() instanceof ClientException
+					&& ((ClientException) e.getCause())
+							.getErrorType() == ClientException.ErrorType.GENERAL) {
 				if (log.isDebugEnabled()) {
-					log.debug("General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
+					log.debug(
+							"General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
 				}
-				fallbackSpan = tracingFeignClient().handleSend(new HashMap<>(request.headers()), request, fallbackSpan);
+				fallbackSpan = tracingFeignClient().handleSend(
+						new HashMap<>(request.headers()), request, fallbackSpan);
 				tracingFeignClient().handleReceive(fallbackSpan, response, e);
 			}
 			throw e;
-		} finally {
+		}
+		finally {
 			fallbackSpan.abandon();
 		}
 	}
@@ -104,8 +112,8 @@ public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 
 	private TracingFeignClient tracingFeignClient() {
 		if (this.tracingFeignClient == null) {
-			this.tracingFeignClient =
-					(TracingFeignClient) TracingFeignClient.create(httpTracing(), getDelegate());
+			this.tracingFeignClient = (TracingFeignClient) TracingFeignClient
+					.create(httpTracing(), getDelegate());
 		}
 		return this.tracingFeignClient;
 	}

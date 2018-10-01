@@ -28,26 +28,32 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
- * Base for specifications that use Spring's {@link MockMvc}. Provides also {@link WebApplicationContext},
- * {@link ApplicationContext}. The latter you can use to specify what
- * kind of address should be returned for a given dependency name.
+ * Base for specifications that use Spring's {@link MockMvc}. Provides also
+ * {@link WebApplicationContext}, {@link ApplicationContext}. The latter you can use to
+ * specify what kind of address should be returned for a given dependency name.
  *
  * @see WebApplicationContext
  * @see ApplicationContext
- *
  * @author 4financeIT
  */
 @WebAppConfiguration
 public abstract class AbstractMvcIntegrationTest {
 
-	@Autowired protected WebApplicationContext webApplicationContext;
+	@Autowired
+	protected WebApplicationContext webApplicationContext;
+
 	protected MockMvc mockMvc;
-	@Autowired protected SleuthProperties properties;
-	@Autowired protected Tracing tracing;
+
+	@Autowired
+	protected SleuthProperties properties;
+
+	@Autowired
+	protected Tracing tracing;
 
 	@Before
 	public void setup() {
-		DefaultMockMvcBuilder mockMvcBuilder = MockMvcBuilders.webAppContextSetup(this.webApplicationContext);
+		DefaultMockMvcBuilder mockMvcBuilder = MockMvcBuilders
+				.webAppContextSetup(this.webApplicationContext);
 		configureMockMvcBuilder(mockMvcBuilder);
 		this.mockMvc = mockMvcBuilder.build();
 	}
@@ -59,4 +65,5 @@ public abstract class AbstractMvcIntegrationTest {
 	 */
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
 	}
+
 }

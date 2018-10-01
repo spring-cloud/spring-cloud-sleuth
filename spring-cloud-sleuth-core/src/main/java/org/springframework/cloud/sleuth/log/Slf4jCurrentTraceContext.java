@@ -25,17 +25,17 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 /**
- * Adds {@linkplain org.slf4j.MDC} properties "traceId", "parentId", "spanId" and "spanExportable" when a {@link
- * brave.Tracer#currentSpan() span is current}. These can be used in log correlation.
- * Supports backward compatibility of MDC entries by adding legacy "X-B3" entries to MDC context
- * "X-B3-TraceId", "X-B3-ParentSpanId", "X-B3-SpanId" and "X-B3-Sampled"
+ * Adds {@linkplain org.slf4j.MDC} properties "traceId", "parentId", "spanId" and
+ * "spanExportable" when a {@link brave.Tracer#currentSpan() span is current}. These can
+ * be used in log correlation. Supports backward compatibility of MDC entries by adding
+ * legacy "X-B3" entries to MDC context "X-B3-TraceId", "X-B3-ParentSpanId", "X-B3-SpanId"
+ * and "X-B3-Sampled"
  *
- * Due to the migration to {@link brave.propagation.CurrentTraceContext.ScopeDecorator} approach,
- * we are making the default implementation package scope since you can register your
- * own implementation of the Scope Decorator.
+ * Due to the migration to {@link brave.propagation.CurrentTraceContext.ScopeDecorator}
+ * approach, we are making the default implementation package scope since you can register
+ * your own implementation of the Scope Decorator.
  *
  * @author Marcin Grzejszczak
- *
  * @since 2.0.0
  * @deprecated {@link Slf4jScopeDecorator} will be used
  */
@@ -44,8 +44,11 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 
 	// Backward compatibility for all logging patterns
 	private static final String LEGACY_EXPORTABLE_NAME = "X-Span-Export";
+
 	private static final String LEGACY_PARENT_ID_NAME = "X-B3-ParentSpanId";
+
 	private static final String LEGACY_TRACE_ID_NAME = "X-B3-TraceId";
+
 	private static final String LEGACY_SPAN_ID_NAME = "X-B3-SpanId";
 
 	private static final Logger log = LoggerFactory
@@ -62,16 +65,19 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 	final CurrentTraceContext delegate;
 
 	Slf4jCurrentTraceContext(CurrentTraceContext delegate) {
-		if (delegate == null)
+		if (delegate == null) {
 			throw new NullPointerException("delegate == null");
+		}
 		this.delegate = delegate;
 	}
 
-	@Override public TraceContext get() {
+	@Override
+	public TraceContext get() {
 		return this.delegate.get();
 	}
 
-	@Override public Scope newScope(@Nullable TraceContext currentSpan) {
+	@Override
+	public Scope newScope(@Nullable TraceContext currentSpan) {
 		final String previousTraceId = MDC.get("traceId");
 		final String previousParentId = MDC.get("parentId");
 		final String previousSpanId = MDC.get("spanId");
@@ -85,9 +91,8 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 			String traceIdString = currentSpan.traceIdString();
 			MDC.put("traceId", traceIdString);
 			MDC.put(LEGACY_TRACE_ID_NAME, traceIdString);
-			String parentId = currentSpan.parentId() != null ?
-					HexCodec.toLowerHex(currentSpan.parentId()) :
-					null;
+			String parentId = currentSpan.parentId() != null
+					? HexCodec.toLowerHex(currentSpan.parentId()) : null;
 			replace("parentId", parentId);
 			replace(LEGACY_PARENT_ID_NAME, parentId);
 			String spanId = HexCodec.toLowerHex(currentSpan.spanId());
@@ -116,8 +121,14 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 
 		Scope scope = this.delegate.newScope(currentSpan);
 
+		/**
+		 * Thread context scope.
+		 * @author Adrian Cole
+		 */
 		class ThreadContextCurrentTraceContextScope implements Scope {
-			@Override public void close() {
+
+			@Override
+			public void close() {
 				log("Closing scope for span: {}", currentSpan);
 				scope.close();
 				replace("traceId", previousTraceId);
@@ -129,6 +140,7 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 				replace(LEGACY_SPAN_ID_NAME, legacyPreviousSpanId);
 				replace(LEGACY_EXPORTABLE_NAME, legacySpanExportable);
 			}
+
 		}
 		return new ThreadContextCurrentTraceContextScope();
 	}
@@ -150,4 +162,5 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 			MDC.remove(key);
 		}
 	}
+
 }

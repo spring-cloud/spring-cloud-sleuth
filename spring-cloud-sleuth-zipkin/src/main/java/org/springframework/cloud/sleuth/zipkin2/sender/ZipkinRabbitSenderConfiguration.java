@@ -32,14 +32,16 @@ import zipkin2.reporter.amqp.RabbitMQSender;
 @ConditionalOnMissingBean(Sender.class)
 @Conditional(ZipkinSenderCondition.class)
 class ZipkinRabbitSenderConfiguration {
+
 	@Value("${spring.zipkin.rabbitmq.queue:zipkin}")
 	private String queue;
 
-	@Bean Sender rabbitSender(CachingConnectionFactory connectionFactory, RabbitProperties config) {
+	@Bean
+	Sender rabbitSender(CachingConnectionFactory connectionFactory,
+			RabbitProperties config) {
 		return RabbitMQSender.newBuilder()
 				.connectionFactory(connectionFactory.getRabbitConnectionFactory())
-				.queue(this.queue)
-				.addresses(config.determineAddresses())
-				.build();
+				.queue(this.queue).addresses(config.determineAddresses()).build();
 	}
+
 }

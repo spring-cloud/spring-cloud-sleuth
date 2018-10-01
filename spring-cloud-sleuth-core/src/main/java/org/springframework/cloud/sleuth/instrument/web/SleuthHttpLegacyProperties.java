@@ -19,11 +19,17 @@ package org.springframework.cloud.sleuth.instrument.web;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
+ * Legacy HTTP Sleuth properties.
+ *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
 @ConfigurationProperties("spring.sleuth.http.legacy")
 public class SleuthHttpLegacyProperties {
+
+	/**
+	 * Enables the legacy Sleuth setup.
+	 */
 	private boolean enabled;
 
 	public boolean isEnabled() {
@@ -33,4 +39,5 @@ public class SleuthHttpLegacyProperties {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+
 }

@@ -36,12 +36,14 @@ import zipkin2.reporter.Reporter;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = SpanAdjusterTests.SpanAdjusterAspectTestsConfig.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = SpanAdjusterTests.SpanAdjusterAspectTestsConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class SpanAdjusterTests {
 
-	@Autowired ArrayListSpanReporter reporter;
-	@Autowired Tracer tracer;
+	@Autowired
+	ArrayListSpanReporter reporter;
+
+	@Autowired
+	Tracer tracer;
 
 	@Test
 	public void should_adjust_span_twice_before_reporting() {
@@ -56,22 +58,29 @@ public class SpanAdjusterTests {
 	@Configuration
 	@EnableAutoConfiguration(exclude = IntegrationAutoConfiguration.class)
 	static class SpanAdjusterAspectTestsConfig {
-		@Bean Sampler sampler() {
+
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean Reporter<zipkin2.Span> reporter() {
+		@Bean
+		Reporter<zipkin2.Span> reporter() {
 			return new ArrayListSpanReporter();
 		}
 
 		// tag::adjuster[]
-		@Bean SpanAdjuster adjusterOne() {
+		@Bean
+		SpanAdjuster adjusterOne() {
 			return span -> span.toBuilder().name("foo").build();
 		}
 
-		@Bean SpanAdjuster adjusterTwo() {
+		@Bean
+		SpanAdjuster adjusterTwo() {
 			return span -> span.toBuilder().name(span.name() + " bar").build();
 		}
 		// end::adjuster[]
+
 	}
+
 }

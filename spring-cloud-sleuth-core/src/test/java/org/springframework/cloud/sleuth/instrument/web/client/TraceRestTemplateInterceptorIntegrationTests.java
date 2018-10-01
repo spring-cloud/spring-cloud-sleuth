@@ -48,23 +48,25 @@ import okhttp3.mockwebserver.SocketPolicy;
  */
 public class TraceRestTemplateInterceptorIntegrationTests {
 
-	@Rule public final MockWebServer mockWebServer = new MockWebServer();
+	@Rule
+	public final MockWebServer mockWebServer = new MockWebServer();
 
 	private RestTemplate template = new RestTemplate(clientHttpRequestFactory());
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.spanReporter(this.reporter)
-			.build();
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.spanReporter(this.reporter).build();
+
 	Tracer tracer = this.tracing.tracer();
 
 	@Before
 	public void setup() {
-		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				TracingClientHttpRequestInterceptor.create(HttpTracing.create(this.tracing))));
+		this.template.setInterceptors(Arrays
+				.<ClientHttpRequestInterceptor>asList(TracingClientHttpRequestInterceptor
+						.create(HttpTracing.create(this.tracing))));
 	}
 
 	@After
@@ -75,25 +77,27 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 	// Issue #198
 	@Test
 	public void spanRemovedFromThreadUponException() throws IOException {
-		this.mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+		this.mockWebServer.enqueue(
+				new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 		Span span = this.tracer.nextSpan().name("new trace");
 
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.template.getForEntity(
 					"http://localhost:" + this.mockWebServer.getPort() + "/exception",
 					Map.class).getBody();
 			Assert.fail("should throw an exception");
-		} catch (RuntimeException e) {
+		}
+		catch (RuntimeException e) {
 			BDDAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
 		// 1 span "new race", 1 span "rest template"
 		BDDAssertions.then(this.reporter.getSpans()).hasSize(2);
 		zipkin2.Span span1 = this.reporter.getSpans().get(0);
-		BDDAssertions.then(span1.tags())
-				.containsEntry("error", "Read timed out");
+		BDDAssertions.then(span1.tags()).containsEntry("error", "Read timed out");
 		BDDAssertions.then(span1.kind().ordinal()).isEqualTo(Span.Kind.CLIENT.ordinal());
 	}
 

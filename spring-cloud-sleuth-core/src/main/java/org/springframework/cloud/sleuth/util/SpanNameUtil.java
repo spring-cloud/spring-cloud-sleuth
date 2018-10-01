@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.util;
 import org.springframework.util.StringUtils;
 
 /**
- * Utility class that provides the name in hyphen based notation
+ * Utility class that provides the name in hyphen based notation.
  *
  * @author Adrian Cole
  * @since 1.0.2
@@ -28,11 +28,15 @@ public final class SpanNameUtil {
 
 	static final int MAX_NAME_LENGTH = 50;
 
+	private SpanNameUtil() {
+
+	}
+
 	public static String shorten(String name) {
 		if (StringUtils.isEmpty(name)) {
 			return name;
 		}
-		int maxLength = name.length() > MAX_NAME_LENGTH ? MAX_NAME_LENGTH : name.length();
+		int maxLength = name.length() > MAX_NAME_LENGTH ? (MAX_NAME_LENGTH) : (name.length());
 		return name.substring(0, maxLength);
 	}
 
@@ -41,12 +45,16 @@ public final class SpanNameUtil {
 		for (int i = 0; i < name.length(); i++) {
 			char c = name.charAt(i);
 			if (Character.isUpperCase(c)) {
-				if (i != 0) result.append('-');
+				if (i != 0) {
+					result.append('-');
+				}
 				result.append(Character.toLowerCase(c));
-			} else {
+			}
+			else {
 				result.append(c);
 			}
 		}
 		return SpanNameUtil.shorten(result.toString());
 	}
+
 }

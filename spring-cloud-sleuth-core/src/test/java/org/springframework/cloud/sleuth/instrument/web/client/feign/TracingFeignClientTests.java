@@ -48,18 +48,23 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TracingFeignClientTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
-	@Mock BeanFactory beanFactory;
+
+	@Mock
+	BeanFactory beanFactory;
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.spanReporter(this.reporter)
-			.build();
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.spanReporter(this.reporter).build();
+
 	Tracer tracer = this.tracing.tracer();
+
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient())
-			.build();
-	@Mock Client client;
+			.clientParser(SleuthHttpParserAccessor.getClient()).build();
+
+	@Mock
+	Client client;
+
 	Client traceFeignClient;
 
 	@Before
@@ -72,10 +77,13 @@ public class TracingFeignClientTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.traceFeignClient.execute(
-					Request.create("GET", "http://foo", new HashMap<>(), "".getBytes(),
-							Charset.defaultCharset()), new Request.Options());
-		} finally {
+			this.traceFeignClient
+					.execute(
+							Request.create("GET", "http://foo", new HashMap<>(),
+									"".getBytes(), Charset.defaultCharset()),
+							new Request.Options());
+		}
+		finally {
 			span.finish();
 		}
 
@@ -90,26 +98,32 @@ public class TracingFeignClientTests {
 				.willThrow(new RuntimeException("exception has occurred"));
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.traceFeignClient.execute(
-					Request.create("GET", "http://foo", new HashMap<>(), "".getBytes(),
-							Charset.defaultCharset()), new Request.Options());
+			this.traceFeignClient
+					.execute(
+							Request.create("GET", "http://foo", new HashMap<>(),
+									"".getBytes(), Charset.defaultCharset()),
+							new Request.Options());
 			BDDAssertions.fail("Exception should have been thrown");
-		} catch (Exception e) {
-		} finally {
+		}
+		catch (Exception e) {
+		}
+		finally {
 			span.finish();
 		}
 
 		then(this.reporter.getSpans().get(0)).extracting("kind.ordinal")
 				.contains(Span.Kind.CLIENT.ordinal());
-		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("error", "exception has occurred");
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("error",
+				"exception has occurred");
 	}
 
 	@Test
 	public void should_shorten_the_span_name() throws IOException {
-		this.traceFeignClient.execute(
-				Request.create("GET", "http://foo/" + bigName(), new HashMap<>(), "".getBytes(),
-						Charset.defaultCharset()), new Request.Options());
+		this.traceFeignClient
+				.execute(
+						Request.create("GET", "http://foo/" + bigName(), new HashMap<>(),
+								"".getBytes(), Charset.defaultCharset()),
+						new Request.Options());
 
 		then(this.reporter.getSpans().get(0).name()).hasSize(50);
 	}

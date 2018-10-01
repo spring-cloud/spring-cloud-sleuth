@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration properties for Feign
+ * Configuration properties for Feign.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.2
@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthFeignProperties {
 
 	/**
-	 * When true enables instrumentation for feign
+	 * When true enables instrumentation for feign.
 	 */
 	private boolean enabled = true;
 
@@ -39,4 +39,5 @@ public class SleuthFeignProperties {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+
 }

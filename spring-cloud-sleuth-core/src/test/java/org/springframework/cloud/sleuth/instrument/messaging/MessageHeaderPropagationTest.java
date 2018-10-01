@@ -27,27 +27,31 @@ import static org.junit.Assert.*;
 
 public class MessageHeaderPropagationTest
 		extends PropagationSetterTest<MessageHeaderAccessor, String> {
+
 	MessageHeaderAccessor carrier = new MessageHeaderAccessor();
 
-	@Override public Propagation.KeyFactory<String> keyFactory() {
+	@Override
+	public Propagation.KeyFactory<String> keyFactory() {
 		return Propagation.KeyFactory.STRING;
 	}
 
-	@Override protected MessageHeaderAccessor carrier() {
+	@Override
+	protected MessageHeaderAccessor carrier() {
 		return carrier;
 	}
 
-	@Override protected Propagation.Setter<MessageHeaderAccessor, String> setter() {
+	@Override
+	protected Propagation.Setter<MessageHeaderAccessor, String> setter() {
 		return MessageHeaderPropagation.INSTANCE;
 	}
 
-	@Override protected Iterable<String> read(MessageHeaderAccessor carrier, String key) {
+	@Override
+	protected Iterable<String> read(MessageHeaderAccessor carrier, String key) {
 		Object result = carrier.getHeader(key);
-		return result != null ?
-				Collections.singleton(result.toString()) :
-				Collections.emptyList();
+		return result != null ? Collections.singleton(result.toString())
+				: Collections.emptyList();
 	}
-	
+
 	@Test
 	public void testGetByteArrayValue() {
 		MessageHeaderAccessor carrier = carrier();
@@ -56,7 +60,7 @@ public class MessageHeaderPropagationTest
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
 		assertEquals("48485a3953bb6124000000", value);
 	}
-	
+
 	@Test
 	public void testGetStringValue() {
 		MessageHeaderAccessor carrier = carrier();
@@ -65,7 +69,7 @@ public class MessageHeaderPropagationTest
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
 		assertEquals("48485a3953bb61240000000", value);
 	}
-	
+
 	@Test
 	public void testGetNullValue() {
 		MessageHeaderAccessor carrier = carrier();
@@ -79,8 +83,7 @@ public class MessageHeaderPropagationTest
 	public void testSkipWrongValueTypeForGet() {
 		MessageHeaderAccessor carrier = carrier();
 		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
-				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}"
-		);
+				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}");
 		MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-SpanId");
 	}
 
@@ -88,17 +91,17 @@ public class MessageHeaderPropagationTest
 	public void testSkipWrongValueTypeForRemoval() {
 		MessageHeaderAccessor carrier = carrier();
 		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
-				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}"
-		);
-		MessageHeaderPropagation.removeAnyTraceHeaders(carrier, Collections.singletonList("X-B3-SpanId"));
+				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}");
+		MessageHeaderPropagation.removeAnyTraceHeaders(carrier,
+				Collections.singletonList("X-B3-SpanId"));
 	}
 
 	@Test
 	public void testSkipWrongValueTypeForPut() {
 		MessageHeaderAccessor carrier = carrier();
 		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
-				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}"
-		);
+				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}");
 		MessageHeaderPropagation.INSTANCE.put(carrier, "X-B3-SpanId", "1234");
 	}
+
 }

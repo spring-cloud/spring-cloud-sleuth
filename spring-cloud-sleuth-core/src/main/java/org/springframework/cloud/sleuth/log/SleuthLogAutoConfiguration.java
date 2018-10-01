@@ -28,8 +28,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * enables a {@link Slf4jCurrentTraceContext} that prints tracing information in the logs.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} enables a {@link Slf4jCurrentTraceContext} that prints tracing
+ * information in the logs.
  * <p>
  *
  * @author Spencer Gibb
@@ -37,10 +38,13 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.0.0
  */
 @Configuration
-@ConditionalOnProperty(value="spring.sleuth.enabled", matchIfMissing=true)
+@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 public class SleuthLogAutoConfiguration {
 
+	/**
+	 * Configuration for Slfj4
+	 */
 	@Configuration
 	@ConditionalOnClass(MDC.class)
 	@EnableConfigurationProperties(SleuthSlf4jProperties.class)
@@ -48,9 +52,12 @@ public class SleuthLogAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
-		public CurrentTraceContext.ScopeDecorator slf4jSpanDecorator(SleuthProperties sleuthProperties,
+		public CurrentTraceContext.ScopeDecorator slf4jSpanDecorator(
+				SleuthProperties sleuthProperties,
 				SleuthSlf4jProperties sleuthSlf4jProperties) {
 			return new Slf4jScopeDecorator(sleuthProperties, sleuthSlf4jProperties);
 		}
+
 	}
+
 }

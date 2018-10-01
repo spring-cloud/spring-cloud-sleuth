@@ -16,56 +16,64 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import brave.ScopedSpan;
-import brave.Tracing;
-import brave.propagation.TraceContext;
 import java.util.concurrent.Callable;
 
+import brave.ScopedSpan;
 import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.TraceContext;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
- * Callable that passes Span between threads. The Span name is
- * taken either from the passed value or from the {@link SpanNamer}
- * interface.
+ * Callable that passes Span between threads. The Span name is taken either from the
+ * passed value or from the {@link SpanNamer} interface.
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
+ * @param <V> - return type from callable
  * @since 1.0.0
  */
 public class TraceCallable<V> implements Callable<V> {
 
 	/**
-	 * Since we don't know the exact operation name we provide a default
-	 * name for the Span
+	 * Since we don't know the exact operation name we provide a default name for the Span.
 	 */
 	private static final String DEFAULT_SPAN_NAME = "async";
 
 	private final Tracer tracer;
+
 	private final Callable<V> delegate;
+
 	private final TraceContext parent;
+
 	private final String spanName;
 
 	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate) {
 		this(tracing, spanNamer, delegate, null);
 	}
 
-	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate, String name) {
+	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate,
+			String name) {
 		this.tracer = tracing.tracer();
 		this.delegate = delegate;
 		this.parent = tracing.currentTraceContext().get();
 		this.spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
 	}
 
-	@Override public V call() throws Exception {
-		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
+	@Override
+	public V call() throws Exception {
+		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName,
+				this.parent);
 		try {
 			return this.delegate.call();
-		} catch (Exception | Error e) {
-			span.error(e);
-			throw e;
-		} finally {
+		}
+		catch (Exception | Error ex) {
+			span.error(ex);
+			throw ex;
+		}
+		finally {
 			span.finish();
 		}
 	}
+
 }

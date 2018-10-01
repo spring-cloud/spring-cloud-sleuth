@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
+ * Properties for messaging
+ *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
@@ -45,7 +47,13 @@ public class SleuthMessagingProperties {
 		this.messaging = messaging;
 	}
 
+	/**
+	 * Properties for Spring Integration
+	 *
+	 * @author Marcin Grzejszczak
+	 */
 	public static class Integration {
+
 		/**
 		 * An array of patterns against which channel names will be matched.
 		 * @see org.springframework.integration.config.GlobalChannelInterceptor#patterns().
@@ -54,7 +62,7 @@ public class SleuthMessagingProperties {
 		private String[] patterns = new String[] { "!hystrixStreamOutput*", "*" };
 
 		/**
-		 * Enable Spring Integration sleuth instrumentation
+		 * Enable Spring Integration sleuth instrumentation.
 		 */
 		private boolean enabled;
 
@@ -73,15 +81,34 @@ public class SleuthMessagingProperties {
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
 		}
+
 	}
 
+	/**
+	 * Generic messaging properties.
+	 *
+	 * @author Marcin Grzejszczak
+	 */
 	public static class Messaging {
+
+		/**
+		 * Should messaging be turned on.
+		 */
 		private boolean enabled;
 
+		/**
+		 * Rabbit related properties.
+		 */
 		private Rabbit rabbit = new Rabbit();
 
+		/**
+		 * Kafka related properties.
+		 */
 		private Kafka kafka = new Kafka();
 
+		/**
+		 * JMS related properties.
+		 */
 		private Jms jms = new Jms();
 
 		public boolean isEnabled() {
@@ -115,9 +142,11 @@ public class SleuthMessagingProperties {
 		public void setJms(Jms jms) {
 			this.jms = jms;
 		}
+
 	}
 
 	public static class Rabbit {
+
 		private boolean enabled;
 
 		private String remoteServiceName = "rabbitmq";
@@ -137,9 +166,11 @@ public class SleuthMessagingProperties {
 		public void setRemoteServiceName(String remoteServiceName) {
 			this.remoteServiceName = remoteServiceName;
 		}
+
 	}
 
 	public static class Kafka {
+
 		private boolean enabled;
 
 		private String remoteServiceName = "kafka";
@@ -159,9 +190,11 @@ public class SleuthMessagingProperties {
 		public void setRemoteServiceName(String remoteServiceName) {
 			this.remoteServiceName = remoteServiceName;
 		}
+
 	}
 
 	public static class Jms {
+
 		private boolean enabled;
 
 		private String remoteServiceName = "jms";
@@ -181,5 +214,7 @@ public class SleuthMessagingProperties {
 		public void setRemoteServiceName(String remoteServiceName) {
 			this.remoteServiceName = remoteServiceName;
 		}
+
 	}
+
 }

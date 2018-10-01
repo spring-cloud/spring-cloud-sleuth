@@ -39,12 +39,14 @@ import zipkin2.reporter.Reporter;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class FinishedSpanHandlerTests {
 
-	@Autowired ArrayListSpanReporter reporter;
-	@Autowired Tracer tracer;
+	@Autowired
+	ArrayListSpanReporter reporter;
+
+	@Autowired
+	Tracer tracer;
 
 	@Test
 	public void should_adjust_span_twice_before_reporting() {
@@ -59,32 +61,41 @@ public class FinishedSpanHandlerTests {
 	@Configuration
 	@EnableAutoConfiguration(exclude = IntegrationAutoConfiguration.class)
 	static class FinishedSpanHandlerAspectTestsConfig {
-		@Bean Sampler sampler() {
+
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean Reporter<zipkin2.Span> reporter() {
+		@Bean
+		Reporter<zipkin2.Span> reporter() {
 			return new ArrayListSpanReporter();
 		}
 
 		// tag::finishedSpanHandler[]
-		@Bean FinishedSpanHandler handlerOne() {
+		@Bean
+		FinishedSpanHandler handlerOne() {
 			return new FinishedSpanHandler() {
-				@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+				@Override
+				public boolean handle(TraceContext traceContext, MutableSpan span) {
 					span.name("foo");
 					return true; // keep this span
 				}
 			};
 		}
 
-		@Bean FinishedSpanHandler handlerTwo() {
+		@Bean
+		FinishedSpanHandler handlerTwo() {
 			return new FinishedSpanHandler() {
-				@Override public boolean handle(TraceContext traceContext, MutableSpan span) {
+				@Override
+				public boolean handle(TraceContext traceContext, MutableSpan span) {
 					span.name(span.name() + " bar");
 					return true; // keep this span
 				}
 			};
 		}
 		// end::finishedSpanHandler[]
+
 	}
+
 }

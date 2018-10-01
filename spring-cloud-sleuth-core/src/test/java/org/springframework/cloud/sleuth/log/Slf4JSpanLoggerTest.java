@@ -37,20 +37,21 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = {
-			"spring.sleuth.baggage-keys=my-baggage",
-			"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage"
-		})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
+		"spring.sleuth.baggage-keys=my-baggage",
+		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage" })
 @SpringBootConfiguration
 @EnableAutoConfiguration
 public class Slf4JSpanLoggerTest {
 
-	@Autowired Tracer tracer;
-	@Autowired Slf4jScopeDecorator slf4jScopeDecorator;
+	@Autowired
+	Tracer tracer;
+
+	@Autowired
+	Slf4jScopeDecorator slf4jScopeDecorator;
 
 	Span span;
-	
+
 	@Before
 	@After
 	public void setup() {
@@ -60,9 +61,11 @@ public class Slf4JSpanLoggerTest {
 
 	@Test
 	public void should_set_entries_to_mdc_from_span() throws Exception {
-		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> { });
+		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
 
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo(this.span.context().traceIdString());
+		assertThat(MDC.get("X-B3-TraceId"))
+				.isEqualTo(this.span.context().traceIdString());
 		assertThat(MDC.get("traceId")).isEqualTo(this.span.context().traceIdString());
 
 		scope.close();
@@ -74,7 +77,8 @@ public class Slf4JSpanLoggerTest {
 	@Test
 	public void should_set_entries_to_mdc_from_span_with_baggage() throws Exception {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
-		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> { });
+		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
 
@@ -88,7 +92,8 @@ public class Slf4JSpanLoggerTest {
 		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");
 
-		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> { });
+		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
+		});
 
 		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
 		assertThat(MDC.get("traceId")).isNullOrEmpty();
@@ -98,4 +103,5 @@ public class Slf4JSpanLoggerTest {
 		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("A");
 		assertThat(MDC.get("traceId")).isEqualTo("A");
 	}
+
 }

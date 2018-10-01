@@ -17,13 +17,16 @@
 package org.springframework.cloud.sleuth.annotation;
 
 /**
- * Does nothing
+ * Does nothing.
  *
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
 class NoOpTagValueResolver implements TagValueResolver {
-	@Override public String resolve(Object parameter) {
+
+	@Override
+	public String resolve(Object parameter) {
 		return null;
 	}
+
 }

@@ -25,22 +25,28 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
  */
 public class MessageHeaderPropagation_NativeTest
 		extends PropagationSetterTest<MessageHeaderAccessor, String> {
+
 	NativeMessageHeaderAccessor carrier = new NativeMessageHeaderAccessor() {
 	};
 
-	@Override public Propagation.KeyFactory<String> keyFactory() {
+	@Override
+	public Propagation.KeyFactory<String> keyFactory() {
 		return Propagation.KeyFactory.STRING;
 	}
 
-	@Override protected MessageHeaderAccessor carrier() {
+	@Override
+	protected MessageHeaderAccessor carrier() {
 		return carrier;
 	}
 
-	@Override protected Propagation.Setter<MessageHeaderAccessor, String> setter() {
+	@Override
+	protected Propagation.Setter<MessageHeaderAccessor, String> setter() {
 		return MessageHeaderPropagation.INSTANCE;
 	}
 
-	@Override protected Iterable<String> read(MessageHeaderAccessor carrier, String key) {
+	@Override
+	protected Iterable<String> read(MessageHeaderAccessor carrier, String key) {
 		return ((NativeMessageHeaderAccessor) carrier).getNativeHeader(key);
 	}
+
 }

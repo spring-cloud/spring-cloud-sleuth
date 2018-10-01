@@ -29,18 +29,23 @@ public class SleuthTestAutoConfiguration {
 	@Configuration
 	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 	static class ReactiveConfiguration {
+
 		@Import(PermitAllWebFluxSecurityConfiguration.class)
 		static class ImportConfiguration {
 
 		}
+
 	}
 
 	@Configuration
 	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 	static class ServletConfiguration {
+
 		@Import(PermitAllServletConfiguration.class)
 		static class ImportConfiguration {
 
 		}
+
 	}
+
 }

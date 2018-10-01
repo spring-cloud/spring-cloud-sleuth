@@ -44,16 +44,17 @@ public class TraceWebSocketAutoConfigurationTests {
 	@Autowired
 	DelegatingWebSocketMessageBrokerConfiguration delegatingWebSocketMessageBrokerConfiguration;
 
-	@Test public void should_register_interceptors_for_all_channels() {
+	@Test
+	public void should_register_interceptors_for_all_channels() {
 		then(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannel()
 				.getInterceptors())
-				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
+						.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 		then(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannel()
 				.getInterceptors())
-				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
+						.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 		then(this.delegatingWebSocketMessageBrokerConfiguration.brokerChannel()
 				.getInterceptors())
-				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
+						.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 	}
 
 	@EnableAutoConfiguration
@@ -61,17 +62,22 @@ public class TraceWebSocketAutoConfigurationTests {
 	@EnableWebSocketMessageBroker
 	public static class Config extends AbstractWebSocketMessageBrokerConfigurer {
 
-		@Override public void configureMessageBroker(MessageBrokerRegistry config) {
+		@Override
+		public void configureMessageBroker(MessageBrokerRegistry config) {
 			config.enableSimpleBroker("/topic");
 			config.setApplicationDestinationPrefixes("/app");
 		}
 
-		@Override public void registerStompEndpoints(StompEndpointRegistry registry) {
+		@Override
+		public void registerStompEndpoints(StompEndpointRegistry registry) {
 			registry.addEndpoint("/hello").withSockJS();
 		}
 
-		@Bean Sampler testSampler() {
+		@Bean
+		Sampler testSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
+
 }

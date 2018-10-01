@@ -22,8 +22,9 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth settings
+ * Sleuth settings.
  *
+ * @author Marcin Grzejszczak
  * @since 1.0.11
  */
 @ConfigurationProperties("spring.sleuth")
@@ -34,24 +35,28 @@ public class SleuthProperties {
 	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
 	private boolean traceId128 = false;
 
-	/** True means the tracing system supports sharing a span ID between a client and server. */
+	/**
+	 * True means the tracing system supports sharing a span ID between a client and
+	 * server.
+	 */
 	private boolean supportsJoin = true;
 
 	/**
-	 * List of baggage key names that should be propagated out of process.
-	 * These keys will be prefixed with `baggage` before the actual key.
-	 * This property is set in order to be backward compatible with previous
-	 * Sleuth versions.
+	 * List of baggage key names that should be propagated out of process. These keys will
+	 * be prefixed with `baggage` before the actual key. This property is set in order to
+	 * be backward compatible with previous Sleuth versions.
 	 *
-	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String, java.util.Collection)
+	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String,
+	 * java.util.Collection)
 	 */
 	private List<String> baggageKeys = new ArrayList<>();
 
 	/**
-	 * List of fields that are referenced the same in-process as it is on the wire. For example, the
-	 * name "x-vcap-request-id" would be set as-is including the prefix.
+	 * List of fields that are referenced the same in-process as it is on the wire. For
+	 * example, the name "x-vcap-request-id" would be set as-is including the prefix.
 	 *
-	 * <p>Note: {@code fieldName} will be implicitly lower-cased.
+	 * <p>
+	 * Note: {@code fieldName} will be implicitly lower-cased.
 	 *
 	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addField(String)
 	 */
@@ -96,4 +101,5 @@ public class SleuthProperties {
 	public void setPropagationKeys(List<String> propagationKeys) {
 		this.propagationKeys = propagationKeys;
 	}
+
 }

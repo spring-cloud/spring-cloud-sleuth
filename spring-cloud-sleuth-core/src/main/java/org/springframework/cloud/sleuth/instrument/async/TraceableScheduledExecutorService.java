@@ -30,9 +30,11 @@ import org.springframework.beans.factory.BeanFactory;
  * @author Gaurav Rai Mazra
  * @since 1.0.0
  */
-public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
+public class TraceableScheduledExecutorService extends TraceableExecutorService
+		implements ScheduledExecutorService {
 
-	public TraceableScheduledExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
+	public TraceableScheduledExecutorService(BeanFactory beanFactory,
+			final ExecutorService delegate) {
 		super(beanFactory, delegate);
 	}
 
@@ -47,21 +49,26 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 	}
 
 	@Override
-	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay,
+			TimeUnit unit) {
 		Callable<V> c = new TraceCallable<>(tracing(), spanNamer(), callable);
 		return getScheduledExecutorService().schedule(c, delay, unit);
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,
+			long period, TimeUnit unit) {
 		Runnable r = new TraceRunnable(tracing(), spanNamer(), command);
-		return getScheduledExecutorService().scheduleAtFixedRate(r, initialDelay, period, unit);
+		return getScheduledExecutorService().scheduleAtFixedRate(r, initialDelay, period,
+				unit);
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,
+			long delay, TimeUnit unit) {
 		Runnable r = new TraceRunnable(tracing(), spanNamer(), command);
-		return getScheduledExecutorService().scheduleWithFixedDelay(r, initialDelay, delay, unit);
+		return getScheduledExecutorService().scheduleWithFixedDelay(r, initialDelay,
+				delay, unit);
 	}
 
 }

@@ -31,8 +31,8 @@ import org.springframework.context.annotation.Configuration;
 import rx.plugins.RxJavaSchedulersHook;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} that
- * enables support for RxJava via {@link RxJavaSchedulersHook}.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} that enables support for RxJava via {@link RxJavaSchedulersHook}.
  *
  * @author Shivang Shah
  * @since 1.0.0
@@ -51,4 +51,5 @@ public class RxJavaAutoConfiguration {
 		return new SleuthRxJavaSchedulersHook(tracer,
 				Arrays.asList(sleuthRxJavaSchedulersProperties.getIgnoredthreads()));
 	}
+
 }

@@ -37,8 +37,8 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * Custom pointcut advisor that picks all classes / interfaces that
- * have the Sleuth related annotations.
+ * Custom pointcut advisor that picks all classes / interfaces that have the Sleuth
+ * related annotations.
  *
  * @author Marcin Grzejszczak
  * @since 1.2.0
@@ -88,22 +88,26 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 	}
 
 	/**
-	 * Checks if a class or a method is is annotated with Sleuth related annotations
+	 * Checks if a class or a method is is annotated with Sleuth related annotations.
 	 */
-	private final class AnnotationClassOrMethodOrArgsPointcut extends
-			DynamicMethodMatcherPointcut {
+	private final class AnnotationClassOrMethodOrArgsPointcut
+			extends DynamicMethodMatcherPointcut {
 
 		@Override
 		public boolean matches(Method method, Class<?> targetClass, Object... args) {
-			//Skip check here as actual check takes place in SleuthInterceptor.invoke(MethodInvocation)
+			// Skip check here as actual check takes place in
+			// SleuthInterceptor.invoke(MethodInvocation)
 			return true;
 		}
 
-		@Override public ClassFilter getClassFilter() {
+		@Override
+		public ClassFilter getClassFilter() {
 			return new ClassFilter() {
-				@Override public boolean matches(Class<?> clazz) {
-					return new AnnotationClassOrMethodFilter(NewSpan.class).matches(clazz) ||
-							new AnnotationClassOrMethodFilter(ContinueSpan.class).matches(clazz);
+				@Override
+				public boolean matches(Class<?> clazz) {
+					return new AnnotationClassOrMethodFilter(NewSpan.class).matches(clazz)
+							|| new AnnotationClassOrMethodFilter(ContinueSpan.class)
+									.matches(clazz);
 				}
 			};
 		}
@@ -127,39 +131,45 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 	}
 
 	/**
-	 * Checks if a method is properly annotated with a given Sleuth annotation
+	 * Checks if a method is properly annotated with a given Sleuth annotation.
 	 */
 	private static class AnnotationMethodsResolver {
 
 		private final Class<? extends Annotation> annotationType;
 
-		public AnnotationMethodsResolver(Class<? extends Annotation> annotationType) {
+		AnnotationMethodsResolver(Class<? extends Annotation> annotationType) {
 			this.annotationType = annotationType;
 		}
 
-		public boolean hasAnnotatedMethods(Class<?> clazz) {
+		boolean hasAnnotatedMethods(Class<?> clazz) {
 			final AtomicBoolean found = new AtomicBoolean(false);
-			ReflectionUtils.doWithMethods(clazz, method -> {
+			ReflectionUtils.doWithMethods(clazz, (method -> {
 				if (found.get()) {
 					return;
 				}
 				Annotation annotation = AnnotationUtils.findAnnotation(method,
 						AnnotationMethodsResolver.this.annotationType);
-				if (annotation != null) { found.set(true); }
-			});
+				if (annotation != null) {
+					found.set(true);
+				}
+			}));
 			return found.get();
 		}
 
 	}
+
 }
 
 /**
- * Interceptor that creates or continues a span depending on the provided
- * annotation. Also it adds logs and tags if necessary.
+ * Interceptor that creates or continues a span depending on the provided annotation. Also
+ * it adds logs and tags if necessary.
+ *
+ * @author Marcin Grzejszczak
  */
-class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
+class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware {
 
 	private BeanFactory beanFactory;
+
 	private SleuthMethodInvocationProcessor methodInvocationProcessor;
 
 	@Override
@@ -168,10 +178,12 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 		if (method == null) {
 			return invocation.proceed();
 		}
-		Method mostSpecificMethod = AopUtils
-				.getMostSpecificMethod(method, invocation.getThis().getClass());
-		NewSpan newSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, NewSpan.class);
-		ContinueSpan continueSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, ContinueSpan.class);
+		Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method,
+				invocation.getThis().getClass());
+		NewSpan newSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod,
+				NewSpan.class);
+		ContinueSpan continueSpan = SleuthAnnotationUtils
+				.findAnnotation(mostSpecificMethod, ContinueSpan.class);
 		if (newSpan == null && continueSpan == null) {
 			return invocation.proceed();
 		}
@@ -180,16 +192,20 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware  {
 
 	private SleuthMethodInvocationProcessor methodInvocationProcessor() {
 		if (this.methodInvocationProcessor == null) {
-			this.methodInvocationProcessor = this.beanFactory.getBean(SleuthMethodInvocationProcessor.class);
+			this.methodInvocationProcessor = this.beanFactory
+					.getBean(SleuthMethodInvocationProcessor.class);
 		}
 		return this.methodInvocationProcessor;
 	}
 
-	@Override public boolean implementsInterface(Class<?> intf) {
+	@Override
+	public boolean implementsInterface(Class<?> intf) {
 		return true;
 	}
 
-	@Override public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+	@Override
+	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 		this.beanFactory = beanFactory;
 	}
+
 }

@@ -30,9 +30,9 @@ import org.springframework.context.annotation.Role;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} that allows creating spans by means of a
- * {@link NewSpan} annotation. You can annotate classes or just methods.
- * You can also apply this annotation to an interface.
+ * Auto-configuration} that allows creating spans by means of a {@link NewSpan}
+ * annotation. You can annotate classes or just methods. You can also apply this
+ * annotation to an interface.
  *
  * @author Christian Schwerdtfeger
  * @author Marcin Grzejszczak
@@ -44,24 +44,28 @@ import org.springframework.context.annotation.Role;
 @ConditionalOnProperty(name = "spring.sleuth.annotation.enabled", matchIfMissing = true)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class SleuthAnnotationAutoConfiguration {
-	
+
 	@Bean
-	@ConditionalOnMissingBean NewSpanParser newSpanParser() {
-		return new DefaultNewSpanParser();
+	@ConditionalOnMissingBean
+	NewSpanParser newSpanParser() {
+		return new DefaultSpanCreator();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean TagValueExpressionResolver spelTagValueExpressionResolver() {
+	@ConditionalOnMissingBean
+	TagValueExpressionResolver spelTagValueExpressionResolver() {
 		return new SpelTagValueExpressionResolver();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean TagValueResolver noOpTagValueResolver() {
+	@ConditionalOnMissingBean
+	TagValueResolver noOpTagValueResolver() {
 		return new NoOpTagValueResolver();
 	}
 
 	@Bean
-	@Role(BeanDefinition.ROLE_INFRASTRUCTURE) SleuthAdvisorConfig sleuthAdvisorConfig() {
+	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+	SleuthAdvisorConfig sleuthAdvisorConfig() {
 		return new SleuthAdvisorConfig();
 	}
 

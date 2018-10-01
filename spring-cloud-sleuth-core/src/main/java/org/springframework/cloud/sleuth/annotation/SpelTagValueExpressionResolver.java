@@ -24,27 +24,32 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
 /**
- * Uses SPEL to evaluate the expression. If an exception is thrown will return
- * the {@code toString()} of the parameter.
+ * Uses SPEL to evaluate the expression. If an exception is thrown will return the
+ * {@code toString()} of the parameter.
  *
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
 class SpelTagValueExpressionResolver implements TagValueExpressionResolver {
-	private static final Log log = LogFactory.getLog(SpelTagValueExpressionResolver.class);
+
+	private static final Log log = LogFactory
+			.getLog(SpelTagValueExpressionResolver.class);
 
 	@Override
 	public String resolve(String expression, Object parameter) {
 		try {
 			SimpleEvaluationContext context = SimpleEvaluationContext
-					.forReadOnlyDataBinding()
-					.build();
+					.forReadOnlyDataBinding().build();
 			ExpressionParser expressionParser = new SpelExpressionParser();
-			Expression expressionToEvaluate = expressionParser.parseExpression(expression);
+			Expression expressionToEvaluate = expressionParser
+					.parseExpression(expression);
 			return expressionToEvaluate.getValue(context, parameter, String.class);
-		} catch (Exception e) {
-			log.error("Exception occurred while tying to evaluate the SPEL expression [" + expression + "]", e);
+		}
+		catch (Exception ex) {
+			log.error("Exception occurred while tying to evaluate the SPEL expression ["
+					+ expression + "]", ex);
 		}
 		return parameter.toString();
 	}
+
 }

@@ -30,10 +30,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RunWith(MockitoJUnitRunner.class)
 public class TraceWebClientBeanPostProcessorTest {
 
-	@Mock BeanFactory beanFactory;
+	@Mock
+	BeanFactory beanFactory;
 
-	@Test public void should_add_filter_only_once_to_web_client() {
-		TraceWebClientBeanPostProcessor processor = new TraceWebClientBeanPostProcessor(this.beanFactory);
+	@Test
+	public void should_add_filter_only_once_to_web_client() {
+		TraceWebClientBeanPostProcessor processor = new TraceWebClientBeanPostProcessor(
+				this.beanFactory);
 		WebClient client = WebClient.create();
 
 		client = (WebClient) processor.postProcessAfterInitialization(client, "foo");
@@ -41,20 +44,27 @@ public class TraceWebClientBeanPostProcessorTest {
 
 		client.mutate().filters(filters -> {
 			BDDAssertions.then(filters).hasSize(1);
-			BDDAssertions.then(filters.get(0)).isInstanceOf(TraceExchangeFilterFunction.class);
+			BDDAssertions.then(filters.get(0))
+					.isInstanceOf(TraceExchangeFilterFunction.class);
 		});
 	}
 
-	@Test public void should_add_filter_only_once_to_web_client_via_builder() {
-		TraceWebClientBeanPostProcessor processor = new TraceWebClientBeanPostProcessor(this.beanFactory);
+	@Test
+	public void should_add_filter_only_once_to_web_client_via_builder() {
+		TraceWebClientBeanPostProcessor processor = new TraceWebClientBeanPostProcessor(
+				this.beanFactory);
 		WebClient.Builder builder = WebClient.builder();
 
-		builder = (WebClient.Builder) processor.postProcessAfterInitialization(builder, "foo");
-		builder = (WebClient.Builder) processor.postProcessAfterInitialization(builder, "foo");
+		builder = (WebClient.Builder) processor.postProcessAfterInitialization(builder,
+				"foo");
+		builder = (WebClient.Builder) processor.postProcessAfterInitialization(builder,
+				"foo");
 
 		builder.build().mutate().filters(filters -> {
 			BDDAssertions.then(filters).hasSize(1);
-			BDDAssertions.then(filters.get(0)).isInstanceOf(TraceExchangeFilterFunction.class);
+			BDDAssertions.then(filters.get(0))
+					.isInstanceOf(TraceExchangeFilterFunction.class);
 		});
 	}
+
 }

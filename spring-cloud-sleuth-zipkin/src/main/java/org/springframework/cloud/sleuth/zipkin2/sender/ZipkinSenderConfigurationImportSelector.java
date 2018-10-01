@@ -47,6 +47,8 @@ public class ZipkinSenderConfigurationImportSelector implements ImportSelector {
 				return entry.getKey();
 			}
 		}
-		throw new IllegalStateException("Unknown configuration class " + configurationClassName);
+		throw new IllegalStateException(
+				"Unknown configuration class " + configurationClassName);
 	}
+
 }

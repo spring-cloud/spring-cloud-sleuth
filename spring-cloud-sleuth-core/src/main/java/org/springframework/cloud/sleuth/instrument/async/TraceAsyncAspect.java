@@ -34,16 +34,17 @@ import org.springframework.util.ReflectionUtils;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
- *
  * @see Tracer
  */
 @Aspect
 public class TraceAsyncAspect {
 
 	private static final String CLASS_KEY = "class";
+
 	private static final String METHOD_KEY = "method";
 
 	private final Tracer tracer;
+
 	private final SpanNamer spanNamer;
 
 	public TraceAsyncAspect(Tracer tracer, SpanNamer spanNamer) {
@@ -59,11 +60,12 @@ public class TraceAsyncAspect {
 			span = this.tracer.nextSpan();
 		}
 		span = span.name(spanName);
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
 			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 	}
@@ -76,8 +78,8 @@ public class TraceAsyncAspect {
 	private Method getMethod(ProceedingJoinPoint pjp, Object object) {
 		MethodSignature signature = (MethodSignature) pjp.getSignature();
 		Method method = signature.getMethod();
-		return ReflectionUtils
-				.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
+		return ReflectionUtils.findMethod(object.getClass(), method.getName(),
+				method.getParameterTypes());
 	}
 
 }

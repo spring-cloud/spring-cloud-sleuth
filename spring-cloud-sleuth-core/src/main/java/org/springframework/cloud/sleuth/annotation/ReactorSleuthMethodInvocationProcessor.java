@@ -30,39 +30,46 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
 /**
+ * Method Invocation Processor for Reactor.
+ *
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
+class ReactorSleuthMethodInvocationProcessor
+		extends AbstractSleuthMethodInvocationProcessor {
 
 	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor;
 
-	@Override public Object process(MethodInvocation invocation, NewSpan newSpan,
+	@Override
+	public Object process(MethodInvocation invocation, NewSpan newSpan,
 			ContinueSpan continueSpan) throws Throwable {
 		Method method = invocation.getMethod();
-		if(isReactorReturnType(method.getReturnType())){
+		if (isReactorReturnType(method.getReturnType())) {
 			return proceedUnderReactorSpan(invocation, newSpan, continueSpan);
-		} else {
-			return nonReactorSleuthMethodInvocationProcessor()
-					.process(invocation, newSpan, continueSpan);
+		}
+		else {
+			return nonReactorSleuthMethodInvocationProcessor().process(invocation,
+					newSpan, continueSpan);
 		}
 	}
 
-	private Object proceedUnderReactorSpan(
-			MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable{
+	private Object proceedUnderReactorSpan(MethodInvocation invocation, NewSpan newSpan,
+			ContinueSpan continueSpan) throws Throwable {
 		Span spanPrevious = tracer().currentSpan();
-		//in case of @ContinueSpan and no span in tracer we start new span and should close it on completion
+		// in case of @ContinueSpan and no span in tracer we start new span and should
+		// close it on completion
 		boolean startNewSpan = newSpan != null || spanPrevious == null;
 		Span span;
 		if (startNewSpan) {
 			span = tracer().nextSpan();
 			newSpanParser().parse(invocation, newSpan, span);
-		} else {
+		}
+		else {
 			span = spanPrevious;
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
-		try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 			Publisher<?> publisher = (Publisher) invocation.proceed();
 			Mono<Span> startSpan = Mono.defer(() -> withSpanInScope(span, () -> {
 				if (startNewSpan) {
@@ -71,35 +78,43 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 				before(invocation, span, log, hasLog);
 				return Mono.just(span);
 			}));
-			if(publisher instanceof Mono){
-				return startSpan.flatMap(spanStarted -> ((Mono<?>)publisher)
-						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doFinally(afterReactor(startNewSpan, log, hasLog, spanStarted)))
-						//put span in context so it can be used by ScopePassingSpanSubscriber
+			if (publisher instanceof Mono) {
+				return startSpan
+						.flatMap(spanStarted -> ((Mono<?>) publisher)
+								.doOnError(onFailureReactor(log, hasLog, spanStarted))
+								.doFinally(afterReactor(startNewSpan, log, hasLog,
+										spanStarted)))
+						// put span in context so it can be used by
+						// ScopePassingSpanSubscriber
 						.subscriberContext(context -> context.put(Span.class, span));
 			}
-			else if(publisher instanceof Flux){
-				return startSpan.flatMapMany(spanStarted -> ((Flux<?>)publisher)
-						.doOnError(onFailureReactor(log, hasLog, spanStarted))
-						.doFinally(afterReactor(startNewSpan, log, hasLog, spanStarted)))
-						//put span in context so it can be used by ScopePassingSpanSubscriber
+			else if (publisher instanceof Flux) {
+				return startSpan
+						.flatMapMany(spanStarted -> ((Flux<?>) publisher)
+								.doOnError(onFailureReactor(log, hasLog, spanStarted))
+								.doFinally(afterReactor(startNewSpan, log, hasLog,
+										spanStarted)))
+						// put span in context so it can be used by
+						// ScopePassingSpanSubscriber
 						.subscriberContext(context -> context.put(Span.class, span));
 			}
 			else {
-				throw new IllegalArgumentException("Unexpected type of publisher: "+publisher.getClass());
+				throw new IllegalArgumentException(
+						"Unexpected type of publisher: " + publisher.getClass());
 			}
 		}
 	}
 
 	private <T> T withSpanInScope(Span span, Supplier<T> supplier) {
-		try(Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws1 = tracer().withSpanInScope(span)) {
 			return supplier.get();
 		}
 	}
 
-	private Consumer<SignalType> afterReactor(boolean isNewSpan, String log, boolean hasLog, Span span) {
+	private Consumer<SignalType> afterReactor(boolean isNewSpan, String log,
+			boolean hasLog, Span span) {
 		return signalType -> {
-			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
+			try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 				after(span, isNewSpan, log, hasLog);
 			}
 		};
@@ -107,7 +122,7 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 
 	private Consumer<Throwable> onFailureReactor(String log, boolean hasLog, Span span) {
 		return throwable -> {
-			try(Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
+			try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 				onFailure(span, log, hasLog, throwable);
 			}
 		};
@@ -120,8 +135,10 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor() {
 		if (this.nonReactorSleuthMethodInvocationProcessor == null) {
 			this.nonReactorSleuthMethodInvocationProcessor = new NonReactorSleuthMethodInvocationProcessor();
-			this.nonReactorSleuthMethodInvocationProcessor.setBeanFactory(this.beanFactory);
+			this.nonReactorSleuthMethodInvocationProcessor
+					.setBeanFactory(this.beanFactory);
 		}
 		return this.nonReactorSleuthMethodInvocationProcessor;
 	}
+
 }

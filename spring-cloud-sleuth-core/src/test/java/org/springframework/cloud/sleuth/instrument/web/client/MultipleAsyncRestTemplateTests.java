@@ -63,21 +63,29 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(
-		classes = { MultipleAsyncRestTemplateTests.Config.class,
-				MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
-				MultipleAsyncRestTemplateTests.ControllerConfig.class },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = { MultipleAsyncRestTemplateTests.Config.class,
+		MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
+		MultipleAsyncRestTemplateTests.ControllerConfig.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class MultipleAsyncRestTemplateTests {
 
-	private static final Log log = LogFactory.getLog(MultipleAsyncRestTemplateTests.class);
+	private static final Log log = LogFactory
+			.getLog(MultipleAsyncRestTemplateTests.class);
 
-	@Autowired @Qualifier("customAsyncRestTemplate") AsyncRestTemplate asyncRestTemplate;
-	@Autowired AsyncConfigurer executor;
+	@Autowired
+	@Qualifier("customAsyncRestTemplate")
+	AsyncRestTemplate asyncRestTemplate;
+
+	@Autowired
+	AsyncConfigurer executor;
+
 	Executor wrappedExecutor;
-	@Autowired Tracer tracer;
-	@LocalServerPort int port;
+
+	@Autowired
+	Tracer tracer;
+
+	@LocalServerPort
+	int port;
 
 	@Before
 	public void setup() {
@@ -93,10 +101,12 @@ public class MultipleAsyncRestTemplateTests {
 	public void should_pass_tracing_context_with_custom_async_client() throws Exception {
 		Span span = this.tracer.nextSpan().name("foo");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			String result = this.asyncRestTemplate.getForEntity("http://localhost:"
-					+ port + "/foo", String.class).get().getBody();
+			String result = this.asyncRestTemplate
+					.getForEntity("http://localhost:" + port + "/foo", String.class).get()
+					.getBody();
 			then(span.context().traceIdString()).isEqualTo(result);
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
@@ -112,7 +122,8 @@ public class MultipleAsyncRestTemplateTests {
 	}
 
 	@Test
-	public void should_inject_traced_executor_that_passes_tracing_context() throws Exception {
+	public void should_inject_traced_executor_that_passes_tracing_context()
+			throws Exception {
 		Span span = this.tracer.nextSpan().name("foo");
 		AtomicBoolean executed = new AtomicBoolean(false);
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
@@ -122,55 +133,60 @@ public class MultipleAsyncRestTemplateTests {
 				then(currentSpan).isNotNull();
 				long currentTraceId = currentSpan.context().traceId();
 				long initialTraceId = span.context().traceId();
-				log.info("Hello from runnable before trace id check. Initial [" + initialTraceId + "] current [" + currentTraceId + "]");
+				log.info("Hello from runnable before trace id check. Initial ["
+						+ initialTraceId + "] current [" + currentTraceId + "]");
 				then(currentTraceId).isEqualTo(initialTraceId);
 				executed.set(true);
 				log.info("Hello from runnable");
 			});
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
-		Awaitility.await().atMost(10L, TimeUnit.SECONDS)
-				.untilAsserted(() -> {
-					then(executed.get()).isTrue();
-				});
+		Awaitility.await().atMost(10L, TimeUnit.SECONDS).untilAsserted(() -> {
+			then(executed.get()).isTrue();
+		});
 		then(this.tracer.currentSpan()).isNull();
 	}
 
-	//tag::custom_async_rest_template[]
+	// tag::custom_async_rest_template[]
 	@Configuration
 	@EnableAutoConfiguration
 	static class Config {
 
 		@Bean(name = "customAsyncRestTemplate")
 		public AsyncRestTemplate traceAsyncRestTemplate() {
-			return new AsyncRestTemplate(asyncClientFactory(), clientHttpRequestFactory());
+			return new AsyncRestTemplate(asyncClientFactory(),
+					clientHttpRequestFactory());
 		}
 
 		private ClientHttpRequestFactory clientHttpRequestFactory() {
 			ClientHttpRequestFactory clientHttpRequestFactory = new CustomClientHttpRequestFactory();
-			//CUSTOMIZE HERE
+			// CUSTOMIZE HERE
 			return clientHttpRequestFactory;
 		}
 
 		private AsyncClientHttpRequestFactory asyncClientFactory() {
 			AsyncClientHttpRequestFactory factory = new CustomAsyncClientHttpRequestFactory();
-			//CUSTOMIZE HERE
+			// CUSTOMIZE HERE
 			return factory;
 		}
-	}
-	//end::custom_async_rest_template[]
 
-	//tag::custom_executor[]
+	}
+	// end::custom_async_rest_template[]
+
+	// tag::custom_executor[]
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableAsync
 	static class CustomExecutorConfig extends AsyncConfigurerSupport {
 
-		@Autowired BeanFactory beanFactory;
+		@Autowired
+		BeanFactory beanFactory;
 
-		@Override public Executor getAsyncExecutor() {
+		@Override
+		public Executor getAsyncExecutor() {
 			ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 			// CUSTOMIZE HERE
 			executor.setCorePoolSize(7);
@@ -181,30 +197,37 @@ public class MultipleAsyncRestTemplateTests {
 			executor.initialize();
 			return new LazyTraceExecutor(this.beanFactory, executor);
 		}
+
 	}
-	//end::custom_executor[]
+	// end::custom_executor[]
 
 	@Configuration
 	static class ControllerConfig {
+
 		@Bean
 		MyRestController myRestController(Tracer tracer) {
 			return new MyRestController(tracer);
 		}
 
-		@Bean Sampler sampler() {
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
+
 }
 
 class CustomClientHttpRequestFactory implements ClientHttpRequestFactory {
 
 	private final SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
 
-	@Override public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod)
+	@Override
+	public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod)
 			throws IOException {
 		return this.factory.createRequest(uri, httpMethod);
 	}
+
 }
 
 class CustomAsyncClientHttpRequestFactory implements AsyncClientHttpRequestFactory {
@@ -220,6 +243,7 @@ class CustomAsyncClientHttpRequestFactory implements AsyncClientHttpRequestFacto
 			throws IOException {
 		return this.factory.createAsyncRequest(uri, httpMethod);
 	}
+
 }
 
 @RestController
@@ -235,4 +259,5 @@ class MyRestController {
 	String foo() {
 		return this.tracer.currentSpan().context().traceIdString();
 	}
+
 }

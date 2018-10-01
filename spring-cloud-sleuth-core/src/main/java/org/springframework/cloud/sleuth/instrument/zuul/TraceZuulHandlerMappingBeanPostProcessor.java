@@ -27,15 +27,15 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
 
 /**
- * Bean post processor that wraps {@link ZuulHandlerMapping} in its
- * trace representation.
+ * Bean post processor that wraps {@link ZuulHandlerMapping} in its trace representation.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.3
  */
 class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 
 	private final BeanFactory beanFactory;
 
@@ -54,12 +54,14 @@ class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 			throws BeansException {
 		if (bean instanceof ZuulHandlerMapping) {
 			if (log.isDebugEnabled()) {
-				log.debug("Attaching trace interceptor to bean [" + beanName + "] of type [" + bean.getClass().getSimpleName() + "]");
+				log.debug("Attaching trace interceptor to bean [" + beanName
+						+ "] of type [" + bean.getClass().getSimpleName() + "]");
 			}
 			ZuulHandlerMapping zuulHandlerMapping = (ZuulHandlerMapping) bean;
-			zuulHandlerMapping.setInterceptors(
-					this.beanFactory.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
+			zuulHandlerMapping.setInterceptors(this.beanFactory
+					.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
 		}
 		return bean;
 	}
+
 }

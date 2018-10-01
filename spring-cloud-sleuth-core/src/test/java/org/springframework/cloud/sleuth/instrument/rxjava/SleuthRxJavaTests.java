@@ -48,8 +48,10 @@ public class SleuthRxJavaTests {
 
 	@Autowired
 	ArrayListSpanReporter reporter;
+
 	@Autowired
 	Tracer tracer;
+
 	StringBuffer caller = new StringBuffer();
 
 	@Before
@@ -85,12 +87,12 @@ public class SleuthRxJavaTests {
 		Span spanInCurrentThread = this.tracer.nextSpan().name("current_span");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(spanInCurrentThread)) {
-			Observable
-					.defer(() -> Observable.just(
-							(Action0) () -> this.caller = new StringBuffer("actual_action")))
+			Observable.defer(() -> Observable.just(
+					(Action0) () -> this.caller = new StringBuffer("actual_action")))
 					.subscribeOn(Schedulers.newThread()).toBlocking()
 					.subscribe(Action0::call);
-		} finally {
+		}
+		finally {
 			spanInCurrentThread.finish();
 		}
 

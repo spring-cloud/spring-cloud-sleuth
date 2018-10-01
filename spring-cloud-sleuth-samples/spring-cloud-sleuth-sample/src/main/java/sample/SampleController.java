@@ -35,16 +35,21 @@ import org.springframework.web.client.RestTemplate;
  */
 @RestController
 public class SampleController
-		implements ApplicationListener<ServletWebServerInitializedEvent > {
+		implements ApplicationListener<ServletWebServerInitializedEvent> {
+
 	private static final Log log = LogFactory.getLog(SampleController.class);
+
 	@Autowired
 	private RestTemplate restTemplate;
+
 	@Autowired
 	private Tracer tracer;
+
 	@Autowired
 	private SampleBackground controller;
 
 	private final Random random = new Random();
+
 	private int port;
 
 	@RequestMapping("/")
@@ -121,4 +126,5 @@ public class SampleController
 	public void onApplicationEvent(ServletWebServerInitializedEvent event) {
 		this.port = event.getSource().getPort();
 	}
+
 }

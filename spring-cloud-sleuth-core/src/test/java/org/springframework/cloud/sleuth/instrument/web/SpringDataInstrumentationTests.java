@@ -55,19 +55,20 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ReservationServiceApplication.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = "spring.sleuth.http.legacy.enabled=true")
+@SpringBootTest(classes = ReservationServiceApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.sleuth.http.legacy.enabled=true")
 @DirtiesContext
 @ActiveProfiles("data")
 public class SpringDataInstrumentationTests {
 
 	@Autowired
 	RestTemplate restTemplate;
+
 	@Autowired
 	Environment environment;
+
 	@Autowired
 	Tracer tracer;
+
 	@Autowired
 	ArrayListSpanReporter reporter;
 
@@ -85,25 +86,28 @@ public class SpringDataInstrumentationTests {
 		Awaitility.await().untilAsserted(() -> {
 			// Make sure the data is attached to the right side of the span
 			then(this.reporter.getSpans())
-					.extracting(Span::kind, Span::name, s -> s.tags().get("mvc.controller.class"))
+					.extracting(Span::kind, Span::name,
+							s -> s.tags().get("mvc.controller.class"))
 					.containsExactlyInAnyOrder(
 							tuple(Span.Kind.CLIENT, "http:/reservations", null),
-							tuple(Span.Kind.SERVER, "http:/reservations", "RepositoryEntityController")
-					);
+							tuple(Span.Kind.SERVER, "http:/reservations",
+									"RepositoryEntityController"));
 		});
 		then(this.tracer.currentSpan()).isNull();
 	}
 
 	long namesCount() {
-		return
-				this.restTemplate.exchange(RequestEntity
-						.get(URI.create("http://localhost:" + port() + "/reservations")).build(), PagedResources.class)
+		return this.restTemplate
+				.exchange(RequestEntity
+						.get(URI.create("http://localhost:" + port() + "/reservations"))
+						.build(), PagedResources.class)
 				.getBody().getMetadata().getTotalElements();
 	}
 
 	private int port() {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
+
 }
 
 @Configuration
@@ -116,8 +120,8 @@ class ReservationServiceApplication {
 		return new RestTemplate();
 	}
 
-	@Bean SampleRecords sampleRecords(
-			ReservationRepository reservationRepository) {
+	@Bean
+	SampleRecords sampleRecords(ReservationRepository reservationRepository) {
 		return new SampleRecords(reservationRepository);
 	}
 
@@ -137,8 +141,7 @@ class SampleRecords {
 
 	private final ReservationRepository reservationRepository;
 
-	public SampleRecords(
-			ReservationRepository reservationRepository) {
+	public SampleRecords(ReservationRepository reservationRepository) {
 		this.reservationRepository = reservationRepository;
 	}
 
@@ -149,10 +152,12 @@ class SampleRecords {
 				.forEach(name -> reservationRepository.save(new Reservation(name)));
 		reservationRepository.findAll().forEach(System.out::println);
 	}
+
 }
 
 @RepositoryRestResource
 interface ReservationRepository extends JpaRepository<Reservation, Long> {
+
 }
 
 @Entity
@@ -185,4 +190,5 @@ class Reservation {
 
 		this.reservationName = reservationName;
 	}
+
 }

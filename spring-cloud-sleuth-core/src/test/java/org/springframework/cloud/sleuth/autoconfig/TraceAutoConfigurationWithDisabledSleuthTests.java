@@ -35,17 +35,18 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class,
-				properties = "spring.sleuth.enabled=false",
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class, properties = "spring.sleuth.enabled=false", webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("disabled")
 public class TraceAutoConfigurationWithDisabledSleuthTests {
 
-	private static final Log log = LogFactory.getLog(
-			TraceAutoConfigurationWithDisabledSleuthTests.class);
+	private static final Log log = LogFactory
+			.getLog(TraceAutoConfigurationWithDisabledSleuthTests.class);
 
-	@Rule public OutputCapture capture = new OutputCapture();
-	@Autowired(required = false) Tracing tracing;
+	@Rule
+	public OutputCapture capture = new OutputCapture();
+
+	@Autowired(required = false)
+	Tracing tracing;
 
 	@Test
 	public void shouldStartContext() {
@@ -62,22 +63,28 @@ public class TraceAutoConfigurationWithDisabledSleuthTests {
 	@EnableAutoConfiguration
 	@Configuration
 	static class Config {
+
 		@Bean
 		public FactoryBean<SecureRandom> secureRandom() {
 			return new FactoryBean<SecureRandom>() {
 
-				@Override public SecureRandom getObject() throws Exception {
+				@Override
+				public SecureRandom getObject() throws Exception {
 					return new SecureRandom();
 				}
 
-				@Override public Class<?> getObjectType() {
+				@Override
+				public Class<?> getObjectType() {
 					return SecureRandom.class;
 				}
 
-				@Override public boolean isSingleton() {
+				@Override
+				public boolean isSingleton() {
 					return true;
 				}
 			};
 		}
+
 	}
+
 }

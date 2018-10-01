@@ -63,10 +63,18 @@ public class Issue410Tests {
 	private static final Log log = LogFactory
 			.getLog(MethodHandles.lookup().lookupClass());
 
-	@Autowired Environment environment;
-	@Autowired Tracer tracer;
-	@Autowired AsyncTask asyncTask;
-	@Autowired RestTemplate restTemplate;
+	@Autowired
+	Environment environment;
+
+	@Autowired
+	Tracer tracer;
+
+	@Autowired
+	AsyncTask asyncTask;
+
+	@Autowired
+	RestTemplate restTemplate;
+
 	/**
 	 * Related to issue #445
 	 */
@@ -77,7 +85,7 @@ public class Issue410Tests {
 	public void should_pass_tracing_info_for_tasks_running_without_a_pool() {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.restTemplate.getForObject(
 					"http://localhost:" + port() + "/without_pool", String.class);
 
@@ -99,7 +107,7 @@ public class Issue410Tests {
 	public void should_pass_tracing_info_for_tasks_running_with_a_pool() {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.restTemplate.getForObject(
 					"http://localhost:" + port() + "/with_pool", String.class);
 
@@ -124,7 +132,7 @@ public class Issue410Tests {
 	public void should_pass_tracing_info_for_completable_futures_with_executor() {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.restTemplate.getForObject(
 					"http://localhost:" + port() + "/completable", String.class);
 
@@ -149,7 +157,7 @@ public class Issue410Tests {
 	public void should_pass_tracing_info_for_completable_futures_with_task_scheduler() {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.restTemplate.getForObject(
 					"http://localhost:" + port() + "/taskScheduler", String.class);
 
@@ -170,6 +178,7 @@ public class Issue410Tests {
 	private int port() {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
+
 }
 
 @Configuration
@@ -198,19 +207,21 @@ class AppConfig {
 @Component
 class AsyncTask {
 
-	private static final Log log = LogFactory.getLog(
-			AsyncTask.class);
+	private static final Log log = LogFactory.getLog(AsyncTask.class);
 
 	private AtomicReference<Span> span = new AtomicReference<>();
 
-	@Autowired 
+	@Autowired
 	Tracer tracer;
+
 	@Autowired
 	@Qualifier("poolTaskExecutor")
 	Executor executor;
+
 	@Autowired
 	@Qualifier("taskScheduler")
 	Executor taskScheduler;
+
 	@Autowired
 	BeanFactory beanFactory;
 
@@ -242,7 +253,8 @@ class AsyncTask {
 					Span joinedSpan1 = span1.join();
 					Span joinedSpan2 = span2.join();
 					then(joinedSpan2).isNotNull();
-					then(joinedSpan1.context().traceId()).isEqualTo(joinedSpan2.context().traceId());
+					then(joinedSpan1.context().traceId())
+							.isEqualTo(joinedSpan2.context().traceId());
 					AsyncTask.log.info("TraceIds are correct");
 					return joinedSpan2;
 				});
@@ -255,14 +267,12 @@ class AsyncTask {
 		CompletableFuture<Span> span1 = CompletableFuture.supplyAsync(() -> {
 			AsyncTask.log.info("First completable future");
 			return AsyncTask.this.tracer.currentSpan();
-		}, new LazyTraceExecutor(
-				AsyncTask.this.beanFactory,
+		}, new LazyTraceExecutor(AsyncTask.this.beanFactory,
 				AsyncTask.this.taskScheduler));
 		CompletableFuture<Span> span2 = CompletableFuture.supplyAsync(() -> {
 			AsyncTask.log.info("Second completable future");
 			return AsyncTask.this.tracer.currentSpan();
-		}, new LazyTraceExecutor(
-				AsyncTask.this.beanFactory,
+		}, new LazyTraceExecutor(AsyncTask.this.beanFactory,
 				AsyncTask.this.taskScheduler));
 		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2)
 				.thenApply(ignoredVoid -> {
@@ -270,7 +280,8 @@ class AsyncTask {
 					Span joinedSpan1 = span1.join();
 					Span joinedSpan2 = span2.join();
 					then(joinedSpan2).isNotNull();
-					then(joinedSpan1.context().traceId()).isEqualTo(joinedSpan2.context().traceId());
+					then(joinedSpan1.context().traceId())
+							.isEqualTo(joinedSpan2.context().traceId());
 					AsyncTask.log.info("TraceIds are correct");
 					return joinedSpan2;
 				});
@@ -281,17 +292,20 @@ class AsyncTask {
 	public AtomicReference<Span> getSpan() {
 		return span;
 	}
+
 }
 
 @SpringBootApplication(exclude = SpringDataWebAutoConfiguration.class)
 @RestController
 class Application {
 
-	private static final Log log = LogFactory.getLog(
-			Application.class);
+	private static final Log log = LogFactory.getLog(Application.class);
 
-	@Autowired AsyncTask asyncTask;
-	@Autowired Tracer tracer;
+	@Autowired
+	AsyncTask asyncTask;
+
+	@Autowired
+	Tracer tracer;
 
 	@RequestMapping("/with_pool")
 	public String withPool() {

@@ -48,6 +48,7 @@ public class HystrixAnnotationsIntegrationTests {
 
 	@Autowired
 	HystrixCommandInvocationSpanCatcher catcher;
+
 	@Autowired
 	Tracing tracer;
 
@@ -71,9 +72,9 @@ public class HystrixAnnotationsIntegrationTests {
 	private void thenSpanInHystrixThreadIsContinued(final Span span) {
 		then(span).isNotNull();
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
-				then(HystrixAnnotationsIntegrationTests.this.catcher).isNotNull();
-				then(span.context().traceId())
-						.isEqualTo(HystrixAnnotationsIntegrationTests.this.catcher.getTraceId());
+			then(HystrixAnnotationsIntegrationTests.this.catcher).isNotNull();
+			then(span.context().traceId()).isEqualTo(
+					HystrixAnnotationsIntegrationTests.this.catcher.getTraceId());
 		});
 	}
 
@@ -103,6 +104,7 @@ public class HystrixAnnotationsIntegrationTests {
 	public static class HystrixCommandInvocationSpanCatcher {
 
 		AtomicReference<Span> spanCaughtFromHystrixThread;
+
 		private final Tracing tracing;
 
 		public HystrixCommandInvocationSpanCatcher(Tracing tracing) {
@@ -126,5 +128,7 @@ public class HystrixAnnotationsIntegrationTests {
 		public Span getSpan() {
 			return this.spanCaughtFromHystrixThread.get();
 		}
+
 	}
+
 }

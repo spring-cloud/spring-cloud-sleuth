@@ -19,17 +19,18 @@ package org.springframework.cloud.sleuth.zipkin2;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Implementations customize the {@link RestTemplate} used to report spans to Zipkin.
- * For example, they can add an additional header needed by their environment.
+ * Implementations customize the {@link RestTemplate} used to report spans to Zipkin. For
+ * example, they can add an additional header needed by their environment.
  *
- * <p>Implementors must gzip according to {@link ZipkinProperties.Compression},
- * for example by using the {@link DefaultZipkinRestTemplateCustomizer}.
+ * <p>
+ * Implementors must gzip according to {@link ZipkinProperties.Compression}, for example
+ * by using the {@link DefaultZipkinRestTemplateCustomizer}.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.1.0
  */
 public interface ZipkinRestTemplateCustomizer {
 
 	void customize(RestTemplate restTemplate);
+
 }

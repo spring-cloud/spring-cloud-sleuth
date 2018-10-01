@@ -35,7 +35,7 @@ public class SampleTransformer {
 	@Autowired
 	SampleBackground background;
 
-	@ServiceActivator(inputChannel="xform")
+	@ServiceActivator(inputChannel = "xform")
 	public String log(Message<?> message) throws InterruptedException {
 		log.info("Received: " + message);
 		this.background.background();

@@ -38,10 +38,12 @@ import zipkin2.reporter.kafka11.KafkaSender;
 @Conditional(ZipkinSenderCondition.class)
 @ConditionalOnProperty(value = "spring.zipkin.sender.type", havingValue = "kafka")
 class ZipkinKafkaSenderConfiguration {
+
 	@Value("${spring.zipkin.kafka.topic:zipkin}")
 	private String topic;
 
-	@Bean Sender kafkaSender(KafkaProperties config) {
+	@Bean
+	Sender kafkaSender(KafkaProperties config) {
 		Map<String, Object> properties = config.buildProducerProperties();
 		properties.put("key.serializer", ByteArraySerializer.class.getName());
 		properties.put("value.serializer", ByteArraySerializer.class.getName());
@@ -50,10 +52,7 @@ class ZipkinKafkaSenderConfiguration {
 		if (bootstrapServers instanceof List) {
 			properties.put("bootstrap.servers", join((List) bootstrapServers));
 		}
-		return KafkaSender.newBuilder()
-				.topic(this.topic)
-				.overrides(properties)
-				.build();
+		return KafkaSender.newBuilder().topic(this.topic).overrides(properties).build();
 	}
 
 	static String join(List<?> parts) {
@@ -66,4 +65,5 @@ class ZipkinKafkaSenderConfiguration {
 		}
 		return to.toString();
 	}
+
 }

@@ -28,7 +28,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
- * Aspect for Feign clients so that you can autowire your custom components
+ * Aspect for Feign clients so that you can autowire your custom components.
  *
  * @author Marcin Grzejszczak
  * @since 1.1.2
@@ -57,10 +57,12 @@ class TraceFeignAspect {
 		return pjp.proceed();
 	}
 
-	Object executeTraceFeignClient(Object bean, ProceedingJoinPoint pjp) throws IOException {
+	Object executeTraceFeignClient(Object bean, ProceedingJoinPoint pjp)
+			throws IOException {
 		Object[] args = pjp.getArgs();
 		Request request = (Request) args[0];
 		Request.Options options = (Request.Options) args[1];
 		return ((Client) bean).execute(request, options);
 	}
+
 }

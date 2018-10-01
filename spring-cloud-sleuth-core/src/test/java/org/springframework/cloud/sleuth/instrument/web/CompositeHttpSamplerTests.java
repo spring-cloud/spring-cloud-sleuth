@@ -30,13 +30,18 @@ import static org.mockito.BDDMockito.given;
 @RunWith(MockitoJUnitRunner.class)
 public class CompositeHttpSamplerTests {
 
-	@Mock HttpAdapter adapter;
-	@Mock HttpSampler left, right;
+	@Mock
+	HttpAdapter adapter;
+
+	@Mock
+	HttpSampler left, right;
+
 	HttpSampler sampler;
+
 	Object request = new Object();
 
 	@Before
-	public void init(){
+	public void init() {
 		this.sampler = new CompositeHttpSampler(left, right);
 	}
 
@@ -78,4 +83,5 @@ public class CompositeHttpSamplerTests {
 
 		then(this.sampler.trySample(this.adapter, this.request)).isTrue();
 	}
+
 }

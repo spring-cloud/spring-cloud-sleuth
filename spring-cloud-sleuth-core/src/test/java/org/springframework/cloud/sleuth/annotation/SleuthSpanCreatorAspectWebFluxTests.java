@@ -47,16 +47,16 @@ import zipkin2.reporter.Reporter;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(
-		properties = {"spring.main.web-application-type=reactive"},
-		classes = {
+@SpringBootTest(properties = { "spring.main.web-application-type=reactive" }, classes = {
 		SleuthSpanCreatorAspectWebFluxTests.TestEndpoint.class,
-		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class}
-		, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SleuthSpanCreatorAspectWebFluxTests {
 
-	@Autowired Tracer tracer;
-	@Autowired ArrayListSpanReporter reporter;
+	@Autowired
+	Tracer tracer;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
@@ -69,11 +69,11 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	private final WebClient webClient = WebClient.create();
 
 	private static final ConcurrentLinkedQueue<Long> spanIdsInHttpTrace = new ConcurrentLinkedQueue<>();
-	
+
 	@Test
 	public void shouldReturnSpanFromWebFluxTraceContext() {
 
-		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/ping")
+		Mono<Long> mono = webClient.get().uri("http://localhost:" + port + "/test/ping")
 				.retrieve().bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
@@ -91,8 +91,9 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldReturnSpanFromWebFluxSubscriptionContext() {
 
-		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/pingFromContext")
-				.retrieve().bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get()
+				.uri("http://localhost:" + port + "/test/pingFromContext").retrieve()
+				.bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -109,8 +110,9 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldContinueSpanInWebFlux() {
 
-		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/continueSpan")
-				.retrieve().bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get()
+				.uri("http://localhost:" + port + "/test/continueSpan").retrieve()
+				.bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -127,8 +129,9 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldCreateNewSpanInWebFlux() {
 
-		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/newSpan1")
-				.retrieve().bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get()
+				.uri("http://localhost:" + port + "/test/newSpan1").retrieve()
+				.bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -146,8 +149,9 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldCreateNewSpanInWebFluxInSubscriberContext() {
 
-		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/newSpan2")
-				.retrieve().bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get()
+				.uri("http://localhost:" + port + "/test/newSpan2").retrieve()
+				.bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -167,7 +171,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		spanIdsInHttpTrace.clear();
 
-		Mono<Long> mono = webClient.get().uri("http://localhost:"+port+"/test/ping")
+		Mono<Long> mono = webClient.get().uri("http://localhost:" + port + "/test/ping")
 				.retrieve().bodyToMono(Long.class);
 
 		then(this.reporter.getSpans()).isEmpty();
@@ -178,18 +182,15 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).kind()).isEqualTo(Span.Kind.SERVER);
 		then(spans.get(0).name()).isEqualTo("get /test/ping");
-		then(spans.get(0).id())
-				.isEqualTo(toHexString(newSpanId))
+		then(spans.get(0).id()).isEqualTo(toHexString(newSpanId))
 				.isEqualTo(toHexString(spanIdsInHttpTrace.poll()));
 		then(this.tracer.currentSpan()).isNull();
 	}
 
-
-	private static String toHexString(long value){
+	private static String toHexString(long value) {
 		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
 	}
 
-	
 	@Configuration
 	@EnableAutoConfiguration
 	@DisableWebFluxSecurity
@@ -200,22 +201,27 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 			return new TestBean(tracer);
 		}
 
-		@Bean Reporter<zipkin2.Span> spanReporter() {
+		@Bean
+		Reporter<zipkin2.Span> spanReporter() {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean Sampler alwaysSampler() {
+		@Bean
+		Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean AccessLoggingHttpTraceRepository accessLoggingHttpTraceRepository(){
+		@Bean
+		AccessLoggingHttpTraceRepository accessLoggingHttpTraceRepository() {
 			return new AccessLoggingHttpTraceRepository();
 		}
+
 	}
 
 	static class AccessLoggingHttpTraceRepository implements HttpTraceRepository {
 
-		@Autowired Tracer tracer;
+		@Autowired
+		Tracer tracer;
 
 		@Override
 		public List<HttpTrace> findAll() {
@@ -226,14 +232,18 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		public void add(HttpTrace trace) {
 			spanIdsInHttpTrace.add(tracer.currentSpan().context().spanId());
 		}
+
 	}
 
 	@RestController
 	@RequestMapping("/test")
 	static class TestEndpoint {
 
-		@Autowired Tracer tracer;
-		@Autowired TestBean testBean;
+		@Autowired
+		Tracer tracer;
+
+		@Autowired
+		TestBean testBean;
 
 		@GetMapping("/ping")
 		public Mono<Long> ping() {
@@ -242,8 +252,8 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		@GetMapping("/pingFromContext")
 		public Mono<Long> pingFromContext() {
-			return Mono.subscriberContext()
-					.flatMap(context -> Mono.just(tracer.currentSpan().context().spanId()));
+			return Mono.subscriberContext().flatMap(
+					context -> Mono.just(tracer.currentSpan().context().spanId()));
 		}
 
 		@GetMapping("/continueSpan")
@@ -260,6 +270,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		public Mono<Long> newSpan2() {
 			return testBean.newSpanInSubscriberContext();
 		}
+
 	}
 
 	static class TestBean {
@@ -282,8 +293,10 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		@NewSpan(name = "newSpanInSubscriberContext")
 		public Mono<Long> newSpanInSubscriberContext() {
-			return Mono.subscriberContext()
-					.flatMap(context -> Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId())));
+			return Mono.subscriberContext().flatMap(context -> Mono
+					.defer(() -> Mono.just(tracer.currentSpan().context().spanId())));
 		}
+
 	}
+
 }

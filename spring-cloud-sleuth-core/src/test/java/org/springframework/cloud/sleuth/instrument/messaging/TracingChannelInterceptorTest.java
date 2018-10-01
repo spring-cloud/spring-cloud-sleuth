@@ -49,16 +49,18 @@ import static org.springframework.messaging.support.NativeMessageHeaderAccessor.
 public class TracingChannelInterceptorTest {
 
 	List<Span> spans = new ArrayList<>();
+
 	ChannelInterceptor interceptor = TracingChannelInterceptor.create(Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.spanReporter(spans::add)
-			.build());
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.spanReporter(spans::add).build());
 
 	QueueChannel channel = new QueueChannel();
+
 	DirectChannel directChannel = new DirectChannel();
+
 	Message message;
+
 	MessageHandler handler = new MessageHandler() {
 		@Override
 		public void handleMessage(Message<?> msg) throws MessagingException {
@@ -66,39 +68,41 @@ public class TracingChannelInterceptorTest {
 		}
 	};
 
-	@Test public void pollingReceive_emptyQueue() {
+	@Test
+	public void pollingReceive_emptyQueue() {
 		channel.addInterceptor(consumerSideOnly(interceptor));
 
 		assertThat(channel.receive(0)).isNull();
 		assertThat(spans).hasSize(0);
 	}
 
-	@Test public void injectsProducerSpan() {
+	@Test
+	public void injectsProducerSpan() {
 		channel.addInterceptor(producerSideOnly(interceptor));
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(channel.receive().getHeaders())
-				.containsKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled",
-						"nativeHeaders");
+		assertThat(channel.receive().getHeaders()).containsKeys("X-B3-TraceId",
+				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
 		assertThat(spans).hasSize(1).flatExtracting(Span::kind)
 				.containsExactly(Span.Kind.PRODUCER);
 	}
 
-	@Test public void injectsProducerAndConsumerSpan() {
+	@Test
+	public void injectsProducerAndConsumerSpan() {
 		directChannel.addInterceptor(interceptor);
 		directChannel.subscribe(this.handler);
 		directChannel.send(MessageBuilder.withPayload("foo").build());
 
 		assertThat(message).isNotNull();
-		assertThat(message.getHeaders())
-				.containsKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled",
-						"nativeHeaders");
-		assertThat(spans).flatExtracting(Span::kind)
-				.contains(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
+		assertThat(message.getHeaders()).containsKeys("X-B3-TraceId", "X-B3-SpanId",
+				"X-B3-Sampled", "nativeHeaders");
+		assertThat(spans).flatExtracting(Span::kind).contains(Span.Kind.CONSUMER,
+				Span.Kind.PRODUCER);
 	}
 
-	@Test public void injectsProducerSpan_nativeHeaders() {
+	@Test
+	public void injectsProducerSpan_nativeHeaders() {
 		channel.addInterceptor(producerSideOnly(interceptor));
 
 		channel.send(MessageBuilder.withPayload("foo").build());
@@ -109,10 +113,12 @@ public class TracingChannelInterceptorTest {
 	}
 
 	/**
-	 * If the producer is acting on an un-processed message (ex via a polling consumer), it should
-	 * look at trace headers when there is no span in scope, and use that as the parent context.
+	 * If the producer is acting on an un-processed message (ex via a polling consumer),
+	 * it should look at trace headers when there is no span in scope, and use that as the
+	 * parent context.
 	 */
-	@Test public void producerConsidersOldSpanIds() {
+	@Test
+	public void producerConsidersOldSpanIds() {
 		channel.addInterceptor(producerSideOnly(interceptor));
 
 		channel.send(MessageBuilder.withPayload("foo")
@@ -120,11 +126,12 @@ public class TracingChannelInterceptorTest {
 				.setHeader("X-B3-ParentSpanId", "000000000000000a")
 				.setHeader("X-B3-SpanId", "000000000000000b").build());
 
-		assertThat(channel.receive().getHeaders())
-				.containsEntry("X-B3-ParentSpanId", "000000000000000b");
+		assertThat(channel.receive().getHeaders()).containsEntry("X-B3-ParentSpanId",
+				"000000000000000b");
 	}
 
-	@Test public void producerConsidersOldSpanIds_nativeHeaders() {
+	@Test
+	public void producerConsidersOldSpanIds_nativeHeaders() {
 		channel.addInterceptor(producerSideOnly(interceptor));
 
 		NativeMessageHeaderAccessor accessor = new NativeMessageHeaderAccessor() {
@@ -134,9 +141,8 @@ public class TracingChannelInterceptorTest {
 		accessor.setNativeHeader("X-B3-ParentSpanId", "000000000000000a");
 		accessor.setNativeHeader("X-B3-SpanId", "000000000000000b");
 
-		channel.send(
-				MessageBuilder.withPayload("foo").copyHeaders(accessor.toMessageHeaders())
-						.build());
+		channel.send(MessageBuilder.withPayload("foo")
+				.copyHeaders(accessor.toMessageHeaders()).build());
 
 		assertThat((Map) channel.receive().getHeaders().get(NATIVE_HEADERS))
 				.containsEntry("X-B3-ParentSpanId",
@@ -144,21 +150,23 @@ public class TracingChannelInterceptorTest {
 	}
 
 	/**
-	 * We have to inject headers on a polling receive as any future processor will come later
+	 * We have to inject headers on a polling receive as any future processor will come
+	 * later
 	 */
-	@Test public void pollingReceive_injectsConsumerSpan() {
+	@Test
+	public void pollingReceive_injectsConsumerSpan() {
 		channel.addInterceptor(consumerSideOnly(interceptor));
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(channel.receive().getHeaders())
-				.containsKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled",
-						"nativeHeaders");
+		assertThat(channel.receive().getHeaders()).containsKeys("X-B3-TraceId",
+				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
 		assertThat(spans).hasSize(1).flatExtracting(Span::kind)
 				.containsExactly(Span.Kind.CONSUMER);
 	}
 
-	@Test public void pollingReceive_injectsConsumerSpan_nativeHeaders() {
+	@Test
+	public void pollingReceive_injectsConsumerSpan_nativeHeaders() {
 		channel.addInterceptor(consumerSideOnly(interceptor));
 
 		channel.send(MessageBuilder.withPayload("foo").build());
@@ -168,7 +176,8 @@ public class TracingChannelInterceptorTest {
 						"spanTraceId", "spanId", "spanSampled");
 	}
 
-	@Test public void subscriber_startsAndStopsConsumerAndProcessingSpan() {
+	@Test
+	public void subscriber_startsAndStopsConsumerAndProcessingSpan() {
 		ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
 		channel.addInterceptor(executorSideOnly(interceptor));
 		List<Message<?>> messages = new ArrayList<>();
@@ -176,18 +185,19 @@ public class TracingChannelInterceptorTest {
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(messages.get(0).getHeaders())
-				.doesNotContainKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled",
-						"nativeHeaders");
-		assertThat(spans).flatExtracting(Span::kind)
-				.containsExactly(Span.Kind.CONSUMER, null);
+		assertThat(messages.get(0).getHeaders()).doesNotContainKeys("X-B3-TraceId",
+				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
+		assertThat(spans).flatExtracting(Span::kind).containsExactly(Span.Kind.CONSUMER,
+				null);
 	}
 
 	/**
-	 * The subscriber consumes a message then synchronously processes it. Since we only inject trace
-	 * IDs on unprocessed messages, we remove IDs to prevent accidental re-use of the same span.
+	 * The subscriber consumes a message then synchronously processes it. Since we only
+	 * inject trace IDs on unprocessed messages, we remove IDs to prevent accidental
+	 * re-use of the same span.
 	 */
-	@Test public void subscriber_removesTraceIdsFromMessage() {
+	@Test
+	public void subscriber_removesTraceIdsFromMessage() {
 		ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
 		channel.addInterceptor(interceptor);
 		List<Message<?>> messages = new ArrayList<>();
@@ -195,11 +205,12 @@ public class TracingChannelInterceptorTest {
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(messages.get(0).getHeaders())
-				.doesNotContainKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled");
+		assertThat(messages.get(0).getHeaders()).doesNotContainKeys("X-B3-TraceId",
+				"X-B3-SpanId", "X-B3-Sampled");
 	}
 
-	@Test public void subscriber_removesTraceIdsFromMessage_nativeHeaders() {
+	@Test
+	public void subscriber_removesTraceIdsFromMessage_nativeHeaders() {
 		ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
 		channel.addInterceptor(interceptor);
 		List<Message<?>> messages = new ArrayList<>();
@@ -211,7 +222,8 @@ public class TracingChannelInterceptorTest {
 				.doesNotContainKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled");
 	}
 
-	@Test public void integrated_sendAndPoll() {
+	@Test
+	public void integrated_sendAndPoll() {
 		channel.addInterceptor(interceptor);
 
 		channel.send(MessageBuilder.withPayload("foo").build());
@@ -221,7 +233,8 @@ public class TracingChannelInterceptorTest {
 				.containsExactlyInAnyOrder(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
 	}
 
-	@Test public void integrated_sendAndSubscriber() {
+	@Test
+	public void integrated_sendAndSubscriber() {
 		ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
 		channel.addInterceptor(interceptor);
 		List<Message<?>> messages = new ArrayList<>();
@@ -229,8 +242,8 @@ public class TracingChannelInterceptorTest {
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(spans).flatExtracting(Span::kind)
-				.containsExactly(Span.Kind.CONSUMER, null, Span.Kind.PRODUCER);
+		assertThat(spans).flatExtracting(Span::kind).containsExactly(Span.Kind.CONSUMER,
+				null, Span.Kind.PRODUCER);
 	}
 
 	@Test
@@ -241,26 +254,32 @@ public class TracingChannelInterceptorTest {
 		Map<String, Object> errorChannelHeaders = new HashMap<>();
 		errorChannelHeaders.put(MessageHeaders.REPLY_CHANNEL, errorsReplyChannel);
 		errorChannelHeaders.put(MessageHeaders.ERROR_CHANNEL, errorsReplyChannel);
-		this.channel.send(new ErrorMessage(
-				new MessagingException(MessageBuilder.withPayload("hi")
-						.setHeader(TraceMessageHeaders.TRACE_ID_NAME, "000000000000000a")
-						.setHeader(TraceMessageHeaders.SPAN_ID_NAME, "000000000000000a")
-						.setReplyChannel(deadReplyChannel)
-						.setErrorChannel(deadReplyChannel)
-						.build()),
-				errorChannelHeaders));
+		this.channel
+				.send(new ErrorMessage(
+						new MessagingException(MessageBuilder.withPayload("hi")
+								.setHeader(TraceMessageHeaders.TRACE_ID_NAME,
+										"000000000000000a")
+								.setHeader(TraceMessageHeaders.SPAN_ID_NAME,
+										"000000000000000a")
+								.setReplyChannel(deadReplyChannel)
+								.setErrorChannel(deadReplyChannel).build()),
+						errorChannelHeaders));
 
 		this.message = this.channel.receive();
 
 		assertThat(this.message).isNotNull();
-		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME, String.class);
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME,
+				String.class);
 		assertThat(spanId).isNotNull();
-		String traceId = this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME, String.class);
+		String traceId = this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME,
+				String.class);
 		assertThat(traceId).isEqualTo("000000000000000a");
 		assertThat(spanId).isNotEqualTo("000000000000000a");
 		assertThat(this.spans).hasSize(2);
-		assertThat(this.message.getHeaders().getReplyChannel()).isSameAs(errorsReplyChannel);
-		assertThat(this.message.getHeaders().getErrorChannel()).isSameAs(errorsReplyChannel);
+		assertThat(this.message.getHeaders().getReplyChannel())
+				.isSameAs(errorsReplyChannel);
+		assertThat(this.message.getHeaders().getErrorChannel())
+				.isSameAs(errorsReplyChannel);
 	}
 
 	ChannelInterceptor producerSideOnly(ChannelInterceptor delegate) {
@@ -296,25 +315,29 @@ public class TracingChannelInterceptorTest {
 	ExecutorChannelInterceptor executorSideOnly(ChannelInterceptor delegate) {
 		class ExecutorSideOnly extends ChannelInterceptorAdapter
 				implements ExecutorChannelInterceptor {
+
 			@Override
 			public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
 					MessageHandler handler) {
-				return ((ExecutorChannelInterceptor) delegate)
-						.beforeHandle(message, channel, handler);
+				return ((ExecutorChannelInterceptor) delegate).beforeHandle(message,
+						channel, handler);
 			}
 
 			@Override
 			public void afterMessageHandled(Message<?> message, MessageChannel channel,
 					MessageHandler handler, Exception ex) {
-				((ExecutorChannelInterceptor) delegate)
-						.afterMessageHandled(message, channel, handler, ex);
+				((ExecutorChannelInterceptor) delegate).afterMessageHandled(message,
+						channel, handler, ex);
 			}
+
 		}
 		return new ExecutorSideOnly();
 	}
 
-	@After public void close() {
+	@After
+	public void close() {
 		assertThat(Tracing.current().currentTraceContext().get()).isNull();
 		Tracing.current().close();
 	}
+
 }

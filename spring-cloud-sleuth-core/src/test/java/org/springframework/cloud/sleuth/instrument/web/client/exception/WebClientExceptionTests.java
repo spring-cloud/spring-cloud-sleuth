@@ -62,24 +62,35 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
 @SpringBootTest(classes = {
-		WebClientExceptionTests.TestConfiguration.class },
-		properties = {"ribbon.ConnectTimeout=30000", "spring.application.name=exceptionservice" },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		WebClientExceptionTests.TestConfiguration.class }, properties = {
+				"ribbon.ConnectTimeout=30000",
+				"spring.application.name=exceptionservice" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class WebClientExceptionTests {
 
-	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 
 	@ClassRule
 	public static final SpringClassRule SCR = new SpringClassRule();
+
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
+
 	@Rule
 	public final OutputCapture capture = new OutputCapture();
 
-	@Autowired TestFeignInterfaceWithException testFeignInterfaceWithException;
-	@Autowired @LoadBalanced RestTemplate template;
-	@Autowired Tracing tracer;
-	@Autowired ArrayListSpanReporter reporter;
+	@Autowired
+	TestFeignInterfaceWithException testFeignInterfaceWithException;
+
+	@Autowired
+	@LoadBalanced
+	RestTemplate template;
+
+	@Autowired
+	Tracing tracer;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
 
 	@Before
 	public void open() {
@@ -100,7 +111,8 @@ public class WebClientExceptionTests {
 		}
 		catch (RuntimeException e) {
 			// SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 
@@ -119,8 +131,10 @@ public class WebClientExceptionTests {
 
 	@FeignClient("exceptionservice")
 	public interface TestFeignInterfaceWithException {
+
 		@RequestMapping(method = RequestMethod.GET, value = "/")
 		ResponseEntity<String> shouldFailToConnect();
+
 	}
 
 	@Configuration
@@ -138,13 +152,16 @@ public class WebClientExceptionTests {
 			return new RestTemplate(clientHttpRequestFactory);
 		}
 
-		@Bean Sampler alwaysSampler() {
+		@Bean
+		Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean ArrayListSpanReporter accumulator() {
+		@Bean
+		ArrayListSpanReporter accumulator() {
 			return new ArrayListSpanReporter();
 		}
+
 	}
 
 	@Configuration
@@ -162,7 +179,9 @@ public class WebClientExceptionTests {
 
 	@FunctionalInterface
 	interface ResponseEntityProvider {
-		ResponseEntity<?> get(
-				WebClientExceptionTests webClientTests);
+
+		ResponseEntity<?> get(WebClientExceptionTests webClientTests);
+
 	}
+
 }

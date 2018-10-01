@@ -38,8 +38,12 @@ import static org.assertj.core.api.Assertions.fail;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class SpanTagAnnotationHandlerTests {
 
-	@Autowired BeanFactory beanFactory;
-	@Autowired TagValueResolver tagValueResolver;
+	@Autowired
+	BeanFactory beanFactory;
+
+	@Autowired
+	TagValueResolver tagValueResolver;
+
 	SpanTagAnnotationHandler handler;
 
 	@Before
@@ -48,38 +52,47 @@ public class SpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldUseCustomTagValueResolver() throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class.getMethod("getAnnotationForTagValueResolver", String.class);
+	public void shouldUseCustomTagValueResolver()
+			throws NoSuchMethodException, SecurityException {
+		Method method = AnnotationMockClass.class
+				.getMethod("getAnnotationForTagValueResolver", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
 			String resolvedValue = handler.resolveTagValue((SpanTag) annotation, "test");
 			assertThat(resolvedValue).isEqualTo("Value from myCustomTagValueResolver");
-		} else {
-			fail("Annotation was not SleuthSpanTag");
 		}
-	}
-	
-	@Test
-	public void shouldUseTagValueExpression() throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class.getMethod("getAnnotationForTagValueExpression", String.class);
-		Annotation annotation = method.getParameterAnnotations()[0][0];
-		if (annotation instanceof SpanTag) {
-			String resolvedValue = handler.resolveTagValue((SpanTag) annotation, "test");
-			
-			assertThat(resolvedValue).isEqualTo("hello characters");
-		} else {
+		else {
 			fail("Annotation was not SleuthSpanTag");
 		}
 	}
 
 	@Test
-	public void shouldReturnArgumentToString() throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class.getMethod("getAnnotationForArgumentToString", Long.class);
+	public void shouldUseTagValueExpression()
+			throws NoSuchMethodException, SecurityException {
+		Method method = AnnotationMockClass.class
+				.getMethod("getAnnotationForTagValueExpression", String.class);
+		Annotation annotation = method.getParameterAnnotations()[0][0];
+		if (annotation instanceof SpanTag) {
+			String resolvedValue = handler.resolveTagValue((SpanTag) annotation, "test");
+
+			assertThat(resolvedValue).isEqualTo("hello characters");
+		}
+		else {
+			fail("Annotation was not SleuthSpanTag");
+		}
+	}
+
+	@Test
+	public void shouldReturnArgumentToString()
+			throws NoSuchMethodException, SecurityException {
+		Method method = AnnotationMockClass.class
+				.getMethod("getAnnotationForArgumentToString", Long.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
 			String resolvedValue = handler.resolveTagValue((SpanTag) annotation, 15);
 			assertThat(resolvedValue).isEqualTo("15");
-		} else {
+		}
+		else {
 			fail("Annotation was not SleuthSpanTag");
 		}
 	}
@@ -88,13 +101,15 @@ public class SpanTagAnnotationHandlerTests {
 
 		// tag::resolver_bean[]
 		@NewSpan
-		public void getAnnotationForTagValueResolver(@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
+		public void getAnnotationForTagValueResolver(
+				@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
 		}
 		// end::resolver_bean[]
 
 		// tag::spel[]
 		@NewSpan
-		public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
+		public void getAnnotationForTagValueExpression(
+				@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
 		}
 		// end::spel[]
 
@@ -103,8 +118,9 @@ public class SpanTagAnnotationHandlerTests {
 		public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 		}
 		// end::toString[]
+
 	}
-	
+
 	@Configuration
 	@EnableAutoConfiguration
 	protected static class TestConfiguration {
@@ -116,9 +132,11 @@ public class SpanTagAnnotationHandlerTests {
 		}
 		// end::custom_resolver[]
 
-		@Bean Sampler alwaysSampler() {
+		@Bean
+		Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
 
 }

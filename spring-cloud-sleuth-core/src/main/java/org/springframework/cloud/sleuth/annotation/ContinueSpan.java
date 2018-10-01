@@ -23,20 +23,25 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Tells Sleuth that all Sleuth related annotations should be applied
- * to an existing span instead of creating a new one.
+ * Tells Sleuth that all Sleuth related annotations should be applied to an existing span
+ * instead of creating a new one.
  *
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-@Target(value = { ElementType.METHOD })
+@Target(value = {
+		ElementType.METHOD
+})
 public @interface ContinueSpan {
 
 	/**
-	 * The value passed to the annotation will be used and the framework
-	 * will create two events with the {@code .start} and {@code .end} suffixes
+	 * Log statement to be appended to the span.
+	 *
+	 * @return - the value passed to the annotation will be used and the framework will create two
+	 * events with the {@code .start} and {@code .end} suffixes.
 	 */
 	String log() default "";
+
 }

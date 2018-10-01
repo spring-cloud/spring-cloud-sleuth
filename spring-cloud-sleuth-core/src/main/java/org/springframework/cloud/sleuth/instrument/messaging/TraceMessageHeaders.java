@@ -27,11 +27,18 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 public class TraceMessageHeaders {
 
 	public static final String SPAN_ID_NAME = "spanId";
+
 	public static final String SAMPLED_NAME = "spanSampled";
+
 	public static final String PARENT_ID_NAME = "spanParentSpanId";
+
 	public static final String TRACE_ID_NAME = "spanTraceId";
+
 	public static final String SPAN_NAME_NAME = "spanName";
+
 	public static final String SPAN_FLAGS_NAME = "spanFlags";
 
-	private TraceMessageHeaders() {}
+	private TraceMessageHeaders() {
+	}
+
 }

@@ -20,13 +20,15 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Provides a URL {@link Pattern} for spans that should be not sampled.
- * The default implementation of {@link SkipPatternProvider} will harvest all
+ * Provides a URL {@link Pattern} for spans that should be not sampled. The default
+ * implementation of {@link SkipPatternProvider} will harvest all
  * {@link SingleSkipPattern}s and combine them in a single pattern
  *
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
 interface SingleSkipPattern {
+
 	Optional<Pattern> skipPattern();
+
 }

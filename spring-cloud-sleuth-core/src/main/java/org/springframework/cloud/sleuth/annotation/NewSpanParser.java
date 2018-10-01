@@ -27,6 +27,13 @@ import org.aopalliance.intercept.MethodInvocation;
  */
 public interface NewSpanParser {
 
-	/** Override to control the name and tags on an annotation-based span */
+	/**
+	 * Override to control the name and tags on an annotation-based span.
+	 *
+	 * @param methodInvocation
+	 * @param newSpan
+	 * @param span
+	 */
 	void parse(MethodInvocation methodInvocation, NewSpan newSpan, SpanCustomizer span);
+
 }

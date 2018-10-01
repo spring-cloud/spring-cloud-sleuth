@@ -31,6 +31,7 @@ public class SampleBackground {
 
 	@Autowired
 	private Tracer tracer;
+
 	private Random random = new Random();
 
 	@Async

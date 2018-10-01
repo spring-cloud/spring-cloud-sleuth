@@ -31,14 +31,13 @@ import org.springframework.web.client.RestTemplate;
  * {@link ZipkinProperties#compression} is enabled.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.1.0
  */
 public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomizer {
+
 	private final ZipkinProperties zipkinProperties;
 
-	public DefaultZipkinRestTemplateCustomizer(
-			ZipkinProperties zipkinProperties) {
+	public DefaultZipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
 		this.zipkinProperties = zipkinProperties;
 	}
 
@@ -51,8 +50,8 @@ public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCu
 
 	private class GZipInterceptor implements ClientHttpRequestInterceptor {
 
-		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws
-				IOException {
+		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+				ClientHttpRequestExecution execution) throws IOException {
 			request.getHeaders().add("Content-Encoding", "gzip");
 			ByteArrayOutputStream gzipped = new ByteArrayOutputStream();
 			try (GZIPOutputStream compressor = new GZIPOutputStream(gzipped)) {
@@ -60,5 +59,7 @@ public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCu
 			}
 			return execution.execute(request, gzipped.toByteArray());
 		}
+
 	}
+
 }

@@ -29,13 +29,13 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.util.StringUtils;
 
 /**
- * This class is able to find all methods annotated with the
- * Sleuth annotations. All methods mean that if you have both an interface
- * and an implementation annotated with Sleuth annotations then this class is capable
- * of finding both of them and merging into one set of tracing information.
+ * This class is able to find all methods annotated with the Sleuth annotations. All
+ * methods mean that if you have both an interface and an implementation annotated with
+ * Sleuth annotations then this class is capable of finding both of them and merging into
+ * one set of tracing information.
  *
- * This information is then used to add proper tags to the span from the
- * method arguments that are annotated with {@link SpanTag}.
+ * This information is then used to add proper tags to the span from the method arguments
+ * that are annotated with {@link SpanTag}.
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
@@ -45,8 +45,9 @@ class SpanTagAnnotationHandler {
 	private static final Log log = LogFactory.getLog(SpanTagAnnotationHandler.class);
 
 	private final BeanFactory beanFactory;
+
 	private SpanCustomizer spanCustomizer;
-	
+
 	SpanTagAnnotationHandler(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
@@ -56,14 +57,15 @@ class SpanTagAnnotationHandler {
 			Method method = pjp.getMethod();
 			Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method,
 					pjp.getThis().getClass());
-			List<SleuthAnnotatedParameter> annotatedParameters =
-					SleuthAnnotationUtils.findAnnotatedParameters(mostSpecificMethod, pjp.getArguments());
+			List<SleuthAnnotatedParameter> annotatedParameters = SleuthAnnotationUtils
+					.findAnnotatedParameters(mostSpecificMethod, pjp.getArguments());
 			getAnnotationsFromInterfaces(pjp, mostSpecificMethod, annotatedParameters);
 			mergeAnnotatedMethodsIfNecessary(pjp, method, mostSpecificMethod,
 					annotatedParameters);
 			addAnnotatedArguments(annotatedParameters);
-		} catch (SecurityException e) {
-			log.error("Exception occurred while trying to add annotated parameters", e);
+		}
+		catch (SecurityException ex) {
+			log.error("Exception occurred while trying to add annotated parameters", ex);
 		}
 	}
 
@@ -75,9 +77,11 @@ class SpanTagAnnotationHandler {
 			for (Class<?> implementedInterface : implementedInterfaces) {
 				for (Method methodFromInterface : implementedInterface.getMethods()) {
 					if (methodsAreTheSame(mostSpecificMethod, methodFromInterface)) {
-						List<SleuthAnnotatedParameter> annotatedParametersForActualMethod =
-								SleuthAnnotationUtils.findAnnotatedParameters(methodFromInterface, pjp.getArguments());
-						mergeAnnotatedParameters(annotatedParameters, annotatedParametersForActualMethod);
+						List<SleuthAnnotatedParameter> annotatedParametersForActualMethod = SleuthAnnotationUtils
+								.findAnnotatedParameters(methodFromInterface,
+										pjp.getArguments());
+						mergeAnnotatedParameters(annotatedParameters,
+								annotatedParametersForActualMethod);
 					}
 				}
 			}
@@ -85,22 +89,25 @@ class SpanTagAnnotationHandler {
 	}
 
 	private boolean methodsAreTheSame(Method mostSpecificMethod, Method method1) {
-		return method1.getName().equals(mostSpecificMethod.getName()) &&
-				Arrays.equals(method1.getParameterTypes(), mostSpecificMethod.getParameterTypes());
+		return method1.getName().equals(mostSpecificMethod.getName()) && Arrays.equals(
+				method1.getParameterTypes(), mostSpecificMethod.getParameterTypes());
 	}
 
 	private void mergeAnnotatedMethodsIfNecessary(MethodInvocation pjp, Method method,
-			Method mostSpecificMethod, List<SleuthAnnotatedParameter> annotatedParameters) {
+			Method mostSpecificMethod,
+			List<SleuthAnnotatedParameter> annotatedParameters) {
 		// that can happen if we have an abstraction and a concrete class that is
 		// annotated with @NewSpan annotation
 		if (!method.equals(mostSpecificMethod)) {
-			List<SleuthAnnotatedParameter> annotatedParametersForActualMethod = SleuthAnnotationUtils.findAnnotatedParameters(
-					method, pjp.getArguments());
-			mergeAnnotatedParameters(annotatedParameters, annotatedParametersForActualMethod);
+			List<SleuthAnnotatedParameter> annotatedParametersForActualMethod = SleuthAnnotationUtils
+					.findAnnotatedParameters(method, pjp.getArguments());
+			mergeAnnotatedParameters(annotatedParameters,
+					annotatedParametersForActualMethod);
 		}
 	}
 
-	private void mergeAnnotatedParameters(List<SleuthAnnotatedParameter> annotatedParametersIndices,
+	private void mergeAnnotatedParameters(
+			List<SleuthAnnotatedParameter> annotatedParametersIndices,
 			List<SleuthAnnotatedParameter> annotatedParametersIndicesForActualMethod) {
 		for (SleuthAnnotatedParameter container : annotatedParametersIndicesForActualMethod) {
 			final int index = container.parameterIndex;
@@ -132,11 +139,9 @@ class SpanTagAnnotationHandler {
 		return this.spanCustomizer;
 	}
 
-
-	private String resolveTagKey(
-			SleuthAnnotatedParameter container) {
-		return StringUtils.hasText(container.annotation.value()) ?
-				container.annotation.value() : container.annotation.key();
+	private String resolveTagKey(SleuthAnnotatedParameter container) {
+		return StringUtils.hasText(container.annotation.value())
+				? container.annotation.value() : container.annotation.key();
 	}
 
 	String resolveTagValue(SpanTag annotation, Object argument) {
@@ -144,12 +149,15 @@ class SpanTagAnnotationHandler {
 			return "";
 		}
 		if (annotation.resolver() != NoOpTagValueResolver.class) {
-			TagValueResolver tagValueResolver = this.beanFactory.getBean(annotation.resolver());
+			TagValueResolver tagValueResolver = this.beanFactory
+					.getBean(annotation.resolver());
 			return tagValueResolver.resolve(argument);
-		} else if (StringUtils.hasText(annotation.expression())) {
+		}
+		else if (StringUtils.hasText(annotation.expression())) {
 			return this.beanFactory.getBean(TagValueExpressionResolver.class)
 					.resolve(annotation.expression(), argument);
 		}
 		return argument.toString();
 	}
+
 }

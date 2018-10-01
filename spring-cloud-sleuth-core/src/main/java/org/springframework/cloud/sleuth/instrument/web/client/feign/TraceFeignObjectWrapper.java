@@ -18,9 +18,9 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import feign.Client;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
-import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -31,17 +31,20 @@ import org.springframework.util.ClassUtils;
  */
 final class TraceFeignObjectWrapper {
 
-	private final BeanFactory beanFactory;
-
-	private CachingSpringLoadBalancerFactory cachingSpringLoadBalancerFactory;
-	private Object springClientFactory;
 	private static final boolean ribbonPresent;
 
 	static {
-		ribbonPresent =
-				ClassUtils.isPresent("org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient", null) &&
-				ClassUtils.isPresent("org.springframework.cloud.netflix.ribbon.SpringClientFactory", null);
+		ribbonPresent = ClassUtils.isPresent(
+				"org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient",
+				null)
+				&& ClassUtils.isPresent(
+						"org.springframework.cloud.netflix.ribbon.SpringClientFactory",
+						null);
 	}
+
+	private final BeanFactory beanFactory;
+	private CachingSpringLoadBalancerFactory cachingSpringLoadBalancerFactory;
+	private Object springClientFactory;
 
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -49,15 +52,16 @@ final class TraceFeignObjectWrapper {
 
 	Object wrap(Object bean) {
 		if (bean instanceof Client && !(bean instanceof TracingFeignClient)) {
-			if (ribbonPresent &&
-					bean instanceof LoadBalancerFeignClient && !(bean instanceof TraceLoadBalancerFeignClient)) {
+			if (ribbonPresent && bean instanceof LoadBalancerFeignClient
+					&& !(bean instanceof TraceLoadBalancerFeignClient)) {
 				LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
 				return new TraceLoadBalancerFeignClient(
 						(Client) new TraceFeignObjectWrapper(this.beanFactory)
 								.wrap(client.getDelegate()),
-						factory(), (SpringClientFactory) clientFactory(), this.beanFactory);
-			} else if (ribbonPresent &&
-					bean instanceof TraceLoadBalancerFeignClient) {
+						factory(), (SpringClientFactory) clientFactory(),
+						this.beanFactory);
+			}
+			else if (ribbonPresent && bean instanceof TraceLoadBalancerFeignClient) {
 				return bean;
 			}
 			return new LazyTracingFeignClient(this.beanFactory, (Client) bean);

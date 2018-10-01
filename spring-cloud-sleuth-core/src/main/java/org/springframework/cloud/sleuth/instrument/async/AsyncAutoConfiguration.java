@@ -21,8 +21,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * that wraps an existing custom {@link AsyncConfigurer} in a {@link LazyTraceAsyncCustomizer}
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} that wraps an existing custom {@link AsyncConfigurer} in a
+ * {@link LazyTraceAsyncCustomizer}.
  *
  * @author Jesus Alonso
  * @since 2.1.0
@@ -30,4 +31,5 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 @Configuration
 @EnableConfigurationProperties(SleuthAsyncProperties.class)
 public class AsyncAutoConfiguration {
+
 }

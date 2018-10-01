@@ -71,18 +71,23 @@ public class FlatMapTests {
 		Issue866Configuration.hook = null;
 	}
 
-	@Rule public OutputCapture capture = new OutputCapture();
+	@Rule
+	public OutputCapture capture = new OutputCapture();
 
-	@Test public void should_work_with_flat_maps() {
-		//given
+	@Test
+	public void should_work_with_flat_maps() {
+		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
-				.web(WebApplicationType.REACTIVE)
-				.properties("server.port=0", "spring.jmx.enabled=false",
-						"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
-						"management.security.enabled=false").run();
+						.web(WebApplicationType.REACTIVE)
+						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.application.name=TraceWebFluxTests",
+								"security.basic.enabled=false",
+								"management.security.enabled=false")
+						.run();
 		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
-		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
+		int port = context.getBean(Environment.class).getProperty("local.server.port",
+				Integer.class);
 		RequestSender sender = context.getBean(RequestSender.class);
 		TestConfiguration config = context.getBean(TestConfiguration.class);
 		FactoryUser factoryUser = context.getBean(FactoryUser.class);
@@ -90,29 +95,27 @@ public class FlatMapTests {
 		accumulator.clear();
 
 		Awaitility.await().untilAsserted(() -> {
-			//when
+			// when
 			accumulator.clear();
 			String firstTraceId = flatMapTraceId(accumulator, callFlatMap(port).block());
-			//then
+			// then
 			thenAllWebClientCallsHaveSameTraceId(firstTraceId, sender);
 			thenSpanInFooHasSameTraceId(firstTraceId, config);
 			accumulator.clear();
 
-			//when
+			// when
 			String secondTraceId = flatMapTraceId(accumulator, callFlatMap(port).block());
-			//then
-			then(firstTraceId)
-					.as("Id will not be reused between calls")
+			// then
+			then(firstTraceId).as("Id will not be reused between calls")
 					.isNotEqualTo(secondTraceId);
 			thenSpanInFooHasSameTraceId(secondTraceId, config);
-			//and
+			// and
 			then(Arrays.stream(capture.toString().split("\n"))
 					.filter(s -> s.contains("Received a request to uri"))
-					.map(s -> s.split(",")[1])
-					.collect(Collectors.toList()))
-					.as("TracingFilter should not have any trace when receiving a request")
-					.containsOnly("");
-			//and #866
+					.map(s -> s.split(",")[1]).collect(Collectors.toList())).as(
+							"TracingFilter should not have any trace when receiving a request")
+							.containsOnly("");
+			// and #866
 			then(factoryUser.wasSchedulerWrapped).isTrue();
 		});
 	}
@@ -122,14 +125,13 @@ public class FlatMapTests {
 		then(sender.span.context().traceIdString()).isEqualTo(traceId);
 	}
 
-	private void thenSpanInFooHasSameTraceId(String traceId,
-			TestConfiguration config) {
+	private void thenSpanInFooHasSameTraceId(String traceId, TestConfiguration config) {
 		then(config.spanInFoo.context().traceIdString()).isEqualTo(traceId);
 	}
 
 	private Mono<ClientResponse> callFlatMap(int port) {
-		return WebClient.create().get()
-				.uri("http://localhost:" + port + "/withFlatMap").exchange();
+		return WebClient.create().get().uri("http://localhost:" + port + "/withFlatMap")
+				.exchange();
 	}
 
 	private String flatMapTraceId(ArrayListSpanReporter accumulator,
@@ -138,9 +140,9 @@ public class FlatMapTests {
 		then(accumulator.getSpans()).isNotEmpty();
 		LOGGER.info("Accumulated spans: " + accumulator.getSpans());
 		List<String> traceIdOfFlatMap = accumulator.getSpans().stream()
-				.filter(span -> span.tags().containsKey("http.path") && span.tags()
-						.get("http.path").equals("/withFlatMap")).map(Span::traceId)
-				.collect(Collectors.toList());
+				.filter(span -> span.tags().containsKey("http.path")
+						&& span.tags().get("http.path").equals("/withFlatMap"))
+				.map(Span::traceId).collect(Collectors.toList());
 		then(traceIdOfFlatMap).hasSize(1);
 		return traceIdOfFlatMap.get(0);
 	}
@@ -152,7 +154,9 @@ public class FlatMapTests {
 
 		brave.Span spanInFoo;
 
-		@Bean RouterFunction<ServerResponse> handlers(Tracer tracer, RequestSender requestSender) {
+		@Bean
+		RouterFunction<ServerResponse> handlers(Tracer tracer,
+				RequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
 				LOGGER.info("noFlatMap");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
@@ -160,8 +164,9 @@ public class FlatMapTests {
 			}).andRoute(GET("/withFlatMap"), request -> {
 				LOGGER.info("withFlatMap");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
-				Flux<Integer> response = one.flatMap(size -> requestSender.getAll()
-						.doOnEach(sig -> LOGGER.info(sig.getContext().toString())))
+				Flux<Integer> response = one
+						.flatMap(size -> requestSender.getAll().doOnEach(
+								sig -> LOGGER.info(sig.getContext().toString())))
 						.map(string -> {
 							LOGGER.info("WHATEVER YEAH");
 							return string.length();
@@ -174,19 +179,23 @@ public class FlatMapTests {
 			});
 		}
 
-		@Bean WebClient webClient() {
+		@Bean
+		WebClient webClient() {
 			return WebClient.create();
 		}
 
-		@Bean ArrayListSpanReporter reporter() {
+		@Bean
+		ArrayListSpanReporter reporter() {
 			return new ArrayListSpanReporter();
 		}
 
-		@Bean Sampler sampler() {
+		@Bean
+		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		@Bean RequestSender sender(WebClient client, Tracer tracer) {
+		@Bean
+		RequestSender sender(WebClient client, Tracer tracer) {
 			return new RequestSender(client, tracer);
 		}
 
@@ -197,13 +206,16 @@ public class FlatMapTests {
 		}
 
 	}
+
 }
 
 class FactoryUser {
+
 	boolean wasSchedulerWrapped = false;
 
 	FactoryUser() {
 		Issue866Configuration.TestHook hook = Issue866Configuration.hook;
 		this.wasSchedulerWrapped = hook != null && hook.executed;
 	}
+
 }

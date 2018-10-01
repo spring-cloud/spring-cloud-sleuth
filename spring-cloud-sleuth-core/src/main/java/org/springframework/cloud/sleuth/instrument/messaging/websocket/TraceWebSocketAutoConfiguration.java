@@ -35,7 +35,6 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
  *
  * @author Dave Syer
  * @since 1.0.0
- *
  * @see AbstractWebSocketMessageBrokerConfigurer
  */
 @Configuration
@@ -55,7 +54,8 @@ public class TraceWebSocketAutoConfiguration
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.configureBrokerChannel().setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registry.configureBrokerChannel()
+				.setInterceptors(TracingChannelInterceptor.create(this.tracing));
 	}
 
 	@Override
@@ -67,4 +67,5 @@ public class TraceWebSocketAutoConfiguration
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing));
 	}
+
 }

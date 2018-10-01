@@ -47,272 +47,278 @@ import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.Assert.assertEquals;
 
 /**
- * This shows how one might make an OpenTracing adapter for Brave, and how to navigate in and out of
- * the core concepts.
+ * This shows how one might make an OpenTracing adapter for Brave, and how to navigate in
+ * and out of the core concepts.
  *
- * Adopted from: https://github.com/openzipkin-contrib/brave-opentracing/tree/master/src/test/java/brave/opentracing
+ * Adopted from:
+ * https://github.com/openzipkin-contrib/brave-opentracing/tree/master/src/test/java/brave/opentracing
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
-properties = "spring.sleuth.baggage-keys=country-code,user-id")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = "spring.sleuth.baggage-keys=country-code,user-id")
 public class BraveTracerTest {
 
-  @Autowired ArrayListSpanReporter spans;
-  @Autowired Tracing brave;
-  @Autowired BraveTracer opentracing;
+	@Autowired
+	ArrayListSpanReporter spans;
 
-  @Test public void startWithOpenTracingAndFinishWithBrave() {
-    io.opentracing.Span openTracingSpan = opentracing.buildSpan("encode")
-        .withTag("lc", "codec")
-        .withStartTimestamp(1L)
-        .start();
+	@Autowired
+	Tracing brave;
 
-    Span braveSpan = ((BraveSpan) openTracingSpan).unwrap();
+	@Autowired
+	BraveTracer opentracing;
 
-    braveSpan.annotate(2L, "pump fake");
-    braveSpan.finish(3L);
+	@Test
+	public void startWithOpenTracingAndFinishWithBrave() {
+		io.opentracing.Span openTracingSpan = opentracing.buildSpan("encode")
+				.withTag("lc", "codec").withStartTimestamp(1L).start();
 
-    checkSpanReportedToZipkin();
-  }
+		Span braveSpan = ((BraveSpan) openTracingSpan).unwrap();
 
-  @Test public void extractTraceContext() throws Exception {
-    Map<String, String> map = new LinkedHashMap<>();
-    map.put("X-B3-TraceId", "0000000000000001");
-    map.put("X-B3-SpanId", "0000000000000002");
-    map.put("X-B3-Sampled", "1");
+		braveSpan.annotate(2L, "pump fake");
+		braveSpan.finish(3L);
 
-    BraveSpanContext openTracingContext =
-        (BraveSpanContext) opentracing.extract(Format.Builtin.HTTP_HEADERS,
-            new TextMapExtractAdapter(map));
+		checkSpanReportedToZipkin();
+	}
 
-    assertThat(openTracingContext.unwrap())
-        .isEqualTo(TraceContext.newBuilder()
-            .traceId(1L)
-            .spanId(2L)
-            .sampled(true).build());
-  }
+	@Test
+	public void extractTraceContext() throws Exception {
+		Map<String, String> map = new LinkedHashMap<>();
+		map.put("X-B3-TraceId", "0000000000000001");
+		map.put("X-B3-SpanId", "0000000000000002");
+		map.put("X-B3-Sampled", "1");
 
-  @Test public void extractBaggage() throws Exception {
-    Map<String, String> map = new LinkedHashMap<>();
-    map.put("X-B3-TraceId", "0000000000000001");
-    map.put("X-B3-SpanId", "0000000000000002");
-    map.put("X-B3-Sampled", "1");
-    map.put("baggage-country-code", "FO");
+		BraveSpanContext openTracingContext = (BraveSpanContext) opentracing
+				.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(map));
 
-    BraveSpanContext openTracingContext = opentracing.extract(Format.Builtin.HTTP_HEADERS,
-        new TextMapExtractAdapter(map));
+		assertThat(openTracingContext.unwrap()).isEqualTo(
+				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
+	}
 
-    assertThat(openTracingContext.baggageItems())
-        .containsExactly(entry("country-code", "FO"));
-  }
+	@Test
+	public void extractBaggage() throws Exception {
+		Map<String, String> map = new LinkedHashMap<>();
+		map.put("X-B3-TraceId", "0000000000000001");
+		map.put("X-B3-SpanId", "0000000000000002");
+		map.put("X-B3-Sampled", "1");
+		map.put("baggage-country-code", "FO");
 
-  @Test public void extractTraceContextTextMap() throws Exception {
-    Map<String, String> map = new LinkedHashMap<>();
-    map.put("X-B3-TraceId", "0000000000000001");
-    map.put("X-B3-SpanId", "0000000000000002");
-    map.put("X-B3-Sampled", "1");
+		BraveSpanContext openTracingContext = opentracing
+				.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(map));
 
-    BraveSpanContext openTracingContext =
-        (BraveSpanContext) opentracing.extract(Format.Builtin.TEXT_MAP,
-            new TextMapExtractAdapter(map));
+		assertThat(openTracingContext.baggageItems())
+				.containsExactly(entry("country-code", "FO"));
+	}
 
-    assertThat(openTracingContext.unwrap())
-        .isEqualTo(TraceContext.newBuilder()
-            .traceId(1L)
-            .spanId(2L)
-            .sampled(true).build());
-  }
+	@Test
+	public void extractTraceContextTextMap() throws Exception {
+		Map<String, String> map = new LinkedHashMap<>();
+		map.put("X-B3-TraceId", "0000000000000001");
+		map.put("X-B3-SpanId", "0000000000000002");
+		map.put("X-B3-Sampled", "1");
 
-  @Test public void extractTraceContextCaseInsensitive() throws Exception {
-    Map<String, String> map = new LinkedHashMap<>();
-    map.put("X-B3-TraceId", "0000000000000001");
-    map.put("x-b3-spanid", "0000000000000002");
-    map.put("x-b3-SaMpLeD", "1");
-    map.put("other", "1");
+		BraveSpanContext openTracingContext = (BraveSpanContext) opentracing
+				.extract(Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(map));
 
-    BraveSpanContext openTracingContext =
-        (BraveSpanContext) opentracing.extract(Format.Builtin.HTTP_HEADERS,
-            new TextMapExtractAdapter(map));
+		assertThat(openTracingContext.unwrap()).isEqualTo(
+				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
+	}
 
-    assertThat(openTracingContext.unwrap())
-        .isEqualTo(TraceContext.newBuilder()
-            .traceId(1L)
-            .spanId(2L)
-            .sampled(true).build());
-  }
+	@Test
+	public void extractTraceContextCaseInsensitive() throws Exception {
+		Map<String, String> map = new LinkedHashMap<>();
+		map.put("X-B3-TraceId", "0000000000000001");
+		map.put("x-b3-spanid", "0000000000000002");
+		map.put("x-b3-SaMpLeD", "1");
+		map.put("other", "1");
 
-  @Test public void injectTraceContext_baggage() throws Exception {
-    BraveSpan span = opentracing.buildSpan("foo").start();
-    span.setBaggageItem("country-code", "FO");
+		BraveSpanContext openTracingContext = (BraveSpanContext) opentracing
+				.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(map));
 
-    Map<String, String> map = new LinkedHashMap<>();
-    TextMapInjectAdapter carrier = new TextMapInjectAdapter(map);
-    opentracing.inject(span.context(), Format.Builtin.HTTP_HEADERS, carrier);
+		assertThat(openTracingContext.unwrap()).isEqualTo(
+				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
+	}
 
-    assertThat(map).containsEntry("baggage-country-code", "FO");
-  }
+	@Test
+	public void injectTraceContext_baggage() throws Exception {
+		BraveSpan span = opentracing.buildSpan("foo").start();
+		span.setBaggageItem("country-code", "FO");
 
-  void checkSpanReportedToZipkin() {
-    assertThat(spans.getSpans()).first().satisfies(s -> {
-          assertThat(s.name()).isEqualTo("encode");
-          assertThat(s.timestamp()).isEqualTo(1L);
-          assertThat(s.annotations())
-              .containsExactly(Annotation.create(2L, "pump fake"));
-          assertThat(s.tags())
-              .containsExactly(entry("lc", "codec"));
-          assertThat(s.duration()).isEqualTo(2L);
-        }
-    );
-  }
+		Map<String, String> map = new LinkedHashMap<>();
+		TextMapInjectAdapter carrier = new TextMapInjectAdapter(map);
+		opentracing.inject(span.context(), Format.Builtin.HTTP_HEADERS, carrier);
 
-  @Test public void subsequentChildrenNestProperly_OTStyle() {
-    // this test is semantically identical to subsequentChildrenNestProperly_BraveStyle, but uses
-    // the OpenTracingAPI instead of the Brave API.
+		assertThat(map).containsEntry("baggage-country-code", "FO");
+	}
 
-    Long idOfSpanA;
-    Long shouldBeIdOfSpanA;
-    Long idOfSpanB;
-    Long shouldBeIdOfSpanB;
-    Long parentIdOfSpanB;
-    Long parentIdOfSpanC;
+	void checkSpanReportedToZipkin() {
+		assertThat(spans.getSpans()).first().satisfies(s -> {
+			assertThat(s.name()).isEqualTo("encode");
+			assertThat(s.timestamp()).isEqualTo(1L);
+			assertThat(s.annotations())
+					.containsExactly(Annotation.create(2L, "pump fake"));
+			assertThat(s.tags()).containsExactly(entry("lc", "codec"));
+			assertThat(s.duration()).isEqualTo(2L);
+		});
+	}
 
-    try (Scope scopeA = opentracing.buildSpan("spanA").startActive(false)) {
-      idOfSpanA = getTraceContext(scopeA).spanId();
-      try (Scope scopeB = opentracing.buildSpan("spanB").startActive(false)) {
-        idOfSpanB = getTraceContext(scopeB).spanId();
-        parentIdOfSpanB = getTraceContext(scopeB).parentId();
-        shouldBeIdOfSpanB = getTraceContext(opentracing.scopeManager().active()).spanId();
-      }
-      shouldBeIdOfSpanA = getTraceContext(opentracing.scopeManager().active()).spanId();
-      try (Scope scopeC = opentracing.buildSpan("spanC").startActive(false)) {
-        parentIdOfSpanC = getTraceContext(scopeC).parentId();
-      }
-    }
+	@Test
+	public void subsequentChildrenNestProperly_OTStyle() {
+		// this test is semantically identical to
+		// subsequentChildrenNestProperly_BraveStyle, but uses
+		// the OpenTracingAPI instead of the Brave API.
 
-    assertEquals("SpanA should have been active again after closing B", idOfSpanA,
-        shouldBeIdOfSpanA);
-    assertEquals("SpanB should have been active prior to its closure", idOfSpanB,
-        shouldBeIdOfSpanB);
-    assertEquals("SpanB's parent should be SpanA", idOfSpanA, parentIdOfSpanB);
-    assertEquals("SpanC's parent should be SpanA", idOfSpanA, parentIdOfSpanC);
-  }
+		Long idOfSpanA;
+		Long shouldBeIdOfSpanA;
+		Long idOfSpanB;
+		Long shouldBeIdOfSpanB;
+		Long parentIdOfSpanB;
+		Long parentIdOfSpanC;
 
-  @Test public void subsequentChildrenNestProperly_BraveStyle() {
-    // this test is semantically identical to subsequentChildrenNestProperly_OTStyle, but uses
-    // the Brave API instead of the OpenTracing API.
+		try (Scope scopeA = opentracing.buildSpan("spanA").startActive(false)) {
+			idOfSpanA = getTraceContext(scopeA).spanId();
+			try (Scope scopeB = opentracing.buildSpan("spanB").startActive(false)) {
+				idOfSpanB = getTraceContext(scopeB).spanId();
+				parentIdOfSpanB = getTraceContext(scopeB).parentId();
+				shouldBeIdOfSpanB = getTraceContext(opentracing.scopeManager().active())
+						.spanId();
+			}
+			shouldBeIdOfSpanA = getTraceContext(opentracing.scopeManager().active())
+					.spanId();
+			try (Scope scopeC = opentracing.buildSpan("spanC").startActive(false)) {
+				parentIdOfSpanC = getTraceContext(scopeC).parentId();
+			}
+		}
 
-    Long shouldBeIdOfSpanA;
-    Long idOfSpanB;
-    Long shouldBeIdOfSpanB;
-    Long parentIdOfSpanB;
-    Long parentIdOfSpanC;
+		assertEquals("SpanA should have been active again after closing B", idOfSpanA,
+				shouldBeIdOfSpanA);
+		assertEquals("SpanB should have been active prior to its closure", idOfSpanB,
+				shouldBeIdOfSpanB);
+		assertEquals("SpanB's parent should be SpanA", idOfSpanA, parentIdOfSpanB);
+		assertEquals("SpanC's parent should be SpanA", idOfSpanA, parentIdOfSpanC);
+	}
 
-    Span spanA = brave.tracer().newTrace().name("spanA").start();
-    Long idOfSpanA = spanA.context().spanId();
-    try (SpanInScope scopeA = brave.tracer().withSpanInScope(spanA)) {
+	@Test
+	public void subsequentChildrenNestProperly_BraveStyle() {
+		// this test is semantically identical to subsequentChildrenNestProperly_OTStyle,
+		// but uses
+		// the Brave API instead of the OpenTracing API.
 
-      Span spanB = brave.tracer().newChild(spanA.context()).name("spanB").start();
-      idOfSpanB = spanB.context().spanId();
-      parentIdOfSpanB = spanB.context().parentId();
-      try (SpanInScope scopeB = brave.tracer().withSpanInScope(spanB)) {
-        shouldBeIdOfSpanB = brave.currentTraceContext().get().spanId();
-      } finally {
-        spanB.finish();
-      }
+		Long shouldBeIdOfSpanA;
+		Long idOfSpanB;
+		Long shouldBeIdOfSpanB;
+		Long parentIdOfSpanB;
+		Long parentIdOfSpanC;
 
-      shouldBeIdOfSpanA = brave.currentTraceContext().get().spanId();
+		Span spanA = brave.tracer().newTrace().name("spanA").start();
+		Long idOfSpanA = spanA.context().spanId();
+		try (SpanInScope scopeA = brave.tracer().withSpanInScope(spanA)) {
 
-      Span spanC = brave.tracer().newChild(spanA.context()).name("spanC").start();
-      parentIdOfSpanC = spanC.context().parentId();
-      try (SpanInScope scopeC = brave.tracer().withSpanInScope(spanC)) {
-        // nothing to do here
-      } finally {
-        spanC.finish();
-      }
-    } finally {
-      spanA.finish();
-    }
+			Span spanB = brave.tracer().newChild(spanA.context()).name("spanB").start();
+			idOfSpanB = spanB.context().spanId();
+			parentIdOfSpanB = spanB.context().parentId();
+			try (SpanInScope scopeB = brave.tracer().withSpanInScope(spanB)) {
+				shouldBeIdOfSpanB = brave.currentTraceContext().get().spanId();
+			}
+			finally {
+				spanB.finish();
+			}
 
-    assertEquals("SpanA should have been active again after closing B", idOfSpanA,
-        shouldBeIdOfSpanA);
-    assertEquals("SpanB should have been active prior to its closure", idOfSpanB,
-        shouldBeIdOfSpanB);
-    assertEquals("SpanB's parent should be SpanA", idOfSpanA, parentIdOfSpanB);
-    assertEquals("SpanC's parent should be SpanA", idOfSpanA, parentIdOfSpanC);
-  }
+			shouldBeIdOfSpanA = brave.currentTraceContext().get().spanId();
 
-  @Test public void implicitParentFromSpanManager_startActive() {
-    try (Scope scopeA = opentracing.buildSpan("spanA").startActive(true)) {
-      try (Scope scopeB = opentracing.buildSpan("spanA").startActive(true)) {
-        assertThat(getTraceContext(scopeB).parentId())
-            .isEqualTo(getTraceContext(scopeA).spanId());
-      }
-    }
-  }
+			Span spanC = brave.tracer().newChild(spanA.context()).name("spanC").start();
+			parentIdOfSpanC = spanC.context().parentId();
+			try (SpanInScope scopeC = brave.tracer().withSpanInScope(spanC)) {
+				// nothing to do here
+			}
+			finally {
+				spanC.finish();
+			}
+		}
+		finally {
+			spanA.finish();
+		}
 
-  @Test public void implicitParentFromSpanManager_start() {
-    try (Scope scopeA = opentracing.buildSpan("spanA").startActive(true)) {
-      BraveSpan span = opentracing.buildSpan("spanB").start();
-      assertThat(span.unwrap().context().parentId())
-          .isEqualTo(getTraceContext(scopeA).spanId());
-    }
-  }
+		assertEquals("SpanA should have been active again after closing B", idOfSpanA,
+				shouldBeIdOfSpanA);
+		assertEquals("SpanB should have been active prior to its closure", idOfSpanB,
+				shouldBeIdOfSpanB);
+		assertEquals("SpanB's parent should be SpanA", idOfSpanA, parentIdOfSpanB);
+		assertEquals("SpanC's parent should be SpanA", idOfSpanA, parentIdOfSpanC);
+	}
 
-  @Test public void implicitParentFromSpanManager_startActive_ignoreActiveSpan() {
-    try (Scope scopeA = opentracing.buildSpan("spanA").startActive(true)) {
-      try (Scope scopeB = opentracing.buildSpan("spanA")
-          .ignoreActiveSpan().startActive(true)) {
-        assertThat(getTraceContext(scopeB).parentId())
-            .isNull(); // new trace
-      }
-    }
-  }
+	@Test
+	public void implicitParentFromSpanManager_startActive() {
+		try (Scope scopeA = opentracing.buildSpan("spanA").startActive(true)) {
+			try (Scope scopeB = opentracing.buildSpan("spanA").startActive(true)) {
+				assertThat(getTraceContext(scopeB).parentId())
+						.isEqualTo(getTraceContext(scopeA).spanId());
+			}
+		}
+	}
 
-  @Test public void implicitParentFromSpanManager_start_ignoreActiveSpan() {
-    try (Scope scopeA = opentracing.buildSpan("spanA").startActive(true)) {
-      BraveSpan span = opentracing.buildSpan("spanB")
-          .ignoreActiveSpan().start();
-      assertThat(span.unwrap().context().parentId())
-          .isNull(); // new trace
-    }
-  }
+	@Test
+	public void implicitParentFromSpanManager_start() {
+		try (Scope scopeA = opentracing.buildSpan("spanA").startActive(true)) {
+			BraveSpan span = opentracing.buildSpan("spanB").start();
+			assertThat(span.unwrap().context().parentId())
+					.isEqualTo(getTraceContext(scopeA).spanId());
+		}
+	}
 
-  @Test public void ignoresErrorFalseTag_beforeStart() {
-    opentracing.buildSpan("encode")
-        .withTag("error", false)
-        .start().finish();
+	@Test
+	public void implicitParentFromSpanManager_startActive_ignoreActiveSpan() {
+		try (Scope scopeA = opentracing.buildSpan("spanA").startActive(true)) {
+			try (Scope scopeB = opentracing.buildSpan("spanA").ignoreActiveSpan()
+					.startActive(true)) {
+				assertThat(getTraceContext(scopeB).parentId()).isNull(); // new trace
+			}
+		}
+	}
 
-    assertThat(spans.getSpans().get(0).tags())
-        .isEmpty();
-  }
+	@Test
+	public void implicitParentFromSpanManager_start_ignoreActiveSpan() {
+		try (Scope scopeA = opentracing.buildSpan("spanA").startActive(true)) {
+			BraveSpan span = opentracing.buildSpan("spanB").ignoreActiveSpan().start();
+			assertThat(span.unwrap().context().parentId()).isNull(); // new trace
+		}
+	}
 
-  @Test public void ignoresErrorFalseTag_afterStart() {
-    opentracing.buildSpan("encode")
-        .start()
-        .setTag("error", false)
-        .finish();
+	@Test
+	public void ignoresErrorFalseTag_beforeStart() {
+		opentracing.buildSpan("encode").withTag("error", false).start().finish();
 
-    assertThat(spans.getSpans().get(0).tags())
-        .isEmpty();
-  }
+		assertThat(spans.getSpans().get(0).tags()).isEmpty();
+	}
 
-  private static TraceContext getTraceContext(Scope scope) {
-    return ((BraveSpanContext) scope.span().context()).unwrap();
-  }
+	@Test
+	public void ignoresErrorFalseTag_afterStart() {
+		opentracing.buildSpan("encode").start().setTag("error", false).finish();
 
-  @Before public void clear() {
-    this.spans.clear();
-  }
+		assertThat(spans.getSpans().get(0).tags()).isEmpty();
+	}
 
-  @Configuration
-  @EnableAutoConfiguration
-  static class Config {
-    @Bean Sampler sampler() {
-      return Sampler.ALWAYS_SAMPLE;
-    }
+	private static TraceContext getTraceContext(Scope scope) {
+		return ((BraveSpanContext) scope.span().context()).unwrap();
+	}
 
-    @Bean ArrayListSpanReporter reporter() {
-      return new ArrayListSpanReporter();
-    }
-  }
+	@Before
+	public void clear() {
+		this.spans.clear();
+	}
+
+	@Configuration
+	@EnableAutoConfiguration
+	static class Config {
+
+		@Bean
+		Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
+
+		@Bean
+		ArrayListSpanReporter reporter() {
+			return new ArrayListSpanReporter();
+		}
+
+	}
+
 }

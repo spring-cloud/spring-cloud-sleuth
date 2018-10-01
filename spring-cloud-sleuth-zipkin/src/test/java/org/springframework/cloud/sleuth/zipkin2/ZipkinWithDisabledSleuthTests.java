@@ -27,11 +27,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @TestPropertySource(properties = "spring.sleuth.enabled=false")
 public class ZipkinWithDisabledSleuthTests {
 
-	@Test public void shouldStartContext() {
+	@Test
+	public void shouldStartContext() {
 
 	}
 
 	@EnableAutoConfiguration
 	static class Config {
+
 	}
+
 }

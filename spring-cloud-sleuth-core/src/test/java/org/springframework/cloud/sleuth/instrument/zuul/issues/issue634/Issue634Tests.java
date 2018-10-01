@@ -42,25 +42,29 @@ import com.netflix.zuul.ZuulFilter;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestZuulApplication.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = {"feign.hystrix.enabled=false",
-				"zuul.routes.dp.path:/display/**",
-				"zuul.routes.dp.path.url: http://localhost:9987/unknown"})
+@SpringBootTest(classes = TestZuulApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+		"feign.hystrix.enabled=false", "zuul.routes.dp.path:/display/**",
+		"zuul.routes.dp.path.url: http://localhost:9987/unknown" })
 @DirtiesContext
 public class Issue634Tests {
 
-	@LocalServerPort int port;
-	@Autowired HttpTracing tracer;
-	@Autowired TraceCheckingSpanFilter filter;
-	@Autowired ArrayListSpanReporter reporter;
+	@LocalServerPort
+	int port;
+
+	@Autowired
+	HttpTracing tracer;
+
+	@Autowired
+	TraceCheckingSpanFilter filter;
+
+	@Autowired
+	ArrayListSpanReporter reporter;
 
 	@Test
 	public void should_reuse_custom_feign_client() {
 		for (int i = 0; i < 15; i++) {
-			new TestRestTemplate()
-					.getForEntity("http://localhost:" + this.port + "/display/ddd",
-							String.class);
+			new TestRestTemplate().getForEntity(
+					"http://localhost:" + this.port + "/display/ddd", String.class);
 
 			then(this.tracer.tracing().tracer().currentSpan()).isNull();
 		}
@@ -69,6 +73,7 @@ public class Issue634Tests {
 				.describedAs("trace id should not be reused from thread").hasSize(1);
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
+
 }
 
 @EnableZuulProxy
@@ -76,15 +81,18 @@ public class Issue634Tests {
 @Configuration
 class TestZuulApplication {
 
-	@Bean TraceCheckingSpanFilter traceCheckingSpanFilter(Tracing tracer) {
+	@Bean
+	TraceCheckingSpanFilter traceCheckingSpanFilter(Tracing tracer) {
 		return new TraceCheckingSpanFilter(tracer);
 	}
 
-	@Bean Sampler sampler() {
+	@Bean
+	Sampler sampler() {
 		return Sampler.ALWAYS_SAMPLE;
 	}
 
-	@Bean ArrayListSpanReporter reporter() {
+	@Bean
+	ArrayListSpanReporter reporter() {
 		return new ArrayListSpanReporter();
 	}
 
@@ -93,28 +101,34 @@ class TestZuulApplication {
 class TraceCheckingSpanFilter extends ZuulFilter {
 
 	private final Tracing tracer;
+
 	final Map<Long, Integer> counter = new ConcurrentHashMap<>();
 
 	TraceCheckingSpanFilter(Tracing tracer) {
 		this.tracer = tracer;
 	}
 
-	@Override public String filterType() {
+	@Override
+	public String filterType() {
 		return "post";
 	}
 
-	@Override public int filterOrder() {
+	@Override
+	public int filterOrder() {
 		return -1;
 	}
 
-	@Override public boolean shouldFilter() {
+	@Override
+	public boolean shouldFilter() {
 		return true;
 	}
 
-	@Override public Object run() {
+	@Override
+	public Object run() {
 		long trace = this.tracer.tracer().currentSpan().context().traceId();
 		Integer integer = this.counter.getOrDefault(trace, 0);
 		counter.put(trace, integer + 1);
 		return null;
 	}
+
 }

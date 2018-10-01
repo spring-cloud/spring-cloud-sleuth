@@ -28,16 +28,17 @@ import zipkin2.codec.SpanBytesEncoder;
  */
 @ConfigurationProperties("spring.zipkin")
 public class ZipkinProperties {
+
 	/**
-	 *  URL of the zipkin query server instance. You can also provide
-	 *  the service id of the Zipkin server if Zipkin's registered in
-	 *  service discovery (e.g. http://zipkinserver/)
+	 * URL of the zipkin query server instance. You can also provide the service id of the
+	 * Zipkin server if Zipkin's registered in service discovery (e.g.
+	 * http://zipkinserver/)
 	 */
 	private String baseUrl = "http://localhost:9411/";
 
 	/**
-	 * If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl}
-	 * as a URL always
+	 * If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl} as a URL
+	 * always
 	 */
 	private Boolean discoveryClientEnabled;
 
@@ -45,13 +46,15 @@ public class ZipkinProperties {
 	 * Enables sending spans to Zipkin
 	 */
 	private boolean enabled = true;
+
 	/**
 	 * Timeout in seconds before pending spans will be sent in batches to Zipkin
 	 */
 	private int messageTimeout = 1;
+
 	/**
-	 * Encoding type of spans sent to Zipkin. Set to {@link SpanBytesEncoder#JSON_V1} if your server
-	 * is not recent.
+	 * Encoding type of spans sent to Zipkin. Set to {@link SpanBytesEncoder#JSON_V1} if
+	 * your server is not recent.
 	 */
 	private SpanBytesEncoder encoder = SpanBytesEncoder.JSON_V2;
 
@@ -140,12 +143,19 @@ public class ZipkinProperties {
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
 		}
+
 	}
 
-	/** When set will override the default {@code spring.application.name} value of the service id */
+	/**
+	 * When set will override the default {@code spring.application.name} value of the
+	 * service id
+	 */
 	public static class Service {
 
-		/** The name of the service, from which the Span was sent via HTTP, that should appear in Zipkin */
+		/**
+		 * The name of the service, from which the Span was sent via HTTP, that should
+		 * appear in Zipkin
+		 */
 		private String name;
 
 		public String getName() {
@@ -155,12 +165,13 @@ public class ZipkinProperties {
 		public void setName(String name) {
 			this.name = name;
 		}
+
 	}
 
-	/** Configuration related to locating of the host name from service discovery.
-	 *  This property is NOT related to finding Zipkin via Service Disovery.
-	 *  To do so use the {@link ZipkinProperties#baseUrl} property with the
-	 *  service name set inside the URL.
+	/**
+	 * Configuration related to locating of the host name from service discovery. This
+	 * property is NOT related to finding Zipkin via Service Disovery. To do so use the
+	 * {@link ZipkinProperties#baseUrl} property with the service name set inside the URL.
 	 */
 	public static class Locator {
 
@@ -186,6 +197,9 @@ public class ZipkinProperties {
 			public void setEnabled(boolean enabled) {
 				this.enabled = enabled;
 			}
+
 		}
+
 	}
+
 }

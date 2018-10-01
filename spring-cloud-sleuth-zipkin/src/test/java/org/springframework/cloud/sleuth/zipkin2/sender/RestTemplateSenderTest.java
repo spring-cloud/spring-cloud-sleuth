@@ -35,57 +35,54 @@ import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
 import static zipkin2.codec.SpanBytesEncoder.PROTO3;
 
 public class RestTemplateSenderTest {
-  static final Span SPAN = Span.newBuilder()
-      .traceId("7180c278b62e8f6a216a2aea45d08fc9")
-      .parentId("6b221d5bc9e6496c")
-      .id("5b4185666d50f68b")
-      .name("get /backend")
-      .kind(Span.Kind.SERVER)
-      .shared(true)
-      .localEndpoint(Endpoint.newBuilder()
-          .serviceName("backend")
-          .ip("192.168.99.101")
-          .port(9000)
-          .build())
-      .timestamp(1472470996250000L)
-      .duration(100000L)
-      .putTag("http.method", "GET")
-      .putTag("http.path", "/backend")
-      .build();
 
-  @Rule public MockWebServer server = new MockWebServer();
+	static final Span SPAN = Span.newBuilder().traceId("7180c278b62e8f6a216a2aea45d08fc9")
+			.parentId("6b221d5bc9e6496c").id("5b4185666d50f68b").name("get /backend")
+			.kind(Span.Kind.SERVER).shared(true)
+			.localEndpoint(Endpoint.newBuilder().serviceName("backend")
+					.ip("192.168.99.101").port(9000).build())
+			.timestamp(1472470996250000L).duration(100000L).putTag("http.method", "GET")
+			.putTag("http.path", "/backend").build();
 
-  String endpoint = server.url("/api/v2/spans").toString();
-  RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), endpoint, JSON_V2);
+	@Rule
+	public MockWebServer server = new MockWebServer();
 
-  /** Tests that json is not manipulated as a side-effect of using rest template. */
-  @Test public void jsonIsNormal() throws Exception {
-    server.enqueue(new MockResponse());
+	String endpoint = server.url("/api/v2/spans").toString();
 
-    send(SPAN).execute();
+	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), endpoint,
+			JSON_V2);
 
-    assertThat(server.takeRequest().getBody().readUtf8())
-        .isEqualTo("[" + new String(JSON_V2.encode(SPAN), "UTF-8") + "]");
-  }
+	/** Tests that json is not manipulated as a side-effect of using rest template. */
+	@Test
+	public void jsonIsNormal() throws Exception {
+		server.enqueue(new MockResponse());
 
-  @Test public void proto3() throws Exception {
-    server.enqueue(new MockResponse());
-    sender = new RestTemplateSender(new RestTemplate(), endpoint, PROTO3);
+		send(SPAN).execute();
 
-    send(SPAN).execute();
+		assertThat(server.takeRequest().getBody().readUtf8())
+				.isEqualTo("[" + new String(JSON_V2.encode(SPAN), "UTF-8") + "]");
+	}
 
-    RecordedRequest request = server.takeRequest();
-    assertThat(request.getHeader("Content-Type"))
-        .isEqualTo("application/x-protobuf");
+	@Test
+	public void proto3() throws Exception {
+		server.enqueue(new MockResponse());
+		sender = new RestTemplateSender(new RestTemplate(), endpoint, PROTO3);
 
-    // proto3 encoding of ListOfSpan is simply a repeated span entry
-    assertThat(request.getBody().readByteArray())
-        .containsExactly(SpanBytesEncoder.PROTO3.encode(SPAN));
-  }
+		send(SPAN).execute();
 
-  Call<Void> send(Span... spans) {
-    SpanBytesEncoder bytesEncoder = sender.encoding() == Encoding.JSON
-        ? SpanBytesEncoder.JSON_V2 : SpanBytesEncoder.PROTO3;
-    return sender.sendSpans(Stream.of(spans).map(bytesEncoder::encode).collect(toList()));
-  }
+		RecordedRequest request = server.takeRequest();
+		assertThat(request.getHeader("Content-Type")).isEqualTo("application/x-protobuf");
+
+		// proto3 encoding of ListOfSpan is simply a repeated span entry
+		assertThat(request.getBody().readByteArray())
+				.containsExactly(SpanBytesEncoder.PROTO3.encode(SPAN));
+	}
+
+	Call<Void> send(Span... spans) {
+		SpanBytesEncoder bytesEncoder = sender.encoding() == Encoding.JSON
+				? SpanBytesEncoder.JSON_V2 : SpanBytesEncoder.PROTO3;
+		return sender
+				.sendSpans(Stream.of(spans).map(bytesEncoder::encode).collect(toList()));
+	}
+
 }

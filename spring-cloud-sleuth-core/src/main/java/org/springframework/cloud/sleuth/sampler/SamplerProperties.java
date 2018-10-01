@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.sampler;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Properties related to sampling
+ * Properties related to sampling.
  *
  * @author Marcin Grzejszczak
  * @author Adrian Cole
@@ -42,4 +42,5 @@ public class SamplerProperties {
 	public void setProbability(float probability) {
 		this.probability = probability;
 	}
+
 }

@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SampleController {
 
 	private final Zipkin zipkin;
+
 	private final Random random = new Random();
 
 	@Autowired
@@ -56,9 +57,11 @@ public class SampleController {
 
 @FeignClient("zipkin")
 interface Zipkin {
+
 	@RequestMapping(value = "/call", method = RequestMethod.GET)
 	String call();
 
 	@RequestMapping(value = "/hi2", method = RequestMethod.GET)
 	String hi2();
+
 }

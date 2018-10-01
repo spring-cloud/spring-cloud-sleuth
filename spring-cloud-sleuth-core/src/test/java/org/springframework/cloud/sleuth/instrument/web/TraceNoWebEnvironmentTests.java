@@ -47,7 +47,8 @@ public class TraceNoWebEnvironmentTests {
 			client.createSomeTestRequest();
 		}
 		catch (Exception e) {
-			then(e.getCause().getClass()).isNotEqualTo(NoSuchBeanDefinitionException.class);
+			then(e.getCause().getClass())
+					.isNotEqualTo(NoSuchBeanDefinitionException.class);
 		}
 	}
 
@@ -55,7 +56,7 @@ public class TraceNoWebEnvironmentTests {
 	@EnableAutoConfiguration
 	@EnableFeignClients(clients = Config.SomeFeignClient.class)
 	@EnableCircuitBreaker
-	public static class Config  {
+	public static class Config {
 
 		@FeignClient(name = "google", url = "https://www.google.com/")
 		public interface SomeFeignClient {
@@ -64,5 +65,7 @@ public class TraceNoWebEnvironmentTests {
 			String createSomeTestRequest();
 
 		}
+
 	}
+
 }

@@ -36,16 +36,16 @@ public class ScopePassingSpanSubscriberTests {
 
 	@Test
 	public void should_propagate_current_context() {
-		ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(
-				null, Context.of("foo", "bar"), this.tracing);
+		ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(null,
+				Context.of("foo", "bar"), this.tracing);
 
 		then((String) subscriber.currentContext().get("foo")).isEqualTo("bar");
 	}
 
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
-		ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(
-				null, null, this.tracing);
+		ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(null, null,
+				this.tracing);
 
 		then(subscriber.currentContext().isEmpty()).isTrue();
 	}
@@ -53,12 +53,14 @@ public class ScopePassingSpanSubscriberTests {
 	@Test
 	public void should_put_current_span_to_context() {
 		Span span = this.tracing.tracer().nextSpan();
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span.start())) {
-			ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(
-					null, Context.empty(), this.tracing);
+		try (Tracer.SpanInScope ws = this.tracing.tracer()
+				.withSpanInScope(span.start())) {
+			ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(null,
+					Context.empty(), this.tracing);
 
 			then(subscriber.currentContext().get(Span.class)).isEqualTo(span);
 		}
 
 	}
+
 }

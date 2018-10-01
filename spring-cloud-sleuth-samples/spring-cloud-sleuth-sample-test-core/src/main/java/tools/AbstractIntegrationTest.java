@@ -30,22 +30,28 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 public abstract class AbstractIntegrationTest {
 
-	protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
+	protected static final Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 
 	protected static final int POLL_INTERVAL = 1;
+
 	protected static final int TIMEOUT = 20;
+
 	protected final RestTemplate restTemplate = new AssertingRestTemplate();
 
-
-	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId) {
+	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint,
+			long traceId) {
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, traceId);
 	}
 
-	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId, Long spanId) {
+	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint,
+			long traceId, Long spanId) {
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, spanId);
 	}
 
 	public static ConditionFactory await() {
-		return Awaitility.await().pollInterval(POLL_INTERVAL, SECONDS).atMost(TIMEOUT, SECONDS);
+		return Awaitility.await().pollInterval(POLL_INTERVAL, SECONDS).atMost(TIMEOUT,
+				SECONDS);
 	}
+
 }

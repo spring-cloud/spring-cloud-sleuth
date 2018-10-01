@@ -23,10 +23,9 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 /**
- * Post processor that wraps takes care of the OkHttp Feign Client instrumentation
+ * Post processor that wraps takes care of the OkHttp Feign Client instrumentation.
  *
  * @author Marcin Grzejszczak
- *
  * @since 1.1.3
  */
 final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
@@ -51,4 +50,5 @@ final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
 			throws BeansException {
 		return bean;
 	}
+
 }

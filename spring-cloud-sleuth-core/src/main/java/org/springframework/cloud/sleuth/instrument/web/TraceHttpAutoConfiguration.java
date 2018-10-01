@@ -34,8 +34,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * related to HTTP based communication.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} related to HTTP based communication.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
@@ -44,30 +44,34 @@ import org.springframework.core.Ordered;
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true", matchIfMissing = true)
 @AutoConfigureAfter(TraceWebAutoConfiguration.class)
-@EnableConfigurationProperties({TraceKeys.class, SleuthHttpLegacyProperties.class})
+@EnableConfigurationProperties({ TraceKeys.class, SleuthHttpLegacyProperties.class })
 public class TraceHttpAutoConfiguration {
 
 	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
-	@Autowired HttpClientParser clientParser;
-	@Autowired HttpServerParser serverParser;
-	@Autowired @ClientSampler HttpSampler clientSampler;
-	@Autowired(required = false) @ServerSampler HttpSampler serverSampler;
+	@Autowired
+	HttpClientParser clientParser;
+
+	@Autowired
+	HttpServerParser serverParser;
+
+	@Autowired
+	@ClientSampler
+	HttpSampler clientSampler;
+
+	@Autowired(required = false)
+	@ServerSampler
+	HttpSampler serverSampler;
 
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
-	HttpTracing httpTracing(
-			Tracing tracing,
-			SkipPatternProvider provider) {
+	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider) {
 		HttpSampler serverSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				provider);
-		return HttpTracing.newBuilder(tracing)
-				.clientParser(this.clientParser)
-				.serverParser(this.serverParser)
-				.clientSampler(this.clientSampler)
-				.serverSampler(serverSampler)
-				.build();
+		return HttpTracing.newBuilder(tracing).clientParser(this.clientParser)
+				.serverParser(this.serverParser).clientSampler(this.clientSampler)
+				.serverSampler(serverSampler).build();
 	}
 
 	private HttpSampler combineUserProvidedSamplerWithSkipPatternSampler(
@@ -87,12 +91,12 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
-			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "false", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	HttpClientParser httpClientParser(ErrorParser errorParser) {
 		return new HttpClientParser() {
-			@Override protected ErrorParser errorParser() {
+			@Override
+			protected ErrorParser errorParser() {
 				return errorParser;
 			}
 		};
@@ -100,13 +104,13 @@ public class TraceHttpAutoConfiguration {
 
 	@Bean
 	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "true")
-	HttpServerParser sleuthHttpServerParser(TraceKeys traceKeys, ErrorParser errorParser) {
+	HttpServerParser sleuthHttpServerParser(TraceKeys traceKeys,
+			ErrorParser errorParser) {
 		return new SleuthHttpServerParser(traceKeys, errorParser);
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
-			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "false", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	HttpServerParser defaultHttpServerParser() {
 		return new HttpServerParser();
@@ -117,43 +121,69 @@ public class TraceHttpAutoConfiguration {
 	HttpSampler sleuthClientSampler(SleuthWebProperties sleuthWebProperties) {
 		return new PathMatchingHttpSampler(sleuthWebProperties);
 	}
+
 }
 
+/**
+ * Composite Http Sampler.
+ *
+ * @author Adrian Cole
+ */
 class CompositeHttpSampler extends HttpSampler {
 
-	private final HttpSampler left, right;
+	private final HttpSampler left;
+
+	private final HttpSampler right;
 
 	CompositeHttpSampler(HttpSampler left, HttpSampler right) {
 		this.left = left;
 		this.right = right;
 	}
 
-	@Override public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
+	@Override
+	public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
 		// If either decision is false, return false
 		Boolean leftDecision = this.left.trySample(adapter, request);
-		if (Boolean.FALSE.equals(leftDecision)) return false;
+		if (Boolean.FALSE.equals(leftDecision)) {
+			return false;
+		}
 		Boolean rightDecision = this.right.trySample(adapter, request);
-		if (Boolean.FALSE.equals(rightDecision)) return false;
+		if (Boolean.FALSE.equals(rightDecision)) {
+			return false;
+		}
 		// If either decision is null, return the other
-		if (leftDecision == null) return rightDecision;
-		if (rightDecision == null) return leftDecision;
+		if (leftDecision == null) {
+			return rightDecision;
+		}
+		if (rightDecision == null) {
+			return leftDecision;
+		}
 		// Neither are null and at least one is true
 		return leftDecision && rightDecision;
 	}
+
 }
 
+/**
+ * Http Sampler that looks at paths.
+ *
+ * @author Marcin Grzejszczak
+ */
 class PathMatchingHttpSampler extends HttpSampler {
+
 	private final SleuthWebProperties properties;
 
 	PathMatchingHttpSampler(SleuthWebProperties properties) {
 		this.properties = properties;
 	}
 
-	@Override public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
+	@Override
+	public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
 		String path = adapter.path(request);
 		if (path == null) {
 			return null;
 		}
 		return path.matches(this.properties.getClient().getSkipPattern()) ? false : null;
 	}
+
 }

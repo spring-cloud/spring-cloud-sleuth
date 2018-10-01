@@ -47,21 +47,28 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(classes = TraceWebClientAutoConfigurationTests.Config.class)
 public class TraceWebClientAutoConfigurationTests {
 
-	@Autowired @Qualifier("firstRestTemplate") RestTemplate restTemplate;
-	@Autowired @Qualifier("secondRestTemplate") RestTemplate secondRestTemplate;
-	@Autowired RestTemplateBuilder builder;
+	@Autowired
+	@Qualifier("firstRestTemplate")
+	RestTemplate restTemplate;
+
+	@Autowired
+	@Qualifier("secondRestTemplate")
+	RestTemplate secondRestTemplate;
+
+	@Autowired
+	RestTemplateBuilder builder;
 
 	@Test
 	public void should_add_rest_template_interceptors() {
- 		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.restTemplate));
+		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.restTemplate));
 		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.secondRestTemplate));
 		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.builder.build()));
 	}
 
-	private List<ClientHttpRequestInterceptor> assertInterceptorsNotEmpty(RestTemplate restTemplate) {
+	private List<ClientHttpRequestInterceptor> assertInterceptorsNotEmpty(
+			RestTemplate restTemplate) {
 		then(restTemplate).isNotNull();
-		List<ClientHttpRequestInterceptor> interceptors = restTemplate
-				.getInterceptors();
+		List<ClientHttpRequestInterceptor> interceptors = restTemplate.getInterceptors();
 		then(interceptors).isNotEmpty();
 		return interceptors;
 	}
@@ -72,21 +79,20 @@ public class TraceWebClientAutoConfigurationTests {
 		int myInterceptorIndex = -1;
 		int mySecondInterceptorIndex = -1;
 		for (int i = 0; i < interceptors.size(); i++) {
-			ClientHttpRequestInterceptor interceptor = interceptors
-					.get(i);
-			if (interceptor instanceof TracingClientHttpRequestInterceptor ||
-					interceptor instanceof LazyTracingClientHttpRequestInterceptor) {
+			ClientHttpRequestInterceptor interceptor = interceptors.get(i);
+			if (interceptor instanceof TracingClientHttpRequestInterceptor
+					|| interceptor instanceof LazyTracingClientHttpRequestInterceptor) {
 				traceInterceptorIndex = i;
-			} else if (interceptor instanceof MyClientHttpRequestInterceptor) {
+			}
+			else if (interceptor instanceof MyClientHttpRequestInterceptor) {
 				myInterceptorIndex = i;
-			} else if (interceptor instanceof MySecondClientHttpRequestInterceptor) {
+			}
+			else if (interceptor instanceof MySecondClientHttpRequestInterceptor) {
 				mySecondInterceptorIndex = i;
 			}
 		}
-		then(traceInterceptorIndex)
-				.isGreaterThanOrEqualTo(0)
-				.isLessThan(myInterceptorIndex)
-				.isLessThan(mySecondInterceptorIndex);
+		then(traceInterceptorIndex).isGreaterThanOrEqualTo(0)
+				.isLessThan(myInterceptorIndex).isLessThan(mySecondInterceptorIndex);
 	}
 
 	@Configuration
@@ -95,9 +101,9 @@ public class TraceWebClientAutoConfigurationTests {
 
 		// custom builder
 		@Bean
-		RestTemplateBuilder myRestTemplateBuilder(List<RestTemplateCustomizer> customizers) {
-			return new RestTemplateBuilder()
-					.additionalCustomizers(customizers)
+		RestTemplateBuilder myRestTemplateBuilder(
+				List<RestTemplateCustomizer> customizers) {
+			return new RestTemplateBuilder().additionalCustomizers(customizers)
 					.additionalInterceptors(new MyClientHttpRequestInterceptor());
 		}
 
@@ -105,8 +111,7 @@ public class TraceWebClientAutoConfigurationTests {
 		@Bean
 		@Qualifier("firstRestTemplate")
 		RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
-			return restTemplateBuilder
-					.build();
+			return restTemplateBuilder.build();
 		}
 
 		// manual rest template
@@ -114,8 +119,8 @@ public class TraceWebClientAutoConfigurationTests {
 		@Qualifier("secondRestTemplate")
 		RestTemplate secondRestTemplate() {
 			RestTemplate restTemplate = new RestTemplate();
-			restTemplate.setInterceptors(
-					Arrays.asList(new MyClientHttpRequestInterceptor(),
+			restTemplate
+					.setInterceptors(Arrays.asList(new MyClientHttpRequestInterceptor(),
 							new MySecondClientHttpRequestInterceptor()));
 			return restTemplate;
 		}
@@ -124,25 +129,31 @@ public class TraceWebClientAutoConfigurationTests {
 		@Bean
 		RestTemplateCustomizer myRestTemplateCustomizer() {
 			return restTemplate -> {
-				restTemplate.getInterceptors().add(0, new MySecondClientHttpRequestInterceptor());
+				restTemplate.getInterceptors().add(0,
+						new MySecondClientHttpRequestInterceptor());
 			};
 		}
 
 	}
+
 }
 
 class MyClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
 
-	@Override public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+	@Override
+	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
 		return execution.execute(request, body);
 	}
+
 }
 
 class MySecondClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
 
-	@Override public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+	@Override
+	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
 		return execution.execute(request, body);
 	}
+
 }

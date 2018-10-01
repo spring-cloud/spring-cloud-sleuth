@@ -57,23 +57,24 @@ public class FeignRetriesTests {
 	@Rule
 	public final MockWebServer server = new MockWebServer();
 
-	@Mock BeanFactory beanFactory;
+	@Mock
+	BeanFactory beanFactory;
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.spanReporter(this.reporter)
-			.build();
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.spanReporter(this.reporter).build();
+
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient())
-			.build();
+			.clientParser(SleuthHttpParserAccessor.getClient()).build();
 
 	@Before
 	@After
 	public void setup() {
-		BDDMockito.given(this.beanFactory.getBean(HttpTracing.class)).willReturn(this.httpTracing);
+		BDDMockito.given(this.beanFactory.getBean(HttpTracing.class))
+				.willReturn(this.httpTracing);
 	}
 
 	@Test
@@ -83,15 +84,16 @@ public class FeignRetriesTests {
 		};
 		String url = "http://localhost:" + server.getPort();
 
-		TestInterface api =
-				Feign.builder()
-						.client(new TracingFeignClient(this.httpTracing, client))
-						.target(TestInterface.class, url);
+		TestInterface api = Feign.builder()
+				.client(new TracingFeignClient(this.httpTracing, client))
+				.target(TestInterface.class, url);
 
 		try {
 			api.decodedPost();
 			failBecauseExceptionWasNotThrown(FeignException.class);
-		} catch (FeignException e) { }
+		}
+		catch (FeignException e) {
+		}
 	}
 
 	@Test
@@ -103,32 +105,29 @@ public class FeignRetriesTests {
 			// we simulate an exception only for the first request
 			if (atomicInteger.get() == 1) {
 				throw new IOException();
-			} else {
+			}
+			else {
 				// with the second retry (first retry) we send back good result
-				return Response.builder()
-						.status(200)
-						.reason("OK")
-						.headers(new HashMap<>())
-						.body("OK", Charset.defaultCharset())
+				return Response.builder().status(200).reason("OK")
+						.headers(new HashMap<>()).body("OK", Charset.defaultCharset())
 						.build();
 			}
 		};
-		TestInterface api =
-				Feign.builder()
-						.client(new TracingFeignClient(this.httpTracing, new Client() {
-							@Override public Response execute(Request request,
-									Request.Options options) throws IOException {
-								atomicInteger.incrementAndGet();
-								return client.execute(request, options);
-							}
-						}))
-						.target(TestInterface.class, url);
+		TestInterface api = Feign.builder()
+				.client(new TracingFeignClient(this.httpTracing, new Client() {
+					@Override
+					public Response execute(Request request, Request.Options options)
+							throws IOException {
+						atomicInteger.incrementAndGet();
+						return client.execute(request, options);
+					}
+				})).target(TestInterface.class, url);
 
 		then(api.decodedPost()).isEqualTo("OK");
 		// request interception should take place only twice (1st request & 2nd retry)
 		then(atomicInteger.get()).isEqualTo(2);
-		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("error", "IOException");
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("error",
+				"IOException");
 		then(this.reporter.getSpans().get(1).kind().ordinal())
 				.isEqualTo(Span.Kind.CLIENT.ordinal());
 	}
@@ -137,7 +136,7 @@ public class FeignRetriesTests {
 
 		@RequestLine("POST /")
 		String decodedPost();
-	}
 
+	}
 
 }

@@ -28,9 +28,9 @@ import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 /**
  * Aspect that creates a new Span for running threads executing methods annotated with
- * {@link org.springframework.scheduling.annotation.Scheduled} annotation.
- * For every execution of scheduled method a new trace will be started. The name of the
- * span will be the simple name of the class annotated with
+ * {@link org.springframework.scheduling.annotation.Scheduled} annotation. For every
+ * execution of scheduled method a new trace will be started. The name of the span will be
+ * the simple name of the class annotated with
  * {@link org.springframework.scheduling.annotation.Scheduled}
  *
  * @author Tomasz Nurkewicz, 4financeIT
@@ -38,16 +38,17 @@ import org.springframework.cloud.sleuth.util.SpanNameUtil;
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  * @since 1.0.0
- *
  * @see Tracing
  */
 @Aspect
 public class TraceSchedulingAspect {
 
 	private static final String CLASS_KEY = "class";
+
 	private static final String METHOD_KEY = "method";
 
 	private final Tracer tracer;
+
 	private final Pattern skipPattern;
 
 	public TraceSchedulingAspect(Tracer tracer, Pattern skipPattern) {
@@ -62,11 +63,12 @@ public class TraceSchedulingAspect {
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
 		Span span = startOrContinueRenamedSpan(spanName);
-		try(Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
 			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 	}

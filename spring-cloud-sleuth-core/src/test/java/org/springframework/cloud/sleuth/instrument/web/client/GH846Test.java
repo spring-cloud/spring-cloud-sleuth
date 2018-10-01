@@ -31,47 +31,53 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootTest(classes = GH846Test.App.class, webEnvironment=WebEnvironment.NONE)
+@SpringBootTest(classes = GH846Test.App.class, webEnvironment = WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
 public class GH846Test {
 
 	@Autowired
 	private MyBean myBean;
-	
+
 	@Test
 	public void doit() throws Exception {
 		int count = myBean.listAndCount();
-		Assert.assertEquals("Change detected in RestTemplate interceptor *after* @PostConstruct", count, myBean.getCountAtPostConstruct());
+		Assert.assertEquals(
+				"Change detected in RestTemplate interceptor *after* @PostConstruct",
+				count, myBean.getCountAtPostConstruct());
 	}
-	
+
 	@EnableAutoConfiguration
 	@Configuration
 	static class App {
+
 		@Bean
 		public RestTemplate myRestTemplate() {
 			return new RestTemplate();
 		}
-		
+
 		@Bean
 		public MyBean myBean() {
 			return new MyBean();
 		}
+
 	}
 
 	static class MyBean {
+
 		@Autowired
 		private RestTemplate restTemplate;
-		
-		/** Number of interceptors registered in the RestTemplate during @PostConstruct */ 
+
+		/** Number of interceptors registered in the RestTemplate during @PostConstruct */
 		private int countAtPostConstruct;
-		
+
 		@PostConstruct
 		public void init() {
 			countAtPostConstruct = listAndCount();
 		}
-		
+
 		public int listAndCount() {
-			for(ClientHttpRequestInterceptor interceptor: restTemplate.getInterceptors()) {
+			for (ClientHttpRequestInterceptor interceptor : restTemplate
+					.getInterceptors()) {
 				System.out.println(interceptor);
 			}
 			return restTemplate.getInterceptors().size();
@@ -80,5 +86,7 @@ public class GH846Test {
 		public int getCountAtPostConstruct() {
 			return countAtPostConstruct;
 		}
+
 	}
+
 }

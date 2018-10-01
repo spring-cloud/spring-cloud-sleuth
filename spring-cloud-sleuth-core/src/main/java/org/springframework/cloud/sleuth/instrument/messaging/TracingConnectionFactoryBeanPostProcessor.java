@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.lang.reflect.Field;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSContext;
@@ -48,6 +49,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * {@link BeanPostProcessor} wrapping around JMS {@link ConnectionFactory}
+ *
  * @author Adrian Cole
  * @since 2.1.0
  */
@@ -59,10 +61,13 @@ class TracingConnectionFactoryBeanPostProcessor implements BeanPostProcessor {
 		this.beanFactory = beanFactory;
 	}
 
-	@Override public Object postProcessAfterInitialization(Object bean, String beanName)
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
-		// Wrap the caching connection factories instead of its target, because it catches callbacks
-		// such as ExceptionListener. If we don't wrap, cached callbacks like this won't be traced.
+		// Wrap the caching connection factories instead of its target, because it catches
+		// callbacks
+		// such as ExceptionListener. If we don't wrap, cached callbacks like this won't
+		// be traced.
 		if (bean instanceof CachingConnectionFactory) {
 			return new LazyConnectionFactory(this.beanFactory,
 					(CachingConnectionFactory) bean);
@@ -76,7 +81,8 @@ class TracingConnectionFactoryBeanPostProcessor implements BeanPostProcessor {
 			}
 			return bean;
 		}
-		// We check XA first in case the ConnectionFactory also implements XAConnectionFactory
+		// We check XA first in case the ConnectionFactory also implements
+		// XAConnectionFactory
 		if (bean instanceof XAConnectionFactory) {
 			return new LazyXAConnectionFactory(this.beanFactory,
 					(XAConnectionFactory) bean);
@@ -86,13 +92,17 @@ class TracingConnectionFactoryBeanPostProcessor implements BeanPostProcessor {
 		}
 		return bean;
 	}
+
 }
 
 class LazyXAConnectionFactory implements XAConnectionFactory {
 
 	private final BeanFactory beanFactory;
+
 	private final XAConnectionFactory delegate;
+
 	private JmsTracing jmsTracing;
+
 	private XAConnectionFactory wrappedDelegate;
 
 	LazyXAConnectionFactory(BeanFactory beanFactory, XAConnectionFactory delegate) {
@@ -100,20 +110,23 @@ class LazyXAConnectionFactory implements XAConnectionFactory {
 		this.delegate = delegate;
 	}
 
-	@Override public XAConnection createXAConnection() throws JMSException {
+	@Override
+	public XAConnection createXAConnection() throws JMSException {
 		return wrappedDelegate().createXAConnection();
 	}
 
-	@Override public XAConnection createXAConnection(String s, String s1)
-			throws JMSException {
+	@Override
+	public XAConnection createXAConnection(String s, String s1) throws JMSException {
 		return wrappedDelegate().createXAConnection(s, s1);
 	}
 
-	@Override public XAJMSContext createXAContext() {
+	@Override
+	public XAJMSContext createXAContext() {
 		return wrappedDelegate().createXAContext();
 	}
 
-	@Override public XAJMSContext createXAContext(String s, String s1) {
+	@Override
+	public XAJMSContext createXAContext(String s, String s1) {
 		return wrappedDelegate().createXAContext(s, s1);
 	}
 
@@ -130,13 +143,17 @@ class LazyXAConnectionFactory implements XAConnectionFactory {
 		}
 		return this.wrappedDelegate = jmsTracing().xaConnectionFactory(this.delegate);
 	}
+
 }
 
 class LazyConnectionFactory implements ConnectionFactory {
 
 	private final BeanFactory beanFactory;
+
 	private final ConnectionFactory delegate;
+
 	private JmsTracing jmsTracing;
+
 	private ConnectionFactory wrappedDelegate;
 
 	LazyConnectionFactory(BeanFactory beanFactory, ConnectionFactory delegate) {
@@ -144,28 +161,33 @@ class LazyConnectionFactory implements ConnectionFactory {
 		this.delegate = delegate;
 	}
 
-	@Override public Connection createConnection() throws JMSException {
+	@Override
+	public Connection createConnection() throws JMSException {
 		return wrappedDelegate().createConnection();
 	}
 
-	@Override public Connection createConnection(String s, String s1)
-			throws JMSException {
+	@Override
+	public Connection createConnection(String s, String s1) throws JMSException {
 		return wrappedDelegate().createConnection(s, s1);
 	}
 
-	@Override public JMSContext createContext() {
+	@Override
+	public JMSContext createContext() {
 		return wrappedDelegate().createContext();
 	}
 
-	@Override public JMSContext createContext(String s, String s1) {
+	@Override
+	public JMSContext createContext(String s, String s1) {
 		return wrappedDelegate().createContext(s, s1);
 	}
 
-	@Override public JMSContext createContext(String s, String s1, int i) {
+	@Override
+	public JMSContext createContext(String s, String s1, int i) {
 		return wrappedDelegate().createContext(s, s1, i);
 	}
 
-	@Override public JMSContext createContext(int i) {
+	@Override
+	public JMSContext createContext(int i) {
 		return wrappedDelegate().createContext(i);
 	}
 
@@ -182,12 +204,15 @@ class LazyConnectionFactory implements ConnectionFactory {
 		}
 		return this.wrappedDelegate = jmsTracing().connectionFactory(this.delegate);
 	}
+
 }
 
 class LazyMessageListener implements MessageListener {
 
 	private final BeanFactory beanFactory;
+
 	private final MessageListener delegate;
+
 	private JmsTracing jmsTracing;
 
 	LazyMessageListener(BeanFactory beanFactory, MessageListener delegate) {
@@ -195,7 +220,8 @@ class LazyMessageListener implements MessageListener {
 		this.delegate = delegate;
 	}
 
-	@Override public void onMessage(Message message) {
+	@Override
+	public void onMessage(Message message) {
 		wrappedDelegate().onMessage(message);
 	}
 
@@ -207,19 +233,26 @@ class LazyMessageListener implements MessageListener {
 	}
 
 	private MessageListener wrappedDelegate() {
-		// Adds a consumer span as we have no visibility into JCA's implementation of messaging
+		// Adds a consumer span as we have no visibility into JCA's implementation of
+		// messaging
 		return jmsTracing().messageListener(this.delegate, true);
 	}
+
 }
 
 /**
- * This ensures listeners end up continuing the trace from {@link MessageConsumer#receive()}
+ * This ensures listeners end up continuing the trace from
+ * {@link MessageConsumer#receive()}
  */
 class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
+
 	final JmsTracing jmsTracing;
+
 	final CurrentTraceContext current;
+
 	// Not all state can be copied without using reflection
 	final Field messageHandlerMethodFactoryField;
+
 	final Field embeddedValueResolverField;
 
 	TracingJmsListenerEndpointRegistry(JmsTracing jmsTracing,
@@ -230,7 +263,25 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 		this.embeddedValueResolverField = tryField("embeddedValueResolver");
 	}
 
-	@Override public void registerListenerContainer(JmsListenerEndpoint endpoint,
+	@Nullable
+	static Field tryField(String name) {
+		try {
+			Field field = MethodJmsListenerEndpoint.class.getDeclaredField(name);
+			field.setAccessible(true);
+			return field;
+		}
+		catch (NoSuchFieldException e) {
+			return null;
+		}
+	}
+
+	@Nullable
+	static <T> T get(Object object, Field field) throws IllegalAccessException {
+		return (T) field.get(object);
+	}
+
+	@Override
+	public void registerListenerContainer(JmsListenerEndpoint endpoint,
 			JmsListenerContainerFactory<?> factory, boolean startImmediately) {
 		if (endpoint instanceof MethodJmsListenerEndpoint) {
 			endpoint = trace((MethodJmsListenerEndpoint) endpoint);
@@ -242,7 +293,8 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 	}
 
 	/**
-	 * This wraps the {@link SimpleJmsListenerEndpoint#getMessageListener()} delegate in a new span.
+	 * This wraps the {@link SimpleJmsListenerEndpoint#getMessageListener()} delegate in a
+	 * new span.
 	 */
 	SimpleJmsListenerEndpoint trace(SimpleJmsListenerEndpoint source) {
 		MessageListener delegate = source.getMessageListener();
@@ -253,14 +305,16 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 	}
 
 	/**
-	 * It would be better to trace by wrapping, but {@link MethodJmsListenerEndpoint#createMessageListener(MessageListenerContainer)},
-	 * is protected so we can't call it from outside code. In other words, a forwarding pattern can't
-	 * be used. Instead, we copy state from the input.
+	 * It would be better to trace by wrapping, but
+	 * {@link MethodJmsListenerEndpoint#createMessageListener(MessageListenerContainer)},
+	 * is protected so we can't call it from outside code. In other words, a forwarding
+	 * pattern can't be used. Instead, we copy state from the input.
 	 * <p>
-	 * NOTE: As {@linkplain MethodJmsListenerEndpoint} is neither final, nor effectively final. For
-	 * this reason we can't ensure copying will get all state. For example, a subtype could hold state
-	 * we aren't aware of, or change behavior. We can consider checking that input is not a subtype,
-	 * and most conservatively leaving unknown subtypes untraced.
+	 * NOTE: As {@linkplain MethodJmsListenerEndpoint} is neither final, nor effectively
+	 * final. For this reason we can't ensure copying will get all state. For example, a
+	 * subtype could hold state we aren't aware of, or change behavior. We can consider
+	 * checking that input is not a subtype, and most conservatively leaving unknown
+	 * subtypes untraced.
 	 */
 	MethodJmsListenerEndpoint trace(MethodJmsListenerEndpoint source) {
 		// Skip out rather than incompletely copying the source
@@ -269,9 +323,11 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 			return source;
 		}
 
-		// We want the stock implementation, except we want to wrap the message listener in a new span
+		// We want the stock implementation, except we want to wrap the message listener
+		// in a new span
 		MethodJmsListenerEndpoint dest = new MethodJmsListenerEndpoint() {
-			@Override protected MessagingMessageListenerAdapter createMessageListenerInstance() {
+			@Override
+			protected MessagingMessageListenerAdapter createMessageListenerInstance() {
 				return new TracingMessagingMessageListenerAdapter(
 						TracingJmsListenerEndpointRegistry.this.jmsTracing,
 						TracingJmsListenerEndpointRegistry.this.current);
@@ -301,20 +357,6 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 		return dest;
 	}
 
-	@Nullable static Field tryField(String name) {
-		try {
-			Field field = MethodJmsListenerEndpoint.class.getDeclaredField(name);
-			field.setAccessible(true);
-			return field;
-		}
-		catch (NoSuchFieldException e) {
-			return null;
-		}
-	}
-
-	@Nullable static <T> T get(Object object, Field field) throws IllegalAccessException {
-		return (T) field.get(object);
-	}
 }
 
 /**
@@ -324,6 +366,7 @@ final class TracingMessagingMessageListenerAdapter
 		extends MessagingMessageListenerAdapter {
 
 	final JmsTracing jmsTracing;
+
 	final CurrentTraceContext current;
 
 	TracingMessagingMessageListenerAdapter(JmsTracing jmsTracing,
@@ -332,8 +375,8 @@ final class TracingMessagingMessageListenerAdapter
 		this.current = current;
 	}
 
-	@Override public void onMessage(Message message, Session session)
-			throws JMSException {
+	@Override
+	public void onMessage(Message message, Session session) throws JMSException {
 		Span span = this.jmsTracing.nextSpan(message).name("on-message").start();
 		try (CurrentTraceContext.Scope ws = this.current.newScope(span.context())) {
 			super.onMessage(message, session);
@@ -346,4 +389,5 @@ final class TracingMessagingMessageListenerAdapter
 			span.finish();
 		}
 	}
+
 }

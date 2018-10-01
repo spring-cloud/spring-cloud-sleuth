@@ -27,7 +27,7 @@ import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
- * {@link Executor} that wraps {@link Runnable} in a trace representation
+ * {@link Executor} that wraps {@link Runnable} in a trace representation.
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -35,10 +35,9 @@ import org.springframework.cloud.sleuth.SpanNamer;
 public class LazyTraceExecutor implements Executor {
 
 	private static final Log log = LogFactory.getLog(LazyTraceExecutor.class);
-
-	private Tracing tracing;
 	private final BeanFactory beanFactory;
 	private final Executor delegate;
+	private Tracing tracing;
 	private SpanNamer spanNamer;
 
 	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate) {
@@ -52,7 +51,7 @@ public class LazyTraceExecutor implements Executor {
 			try {
 				this.tracing = this.beanFactory.getBean(Tracing.class);
 			}
-			catch (NoSuchBeanDefinitionException e) {
+			catch (NoSuchBeanDefinitionException ex) {
 				this.delegate.execute(command);
 				return;
 			}
@@ -66,11 +65,13 @@ public class LazyTraceExecutor implements Executor {
 			try {
 				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 			}
-			catch (NoSuchBeanDefinitionException e) {
-				log.warn("SpanNamer bean not found - will provide a manually created instance");
+			catch (NoSuchBeanDefinitionException ex) {
+				log.warn(
+						"SpanNamer bean not found - will provide a manually created instance");
 				return new DefaultSpanNamer();
 			}
 		}
 		return this.spanNamer;
 	}
+
 }

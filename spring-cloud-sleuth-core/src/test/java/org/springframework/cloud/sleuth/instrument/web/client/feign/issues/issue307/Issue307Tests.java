@@ -46,21 +46,23 @@ public class Issue307Tests {
 
 	@Test
 	public void should_start_context() {
-		try (ConfigurableApplicationContext applicationContext = SpringApplication
-				.run(SleuthSampleApplication.class, "--spring.jmx.enabled=false", "--server.port=0")) {
+		try (ConfigurableApplicationContext applicationContext = SpringApplication.run(
+				SleuthSampleApplication.class, "--spring.jmx.enabled=false",
+				"--server.port=0")) {
 		}
 	}
+
 }
 
 @EnableAutoConfiguration
-@Import({ ParticipantsBean.class})
+@Import({ ParticipantsBean.class })
 @RestController
 @EnableFeignClients
 @EnableCircuitBreaker
 class SleuthSampleApplication {
 
-	private static final Logger LOG = LoggerFactory.getLogger(
-			SleuthSampleApplication.class.getName());
+	private static final Logger LOG = LoggerFactory
+			.getLogger(SleuthSampleApplication.class.getName());
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -96,10 +98,12 @@ class SleuthSampleApplication {
 	private int port() {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
+
 }
 
 @Component
 class ParticipantsBean {
+
 	@Autowired
 	private ParticipantsClient participantsClient;
 
@@ -111,12 +115,13 @@ class ParticipantsBean {
 	public List<Object> defaultParticipants(String raceId) {
 		return new ArrayList<>();
 	}
+
 }
 
 @FeignClient("participants")
 interface ParticipantsClient {
 
-	@RequestMapping(method = RequestMethod.GET, value="/races/{raceId}")
+	@RequestMapping(method = RequestMethod.GET, value = "/races/{raceId}")
 	List<Object> getParticipants(@PathVariable("raceId") String raceId);
 
 }

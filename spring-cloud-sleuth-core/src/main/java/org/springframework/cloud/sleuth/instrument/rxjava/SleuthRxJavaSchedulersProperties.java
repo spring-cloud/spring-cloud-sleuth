@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration properties for RxJava tracing
+ * Configuration properties for RxJava tracing.
  *
  * @author Arthur Gavlyukovskiy
  * @since 1.0.12
@@ -31,6 +31,7 @@ public class SleuthRxJavaSchedulersProperties {
 	 * Thread names for which spans will not be sampled.
 	 */
 	private String[] ignoredthreads = { "HystrixMetricPoller", "^RxComputation.*$" };
+
 	private Hook hook = new Hook();
 
 	public String[] getIgnoredthreads() {
@@ -63,5 +64,7 @@ public class SleuthRxJavaSchedulersProperties {
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
 		}
+
 	}
+
 }

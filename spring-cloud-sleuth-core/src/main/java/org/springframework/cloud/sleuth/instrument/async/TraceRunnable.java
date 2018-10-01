@@ -23,9 +23,8 @@ import brave.propagation.TraceContext;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
- * Runnable that passes Span between threads. The Span name is
- * taken either from the passed value or from the {@link SpanNamer}
- * interface.
+ * Runnable that passes Span between threads. The Span name is taken either from the
+ * passed value or from the {@link SpanNamer} interface.
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
@@ -34,21 +33,24 @@ import org.springframework.cloud.sleuth.SpanNamer;
 public class TraceRunnable implements Runnable {
 
 	/**
-	 * Since we don't know the exact operation name we provide a default
-	 * name for the Span
+	 * Since we don't know the exact operation name we provide a default name for the Span
 	 */
 	private static final String DEFAULT_SPAN_NAME = "async";
 
 	private final Tracer tracer;
+
 	private final Runnable delegate;
+
 	private final TraceContext parent;
+
 	private final String spanName;
 
 	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate) {
 		this(tracing, spanNamer, delegate, null);
 	}
 
-	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate, String name) {
+	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate,
+			String name) {
 		this.tracer = tracing.tracer();
 		this.delegate = delegate;
 		this.parent = tracing.currentTraceContext().get();
@@ -57,14 +59,18 @@ public class TraceRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
+		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName,
+				this.parent);
 		try {
 			this.delegate.run();
-		} catch (Exception | Error e) {
+		}
+		catch (Exception | Error e) {
 			span.error(e);
 			throw e;
-		} finally {
+		}
+		finally {
 			span.finish();
 		}
 	}
+
 }

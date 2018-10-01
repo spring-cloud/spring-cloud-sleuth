@@ -46,13 +46,16 @@ import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 @RunWith(MockitoJUnitRunner.class)
 public class ExecutorBeanPostProcessorTests {
 
-	@Mock BeanFactory beanFactory;
+	@Mock
+	BeanFactory beanFactory;
+
 	private SleuthAsyncProperties sleuthAsyncProperties;
-	
+
 	@Before
 	public void setup() {
 		this.sleuthAsyncProperties = new SleuthAsyncProperties();
-		Mockito.when(beanFactory.getBean(SleuthAsyncProperties.class)).thenReturn(this.sleuthAsyncProperties);
+		Mockito.when(beanFactory.getBean(SleuthAsyncProperties.class))
+				.thenReturn(this.sleuthAsyncProperties);
 	}
 
 	@Test
@@ -65,9 +68,12 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	class Foo implements Executor {
-		@Override public void execute(Runnable command) {
+
+		@Override
+		public void execute(Runnable command) {
 
 		}
+
 	}
 
 	@Test
@@ -83,23 +89,24 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxy() throws Exception {
+	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxy()
+			throws Exception {
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
-			@Override Object createProxy(Object bean, boolean cglibProxy,
-					Executor executor) {
+			@Override
+			Object createProxy(Object bean, boolean cglibProxy, Executor executor) {
 				throw new AopConfigException("foo");
 			}
 		};
 
 		thenThrownBy(() -> bpp.postProcessAfterInitialization(service, "foo"))
-				.isInstanceOf(AopConfigException.class)
-				.hasMessage("foo");
+				.isInstanceOf(AopConfigException.class).hasMessage("foo");
 		service.shutdown();
 	}
 
 	@Test
-	public void should_create_a_cglib_proxy_by_default_for_ThreadPoolTaskExecutor() throws Exception {
+	public void should_create_a_cglib_proxy_by_default_for_ThreadPoolTaskExecutor()
+			throws Exception {
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
 				.postProcessAfterInitialization(new FooThreadPoolTaskExecutor(), "foo");
 
@@ -108,45 +115,52 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	class FooThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
+
 	}
 
 	@Test
-	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxyfor_ThreadPoolTaskExecutor() throws Exception {
+	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxyfor_ThreadPoolTaskExecutor()
+			throws Exception {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
-			@Override Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
+			@Override
+			Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
 					ThreadPoolTaskExecutor executor) {
 				throw new AopConfigException("foo");
 			}
 		};
 
 		thenThrownBy(() -> bpp.postProcessAfterInitialization(taskExecutor, "foo"))
-				.isInstanceOf(AopConfigException.class)
-				.hasMessage("foo");
+				.isInstanceOf(AopConfigException.class).hasMessage("foo");
 	}
-	
+
 	@Test
 	public void proxy_is_not_needed() throws Exception {
-		this.sleuthAsyncProperties.setIgnoredBeans(Collections.singletonList("fooExecutor"));
-		
-		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
-		
+		this.sleuthAsyncProperties
+				.setIgnoredBeans(Collections.singletonList("fooExecutor"));
+
+		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory)
+				.isProxyNeeded("fooExecutor");
+
 		then(isProxyNeeded).isFalse();
 	}
-	
+
 	@Test
 	public void proxy_is_needed() throws Exception {
-		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
-		
+		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory)
+				.isProxyNeeded("fooExecutor");
+
 		then(isProxyNeeded).isTrue();
 	}
-	
+
 	@Test
 	public void should_not_create_proxy() throws Exception {
-		this.sleuthAsyncProperties.setIgnoredBeans(Collections.singletonList("fooExecutor"));
-		
+		this.sleuthAsyncProperties
+				.setIgnoredBeans(Collections.singletonList("fooExecutor"));
+
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
-			.postProcessAfterInitialization(new ThreadPoolTaskExecutor(), "fooExecutor");
+				.postProcessAfterInitialization(new ThreadPoolTaskExecutor(),
+						"fooExecutor");
 
 		then(o).isInstanceOf(ThreadPoolTaskExecutor.class);
 		then(ClassUtils.isCglibProxy(o)).isFalse();
@@ -156,24 +170,27 @@ public class ExecutorBeanPostProcessorTests {
 	public void should_throw_real_exception_when_using_proxy() throws Exception {
 		// for LazyTraceExecutor
 		Mockito.when(this.beanFactory.getBean(Tracing.class))
-			.thenReturn(Tracing.newBuilder().build());
+				.thenReturn(Tracing.newBuilder().build());
 		Mockito.when(this.beanFactory.getBean(SpanNamer.class))
-			.thenReturn(new DefaultSpanNamer());
+				.thenReturn(new DefaultSpanNamer());
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
-			.postProcessAfterInitialization(new RejectedExecutionExecutor(), "fooExecutor");
+				.postProcessAfterInitialization(new RejectedExecutionExecutor(),
+						"fooExecutor");
 
 		then(o).isInstanceOf(RejectedExecutionExecutor.class);
 		then(ClassUtils.isCglibProxy(o)).isTrue();
-		thenThrownBy(() -> ((RejectedExecutionExecutor) o).execute(() -> {}))
-			.isInstanceOf(RejectedExecutionException.class)
-			.hasMessage("rejected");
+		thenThrownBy(() -> ((RejectedExecutionExecutor) o).execute(() -> {
+		})).isInstanceOf(RejectedExecutionException.class).hasMessage("rejected");
 	}
 
 	class RejectedExecutionExecutor implements Executor {
-		@Override public void execute(Runnable task) {
+
+		@Override
+		public void execute(Runnable task) {
 			throw new RejectedExecutionException("rejected");
 		}
+
 	}
 
 }

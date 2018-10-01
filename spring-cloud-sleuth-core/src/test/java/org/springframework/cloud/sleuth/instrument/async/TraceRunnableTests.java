@@ -39,13 +39,14 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceRunnableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create())
-					.build())
-			.spanReporter(this.reporter)
-			.build();
+					.addScopeDecorator(StrictScopeDecorator.create()).build())
+			.spanReporter(this.reporter).build();
+
 	Tracer tracer = this.tracing.tracer();
 
 	@After
@@ -95,14 +96,14 @@ public class TraceRunnableTests {
 	}
 
 	@Test
-	public void should_take_name_of_span_from_span_name_annotation()
-			throws Exception {
+	public void should_take_name_of_span_from_span_name_annotation() throws Exception {
 		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
 
 		whenRunnableGetsSubmitted(traceKeepingRunnable);
 
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).name()).isEqualTo("some-runnable-name-from-annotation");
+		then(this.reporter.getSpans().get(0).name())
+				.isEqualTo("some-runnable-name-from-annotation");
 	}
 
 	@Test
@@ -114,7 +115,8 @@ public class TraceRunnableTests {
 		whenRunnableGetsSubmitted(runnable);
 
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).name()).isEqualTo("some-runnable-name-from-to-string");
+		then(this.reporter.getSpans().get(0).name())
+				.isEqualTo("some-runnable-name-from-to-string");
 	}
 
 	private TraceKeepingRunnable runnableThatRetrievesTraceFromThreadLocal() {
@@ -126,8 +128,9 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(),
-				runnable)).get();
+		this.executor
+				.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(), runnable))
+				.get();
 	}
 
 	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable)
@@ -142,7 +145,8 @@ public class TraceRunnableTests {
 				span.set(tracer.currentSpan());
 			}
 
-			@Override public String toString() {
+			@Override
+			public String toString() {
 				return "some-runnable-name-from-to-string";
 			}
 		};
@@ -163,6 +167,7 @@ public class TraceRunnableTests {
 		public void run() {
 			this.span = this.tracer.currentSpan();
 		}
+
 	}
 
 }

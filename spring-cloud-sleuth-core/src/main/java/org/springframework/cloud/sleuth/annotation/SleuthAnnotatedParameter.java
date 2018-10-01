@@ -16,8 +16,8 @@
 package org.springframework.cloud.sleuth.annotation;
 
 /**
- * A container class that holds information about the parameter
- * of the annotated method argument.
+ * A container class that holds information about the parameter of the annotated method
+ * argument.
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
@@ -25,11 +25,12 @@ package org.springframework.cloud.sleuth.annotation;
 class SleuthAnnotatedParameter {
 
 	final int parameterIndex;
+
 	final SpanTag annotation;
+
 	final Object argument;
 
-	SleuthAnnotatedParameter(int parameterIndex, SpanTag annotation,
-			Object argument) {
+	SleuthAnnotatedParameter(int parameterIndex, SpanTag annotation, Object argument) {
 		this.parameterIndex = parameterIndex;
 		this.annotation = annotation;
 		this.argument = argument;

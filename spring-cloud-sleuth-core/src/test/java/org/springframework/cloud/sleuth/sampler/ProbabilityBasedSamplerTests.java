@@ -27,8 +27,9 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 public class ProbabilityBasedSamplerTests {
-	
+
 	SamplerProperties samplerConfiguration = new SamplerProperties();
+
 	private static Random RANDOM = new Random();
 
 	@Test
@@ -36,8 +37,8 @@ public class ProbabilityBasedSamplerTests {
 		this.samplerConfiguration.setProbability(1f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new ProbabilityBasedSampler(this.samplerConfiguration).isSampled(RANDOM.nextLong()))
-					.isTrue();
+			then(new ProbabilityBasedSampler(this.samplerConfiguration)
+					.isSampled(RANDOM.nextLong())).isTrue();
 		}
 
 	}
@@ -48,8 +49,8 @@ public class ProbabilityBasedSamplerTests {
 		this.samplerConfiguration.setProbability(0f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new ProbabilityBasedSampler(this.samplerConfiguration).isSampled(RANDOM.nextLong()))
-					.isFalse();
+			then(new ProbabilityBasedSampler(this.samplerConfiguration)
+					.isSampled(RANDOM.nextLong())).isFalse();
 		}
 	}
 
@@ -65,7 +66,8 @@ public class ProbabilityBasedSamplerTests {
 	}
 
 	@Test
-	public void should_pass_given_percent_of_samples_with_fractional_element() throws Exception {
+	public void should_pass_given_percent_of_samples_with_fractional_element()
+			throws Exception {
 		int numberOfIterations = 1000;
 		float probability = 0.35f;
 		this.samplerConfiguration.setProbability(probability);
@@ -85,4 +87,5 @@ public class ProbabilityBasedSamplerTests {
 		}
 		return passedCounter;
 	}
+
 }

@@ -19,15 +19,16 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 import java.util.function.Supplier;
 
 import brave.Tracing;
-import reactor.util.context.Context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
 import org.springframework.beans.factory.BeanFactory;
+import reactor.util.context.Context;
 
 /**
- * Supplier to lazily start a {@link SpanSubscription}
+ * Supplier to lazily start a {@link SpanSubscription}.
  *
+ * @param <T> type of returned subscription
  * @author Marcin Grzejszczak
  */
 class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
@@ -35,13 +36,16 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	private static final Log log = LogFactory.getLog(SpanSubscriptionProvider.class);
 
 	final BeanFactory beanFactory;
+
 	final Subscriber<? super T> subscriber;
+
 	final Context context;
+
 	final String name;
+
 	private volatile Tracing tracing;
 
-	SpanSubscriptionProvider(BeanFactory beanFactory,
-			Subscriber<? super T> subscriber,
+	SpanSubscriptionProvider(BeanFactory beanFactory, Subscriber<? super T> subscriber,
 			Context context, String name) {
 		this.beanFactory = beanFactory;
 		this.subscriber = subscriber;
@@ -52,7 +56,8 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 		}
 	}
 
-	@Override public SpanSubscription<T> get() {
+	@Override
+	public SpanSubscription<T> get() {
 		return newCoreSubscriber(tracing());
 	}
 
@@ -66,4 +71,5 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 		}
 		return this.tracing;
 	}
+
 }

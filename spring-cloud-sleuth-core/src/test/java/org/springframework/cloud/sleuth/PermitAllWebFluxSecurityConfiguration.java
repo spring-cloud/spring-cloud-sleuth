@@ -23,11 +23,12 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
 public class PermitAllWebFluxSecurityConfiguration {
-	@Bean SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
-		return http.authorizeExchange()
-				.anyExchange().permitAll()
-				.and()
-				.csrf().disable()
+
+	@Bean
+	SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http)
+			throws Exception {
+		return http.authorizeExchange().anyExchange().permitAll().and().csrf().disable()
 				.build();
 	}
+
 }

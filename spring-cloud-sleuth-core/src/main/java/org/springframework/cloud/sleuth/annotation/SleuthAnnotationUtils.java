@@ -26,33 +26,39 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
 /**
- * Utility class that can verify whether the method is annotated with
- * the Sleuth annotations.
+ * Utility class that can verify whether the method is annotated with the Sleuth
+ * annotations.
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
 class SleuthAnnotationUtils {
 
+	private SleuthAnnotationUtils() {
+
+	}
+
 	private static final Log log = LogFactory.getLog(SleuthAnnotationUtils.class);
 
 	static boolean isMethodAnnotated(Method method) {
-		return findAnnotation(method, NewSpan.class) != null ||
-				findAnnotation(method, ContinueSpan.class) != null;
+		return findAnnotation(method, NewSpan.class) != null
+				|| findAnnotation(method, ContinueSpan.class) != null;
 	}
 
 	static boolean hasAnnotatedParams(Method method, Object[] args) {
 		return !findAnnotatedParameters(method, args).isEmpty();
 	}
 
-	static List<SleuthAnnotatedParameter> findAnnotatedParameters(Method method, Object[] args) {
+	static List<SleuthAnnotatedParameter> findAnnotatedParameters(Method method,
+			Object[] args) {
 		Annotation[][] parameters = method.getParameterAnnotations();
 		List<SleuthAnnotatedParameter> result = new ArrayList<>();
 		int i = 0;
 		for (Annotation[] parameter : parameters) {
 			for (Annotation parameter2 : parameter) {
 				if (parameter2 instanceof SpanTag) {
-					result.add(new SleuthAnnotatedParameter(i, (SpanTag) parameter2, args[i]));
+					result.add(new SleuthAnnotatedParameter(i, (SpanTag) parameter2,
+							args[i]));
 				}
 			}
 			i++;
@@ -61,21 +67,28 @@ class SleuthAnnotationUtils {
 	}
 
 	/**
-	 * Searches for an annotation either on a method or inside the method parameters
+	 * Searches for an annotation either on a method or inside the method parameters.
+	 *
+	 * @param <T> - annotation
+	 * @param clazz - class with annotation
+	 * @param method - annotated method
+	 * @return annotation
 	 */
 	static <T extends Annotation> T findAnnotation(Method method, Class<T> clazz) {
 		T annotation = AnnotationUtils.findAnnotation(method, clazz);
 		if (annotation == null) {
 			try {
-				annotation = AnnotationUtils.findAnnotation(
-						method.getDeclaringClass().getMethod(method.getName(),
-								method.getParameterTypes()), clazz);
-			} catch (NoSuchMethodException | SecurityException e) {
+				annotation = AnnotationUtils.findAnnotation(method.getDeclaringClass()
+						.getMethod(method.getName(), method.getParameterTypes()), clazz);
+			}
+			catch (NoSuchMethodException | SecurityException ex) {
 				if (log.isDebugEnabled()) {
-					log.debug("Exception occurred while tyring to find the annotation", e);
+					log.debug("Exception occurred while tyring to find the annotation",
+							ex);
 				}
 			}
 		}
 		return annotation;
 	}
+
 }

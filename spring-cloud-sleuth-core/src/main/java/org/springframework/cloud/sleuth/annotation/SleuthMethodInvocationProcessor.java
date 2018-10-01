@@ -19,10 +19,14 @@ package org.springframework.cloud.sleuth.annotation;
 import org.aopalliance.intercept.MethodInvocation;
 
 /**
+ * Contract for processing Sleuth annotations.
+ *
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
 interface SleuthMethodInvocationProcessor {
 
-	Object process(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable;
+	Object process(MethodInvocation invocation, NewSpan newSpan,
+			ContinueSpan continueSpan) throws Throwable;
+
 }

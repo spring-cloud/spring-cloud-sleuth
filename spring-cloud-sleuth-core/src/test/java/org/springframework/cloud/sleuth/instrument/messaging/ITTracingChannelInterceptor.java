@@ -50,29 +50,38 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ported from org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTest to
+ * Ported from
+ * org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTest to
  * allow sleuth to decommission its implementation.
  */
-@SpringBootTest(classes = ITTracingChannelInterceptor.App.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = ITTracingChannelInterceptor.App.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
 @DirtiesContext
 public class ITTracingChannelInterceptor implements MessageHandler {
 
-	@Autowired @Qualifier("directChannel") DirectChannel directChannel;
+	@Autowired
+	@Qualifier("directChannel")
+	DirectChannel directChannel;
 
-	@Autowired @Qualifier("executorChannel") ExecutorChannel executorChannel;
+	@Autowired
+	@Qualifier("executorChannel")
+	ExecutorChannel executorChannel;
 
-	@Autowired Tracer tracer;
+	@Autowired
+	Tracer tracer;
 
-	@Autowired List<zipkin2.Span> spans;
+	@Autowired
+	List<zipkin2.Span> spans;
 
-	@Autowired MessagingTemplate messagingTemplate;
+	@Autowired
+	MessagingTemplate messagingTemplate;
 
 	Message<?> message;
+
 	Span currentSpan;
 
-	@Override public void handleMessage(Message<?> msg) {
+	@Override
+	public void handleMessage(Message<?> msg) {
 		message = msg;
 		currentSpan = tracer.currentSpan();
 		if (message.getHeaders().containsKey("THROW_EXCEPTION")) {
@@ -80,75 +89,83 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 		}
 	}
 
-	@Before public void init() {
+	@Before
+	public void init() {
 		directChannel.subscribe(this);
 		executorChannel.subscribe(this);
 	}
 
-	@After public void close() {
+	@After
+	public void close() {
 		directChannel.unsubscribe(this);
 		executorChannel.unsubscribe(this);
 	}
 
 	// formerly known as TraceChannelInterceptorTest.executableSpanCreation
-	@Test public void propagatesNoopSpan() {
-		directChannel.send(MessageBuilder.withPayload("hi").setHeader("X-B3-Sampled", "0")
-				.build());
+	@Test
+	public void propagatesNoopSpan() {
+		directChannel.send(
+				MessageBuilder.withPayload("hi").setHeader("X-B3-Sampled", "0").build());
 
 		assertThat(message.getHeaders()).containsEntry("X-B3-Sampled", "0");
 
 		assertThat(currentSpan.isNoop()).isTrue();
 	}
 
-	@Test public void messageHeadersStillMutableForStomp() {
-		directChannel.send(MessageBuilder.withPayload("hi").setHeader("stompCommand", "DISCONNECT")
-				.build());
+	@Test
+	public void messageHeadersStillMutableForStomp() {
+		directChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader("stompCommand", "DISCONNECT").build());
 
 		assertThat(
 				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
-				.isNotNull();
+						.isNotNull();
 
 		message = null;
-		directChannel.send(MessageBuilder.withPayload("hi").setHeader("simpMessageType", "sth")
-				.build());
+		directChannel.send(MessageBuilder.withPayload("hi")
+				.setHeader("simpMessageType", "sth").build());
 
 		assertThat(
 				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
-				.isNotNull();
+						.isNotNull();
 	}
 
-	@Test public void messageHeadersImmutableForNonStomp() {
-		directChannel.send(MessageBuilder.withPayload("hi").setHeader("foo", "bar")
-				.build());
+	@Test
+	public void messageHeadersImmutableForNonStomp() {
+		directChannel
+				.send(MessageBuilder.withPayload("hi").setHeader("foo", "bar").build());
 
 		assertThat(
 				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
-				.isNull();
+						.isNull();
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
 	static class App {
 
-		@Bean List<zipkin2.Span> spans() {
+		@Bean
+		List<zipkin2.Span> spans() {
 			return new ArrayList<>();
 		}
 
-		@Bean Tracing tracing() {
+		@Bean
+		Tracing tracing() {
 			return Tracing.newBuilder()
 					.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-							.addScopeDecorator(StrictScopeDecorator.create())
-							.build())
+							.addScopeDecorator(StrictScopeDecorator.create()).build())
 					.spanReporter(spans()::add).build();
 		}
 
-		@Bean Tracer tracer() {
+		@Bean
+		Tracer tracer() {
 			return tracing().tracer();
 		}
 
 		ExecutorService service = Executors.newSingleThreadExecutor();
 
-		@Bean ExecutorChannel executorChannel() {
+		@Bean
+		ExecutorChannel executorChannel() {
 			return new ExecutorChannel(this.service);
 		}
 
@@ -157,12 +174,16 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 			this.service.shutdown();
 		}
 
-		@Bean DirectChannel directChannel() {
+		@Bean
+		DirectChannel directChannel() {
 			return new DirectChannel();
 		}
 
-		@Bean public MessagingTemplate messagingTemplate() {
+		@Bean
+		public MessagingTemplate messagingTemplate() {
 			return new MessagingTemplate(directChannel());
 		}
+
 	}
+
 }

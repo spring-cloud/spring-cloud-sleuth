@@ -38,7 +38,6 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  *
  * @author Spencer Gibb
  * @since 1.0.0
- *
  * @see TracingChannelInterceptor
  */
 @Configuration
@@ -52,9 +51,9 @@ public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	public GlobalChannelInterceptorWrapper tracingGlobalChannelInterceptorWrapper(
-			TracingChannelInterceptor interceptor,
-			SleuthMessagingProperties properties) {
-		GlobalChannelInterceptorWrapper wrapper = new GlobalChannelInterceptorWrapper(interceptor);
+			TracingChannelInterceptor interceptor, SleuthMessagingProperties properties) {
+		GlobalChannelInterceptorWrapper wrapper = new GlobalChannelInterceptorWrapper(
+				interceptor);
 		wrapper.setPatterns(properties.getIntegration().getPatterns());
 		return wrapper;
 	}
@@ -63,7 +62,8 @@ public class TraceSpringIntegrationAutoConfiguration {
 	TracingChannelInterceptor traceChannelInterceptor(Tracing tracing,
 			Propagation.Setter<MessageHeaderAccessor, String> traceMessagePropagationSetter,
 			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
-		return new TracingChannelInterceptor(tracing, traceMessagePropagationSetter, traceMessagePropagationGetter);
+		return new TracingChannelInterceptor(tracing, traceMessagePropagationSetter,
+				traceMessagePropagationGetter);
 	}
 
 	@Bean
