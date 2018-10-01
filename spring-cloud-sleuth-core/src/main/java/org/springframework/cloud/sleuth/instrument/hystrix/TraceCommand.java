@@ -23,7 +23,8 @@ import brave.Tracer;
 import com.netflix.hystrix.HystrixCommand;
 
 /**
- * Abstraction over {@code HystrixCommand} that wraps command execution with Trace setting.
+ * Abstraction over {@code HystrixCommand} that wraps command execution with Trace
+ * setting.
  *
  * @param <R> - return type of Hystrix Command
  * @author Tomasz Nurkiewicz, 4financeIT

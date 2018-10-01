@@ -36,7 +36,8 @@ public final class SpanNameUtil {
 		if (StringUtils.isEmpty(name)) {
 			return name;
 		}
-		int maxLength = name.length() > MAX_NAME_LENGTH ? (MAX_NAME_LENGTH) : (name.length());
+		int maxLength = name.length() > MAX_NAME_LENGTH ? (MAX_NAME_LENGTH)
+				: (name.length());
 		return name.substring(0, maxLength);
 	}
 

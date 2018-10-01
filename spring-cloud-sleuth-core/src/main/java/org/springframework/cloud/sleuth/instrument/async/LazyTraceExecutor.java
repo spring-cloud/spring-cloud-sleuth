@@ -35,9 +35,13 @@ import org.springframework.cloud.sleuth.SpanNamer;
 public class LazyTraceExecutor implements Executor {
 
 	private static final Log log = LogFactory.getLog(LazyTraceExecutor.class);
+
 	private final BeanFactory beanFactory;
+
 	private final Executor delegate;
+
 	private Tracing tracing;
+
 	private SpanNamer spanNamer;
 
 	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate) {

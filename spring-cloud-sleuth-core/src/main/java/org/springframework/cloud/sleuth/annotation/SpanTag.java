@@ -40,9 +40,7 @@ import org.springframework.core.annotation.AliasFor;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-@Target(value = {
-		ElementType.PARAMETER
-})
+@Target(value = { ElementType.PARAMETER })
 public @interface SpanTag {
 
 	/**
@@ -58,8 +56,8 @@ public @interface SpanTag {
 	String key() default "";
 
 	/**
-	 * @return - Execute this SPEL expression to calculate the tag value. Will be analyzed if no
-	 * value of the {@link SpanTag#resolver()} was set.
+	 * @return - Execute this SPEL expression to calculate the tag value. Will be analyzed
+	 * if no value of the {@link SpanTag#resolver()} was set.
 	 */
 	String expression() default "";
 

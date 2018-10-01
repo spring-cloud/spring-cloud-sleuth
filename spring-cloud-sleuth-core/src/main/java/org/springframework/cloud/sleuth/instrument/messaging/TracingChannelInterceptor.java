@@ -80,12 +80,19 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 * "http.route".
 	 */
 	private static final String REMOTE_SERVICE_NAME = "broker";
+
 	final Tracing tracing;
+
 	final Tracer tracer;
+
 	final ThreadLocalSpan threadLocalSpan;
+
 	final TraceContext.Injector<MessageHeaderAccessor> injector;
+
 	final TraceContext.Extractor<MessageHeaderAccessor> extractor;
+
 	final boolean integrationObjectSupportPresent;
+
 	private final boolean hasDirectChannelClass;
 
 	@Autowired

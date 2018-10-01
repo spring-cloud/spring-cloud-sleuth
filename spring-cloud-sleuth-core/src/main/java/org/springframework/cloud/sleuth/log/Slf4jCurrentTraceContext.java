@@ -123,6 +123,7 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 
 		/**
 		 * Thread context scope.
+		 *
 		 * @author Adrian Cole
 		 */
 		class ThreadContextCurrentTraceContextScope implements Scope {

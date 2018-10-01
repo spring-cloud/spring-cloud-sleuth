@@ -68,7 +68,6 @@ class SleuthAnnotationUtils {
 
 	/**
 	 * Searches for an annotation either on a method or inside the method parameters.
-	 *
 	 * @param <T> - annotation
 	 * @param clazz - class with annotation
 	 * @param method - annotated method

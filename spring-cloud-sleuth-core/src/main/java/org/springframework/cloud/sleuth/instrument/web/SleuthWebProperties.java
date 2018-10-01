@@ -120,6 +120,7 @@ public class SleuthWebProperties {
 
 	/**
 	 * Web client properties.
+	 *
 	 * @author Marcin Grzejszczak
 	 */
 	public static class Client {
@@ -155,6 +156,7 @@ public class SleuthWebProperties {
 
 	/**
 	 * Async computing properties.
+	 *
 	 * @author Marcin Grzejszczak
 	 */
 	public static class Async {
@@ -174,6 +176,7 @@ public class SleuthWebProperties {
 
 	/**
 	 * Async client properties.
+	 *
 	 * @author Marcin Grzejszczak
 	 */
 	public static class AsyncClient {
@@ -207,6 +210,7 @@ public class SleuthWebProperties {
 
 	/**
 	 * Async Rest Template properties.
+	 *
 	 * @author Marcin Grzejszczak
 	 */
 	public static class Template {

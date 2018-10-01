@@ -35,9 +35,13 @@ import org.springframework.beans.factory.BeanFactory;
 class LazyTracingFeignClient implements Client {
 
 	private static final Log log = LogFactory.getLog(LazyTracingFeignClient.class);
+
 	private final BeanFactory beanFactory;
+
 	private final Client delegate;
+
 	private Client tracingFeignClient;
+
 	private HttpTracing httpTracing;
 
 	LazyTracingFeignClient(BeanFactory beanFactory, Client delegate) {

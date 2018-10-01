@@ -67,9 +67,13 @@ final class TracingFeignClient implements Client {
 			return "Map::set";
 		}
 	};
+
 	final Tracer tracer;
+
 	final Client delegate;
+
 	final HttpClientHandler<Request, Response> handler;
+
 	final TraceContext.Injector<Map<String, Collection<String>>> injector;
 
 	TracingFeignClient(HttpTracing httpTracing, Client delegate) {

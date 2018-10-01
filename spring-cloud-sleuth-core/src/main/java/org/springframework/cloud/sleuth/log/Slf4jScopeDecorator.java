@@ -100,8 +100,8 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 					log.trace("With parent: {}", currentSpan.parentId());
 				}
 			}
-			whitelistedBaggageKeys(currentSpan)
-					.forEach((s) -> MDC.put(s, ExtraFieldPropagation.get(currentSpan, s)));
+			whitelistedBaggageKeys(currentSpan).forEach(
+					(s) -> MDC.put(s, ExtraFieldPropagation.get(currentSpan, s)));
 		}
 		else {
 			MDC.remove("traceId");
@@ -117,6 +117,7 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 
 		/**
 		 * Thread context scope.
+		 *
 		 * @author Adrian Cole
 		 */
 		class ThreadContextCurrentTraceContextScope implements CurrentTraceContext.Scope {

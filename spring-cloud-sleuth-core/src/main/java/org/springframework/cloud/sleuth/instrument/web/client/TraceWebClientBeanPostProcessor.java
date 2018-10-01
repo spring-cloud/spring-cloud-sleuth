@@ -109,12 +109,19 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			return "HttpHeaders::getFirst";
 		}
 	};
+
 	private static final Log log = LogFactory.getLog(TraceExchangeFilterFunction.class);
+
 	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
+
 	final BeanFactory beanFactory;
+
 	Tracer tracer;
+
 	HttpTracing httpTracing;
+
 	HttpClientHandler<ClientRequest, ClientResponse> handler;
+
 	TraceContext.Injector<ClientRequest.Builder> injector;
 
 	TraceExchangeFilterFunction(BeanFactory beanFactory) {

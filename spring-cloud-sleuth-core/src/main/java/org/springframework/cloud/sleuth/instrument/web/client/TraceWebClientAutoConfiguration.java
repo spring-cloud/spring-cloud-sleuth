@@ -376,11 +376,16 @@ class TracingHttpClientInstrumentation {
 			return "HttpHeaders::get";
 		}
 	};
+
 	private static final Log log = LogFactory
 			.getLog(TracingHttpClientInstrumentation.class);
+
 	final Tracer tracer;
+
 	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+
 	final TraceContext.Injector<HttpHeaders> injector;
+
 	final HttpTracing httpTracing;
 
 	TracingHttpClientInstrumentation(HttpTracing httpTracing) {
@@ -462,6 +467,7 @@ class TracingHttpClientInstrumentation {
 	static class TracedHttpClientRequest implements HttpClientRequest {
 
 		private final io.netty.handler.codec.http.HttpHeaders addedHeaders;
+
 		private HttpClientRequest delegate;
 
 		TracedHttpClientRequest(HttpClientRequest delegate, HttpHeaders addedHeaders) {

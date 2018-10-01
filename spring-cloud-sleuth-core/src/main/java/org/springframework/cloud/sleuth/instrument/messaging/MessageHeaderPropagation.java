@@ -85,7 +85,8 @@ enum MessageHeaderPropagation
 				nativeAccessor.removeNativeHeader(keyToRemove);
 			}
 			else {
-				Object nativeHeaders = accessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
+				Object nativeHeaders = accessor
+						.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 				if (nativeHeaders instanceof Map) {
 					((Map) nativeHeaders).remove(keyToRemove);
 				}
@@ -117,7 +118,8 @@ enum MessageHeaderPropagation
 			nativeAccessor.setNativeHeader(key, value);
 		}
 		else {
-			Object nativeHeaders = accessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
+			Object nativeHeaders = accessor
+					.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 			if (nativeHeaders == null) {
 				accessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
 						nativeHeaders = new LinkedMultiValueMap<>());
@@ -162,7 +164,8 @@ enum MessageHeaderPropagation
 			}
 		}
 		else {
-			Object nativeHeaders = accessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
+			Object nativeHeaders = accessor
+					.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 			if (nativeHeaders instanceof Map) {
 				Object result = ((Map) nativeHeaders).get(key);
 				if (result instanceof List && !((List) result).isEmpty()) {

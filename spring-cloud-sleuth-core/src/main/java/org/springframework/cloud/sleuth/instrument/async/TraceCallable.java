@@ -36,7 +36,8 @@ import org.springframework.cloud.sleuth.SpanNamer;
 public class TraceCallable<V> implements Callable<V> {
 
 	/**
-	 * Since we don't know the exact operation name we provide a default name for the Span.
+	 * Since we don't know the exact operation name we provide a default name for the
+	 * Span.
 	 */
 	private static final String DEFAULT_SPAN_NAME = "async";
 

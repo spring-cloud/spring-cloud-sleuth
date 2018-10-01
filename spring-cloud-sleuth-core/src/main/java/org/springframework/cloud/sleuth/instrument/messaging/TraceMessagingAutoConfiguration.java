@@ -199,8 +199,11 @@ class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 class SleuthKafkaAspect {
 
 	private static final Log log = LogFactory.getLog(SleuthKafkaAspect.class);
+
 	final Field recordMessageConverter;
+
 	private final KafkaTracing kafkaTracing;
+
 	private final Tracer tracer;
 
 	SleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {

@@ -43,7 +43,9 @@ final class TraceFeignObjectWrapper {
 	}
 
 	private final BeanFactory beanFactory;
+
 	private CachingSpringLoadBalancerFactory cachingSpringLoadBalancerFactory;
+
 	private Object springClientFactory;
 
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {

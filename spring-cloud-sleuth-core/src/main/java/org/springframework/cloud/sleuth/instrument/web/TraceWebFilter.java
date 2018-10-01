@@ -54,6 +54,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	 * logs will not get correlated.
 	 */
 	public static final int ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
+
 	protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
 			+ ".TRACE";
 	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
@@ -70,11 +71,16 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			return "HttpHeaders::getFirst";
 		}
 	};
+
 	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
+
 	private static final String STATUS_CODE_KEY = "http.status_code";
+
 	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName()
 			+ ".SPAN_WITH_NO_PARENT";
+
 	private final BeanFactory beanFactory;
+
 	Tracer tracer;
 
 	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;

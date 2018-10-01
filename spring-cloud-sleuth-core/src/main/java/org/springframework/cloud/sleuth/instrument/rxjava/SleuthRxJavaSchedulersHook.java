@@ -97,6 +97,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
 	/**
 	 * Wrapped Action element.
+	 *
 	 * @author Marcin Grzejszczak
 	 */
 	static class TraceAction implements Action0 {
