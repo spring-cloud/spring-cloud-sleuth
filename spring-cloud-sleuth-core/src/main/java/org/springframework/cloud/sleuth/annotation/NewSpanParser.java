@@ -29,9 +29,9 @@ public interface NewSpanParser {
 
 	/**
 	 * Override to control the name and tags on an annotation-based span.
-	 * @param methodInvocation
-	 * @param newSpan
-	 * @param span
+	 * @param methodInvocation - method invocation
+	 * @param newSpan - annotation
+	 * @param span - span to customize
 	 */
 	void parse(MethodInvocation methodInvocation, NewSpan newSpan, SpanCustomizer span);
 

@@ -71,32 +71,33 @@ class ReactorSleuthMethodInvocationProcessor
 		boolean hasLog = StringUtils.hasText(log);
 		try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 			Publisher<?> publisher = (Publisher) invocation.proceed();
-			Mono<Span> startSpan = Mono.defer(() -> withSpanInScope(span, () -> {
+			Mono<SpanWithScope> startSpan = Mono.defer(() -> {
+				Tracer.SpanInScope ws2 = tracer().withSpanInScope(span);
 				if (startNewSpan) {
 					span.start();
 				}
 				before(invocation, span, log, hasLog);
-				return Mono.just(span);
-			}));
+				return Mono.just(new SpanWithScope(span, ws2));
+			});
 			if (publisher instanceof Mono) {
 				return startSpan
 						.flatMap(spanStarted -> ((Mono<?>) publisher)
-								.doOnError(onFailureReactor(log, hasLog, spanStarted))
+								.doOnError(onFailureReactor(log, hasLog, spanStarted.span))
 								.doFinally(afterReactor(startNewSpan, log, hasLog,
-										spanStarted)))
+										spanStarted.span, spanStarted.spanInScope)))
 						// put span in context so it can be used by
 						// ScopePassingSpanSubscriber
-						.subscriberContext(context -> context.put(Span.class, span));
+						.subscriberContext((context) -> context.put(Span.class, span));
 			}
 			else if (publisher instanceof Flux) {
 				return startSpan
-						.flatMapMany(spanStarted -> ((Flux<?>) publisher)
-								.doOnError(onFailureReactor(log, hasLog, spanStarted))
-								.doFinally(afterReactor(startNewSpan, log, hasLog,
-										spanStarted)))
+						.flatMapMany((spanStarted) -> withSpanInScope(span, () -> ((Flux<?>) publisher)
+							.doOnError(onFailureReactor(log, hasLog, spanStarted.span))
+							.doFinally(afterReactor(startNewSpan, log, hasLog,
+									spanStarted.span, spanStarted.spanInScope))))
 						// put span in context so it can be used by
 						// ScopePassingSpanSubscriber
-						.subscriberContext(context -> context.put(Span.class, span));
+						.subscriberContext((context) -> context.put(Span.class, span));
 			}
 			else {
 				throw new IllegalArgumentException(
@@ -112,16 +113,18 @@ class ReactorSleuthMethodInvocationProcessor
 	}
 
 	private Consumer<SignalType> afterReactor(boolean isNewSpan, String log,
-			boolean hasLog, Span span) {
-		return signalType -> {
-			try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
+			boolean hasLog, Span span, Tracer.SpanInScope scope) {
+		return (signalType) -> {
+			try {
 				after(span, isNewSpan, log, hasLog);
+			} finally {
+				scope.close();
 			}
 		};
 	}
 
 	private Consumer<Throwable> onFailureReactor(String log, boolean hasLog, Span span) {
-		return throwable -> {
+		return (throwable) -> {
 			try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
 				onFailure(span, log, hasLog, throwable);
 			}
@@ -141,4 +144,15 @@ class ReactorSleuthMethodInvocationProcessor
 		return this.nonReactorSleuthMethodInvocationProcessor;
 	}
 
+}
+
+
+class SpanWithScope {
+	final Span span;
+	final Tracer.SpanInScope spanInScope;
+
+	SpanWithScope(Span span, Tracer.SpanInScope spanInScope) {
+		this.span = span;
+		this.spanInScope = spanInScope;
+	}
 }

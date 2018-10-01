@@ -122,14 +122,17 @@ public abstract class ReactorSleuth {
 	@SuppressWarnings("unchecked")
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanOperator(
 			BeanFactory beanFactory) {
-		return (sourcePub -> {
-			// TODO: Remove this once Reactor 3.1.8 is released
-			// do the checks directly on actual original Publisher
-			if (sourcePub instanceof ConnectableFlux // Operators.lift can't handle that
-					|| sourcePub instanceof GroupedFlux // Operators.lift can't handle
-														// that
+		return (sourcePub) -> {
+			if (Scannable.from(sourcePub).scan(Scannable.Attr.RUN_ON) == null
+					// only wrap if operation will be ran on a different thread
 			) {
+				if (log.isTraceEnabled()) {
+					log.trace("Won't wrap operation [" + sourcePub.getClass().getSimpleName() + "] since it will be executed in the same thread");
+				}
 				return sourcePub;
+			}
+			if (log.isTraceEnabled()) {
+				log.trace("Will wrap operation [" + sourcePub.getClass().getSimpleName() + "] since it will be scheduled in a separate thread");
 			}
 			// no more POINTCUT_FILTER since mechanism is broken
 			Function<? super Publisher<T>, ? extends Publisher<T>> lift = Operators
@@ -158,7 +161,7 @@ public abstract class ReactorSleuth {
 					});
 
 			return lift.apply(sourcePub);
-		});
+		};
 	}
 
 	private static boolean contextRefreshed(BeanFactory beanFactory) {

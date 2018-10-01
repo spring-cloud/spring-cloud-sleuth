@@ -162,6 +162,7 @@ public class FlatMapTests {
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				return ServerResponse.ok().body(one, Integer.class);
 			}).andRoute(GET("/withFlatMap"), request -> {
+				tracer.startScopedSpan("foo");
 				LOGGER.info("withFlatMap");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				Flux<Integer> response = one
