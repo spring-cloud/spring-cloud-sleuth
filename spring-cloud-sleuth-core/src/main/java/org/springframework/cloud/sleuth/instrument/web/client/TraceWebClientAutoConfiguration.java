@@ -488,11 +488,6 @@ class TracingHttpClientInstrumentation {
 		}
 
 		@Override
-		public boolean hasSentHeaders() {
-			return this.delegate.hasSentHeaders();
-		}
-
-		@Override
 		public HttpClientRequest header(CharSequence name, CharSequence value) {
 			this.delegate = this.delegate.header(name, value);
 			return this;
@@ -509,12 +504,6 @@ class TracingHttpClientInstrumentation {
 		@Override
 		public boolean isFollowRedirect() {
 			return this.delegate.isFollowRedirect();
-		}
-
-		@Override
-		public HttpClientRequest keepAlive(boolean keepAlive) {
-			this.delegate = this.delegate.keepAlive(keepAlive);
-			return this;
 		}
 
 		@Override
