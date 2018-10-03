@@ -148,6 +148,7 @@ public class TraceWebClientAutoConfiguration {
 
 	}
 
+	@Configuration
 	@ConditionalOnClass(WebClient.class)
 	static class WebClientConfig {
 

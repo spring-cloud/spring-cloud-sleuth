@@ -52,6 +52,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceWebAsyncClientAutoConfiguration {
 
+	@Configuration
 	@ConditionalOnBean(AsyncRestTemplate.class)
 	static class AsyncRestTemplateConfig {
 
