@@ -40,6 +40,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
@@ -58,17 +61,18 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
+	private static final ConcurrentLinkedQueue<Long> spanIdsInHttpTrace = new ConcurrentLinkedQueue<>();
+
 	@Before
 	public void setup() {
 		this.reporter.clear();
+		spanIdsInHttpTrace.clear();
 	}
 
 	@LocalServerPort
 	private int port;
 
 	private final WebClient webClient = WebClient.create();
-
-	private static final ConcurrentLinkedQueue<Long> spanIdsInHttpTrace = new ConcurrentLinkedQueue<>();
 
 	@Test
 	public void shouldReturnSpanFromWebFluxTraceContext() {
@@ -239,6 +243,8 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@RequestMapping("/test")
 	static class TestEndpoint {
 
+		private static final Logger log = LoggerFactory.getLogger(TestEndpoint.class);
+
 		@Autowired
 		Tracer tracer;
 
@@ -252,28 +258,34 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		@GetMapping("/pingFromContext")
 		public Mono<Long> pingFromContext() {
-			return Mono.subscriberContext().flatMap(
-					context -> Mono.just(tracer.currentSpan().context().spanId()));
+			return Mono.subscriberContext()
+					.doOnSuccess(context -> log.info("Ping from context"))
+					.flatMap(context -> Mono.just(tracer.currentSpan().context().spanId()));
 		}
 
 		@GetMapping("/continueSpan")
 		public Mono<Long> continueSpan() {
+			log.info("continueSpan");
 			return testBean.continueSpanInTraceContext();
 		}
 
 		@GetMapping("/newSpan1")
 		public Mono<Long> newSpan1() {
+			log.info("newSpan1");
 			return testBean.newSpanInTraceContext();
 		}
 
 		@GetMapping("/newSpan2")
 		public Mono<Long> newSpan2() {
+			log.info("newSpan2");
 			return testBean.newSpanInSubscriberContext();
 		}
 
 	}
 
 	static class TestBean {
+
+		private static final Logger log = LoggerFactory.getLogger(TestBean.class);
 
 		private final Tracer tracer;
 
@@ -283,17 +295,22 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		@ContinueSpan
 		public Mono<Long> continueSpanInTraceContext() {
+			log.info("Continue");
 			return Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId()));
 		}
 
 		@NewSpan(name = "newSpanInTraceContext")
 		public Mono<Long> newSpanInTraceContext() {
+			log.info("New Span in Trace Context");
 			return Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId()));
 		}
 
 		@NewSpan(name = "newSpanInSubscriberContext")
 		public Mono<Long> newSpanInSubscriberContext() {
-			return Mono.subscriberContext().flatMap(context -> Mono
+			log.info("New Span in Subscriber Context");
+			return Mono.subscriberContext()
+					.doOnSuccess(context -> log.info("New Span in deferred Trace Context"))
+					.flatMap(context -> Mono
 					.defer(() -> Mono.just(tracer.currentSpan().context().spanId())));
 		}
 
