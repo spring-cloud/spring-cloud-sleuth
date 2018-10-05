@@ -319,19 +319,19 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		}
 
 		@ContinueSpan
-		Mono<Long> continueSpanInTraceContext() {
+		public Mono<Long> continueSpanInTraceContext() {
 			log.info("Continue");
 			return Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId()));
 		}
 
 		@NewSpan(name = "newSpanInTraceContext")
-		Mono<Long> newSpanInTraceContext() {
+		public Mono<Long> newSpanInTraceContext() {
 			log.info("New Span in Trace Context");
 			return Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId()));
 		}
 
 		@NewSpan(name = "newSpanInSubscriberContext")
-		Mono<Long> newSpanInSubscriberContext() {
+		public Mono<Long> newSpanInSubscriberContext() {
 			log.info("New Span in Subscriber Context");
 			return Mono.subscriberContext()
 					.doOnSuccess(
