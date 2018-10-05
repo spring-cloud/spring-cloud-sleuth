@@ -83,6 +83,7 @@ public class JmsTracingConfigurationTest {
 	@Test
 	public void tracesXAConnectionFactories() {
 		contextRunner.withUserConfiguration(XAConfiguration.class).run(ctx -> {
+			clearSpans(ctx);
 			checkConnection(ctx);
 			checkXAConnection(ctx);
 		});
@@ -102,6 +103,7 @@ public class JmsTracingConfigurationTest {
 	public void tracesListener_jmsMessageListener() {
 		contextRunner.withUserConfiguration(SimpleJmsListenerConfiguration.class)
 				.run(ctx -> {
+					clearSpans(ctx);
 					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
 
 					Callable<Span> takeSpan = ctx.getBean("takeSpan", Callable.class);
@@ -146,6 +148,7 @@ public class JmsTracingConfigurationTest {
 	public void tracesListener_annotationMessageListener() {
 		contextRunner.withUserConfiguration(AnnotationJmsListenerConfiguration.class)
 				.run(ctx -> {
+					clearSpans(ctx);
 					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
 
 					Callable<Span> takeSpan = ctx.getBean("takeSpan", Callable.class);
@@ -178,6 +181,7 @@ public class JmsTracingConfigurationTest {
 	public void tracesListener_jcaMessageListener() {
 		contextRunner.withUserConfiguration(JcaJmsListenerConfiguration.class)
 				.run(ctx -> {
+					clearSpans(ctx);
 					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
 
 					Callable<Span> takeSpan = ctx.getBean("takeSpan", Callable.class);
@@ -234,6 +238,10 @@ public class JmsTracingConfigurationTest {
 
 	}
 
+	static void clearSpans(AssertableApplicationContext ctx) throws JMSException {
+		ctx.getBean(JmsTestTracingConfiguration.class).clearSpan();
+	}
+
 	static void checkConnection(AssertableApplicationContext ctx) throws JMSException {
 		// Not using try-with-resources as that doesn't exist in JMS 1.1
 		Connection con = ctx.getBean(ConnectionFactory.class).createConnection();
@@ -277,6 +285,10 @@ class JmsTestTracingConfiguration {
 	 * prevent race conditions in tests.
 	 */
 	BlockingQueue<Span> spans = new LinkedBlockingQueue<>();
+
+	void clearSpan() {
+		this.spans.clear();
+	}
 
 	/**
 	 * Call this to block until a span was reported
