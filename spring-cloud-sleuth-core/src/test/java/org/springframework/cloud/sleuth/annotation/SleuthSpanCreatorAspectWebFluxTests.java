@@ -258,7 +258,9 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		@Override
 		public void add(HttpTrace trace) {
-			spanIdsInHttpTrace.add(tracer.currentSpan().context().spanId());
+			if (tracer.currentSpan() != null) {
+				spanIdsInHttpTrace.add(tracer.currentSpan().context().spanId());
+			}
 		}
 
 	}
