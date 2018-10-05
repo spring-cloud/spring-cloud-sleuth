@@ -194,9 +194,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		});
 	}
 
-	// TODO: Fix me
 	@Test
-	@Ignore("The order with HttpTraceWebFilter has changed in Boot")
 	public void shouldSetupCorrectSpanInHttpTrace() {
 
 		spanIdsInHttpTrace.clear();
