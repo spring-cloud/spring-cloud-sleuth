@@ -230,7 +230,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 			then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("customTest.before",
-					"customTest.after");
+							"customTest.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -247,7 +247,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 			then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("customTest.before",
-					"customTest.after");
+							"customTest.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -275,7 +275,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 			then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("customTest.before",
-					"customTest.after");
+							"customTest.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -306,7 +306,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 					.containsEntry("customTestTag11", "test");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("customTest.before",
-					"customTest.after");
+							"customTest.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -361,7 +361,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 			then(spans.get(0).tags()).containsEntry("error", "test exception 13");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("testMethod13.before",
-					"testMethod13.afterFailure", "testMethod13.after");
+							"testMethod13.afterFailure", "testMethod13.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -624,8 +624,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		@Override
 		public Mono<Long> newSpanInSubscriberContext() {
-			return Mono.subscriberContext().flatMap(
-					context -> Mono.just(id(tracer)));
+			return Mono.subscriberContext().flatMap(context -> Mono.just(id(tracer)));
 		}
 
 	}
@@ -643,24 +642,17 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		@NewSpan(name = "outerSpanInTraceContext")
 		public Mono<Pair<Pair<Long, Long>, Long>> outerNewSpanInTraceContext() {
-			return Mono
-					.defer(() -> Mono.just(id(tracer))
-							.zipWith(
-									testBeanInterface.newSpanInTraceContext())
-							.map(pair -> Pair.of(
-									Pair.of(pair.getT1(), id(tracer)),
-									pair.getT2())));
+			return Mono.defer(() -> Mono.just(id(tracer))
+					.zipWith(testBeanInterface.newSpanInTraceContext()).map(pair -> Pair
+							.of(Pair.of(pair.getT1(), id(tracer)), pair.getT2())));
 		}
 
 		@NewSpan(name = "outerSpanInSubscriberContext")
 		public Mono<Pair<Pair<Long, Long>, Long>> outerNewSpanInSubscriberContext() {
 			return Mono.subscriberContext()
 					.flatMap(context -> Mono.just(id(tracer))
-							.zipWith(
-									testBeanInterface.newSpanInSubscriberContext())
-							.map(pair -> Pair.of(
-									Pair.of(pair.getT1(),
-											id(tracer)),
+							.zipWith(testBeanInterface.newSpanInSubscriberContext())
+							.map(pair -> Pair.of(Pair.of(pair.getT1(), id(tracer)),
 									pair.getT2())));
 		}
 

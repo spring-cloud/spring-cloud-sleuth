@@ -16,15 +16,27 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
+import zipkin2.Annotation;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,17 +44,6 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import zipkin2.Annotation;
-import zipkin2.reporter.Reporter;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests.TestBean.TEST_STRING1;
@@ -213,7 +214,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 			then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("customTest.before",
-					"customTest.after");
+							"customTest.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -231,7 +232,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 			then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("customTest.before",
-					"customTest.after");
+							"customTest.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -257,7 +258,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 			then(spans.get(0).tags()).containsEntry("customTestTag10", "test");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("customTest.before",
-					"customTest.after");
+							"customTest.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -286,7 +287,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 					.containsEntry("customTestTag11", "test");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("customTest.before",
-					"customTest.after");
+							"customTest.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -341,7 +342,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 			then(spans.get(0).tags()).containsEntry("error", "test exception 13");
 			then(spans.get(0).annotations().stream().map(Annotation::value)
 					.collect(Collectors.toList())).contains("testMethod13.before",
-					"testMethod13.afterFailure", "testMethod13.after");
+							"testMethod13.afterFailure", "testMethod13.after");
 			then(spans.get(0).duration()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -589,13 +590,14 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		@Override
 		public Flux<Long> newSpanInTraceContext() {
-			return Flux.defer(() -> Flux.just(id(tracer)));
+			Long id = id(tracer);
+			return Flux.defer(() -> Flux.just(id));
 		}
 
 		@Override
 		public Flux<Long> newSpanInSubscriberContext() {
-			return Mono.subscriberContext().flatMapMany(
-					context -> Flux.just(id(tracer)));
+			return Mono.subscriberContext()
+					.flatMapMany(context -> Flux.just(id(context, tracer)));
 		}
 
 	}
@@ -605,6 +607,13 @@ public class SleuthSpanCreatorAspectFluxTests {
 			return null;
 		}
 		return tracer.currentSpan().context().spanId();
+	}
+
+	protected static Long id(Context context, Tracer tracer) {
+		if (context.hasKey(Span.class)) {
+			return context.get(Span.class).context().spanId();
+		}
+		return id(tracer);
 	}
 
 	@Configuration
