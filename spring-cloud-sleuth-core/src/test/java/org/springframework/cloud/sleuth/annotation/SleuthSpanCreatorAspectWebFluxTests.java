@@ -24,6 +24,7 @@ import brave.sampler.Sampler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -75,7 +76,8 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@LocalServerPort
 	private int port;
 
-	private static String toHexString(long value) {
+	private static String toHexString(Long value) {
+		BDDAssertions.then(value).isNotNull();
 		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
 	}
 
@@ -196,7 +198,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldSetupCorrectSpanInHttpTrace() {
-
 		spanIdsInHttpTrace.clear();
 
 		Mono<Long> mono = webClient.get().uri("http://localhost:" + port + "/test/ping")
