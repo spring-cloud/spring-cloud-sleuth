@@ -22,6 +22,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -56,6 +58,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SleuthSpanCreatorAspectWebFluxTests {
 
+	private static final Log log = LogFactory.getLog(SleuthSpanCreatorAspectWebFluxTests.class);
+
 	private static final ConcurrentLinkedQueue<Long> spanIdsInHttpTrace = new ConcurrentLinkedQueue<>();
 
 	private final WebClient webClient = WebClient.create();
@@ -81,7 +85,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldReturnSpanFromWebFluxTraceContext() {
-
 		Mono<Long> mono = webClient.get().uri("http://localhost:" + port + "/test/ping")
 				.retrieve().bodyToMono(Long.class);
 
@@ -89,12 +92,18 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		Long newSpanId = mono.block();
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
+		List<zipkin2.Span> spans = getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).kind()).isEqualTo(Span.Kind.SERVER);
 		then(spans.get(0).name()).isEqualTo("get /test/ping");
 		then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
 		then(this.tracer.currentSpan()).isNull();
+	}
+
+	private List<zipkin2.Span> getSpans() {
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		log.info("Reported the following spans: \n\n" + spans);
+		return spans;
 	}
 
 	@Test
@@ -108,7 +117,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		Long newSpanId = mono.block();
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
+		List<zipkin2.Span> spans = getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).kind()).isEqualTo(Span.Kind.SERVER);
 		then(spans.get(0).name()).isEqualTo("get /test/pingfromcontext");
@@ -127,7 +136,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		Long newSpanId = mono.block();
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
+		List<zipkin2.Span> spans = getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).kind()).isEqualTo(Span.Kind.SERVER);
 		then(spans.get(0).name()).isEqualTo("get /test/continuespan");
@@ -146,7 +155,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		Long newSpanId = mono.block();
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
+		List<zipkin2.Span> spans = getSpans();
 		then(spans).hasSize(2);
 		then(spans.get(0).name()).isEqualTo("new-span-in-trace-context");
 		then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
@@ -166,7 +175,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		Long newSpanId = mono.block();
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
+		List<zipkin2.Span> spans = getSpans();
 		then(spans).hasSize(2);
 		then(spans.get(0).name()).isEqualTo("new-span-in-subscriber-context");
 		then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
@@ -189,7 +198,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		Long newSpanId = mono.block();
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
+		List<zipkin2.Span> spans = getSpans();
 		then(spans).hasSize(1);
 		then(spans.get(0).kind()).isEqualTo(Span.Kind.SERVER);
 		then(spans.get(0).name()).isEqualTo("get /test/ping");
