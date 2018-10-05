@@ -58,7 +58,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SleuthSpanCreatorAspectWebFluxTests {
 
-	private static final Log log = LogFactory.getLog(SleuthSpanCreatorAspectWebFluxTests.class);
+	private static final Log log = LogFactory
+			.getLog(SleuthSpanCreatorAspectWebFluxTests.class);
 
 	private static final ConcurrentLinkedQueue<Long> spanIdsInHttpTrace = new ConcurrentLinkedQueue<>();
 
