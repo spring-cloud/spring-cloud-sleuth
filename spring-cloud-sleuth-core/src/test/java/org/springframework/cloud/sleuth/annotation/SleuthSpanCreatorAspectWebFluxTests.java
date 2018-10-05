@@ -341,8 +341,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 			return Mono.subscriberContext()
 					.doOnSuccess(
 							context -> log.info("New Span in deferred Trace Context"))
-					.flatMap(context -> Mono.defer(
-							() -> Mono.just(span)));
+					.flatMap(context -> Mono.defer(() -> Mono.just(span)));
 		}
 
 	}
