@@ -63,12 +63,13 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	private static final Log log = LogFactory
 			.getLog(SleuthSpanCreatorAspectWebFluxTests.class);
 
-	private static final ConcurrentLinkedQueue<Long> spanIdsInHttpTrace = new ConcurrentLinkedQueue<>();
-
 	private final WebClient webClient = WebClient.create();
 
 	@Autowired
 	Tracer tracer;
+
+	@Autowired
+	AccessLoggingHttpTraceRepository repository;
 
 	@Autowired
 	ArrayListSpanReporter reporter;
@@ -84,7 +85,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Before
 	public void setup() {
 		this.reporter.clear();
-		spanIdsInHttpTrace.clear();
+		this.repository.clear();
 	}
 
 	@Test
@@ -198,7 +199,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldSetupCorrectSpanInHttpTrace() {
-		spanIdsInHttpTrace.clear();
+		repository.clear();
 
 		Mono<Long> mono = webClient.get().uri("http://localhost:" + port + "/test/ping")
 				.retrieve().bodyToMono(Long.class);
@@ -212,8 +213,9 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 			then(spans).hasSize(1);
 			then(spans.get(0).kind()).isEqualTo(Span.Kind.SERVER);
 			then(spans.get(0).name()).isEqualTo("get /test/ping");
+			then(this.repository.getSpan()).isNotNull();
 			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId))
-					.isEqualTo(toHexString(spanIdsInHttpTrace.poll()));
+					.isEqualTo(repository.getSpan().context().traceIdString());
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -247,21 +249,33 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	static class AccessLoggingHttpTraceRepository implements HttpTraceRepository {
 
+		private static final Log log = LogFactory
+				.getLog(AccessLoggingHttpTraceRepository.class);
+
 		@Autowired
 		Tracer tracer;
 
+		brave.Span span;
+
 		@Override
 		public List<HttpTrace> findAll() {
+			log.info("Find all executed");
 			return null;
 		}
 
 		@Override
 		public void add(HttpTrace trace) {
-			if (tracer.currentSpan() != null) {
-				spanIdsInHttpTrace.add(tracer.currentSpan().context().spanId());
-			}
+			this.span = this.tracer.currentSpan();
+			log.info("Setting span [" + this.span + "]");
 		}
 
+		public brave.Span getSpan() {
+			return this.span;
+		}
+
+		public void clear() {
+			this.span = null;
+		}
 	}
 
 	@RestController
