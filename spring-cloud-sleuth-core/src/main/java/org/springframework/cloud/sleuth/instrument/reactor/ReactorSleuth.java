@@ -46,6 +46,7 @@ public abstract class ReactorSleuth {
 
 	private ReactorSleuth() {
 	}
+
 	private static <T> SpanSubscriptionProvider spanSubscriptionProvider(
 			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
 		return new SpanSubscriptionProvider(beanFactory, sub, sub.currentContext(),

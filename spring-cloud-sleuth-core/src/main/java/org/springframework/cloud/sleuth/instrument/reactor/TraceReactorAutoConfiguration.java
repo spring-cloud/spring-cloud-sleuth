@@ -17,12 +17,15 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import javax.annotation.PreDestroy;
 
 import brave.Tracing;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -35,15 +38,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.ContextRefreshedEvent;
-import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -89,7 +86,8 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 
 	private final ConfigurableApplicationContext context;
 
-	HookRegisteringBeanDefinitionRegistryPostProcessor(ConfigurableApplicationContext context) {
+	HookRegisteringBeanDefinitionRegistryPostProcessor(
+			ConfigurableApplicationContext context) {
 		this.context = context;
 	}
 
@@ -117,7 +115,8 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 			public ScheduledExecutorService decorateExecutorService(String schedulerType,
 					Supplier<? extends ScheduledExecutorService> actual) {
 				return new TraceableScheduledExecutorService(
-						HookRegisteringBeanDefinitionRegistryPostProcessor.this.context, actual.get());
+						HookRegisteringBeanDefinitionRegistryPostProcessor.this.context,
+						actual.get());
 			}
 		};
 	}

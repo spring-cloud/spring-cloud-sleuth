@@ -276,6 +276,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		public void clear() {
 			this.span = null;
 		}
+
 	}
 
 	@RestController
