@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,8 +35,8 @@ public class Issue866Configuration {
 	public static TestHook hook;
 
 	@Bean
-	HookRegisteringBeanDefinitionRegistryPostProcessor overridingProcessorForTests() {
-		TestHook hook = new TestHook();
+	HookRegisteringBeanDefinitionRegistryPostProcessor overridingProcessorForTests(ConfigurableApplicationContext context) {
+		TestHook hook = new TestHook(context);
 		Issue866Configuration.hook = hook;
 		return hook;
 	}
@@ -44,6 +45,10 @@ public class Issue866Configuration {
 			extends HookRegisteringBeanDefinitionRegistryPostProcessor {
 
 		public boolean executed = false;
+
+		public TestHook(ConfigurableApplicationContext context) {
+			super(context);
+		}
 
 		@Override
 		public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)

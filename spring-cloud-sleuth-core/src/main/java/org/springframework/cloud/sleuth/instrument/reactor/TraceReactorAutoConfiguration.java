@@ -35,7 +35,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -67,8 +69,9 @@ public class TraceReactorAutoConfiguration {
 		@Bean
 		// for tests
 		@ConditionalOnMissingBean
-		static HookRegisteringBeanDefinitionRegistryPostProcessor traceHookRegisteringBeanDefinitionRegistryPostProcessor() {
-			return new HookRegisteringBeanDefinitionRegistryPostProcessor();
+		static HookRegisteringBeanDefinitionRegistryPostProcessor traceHookRegisteringBeanDefinitionRegistryPostProcessor(
+				ConfigurableApplicationContext context) {
+			return new HookRegisteringBeanDefinitionRegistryPostProcessor(context);
 		}
 
 		@PreDestroy
@@ -77,17 +80,18 @@ public class TraceReactorAutoConfiguration {
 			Schedulers.resetFactory();
 		}
 
-		@Bean
-		ApplicationContextRefreshedListener traceApplicationContextRefreshedListener() {
-			return new ApplicationContextRefreshedListener();
-		}
-
 	}
 
 }
 
 class HookRegisteringBeanDefinitionRegistryPostProcessor
 		implements BeanDefinitionRegistryPostProcessor {
+
+	private final ConfigurableApplicationContext context;
+
+	HookRegisteringBeanDefinitionRegistryPostProcessor(ConfigurableApplicationContext context) {
+		this.context = context;
+	}
 
 	@Override
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
@@ -103,7 +107,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 	void setupHooks(BeanFactory beanFactory) {
 		Hooks.onEachOperator(
 				TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY,
-				ReactorSleuth.scopePassingSpanOperator(beanFactory));
+				ReactorSleuth.scopePassingSpanOperator(this.context));
 		Schedulers.setFactory(factoryInstance(beanFactory));
 	}
 
@@ -112,25 +116,10 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 			@Override
 			public ScheduledExecutorService decorateExecutorService(String schedulerType,
 					Supplier<? extends ScheduledExecutorService> actual) {
-				return new TraceableScheduledExecutorService(beanFactory, actual.get());
+				return new TraceableScheduledExecutorService(
+						HookRegisteringBeanDefinitionRegistryPostProcessor.this.context, actual.get());
 			}
 		};
-	}
-
-}
-
-class ApplicationContextRefreshedListener
-		implements ApplicationListener<ContextRefreshedEvent> {
-
-	AtomicBoolean refreshed = new AtomicBoolean();
-
-	@Override
-	public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-		this.refreshed.set(true);
-	}
-
-	boolean isRefreshed() {
-		return this.refreshed.get();
 	}
 
 }
