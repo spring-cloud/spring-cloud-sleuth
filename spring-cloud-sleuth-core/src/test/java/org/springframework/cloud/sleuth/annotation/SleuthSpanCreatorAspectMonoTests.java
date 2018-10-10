@@ -660,7 +660,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 	protected static Long id(Tracer tracer) {
 		if (tracer.currentSpan() == null) {
-			return null;
+			throw new IllegalStateException("Current Span is supposed to have a value!");
 		}
 		return tracer.currentSpan().context().spanId();
 	}
