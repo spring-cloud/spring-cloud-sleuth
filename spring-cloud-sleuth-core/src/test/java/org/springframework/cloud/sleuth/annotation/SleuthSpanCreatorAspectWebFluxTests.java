@@ -61,20 +61,24 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = { "spring.main.web-application-type=reactive" }, classes = {
 		SleuthSpanCreatorAspectWebFluxTests.TestEndpoint.class,
-		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class SleuthSpanCreatorAspectWebFluxTests {
 
 	private static final Log log = LogFactory
 			.getLog(SleuthSpanCreatorAspectWebFluxTests.class);
+
 	@Autowired
 	Tracer tracer;
+
 	@Autowired
 	AccessLoggingHttpTraceRepository repository;
+
 	@Autowired
 	ArrayListSpanReporter reporter;
+
 	private WebTestClient webClient;
+
 	@LocalServerPort
 	private int port;
 
@@ -105,8 +109,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		Mono<Long> mono = webClient.get().uri("/test/ping").exchange()
 				.returnResult(Long.class).getResponseBody().single();
 
-		then(this.reporter.getSpans()).isEmpty();
-
 		Long newSpanId = mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
@@ -131,8 +133,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		Mono<Long> mono = webClient.get().uri("/test/pingFromContext").exchange()
 				.returnResult(Long.class).getResponseBody().single();
 
-		then(this.reporter.getSpans()).isEmpty();
-
 		Long newSpanId = mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
@@ -151,8 +151,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		Mono<Long> mono = webClient.get().uri("/test/continueSpan").exchange()
 				.returnResult(Long.class).getResponseBody().single();
 
-		then(this.reporter.getSpans()).isEmpty();
-
 		Long newSpanId = mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
@@ -169,8 +167,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	public void shouldCreateNewSpanInWebFlux() {
 		Mono<Long> mono = webClient.get().uri("/test/newSpan1").exchange()
 				.returnResult(Long.class).getResponseBody().single();
-
-		then(this.reporter.getSpans()).isEmpty();
 
 		Long newSpanId = mono.block();
 
@@ -189,8 +185,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	public void shouldCreateNewSpanInWebFluxInSubscriberContext() {
 		Mono<Long> mono = webClient.get().uri("/test/newSpan2").exchange()
 				.returnResult(Long.class).getResponseBody().single();
-
-		then(this.reporter.getSpans()).isEmpty();
 
 		Long newSpanId = mono.block();
 
@@ -211,8 +205,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		Mono<Long> mono = webClient.get().uri("/test/ping").exchange()
 				.returnResult(Long.class).getResponseBody().single();
-
-		then(this.reporter.getSpans()).isEmpty();
 
 		Long newSpanId = mono.block();
 
