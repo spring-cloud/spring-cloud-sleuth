@@ -34,8 +34,7 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-final class ScopePassingSpanSubscriber<T> extends AtomicBoolean
-		implements SpanSubscription<T> {
+final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T> {
 
 	private static final Log log = LogFactory.getLog(ScopePassingSpanSubscriber.class);
 
@@ -109,6 +108,10 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean
 	@Override
 	public Context currentContext() {
 		return this.context;
+	}
+
+	private void clearSpan() {
+		this.tracer.withSpanInScope(null);
 	}
 
 }

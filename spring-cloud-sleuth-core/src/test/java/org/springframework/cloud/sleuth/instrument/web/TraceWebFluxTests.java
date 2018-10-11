@@ -56,16 +56,10 @@ public class TraceWebFluxTests {
 
 	public static final String EXPECTED_TRACE_ID = "b919095138aa4c6e";
 
-	@BeforeClass
-	@AfterClass
-	public static void setup() {
-		Hooks.resetOnLastOperator();
-		TraceReactorAutoConfigurationAccessorConfiguration.close();
-	}
-
 	@Test
 	public void should_instrument_web_filter() throws Exception {
 		// setup
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				TraceWebFluxTests.Config.class)
 						.web(WebApplicationType.REACTIVE)
@@ -105,6 +99,7 @@ public class TraceWebFluxTests {
 
 		// cleanup
 		context.close();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
 
 	private void clean(ArrayListSpanReporter accumulator, Controller2 controller2) {
@@ -173,7 +168,6 @@ public class TraceWebFluxTests {
 	@Configuration
 	@EnableAutoConfiguration(exclude = { TraceWebClientAutoConfiguration.class })
 	@DisableWebFluxSecurity
-	@ImportAutoConfiguration(TraceReactorAutoConfigurationAccessorConfiguration.class)
 	static class Config {
 
 		@Bean

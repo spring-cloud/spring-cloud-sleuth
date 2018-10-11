@@ -47,12 +47,6 @@ public abstract class ReactorSleuth {
 	private ReactorSleuth() {
 	}
 
-	private static <T> SpanSubscriptionProvider spanSubscriptionProvider(
-			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
-		return new SpanSubscriptionProvider(beanFactory, sub, sub.currentContext(),
-				scannable.name());
-	}
-
 	/**
 	 * Return a span operator pointcut given a {@link Tracing}. This can be used in
 	 * reactor via {@link reactor.core.publisher.Flux#transform(Function)},
@@ -67,6 +61,9 @@ public abstract class ReactorSleuth {
 	@SuppressWarnings("unchecked")
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanOperator(
 			ConfigurableApplicationContext beanFactory) {
+		if (log.isTraceEnabled()) {
+			log.trace("Scope passing operator [" + beanFactory + "]");
+		}
 		return (sourcePub -> {
 			// TODO: Remove this once Reactor 3.1.8 is released
 			// do the checks directly on actual original Publisher
@@ -94,7 +91,7 @@ public abstract class ReactorSleuth {
 						}
 						if (log.isTraceEnabled()) {
 							log.trace(
-									"Spring Context is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
+									"Spring Context [" + beanFactory + "] is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
 											+ sub.currentContext() + "] and name is ["
 											+ scannable.name() + "]");
 						}

@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -28,6 +31,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class Issue866Configuration {
 
+	private static final Log log = LogFactory.getLog(Issue866Configuration.class);
+
 	// we don't want to force direct dependencies between components
 	// because Spring might just properly setup the context
 	// we want to ensure that the HRBDRPP is always executed before
@@ -37,6 +42,7 @@ public class Issue866Configuration {
 	@Bean
 	HookRegisteringBeanDefinitionRegistryPostProcessor overridingProcessorForTests(
 			ConfigurableApplicationContext context) {
+		log.info("Registering a HookRegisteringBeanDefinitionRegistryPostProcessor for context [" + context + "]");
 		TestHook hook = new TestHook(context);
 		Issue866Configuration.hook = hook;
 		return hook;

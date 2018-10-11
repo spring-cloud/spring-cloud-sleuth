@@ -52,7 +52,7 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 		this.context = context;
 		this.name = name;
 		if (log.isTraceEnabled()) {
-			log.trace("Context [" + context + "], name [" + name + "]");
+			log.trace("Spring context [" + beanFactory + "], Reactor context [" + context + "], name [" + name + "]");
 		}
 	}
 

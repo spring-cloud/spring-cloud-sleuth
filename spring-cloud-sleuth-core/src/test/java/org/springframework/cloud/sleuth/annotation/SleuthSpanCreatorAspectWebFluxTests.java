@@ -41,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.trace.http.HttpTrace;
 import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
@@ -61,7 +60,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = { "spring.main.web-application-type=reactive" }, classes = {
 		SleuthSpanCreatorAspectWebFluxTests.TestEndpoint.class,
-		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class SleuthSpanCreatorAspectWebFluxTests {
 
@@ -85,7 +85,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@AfterClass
 	@BeforeClass
 	public static void cleanup() {
-		System.out.println("DUPA2");
 		Hooks.resetOnLastOperator();
 		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
@@ -100,7 +99,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 		this.reporter.clear();
 		this.repository.clear();
 		log.info("Running app on port [" + this.port + "]");
-		this.webClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port)
+		this.webClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + this.port)
 				.build();
 	}
 
@@ -233,7 +232,6 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Configuration
 	@EnableAutoConfiguration
 	@DisableWebFluxSecurity
-	@ImportAutoConfiguration(TraceReactorAutoConfigurationAccessorConfiguration.class)
 	protected static class TestConfiguration {
 
 		@Bean
