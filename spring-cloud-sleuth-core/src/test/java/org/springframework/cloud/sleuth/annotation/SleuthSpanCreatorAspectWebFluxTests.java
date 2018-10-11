@@ -106,10 +106,12 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldReturnSpanFromWebFluxTraceContext() {
-		Mono<Long> mono = webClient.get().uri("/test/ping").exchange()
-				.returnResult(Long.class).getResponseBody().single();
+		Mono<Object> mono = webClient.get().uri("/test/ping").exchange()
+				.returnResult(Object.class).getResponseBody().single();
 
-		Long newSpanId = mono.block();
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
@@ -129,11 +131,12 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldReturnSpanFromWebFluxSubscriptionContext() {
+		Mono<Object> mono = webClient.get().uri("/test/pingFromContext").exchange()
+				.returnResult(Object.class).getResponseBody().single();
 
-		Mono<Long> mono = webClient.get().uri("/test/pingFromContext").exchange()
-				.returnResult(Long.class).getResponseBody().single();
-
-		Long newSpanId = mono.block();
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
@@ -147,11 +150,12 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldContinueSpanInWebFlux() {
+		Mono<Object> mono = webClient.get().uri("/test/continueSpan").exchange()
+				.returnResult(Object.class).getResponseBody().single();
 
-		Mono<Long> mono = webClient.get().uri("/test/continueSpan").exchange()
-				.returnResult(Long.class).getResponseBody().single();
-
-		Long newSpanId = mono.block();
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
@@ -165,10 +169,12 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldCreateNewSpanInWebFlux() {
-		Mono<Long> mono = webClient.get().uri("/test/newSpan1").exchange()
-				.returnResult(Long.class).getResponseBody().single();
+		Mono<Object> mono = webClient.get().uri("/test/newSpan1").exchange()
+				.returnResult(Object.class).getResponseBody().single();
 
-		Long newSpanId = mono.block();
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
@@ -183,10 +189,12 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldCreateNewSpanInWebFluxInSubscriberContext() {
-		Mono<Long> mono = webClient.get().uri("/test/newSpan2").exchange()
-				.returnResult(Long.class).getResponseBody().single();
+		Mono<Object> mono = webClient.get().uri("/test/newSpan2").exchange()
+				.returnResult(Object.class).getResponseBody().single();
 
-		Long newSpanId = mono.block();
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
@@ -203,10 +211,12 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	public void shouldSetupCorrectSpanInHttpTrace() {
 		repository.clear();
 
-		Mono<Long> mono = webClient.get().uri("/test/ping").exchange()
-				.returnResult(Long.class).getResponseBody().single();
+		Mono<Object> mono = webClient.get().uri("/test/ping").exchange()
+				.returnResult(Object.class).getResponseBody().single();
 
-		Long newSpanId = mono.block();
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
