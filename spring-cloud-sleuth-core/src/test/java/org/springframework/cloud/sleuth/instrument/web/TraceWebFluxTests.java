@@ -16,29 +16,43 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.List;
+
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.actuate.trace.http.HttpTrace;
+import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
+
+import org.springframework.cloud.sleuth.annotation.ContinueSpan;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -47,8 +61,8 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
+import zipkin2.reporter.Reporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -96,6 +110,19 @@ public class TraceWebFluxTests {
 		ClientResponse skippedPatternResponse = whenRequestIsSentToSkippedPattern(port);
 		// then
 		thenNoSpanWasReported(accumulator, skippedPatternResponse, controller2);
+
+		// some other tests
+		SleuthSpanCreatorAspectWebFlux bean = context
+				.getBean(SleuthSpanCreatorAspectWebFlux.class);
+		bean.setPort(port);
+
+		// then
+		bean.shouldContinueSpanInWebFlux();
+		bean.shouldCreateNewSpanInWebFlux();
+		bean.shouldCreateNewSpanInWebFluxInSubscriberContext();
+		bean.shouldReturnSpanFromWebFluxSubscriptionContext();
+		bean.shouldReturnSpanFromWebFluxTraceContext();
+		bean.shouldSetupCorrectSpanInHttpTrace();
 
 		// cleanup
 		context.close();
@@ -191,11 +218,33 @@ public class TraceWebFluxTests {
 		}
 
 		@Bean
+		TestEndpoint testEndpoint() {
+			return new TestEndpoint();
+		}
+
+		@Bean
 		RouterFunction<ServerResponse> function() {
 			return RouterFunctions.route(RequestPredicates.GET("/function"), r -> {
 				then(MDC.get("X-B3-TraceId")).isNotEmpty();
 				return ServerResponse.ok().syncBody("functionOk");
 			});
+		}
+
+		@Bean
+		TestBean testBean(Tracer tracer) {
+			return new TestBean(tracer);
+		}
+
+		@Bean
+		SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository accessLoggingHttpTraceRepository() {
+			return new SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository();
+		}
+
+		@Bean
+		SleuthSpanCreatorAspectWebFlux sleuthSpanCreatorAspectWebFlux(Tracer tracer,
+				SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository repository,
+				ArrayListSpanReporter reporter) {
+			return new SleuthSpanCreatorAspectWebFlux(tracer, repository, reporter);
 		}
 
 	}
@@ -226,6 +275,285 @@ public class TraceWebFluxTests {
 			return Flux.just(sampled.toString());
 		}
 
+	}
+
+	@RestController
+	@RequestMapping("/test")
+	static class TestEndpoint {
+
+		private static final Logger log = LoggerFactory
+				.getLogger(TestEndpoint.class);
+
+		@Autowired
+		Tracer tracer;
+
+		@Autowired
+		TestBean testBean;
+
+		@GetMapping("/ping")
+		Mono<Long> ping() {
+			log.info("ping");
+			return Mono.just(tracer.currentSpan().context().spanId());
+		}
+
+		@GetMapping("/pingFromContext")
+		Mono<Long> pingFromContext() {
+			log.info("pingFromContext");
+			return Mono.subscriberContext()
+					.doOnSuccess(context -> log.info("Ping from context"))
+					.flatMap(context -> Mono
+							.just(tracer.currentSpan().context().spanId()));
+		}
+
+		@GetMapping("/continueSpan")
+		Mono<Long> continueSpan() {
+			log.info("continueSpan");
+			return testBean.continueSpanInTraceContext();
+		}
+
+		@GetMapping("/newSpan1")
+		Mono<Long> newSpan1() {
+			log.info("newSpan1");
+			return testBean.newSpanInTraceContext();
+		}
+
+		@GetMapping("/newSpan2")
+		Mono<Long> newSpan2() {
+			log.info("newSpan2");
+			return testBean.newSpanInSubscriberContext();
+		}
+
+	}
+
+}
+
+class SleuthSpanCreatorAspectWebFlux {
+
+	private static final Log log = LogFactory
+			.getLog(SleuthSpanCreatorAspectWebFlux.class);
+
+	private final Tracer tracer;
+	private final SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository repository;
+	private final ArrayListSpanReporter reporter;
+
+	SleuthSpanCreatorAspectWebFlux(Tracer tracer, AccessLoggingHttpTraceRepository repository, ArrayListSpanReporter reporter) {
+		this.tracer = tracer;
+		this.repository = repository;
+		this.reporter = reporter;
+	}
+
+	private WebTestClient webClient;
+
+	int port;
+
+	void setPort(int port) {
+		this.port = port;
+	}
+
+	private static String toHexString(Long value) {
+		BDDAssertions.then(value).isNotNull();
+		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
+	}
+
+	public void setup() {
+		this.reporter.clear();
+		this.repository.clear();
+		log.info("Running app on port [" + this.port + "]");
+		this.webClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + this.port)
+				.build();
+	}
+
+	public void shouldReturnSpanFromWebFluxTraceContext() {
+		setup();
+		Mono<Object> mono = webClient.get().uri("/test/ping").exchange()
+				.returnResult(Object.class).getResponseBody().single();
+
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
+
+		Awaitility.await().untilAsserted(() -> {
+			List<zipkin2.Span> spans = getSpans();
+			then(spans).hasSize(1);
+			then(spans.get(0).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(spans.get(0).name()).isEqualTo("get /test/ping");
+			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			then(this.tracer.currentSpan()).isNull();
+		});
+	}
+
+	private List<zipkin2.Span> getSpans() {
+		List<zipkin2.Span> spans = this.reporter.getSpans();
+		log.info("Reported the following spans: \n\n" + spans);
+		return spans;
+	}
+
+	public void shouldReturnSpanFromWebFluxSubscriptionContext() {
+		setup();
+		Mono<Object> mono = webClient.get().uri("/test/pingFromContext").exchange()
+				.returnResult(Object.class).getResponseBody().single();
+
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
+
+		Awaitility.await().untilAsserted(() -> {
+			List<zipkin2.Span> spans = getSpans();
+			then(spans).hasSize(1);
+			then(spans.get(0).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(spans.get(0).name()).isEqualTo("get /test/pingfromcontext");
+			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			then(this.tracer.currentSpan()).isNull();
+		});
+	}
+
+	public void shouldContinueSpanInWebFlux() {
+		setup();
+		Mono<Object> mono = webClient.get().uri("/test/continueSpan").exchange()
+				.returnResult(Object.class).getResponseBody().single();
+
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
+
+		Awaitility.await().untilAsserted(() -> {
+			List<zipkin2.Span> spans = getSpans();
+			then(spans).hasSize(1);
+			then(spans.get(0).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(spans.get(0).name()).isEqualTo("get /test/continuespan");
+			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			then(this.tracer.currentSpan()).isNull();
+		});
+	}
+
+	public void shouldCreateNewSpanInWebFlux() {
+		setup();
+		Mono<Object> mono = webClient.get().uri("/test/newSpan1").exchange()
+				.returnResult(Object.class).getResponseBody().single();
+
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
+
+		Awaitility.await().untilAsserted(() -> {
+			List<zipkin2.Span> spans = getSpans();
+			then(spans).hasSize(2);
+			then(spans.get(0).name()).isEqualTo("new-span-in-trace-context");
+			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			then(spans.get(1).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(spans.get(1).name()).isEqualTo("get /test/newspan1");
+			then(this.tracer.currentSpan()).isNull();
+		});
+	}
+
+	public void shouldCreateNewSpanInWebFluxInSubscriberContext() {
+		setup();
+		Mono<Object> mono = webClient.get().uri("/test/newSpan2").exchange()
+				.returnResult(Object.class).getResponseBody().single();
+
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
+
+		Awaitility.await().untilAsserted(() -> {
+			List<zipkin2.Span> spans = getSpans();
+			then(spans).hasSize(2);
+			then(spans.get(0).name()).isEqualTo("new-span-in-subscriber-context");
+			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			then(spans.get(1).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(spans.get(1).name()).isEqualTo("get /test/newspan2");
+			then(this.tracer.currentSpan()).isNull();
+		});
+	}
+
+	public void shouldSetupCorrectSpanInHttpTrace() {
+		setup();
+
+		Mono<Object> mono = webClient.get().uri("/test/ping").exchange()
+				.returnResult(Object.class).getResponseBody().single();
+
+		Object object = mono.block();
+		log.info("Received [" + object + "]");
+		Long newSpanId = (Long) object;
+
+		Awaitility.await().untilAsserted(() -> {
+			List<zipkin2.Span> spans = getSpans();
+			then(spans).hasSize(1);
+			then(spans.get(0).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(spans.get(0).name()).isEqualTo("get /test/ping");
+			then(this.repository.getSpan()).isNotNull();
+			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId))
+					.isEqualTo(repository.getSpan().context().traceIdString());
+			then(this.tracer.currentSpan()).isNull();
+		});
+	}
+
+	static class AccessLoggingHttpTraceRepository implements HttpTraceRepository {
+
+		private static final Log log = LogFactory
+				.getLog(SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository.class);
+
+		@Autowired
+		Tracer tracer;
+
+		brave.Span span;
+
+		@Override
+		public List<HttpTrace> findAll() {
+			log.info("Find all executed");
+			return null;
+		}
+
+		@Override
+		public void add(HttpTrace trace) {
+			this.span = this.tracer.currentSpan();
+			log.info("Setting span [" + this.span + "]");
+		}
+
+		public brave.Span getSpan() {
+			return this.span;
+		}
+
+		public void clear() {
+			this.span = null;
+		}
+
+	}
+
+}
+
+class TestBean {
+
+	private static final Logger log = LoggerFactory.getLogger(TestBean.class);
+
+	private final Tracer tracer;
+
+	TestBean(Tracer tracer) {
+		this.tracer = tracer;
+	}
+
+	@ContinueSpan
+	public Mono<Long> continueSpanInTraceContext() {
+		log.info("Continue");
+		Long span = tracer.currentSpan().context().spanId();
+		return Mono.defer(() -> Mono.just(span));
+	}
+
+	@NewSpan(name = "newSpanInTraceContext")
+	public Mono<Long> newSpanInTraceContext() {
+		log.info("New Span in Trace Context");
+		Long span = tracer.currentSpan().context().spanId();
+		return Mono.defer(() -> Mono.just(span));
+	}
+
+	@NewSpan(name = "newSpanInSubscriberContext")
+	public Mono<Long> newSpanInSubscriberContext() {
+		log.info("New Span in Subscriber Context");
+		Long span = tracer.currentSpan().context().spanId();
+		return Mono.subscriberContext()
+				.doOnSuccess(
+						context -> log.info("New Span in deferred Trace Context"))
+				.flatMap(context -> Mono.defer(() -> Mono.just(span)));
 	}
 
 }
