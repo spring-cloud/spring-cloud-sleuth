@@ -343,7 +343,7 @@ The following example shows setting baggage on a span:
 ----
 Span initialSpan = this.tracer.nextSpan().name("span").start();
 ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
-ExtraFieldPropagation.set(initialSpan.context(),"UPPER_CASE", "someValue");
+ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");
 }
 ----
 
@@ -380,9 +380,9 @@ spring.sleuth:
 [source,java]
 ----
 initialSpan.tag("foo",
-        ExtraFieldPropagation.get(initialSpan.context(), "foo"));
+		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
 initialSpan.tag("UPPER_CASE",
-        ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
+		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
 ----
 
 [[sleuth-adding-project]]

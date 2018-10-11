@@ -83,7 +83,7 @@ public abstract class ReactorSleuth {
 						if (beanFactory.isActive()) {
 							if (log.isTraceEnabled()) {
 								log.trace(
-										"Spring Context already refreshed. Creating a scope "
+										"Spring Context [" + beanFactory + "] already refreshed. Creating a scope "
 												+ "passing span subscriber with Reactor Context "
 												+ "[" + sub.currentContext()
 												+ "] and name [" + scannable.name()

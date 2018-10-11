@@ -20,18 +20,22 @@ import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.MDC;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,7 +49,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -54,9 +57,10 @@ public class TraceWebFluxTests {
 	public static final String EXPECTED_TRACE_ID = "b919095138aa4c6e";
 
 	@BeforeClass
+	@AfterClass
 	public static void setup() {
 		Hooks.resetOnLastOperator();
-		Schedulers.resetFactory();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
 
 	@Test
@@ -169,6 +173,7 @@ public class TraceWebFluxTests {
 	@Configuration
 	@EnableAutoConfiguration(exclude = { TraceWebClientAutoConfiguration.class })
 	@DisableWebFluxSecurity
+	@ImportAutoConfiguration(TraceReactorAutoConfigurationAccessorConfiguration.class)
 	static class Config {
 
 		@Bean

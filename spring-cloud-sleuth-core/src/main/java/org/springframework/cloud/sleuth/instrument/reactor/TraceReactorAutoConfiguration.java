@@ -22,6 +22,8 @@ import java.util.function.Supplier;
 import javax.annotation.PreDestroy;
 
 import brave.Tracing;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -60,6 +62,8 @@ public class TraceReactorAutoConfiguration {
 	@ConditionalOnBean(Tracing.class)
 	static class TraceReactorConfiguration {
 
+		private static final Log log = LogFactory.getLog(TraceReactorConfiguration.class);
+
 		static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class
 				.getName();
 
@@ -73,6 +77,9 @@ public class TraceReactorAutoConfiguration {
 
 		@PreDestroy
 		public void cleanupHooks() {
+			if (log.isTraceEnabled()) {
+				log.trace("Cleaning up hooks");
+			}
 			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 			Schedulers.resetFactory();
 		}
@@ -114,9 +121,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 			@Override
 			public ScheduledExecutorService decorateExecutorService(String schedulerType,
 					Supplier<? extends ScheduledExecutorService> actual) {
-				return new TraceableScheduledExecutorService(
-						HookRegisteringBeanDefinitionRegistryPostProcessor.this.context,
-						actual.get());
+				return new TraceableScheduledExecutorService(beanFactory, actual.get());
 			}
 		};
 	}

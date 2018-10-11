@@ -25,7 +25,7 @@ import reactor.util.context.Context;
 /**
  * A lazy representation of the {@link SpanSubscription}.
  *
- * @param - type of what subscription returns
+ * @param <T> of what subscription returns
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */

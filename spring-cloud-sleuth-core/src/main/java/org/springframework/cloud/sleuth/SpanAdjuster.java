@@ -36,7 +36,7 @@ public interface SpanAdjuster {
 	 * this interface can be used to alter then name. Example:
 	 *
 	 * {@code span -> span.toBuilder().name(scrub(span.getName())).build();}
-	 * @param - span to adjust
+	 * @param span to adjust
 	 * @return - adjusted span
 	 */
 	Span adjust(Span span);

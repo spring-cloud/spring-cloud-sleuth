@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.annotation;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import brave.Tracer;
 import brave.sampler.Sampler;
@@ -26,12 +25,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
+import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
@@ -40,42 +41,50 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.trace.http.HttpTrace;
 import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @SpringBootTest(properties = { "spring.main.web-application-type=reactive" }, classes = {
 		SleuthSpanCreatorAspectWebFluxTests.TestEndpoint.class,
-		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		SleuthSpanCreatorAspectWebFluxTests.TestConfiguration.class },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext
 public class SleuthSpanCreatorAspectWebFluxTests {
 
 	private static final Log log = LogFactory
 			.getLog(SleuthSpanCreatorAspectWebFluxTests.class);
-
-	private final WebClient webClient = WebClient.create();
-
 	@Autowired
 	Tracer tracer;
-
 	@Autowired
 	AccessLoggingHttpTraceRepository repository;
-
 	@Autowired
 	ArrayListSpanReporter reporter;
-
+	private WebTestClient webClient;
 	@LocalServerPort
 	private int port;
+
+	@AfterClass
+	@BeforeClass
+	public static void cleanup() {
+		System.out.println("DUPA2");
+		Hooks.resetOnLastOperator();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
+	}
 
 	private static String toHexString(Long value) {
 		BDDAssertions.then(value).isNotNull();
@@ -86,12 +95,15 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	public void setup() {
 		this.reporter.clear();
 		this.repository.clear();
+		log.info("Running app on port [" + this.port + "]");
+		this.webClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port)
+				.build();
 	}
 
 	@Test
 	public void shouldReturnSpanFromWebFluxTraceContext() {
-		Mono<Long> mono = webClient.get().uri("http://localhost:" + port + "/test/ping")
-				.retrieve().bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get().uri("/test/ping").exchange()
+				.returnResult(Long.class).getResponseBody().single();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -116,9 +128,8 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldReturnSpanFromWebFluxSubscriptionContext() {
 
-		Mono<Long> mono = webClient.get()
-				.uri("http://localhost:" + port + "/test/pingFromContext").retrieve()
-				.bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get().uri("/test/pingFromContext").exchange()
+				.returnResult(Long.class).getResponseBody().single();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -137,9 +148,8 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Test
 	public void shouldContinueSpanInWebFlux() {
 
-		Mono<Long> mono = webClient.get()
-				.uri("http://localhost:" + port + "/test/continueSpan").retrieve()
-				.bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get().uri("/test/continueSpan").exchange()
+				.returnResult(Long.class).getResponseBody().single();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -157,9 +167,8 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldCreateNewSpanInWebFlux() {
-		Mono<Long> mono = webClient.get()
-				.uri("http://localhost:" + port + "/test/newSpan1").retrieve()
-				.bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get().uri("/test/newSpan1").exchange()
+				.returnResult(Long.class).getResponseBody().single();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -178,9 +187,8 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 	@Test
 	public void shouldCreateNewSpanInWebFluxInSubscriberContext() {
-		Mono<Long> mono = webClient.get()
-				.uri("http://localhost:" + port + "/test/newSpan2").retrieve()
-				.bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get().uri("/test/newSpan2").exchange()
+				.returnResult(Long.class).getResponseBody().single();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -201,8 +209,8 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	public void shouldSetupCorrectSpanInHttpTrace() {
 		repository.clear();
 
-		Mono<Long> mono = webClient.get().uri("http://localhost:" + port + "/test/ping")
-				.retrieve().bodyToMono(Long.class);
+		Mono<Long> mono = webClient.get().uri("/test/ping").exchange()
+				.returnResult(Long.class).getResponseBody().single();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -223,6 +231,7 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 	@Configuration
 	@EnableAutoConfiguration
 	@DisableWebFluxSecurity
+	@ImportAutoConfiguration(TraceReactorAutoConfigurationAccessorConfiguration.class)
 	protected static class TestConfiguration {
 
 		@Bean
@@ -293,11 +302,13 @@ public class SleuthSpanCreatorAspectWebFluxTests {
 
 		@GetMapping("/ping")
 		Mono<Long> ping() {
+			log.info("ping");
 			return Mono.just(tracer.currentSpan().context().spanId());
 		}
 
 		@GetMapping("/pingFromContext")
 		Mono<Long> pingFromContext() {
+			log.info("pingFromContext");
 			return Mono.subscriberContext()
 					.doOnSuccess(context -> log.info("Ping from context"))
 					.flatMap(context -> Mono

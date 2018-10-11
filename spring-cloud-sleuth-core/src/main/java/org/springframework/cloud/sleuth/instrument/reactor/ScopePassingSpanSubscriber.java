@@ -30,7 +30,7 @@ import reactor.util.context.Context;
 /**
  * A trace representation of the {@link Subscriber} that always continues a span.
  *
- * @param - span subscription type
+ * @param <T> subscription type
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
