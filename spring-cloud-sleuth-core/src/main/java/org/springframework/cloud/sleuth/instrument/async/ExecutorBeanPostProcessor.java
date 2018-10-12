@@ -126,10 +126,11 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		factory.setProxyTargetClass(cglibProxy);
 		factory.addAdvice(new ExecutorMethodInterceptor(executor, this.beanFactory));
 		factory.setTarget(bean);
-		factory.setBeanClassLoader(new ClassLoader(this.getClass().getClassLoader()) {
+		if (JavaVersion.current().isJava11Compatible()) {
+			factory.setBeanClassLoader(new ClassLoader(this.getClass().getClassLoader()) {
 
-		});
-		factory.setBeanFactory(this.beanFactory);
+			});
+		}
 		return factory.getObject();
 	}
 
