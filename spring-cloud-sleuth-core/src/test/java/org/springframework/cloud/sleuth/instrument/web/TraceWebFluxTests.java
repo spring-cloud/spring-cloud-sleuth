@@ -281,8 +281,7 @@ public class TraceWebFluxTests {
 	@RequestMapping("/test")
 	static class TestEndpoint {
 
-		private static final Logger log = LoggerFactory
-				.getLogger(TestEndpoint.class);
+		private static final Logger log = LoggerFactory.getLogger(TestEndpoint.class);
 
 		@Autowired
 		Tracer tracer;
@@ -333,10 +332,13 @@ class SleuthSpanCreatorAspectWebFlux {
 			.getLog(SleuthSpanCreatorAspectWebFlux.class);
 
 	private final Tracer tracer;
+
 	private final SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository repository;
+
 	private final ArrayListSpanReporter reporter;
 
-	SleuthSpanCreatorAspectWebFlux(Tracer tracer, AccessLoggingHttpTraceRepository repository, ArrayListSpanReporter reporter) {
+	SleuthSpanCreatorAspectWebFlux(Tracer tracer,
+			AccessLoggingHttpTraceRepository repository, ArrayListSpanReporter reporter) {
 		this.tracer = tracer;
 		this.repository = repository;
 		this.reporter = reporter;
@@ -359,8 +361,8 @@ class SleuthSpanCreatorAspectWebFlux {
 		this.reporter.clear();
 		this.repository.clear();
 		log.info("Running app on port [" + this.port + "]");
-		this.webClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + this.port)
-				.build();
+		this.webClient = WebTestClient.bindToServer()
+				.baseUrl("http://localhost:" + this.port).build();
 	}
 
 	public void shouldReturnSpanFromWebFluxTraceContext() {
@@ -490,8 +492,8 @@ class SleuthSpanCreatorAspectWebFlux {
 
 	static class AccessLoggingHttpTraceRepository implements HttpTraceRepository {
 
-		private static final Log log = LogFactory
-				.getLog(SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository.class);
+		private static final Log log = LogFactory.getLog(
+				SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository.class);
 
 		@Autowired
 		Tracer tracer;
@@ -551,8 +553,7 @@ class TestBean {
 		log.info("New Span in Subscriber Context");
 		Long span = tracer.currentSpan().context().spanId();
 		return Mono.subscriberContext()
-				.doOnSuccess(
-						context -> log.info("New Span in deferred Trace Context"))
+				.doOnSuccess(context -> log.info("New Span in deferred Trace Context"))
 				.flatMap(context -> Mono.defer(() -> Mono.just(span)));
 	}
 

@@ -79,21 +79,20 @@ public abstract class ReactorSleuth {
 						// rest of the logic unchanged...
 						if (beanFactory.isActive()) {
 							if (log.isTraceEnabled()) {
-								log.trace(
-										"Spring Context [" + beanFactory + "] already refreshed. Creating a scope "
-												+ "passing span subscriber with Reactor Context "
-												+ "[" + sub.currentContext()
-												+ "] and name [" + scannable.name()
-												+ "]");
+								log.trace("Spring Context [" + beanFactory
+										+ "] already refreshed. Creating a scope "
+										+ "passing span subscriber with Reactor Context "
+										+ "[" + sub.currentContext() + "] and name ["
+										+ scannable.name() + "]");
 							}
 							return scopePassingSpanSubscription(beanFactory, scannable,
 									sub).get();
 						}
 						if (log.isTraceEnabled()) {
-							log.trace(
-									"Spring Context [" + beanFactory + "] is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
-											+ sub.currentContext() + "] and name is ["
-											+ scannable.name() + "]");
+							log.trace("Spring Context [" + beanFactory
+									+ "] is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
+									+ sub.currentContext() + "] and name is ["
+									+ scannable.name() + "]");
 						}
 						return new LazySpanSubscriber<T>(scopePassingSpanSubscription(
 								beanFactory, scannable, sub));

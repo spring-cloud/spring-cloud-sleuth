@@ -131,7 +131,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
- 		if (tracer().currentSpan() != null) {
+		if (tracer().currentSpan() != null) {
 			// clear any previous trace
 			tracer().withSpanInScope(null);
 		}

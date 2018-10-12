@@ -25,6 +25,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
@@ -125,6 +126,10 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		factory.setProxyTargetClass(cglibProxy);
 		factory.addAdvice(new ExecutorMethodInterceptor(executor, this.beanFactory));
 		factory.setTarget(bean);
+		factory.setBeanClassLoader(new ClassLoader(this.getClass().getClassLoader()) {
+
+		});
+		factory.setBeanFactory(this.beanFactory);
 		return factory.getObject();
 	}
 

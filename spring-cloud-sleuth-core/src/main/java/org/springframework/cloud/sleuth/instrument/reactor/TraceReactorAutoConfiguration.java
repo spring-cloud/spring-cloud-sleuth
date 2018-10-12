@@ -73,7 +73,9 @@ public class TraceReactorAutoConfiguration {
 		static HookRegisteringBeanDefinitionRegistryPostProcessor traceHookRegisteringBeanDefinitionRegistryPostProcessor(
 				ConfigurableApplicationContext context) {
 			if (log.isTraceEnabled()) {
-				log.trace("Registering bean definition registry post processor for context [" + context + "]");
+				log.trace(
+						"Registering bean definition registry post processor for context ["
+								+ context + "]");
 			}
 			return new HookRegisteringBeanDefinitionRegistryPostProcessor(context);
 		}
