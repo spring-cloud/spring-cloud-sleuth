@@ -157,7 +157,7 @@ public class JmsTracingConfigurationTest {
 
 					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
 							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).extracting(Span::name).containsExactly("send",
+					assertThat(trace).extracting(Span::name).containsExactlyInAnyOrder("send",
 							"receive", "on-message");
 				});
 	}
@@ -190,7 +190,7 @@ public class JmsTracingConfigurationTest {
 
 					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
 							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).extracting(Span::name).containsExactly("send",
+					assertThat(trace).extracting(Span::name).containsExactlyInAnyOrder("send",
 							"receive", "on-message");
 				});
 	}

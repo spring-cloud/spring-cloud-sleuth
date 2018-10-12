@@ -19,16 +19,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TAKEN FROM GRADLE (https://github.com/gradle/gradle/blob/master/subprojects/base-services/src/main/java/org/gradle/api/JavaVersion.java)
+ * TAKEN FROM GRADLE
+ * (https://github.com/gradle/gradle/blob/master/subprojects/base-services/src/main/java/org/gradle/api/JavaVersion.java)
  *
- * An enumeration of Java versions.
- * Before 9: http://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
- * 9+: http://openjdk.java.net/jeps/223
+ * An enumeration of Java versions. Before 9:
+ * http://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html 9+:
+ * http://openjdk.java.net/jeps/223
  */
 enum JavaVersion {
-	VERSION_1_1, VERSION_1_2, VERSION_1_3, VERSION_1_4,
-	VERSION_1_5, VERSION_1_6, VERSION_1_7, VERSION_1_8,
-	VERSION_1_9, VERSION_1_10,
+
+	VERSION_1_1, VERSION_1_2, VERSION_1_3, VERSION_1_4, VERSION_1_5, VERSION_1_6, VERSION_1_7, VERSION_1_8, VERSION_1_9, VERSION_1_10,
 	/**
 	 * Java 11 major version.
 	 *
@@ -51,16 +51,18 @@ enum JavaVersion {
 	// Since Java 9, version should be X instead of 1.X
 	// However, to keep backward compatibility, we change from 11
 	private static final int FIRST_MAJOR_VERSION_ORDINAL = 10;
+
 	private static JavaVersion currentJavaVersion;
+
 	private final String versionName;
 
 	JavaVersion() {
-		this.versionName = ordinal() >= FIRST_MAJOR_VERSION_ORDINAL ? getMajorVersion() : "1." + getMajorVersion();
+		this.versionName = ordinal() >= FIRST_MAJOR_VERSION_ORDINAL ? getMajorVersion()
+				: "1." + getMajorVersion();
 	}
 
 	/**
 	 * Converts the given object into a {@code JavaVersion}.
-	 *
 	 * @param value An object whose toString() value is to be converted. May be null.
 	 * @return The version, or null if the provided value is null.
 	 * @throws IllegalArgumentException when the provided value cannot be converted.
@@ -88,7 +90,6 @@ enum JavaVersion {
 
 	/**
 	 * Returns the version of the current JVM.
-	 *
 	 * @return The version of the current JVM.
 	 */
 	public static JavaVersion current() {
@@ -99,12 +100,14 @@ enum JavaVersion {
 	}
 
 	private static JavaVersion getVersionForMajor(int major) {
-		return major >= values().length ? JavaVersion.VERSION_HIGHER : values()[major - 1];
+		return major >= values().length ? JavaVersion.VERSION_HIGHER
+				: values()[major - 1];
 	}
 
 	private static void assertTrue(String value, boolean condition) {
 		if (!condition) {
-			throw new IllegalArgumentException("Could not determine java version from '" + value + "'.");
+			throw new IllegalArgumentException(
+					"Could not determine java version from '" + value + "'.");
 		}
 	}
 
@@ -162,8 +165,8 @@ enum JavaVersion {
 		return this.versionName;
 	}
 
-
 	public String getMajorVersion() {
 		return String.valueOf(ordinal() + 1);
 	}
+
 }
