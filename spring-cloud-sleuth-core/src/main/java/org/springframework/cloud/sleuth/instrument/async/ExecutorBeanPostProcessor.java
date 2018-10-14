@@ -127,6 +127,9 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		factory.addAdvice(new ExecutorMethodInterceptor(executor, this.beanFactory));
 		factory.setTarget(bean);
 		if (JavaVersion.current().isJava11Compatible()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Creating an additional ClassLoader for JDK11");
+			}
 			factory.setBeanClassLoader(new ClassLoader(this.getClass().getClassLoader()) {
 
 			});
