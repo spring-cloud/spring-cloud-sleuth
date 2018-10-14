@@ -313,6 +313,20 @@
 		</dependency>
 	</dependencies>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<forkCount>4</forkCount>
+					<reuseForks>false</reuseForks>
+					<failIfNoTests>true</failIfNoTests>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 	<profiles>
 		<profile>
 			<id>fast</id>
@@ -324,7 +338,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.21.0</version>
 						<configuration>
 							<forkCount>4</forkCount>
 							<reuseForks>true</reuseForks>
