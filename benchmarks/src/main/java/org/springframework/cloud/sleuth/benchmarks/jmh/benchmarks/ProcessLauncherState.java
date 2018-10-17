@@ -30,7 +30,7 @@ import java.util.List;
 import org.openjdk.jmh.util.FileUtils;
 import org.openjdk.jmh.util.Utils;
 
-import org.springframework.cloud.sleuth.benchmarks.app.SleuthBenchmarkingSpringApp;
+import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
 
 public class ProcessLauncherState {
 
