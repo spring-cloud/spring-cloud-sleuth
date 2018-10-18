@@ -34,7 +34,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<spring-boot.version>2.1.0.M1</spring-boot.version>
-		<brave.version>5.1.0</brave.version>
+		<brave.version>5.4.3</brave.version>
 	</properties>
 
 	<dependencyManagement>
