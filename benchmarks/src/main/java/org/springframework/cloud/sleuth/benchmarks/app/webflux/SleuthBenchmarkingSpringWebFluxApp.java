@@ -52,9 +52,6 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 
 	public int port;
 
-	@Autowired(required = false)
-	Tracer tracer;
-
 	@RequestMapping("/foo")
 	public Mono<String> foo() {
 		return Mono.just("foo");
@@ -67,12 +64,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 
 	@Bean
 	SkipPatternProvider patternProvider() {
-		return new SkipPatternProvider() {
-			@Override
-			public Pattern skipPattern() {
-				return Pattern.compile("");
-			}
-		};
+		return () -> Pattern.compile("");
 	}
 
 
