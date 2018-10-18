@@ -34,7 +34,7 @@ import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
-import org.springframework.cloud.sleuth.benchmarks.app.SleuthBenchmarkingSpringApp;
+import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.web.client.MockMvcClientHttpRequestFactory;
 import org.springframework.test.web.servlet.MockMvc;

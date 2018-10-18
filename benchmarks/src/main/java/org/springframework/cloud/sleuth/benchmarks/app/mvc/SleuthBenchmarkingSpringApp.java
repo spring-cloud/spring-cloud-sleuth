@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.app;
+package org.springframework.cloud.sleuth.benchmarks.app.mvc;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
