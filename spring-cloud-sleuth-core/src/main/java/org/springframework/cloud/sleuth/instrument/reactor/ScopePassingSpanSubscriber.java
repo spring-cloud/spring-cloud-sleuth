@@ -42,29 +42,25 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T> {
 
 	private final Context context;
 
-	private final Tracing tracing;
 	private final CurrentTraceContext currentTraceContext;
 	private final TraceContext traceContext;
+	private final Tracer tracer;
 
 	private Subscription s;
 
 	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx,
 	                           Tracing tracing) {
 		this.subscriber = subscriber;
-		this.tracing = tracing;
-		Tracer tracer = tracing.tracer();
-		this.currentTraceContext = this.tracing.currentTraceContext();
-		Span rootSpan = ctx != null ? ctx.getOrDefault(Span.class, tracer.currentSpan())
+		this.tracer = tracing.tracer();
+		this.currentTraceContext = tracing.currentTraceContext();
+		Span root = ctx != null ? ctx.hasKey(Span.class) ? ctx.get(Span.class)
+				: this.tracer.currentSpan()
 				: null;
-		TraceContext rootTraceContext = ctx != null ? ctx.getOrDefault(TraceContext.class, this.currentTraceContext.get()) : null;
-		this.traceContext = rootTraceContext;
-		this.context = ctx != null && rootTraceContext != null ? ctx.put(TraceContext.class, rootTraceContext)
+		this.traceContext = root == null ? null : root.context();
+		this.context = ctx != null && root != null ? ctx.put(Span.class, root)
 				: ctx != null ? ctx : Context.empty();
-		if(rootTraceContext != null ) {
-			this.context.put(Span.class, rootSpan);
-		}
 		if (log.isTraceEnabled()) {
-			log.trace("Root traceContext [" + rootTraceContext + "], context [" + this.context + "]");
+			log.trace("Root span [" + root + "], context [" + this.context + "]");
 		}
 	}
 
