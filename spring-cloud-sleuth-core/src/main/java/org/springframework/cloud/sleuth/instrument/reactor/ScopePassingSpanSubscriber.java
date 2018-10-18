@@ -21,6 +21,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
@@ -38,69 +40,71 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T> {
 
 	private static final Log log = LogFactory.getLog(ScopePassingSpanSubscriber.class);
 
-	private final Span span;
-
 	private final Subscriber<? super T> subscriber;
 
 	private final Context context;
 
-	private final Tracer tracer;
+	private final Tracing tracing;
+	private final CurrentTraceContext currentTraceContext;
+	private final TraceContext root;
 
 	private Subscription s;
 
 	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx,
 			Tracing tracing) {
 		this.subscriber = subscriber;
-		this.tracer = tracing.tracer();
-		Span root = ctx != null ? ctx.getOrDefault(Span.class, this.tracer.currentSpan())
-				: null;
-		this.span = root;
-		this.context = ctx != null && root != null ? ctx.put(Span.class, root)
+		this.tracing = tracing;
+		this.currentTraceContext = this.tracing.currentTraceContext();
+		TraceContext root = ctx != null ? ctx.getOrDefault(TraceContext.class, this.currentTraceContext.get()) : null;
+		this.root = root;
+		this.context = ctx != null && root != null ? ctx.put(TraceContext.class, root)
 				: ctx != null ? ctx : Context.empty();
+
 		if (log.isTraceEnabled()) {
-			log.trace("Root span [" + root + "], context [" + this.context + "]");
+			log.trace("Root traceContext [" + root + "], context [" + this.context + "]");
 		}
 	}
 
 	@Override
 	public void onSubscribe(Subscription subscription) {
 		this.s = subscription;
-		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.root)) {
 			this.subscriber.onSubscribe(this);
 		}
 	}
 
 	@Override
 	public void request(long n) {
-		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.root)) {
 			this.s.request(n);
 		}
 	}
 
 	@Override
 	public void cancel() {
-		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.root)) {
 			this.s.cancel();
 		}
+
 	}
 
 	@Override
 	public void onNext(T o) {
-		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.root)) {
 			this.subscriber.onNext(o);
 		}
 	}
 
 	@Override
 	public void onError(Throwable throwable) {
-		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.root)) {
 			this.subscriber.onError(throwable);
 		}
 	}
 
 	@Override
 	public void onComplete() {
-		try (Tracer.SpanInScope inScope = this.tracer.withSpanInScope(this.span)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.root)) {
 			this.subscriber.onComplete();
 		}
 	}
@@ -108,10 +112,6 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T> {
 	@Override
 	public Context currentContext() {
 		return this.context;
-	}
-
-	private void clearSpan() {
-		this.tracer.withSpanInScope(null);
 	}
 
 }

@@ -19,9 +19,11 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.propagation.TraceContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import reactor.util.context.Context;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -58,7 +60,7 @@ public class ScopePassingSpanSubscriberTests {
 			ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(null,
 					Context.empty(), this.tracing);
 
-			then(subscriber.currentContext().get(Span.class)).isEqualTo(span);
+			then(subscriber.currentContext().get(TraceContext.class)).isEqualTo(span.context());
 		}
 
 	}
