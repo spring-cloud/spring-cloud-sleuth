@@ -18,11 +18,13 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.Collections;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 
 import brave.Tracing;
+import org.aopalliance.aop.Advice;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -90,14 +92,16 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxy()
+	public void should_fallback_to_()
 			throws Exception {
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
+
 			@Override
-			Object createProxy(Object bean, boolean cglibProxy, Executor executor) {
+			Object createProxy(Object bean, boolean cglibProxy, Advice advice) {
 				throw new AopConfigException("foo");
 			}
+
 		};
 
 		thenThrownBy(() -> bpp.postProcessAfterInitialization(service, "foo"))
@@ -120,13 +124,29 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxyfor_ThreadPoolTaskExecutor()
+	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxy_for_ThreadPoolTaskExecutor()
 			throws Exception {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
 			@Override
 			Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
 					ThreadPoolTaskExecutor executor) {
+				throw new AopConfigException("foo");
+			}
+		};
+
+		thenThrownBy(() -> bpp.postProcessAfterInitialization(taskExecutor, "foo"))
+				.isInstanceOf(AopConfigException.class).hasMessage("foo");
+	}
+
+	@Test
+	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxy_for_ExecutorService()
+			throws Exception {
+		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
+			@Override
+			Object createExecutorServiceProxy(Object bean, boolean cglibProxy,
+					ExecutorService executor) {
 				throw new AopConfigException("foo");
 			}
 		};
