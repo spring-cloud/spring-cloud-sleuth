@@ -16,22 +16,36 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import brave.Tracer;
 import brave.Tracing;
+import org.aopalliance.aop.Advice;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.aop.framework.AopConfigException;
+import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -49,6 +63,7 @@ public class ExecutorBeanPostProcessorTests {
 
 	@Mock
 	BeanFactory beanFactory;
+	Tracing tracing = Tracing.newBuilder().build();
 
 	private SleuthAsyncProperties sleuthAsyncProperties;
 
@@ -57,6 +72,15 @@ public class ExecutorBeanPostProcessorTests {
 		this.sleuthAsyncProperties = new SleuthAsyncProperties();
 		Mockito.when(beanFactory.getBean(SleuthAsyncProperties.class))
 				.thenReturn(this.sleuthAsyncProperties);
+		Mockito.when(beanFactory.getBean(Tracing.class))
+				.thenReturn(this.tracing);
+		Mockito.when(beanFactory.getBean(SpanNamer.class))
+				.thenReturn(new DefaultSpanNamer());
+	}
+
+	@After
+	public void clear() {
+		this.tracing.close();
 	}
 
 	@Test
@@ -78,30 +102,32 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_create_jdk_proxy_when_cglib_fails_to_be_done() throws Exception {
+	public void should_fallback_to_sleuth_implementation_when_cglib_cannot_be_created() throws Exception {
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
 				.postProcessAfterInitialization(service, "foo");
 
-		then(o).isInstanceOf(ScheduledExecutorService.class);
-		then(ClassUtils.isCglibProxy(o)).isFalse();
+		then(o).isInstanceOf(TraceableExecutorService.class);
 		service.shutdown();
 	}
 
 	@Test
-	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxy()
+	public void should_fallback_to_default_implementation_when_exception_thrown()
 			throws Exception {
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
+
 			@Override
-			Object createProxy(Object bean, boolean cglibProxy, Executor executor) {
+			Object createProxy(Object bean, boolean cglibProxy, Advice advice) {
 				throw new AopConfigException("foo");
 			}
+
 		};
 
-		thenThrownBy(() -> bpp.postProcessAfterInitialization(service, "foo"))
-				.isInstanceOf(AopConfigException.class).hasMessage("foo");
+		Object wrappedService = bpp.postProcessAfterInitialization(service, "foo");
+
+		then(wrappedService).isInstanceOf(TraceableExecutorService.class);
 		service.shutdown();
 	}
 
@@ -120,7 +146,7 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxyfor_ThreadPoolTaskExecutor()
+	public void should_throw_exception_when_it_is_not_possible_to_create_any_proxy_for_ThreadPoolTaskExecutor()
 			throws Exception {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
@@ -133,6 +159,104 @@ public class ExecutorBeanPostProcessorTests {
 
 		thenThrownBy(() -> bpp.postProcessAfterInitialization(taskExecutor, "foo"))
 				.isInstanceOf(AopConfigException.class).hasMessage("foo");
+	}
+
+	@Test
+	public void should_fallback_to_sleuth_impl_when_it_is_not_possible_to_create_any_proxy_for_ExecutorService()
+			throws Exception {
+		ExecutorService service = BDDMockito.mock(ExecutorService.class);
+		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
+			@Override
+			Object getObject(ProxyFactoryBean factory) {
+				throw new AopConfigException("foo");
+			}
+		};
+
+		Object o = bpp.postProcessAfterInitialization(service, "foo");
+
+		then(o).isInstanceOf(TraceableExecutorService.class);
+	}
+
+	@Test
+	public void should_throw_exception_from_the_wrapped_object()
+			throws Exception {
+		ExecutorService service = exceptionThrowingExecutorService();
+		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory);
+
+		ExecutorService o = (ExecutorService) bpp.postProcessAfterInitialization(service, "foo");
+
+		thenThrownBy(() -> o.submit((Callable<Object>) () -> "hello"))
+				.hasMessage("foo")
+				.isInstanceOf(IllegalStateException.class);
+	}
+
+	private ExecutorService exceptionThrowingExecutorService() {
+		return new ExecutorService() {
+			@Override
+			public void execute(Runnable command) {
+
+			}
+
+			@Override
+			public void shutdown() {
+
+			}
+
+			@Override
+			public List<Runnable> shutdownNow() {
+				return null;
+			}
+
+			@Override
+			public boolean isShutdown() {
+				return false;
+			}
+
+			@Override
+			public boolean isTerminated() {
+				return false;
+			}
+
+			@Override
+			public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+				return false;
+			}
+
+			@Override
+			public <T> Future<T> submit(Callable<T> task) {
+				throw new IllegalStateException("foo");
+			}
+
+			@Override
+			public <T> Future<T> submit(Runnable task, T result) {
+				return null;
+			}
+
+			@Override
+			public Future<?> submit(Runnable task) {
+				return null;
+			}
+
+			@Override
+			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+				return null;
+			}
+
+			@Override
+			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+				return null;
+			}
+
+			@Override
+			public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+				return null;
+			}
+
+			@Override
+			public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+				return null;
+			}
+		};
 	}
 
 	@Test
