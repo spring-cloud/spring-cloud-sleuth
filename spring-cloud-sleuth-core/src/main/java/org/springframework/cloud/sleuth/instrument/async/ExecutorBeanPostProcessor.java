@@ -75,14 +75,16 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			else {
 				log.info("Not instrumenting bean " + beanName);
 			}
-		} else if (bean instanceof ExecutorService) {
+		}
+		else if (bean instanceof ExecutorService) {
 			if (isProxyNeeded(beanName)) {
 				return wrapExecutorService(bean);
 			}
 			else {
 				log.info("Not instrumenting bean " + beanName);
 			}
-		} else if (bean instanceof Executor) {
+		}
+		else if (bean instanceof Executor) {
 			return wrapExecutor(bean);
 		}
 		return bean;
@@ -106,7 +108,8 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 							"Exception occurred while trying to create a proxy, falling back to JDK proxy",
 							ex);
 				}
-				return createProxy(bean, false, new ExecutorMethodInterceptor(executor, this.beanFactory));
+				return createProxy(bean, false,
+						new ExecutorMethodInterceptor(executor, this.beanFactory));
 			}
 			throw ex;
 		}
@@ -147,19 +150,22 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			Supplier<Executor> supplier) {
 		ProxyFactoryBean factory = new ProxyFactoryBean();
 		factory.setProxyTargetClass(cglibProxy);
-		factory.addAdvice(new ExecutorMethodInterceptor<Executor>(executor,
-				this.beanFactory) {
-			@Override
-			<T extends Executor> T executor(BeanFactory beanFactory, T executor) {
-				return (T) supplier.get();
-			}
-		});
+		factory.addAdvice(
+				new ExecutorMethodInterceptor<Executor>(executor, this.beanFactory) {
+					@Override
+					<T extends Executor> T executor(BeanFactory beanFactory, T executor) {
+						return (T) supplier.get();
+					}
+				});
 		factory.setTarget(bean);
 		try {
 			return getObject(factory);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			if (log.isDebugEnabled()) {
-				log.debug("Exception occurred while trying to get a proxy. Will fallback to a different implementation", e);
+				log.debug(
+						"Exception occurred while trying to get a proxy. Will fallback to a different implementation",
+						e);
 			}
 			return supplier.get();
 		}

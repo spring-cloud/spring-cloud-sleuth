@@ -282,6 +282,7 @@ public class WebClientTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
+	@Ignore
 	public void shouldAttachTraceIdWhenCallingAnotherServiceForNettyHttpClient()
 			throws Exception {
 		Span span = this.tracer.nextSpan().name("foo").start();

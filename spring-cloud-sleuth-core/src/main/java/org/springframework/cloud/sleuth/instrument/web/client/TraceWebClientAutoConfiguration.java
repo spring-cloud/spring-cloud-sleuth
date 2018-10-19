@@ -156,7 +156,8 @@ public class TraceWebClientAutoConfiguration {
 	static class NettyConfiguration {
 
 		@Bean
-		public HttpClientBeanPostProcessor httpClientBeanPostProcessor(BeanFactory beanFactory) {
+		public HttpClientBeanPostProcessor httpClientBeanPostProcessor(
+				BeanFactory beanFactory) {
 			return new HttpClientBeanPostProcessor(beanFactory);
 		}
 
@@ -309,8 +310,8 @@ class LazyTracingClientHttpRequestInterceptor implements ClientHttpRequestInterc
 		}
 		return this.interceptor;
 	}
-}
 
+}
 
 class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
@@ -321,7 +322,8 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
 		if (bean instanceof HttpClient) {
 			return ((HttpClient) bean)
 					.doOnRequest(TracingDoOnRequest.create(this.beanFactory))
@@ -329,6 +331,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		}
 		return bean;
 	}
+
 }
 
 class TracingDoOnRequest implements BiConsumer<HttpClientRequest, Connection> {
@@ -361,8 +364,11 @@ class TracingDoOnRequest implements BiConsumer<HttpClientRequest, Connection> {
 	};
 
 	final Tracer tracer;
+
 	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+
 	final TraceContext.Injector<HttpHeaders> injector;
+
 	final HttpTracing httpTracing;
 
 	TracingDoOnRequest(HttpTracing httpTracing) {
@@ -379,18 +385,17 @@ class TracingDoOnRequest implements BiConsumer<HttpClientRequest, Connection> {
 	@Override
 	public void accept(HttpClientRequest req, Connection connection) {
 		final Span currentSpan = this.tracer.currentSpan();
-		try (Tracer.SpanInScope spanInScope = this.tracer
-				.withSpanInScope(currentSpan)) {
+		try (Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(currentSpan)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Wrapping do on request");
 			}
-			Span span = this.handler.handleSend(this.injector, req
-					.requestHeaders(), req);
+			Span span = this.handler.handleSend(this.injector, req.requestHeaders(), req);
 			Attribute<Object> attribute = connection.channel()
 					.attr(AttributeKey.valueOf("span"));
 			attribute.set(span);
 		}
 	}
+
 }
 
 class TracingDoOnResponse implements BiConsumer<HttpClientResponse, Connection> {
@@ -398,6 +403,7 @@ class TracingDoOnResponse implements BiConsumer<HttpClientResponse, Connection> 
 	private static final Logger log = LoggerFactory.getLogger(TracingDoOnResponse.class);
 
 	final Tracer tracer;
+
 	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
 	TracingDoOnResponse(HttpTracing httpTracing) {
@@ -411,7 +417,8 @@ class TracingDoOnResponse implements BiConsumer<HttpClientResponse, Connection> 
 
 	@Override
 	public void accept(HttpClientResponse httpClientResponse, Connection connection) {
-		Attribute<Object> spanAttr = connection.channel().attr(AttributeKey.valueOf("span"));
+		Attribute<Object> spanAttr = connection.channel()
+				.attr(AttributeKey.valueOf("span"));
 		Span span = (Span) spanAttr.get();
 		if (span == null) {
 			return;
@@ -425,6 +432,7 @@ class TracingDoOnResponse implements BiConsumer<HttpClientResponse, Connection> 
 			this.handler.handleReceive(httpClientResponse, null, span);
 		}
 	}
+
 }
 
 class HttpAdapter

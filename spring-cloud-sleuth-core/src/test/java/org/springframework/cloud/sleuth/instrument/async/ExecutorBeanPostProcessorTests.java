@@ -63,6 +63,7 @@ public class ExecutorBeanPostProcessorTests {
 
 	@Mock
 	BeanFactory beanFactory;
+
 	Tracing tracing = Tracing.newBuilder().build();
 
 	private SleuthAsyncProperties sleuthAsyncProperties;
@@ -72,8 +73,7 @@ public class ExecutorBeanPostProcessorTests {
 		this.sleuthAsyncProperties = new SleuthAsyncProperties();
 		Mockito.when(beanFactory.getBean(SleuthAsyncProperties.class))
 				.thenReturn(this.sleuthAsyncProperties);
-		Mockito.when(beanFactory.getBean(Tracing.class))
-				.thenReturn(this.tracing);
+		Mockito.when(beanFactory.getBean(Tracing.class)).thenReturn(this.tracing);
 		Mockito.when(beanFactory.getBean(SpanNamer.class))
 				.thenReturn(new DefaultSpanNamer());
 	}
@@ -102,7 +102,8 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_fallback_to_sleuth_implementation_when_cglib_cannot_be_created() throws Exception {
+	public void should_fallback_to_sleuth_implementation_when_cglib_cannot_be_created()
+			throws Exception {
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
@@ -178,15 +179,14 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_throw_exception_from_the_wrapped_object()
-			throws Exception {
+	public void should_throw_exception_from_the_wrapped_object() throws Exception {
 		ExecutorService service = exceptionThrowingExecutorService();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory);
 
-		ExecutorService o = (ExecutorService) bpp.postProcessAfterInitialization(service, "foo");
+		ExecutorService o = (ExecutorService) bpp.postProcessAfterInitialization(service,
+				"foo");
 
-		thenThrownBy(() -> o.submit((Callable<Object>) () -> "hello"))
-				.hasMessage("foo")
+		thenThrownBy(() -> o.submit((Callable<Object>) () -> "hello")).hasMessage("foo")
 				.isInstanceOf(IllegalStateException.class);
 	}
 
@@ -218,7 +218,8 @@ public class ExecutorBeanPostProcessorTests {
 			}
 
 			@Override
-			public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+			public boolean awaitTermination(long timeout, TimeUnit unit)
+					throws InterruptedException {
 				return false;
 			}
 
@@ -238,22 +239,27 @@ public class ExecutorBeanPostProcessorTests {
 			}
 
 			@Override
-			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
+					throws InterruptedException {
 				return null;
 			}
 
 			@Override
-			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
+					long timeout, TimeUnit unit) throws InterruptedException {
 				return null;
 			}
 
 			@Override
-			public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+			public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
+					throws InterruptedException, ExecutionException {
 				return null;
 			}
 
 			@Override
-			public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+			public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout,
+					TimeUnit unit)
+					throws InterruptedException, ExecutionException, TimeoutException {
 				return null;
 			}
 		};
