@@ -16,12 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.net.URI;
+
+import brave.propagation.Propagation;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**

@@ -31,9 +31,9 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootTest(classes = GH846Test.App.class, webEnvironment = WebEnvironment.NONE)
+@SpringBootTest(classes = GH846Tests.App.class, webEnvironment = WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
-public class GH846Test {
+public class GH846Tests {
 
 	@Autowired
 	private MyBean myBean;
