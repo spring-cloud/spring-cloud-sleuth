@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -27,6 +28,8 @@ import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import reactor.core.publisher.Mono;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -36,7 +39,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into
@@ -93,23 +95,19 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 	static final Propagation.Setter<ClientRequest.Builder, String> SETTER =
 			new Propagation.Setter<ClientRequest.Builder, String>() {
 				@Override public void put(ClientRequest.Builder carrier, String key, String value) {
-					carrier.header(key, value);
+					carrier.headers(httpHeaders -> {
+						if (log.isTraceEnabled()) {
+							log.trace("Replacing [" + key + "] with value [" + value + "]");
+						}
+						httpHeaders.merge(key, Collections
+								.singletonList(value), (oldValue, newValue) -> newValue);
+					});
 				}
 
 				@Override public String toString() {
 					return "ClientRequest.Builder::header";
 				}
 			};
-
-	static final Propagation.Getter<ClientRequest, String> GETTER = new Propagation.Getter<ClientRequest, String>() {
-		@Override public String get(ClientRequest carrier, String key) {
-			return carrier.headers().getFirst(key);
-		}
-
-		@Override public String toString() {
-			return "HttpHeaders::getFirst";
-		}
-	};
 
 	public static ExchangeFilterFunction create(BeanFactory beanFactory) {
 		return new TraceExchangeFilterFunction(beanFactory);
@@ -134,6 +132,9 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				.onErrorResume(Mono::just)
 				.zipWith(Mono.subscriberContext())
 				.flatMap(anyAndContext -> {
+					if (log.isDebugEnabled()) {
+						log.debug("Wrapping the context [" + anyAndContext + "]");
+					}
 					Object any = anyAndContext.getT1();
 					Span clientSpan = anyAndContext.getT2().get(CLIENT_SPAN_KEY);
 					Mono<ClientResponse> continuation;
