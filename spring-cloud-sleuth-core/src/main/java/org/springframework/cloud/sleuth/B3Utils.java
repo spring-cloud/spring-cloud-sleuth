@@ -136,6 +136,10 @@ public final class B3Utils {
 			return null;
 		}
 
+		public boolean isSampled() {
+			return this == SAMPLED || this == DEBUG;
+		}
+
 		@Override public String toString() {
 			return String.valueOf(this.sampledChar);
 		}

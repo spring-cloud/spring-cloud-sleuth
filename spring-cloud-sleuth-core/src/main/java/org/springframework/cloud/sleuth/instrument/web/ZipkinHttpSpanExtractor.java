@@ -1,14 +1,18 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.cloud.sleuth.B3Utils;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanTextMap;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.util.StringUtils;
 
 /**
@@ -17,10 +21,10 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
-public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
+public class ZipkinHttpSpanExtractor implements HttpSpanExtractor, BeanFactoryAware {
 
 	private static final org.apache.commons.logging.Log log = LogFactory.getLog(
-			MethodHandles.lookup().lookupClass());
+			ZipkinHttpSpanExtractor.class);
 
 	private static final String HTTP_COMPONENT = "http";
 
@@ -28,10 +32,22 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 
 	private final Pattern skipPattern;
 	private final Random random;
+	private Sampler sampler;
+	private BeanFactory beanFactory;
 
+	/**
+	 * @deprecated use {@link ZipkinHttpSpanExtractor#ZipkinHttpSpanExtractor(Pattern, Sampler)}
+	 */
+	@Deprecated
 	public ZipkinHttpSpanExtractor(Pattern skipPattern) {
 		this.skipPattern = skipPattern;
 		this.random = new Random();
+	}
+
+	public ZipkinHttpSpanExtractor(Pattern skipPattern, Sampler sampler) {
+		this.skipPattern = skipPattern;
+		this.random = new Random();
+		this.sampler = sampler;
 	}
 
 	@Override
@@ -132,18 +148,37 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 		// trace, span id were retrieved from the headers and span is sampled
 		span.shared(!(skip || idToBeGenerated));
 		boolean debug = sampled == B3Utils.Sampled.DEBUG;
-		if (debug) {
-			span.exportable(true);
-		} else if (skip) {
-			span.exportable(false);
-		}
 		for (Map.Entry<String, String> entry : carrier.entrySet()) {
 			if (entry.getKey().toLowerCase()
 					.startsWith(ZipkinHttpSpanMapper.BAGGAGE_PREFIX)) {
 				span.baggage(unprefixedKey(entry.getKey()), entry.getValue());
 			}
 		}
+		if (debug) {
+			span.exportable(true);
+		} else if (skip) {
+			span.exportable(false);
+		} else {
+			span.exportable(sampled == null ?
+					sampler().isSampled(span.build()) : sampled.isSampled());
+		}
 		return span.build();
+	}
+
+	private Sampler sampler() {
+		// the new approach
+		if (this.sampler != null) {
+			return this.sampler;
+		}
+		// fallback not to break the API
+		if (this.beanFactory != null) {
+			this.sampler = this.beanFactory.getBean(Sampler.class);
+		} else {
+			// if somehow bean factory wasn't set it will behave as previously
+			// this however should happen only in tests
+			this.sampler = new AlwaysSampler();
+		}
+		return this.sampler;
 	}
 
 	private String unprefixedKey(String key) {
@@ -151,4 +186,8 @@ public class ZipkinHttpSpanExtractor implements HttpSpanExtractor {
 				.toLowerCase();
 	}
 
+	@Override
+	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+		this.beanFactory = beanFactory;
+	}
 }

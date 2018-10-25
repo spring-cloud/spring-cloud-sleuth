@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.TraceKeys;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -52,8 +53,9 @@ public class TraceHttpAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public HttpSpanExtractor httpSpanExtractor(SkipPatternProvider skipPatternProvider) {
-		return new ZipkinHttpSpanExtractor(skipPatternProvider.skipPattern());
+	public HttpSpanExtractor httpSpanExtractor(SkipPatternProvider skipPatternProvider,
+			Sampler sampler) {
+		return new ZipkinHttpSpanExtractor(skipPatternProvider.skipPattern(), sampler);
 	}
 
 	@Bean

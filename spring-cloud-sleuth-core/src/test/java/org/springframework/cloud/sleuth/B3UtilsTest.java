@@ -165,6 +165,18 @@ public class B3UtilsTest {
 		BDDAssertions.then(sampled).isEqualTo(B3Utils.Sampled.NOT_SAMPLED);
 	}
 
+	@Test public void should_return_is_sampled_if_sampled() {
+		BDDAssertions.then(B3Utils.Sampled.SAMPLED.isSampled()).isTrue();
+	}
+
+	@Test public void should_return_is_not_sampled_if_not_sampled() {
+		BDDAssertions.then(B3Utils.Sampled.NOT_SAMPLED.isSampled()).isFalse();
+	}
+
+	@Test public void should_return_is_sampled_if_debug() {
+		BDDAssertions.then(B3Utils.Sampled.DEBUG.isSampled()).isTrue();
+	}
+
 	@Test public void should_read_debug_id_from_fallback() {
 		Map<String, String> map = new HashMap<>();
 		map.put("fallbackFlags", "1");

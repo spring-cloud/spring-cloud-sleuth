@@ -16,6 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.WriteListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,12 +63,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.WriteListener;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -291,6 +290,7 @@ public class TraceFilterTests {
 				.header(Span.TRACE_ID_NAME, 20L).buildRequest(new MockServletContext());
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		BeanFactory beanFactory = beanFactory();
+		BDDMockito.given(beanFactory.getBean(Sampler.class)).willReturn(new AlwaysSampler());
 		BDDMockito.given(beanFactory.getBean(SpanReporter.class)).willReturn(this.spanReporter);
 
 		TraceFilter filter = new TraceFilter(beanFactory);

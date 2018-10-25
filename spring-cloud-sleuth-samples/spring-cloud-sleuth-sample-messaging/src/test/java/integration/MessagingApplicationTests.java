@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -185,6 +186,10 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		@Bean
 		Reporter<Span> integrationTestZipkinSpanReporter() {
 			return new IntegrationTestZipkinSpanReporter();
+		}
+
+		@Bean AlwaysSampler sampler() {
+			return new AlwaysSampler();
 		}
 	}
 }

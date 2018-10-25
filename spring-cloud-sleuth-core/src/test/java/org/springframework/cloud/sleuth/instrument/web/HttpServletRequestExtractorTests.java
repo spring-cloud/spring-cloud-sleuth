@@ -16,19 +16,22 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Vector;
 import java.util.regex.Pattern;
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.cloud.sleuth.Sampler;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.sampler.NeverSampler;
 
 import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
@@ -270,5 +273,89 @@ public class HttpServletRequestExtractorTests {
 		BDDMockito.given(this.request.getHeader(Span.SAMPLED_NAME))
 				.willReturn(Span.SPAN_SAMPLED);
 		return hex128Bits;
+	}
+
+	@Test
+	public void should_call_sampler_when_trace_id_and_span_id_are_set_and_sampled_flag_is_not() {
+		HttpServletRequest request = stubWithoutSampledFlag(Mockito.mock(HttpServletRequest.class));
+		Sampler sampler = new FirstFalseThenTrueSampler();
+
+		Span span = extractorWithSampler(sampler)
+					.joinTrace(new HttpServletRequestTextMap(request));
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(10L)
+				.hasSpanIdEqualTo(20L)
+				.isNotExportable();
+
+		request = stubWithoutSampledFlag(Mockito.mock(HttpServletRequest.class));
+		span = extractorWithSampler(sampler)
+					.joinTrace(new HttpServletRequestTextMap(request));
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(10L)
+				.hasSpanIdEqualTo(20L)
+				.isExportable();
+	}
+
+	@Test
+	public void should_not_call_sampler_when_trace_id_and_span_id_are_set_and_sampled_flag_is_set_too() {
+		HttpServletRequest request = stubWithSampledFlag(Mockito.mock(HttpServletRequest.class));
+		Sampler sampler = new NeverSampler();
+
+		Span span = extractorWithSampler(sampler)
+					.joinTrace(new HttpServletRequestTextMap(request));
+
+		then(span)
+				.isNotNull()
+				.hasTraceIdEqualTo(10L)
+				.hasSpanIdEqualTo(20L)
+				.isExportable();
+	}
+
+	private HttpServletRequest stubWithoutSampledFlag(HttpServletRequest request) {
+		BDDMockito.given(request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME)).elements());
+		BDDMockito.given(request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(Span.idToHex(10L));
+		BDDMockito.given(request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(Span.idToHex(20L));
+		BDDMockito.given(request.getRequestURI()).willReturn("http://foo.com");
+		BDDMockito.given(request.getContextPath()).willReturn("/");
+		return request;
+	}
+
+	private HttpServletRequest stubWithSampledFlag(HttpServletRequest request) {
+		BDDMockito.given(request.getHeaderNames())
+				.willReturn(new Vector<>(Arrays.asList(Span.TRACE_ID_NAME,
+						Span.SPAN_ID_NAME, Span.SAMPLED_NAME)).elements());
+		BDDMockito.given(request.getHeader(Span.TRACE_ID_NAME))
+				.willReturn(Span.idToHex(10L));
+		BDDMockito.given(request.getHeader(Span.SPAN_ID_NAME))
+				.willReturn(Span.idToHex(20L));
+		BDDMockito.given(request.getHeader(Span.SAMPLED_NAME))
+				.willReturn(Span.SPAN_SAMPLED);
+		BDDMockito.given(request.getRequestURI()).willReturn("http://foo.com");
+		BDDMockito.given(request.getContextPath()).willReturn("/");
+		return request;
+	}
+
+	private ZipkinHttpSpanExtractor extractorWithSampler(Sampler sampler) {
+		return new ZipkinHttpSpanExtractor(
+				Pattern.compile(""), sampler);
+	}
+}
+
+class FirstFalseThenTrueSampler implements Sampler {
+
+	int counter = 0;
+
+	@Override public boolean isSampled(Span span) {
+		boolean sampled = counter > 0;
+		counter++;
+		return sampled;
 	}
 }
