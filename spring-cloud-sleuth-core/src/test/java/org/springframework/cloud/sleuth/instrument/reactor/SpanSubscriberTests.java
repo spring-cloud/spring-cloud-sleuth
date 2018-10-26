@@ -258,7 +258,7 @@ public class SpanSubscriberTests {
 
 	@AfterClass
 	public static void cleanup() {
-		Hooks.resetOnEachOperator();
+		Hooks.resetOnLastOperator();
 		Schedulers.resetFactory();
 	}
 

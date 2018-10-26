@@ -51,7 +51,7 @@ public abstract class ReactorSleuth {
 	 * Return a span operator pointcut given a {@link Tracing}. This can be used in
 	 * reactor via {@link reactor.core.publisher.Flux#transform(Function)},
 	 * {@link reactor.core.publisher.Mono#transform(Function)},
-	 * {@link reactor.core.publisher.Hooks#onEachOperator(Function)} or
+	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)} or
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)}. The Span operator
 	 * pointcut will pass the Scope of the Span without ever creating any new spans.
 	 * @param beanFactory - {@link BeanFactory}

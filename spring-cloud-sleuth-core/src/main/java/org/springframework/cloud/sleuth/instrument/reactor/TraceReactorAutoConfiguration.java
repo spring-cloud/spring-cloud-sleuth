@@ -85,7 +85,7 @@ public class TraceReactorAutoConfiguration {
 			if (log.isTraceEnabled()) {
 				log.trace("Cleaning up hooks");
 			}
-			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
+			Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 			Schedulers.resetFactory();
 		}
 
@@ -115,7 +115,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 	}
 
 	void setupHooks(BeanFactory beanFactory) {
-		Hooks.onEachOperator(
+		Hooks.onLastOperator(
 				TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY,
 				ReactorSleuth.scopePassingSpanOperator(this.context));
 		Schedulers.setFactory(factoryInstance(beanFactory));

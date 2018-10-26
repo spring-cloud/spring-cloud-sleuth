@@ -18,7 +18,7 @@ public class TraceReactorAutoConfigurationAccessorConfiguration {
 			log.trace("Cleaning up hooks");
 		}
 		new TraceReactorAutoConfiguration.TraceReactorConfiguration().cleanupHooks();
-		Hooks.resetOnEachOperator();
+		Hooks.resetOnLastOperator();
 		Hooks.resetOnLastOperator();
 		Schedulers.resetFactory();
 	}
