@@ -259,7 +259,7 @@ public class SpanSubscriberTests {
 	@AfterClass
 	public static void cleanup() {
 		Hooks.resetOnEachOperator();
-		Schedulers.resetFactory();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
 
 	@EnableAutoConfiguration

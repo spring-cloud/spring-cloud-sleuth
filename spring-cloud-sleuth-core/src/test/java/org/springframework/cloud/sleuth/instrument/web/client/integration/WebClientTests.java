@@ -69,6 +69,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
@@ -169,8 +170,7 @@ public class WebClientTests {
 
 	@BeforeClass
 	public static void cleanup() {
-		Hooks.resetOnLastOperator();
-		Schedulers.resetFactory();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
 
 	@Test

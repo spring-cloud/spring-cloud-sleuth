@@ -50,6 +50,7 @@
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
+			<version>3.2.2.1408.BUILD-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

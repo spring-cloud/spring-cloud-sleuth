@@ -17,7 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 
 import javax.annotation.PreDestroy;
 
@@ -27,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -86,7 +88,9 @@ public class TraceReactorAutoConfiguration {
 				log.trace("Cleaning up hooks");
 			}
 			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
-			Schedulers.resetFactory();
+			Schedulers.removeExecutorServiceDecorator(
+					HookRegisteringBeanDefinitionRegistryPostProcessor.SLEUTH_DECORATOR
+							.getAndSet(null));
 		}
 
 	}
@@ -95,6 +99,8 @@ public class TraceReactorAutoConfiguration {
 
 class HookRegisteringBeanDefinitionRegistryPostProcessor
 		implements BeanDefinitionRegistryPostProcessor {
+
+	static final AtomicReference<BiFunction<Tuple2<String, String>, ScheduledExecutorService, ScheduledExecutorService>> SLEUTH_DECORATOR = new AtomicReference<>();
 
 	private final ConfigurableApplicationContext context;
 
@@ -115,20 +121,15 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 	}
 
 	void setupHooks(BeanFactory beanFactory) {
+		BiFunction<Tuple2<String, String>, ScheduledExecutorService, ScheduledExecutorService> decorator = (
+				objects,
+				scheduledExecutorService) -> new TraceableScheduledExecutorService(
+						beanFactory, scheduledExecutorService);
+		SLEUTH_DECORATOR.set(decorator);
 		Hooks.onEachOperator(
 				TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY,
 				ReactorSleuth.scopePassingSpanOperator(this.context));
-		Schedulers.setFactory(factoryInstance(beanFactory));
-	}
-
-	private Schedulers.Factory factoryInstance(final BeanFactory beanFactory) {
-		return new Schedulers.Factory() {
-			@Override
-			public ScheduledExecutorService decorateExecutorService(String schedulerType,
-					Supplier<? extends ScheduledExecutorService> actual) {
-				return new TraceableScheduledExecutorService(beanFactory, actual.get());
-			}
-		};
+		Schedulers.addExecutorServiceDecorator(decorator);
 	}
 
 }

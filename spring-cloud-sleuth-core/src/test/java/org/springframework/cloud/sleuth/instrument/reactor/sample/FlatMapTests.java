@@ -35,6 +35,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -61,8 +62,7 @@ public class FlatMapTests {
 
 	@BeforeClass
 	public static void setup() {
-		Hooks.resetOnLastOperator();
-		Schedulers.resetFactory();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 		Issue866Configuration.hook = null;
 	}
 
