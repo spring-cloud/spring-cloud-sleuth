@@ -110,7 +110,6 @@ public class SpanSubscriberTests {
 			});
 
 			then(this.tracer.currentSpan()).isNotNull();
-			then(spanInOperation.get()).isInstanceOf(ScopePassingSpanSubscriber.class);
 
 			Mono.<Integer>error(new Exception()).subscribe(new BaseSubscriber<Integer>() {
 				@Override
