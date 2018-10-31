@@ -17,25 +17,31 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.awaitility.Awaitility;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
+import reactor.core.Scannable;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Schedulers;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.awaitility.Awaitility;
+import org.junit.AfterClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -206,8 +212,8 @@ public class SpanSubscriberTests {
 			    }).map(d -> d + 1).blockLast();
 
 			Awaitility.await().untilAsserted(() -> {
-				then(spanInOperation.get().context().traceId())
-						.isEqualTo(span.context().traceId());
+				then(spanInOperation.get().context().spanId())
+						.isEqualTo(span.context().spanId());
 			});
 			then(this.tracer.currentSpan()).isEqualTo(span);
 		}
@@ -227,8 +233,8 @@ public class SpanSubscriberTests {
 
 			then(this.tracer.currentSpan()).isEqualTo(foo2);
 			// parent cause there's an async span in the meantime
-			then(spanInOperation.get().context().traceId())
-					.isEqualTo(foo2.context().traceId());
+			then(spanInOperation.get().context().spanId())
+					.isEqualTo(foo2.context().spanId());
 		}
 		finally {
 			foo2.finish();
@@ -301,6 +307,12 @@ public class SpanSubscriberTests {
 		}
 
 		then(spanInSubscriberContext).hasValue(initSpan.context().spanId()); // ok here
+	}
+
+	@AfterClass
+	public static void cleanup() {
+		Hooks.resetOnLastOperator();
+		Schedulers.resetFactory();
 	}
 
 	@EnableAutoConfiguration
