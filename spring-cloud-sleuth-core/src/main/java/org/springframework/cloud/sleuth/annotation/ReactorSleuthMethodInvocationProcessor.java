@@ -17,26 +17,22 @@
 package org.springframework.cloud.sleuth.annotation;
 
 import java.lang.reflect.Method;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import brave.Span;
 import brave.Tracer;
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
 import org.aopalliance.intercept.MethodInvocation;
 import org.reactivestreams.Publisher;
-
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
-import org.springframework.util.StringUtils;
-
+import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Scannable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.SignalType;
 import reactor.util.annotation.Nullable;
+import reactor.util.context.Context;
+
+import org.springframework.util.StringUtils;
 
 /**
  * Method Invocation Processor for Reactor.
@@ -49,12 +45,13 @@ class ReactorSleuthMethodInvocationProcessor
 
 	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor;
 
-	private Function<? super Publisher<Object>, ? extends Publisher<Object>> spanSubscriberTransformer;
+	Tracing tracing;
 
-	@Override
-	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-		super.setBeanFactory(beanFactory);
-		spanSubscriberTransformer = ReactorSleuth.scopePassingSpanOperator(beanFactory);
+	Tracing tracing() {
+		if (this.tracing == null) {
+			this.tracing = this.beanFactory.getBean(Tracing.class);
+		}
+		return this.tracing;
 	}
 
 	@Override
@@ -76,79 +73,90 @@ class ReactorSleuthMethodInvocationProcessor
 		Span spanPrevious = tracer().currentSpan();
 		// in case of @ContinueSpan and no span in tracer we start new span and should
 		// close it on completion
-		boolean startNewSpan = newSpan != null || spanPrevious == null;
 		Span span;
-		if (startNewSpan) {
-			span = tracer().nextSpan();
-			newSpanParser().parse(invocation, newSpan, span);
+		if (newSpan != null || spanPrevious == null) {
+			span = null;
 		}
 		else {
 			span = spanPrevious;
 		}
 
 		String log = log(continueSpan);
-		try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
-			Publisher<?> publisher = (Publisher) invocation.proceed();
+		Publisher<?> publisher = (Publisher) invocation.proceed();
 
-			if (publisher instanceof Mono) {
-				return new MonoTrace((Mono<Object>)publisher, startNewSpan, span, invocation, log)
-						.transform(spanSubscriberTransformer)
-						// put span in context so it can be used by
-						// ScopePassingSpanSubscriber
-						.subscriberContext(context -> context.put(Span.class, span));
-			}
-			else if (publisher instanceof Flux) {
-				return new FluxTrace((Flux<Object>)publisher, startNewSpan, span, invocation, log)
-						.transform(spanSubscriberTransformer)
-				        // put span in context so it can be used by
-				        // ScopePassingSpanSubscriber
-						.subscriberContext(context -> context.put(Span.class, span));
-			}
-			else {
-				throw new IllegalArgumentException(
-						"Unexpected type of publisher: " + publisher.getClass());
-			}
+		if (publisher instanceof Mono) {
+			return new MonoSpan((Mono<Object>) publisher,
+					this,
+					newSpan,
+					span,
+					invocation,
+					log);
+		}
+		else if (publisher instanceof Flux) {
+			return new FluxSpan((Flux<Object>) publisher,
+					this,
+					newSpan,
+					span,
+					invocation,
+					log);
+		}
+		else {
+			throw new IllegalArgumentException("Unexpected type of publisher: " + publisher.getClass());
 		}
 	}
 
-	private final class FluxTrace extends Flux<Object> implements Scannable {
-		final Flux<Object> source;
-		final boolean startNewSpan;
-		final Span span;
-		final MethodInvocation invocation;
-		final String log;
-		final boolean hasLog;
+	private static final class FluxSpan extends Flux<Object> implements Scannable {
 
-		FluxTrace(Flux<Object> source,
-				boolean startNewSpan,
-				Span span,
+		final Flux<Object>                           source;
+		final Span                                   span;
+		final MethodInvocation                       invocation;
+		final String                                 log;
+		final boolean                                hasLog;
+		final ReactorSleuthMethodInvocationProcessor processor;
+		final NewSpan                                newSpan;
+
+		FluxSpan(Flux<Object> source,
+				ReactorSleuthMethodInvocationProcessor processor,
+				NewSpan newSpan,
+				@Nullable Span span,
 				MethodInvocation invocation,
 				String log) {
 			this.source = source;
-			this.startNewSpan = startNewSpan;
 			this.span = span;
+			this.newSpan = newSpan;
 			this.invocation = invocation;
 			this.log = log;
 			this.hasLog = StringUtils.hasText(log);
+			this.processor = processor;
 		}
 
 		@Override
-		public void subscribe(CoreSubscriber<? super Object> subscriber) {
-			try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
-				if (startNewSpan) {
-					span.start();
-				}
-				before(invocation, span, log, hasLog);
-				source.doOnError(onFailureReactor(log, hasLog, span))
-				      .doFinally(afterReactor(startNewSpan, log, hasLog, span))
-				      .subscribe(subscriber);
+		public void subscribe(CoreSubscriber<? super Object> actual) {
+			Span span;
+			Tracer tracer = this.processor.tracer();
+			if (this.span == null) {
+				span = tracer.nextSpan();
+				this.processor.newSpanParser().parse(invocation, newSpan, span);
+				span.start();
+			}
+			else {
+				span = this.span;
+			}
+			try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+				this.source.subscribe(new SpanSubscriber(actual,
+						this.processor,
+						this.invocation,
+						this.span == null,
+						span,
+						this.log,
+						this.hasLog));
 			}
 		}
 
 		@Nullable
 		public Object scanUnsafe(Attr key) {
 			if (key == Attr.PARENT) {
-				return Scannable.from(source);
+				return this.source;
 			}
 			else {
 				return null;
@@ -156,21 +164,25 @@ class ReactorSleuthMethodInvocationProcessor
 		}
 	}
 
-	private final class MonoTrace extends Mono<Object> implements Scannable {
-		final Mono<Object> source;
-		final boolean startNewSpan;
-		final Span span;
-		final MethodInvocation invocation;
-		final String log;
-		final boolean hasLog;
+	private static final class MonoSpan extends Mono<Object> implements Scannable {
 
-		MonoTrace(Mono<Object> source,
-				boolean startNewSpan,
-				Span span,
+		final Mono<Object>                           source;
+		final Span                                   span;
+		final MethodInvocation                       invocation;
+		final String                                 log;
+		final boolean                                hasLog;
+		final ReactorSleuthMethodInvocationProcessor processor;
+		final NewSpan                                newSpan;
+
+		MonoSpan(Mono<Object> source,
+				ReactorSleuthMethodInvocationProcessor processor,
+				NewSpan newSpan,
+				@Nullable Span span,
 				MethodInvocation invocation,
 				String log) {
 			this.source = source;
-			this.startNewSpan = startNewSpan;
+			this.processor = processor;
+			this.newSpan = newSpan;
 			this.span = span;
 			this.invocation = invocation;
 			this.log = log;
@@ -178,24 +190,32 @@ class ReactorSleuthMethodInvocationProcessor
 		}
 
 		@Override
-		public void subscribe(CoreSubscriber<? super Object> subscriber) {
-			try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
-				if (startNewSpan) {
-					span.start();
-				}
-				before(invocation, span, log, hasLog);
-				source.doAfterSuccessOrError(afterMonoReactor(startNewSpan,
-						log,
-						hasLog,
-						span))
-				      .subscribe(subscriber);
+		public void subscribe(CoreSubscriber<? super Object> actual) {
+			Span span;
+			Tracer tracer = this.processor.tracer();
+			if (this.span == null) {
+				span = tracer.nextSpan();
+				this.processor.newSpanParser().parse(invocation, newSpan, span);
+				span.start();
+			}
+			else {
+				span = this.span;
+			}
+			try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+				this.source.subscribe(new SpanSubscriber(actual,
+						this.processor,
+						this.invocation,
+						this.span == null,
+						span,
+						this.log,
+						this.hasLog));
 			}
 		}
 
 		@Nullable
 		public Object scanUnsafe(Attr key) {
 			if (key == Attr.PARENT) {
-				return Scannable.from(source);
+				return this.source;
 			}
 			else {
 				return null;
@@ -203,30 +223,115 @@ class ReactorSleuthMethodInvocationProcessor
 		}
 	}
 
-	private Consumer<SignalType> afterReactor(boolean isNewSpan, String log,
-			boolean hasLog, Span span) {
-		return signalType -> {
-			after(span, isNewSpan, log, hasLog);
+	private static final class SpanSubscriber implements CoreSubscriber<Object>,
+	                                                     Subscription,
+	                                                     Scannable {
 
-		};
-	}
+		final CoreSubscriber<? super Object>         actual;
+		final boolean                                isNewSpan;
+		final Span                                   span;
+		final String                                 log;
+		final boolean                                hasLog;
+		final CurrentTraceContext                    currentTraceContext;
+		final ReactorSleuthMethodInvocationProcessor processor;
+		final Context                                context;
 
-	private Consumer<Throwable> onFailureReactor(String log, boolean hasLog, Span span) {
-		return throwable -> {
-			onFailure(span, log, hasLog, throwable);
+		Subscription parent;
 
-		};
-	}
+		SpanSubscriber(CoreSubscriber<? super Object> actual,
+				ReactorSleuthMethodInvocationProcessor processor,
+				MethodInvocation invocation,
+				boolean isNewSpan,
+				Span span,
+				String log,
+				boolean hasLog) {
+			this.actual = actual;
+			this.isNewSpan = isNewSpan;
+			this.span = span;
+			this.log = log;
+			this.hasLog = hasLog;
+			this.processor = processor;
 
-	private <T> BiConsumer<T, Throwable> afterMonoReactor(boolean isNewSpan, String log,
-			boolean hasLog, Span span) {
-		return (data, error) -> {
-			if (error != null) {
-				onFailure(span, log, hasLog, error);
+			this.currentTraceContext = processor.tracing().currentTraceContext();
+			this.context = actual.currentContext().put(Span.class, span);
+
+			processor.before(invocation, this.span, this.log, this.hasLog);
+		}
+
+		@Override
+		public void request(long n) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext
+					.maybeScope(this.span.context())) {
+				this.parent.request(n);
 			}
-			after(span, isNewSpan, log, hasLog);
+		}
 
-		};
+		@Override
+		public void cancel() {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext
+					.maybeScope(this.span.context())) {
+				this.parent.cancel();
+			}
+			finally {
+				this.processor.after(this.span, this.isNewSpan, this.log, this.hasLog);
+			}
+		}
+
+		@Override
+		public Context currentContext() {
+			return context;
+		}
+
+		@Override
+		public void onSubscribe(Subscription subscription) {
+			this.parent = subscription;
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext
+					.maybeScope(this.span.context())) {
+				this.actual.onSubscribe(this);
+			}
+		}
+
+		@Override
+		public void onNext(Object o) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext
+					.maybeScope(this.span.context())) {
+				this.actual.onNext(o);
+			}
+		}
+
+		@Override
+		public void onError(Throwable error) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext
+					.maybeScope(this.span.context())) {
+				this.processor.onFailure(this.span, this.log, this.hasLog, error);
+				this.actual.onError(error);
+			}
+			finally {
+				this.processor.after(this.span, this.isNewSpan, this.log, this.hasLog);
+			}
+		}
+
+		@Override
+		public void onComplete() {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext
+					.maybeScope(this.span.context())) {
+				this.actual.onComplete();
+			}
+			finally {
+				this.processor.after(this.span, this.isNewSpan, this.log, this.hasLog);
+			}
+		}
+
+		@Override
+		public Object scanUnsafe(Attr key) {
+			if (key == Attr.ACTUAL) {
+				return this.actual;
+			}
+			if (key == Attr.PARENT) {
+				return this.parent;
+			}
+			return null;
+		}
 	}
 
 	private boolean isReactorReturnType(Class<?> returnType) {
