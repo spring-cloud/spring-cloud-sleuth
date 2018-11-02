@@ -155,7 +155,7 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 										|| clientResponse.statusCode() == null) {
 									if (log.isDebugEnabled()) {
 										log.debug(
-												"No handle was returned. Will close the span ["
+												"No response was returned. Will close the span ["
 														+ clientSpan + "]");
 									}
 									handleReceive(clientSpan, ws, clientResponse,
@@ -172,7 +172,7 @@ class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 														+ clientSpan + "]");
 									}
 									throwable = new RestClientException(
-											"Status code of the handle is ["
+											"Status code of the response is ["
 													+ clientResponse.statusCode().value()
 													+ "] and the reason is ["
 													+ clientResponse.statusCode()

@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Utility class to retrieve data from Servlet HTTP request and handle.
+ * Utility class to retrieve data from Servlet HTTP request and response.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0

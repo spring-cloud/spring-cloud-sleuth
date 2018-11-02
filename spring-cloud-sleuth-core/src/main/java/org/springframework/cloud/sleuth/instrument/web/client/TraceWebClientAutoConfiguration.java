@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -349,8 +350,8 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		@Override
 		public Mono<? extends Connection> apply(Mono<? extends Connection> mono,
 				Bootstrap bootstrap) {
-			return mono.subscriberContext(
-					context -> context.put(Span.class, tracer().nextSpan()));
+			return mono.subscriberContext(context -> context.put(AtomicReference.class,
+					new AtomicReference<>(tracer().currentSpan())));
 		}
 
 		private Tracer tracer() {
@@ -378,17 +379,6 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 				return "HttpHeaders::add";
 			}
 		};
-		static final Propagation.Getter<HttpHeaders, String> GETTER = new Propagation.Getter<HttpHeaders, String>() {
-			@Override
-			public String get(HttpHeaders carrier, String key) {
-				return carrier.get(key);
-			}
-
-			@Override
-			public String toString() {
-				return "HttpHeaders::get";
-			}
-		};
 
 		private static final Logger log = LoggerFactory
 				.getLogger(TracingDoOnRequest.class);
@@ -414,12 +404,11 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
-			Span span = req.currentContext().getOrDefault(Span.class,
-					this.tracer.nextSpan());
-			if (log.isDebugEnabled()) {
-				log.debug("Wrapping do on request");
-			}
-			this.handler.handleSend(this.injector, req.requestHeaders(), req, span);
+			AtomicReference reference = req.currentContext()
+					.getOrDefault(AtomicReference.class, new AtomicReference());
+			Span span = this.handler.handleSend(this.injector, req.requestHeaders(), req,
+					(Span) reference.get());
+			reference.set(span);
 		}
 
 	}
@@ -491,12 +480,13 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		protected void handle(HttpClientResponse httpClientResponse,
 				Throwable throwable) {
-			Span span = httpClientResponse.currentContext().getOrDefault(Span.class,
-					null);
-			if (span == null) {
+			AtomicReference reference = httpClientResponse.currentContext()
+					.getOrDefault(AtomicReference.class, null);
+			if (reference == null || reference.get() == null) {
 				return;
 			}
-			this.handler.handleReceive(httpClientResponse, throwable, span);
+			this.handler.handleReceive(httpClientResponse, throwable,
+					(Span) reference.get());
 		}
 
 	}

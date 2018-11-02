@@ -68,7 +68,7 @@ public class RequestSendingRunnable implements Runnable {
 		ResponseEntity<String> responseEntity = this.restTemplate
 				.exchange(requestWithTraceId(), String.class);
 		then(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		log.info(String.format("Received the following handle [%s]", responseEntity));
+		log.info(String.format("Received the following response [%s]", responseEntity));
 	}
 
 	private RequestEntity<Void> requestWithTraceId() {
