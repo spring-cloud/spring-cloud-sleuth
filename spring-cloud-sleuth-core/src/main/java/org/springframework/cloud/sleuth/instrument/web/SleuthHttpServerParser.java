@@ -72,7 +72,7 @@ class SleuthHttpServerParser extends HttpServerParser {
 			return;
 		}
 		if (httpStatus == HttpServletResponse.SC_OK && error != null) {
-			// Filter chain threw exception but the response status may not have been set
+			// Filter chain threw exception but the handle status may not have been set
 			// yet, so we have to guess.
 			customizer.tag(STATUS_CODE_KEY,
 					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));

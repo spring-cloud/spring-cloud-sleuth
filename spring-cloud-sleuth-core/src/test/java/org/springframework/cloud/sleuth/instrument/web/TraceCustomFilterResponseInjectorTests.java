@@ -80,7 +80,7 @@ public class TraceCustomFilterResponseInjectorTests {
 				Map.class);
 
 		then(responseEntity.getHeaders()).containsKeys(TRACE_ID_NAME, SPAN_ID_NAME)
-				.as("Trace headers must be present in response headers");
+				.as("Trace headers must be present in handle headers");
 	}
 
 	@Configuration

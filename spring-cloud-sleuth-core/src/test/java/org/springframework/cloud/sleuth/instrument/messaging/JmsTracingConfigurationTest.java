@@ -281,7 +281,7 @@ class JmsTestTracingConfiguration {
 	/**
 	 * When testing servers or asynchronous clients, spans are reported on a worker
 	 * thread. In order to read them on the main thread, we use a concurrent queue. As
-	 * some implementations report after a response is sent, we use a blocking queue to
+	 * some implementations report after a handle is sent, we use a blocking queue to
 	 * prevent race conditions in tests.
 	 */
 	BlockingQueue<Span> spans = new LinkedBlockingQueue<>();

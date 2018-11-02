@@ -282,7 +282,6 @@ public class WebClientTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	@Ignore
 	public void shouldAttachTraceIdWhenCallingAnotherServiceForNettyHttpClient()
 			throws Exception {
 		Span span = this.tracer.nextSpan().name("foo").start();
@@ -295,6 +294,7 @@ public class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
+		System.out.println("Collected span " + this.reporter.getSpans());
 		then(this.reporter.getSpans()).isNotEmpty().extracting("traceId", String.class)
 				.containsOnly(span.context().traceIdString());
 		then(this.reporter.getSpans()).extracting("kind.name").contains("CLIENT");
