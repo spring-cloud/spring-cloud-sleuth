@@ -19,7 +19,9 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import brave.Span;
 import brave.Tracer;
@@ -30,13 +32,13 @@ import brave.httpclient.TracingHttpClientBuilder;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
@@ -325,138 +327,194 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
 		if (bean instanceof HttpClient) {
-			return ((HttpClient) bean)
+			return ((HttpClient) bean).mapConnect(new TracingMapConnect(this.beanFactory))
 					.doOnRequest(TracingDoOnRequest.create(this.beanFactory))
-					.doOnResponse(TracingDoOnResponse.create(this.beanFactory));
+					.doOnRequestError(TracingDoOnErrorRequest.create(this.beanFactory))
+					.doOnResponse(TracingDoOnResponse.create(this.beanFactory))
+					.doOnResponseError(TracingDoOnErrorResponse.create(this.beanFactory));
 		}
 		return bean;
 	}
 
-}
+	private static class TracingMapConnect implements
+			BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
 
-class TracingDoOnRequest implements BiConsumer<HttpClientRequest, Connection> {
+		private final BeanFactory beanFactory;
 
-	private static final Logger log = LoggerFactory.getLogger(TracingDoOnRequest.class);
+		private Tracer tracer;
 
-	static final Propagation.Setter<HttpHeaders, String> SETTER = new Propagation.Setter<HttpHeaders, String>() {
+		TracingMapConnect(BeanFactory beanFactory) {
+			this.beanFactory = beanFactory;
+		}
+
 		@Override
-		public void put(HttpHeaders carrier, String key, String value) {
-			if (!carrier.contains(key)) {
-				carrier.add(key, value);
+		public Mono<? extends Connection> apply(Mono<? extends Connection> mono,
+				Bootstrap bootstrap) {
+			return mono.subscriberContext(context -> context.put(AtomicReference.class,
+					new AtomicReference<>(tracer().currentSpan())));
+		}
+
+		private Tracer tracer() {
+			if (this.tracer == null) {
+				this.tracer = this.beanFactory.getBean(Tracer.class);
 			}
+			return this.tracer;
 		}
 
-		@Override
-		public String toString() {
-			return "HttpHeaders::add";
-		}
-	};
-	static final Propagation.Getter<HttpHeaders, String> GETTER = new Propagation.Getter<HttpHeaders, String>() {
-		@Override
-		public String get(HttpHeaders carrier, String key) {
-			return carrier.get(key);
-		}
-
-		@Override
-		public String toString() {
-			return "HttpHeaders::get";
-		}
-	};
-
-	final Tracer tracer;
-
-	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
-
-	final TraceContext.Injector<HttpHeaders> injector;
-
-	final HttpTracing httpTracing;
-
-	TracingDoOnRequest(HttpTracing httpTracing) {
-		this.tracer = httpTracing.tracing().tracer();
-		this.handler = HttpClientHandler.create(httpTracing, new HttpAdapter());
-		this.injector = httpTracing.tracing().propagation().injector(SETTER);
-		this.httpTracing = httpTracing;
 	}
 
-	static TracingDoOnRequest create(BeanFactory beanFactory) {
-		return new TracingDoOnRequest(beanFactory.getBean(HttpTracing.class));
-	}
+	private static class TracingDoOnRequest
+			implements BiConsumer<HttpClientRequest, Connection> {
 
-	@Override
-	public void accept(HttpClientRequest req, Connection connection) {
-		final Span currentSpan = this.tracer.currentSpan();
-		try (Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(currentSpan)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Wrapping do on request");
+		static final Propagation.Setter<HttpHeaders, String> SETTER = new Propagation.Setter<HttpHeaders, String>() {
+			@Override
+			public void put(HttpHeaders carrier, String key, String value) {
+				if (!carrier.contains(key)) {
+					carrier.add(key, value);
+				}
 			}
-			Span span = this.handler.handleSend(this.injector, req.requestHeaders(), req);
-			Attribute<Object> attribute = connection.channel()
-					.attr(AttributeKey.valueOf("span"));
-			attribute.set(span);
-		}
-	}
 
-}
-
-class TracingDoOnResponse implements BiConsumer<HttpClientResponse, Connection> {
-
-	private static final Logger log = LoggerFactory.getLogger(TracingDoOnResponse.class);
-
-	final Tracer tracer;
-
-	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
-
-	TracingDoOnResponse(HttpTracing httpTracing) {
-		this.tracer = httpTracing.tracing().tracer();
-		this.handler = HttpClientHandler.create(httpTracing, new HttpAdapter());
-	}
-
-	static TracingDoOnResponse create(BeanFactory beanFactory) {
-		return new TracingDoOnResponse(beanFactory.getBean(HttpTracing.class));
-	}
-
-	@Override
-	public void accept(HttpClientResponse httpClientResponse, Connection connection) {
-		Attribute<Object> spanAttr = connection.channel()
-				.attr(AttributeKey.valueOf("span"));
-		Span span = (Span) spanAttr.get();
-		if (span == null) {
-			return;
-		}
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Setting client sent spans");
+			@Override
+			public String toString() {
+				return "HttpHeaders::add";
 			}
-			// status codes and CR
-			// TODO: Add throwable
-			this.handler.handleReceive(httpClientResponse, null, span);
+		};
+
+		private static final Logger log = LoggerFactory
+				.getLogger(TracingDoOnRequest.class);
+
+		final Tracer tracer;
+
+		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+
+		final TraceContext.Injector<HttpHeaders> injector;
+
+		final HttpTracing httpTracing;
+
+		TracingDoOnRequest(HttpTracing httpTracing) {
+			this.tracer = httpTracing.tracing().tracer();
+			this.handler = HttpClientHandler.create(httpTracing, new HttpAdapter());
+			this.injector = httpTracing.tracing().propagation().injector(SETTER);
+			this.httpTracing = httpTracing;
 		}
+
+		static TracingDoOnRequest create(BeanFactory beanFactory) {
+			return new TracingDoOnRequest(beanFactory.getBean(HttpTracing.class));
+		}
+
+		@Override
+		public void accept(HttpClientRequest req, Connection connection) {
+			AtomicReference reference = req.currentContext()
+					.getOrDefault(AtomicReference.class, new AtomicReference());
+			Span span = this.handler.handleSend(this.injector, req.requestHeaders(), req,
+					(Span) reference.get());
+			reference.set(span);
+		}
+
 	}
 
-}
+	private static class TracingDoOnResponse extends AbstractTracingDoOnHandler
+			implements BiConsumer<HttpClientResponse, Connection> {
 
-class HttpAdapter
-		extends brave.http.HttpClientAdapter<HttpClientRequest, HttpClientResponse> {
+		TracingDoOnResponse(HttpTracing httpTracing) {
+			super(httpTracing);
+		}
 
-	@Override
-	public String method(HttpClientRequest request) {
-		return request.method().name();
+		static TracingDoOnResponse create(BeanFactory beanFactory) {
+			return new TracingDoOnResponse(beanFactory.getBean(HttpTracing.class));
+		}
+
+		@Override
+		public void accept(HttpClientResponse httpClientResponse, Connection connection) {
+			handle(httpClientResponse, null);
+		}
+
 	}
 
-	@Override
-	public String url(HttpClientRequest request) {
-		return request.uri();
+	private static class TracingDoOnErrorRequest extends AbstractTracingDoOnHandler
+			implements BiConsumer<HttpClientRequest, Throwable> {
+
+		TracingDoOnErrorRequest(HttpTracing httpTracing) {
+			super(httpTracing);
+		}
+
+		static TracingDoOnErrorRequest create(BeanFactory beanFactory) {
+			return new TracingDoOnErrorRequest(beanFactory.getBean(HttpTracing.class));
+		}
+
+		@Override
+		public void accept(HttpClientRequest request, Throwable throwable) {
+			handle(null, throwable);
+		}
+
 	}
 
-	@Override
-	public String requestHeader(HttpClientRequest request, String name) {
-		Object result = request.requestHeaders().get(name);
-		return result != null ? result.toString() : "";
+	private static class TracingDoOnErrorResponse extends AbstractTracingDoOnHandler
+			implements BiConsumer<HttpClientResponse, Throwable> {
+
+		TracingDoOnErrorResponse(HttpTracing httpTracing) {
+			super(httpTracing);
+		}
+
+		static TracingDoOnErrorResponse create(BeanFactory beanFactory) {
+			return new TracingDoOnErrorResponse(beanFactory.getBean(HttpTracing.class));
+		}
+
+		@Override
+		public void accept(HttpClientResponse httpClientResponse, Throwable throwable) {
+			handle(httpClientResponse, throwable);
+		}
+
 	}
 
-	@Override
-	public Integer statusCode(HttpClientResponse response) {
-		return response.status().code();
+	private static abstract class AbstractTracingDoOnHandler {
+
+		final Tracer tracer;
+
+		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+
+		AbstractTracingDoOnHandler(HttpTracing httpTracing) {
+			this.tracer = httpTracing.tracing().tracer();
+			this.handler = HttpClientHandler.create(httpTracing, new HttpAdapter());
+		}
+
+		protected void handle(HttpClientResponse httpClientResponse,
+				Throwable throwable) {
+			AtomicReference reference = httpClientResponse.currentContext()
+					.getOrDefault(AtomicReference.class, null);
+			if (reference == null || reference.get() == null) {
+				return;
+			}
+			this.handler.handleReceive(httpClientResponse, throwable,
+					(Span) reference.get());
+		}
+
+	}
+
+	private static class HttpAdapter
+			extends brave.http.HttpClientAdapter<HttpClientRequest, HttpClientResponse> {
+
+		@Override
+		public String method(HttpClientRequest request) {
+			return request.method().name();
+		}
+
+		@Override
+		public String url(HttpClientRequest request) {
+			return request.uri();
+		}
+
+		@Override
+		public String requestHeader(HttpClientRequest request, String name) {
+			Object result = request.requestHeaders().get(name);
+			return result != null ? result.toString() : "";
+		}
+
+		@Override
+		public Integer statusCode(HttpClientResponse response) {
+			return response.status().code();
+		}
+
 	}
 
 }
