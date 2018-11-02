@@ -112,8 +112,8 @@ public class JmsTracingConfigurationTest {
 
 					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
 							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).extracting(Span::name).contains("send",
-							"receive", "on-message");
+					assertThat(trace).extracting(Span::name).contains("send", "receive",
+							"on-message");
 				});
 	}
 
