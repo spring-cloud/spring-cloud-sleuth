@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import javax.annotation.Nullable;
+
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
@@ -25,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.Scannable;
 import reactor.util.context.Context;
 
 /**
@@ -34,7 +37,7 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T> {
+final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scannable {
 
 	private static final Log log = LogFactory.getLog(ScopePassingSpanSubscriber.class);
 
@@ -46,18 +49,13 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T> {
 
 	private final TraceContext traceContext;
 
-	private final Tracer tracer;
-
 	private Subscription s;
 
 	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx,
-			Tracing tracing) {
+			Tracing tracing, @Nullable Span root) {
 		this.subscriber = subscriber;
-		this.tracer = tracing.tracer();
 		this.currentTraceContext = tracing.currentTraceContext();
-		Span root = ctx != null
-				? ctx.hasKey(Span.class) ? ctx.get(Span.class) : this.tracer.currentSpan()
-				: null;
+
 		this.traceContext = root == null ? null : root.context();
 		this.context = ctx != null && root != null ? ctx.put(Span.class, root)
 				: ctx != null ? ctx : Context.empty();
@@ -121,4 +119,12 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T> {
 		return this.context;
 	}
 
+	@Override
+	public Object scanUnsafe(Attr key) {
+		if (key == Attr.PARENT) {
+			return this.s;
+		} else {
+			return key == Attr.ACTUAL ? this.subscriber : null;
+		}
+	}
 }

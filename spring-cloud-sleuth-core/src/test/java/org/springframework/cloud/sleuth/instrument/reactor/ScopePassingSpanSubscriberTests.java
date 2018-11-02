@@ -22,6 +22,8 @@ import brave.Tracing;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+import reactor.core.CoreSubscriber;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.util.context.Context;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -36,16 +38,17 @@ public class ScopePassingSpanSubscriberTests {
 
 	@Test
 	public void should_propagate_current_context() {
-		ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(null,
-				Context.of("foo", "bar"), this.tracing);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
+				Context.of("foo", "bar"), this.tracing, null);
 
 		then((String) subscriber.currentContext().get("foo")).isEqualTo("bar");
 	}
 
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
-		ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(null, null,
-				this.tracing);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null
+				, null,
+				this.tracing, null);
 
 		then(subscriber.currentContext().isEmpty()).isTrue();
 	}
@@ -55,8 +58,9 @@ public class ScopePassingSpanSubscriberTests {
 		Span span = this.tracing.tracer().nextSpan();
 		try (Tracer.SpanInScope ws = this.tracing.tracer()
 				.withSpanInScope(span.start())) {
-			ScopePassingSpanSubscriber subscriber = new ScopePassingSpanSubscriber(null,
-					Context.empty(), this.tracing);
+			CoreSubscriber<?> subscriber =
+					ReactorSleuth.scopePassingSpanSubscription(tracing, new BaseSubscriber<Object>() {
+					});
 
 			then(subscriber.currentContext().get(Span.class)).isEqualTo(span);
 		}
