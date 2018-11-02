@@ -544,17 +544,15 @@ class TestBean {
 	@NewSpan(name = "newSpanInTraceContext")
 	public Mono<Long> newSpanInTraceContext() {
 		log.info("New Span in Trace Context");
-		Long span = tracer.currentSpan().context().spanId();
-		return Mono.defer(() -> Mono.just(span));
+		return Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId()));
 	}
 
 	@NewSpan(name = "newSpanInSubscriberContext")
 	public Mono<Long> newSpanInSubscriberContext() {
 		log.info("New Span in Subscriber Context");
-		Long span = tracer.currentSpan().context().spanId();
 		return Mono.subscriberContext()
 				.doOnSuccess(context -> log.info("New Span in deferred Trace Context"))
-				.flatMap(context -> Mono.defer(() -> Mono.just(span)));
+				.flatMap(context -> Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId())));
 	}
 
 }

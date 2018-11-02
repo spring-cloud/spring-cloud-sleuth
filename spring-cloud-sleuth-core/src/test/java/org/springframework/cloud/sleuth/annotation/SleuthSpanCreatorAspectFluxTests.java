@@ -590,8 +590,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		@Override
 		public Flux<Long> newSpanInTraceContext() {
-			Long id = id(tracer);
-			return Flux.defer(() -> Flux.just(id));
+			return Flux.defer(() -> Flux.just(id(tracer)));
 		}
 
 		@Override
