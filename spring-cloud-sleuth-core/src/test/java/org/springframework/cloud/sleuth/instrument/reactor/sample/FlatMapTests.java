@@ -96,27 +96,37 @@ public class FlatMapTests {
 
 		Awaitility.await().untilAsserted(() -> {
 			// when
+			LOGGER.info("Start");
 			accumulator.clear();
 			String firstTraceId = flatMapTraceId(accumulator, callFlatMap(port).block());
 			// then
+			LOGGER.info("Checking first trace id");
 			thenAllWebClientCallsHaveSameTraceId(firstTraceId, sender);
 			thenSpanInFooHasSameTraceId(firstTraceId, config);
 			accumulator.clear();
+			LOGGER.info("All web client calls have same trace id");
 
 			// when
+			LOGGER.info("Second trace start");
 			String secondTraceId = flatMapTraceId(accumulator, callFlatMap(port).block());
 			// then
 			then(firstTraceId).as("Id will not be reused between calls")
 					.isNotEqualTo(secondTraceId);
+			LOGGER.info("Id was not reused between calls");
 			thenSpanInFooHasSameTraceId(secondTraceId, config);
+			LOGGER.info("Span in Foo has same trace id");
 			// and
-			then(Arrays.stream(capture.toString().split("\n"))
+			List<String> requestUri = Arrays
+					.stream(capture.toString().split("\n"))
 					.filter(s -> s.contains("Received a request to uri"))
-					.map(s -> s.split(",")[1]).collect(Collectors.toList())).as(
+					.map(s -> s.split(",")[1]).collect(Collectors.toList());
+			LOGGER.info("TracingFilter should not have any trace when receiving a request " + requestUri);
+			then(requestUri).as(
 							"TracingFilter should not have any trace when receiving a request")
 							.containsOnly("");
 			// and #866
 			then(factoryUser.wasSchedulerWrapped).isTrue();
+			LOGGER.info("Factory was wrapped");
 		});
 	}
 
