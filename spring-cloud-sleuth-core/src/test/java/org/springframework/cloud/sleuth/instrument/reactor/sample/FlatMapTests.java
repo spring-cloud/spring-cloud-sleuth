@@ -116,14 +116,15 @@ public class FlatMapTests {
 			thenSpanInFooHasSameTraceId(secondTraceId, config);
 			LOGGER.info("Span in Foo has same trace id");
 			// and
-			List<String> requestUri = Arrays
-					.stream(capture.toString().split("\n"))
+			List<String> requestUri = Arrays.stream(capture.toString().split("\n"))
 					.filter(s -> s.contains("Received a request to uri"))
 					.map(s -> s.split(",")[1]).collect(Collectors.toList());
-			LOGGER.info("TracingFilter should not have any trace when receiving a request " + requestUri);
+			LOGGER.info(
+					"TracingFilter should not have any trace when receiving a request "
+							+ requestUri);
 			then(requestUri).as(
-							"TracingFilter should not have any trace when receiving a request")
-							.containsOnly("");
+					"TracingFilter should not have any trace when receiving a request")
+					.containsOnly("");
 			// and #866
 			then(factoryUser.wasSchedulerWrapped).isTrue();
 			LOGGER.info("Factory was wrapped");

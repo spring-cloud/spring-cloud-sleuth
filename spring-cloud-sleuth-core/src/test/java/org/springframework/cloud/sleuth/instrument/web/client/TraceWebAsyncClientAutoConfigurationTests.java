@@ -90,10 +90,10 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.accumulator
-					.getSpans().stream().filter(span -> Span.Kind.CLIENT == span.kind())
-					.findFirst().get()).matches(
-					span -> span.duration() >= TimeUnit.MILLISECONDS.toMicros(100));
+			then(this.accumulator.getSpans().stream()
+					.filter(span -> Span.Kind.CLIENT == span.kind()).findFirst().get())
+							.matches(span -> span.duration() >= TimeUnit.MILLISECONDS
+									.toMicros(100));
 			then(this.tracer.tracer().currentSpan()).isNull();
 		});
 	}

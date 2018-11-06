@@ -245,10 +245,10 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			public void onNext(ClientResponse response) {
 				done = true;
 				try {
-					//decorate response body
+					// decorate response body
 					this.actual.onNext(ClientResponse.from(response)
 							.body(response.bodyToFlux(DataBuffer.class)
-							              .transform(scopePassingTransformer))
+									.transform(scopePassingTransformer))
 							.build());
 				}
 				finally {
