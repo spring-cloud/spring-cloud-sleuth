@@ -64,14 +64,12 @@ public abstract class ReactorSleuth {
 			log.trace("Scope passing operator [" + beanFactory + "]");
 		}
 
-		//Adapt if lazy bean factory
-		BooleanSupplier isActive =
-				beanFactory instanceof ConfigurableApplicationContext ?
-						((ConfigurableApplicationContext) beanFactory)::isActive :
-						() -> true;
+		// Adapt if lazy bean factory
+		BooleanSupplier isActive = beanFactory instanceof ConfigurableApplicationContext
+				? ((ConfigurableApplicationContext) beanFactory)::isActive : () -> true;
 
 		return Operators.liftPublisher((p, sub) -> {
-			//if Flux/Mono #just, #empty, #error
+			// if Flux/Mono #just, #empty, #error
 			if (p instanceof Fuseable.ScalarCallable) {
 				return sub;
 			}
@@ -81,40 +79,43 @@ public abstract class ReactorSleuth {
 				if (log.isTraceEnabled()) {
 					log.trace("Spring Context [" + beanFactory
 							+ "] already refreshed. Creating a scope "
-							+ "passing span subscriber with Reactor Context "
-							+ "[" + sub.currentContext() + "] and name ["
-							+ scannable.name() + "]");
+							+ "passing span subscriber with Reactor Context " + "["
+							+ sub.currentContext() + "] and name [" + scannable.name()
+							+ "]");
 				}
 
-				return scopePassingSpanSubscription(beanFactory.getBean(Tracing.class), sub);
+				return scopePassingSpanSubscription(beanFactory.getBean(Tracing.class),
+						sub);
 			}
 			if (log.isTraceEnabled()) {
 				log.trace("Spring Context [" + beanFactory
 						+ "] is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
-						+ sub.currentContext() + "] and name is ["
-						+ scannable.name() + "]");
+						+ sub.currentContext() + "] and name is [" + scannable.name()
+						+ "]");
 			}
-			return new LazySpanSubscriber<>(lazyScopePassingSpanSubscription(beanFactory, scannable, sub));
+			return new LazySpanSubscriber<>(
+					lazyScopePassingSpanSubscription(beanFactory, scannable, sub));
 		});
 	}
 
 	static <T> SpanSubscriptionProvider<T> lazyScopePassingSpanSubscription(
 			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
-		return new SpanSubscriptionProvider<>(beanFactory, sub, sub.currentContext(), scannable.name());
+		return new SpanSubscriptionProvider<>(beanFactory, sub, sub.currentContext(),
+				scannable.name());
 	}
 
-
-	static <T> CoreSubscriber<? super T> scopePassingSpanSubscription(
-			Tracing tracing, CoreSubscriber<? super T> sub) {
+	static <T> CoreSubscriber<? super T> scopePassingSpanSubscription(Tracing tracing,
+			CoreSubscriber<? super T> sub) {
 
 		Context context = sub.currentContext();
 
-		Span root = context.hasKey(Span.class) ? context.get(Span.class) : tracing.tracer().currentSpan();
+		Span root = context.hasKey(Span.class) ? context.get(Span.class)
+				: tracing.tracer().currentSpan();
 		if (root != null) {
 			return new ScopePassingSpanSubscriber<>(sub, context, tracing, root);
 		}
 		else {
-			return sub; //no need to trace
+			return sub; // no need to trace
 		}
 	}
 

@@ -123,8 +123,10 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 	public Object scanUnsafe(Attr key) {
 		if (key == Attr.PARENT) {
 			return this.s;
-		} else {
+		}
+		else {
 			return key == Attr.ACTUAL ? this.subscriber : null;
 		}
 	}
+
 }

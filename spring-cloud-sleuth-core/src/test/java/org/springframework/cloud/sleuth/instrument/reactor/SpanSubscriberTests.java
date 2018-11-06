@@ -88,10 +88,10 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			Mono.just(1).flatMap(d -> Flux.just(d + 1).collectList().map(p -> p.get(0)))
-			    .map(d -> d + 1).map((d) -> {
-				spanInOperation.set(this.tracer.currentSpan());
-				return d + 1;
-			}).map(d -> d + 1).subscribe(System.out::println);
+					.map(d -> d + 1).map((d) -> {
+						spanInOperation.set(this.tracer.currentSpan());
+						return d + 1;
+					}).map(d -> d + 1).subscribe(System.out::println);
 		}
 		finally {
 			span.finish();
@@ -106,13 +106,13 @@ public class SpanSubscriberTests {
 		Span span = this.tracer.nextSpan().name("foo").start();
 		log.info("Hello");
 
-		//Disable global hooks for local hook testing
+		// Disable global hooks for local hook testing
 		Hooks.resetOnLastOperator();
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 
-			Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer =
-					ReactorSleuth.scopePassingSpanOperator(factory);
+			Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = ReactorSleuth
+					.scopePassingSpanOperator(factory);
 
 			Subscriber<Object> assertNoSpanSubscriber = new CoreSubscriber<Object>() {
 				@Override
@@ -159,26 +159,20 @@ public class SpanSubscriberTests {
 
 				}
 			};
-			transformer.apply(Mono.just(1).hide())
-			           .subscribe(assertSpanSubscriber);
+			transformer.apply(Mono.just(1).hide()).subscribe(assertSpanSubscriber);
 
-			transformer.apply(Mono.just(1))
-			           .subscribe(assertNoSpanSubscriber);
+			transformer.apply(Mono.just(1)).subscribe(assertNoSpanSubscriber);
 
 			transformer.apply(Mono.<Integer>error(new Exception()).hide())
-			           .subscribe(assertSpanSubscriber);
-
+					.subscribe(assertSpanSubscriber);
 
 			transformer.apply(Mono.error(new Exception()))
-			           .subscribe(assertNoSpanSubscriber);
+					.subscribe(assertNoSpanSubscriber);
 
 			transformer.apply(Mono.<Integer>empty().hide())
-			           .subscribe(assertSpanSubscriber);
+					.subscribe(assertSpanSubscriber);
 
-			transformer.apply(Mono.empty())
-			           .subscribe(assertNoSpanSubscriber);
-
-
+			transformer.apply(Mono.empty()).subscribe(assertNoSpanSubscriber);
 
 		}
 		finally {
@@ -198,12 +192,12 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.1")
-			    .map(d -> d + 1).map(d -> d + 1)
-			    .publishOn(Schedulers.newSingle("secondThread")).log("reactor.2")
-			    .map((d) -> {
-				    spanInOperation.set(this.tracer.currentSpan());
-				    return d + 1;
-			    }).map(d -> d + 1).blockLast();
+					.map(d -> d + 1).map(d -> d + 1)
+					.publishOn(Schedulers.newSingle("secondThread")).log("reactor.2")
+					.map((d) -> {
+						spanInOperation.set(this.tracer.currentSpan());
+						return d + 1;
+					}).map(d -> d + 1).blockLast();
 
 			Awaitility.await().untilAsserted(() -> {
 				then(spanInOperation.get().context().traceId())
@@ -220,10 +214,10 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(foo2)) {
 			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.")
-			    .map(d -> d + 1).map(d -> d + 1).map((d) -> {
-				spanInOperation.set(this.tracer.currentSpan());
-				return d + 1;
-			}).map(d -> d + 1).blockLast();
+					.map(d -> d + 1).map(d -> d + 1).map((d) -> {
+						spanInOperation.set(this.tracer.currentSpan());
+						return d + 1;
+					}).map(d -> d + 1).blockLast();
 
 			then(this.tracer.currentSpan()).isEqualTo(foo2);
 			// parent cause there's an async span in the meantime
@@ -243,11 +237,11 @@ public class SpanSubscriberTests {
 		log.info("Hello");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(parentSpan)) {
 			final Long spanId = Mono.fromCallable(tracer::currentSpan)
-			                        .map(span -> span.context().spanId()).block();
+					.map(span -> span.context().spanId()).block();
 			then(spanId).isNotNull();
 
 			final Long secondSpanId = Mono.fromCallable(tracer::currentSpan)
-			                              .map(span -> span.context().spanId()).block();
+					.map(span -> span.context().spanId()).block();
 			then(secondSpanId).isEqualTo(spanId); // different trace ids here
 		}
 	}
@@ -260,11 +254,11 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
 			Mono.fromCallable(tracer::currentSpan).map(span -> span.context().spanId())
-			    .doOnNext(spanInOperation::set)
-			    .zipWith(Mono.fromCallable(tracer::currentSpan)
-			                 .map(span -> span.context().spanId())
-			                 .doOnNext(spanInZipOperation::set))
-			    .block();
+					.doOnNext(spanInOperation::set)
+					.zipWith(Mono.fromCallable(tracer::currentSpan)
+							.map(span -> span.context().spanId())
+							.doOnNext(spanInZipOperation::set))
+					.block();
 		}
 
 		then(spanInZipOperation).hasValue(initSpan.context().spanId()); // ok here
@@ -283,8 +277,8 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
 			Mono.just("value1")
-			    .flatMap(request -> Mono.just("value2").then(Mono.just("foo")))
-			    .map(a -> "qwe").block();
+					.flatMap(request -> Mono.just("value2").then(Mono.just("foo")))
+					.map(a -> "qwe").block();
 		}
 	}
 
@@ -296,8 +290,8 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
 			Mono.subscriberContext()
-			    .map(context -> tracer.currentSpan().context().spanId())
-			    .doOnNext(spanInSubscriberContext::set).block();
+					.map(context -> tracer.currentSpan().context().spanId())
+					.doOnNext(spanInSubscriberContext::set).block();
 		}
 
 		then(spanInSubscriberContext).hasValue(initSpan.context().spanId()); // ok here

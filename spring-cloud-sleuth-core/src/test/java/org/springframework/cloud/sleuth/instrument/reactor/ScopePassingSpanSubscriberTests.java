@@ -46,9 +46,8 @@ public class ScopePassingSpanSubscriberTests {
 
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
-		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null
-				, null,
-				this.tracing, null);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
+				null, this.tracing, null);
 
 		then(subscriber.currentContext().isEmpty()).isTrue();
 	}
@@ -58,8 +57,8 @@ public class ScopePassingSpanSubscriberTests {
 		Span span = this.tracing.tracer().nextSpan();
 		try (Tracer.SpanInScope ws = this.tracing.tracer()
 				.withSpanInScope(span.start())) {
-			CoreSubscriber<?> subscriber =
-					ReactorSleuth.scopePassingSpanSubscription(tracing, new BaseSubscriber<Object>() {
+			CoreSubscriber<?> subscriber = ReactorSleuth
+					.scopePassingSpanSubscription(tracing, new BaseSubscriber<Object>() {
 					});
 
 			then(subscriber.currentContext().get(Span.class)).isEqualTo(span);

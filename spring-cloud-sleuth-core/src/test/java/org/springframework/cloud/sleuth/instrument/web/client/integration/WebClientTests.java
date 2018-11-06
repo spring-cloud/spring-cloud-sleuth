@@ -296,7 +296,8 @@ public class WebClientTests {
 		Awaitility.await().untilAsserted(() -> {
 			then(this.tracer.currentSpan()).isNull();
 			System.out.println("Collected span " + this.reporter.getSpans());
-			then(this.reporter.getSpans()).isNotEmpty().extracting("traceId", String.class)
+			then(this.reporter.getSpans()).isNotEmpty()
+					.extracting("traceId", String.class)
 					.containsOnly(span.context().traceIdString());
 			then(this.reporter.getSpans()).extracting("kind.name").contains("CLIENT");
 		});

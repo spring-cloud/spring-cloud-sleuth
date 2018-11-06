@@ -28,7 +28,9 @@ import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Scannable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoOperator;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
@@ -85,43 +87,37 @@ class ReactorSleuthMethodInvocationProcessor
 		Publisher<?> publisher = (Publisher) invocation.proceed();
 
 		if (publisher instanceof Mono) {
-			return new MonoSpan((Mono<Object>) publisher,
-					this,
-					newSpan,
-					span,
-					invocation,
+			return new MonoSpan((Mono<Object>) publisher, this, newSpan, span, invocation,
 					log);
 		}
 		else if (publisher instanceof Flux) {
-			return new FluxSpan((Flux<Object>) publisher,
-					this,
-					newSpan,
-					span,
-					invocation,
+			return new FluxSpan((Flux<Object>) publisher, this, newSpan, span, invocation,
 					log);
 		}
 		else {
-			throw new IllegalArgumentException("Unexpected type of publisher: " + publisher.getClass());
+			throw new IllegalArgumentException(
+					"Unexpected type of publisher: " + publisher.getClass());
 		}
 	}
 
-	private static final class FluxSpan extends Flux<Object> implements Scannable {
+	private static final class FluxSpan extends FluxOperator<Object, Object> {
 
-		final Flux<Object>                           source;
-		final Span                                   span;
-		final MethodInvocation                       invocation;
-		final String                                 log;
-		final boolean                                hasLog;
+		final Span span;
+
+		final MethodInvocation invocation;
+
+		final String log;
+
+		final boolean hasLog;
+
 		final ReactorSleuthMethodInvocationProcessor processor;
-		final NewSpan                                newSpan;
 
-		FluxSpan(Flux<Object> source,
-				ReactorSleuthMethodInvocationProcessor processor,
-				NewSpan newSpan,
-				@Nullable Span span,
-				MethodInvocation invocation,
+		final NewSpan newSpan;
+
+		FluxSpan(Flux<Object> source, ReactorSleuthMethodInvocationProcessor processor,
+				NewSpan newSpan, @Nullable Span span, MethodInvocation invocation,
 				String log) {
-			this.source = source;
+			super(source);
 			this.span = span;
 			this.newSpan = newSpan;
 			this.invocation = invocation;
@@ -143,44 +139,31 @@ class ReactorSleuthMethodInvocationProcessor
 				span = this.span;
 			}
 			try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
-				this.source.subscribe(new SpanSubscriber(actual,
-						this.processor,
-						this.invocation,
-						this.span == null,
-						span,
-						this.log,
-						this.hasLog));
+				this.source.subscribe(new SpanSubscriber(actual, this.processor,
+						this.invocation, this.span == null, span, this.log, this.hasLog));
 			}
 		}
 
-		@Nullable
-		public Object scanUnsafe(Attr key) {
-			if (key == Attr.PARENT) {
-				return this.source;
-			}
-			else {
-				return null;
-			}
-		}
 	}
 
-	private static final class MonoSpan extends Mono<Object> implements Scannable {
+	private static final class MonoSpan extends MonoOperator<Object, Object> {
 
-		final Mono<Object>                           source;
-		final Span                                   span;
-		final MethodInvocation                       invocation;
-		final String                                 log;
-		final boolean                                hasLog;
+		final Span span;
+
+		final MethodInvocation invocation;
+
+		final String log;
+
+		final boolean hasLog;
+
 		final ReactorSleuthMethodInvocationProcessor processor;
-		final NewSpan                                newSpan;
 
-		MonoSpan(Mono<Object> source,
-				ReactorSleuthMethodInvocationProcessor processor,
-				NewSpan newSpan,
-				@Nullable Span span,
-				MethodInvocation invocation,
+		final NewSpan newSpan;
+
+		MonoSpan(Mono<Object> source, ReactorSleuthMethodInvocationProcessor processor,
+				NewSpan newSpan, @Nullable Span span, MethodInvocation invocation,
 				String log) {
-			this.source = source;
+			super(source);
 			this.processor = processor;
 			this.newSpan = newSpan;
 			this.span = span;
@@ -202,48 +185,37 @@ class ReactorSleuthMethodInvocationProcessor
 				span = this.span;
 			}
 			try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
-				this.source.subscribe(new SpanSubscriber(actual,
-						this.processor,
-						this.invocation,
-						this.span == null,
-						span,
-						this.log,
-						this.hasLog));
+				this.source.subscribe(new SpanSubscriber(actual, this.processor,
+						this.invocation, this.span == null, span, this.log, this.hasLog));
 			}
 		}
 
-		@Nullable
-		public Object scanUnsafe(Attr key) {
-			if (key == Attr.PARENT) {
-				return this.source;
-			}
-			else {
-				return null;
-			}
-		}
 	}
 
-	private static final class SpanSubscriber implements CoreSubscriber<Object>,
-	                                                     Subscription,
-	                                                     Scannable {
+	private static final class SpanSubscriber
+			implements CoreSubscriber<Object>, Subscription, Scannable {
 
-		final CoreSubscriber<? super Object>         actual;
-		final boolean                                isNewSpan;
-		final Span                                   span;
-		final String                                 log;
-		final boolean                                hasLog;
-		final CurrentTraceContext                    currentTraceContext;
+		final CoreSubscriber<? super Object> actual;
+
+		final boolean isNewSpan;
+
+		final Span span;
+
+		final String log;
+
+		final boolean hasLog;
+
+		final CurrentTraceContext currentTraceContext;
+
 		final ReactorSleuthMethodInvocationProcessor processor;
-		final Context                                context;
+
+		final Context context;
 
 		Subscription parent;
 
 		SpanSubscriber(CoreSubscriber<? super Object> actual,
 				ReactorSleuthMethodInvocationProcessor processor,
-				MethodInvocation invocation,
-				boolean isNewSpan,
-				Span span,
-				String log,
+				MethodInvocation invocation, boolean isNewSpan, Span span, String log,
 				boolean hasLog) {
 			this.actual = actual;
 			this.isNewSpan = isNewSpan;
@@ -332,6 +304,7 @@ class ReactorSleuthMethodInvocationProcessor
 			}
 			return null;
 		}
+
 	}
 
 	private boolean isReactorReturnType(Class<?> returnType) {
