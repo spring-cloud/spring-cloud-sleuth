@@ -77,7 +77,7 @@ public class TraceableExecutorServiceTests {
 
 	@Before
 	public void setup() {
-		this.traceManagerableExecutorService = new TraceableExecutorService(beanFactory(),
+		this.traceManagerableExecutorService = new TraceableExecutorService(beanFactory(true),
 				this.executorService);
 		this.reporter.clear();
 		this.spanVerifyingRunnable.clear();
@@ -116,7 +116,7 @@ public class TraceableExecutorServiceTests {
 			throws Exception {
 		ExecutorService executorService = Mockito.mock(ExecutorService.class);
 		TraceableExecutorService traceExecutorService = new TraceableExecutorService(
-				beanFactory(), executorService);
+				beanFactory(true), executorService);
 
 		traceExecutorService.invokeAll(callables());
 		BDDMockito.then(executorService).should()
@@ -133,6 +133,33 @@ public class TraceableExecutorServiceTests {
 
 		traceExecutorService.invokeAny(callables(), 1L, TimeUnit.DAYS);
 		BDDMockito.then(executorService).should().invokeAny(
+				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
+				BDDMockito.eq(1L), BDDMockito.eq(TimeUnit.DAYS));
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void should_not_wrap_methods_in_trace_representation_only_for_non_tracing_callables_when_context_not_ready()
+			throws Exception {
+		ExecutorService executorService = Mockito.mock(ExecutorService.class);
+		TraceableExecutorService traceExecutorService = new TraceableExecutorService(
+				beanFactory(false), executorService);
+
+		traceExecutorService.invokeAll(callables());
+		BDDMockito.then(executorService).should(BDDMockito.never())
+				.invokeAll(BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()));
+
+		traceExecutorService.invokeAll(callables(), 1L, TimeUnit.DAYS);
+		BDDMockito.then(executorService).should(BDDMockito.never()).invokeAll(
+				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
+				BDDMockito.eq(1L), BDDMockito.eq(TimeUnit.DAYS));
+
+		traceExecutorService.invokeAny(callables());
+		BDDMockito.then(executorService).should(BDDMockito.never())
+				.invokeAny(BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()));
+
+		traceExecutorService.invokeAny(callables(), 1L, TimeUnit.DAYS);
+		BDDMockito.then(executorService).should(BDDMockito.never()).invokeAny(
 				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
 				BDDMockito.eq(1L), BDDMockito.eq(TimeUnit.DAYS));
 	}
@@ -162,7 +189,7 @@ public class TraceableExecutorServiceTests {
 	public void should_propagate_trace_info_when_compleable_future_is_used()
 			throws Exception {
 		ExecutorService executorService = this.executorService;
-		BeanFactory beanFactory = beanFactory();
+		BeanFactory beanFactory = beanFactory(true);
 		// tag::completablefuture[]
 		CompletableFuture<Long> completableFuture = CompletableFuture.supplyAsync(() -> {
 			// perform some logic
@@ -171,6 +198,21 @@ public class TraceableExecutorServiceTests {
 				// 'calculateTax' explicitly names the span - this param is optional
 				"calculateTax"));
 		// end::completablefuture[]
+
+		then(completableFuture.get()).isEqualTo(1_000_000L);
+		then(this.tracer.currentSpan()).isNull();
+	}
+
+	@Test
+	public void should_not_propagate_trace_info_when_compleable_future_is_used_when_context_not_refreshed()
+			throws Exception {
+		ExecutorService executorService = this.executorService;
+		BeanFactory beanFactory = beanFactory(false);
+		CompletableFuture<Long> completableFuture = CompletableFuture.supplyAsync(() -> {
+			// perform some logic
+			return 1_000_000L;
+		}, new TraceableExecutorService(beanFactory, executorService,
+				"calculateTax"));
 
 		then(completableFuture.get()).isEqualTo(1_000_000L);
 		then(this.tracer.currentSpan()).isNull();
@@ -185,11 +227,13 @@ public class TraceableExecutorServiceTests {
 		return futures.toArray(new CompletableFuture[futures.size()]);
 	}
 
-	BeanFactory beanFactory() {
+	BeanFactory beanFactory(boolean refreshed) {
 		BDDMockito.given(this.beanFactory.getBean(Tracing.class))
 				.willReturn(this.tracing);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class))
 				.willReturn(new DefaultSpanNamer());
+		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
+				.willReturn(new ContextRefreshedListener(refreshed));
 		return this.beanFactory;
 	}
 

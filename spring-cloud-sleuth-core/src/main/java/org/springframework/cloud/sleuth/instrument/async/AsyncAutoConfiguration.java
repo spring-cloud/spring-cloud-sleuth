@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 
@@ -31,5 +32,10 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 @Configuration
 @EnableConfigurationProperties(SleuthAsyncProperties.class)
 public class AsyncAutoConfiguration {
+
+	@Bean
+	ContextRefreshedListener traceContextRefreshedListener() {
+		return new ContextRefreshedListener();
+	}
 
 }

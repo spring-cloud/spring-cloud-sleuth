@@ -44,31 +44,37 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		Runnable r = new TraceRunnable(tracing(), spanNamer(), command);
-		return getScheduledExecutorService().schedule(r, delay, unit);
+		return getScheduledExecutorService().schedule(
+				ContextUtil.isContextInCreation(this.beanFactory) ? command
+						: new TraceRunnable(tracing(), spanNamer(), command),
+				delay, unit);
 	}
 
 	@Override
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay,
 			TimeUnit unit) {
-		Callable<V> c = new TraceCallable<>(tracing(), spanNamer(), callable);
-		return getScheduledExecutorService().schedule(c, delay, unit);
+		return getScheduledExecutorService().schedule(
+				ContextUtil.isContextInCreation(this.beanFactory) ? callable
+						: new TraceCallable<>(tracing(), spanNamer(), callable),
+				delay, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,
 			long period, TimeUnit unit) {
-		Runnable r = new TraceRunnable(tracing(), spanNamer(), command);
-		return getScheduledExecutorService().scheduleAtFixedRate(r, initialDelay, period,
-				unit);
+		return getScheduledExecutorService().scheduleAtFixedRate(
+				ContextUtil.isContextInCreation(this.beanFactory) ? command
+						: new TraceRunnable(tracing(), spanNamer(), command),
+				initialDelay, period, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,
 			long delay, TimeUnit unit) {
-		Runnable r = new TraceRunnable(tracing(), spanNamer(), command);
-		return getScheduledExecutorService().scheduleWithFixedDelay(r, initialDelay,
-				delay, unit);
+		return getScheduledExecutorService().scheduleWithFixedDelay(
+				ContextUtil.isContextInCreation(this.beanFactory) ? command
+						: new TraceRunnable(tracing(), spanNamer(), command),
+				initialDelay, delay, unit);
 	}
 
 }
