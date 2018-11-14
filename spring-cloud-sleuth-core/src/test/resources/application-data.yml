@@ -1,1 +1,3 @@
 spring.autoconfigure.exclude:
+spring.data.jdbc.repositories.enabled: true
+spring.data.jpa.repositories.enabled: true
