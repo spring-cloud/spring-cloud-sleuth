@@ -39,7 +39,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage",
-		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage" })
+		"spring.sleuth.propagation-keys=my-propagation",
+		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,my-propagation" })
 @SpringBootConfiguration
 @EnableAutoConfiguration
 public class Slf4JSpanLoggerTest {
@@ -77,14 +78,18 @@ public class Slf4JSpanLoggerTest {
 	@Test
 	public void should_set_entries_to_mdc_from_span_with_baggage() throws Exception {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
+		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
+				"my-propagation-value");
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 
 		scope.close();
 
 		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
 	}
 
 	@Test
