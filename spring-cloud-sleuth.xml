@@ -1060,8 +1060,10 @@ Notice that there&#8217;s no <literal>x-</literal> in front of the header keys.<
 </important>
 <simpara>In order to automatically set the baggage values to Slf4j&#8217;s MDC, you have to set
 the <literal>spring.sleuth.log.slf4j.whitelisted-mdc-keys</literal> property with a list of whitelisted
-baggage keys. E.g. <literal>spring.sleuth.log.slf4j.whitelisted-mdc-keys=foo</literal> will set the value of the
-<literal>foo</literal> baggage into MDC.</simpara>
+baggage and propagation keys. E.g. <literal>spring.sleuth.log.slf4j.whitelisted-mdc-keys=foo</literal> will set the value of the <literal>foo</literal> baggage into MDC.</simpara>
+<important>
+<simpara>Remember that adding entries to MDC can drastically decrease the performance of your application!</simpara>
+</important>
 </section>
 <section xml:id="_extracting_a_propagated_context">
 <title>Extracting a Propagated Context</title>
