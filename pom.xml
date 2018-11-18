@@ -21,7 +21,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-cloud-sleuth</artifactId>
-	<version>2.1.0.M2</version>
+	<version>2.1.0.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Sleuth</name>
 	<description>Spring Cloud Sleuth</description>
@@ -29,7 +29,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>2.1.0.RC2</version>
+		<version>2.1.0.BUILD-SNAPSHOT</version>
 		<relativePath/>
 		<!-- lookup parent from repository -->
 	</parent>
@@ -242,11 +242,11 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
-		<spring-cloud-build.version>2.1.0.RC2</spring-cloud-build.version>
-		<spring-cloud-commons.version>2.1.0.M2</spring-cloud-commons.version>
-		<spring-cloud-stream.version>Fishtown.RC1</spring-cloud-stream.version>
-		<spring-cloud-netflix.version>2.1.0.M2</spring-cloud-netflix.version>
-		<spring-cloud-openfeign.version>2.1.0.M2</spring-cloud-openfeign.version>
+		<spring-cloud-build.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-build.version>
+		<spring-cloud-commons.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-stream.version>Fishtown.BUILD-SNAPSHOT</spring-cloud-stream.version>
+		<spring-cloud-netflix.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
+		<spring-cloud-openfeign.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.4.4</brave.version>
 		<spring-security-boot-autoconfigure.version>2.0.4.RELEASE</spring-security-boot-autoconfigure.version>
 	</properties>
