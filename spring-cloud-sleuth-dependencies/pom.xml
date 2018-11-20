@@ -31,6 +31,7 @@
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
 		<brave.opentracing.version>0.33.7</brave.opentracing.version>
+		<grpc.spring.boot.version>3.0.0</grpc.spring.boot.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -74,6 +75,12 @@
 				<groupId>io.opentracing.brave</groupId>
 				<artifactId>brave-opentracing</artifactId>
 				<version>${brave.opentracing.version}</version>
+			</dependency>
+			<!-- GRPC -->
+			<dependency>
+				<groupId>io.github.lognet</groupId>
+				<artifactId>grpc-spring-boot-starter</artifactId>
+				<version>${grpc.spring.boot.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

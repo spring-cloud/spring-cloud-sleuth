@@ -1210,6 +1210,44 @@ You can disable it by setting `spring.sleuth.feign.processor.enabled` to `false`
 If you set it to `false`, Spring Cloud Sleuth does not instrument any of your custom Feign components.
 However, all the default instrumentation is still there.
 
+=== gRPC
+
+Spring Cloud Sleuth provides instrumentation for https://grpc.io/[gRPC] through `TraceGrpcAutoConfiguration`. You can disable it entirely by setting `spring.sleuth.grpc.enabled` to `false`.
+
+==== Dependencies
+IMPORTANT: The gRPC integration relies on two external libraries to instrument clients and servers and both of those libraries must be on the class path to enable the instrumentation.
+
+Maven: 
+```
+		<dependency>
+			<groupId>io.github.lognet</groupId>
+			<artifactId>grpc-spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.zipkin.brave</groupId>
+			<artifactId>brave-instrumentation-grpc</artifactId>
+		</dependency>
+```
+Gradle:
+```
+    compile("io.github.lognet:grpc-spring-boot-starter")
+    compile("io.zipkin.brave:brave-instrumentation-grpc")
+```
+
+==== Server Instrumentation
+
+Spring Cloud Sleuth leverages grpc-spring-boot-starter to register Brave's gRPC server interceptor with all services annotated with `@GRpcService`. 
+
+==== Client Instrumentation
+
+gRPC clients leverage a `ManagedChannelBuilder` to construct a `ManagedChannel` used to communicate to the gRPC server. The native `ManagedChannelBuilder` provides static methods as entry points for construction of `ManagedChannel` instances, however, this mechanism is outside the influence of the Spring application context.
+
+IMPORTANT: Spring Cloud Sleuth provides a `SpringAwareManagedChannelBuilder` that can be customized through the Spring application context and injected by gRPC clients. *This builder must be used when creating `ManagedChannel` instances.*
+
+
+Sleuth creates a `TracingManagedChannelBuilderCustomizer` which inject Brave's client interceptor into the `SpringAwareManagedChannelBuilder`.
+
+
 === Asynchronous Communication
 
 ==== `@Async` Annotated methods
