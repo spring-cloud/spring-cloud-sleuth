@@ -30,7 +30,7 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<brave.opentracing.version>0.33.5</brave.opentracing.version>
+		<brave.opentracing.version>0.33.7</brave.opentracing.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
