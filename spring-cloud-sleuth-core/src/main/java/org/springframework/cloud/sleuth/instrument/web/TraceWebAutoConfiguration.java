@@ -93,7 +93,7 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass({ServerProperties.class, WebEndpointProperties.class})
+	@ConditionalOnClass({ ServerProperties.class, WebEndpointProperties.class })
 	protected static class ServerSkipPatternProviderConfig {
 
 		/**

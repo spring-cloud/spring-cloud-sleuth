@@ -26,6 +26,7 @@ import brave.Tracing;
 import brave.jms.JmsTracing;
 import brave.kafka.clients.KafkaTracing;
 import brave.propagation.CurrentTraceContext;
+import brave.spring.rabbit.SleuthTracingRabbitListenerAdvice;
 import brave.spring.rabbit.SpringRabbitTracing;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -38,6 +39,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.ProxyFactoryBean;
@@ -183,8 +185,18 @@ class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 			return rabbitTracing().decorateRabbitTemplate((RabbitTemplate) bean);
 		}
 		else if (bean instanceof SimpleRabbitListenerContainerFactory) {
-			return rabbitTracing().decorateSimpleRabbitListenerContainerFactory(
-					(SimpleRabbitListenerContainerFactory) bean);
+			try {
+				return rabbitTracing().decorateSimpleRabbitListenerContainerFactory(
+						(SimpleRabbitListenerContainerFactory) bean);
+			}
+			catch (NullPointerException ex) {
+				// TODO: Fix this in Rabbit or Brave
+				SpringRabbitTracing springRabbitTracing = rabbitTracing();
+				SimpleRabbitListenerContainerFactory factory = (SimpleRabbitListenerContainerFactory) bean;
+				factory.setAdviceChain(
+						SleuthTracingRabbitListenerAdvice.advice(springRabbitTracing));
+				return factory;
+			}
 		}
 		return bean;
 	}
