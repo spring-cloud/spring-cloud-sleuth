@@ -102,6 +102,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
 
+	private static final String CANCELLED_SUBSCRIPTION_ERROR = "CANCELLED";
+
 	static final Propagation.Setter<ClientRequest.Builder, String> SETTER = new Propagation.Setter<ClientRequest.Builder, String>() {
 		@Override
 		public void put(ClientRequest.Builder carrier, String key, String value) {
@@ -238,7 +240,18 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			@Override
 			public void onSubscribe(Subscription subscription) {
-				this.actual.onSubscribe(subscription);
+				this.actual.onSubscribe(new Subscription() {
+					@Override
+					public void request(long n) {
+						subscription.request(n);
+					}
+
+					@Override
+					public void cancel() {
+						terminateSpanOnCancel();
+						subscription.cancel();
+					}
+				});
 			}
 
 			@Override
@@ -287,6 +300,16 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					ClientResponse clientResponse, Throwable throwable) {
 				this.handler.handleReceive(clientResponse, throwable, clientSpan);
 				ws.close();
+			}
+
+			void terminateSpanOnCancel() {
+				if (log.isDebugEnabled()) {
+					log.debug("Subscription was cancelled. Will close the span [" + span
+							+ "]");
+				}
+
+				span.tag("error", CANCELLED_SUBSCRIPTION_ERROR);
+				handleReceive(span, ws, null, null);
 			}
 
 			void terminateSpan(@Nullable ClientResponse clientResponse,
