@@ -1898,6 +1898,40 @@ You can disable it by setting <literal>spring.sleuth.feign.processor.enabled</li
 If you set it to <literal>false</literal>, Spring Cloud Sleuth does not instrument any of your custom Feign components.
 However, all the default instrumentation is still there.</simpara>
 </section>
+<section xml:id="_grpc">
+<title>gRPC</title>
+<simpara>Spring Cloud Sleuth provides instrumentation for <link xl:href="https://grpc.io/">gRPC</link> through <literal>TraceGrpcAutoConfiguration</literal>. You can disable it entirely by setting <literal>spring.sleuth.grpc.enabled</literal> to <literal>false</literal>.</simpara>
+<section xml:id="_dependencies">
+<title>Dependencies</title>
+<important>
+<simpara>The gRPC integration relies on two external libraries to instrument clients and servers and both of those libraries must be on the class path to enable the instrumentation.</simpara>
+</important>
+<simpara>Maven:</simpara>
+<screen>		&lt;dependency&gt;
+			&lt;groupId&gt;io.github.lognet&lt;/groupId&gt;
+			&lt;artifactId&gt;grpc-spring-boot-starter&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;io.zipkin.brave&lt;/groupId&gt;
+			&lt;artifactId&gt;brave-instrumentation-grpc&lt;/artifactId&gt;
+		&lt;/dependency&gt;</screen>
+<simpara>Gradle:</simpara>
+<screen>    compile("io.github.lognet:grpc-spring-boot-starter")
+    compile("io.zipkin.brave:brave-instrumentation-grpc")</screen>
+</section>
+<section xml:id="_server_instrumentation">
+<title>Server Instrumentation</title>
+<simpara>Spring Cloud Sleuth leverages grpc-spring-boot-starter to register Brave&#8217;s gRPC server interceptor with all services annotated with <literal>@GRpcService</literal>.</simpara>
+</section>
+<section xml:id="_client_instrumentation">
+<title>Client Instrumentation</title>
+<simpara>gRPC clients leverage a <literal>ManagedChannelBuilder</literal> to construct a <literal>ManagedChannel</literal> used to communicate to the gRPC server. The native <literal>ManagedChannelBuilder</literal> provides static methods as entry points for construction of <literal>ManagedChannel</literal> instances, however, this mechanism is outside the influence of the Spring application context.</simpara>
+<important>
+<simpara>Spring Cloud Sleuth provides a <literal>SpringAwareManagedChannelBuilder</literal> that can be customized through the Spring application context and injected by gRPC clients. <emphasis role="strong">This builder must be used when creating <literal>ManagedChannel</literal> instances.</emphasis></simpara>
+</important>
+<simpara>Sleuth creates a <literal>TracingManagedChannelBuilderCustomizer</literal> which inject Brave&#8217;s client interceptor into the <literal>SpringAwareManagedChannelBuilder</literal>.</simpara>
+</section>
+</section>
 <section xml:id="_asynchronous_communication">
 <title>Asynchronous Communication</title>
 <section xml:id="_async_annotated_methods">
