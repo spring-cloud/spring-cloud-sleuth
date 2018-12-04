@@ -30,6 +30,8 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -60,10 +62,25 @@ public class DemoSleuthSkipApplicationTests {
 		then(this.accumulator.getSpans()).hasSize(0);
 	}
 
+	@Test
+	public void should_sample_non_actuator_endpoint_with_context_path() {
+		new RestTemplate().getForObject(
+				"http://localhost:" + this.port + "/context-path/something",
+				String.class);
+
+		then(this.tracer.currentSpan()).isNull();
+		then(this.accumulator.getSpans()).hasSize(1);
+	}
+
 	@EnableAutoConfiguration(exclude = RabbitAutoConfiguration.class)
 	@Configuration
 	@DisableSecurity
+	@RestController
 	public static class Config {
+
+		@GetMapping("something")
+		void doNothing() {
+		}
 
 		@Bean
 		ArrayListSpanReporter reporter() {

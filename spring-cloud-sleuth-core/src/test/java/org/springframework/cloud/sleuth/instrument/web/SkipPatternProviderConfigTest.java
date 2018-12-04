@@ -21,6 +21,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.junit.Test;
+
+import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 
@@ -80,7 +82,9 @@ public class SkipPatternProviderConfigTest {
 	public void should_return_empty_when_server_props_have_no_context_path()
 			throws Exception {
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ServerSkipPatternProviderConfig()
-				.skipPatternForServerProperties(new ServerProperties()).skipPattern();
+				.skipPatternForServerProperties(new ServerProperties(),
+						new WebEndpointProperties())
+				.skipPattern();
 
 		then(pattern).isEmpty();
 	}
@@ -91,10 +95,11 @@ public class SkipPatternProviderConfigTest {
 		properties.getServlet().setContextPath("foo");
 
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ServerSkipPatternProviderConfig()
-				.skipPatternForServerProperties(properties).skipPattern();
+				.skipPatternForServerProperties(properties, new WebEndpointProperties())
+				.skipPattern();
 
 		then(pattern).isNotEmpty();
-		then(pattern.get().pattern()).isEqualTo("foo.*");
+		then(pattern.get().pattern()).isEqualTo("foo/actuator.*");
 	}
 
 	@Test
