@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import brave.Tracing;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -92,27 +93,31 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass(ServerProperties.class)
+	@ConditionalOnClass({ServerProperties.class, WebEndpointProperties.class})
 	protected static class ServerSkipPatternProviderConfig {
 
 		/**
-		 * Sets or appends {@link ServerProperties#getServlet()#getContextPath()} to the
-		 * skip pattern. If neither is available then sets the default one
+		 * Uses {@link ServerProperties#getServlet()#getContextPath()} and
+		 * {@link WebEndpointProperties#getBasePath()} to skip Actuator endpoints.
 		 */
 		static Optional<Pattern> getPatternForServerProperties(
-				ServerProperties serverProperties) {
+				ServerProperties serverProperties,
+				WebEndpointProperties webEndpointProperties) {
 			String contextPath = serverProperties.getServlet().getContextPath();
 			if (StringUtils.hasText(contextPath)) {
-				return Optional.of(Pattern.compile(contextPath + ".*"));
+				return Optional.of(Pattern.compile(
+						contextPath + webEndpointProperties.getBasePath() + ".*"));
 			}
 			return Optional.empty();
 		}
 
 		@Bean
-		@ConditionalOnBean(ServerProperties.class)
+		@ConditionalOnBean({ ServerProperties.class, WebEndpointProperties.class })
 		public SingleSkipPattern skipPatternForServerProperties(
-				final ServerProperties serverProperties) {
-			return () -> getPatternForServerProperties(serverProperties);
+				final ServerProperties serverProperties,
+				final WebEndpointProperties webEndpointProperties) {
+			return () -> getPatternForServerProperties(serverProperties,
+					webEndpointProperties);
 		}
 
 	}
