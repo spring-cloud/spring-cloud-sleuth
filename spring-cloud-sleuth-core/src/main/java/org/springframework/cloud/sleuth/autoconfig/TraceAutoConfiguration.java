@@ -24,12 +24,13 @@ import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
 import brave.handler.FinishedSpanHandler;
-import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
+import org.springframework.cloud.sleuth.propagation.DefaultBasePropagationFactoryProvider;
+import org.springframework.cloud.sleuth.propagation.BasePropagationFactoryProvider;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
@@ -121,13 +122,21 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
+	BasePropagationFactoryProvider basePropagationFactoryProvider() {
+		return new DefaultBasePropagationFactoryProvider();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	Propagation.Factory sleuthPropagation(
+			SleuthProperties sleuthProperties,
+			BasePropagationFactoryProvider basePropagationFactoryProvider) {
 		if (sleuthProperties.getBaggageKeys().isEmpty()
 				&& sleuthProperties.getPropagationKeys().isEmpty()) {
-			return B3Propagation.FACTORY;
+			return basePropagationFactoryProvider.get();
 		}
 		ExtraFieldPropagation.FactoryBuilder factoryBuilder = ExtraFieldPropagation
-				.newFactoryBuilder(B3Propagation.FACTORY);
+				.newFactoryBuilder(basePropagationFactoryProvider.get());
 		if (!sleuthProperties.getBaggageKeys().isEmpty()) {
 			factoryBuilder = factoryBuilder
 					// for HTTP
