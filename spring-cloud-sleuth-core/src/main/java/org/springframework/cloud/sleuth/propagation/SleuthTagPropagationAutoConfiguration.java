@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.log;
+package org.springframework.cloud.sleuth.propagation;
 
-import brave.propagation.CurrentTraceContext;
-import org.slf4j.MDC;
+import brave.handler.FinishedSpanHandler;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
@@ -28,34 +26,25 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} adds a {@link Slf4jScopeDecorator} that prints tracing information
- * in the logs.
- * <p>
- *
- * @author Spencer Gibb
- * @author Marcin Grzejszczak
- * @since 2.0.0
+ * @author Taras Danylchuk
+ * @since 2.1.0
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
-public class SleuthLogAutoConfiguration {
+public class SleuthTagPropagationAutoConfiguration {
 
-	/**
-	 * Configuration for Slfj4
-	 */
 	@Configuration
-	@ConditionalOnClass(MDC.class)
-	@EnableConfigurationProperties(SleuthSlf4jProperties.class)
-	protected static class Slf4jConfiguration {
+	@ConditionalOnProperty(value = "spring.sleuth.propagation.tag.enabled", matchIfMissing = true)
+	@EnableConfigurationProperties(SleuthTagPropagationProperties.class)
+	protected static class TagPropagationConfiguration {
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
-		public CurrentTraceContext.ScopeDecorator slf4jSpanDecorator(
-				SleuthProperties sleuthProperties,
-				SleuthSlf4jProperties sleuthSlf4jProperties) {
-			return new Slf4jScopeDecorator(sleuthProperties, sleuthSlf4jProperties);
+		@ConditionalOnProperty(value = "spring.sleuth.propagation.tag.whitelisted-keys")
+		public FinishedSpanHandler finishedSpanHandler(SleuthProperties sleuthProperties,
+													   SleuthTagPropagationProperties tagPropagationProperties) {
+			return new TagPropagationFinishedSpanHandler(sleuthProperties,
+					tagPropagationProperties);
 		}
 
 	}
