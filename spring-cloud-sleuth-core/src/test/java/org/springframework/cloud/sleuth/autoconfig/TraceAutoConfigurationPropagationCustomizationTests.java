@@ -1,37 +1,51 @@
 package org.springframework.cloud.sleuth.autoconfig;
 
-import brave.Tracing;
+import brave.propagation.B3Propagation;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.ExtraFieldPropagation;
+import brave.propagation.Propagation;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(
-		classes = TraceAutoConfigurationPropagationCustomizationTests.Config.class,
-		properties = "spring.sleuth.baggage-keys=my-baggage",
-		webEnvironment = SpringBootTest.WebEnvironment.NONE
-)
 public class TraceAutoConfigurationPropagationCustomizationTests {
 
-	@Autowired
-	Tracing tracing;
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class));
 
 	@Test
-	public void usesCustomFactoryBuilder() {
-		BDDAssertions.then(tracing.propagationFactory())
-				.hasFieldOrPropertyWithValue("delegate", B3SinglePropagation.FACTORY);
+	public void stillCreatesDefault() {
+		this.contextRunner.run((context) -> {
+					BDDAssertions.then(context.getBean(Propagation.Factory.class))
+							.isEqualTo(B3Propagation.FACTORY);
+				});
+	}
+
+	@Test
+	public void allowsCustomization() {
+		this.contextRunner
+				.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
+				.run((context) -> {
+					BDDAssertions.then(context.getBean(Propagation.Factory.class))
+							.hasFieldOrPropertyWithValue("delegate", B3Propagation.FACTORY);
+				});
+	}
+
+	@Test
+	public void allowsCustomizationOfBuilder() {
+		this.contextRunner
+				.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
+				.withUserConfiguration(Config.class)
+				.run((context) -> {
+					BDDAssertions.then(context.getBean(Propagation.Factory.class))
+							.hasFieldOrPropertyWithValue("delegate", B3SinglePropagation.FACTORY);
+		});
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
 	static class Config {
 
 		@Bean
