@@ -132,8 +132,10 @@ public class TraceAutoConfiguration {
 		ExtraFieldPropagation.FactoryBuilder factoryBuilder;
 		if (extraFieldPropagationFactoryBuilder != null) {
 			factoryBuilder = extraFieldPropagationFactoryBuilder;
-		} else {
-			factoryBuilder = ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY);
+		}
+		else {
+			factoryBuilder = ExtraFieldPropagation
+					.newFactoryBuilder(B3Propagation.FACTORY);
 		}
 		if (!sleuthProperties.getBaggageKeys().isEmpty()) {
 			factoryBuilder = factoryBuilder
