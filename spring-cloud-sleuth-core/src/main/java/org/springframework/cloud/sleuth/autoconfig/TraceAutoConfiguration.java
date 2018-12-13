@@ -16,24 +16,17 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import brave.CurrentSpanCustomizer;
 import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
 import brave.handler.FinishedSpanHandler;
+import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
-import org.springframework.cloud.sleuth.propagation.DefaultBasePropagationFactoryProvider;
-import org.springframework.cloud.sleuth.propagation.BasePropagationFactoryProvider;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -44,6 +37,11 @@ import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -71,6 +69,9 @@ public class TraceAutoConfiguration {
 
 	@Autowired(required = false)
 	List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
+
+	@Autowired(required = false)
+	ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilder;
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -122,21 +123,17 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	BasePropagationFactoryProvider basePropagationFactoryProvider() {
-		return new DefaultBasePropagationFactoryProvider();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	Propagation.Factory sleuthPropagation(
-			SleuthProperties sleuthProperties,
-			BasePropagationFactoryProvider basePropagationFactoryProvider) {
+	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
 		if (sleuthProperties.getBaggageKeys().isEmpty()
 				&& sleuthProperties.getPropagationKeys().isEmpty()) {
-			return basePropagationFactoryProvider.get();
+			return B3Propagation.FACTORY;
 		}
-		ExtraFieldPropagation.FactoryBuilder factoryBuilder = ExtraFieldPropagation
-				.newFactoryBuilder(basePropagationFactoryProvider.get());
+		ExtraFieldPropagation.FactoryBuilder factoryBuilder;
+		if (extraFieldPropagationFactoryBuilder != null) {
+			factoryBuilder = extraFieldPropagationFactoryBuilder;
+		} else {
+			factoryBuilder = ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY);
+		}
 		if (!sleuthProperties.getBaggageKeys().isEmpty()) {
 			factoryBuilder = factoryBuilder
 					// for HTTP
