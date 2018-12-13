@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import brave.CurrentSpanCustomizer;
 import brave.ErrorParser;
 import brave.Tracer;
@@ -27,6 +30,9 @@ import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,11 +43,6 @@ import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
