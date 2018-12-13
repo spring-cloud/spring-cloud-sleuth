@@ -38,7 +38,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	public void allowsCustomizationOfBuilder() {
 		this.contextRunner
 				.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
-				.withUserConfiguration(Config.class)
+				.withUserConfiguration(CustomPropagationFactoryBuilderConfig.class)
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
 							.hasFieldOrPropertyWithValue("delegate", B3SinglePropagation.FACTORY);
@@ -46,7 +46,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	}
 
 	@Configuration
-	static class Config {
+	static class CustomPropagationFactoryBuilderConfig {
 
 		@Bean
 		public ExtraFieldPropagation.FactoryBuilder factoryBuilder() {
