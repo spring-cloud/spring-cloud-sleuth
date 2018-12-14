@@ -122,6 +122,7 @@ class MyClient implements Client {
 	public Response execute(Request request, Request.Options options) throws IOException {
 		this.wasCalled = true;
 		return Response.builder().body("foo", Charset.forName("UTF-8"))
+				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(), Request.Body.empty()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 

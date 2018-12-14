@@ -40,10 +40,11 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import zipkin2.Span;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
-import zipkin2.Span;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -110,6 +111,7 @@ public class FeignRetriesTests {
 				// with the second retry (first retry) we send back good result
 				return Response.builder().status(200).reason("OK")
 						.headers(new HashMap<>()).body("OK", Charset.defaultCharset())
+						.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(), Request.Body.empty()))
 						.build();
 			}
 		};
