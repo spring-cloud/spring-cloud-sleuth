@@ -71,6 +71,9 @@ public class TraceAutoConfiguration {
 	@Autowired(required = false)
 	List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
 
+	@Autowired(required = false)
+	ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilder;
+
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
@@ -126,8 +129,14 @@ public class TraceAutoConfiguration {
 				&& sleuthProperties.getPropagationKeys().isEmpty()) {
 			return B3Propagation.FACTORY;
 		}
-		ExtraFieldPropagation.FactoryBuilder factoryBuilder = ExtraFieldPropagation
-				.newFactoryBuilder(B3Propagation.FACTORY);
+		ExtraFieldPropagation.FactoryBuilder factoryBuilder;
+		if (extraFieldPropagationFactoryBuilder != null) {
+			factoryBuilder = extraFieldPropagationFactoryBuilder;
+		}
+		else {
+			factoryBuilder = ExtraFieldPropagation
+					.newFactoryBuilder(B3Propagation.FACTORY);
+		}
 		if (!sleuthProperties.getBaggageKeys().isEmpty()) {
 			factoryBuilder = factoryBuilder
 					// for HTTP
