@@ -4,7 +4,7 @@
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
-<date>2018-12-13</date>
+<date>2018-12-14</date>
 <author>
 <personname>
 <firstname>Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer, Jay Bryant</firstname>
@@ -1322,7 +1322,7 @@ class TaxCountingRunnable implements Runnable {
 
 }</programlisting>
 <simpara>In this case, when processed in the following manner, the span is named <literal>calculateTax</literal>:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracing, spanNamer,
+<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(this.tracing, spanNamer,
 		new TaxCountingRunnable());
 Future&lt;?&gt; future = executorService.submit(runnable);
 // ... some additional logic ...
@@ -1335,7 +1335,7 @@ Typically, one creates an anonymous instance of those classes.
 You cannot annotate such classes.
 To overcome that limitation, if there is no <literal>@SpanName</literal> annotation present, we check whether the class has a custom implementation of the <literal>toString()</literal> method.</simpara>
 <simpara>Running such code leads to creating a span named <literal>calculateTax</literal>, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(tracing, spanNamer, new Runnable() {
+<programlisting language="java" linenumbering="unnumbered">Runnable runnable = new TraceRunnable(this.tracing, spanNamer, new Runnable() {
 	@Override
 	public void run() {
 		// perform logic
@@ -1675,11 +1675,12 @@ If you wish to disable this, set <literal>spring.sleuth.opentracing.enabled</lit
 	}
 };
 // Manual `TraceRunnable` creation with explicit "calculateTax" Span name
-Runnable traceRunnable = new TraceRunnable(tracing, spanNamer, runnable,
+Runnable traceRunnable = new TraceRunnable(this.tracing, spanNamer, runnable,
 		"calculateTax");
 // Wrapping `Runnable` with `Tracing`. That way the current span will be available
 // in the thread of `Runnable`
-Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);</programlisting>
+Runnable traceRunnableFromTracer = this.tracing.currentTraceContext()
+		.wrap(runnable);</programlisting>
 <simpara>The following example shows how to do so for <literal>Callable</literal>:</simpara>
 <programlisting language="java" linenumbering="unnumbered">Callable&lt;String&gt; callable = new Callable&lt;String&gt;() {
 	@Override
@@ -1693,11 +1694,11 @@ Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);
 	}
 };
 // Manual `TraceCallable` creation with explicit "calculateTax" Span name
-Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(tracing, spanNamer, callable,
-		"calculateTax");
+Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(this.tracing, spanNamer,
+		callable, "calculateTax");
 // Wrapping `Callable` with `Tracing`. That way the current span will be available
 // in the thread of `Callable`
-Callable&lt;String&gt; traceCallableFromTracer = tracing.currentTraceContext()
+Callable&lt;String&gt; traceCallableFromTracer = this.tracing.currentTraceContext()
 		.wrap(callable);</programlisting>
 <simpara>That way, you ensure that a new span is created and closed for each execution.</simpara>
 </section>

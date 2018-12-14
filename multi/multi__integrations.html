@@ -14,11 +14,12 @@ If you wish to disable this, set <code class="literal">spring.sleuth.opentracing
 	}
 };
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Manual `TraceRunnable` creation with explicit "calculateTax" Span name</span>
-Runnable traceRunnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(tracing, spanNamer, runnable,
+Runnable traceRunnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracing, spanNamer, runnable,
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateTax"</span>);
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Wrapping `Runnable` with `Tracing`. That way the current span will be available</span>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// in the thread of `Runnable`</span>
-Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);</pre><p>The following example shows how to do so for <code class="literal">Callable</code>:</p><pre class="programlisting">Callable&lt;String&gt; callable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Callable&lt;String&gt;() {
+Runnable traceRunnableFromTracer = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracing.currentTraceContext()
+		.wrap(runnable);</pre><p>The following example shows how to do so for <code class="literal">Callable</code>:</p><pre class="programlisting">Callable&lt;String&gt; callable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Callable&lt;String&gt;() {
 	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String call() <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> Exception {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> someLogic();
@@ -30,11 +31,11 @@ Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);
 	}
 };
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Manual `TraceCallable` creation with explicit "calculateTax" Span name</span>
-Callable&lt;String&gt; traceCallable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceCallable&lt;&gt;(tracing, spanNamer, callable,
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateTax"</span>);
+Callable&lt;String&gt; traceCallable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceCallable&lt;&gt;(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracing, spanNamer,
+		callable, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateTax"</span>);
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Wrapping `Callable` with `Tracing`. That way the current span will be available</span>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// in the thread of `Callable`</span>
-Callable&lt;String&gt; traceCallableFromTracer = tracing.currentTraceContext()
+Callable&lt;String&gt; traceCallableFromTracer = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracing.currentTraceContext()
 		.wrap(callable);</pre><p>That way, you ensure that a new span is created and closed for each execution.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_hystrix" href="#_hystrix"></a>15.3&nbsp;Hystrix</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_custom_concurrency_strategy" href="#_custom_concurrency_strategy"></a>15.3.1&nbsp;Custom Concurrency Strategy</h3></div></div></div><p>We register a custom <a class="link" href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy" target="_top"><code class="literal">HystrixConcurrencyStrategy</code></a> called <code class="literal">TraceCallable</code> that wraps all <code class="literal">Callable</code> instances in their Sleuth representative.
 The strategy either starts or continues a span, depending on whether tracing was already going on before the Hystrix command was called.
 To disable the custom Hystrix Concurrency Strategy, set the <code class="literal">spring.sleuth.hystrix.strategy.enabled</code> to <code class="literal">false</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_manual_command_setting" href="#_manual_command_setting"></a>15.3.2&nbsp;Manual Command setting</h3></div></div></div><p>Assume that you have the following <code class="literal">HystrixCommand</code>:</p><pre class="programlisting">HystrixCommand&lt;String&gt; hystrixCommand = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> HystrixCommand&lt;String&gt;(setter) {

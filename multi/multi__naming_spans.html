@@ -9,14 +9,14 @@ The name should be low cardinality, so it should not include identifiers.</p><p>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// perform logic</span>
 	}
 
-}</pre><p>In this case, when processed in the following manner, the span is named <code class="literal">calculateTax</code>:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(tracing, spanNamer,
+}</pre><p>In this case, when processed in the following manner, the span is named <code class="literal">calculateTax</code>:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracing, spanNamer,
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TaxCountingRunnable());
 Future&lt;?&gt; future = executorService.submit(runnable);
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ... some additional logic ...</span>
 future.get();</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_tostring_method" href="#_tostring_method"></a>10.2&nbsp;<code class="literal">toString()</code> method</h2></div></div></div><p>It is pretty rare to create separate classes for <code class="literal">Runnable</code> or <code class="literal">Callable</code>.
 Typically, one creates an anonymous instance of those classes.
 You cannot annotate such classes.
-To overcome that limitation, if there is no <code class="literal">@SpanName</code> annotation present, we check whether the class has a custom implementation of the <code class="literal">toString()</code> method.</p><p>Running such code leads to creating a span named <code class="literal">calculateTax</code>, as shown in the following example:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(tracing, spanNamer, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Runnable() {
+To overcome that limitation, if there is no <code class="literal">@SpanName</code> annotation present, we check whether the class has a custom implementation of the <code class="literal">toString()</code> method.</p><p>Running such code leads to creating a span named <code class="literal">calculateTax</code>, as shown in the following example:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracing, spanNamer, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Runnable() {
 	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> run() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// perform logic</span>
