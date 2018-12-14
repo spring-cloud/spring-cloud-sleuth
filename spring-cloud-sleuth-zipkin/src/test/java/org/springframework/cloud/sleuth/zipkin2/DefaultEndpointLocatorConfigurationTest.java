@@ -168,7 +168,7 @@ public class DefaultEndpointLocatorConfigurationTest {
 	@Test
 	public void portDefaultsTo8080() throws UnknownHostException {
 		DefaultEndpointLocator locator = new DefaultEndpointLocator(null,
-				new ServerProperties(), environment, new ZipkinProperties(),
+				new ServerProperties(), this.environment, new ZipkinProperties(),
 				localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port()).isEqualTo(8080);
@@ -180,7 +180,7 @@ public class DefaultEndpointLocatorConfigurationTest {
 		properties.setPort(1234);
 
 		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties,
-				environment, new ZipkinProperties(), localAddress(ADDRESS1234));
+				this.environment, new ZipkinProperties(), localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port()).isEqualTo(1234);
 	}
@@ -188,7 +188,7 @@ public class DefaultEndpointLocatorConfigurationTest {
 	@Test
 	public void portDefaultsToLocalhost() throws UnknownHostException {
 		DefaultEndpointLocator locator = new DefaultEndpointLocator(null,
-				new ServerProperties(), environment, new ZipkinProperties(),
+				new ServerProperties(), this.environment, new ZipkinProperties(),
 				localAddress(ADDRESS1234));
 
 		assertThat(locator.local().ipv4()).isEqualTo("1.2.3.4");
@@ -200,7 +200,7 @@ public class DefaultEndpointLocatorConfigurationTest {
 		properties.setAddress(InetAddress.getByAddress(ADDRESS1234));
 
 		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties,
-				environment, new ZipkinProperties(),
+				this.environment, new ZipkinProperties(),
 				localAddress(new byte[] { 4, 4, 4, 4 }));
 
 		assertThat(locator.local().ipv4()).isEqualTo("1.2.3.4");
@@ -213,7 +213,7 @@ public class DefaultEndpointLocatorConfigurationTest {
 		zipkinProperties.getService().setName("foo");
 
 		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties,
-				environment, zipkinProperties, localAddress(ADDRESS1234));
+				this.environment, zipkinProperties, localAddress(ADDRESS1234));
 
 		assertThat(locator.local().serviceName()).isEqualTo("foo");
 	}
@@ -224,7 +224,7 @@ public class DefaultEndpointLocatorConfigurationTest {
 		properties.setPort(-1);
 
 		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties,
-				environment, new ZipkinProperties(), localAddress(ADDRESS1234));
+				this.environment, new ZipkinProperties(), localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port()).isEqualTo(8080);
 	}

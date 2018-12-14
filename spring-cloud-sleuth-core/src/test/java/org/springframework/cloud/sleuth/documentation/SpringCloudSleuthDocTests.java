@@ -59,7 +59,7 @@ public class SpringCloudSleuthDocTests {
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.sampler(Sampler.ALWAYS_SAMPLE).spanReporter(this.reporter).build();
 
-	Tracer tracer = tracing.tracer();
+	Tracer tracer = this.tracing.tracer();
 
 	@Before
 	public void setup() {
@@ -97,7 +97,7 @@ public class SpringCloudSleuthDocTests {
 		SpanNamer spanNamer = new DefaultSpanNamer();
 
 		// tag::span_name_annotated_runnable_execution[]
-		Runnable runnable = new TraceRunnable(tracing, spanNamer,
+		Runnable runnable = new TraceRunnable(this.tracing, spanNamer,
 				new TaxCountingRunnable());
 		Future<?> future = executorService.submit(runnable);
 		// ... some additional logic ...
@@ -116,7 +116,7 @@ public class SpringCloudSleuthDocTests {
 		SpanNamer spanNamer = new DefaultSpanNamer();
 
 		// tag::span_name_to_string_runnable_execution[]
-		Runnable runnable = new TraceRunnable(tracing, spanNamer, new Runnable() {
+		Runnable runnable = new TraceRunnable(this.tracing, spanNamer, new Runnable() {
 			@Override
 			public void run() {
 				// perform logic
@@ -265,11 +265,11 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceRunnable` creation with explicit "calculateTax" Span name
-		Runnable traceRunnable = new TraceRunnable(tracing, spanNamer, runnable,
+		Runnable traceRunnable = new TraceRunnable(this.tracing, spanNamer, runnable,
 				"calculateTax");
 		// Wrapping `Runnable` with `Tracing`. That way the current span will be available
 		// in the thread of `Runnable`
-		Runnable traceRunnableFromTracer = tracing.currentTraceContext().wrap(runnable);
+		Runnable traceRunnableFromTracer = this.tracing.currentTraceContext().wrap(runnable);
 		// end::trace_runnable[]
 
 		then(traceRunnable).isExactlyInstanceOf(TraceRunnable.class);
@@ -291,11 +291,11 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceCallable` creation with explicit "calculateTax" Span name
-		Callable<String> traceCallable = new TraceCallable<>(tracing, spanNamer, callable,
+		Callable<String> traceCallable = new TraceCallable<>(this.tracing, spanNamer, callable,
 				"calculateTax");
 		// Wrapping `Callable` with `Tracing`. That way the current span will be available
 		// in the thread of `Callable`
-		Callable<String> traceCallableFromTracer = tracing.currentTraceContext()
+		Callable<String> traceCallableFromTracer = this.tracing.currentTraceContext()
 				.wrap(callable);
 		// end::trace_callable[]
 	}

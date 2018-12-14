@@ -127,7 +127,7 @@ class TraceCheckingSpanFilter extends ZuulFilter {
 	public Object run() {
 		long trace = this.tracer.tracer().currentSpan().context().traceId();
 		Integer integer = this.counter.getOrDefault(trace, 0);
-		counter.put(trace, integer + 1);
+		this.counter.put(trace, integer + 1);
 		return null;
 	}
 

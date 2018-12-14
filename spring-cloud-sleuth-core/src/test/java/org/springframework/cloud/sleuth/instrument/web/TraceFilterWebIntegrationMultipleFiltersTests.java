@@ -172,12 +172,12 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 		@Override
 		public void doFilter(ServletRequest request, ServletResponse response,
 				FilterChain chain) throws IOException, ServletException {
-			Span currentSpan = tracer.tracer().currentSpan();
+			Span currentSpan = this.tracer.tracer().currentSpan();
 			this.span.set(currentSpan);
 		}
 
 		public AtomicReference<Span> getSpan() {
-			return span;
+			return this.span;
 		}
 
 	}

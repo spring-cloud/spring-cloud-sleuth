@@ -103,7 +103,7 @@ public class TraceFilterWebIntegrationTests {
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		// issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
-		String[] split = capture.toString().split("\n");
+		String[] split = this.capture.toString().split("\n");
 		List<String> list = Arrays.stream(split)
 				.filter(s -> s.contains("Uncaught exception thrown"))
 				.filter(s -> s.contains(hex + "," + hex + ",true]"))

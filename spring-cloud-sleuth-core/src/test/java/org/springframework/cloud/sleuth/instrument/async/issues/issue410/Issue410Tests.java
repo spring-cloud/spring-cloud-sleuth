@@ -290,7 +290,7 @@ class AsyncTask {
 	}
 
 	public AtomicReference<Span> getSpan() {
-		return span;
+		return this.span;
 	}
 
 }

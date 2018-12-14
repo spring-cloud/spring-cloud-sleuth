@@ -149,12 +149,12 @@ class SleuthTestController {
 
 	@RequestMapping("/test-ok")
 	public String ok() throws InterruptedException, ExecutionException {
-		return myFeignClient.ok();
+		return this.myFeignClient.ok();
 	}
 
 	@RequestMapping("/test-not-ok")
 	public String notOk() throws InterruptedException, ExecutionException {
-		return myFeignClient.exp();
+		return this.myFeignClient.exp();
 	}
 
 }

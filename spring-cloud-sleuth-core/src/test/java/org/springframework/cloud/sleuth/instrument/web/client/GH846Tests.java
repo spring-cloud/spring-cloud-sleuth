@@ -40,10 +40,10 @@ public class GH846Tests {
 
 	@Test
 	public void doit() throws Exception {
-		int count = myBean.listAndCount();
+		int count = this.myBean.listAndCount();
 		Assert.assertEquals(
 				"Change detected in RestTemplate interceptor *after* @PostConstruct",
-				count, myBean.getCountAtPostConstruct());
+				count, this.myBean.getCountAtPostConstruct());
 	}
 
 	@EnableAutoConfiguration
@@ -72,19 +72,19 @@ public class GH846Tests {
 
 		@PostConstruct
 		public void init() {
-			countAtPostConstruct = listAndCount();
+			this.countAtPostConstruct = listAndCount();
 		}
 
 		public int listAndCount() {
-			for (ClientHttpRequestInterceptor interceptor : restTemplate
+			for (ClientHttpRequestInterceptor interceptor : this.restTemplate
 					.getInterceptors()) {
 				System.out.println(interceptor);
 			}
-			return restTemplate.getInterceptors().size();
+			return this.restTemplate.getInterceptors().size();
 		}
 
 		public int getCountAtPostConstruct() {
-			return countAtPostConstruct;
+			return this.countAtPostConstruct;
 		}
 
 	}

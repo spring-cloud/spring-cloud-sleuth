@@ -114,7 +114,7 @@ public class HystrixAnnotationsIntegrationTests {
 		@HystrixCommand
 		public void invokeLogicWrappedInHystrixCommand() {
 			this.spanCaughtFromHystrixThread = new AtomicReference<>(
-					tracing.tracer().currentSpan());
+					this.tracing.tracer().currentSpan());
 		}
 
 		public Long getTraceId() {

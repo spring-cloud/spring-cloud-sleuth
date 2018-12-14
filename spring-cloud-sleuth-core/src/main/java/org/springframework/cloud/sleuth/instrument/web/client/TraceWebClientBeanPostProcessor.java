@@ -256,12 +256,12 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			@Override
 			public void onNext(ClientResponse response) {
-				done = true;
+				this.done = true;
 				try {
 					// decorate response body
 					this.actual.onNext(ClientResponse.from(response)
 							.body(response.bodyToFlux(DataBuffer.class)
-									.transform(scopePassingTransformer))
+									.transform(this.scopePassingTransformer))
 							.build());
 				}
 				finally {
@@ -285,7 +285,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					this.actual.onComplete();
 				}
 				finally {
-					if (!done) {
+					if (!this.done) {
 						terminateSpan(null, null);
 					}
 				}
@@ -304,22 +304,22 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			void terminateSpanOnCancel() {
 				if (log.isDebugEnabled()) {
-					log.debug("Subscription was cancelled. Will close the span [" + span
+					log.debug("Subscription was cancelled. Will close the span [" + this.span
 							+ "]");
 				}
 
-				span.tag("error", CANCELLED_SUBSCRIPTION_ERROR);
-				handleReceive(span, ws, null, null);
+				this.span.tag("error", CANCELLED_SUBSCRIPTION_ERROR);
+				handleReceive(this.span, this.ws, null, null);
 			}
 
 			void terminateSpan(@Nullable ClientResponse clientResponse,
 					@Nullable Throwable throwable) {
 				if (clientResponse == null || clientResponse.statusCode() == null) {
 					if (log.isDebugEnabled()) {
-						log.debug("No response was returned. Will close the span [" + span
+						log.debug("No response was returned. Will close the span [" + this.span
 								+ "]");
 					}
-					handleReceive(span, ws, clientResponse, throwable);
+					handleReceive(this.span, this.ws, clientResponse, throwable);
 					return;
 				}
 				boolean error = clientResponse.statusCode().is4xxClientError()
@@ -328,14 +328,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					if (log.isDebugEnabled()) {
 						log.debug(
 								"Non positive status code was returned from the call. Will close the span ["
-										+ span + "]");
+										+ this.span + "]");
 					}
 					throwable = new RestClientException("Status code of the response is ["
 							+ clientResponse.statusCode().value()
 							+ "] and the reason is ["
 							+ clientResponse.statusCode().getReasonPhrase() + "]");
 				}
-				handleReceive(span, ws, clientResponse, throwable);
+				handleReceive(this.span, this.ws, clientResponse, throwable);
 			}
 
 		}

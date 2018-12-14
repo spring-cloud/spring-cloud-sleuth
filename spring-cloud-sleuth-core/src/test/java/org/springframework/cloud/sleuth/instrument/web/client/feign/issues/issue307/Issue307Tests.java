@@ -92,7 +92,7 @@ class SleuthSampleApplication {
 	@RequestMapping("/callhome")
 	public String callHome() {
 		LOG.info("calling home");
-		return restTemplate.getForObject("http://localhost:" + port(), String.class);
+		return this.restTemplate.getForObject("http://localhost:" + port(), String.class);
 	}
 
 	private int port() {
@@ -109,7 +109,7 @@ class ParticipantsBean {
 
 	@HystrixCommand(fallbackMethod = "defaultParticipants")
 	public List<Object> getParticipants(String raceId) {
-		return participantsClient.getParticipants(raceId);
+		return this.participantsClient.getParticipants(raceId);
 	}
 
 	public List<Object> defaultParticipants(String raceId) {

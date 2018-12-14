@@ -42,7 +42,7 @@ public class CompositeHttpSamplerTests {
 
 	@Before
 	public void init() {
-		this.sampler = new CompositeHttpSampler(left, right);
+		this.sampler = new CompositeHttpSampler(this.left, this.right);
 	}
 
 	@Test

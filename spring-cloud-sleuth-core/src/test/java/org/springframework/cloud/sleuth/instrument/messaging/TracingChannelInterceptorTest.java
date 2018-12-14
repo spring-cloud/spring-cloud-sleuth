@@ -53,7 +53,7 @@ public class TracingChannelInterceptorTest {
 	ChannelInterceptor interceptor = TracingChannelInterceptor.create(Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
-			.spanReporter(spans::add).build());
+			.spanReporter(this.spans::add).build());
 
 	QueueChannel channel = new QueueChannel();
 
@@ -64,50 +64,50 @@ public class TracingChannelInterceptorTest {
 	MessageHandler handler = new MessageHandler() {
 		@Override
 		public void handleMessage(Message<?> msg) throws MessagingException {
-			message = msg;
+			TracingChannelInterceptorTest.this.message = msg;
 		}
 	};
 
 	@Test
 	public void pollingReceive_emptyQueue() {
-		channel.addInterceptor(consumerSideOnly(interceptor));
+		this.channel.addInterceptor(consumerSideOnly(this.interceptor));
 
-		assertThat(channel.receive(0)).isNull();
-		assertThat(spans).hasSize(0);
+		assertThat(this.channel.receive(0)).isNull();
+		assertThat(this.spans).hasSize(0);
 	}
 
 	@Test
 	public void injectsProducerSpan() {
-		channel.addInterceptor(producerSideOnly(interceptor));
+		this.channel.addInterceptor(producerSideOnly(this.interceptor));
 
-		channel.send(MessageBuilder.withPayload("foo").build());
+		this.channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(channel.receive().getHeaders()).containsKeys("X-B3-TraceId",
+		assertThat(this.channel.receive().getHeaders()).containsKeys("X-B3-TraceId",
 				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
-		assertThat(spans).hasSize(1).flatExtracting(Span::kind)
+		assertThat(this.spans).hasSize(1).flatExtracting(Span::kind)
 				.containsExactly(Span.Kind.PRODUCER);
 	}
 
 	@Test
 	public void injectsProducerAndConsumerSpan() {
-		directChannel.addInterceptor(interceptor);
-		directChannel.subscribe(this.handler);
-		directChannel.send(MessageBuilder.withPayload("foo").build());
+		this.directChannel.addInterceptor(this.interceptor);
+		this.directChannel.subscribe(this.handler);
+		this.directChannel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(message).isNotNull();
-		assertThat(message.getHeaders()).containsKeys("X-B3-TraceId", "X-B3-SpanId",
+		assertThat(this.message).isNotNull();
+		assertThat(this.message.getHeaders()).containsKeys("X-B3-TraceId", "X-B3-SpanId",
 				"X-B3-Sampled", "nativeHeaders");
-		assertThat(spans).flatExtracting(Span::kind).contains(Span.Kind.CONSUMER,
+		assertThat(this.spans).flatExtracting(Span::kind).contains(Span.Kind.CONSUMER,
 				Span.Kind.PRODUCER);
 	}
 
 	@Test
 	public void injectsProducerSpan_nativeHeaders() {
-		channel.addInterceptor(producerSideOnly(interceptor));
+		this.channel.addInterceptor(producerSideOnly(this.interceptor));
 
-		channel.send(MessageBuilder.withPayload("foo").build());
+		this.channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat((Map) channel.receive().getHeaders().get(NATIVE_HEADERS))
+		assertThat((Map) this.channel.receive().getHeaders().get(NATIVE_HEADERS))
 				.containsOnlyKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled",
 						"spanTraceId", "spanId", "spanSampled");
 	}
@@ -119,20 +119,20 @@ public class TracingChannelInterceptorTest {
 	 */
 	@Test
 	public void producerConsidersOldSpanIds() {
-		channel.addInterceptor(producerSideOnly(interceptor));
+		this.channel.addInterceptor(producerSideOnly(this.interceptor));
 
-		channel.send(MessageBuilder.withPayload("foo")
+		this.channel.send(MessageBuilder.withPayload("foo")
 				.setHeader("X-B3-TraceId", "000000000000000a")
 				.setHeader("X-B3-ParentSpanId", "000000000000000a")
 				.setHeader("X-B3-SpanId", "000000000000000b").build());
 
-		assertThat(channel.receive().getHeaders()).containsEntry("X-B3-ParentSpanId",
+		assertThat(this.channel.receive().getHeaders()).containsEntry("X-B3-ParentSpanId",
 				"000000000000000b");
 	}
 
 	@Test
 	public void producerConsidersOldSpanIds_nativeHeaders() {
-		channel.addInterceptor(producerSideOnly(interceptor));
+		this.channel.addInterceptor(producerSideOnly(this.interceptor));
 
 		NativeMessageHeaderAccessor accessor = new NativeMessageHeaderAccessor() {
 		};
@@ -141,10 +141,10 @@ public class TracingChannelInterceptorTest {
 		accessor.setNativeHeader("X-B3-ParentSpanId", "000000000000000a");
 		accessor.setNativeHeader("X-B3-SpanId", "000000000000000b");
 
-		channel.send(MessageBuilder.withPayload("foo")
+		this.channel.send(MessageBuilder.withPayload("foo")
 				.copyHeaders(accessor.toMessageHeaders()).build());
 
-		assertThat((Map) channel.receive().getHeaders().get(NATIVE_HEADERS))
+		assertThat((Map) this.channel.receive().getHeaders().get(NATIVE_HEADERS))
 				.containsEntry("X-B3-ParentSpanId",
 						Collections.singletonList("000000000000000b"));
 	}
@@ -155,23 +155,23 @@ public class TracingChannelInterceptorTest {
 	 */
 	@Test
 	public void pollingReceive_injectsConsumerSpan() {
-		channel.addInterceptor(consumerSideOnly(interceptor));
+		this.channel.addInterceptor(consumerSideOnly(this.interceptor));
 
-		channel.send(MessageBuilder.withPayload("foo").build());
+		this.channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(channel.receive().getHeaders()).containsKeys("X-B3-TraceId",
+		assertThat(this.channel.receive().getHeaders()).containsKeys("X-B3-TraceId",
 				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
-		assertThat(spans).hasSize(1).flatExtracting(Span::kind)
+		assertThat(this.spans).hasSize(1).flatExtracting(Span::kind)
 				.containsExactly(Span.Kind.CONSUMER);
 	}
 
 	@Test
 	public void pollingReceive_injectsConsumerSpan_nativeHeaders() {
-		channel.addInterceptor(consumerSideOnly(interceptor));
+		this.channel.addInterceptor(consumerSideOnly(this.interceptor));
 
-		channel.send(MessageBuilder.withPayload("foo").build());
+		this.channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat((Map) channel.receive().getHeaders().get(NATIVE_HEADERS))
+		assertThat((Map) this.channel.receive().getHeaders().get(NATIVE_HEADERS))
 				.containsOnlyKeys("X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled",
 						"spanTraceId", "spanId", "spanSampled");
 	}
@@ -179,7 +179,7 @@ public class TracingChannelInterceptorTest {
 	@Test
 	public void subscriber_startsAndStopsConsumerAndProcessingSpan() {
 		ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
-		channel.addInterceptor(executorSideOnly(interceptor));
+		channel.addInterceptor(executorSideOnly(this.interceptor));
 		List<Message<?>> messages = new ArrayList<>();
 		channel.subscribe(messages::add);
 
@@ -187,7 +187,7 @@ public class TracingChannelInterceptorTest {
 
 		assertThat(messages.get(0).getHeaders()).doesNotContainKeys("X-B3-TraceId",
 				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
-		assertThat(spans).flatExtracting(Span::kind).containsExactly(Span.Kind.CONSUMER,
+		assertThat(this.spans).flatExtracting(Span::kind).containsExactly(Span.Kind.CONSUMER,
 				null);
 	}
 
@@ -199,7 +199,7 @@ public class TracingChannelInterceptorTest {
 	@Test
 	public void subscriber_removesTraceIdsFromMessage() {
 		ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
-		channel.addInterceptor(interceptor);
+		channel.addInterceptor(this.interceptor);
 		List<Message<?>> messages = new ArrayList<>();
 		channel.subscribe(messages::add);
 
@@ -212,7 +212,7 @@ public class TracingChannelInterceptorTest {
 	@Test
 	public void subscriber_removesTraceIdsFromMessage_nativeHeaders() {
 		ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
-		channel.addInterceptor(interceptor);
+		channel.addInterceptor(this.interceptor);
 		List<Message<?>> messages = new ArrayList<>();
 		channel.subscribe(messages::add);
 
@@ -224,31 +224,31 @@ public class TracingChannelInterceptorTest {
 
 	@Test
 	public void integrated_sendAndPoll() {
-		channel.addInterceptor(interceptor);
+		this.channel.addInterceptor(this.interceptor);
 
-		channel.send(MessageBuilder.withPayload("foo").build());
-		channel.receive();
+		this.channel.send(MessageBuilder.withPayload("foo").build());
+		this.channel.receive();
 
-		assertThat(spans).flatExtracting(Span::kind)
+		assertThat(this.spans).flatExtracting(Span::kind)
 				.containsExactlyInAnyOrder(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
 	}
 
 	@Test
 	public void integrated_sendAndSubscriber() {
 		ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel();
-		channel.addInterceptor(interceptor);
+		channel.addInterceptor(this.interceptor);
 		List<Message<?>> messages = new ArrayList<>();
 		channel.subscribe(messages::add);
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(spans).flatExtracting(Span::kind).containsExactly(Span.Kind.CONSUMER,
+		assertThat(this.spans).flatExtracting(Span::kind).containsExactly(Span.Kind.CONSUMER,
 				null, Span.Kind.PRODUCER);
 	}
 
 	@Test
 	public void errorMessageHeadersRetained() {
-		this.channel.addInterceptor(interceptor);
+		this.channel.addInterceptor(this.interceptor);
 		QueueChannel deadReplyChannel = new QueueChannel();
 		QueueChannel errorsReplyChannel = new QueueChannel();
 		Map<String, Object> errorChannelHeaders = new HashMap<>();

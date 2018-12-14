@@ -56,7 +56,7 @@ public class SleuthHttpClientParserTests {
 
 			@Override
 			public String url(Object request) {
-				return url.toString();
+				return this.url.toString();
 			}
 
 			@Override

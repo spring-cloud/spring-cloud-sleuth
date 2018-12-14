@@ -103,9 +103,9 @@ class Controller {
 	public void asyncTest(@RequestParam(required = false) boolean isSleep)
 			throws InterruptedException {
 		log.info("(/trace-async-rest-template) I got a request!");
-		final long traceId = tracer.tracer().currentSpan().context().traceId();
-		ListenableFuture<ResponseEntity<HogeBean>> res = traceAsyncRestTemplate
-				.getForEntity("http://localhost:" + port + "/bean", HogeBean.class);
+		final long traceId = this.tracer.tracer().currentSpan().context().traceId();
+		ListenableFuture<ResponseEntity<HogeBean>> res = this.traceAsyncRestTemplate
+				.getForEntity("http://localhost:" + this.port + "/bean", HogeBean.class);
 		if (isSleep) {
 			Thread.sleep(1000);
 		}

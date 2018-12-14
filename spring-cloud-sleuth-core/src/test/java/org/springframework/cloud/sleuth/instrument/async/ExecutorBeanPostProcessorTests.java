@@ -71,10 +71,10 @@ public class ExecutorBeanPostProcessorTests {
 	@Before
 	public void setup() {
 		this.sleuthAsyncProperties = new SleuthAsyncProperties();
-		Mockito.when(beanFactory.getBean(SleuthAsyncProperties.class))
+		Mockito.when(this.beanFactory.getBean(SleuthAsyncProperties.class))
 				.thenReturn(this.sleuthAsyncProperties);
-		Mockito.when(beanFactory.getBean(Tracing.class)).thenReturn(this.tracing);
-		Mockito.when(beanFactory.getBean(SpanNamer.class))
+		Mockito.when(this.beanFactory.getBean(Tracing.class)).thenReturn(this.tracing);
+		Mockito.when(this.beanFactory.getBean(SpanNamer.class))
 				.thenReturn(new DefaultSpanNamer());
 	}
 

@@ -132,7 +132,7 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = reporter.getSpans();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).isNotEmpty();
 		then(spans.get(0).tags()).containsEntry("http.url", "/foo?a=b")
 				.containsEntry("http.path", "/foo").containsEntry("http.method", "GET");
@@ -157,7 +157,7 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		then(reporter.getSpans()).isEmpty();
+		then(this.reporter.getSpans()).isEmpty();
 	}
 
 	// issue #198
@@ -195,7 +195,7 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = reporter.getSpans();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(2);
 		String spanName = spans.get(0).name();
 		then(spanName).isEqualTo("http:/cas~fs~%c3%a5%cb%86%e2%80%99");
@@ -218,7 +218,7 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = reporter.getSpans();
+		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).isNotEmpty();
 		String spanName = spans.get(0).name();
 		then(spanName).hasSize(50);

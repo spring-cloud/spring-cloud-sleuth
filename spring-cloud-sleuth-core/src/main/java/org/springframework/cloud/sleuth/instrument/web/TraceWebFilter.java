@@ -292,7 +292,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			Span span;
 			if (c.hasKey(Span.class)) {
 				Span parent = c.get(Span.class);
-				span = tracer
+				span = this.tracer
 						.nextSpan(TraceContextOrSamplingFlags.create(parent.context()))
 						.start();
 				if (log.isDebugEnabled()) {

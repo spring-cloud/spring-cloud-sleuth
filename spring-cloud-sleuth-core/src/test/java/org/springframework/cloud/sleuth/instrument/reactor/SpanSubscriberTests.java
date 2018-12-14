@@ -112,7 +112,7 @@ public class SpanSubscriberTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 
 			Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = ReactorSleuth
-					.scopePassingSpanOperator(factory);
+					.scopePassingSpanOperator(this.factory);
 
 			Subscriber<Object> assertNoSpanSubscriber = new CoreSubscriber<Object>() {
 				@Override
@@ -236,11 +236,11 @@ public class SpanSubscriberTests {
 		Span parentSpan = this.tracer.nextSpan().name("foo").start();
 		log.info("Hello");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(parentSpan)) {
-			final Long spanId = Mono.fromCallable(tracer::currentSpan)
+			final Long spanId = Mono.fromCallable(this.tracer::currentSpan)
 					.map(span -> span.context().spanId()).block();
 			then(spanId).isNotNull();
 
-			final Long secondSpanId = Mono.fromCallable(tracer::currentSpan)
+			final Long secondSpanId = Mono.fromCallable(this.tracer::currentSpan)
 					.map(span -> span.context().spanId()).block();
 			then(secondSpanId).isEqualTo(spanId); // different trace ids here
 		}
@@ -253,9 +253,9 @@ public class SpanSubscriberTests {
 		final AtomicReference<Long> spanInZipOperation = new AtomicReference<>();
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
-			Mono.fromCallable(tracer::currentSpan).map(span -> span.context().spanId())
+			Mono.fromCallable(this.tracer::currentSpan).map(span -> span.context().spanId())
 					.doOnNext(spanInOperation::set)
-					.zipWith(Mono.fromCallable(tracer::currentSpan)
+					.zipWith(Mono.fromCallable(this.tracer::currentSpan)
 							.map(span -> span.context().spanId())
 							.doOnNext(spanInZipOperation::set))
 					.block();
@@ -290,7 +290,7 @@ public class SpanSubscriberTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
 			Mono.subscriberContext()
-					.map(context -> tracer.currentSpan().context().spanId())
+					.map(context -> this.tracer.currentSpan().context().spanId())
 					.doOnNext(spanInSubscriberContext::set).block();
 		}
 

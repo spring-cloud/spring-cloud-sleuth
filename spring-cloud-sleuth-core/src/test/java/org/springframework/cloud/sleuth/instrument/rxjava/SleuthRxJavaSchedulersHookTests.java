@@ -79,7 +79,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		RxJavaPlugins.getInstance()
 				.registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
 
-		new SleuthRxJavaSchedulersHook(this.tracer, threadsToIgnore);
+		new SleuthRxJavaSchedulersHook(this.tracer, this.threadsToIgnore);
 
 		then(RxJavaPlugins.getInstance().getErrorHandler())
 				.isExactlyInstanceOf(MyRxJavaErrorHandler.class);

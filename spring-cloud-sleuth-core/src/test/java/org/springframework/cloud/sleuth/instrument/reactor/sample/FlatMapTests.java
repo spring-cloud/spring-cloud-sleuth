@@ -116,7 +116,7 @@ public class FlatMapTests {
 			thenSpanInFooHasSameTraceId(secondTraceId, config);
 			LOGGER.info("Span in Foo has same trace id");
 			// and
-			List<String> requestUri = Arrays.stream(capture.toString().split("\n"))
+			List<String> requestUri = Arrays.stream(this.capture.toString().split("\n"))
 					.filter(s -> s.contains("Received a request to uri"))
 					.map(s -> s.split(",")[1]).collect(Collectors.toList());
 			LOGGER.info(
@@ -185,7 +185,7 @@ public class FlatMapTests {
 				return ServerResponse.ok().body(response, Integer.class);
 			}).andRoute(GET("/foo"), request -> {
 				LOGGER.info("foo");
-				spanInFoo = tracer.currentSpan();
+				this.spanInFoo = tracer.currentSpan();
 				return ServerResponse.ok().body(Flux.just(1), Integer.class);
 			});
 		}

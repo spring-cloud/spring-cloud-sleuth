@@ -139,7 +139,7 @@ class DemoController {
 
 	@RequestMapping(value = "/hello/{name}")
 	public String getHello(@PathVariable("name") String name) {
-		return myNameRemote.getName(name) + " foo";
+		return this.myNameRemote.getName(name) + " foo";
 	}
 
 	@RequestMapping(value = "/name/{name}")

@@ -77,7 +77,7 @@ public class SpringDataInstrumentationTests {
 
 	@Before
 	public void setup() {
-		reporter.clear();
+		this.reporter.clear();
 	}
 
 	@Test
@@ -152,8 +152,8 @@ class SampleRecords {
 	public void create() throws Exception {
 		Stream.of("Josh", "Jungryeol", "Nosung", "Hyobeom", "Soeun", "Seunghue", "Peter",
 				"Jooyong")
-				.forEach(name -> reservationRepository.save(new Reservation(name)));
-		reservationRepository.findAll().forEach(System.out::println);
+				.forEach(name -> this.reservationRepository.save(new Reservation(name)));
+		this.reservationRepository.findAll().forEach(System.out::println);
 	}
 
 }
@@ -173,16 +173,16 @@ class Reservation {
 	private String reservationName; // reservation_name
 
 	public Long getId() {
-		return id;
+		return this.id;
 	}
 
 	public String getReservationName() {
-		return reservationName;
+		return this.reservationName;
 	}
 
 	@Override
 	public String toString() {
-		return "Reservation{" + "id=" + id + ", reservationName='" + reservationName
+		return "Reservation{" + "id=" + this.id + ", reservationName='" + this.reservationName
 				+ '\'' + '}';
 	}
 

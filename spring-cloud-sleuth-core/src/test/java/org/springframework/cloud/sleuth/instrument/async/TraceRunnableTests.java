@@ -142,7 +142,7 @@ public class TraceRunnableTests {
 		return new Runnable() {
 			@Override
 			public void run() {
-				span.set(tracer.currentSpan());
+				span.set(TraceRunnableTests.this.tracer.currentSpan());
 			}
 
 			@Override

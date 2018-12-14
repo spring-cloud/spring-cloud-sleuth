@@ -116,7 +116,7 @@ public class TraceCallableTests {
 		return new Callable<Span>() {
 			@Override
 			public Span call() throws Exception {
-				return tracer.currentSpan();
+				return TraceCallableTests.this.tracer.currentSpan();
 			}
 
 			@Override

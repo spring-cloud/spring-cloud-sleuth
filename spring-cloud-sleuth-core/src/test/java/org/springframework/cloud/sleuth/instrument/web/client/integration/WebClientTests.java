@@ -288,7 +288,7 @@ public class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			HttpClientResponse response = this.nettyHttpClient.get()
-					.uri("http://localhost:" + port).response().block();
+					.uri("http://localhost:" + this.port).response().block();
 
 			then(response).isNotNull();
 		}
@@ -311,7 +311,7 @@ public class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.httpClientBuilder.build().execute(
-					new HttpGet("http://localhost:" + port), new BasicResponseHandler());
+					new HttpGet("http://localhost:" + this.port), new BasicResponseHandler());
 
 			then(response).isNotEmpty();
 		}
@@ -332,7 +332,7 @@ public class WebClientTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			client.start();
 			Future<HttpResponse> future = client.execute(
-					new HttpGet("http://localhost:" + port),
+					new HttpGet("http://localhost:" + this.port),
 					new FutureCallback<HttpResponse>() {
 						@Override
 						public void completed(HttpResponse result) {
@@ -573,7 +573,7 @@ public class WebClientTests {
 		}
 
 		public boolean isExecuted() {
-			return executed;
+			return this.executed;
 		}
 
 	}

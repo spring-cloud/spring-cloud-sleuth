@@ -47,30 +47,30 @@ public class RestTemplateSenderTest {
 	@Rule
 	public MockWebServer server = new MockWebServer();
 
-	String endpoint = server.url("/api/v2/spans").toString();
+	String endpoint = this.server.url("/api/v2/spans").toString();
 
-	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), endpoint,
+	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint,
 			JSON_V2);
 
 	/** Tests that json is not manipulated as a side-effect of using rest template. */
 	@Test
 	public void jsonIsNormal() throws Exception {
-		server.enqueue(new MockResponse());
+		this.server.enqueue(new MockResponse());
 
 		send(SPAN).execute();
 
-		assertThat(server.takeRequest().getBody().readUtf8())
+		assertThat(this.server.takeRequest().getBody().readUtf8())
 				.isEqualTo("[" + new String(JSON_V2.encode(SPAN), "UTF-8") + "]");
 	}
 
 	@Test
 	public void proto3() throws Exception {
-		server.enqueue(new MockResponse());
-		sender = new RestTemplateSender(new RestTemplate(), endpoint, PROTO3);
+		this.server.enqueue(new MockResponse());
+		this.sender = new RestTemplateSender(new RestTemplate(), this.endpoint, PROTO3);
 
 		send(SPAN).execute();
 
-		RecordedRequest request = server.takeRequest();
+		RecordedRequest request = this.server.takeRequest();
 		assertThat(request.getHeader("Content-Type")).isEqualTo("application/x-protobuf");
 
 		// proto3 encoding of ListOfSpan is simply a repeated span entry
@@ -79,9 +79,9 @@ public class RestTemplateSenderTest {
 	}
 
 	Call<Void> send(Span... spans) {
-		SpanBytesEncoder bytesEncoder = sender.encoding() == Encoding.JSON
+		SpanBytesEncoder bytesEncoder = this.sender.encoding() == Encoding.JSON
 				? SpanBytesEncoder.JSON_V2 : SpanBytesEncoder.PROTO3;
-		return sender
+		return this.sender
 				.sendSpans(Stream.of(spans).map(bytesEncoder::encode).collect(toList()));
 	}
 

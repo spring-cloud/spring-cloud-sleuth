@@ -132,7 +132,7 @@ class ReactorSleuthMethodInvocationProcessor
 			Tracer tracer = this.processor.tracer();
 			if (this.span == null) {
 				span = tracer.nextSpan();
-				this.processor.newSpanParser().parse(invocation, newSpan, span);
+				this.processor.newSpanParser().parse(this.invocation, this.newSpan, span);
 				span.start();
 			}
 			else {
@@ -178,7 +178,7 @@ class ReactorSleuthMethodInvocationProcessor
 			Tracer tracer = this.processor.tracer();
 			if (this.span == null) {
 				span = tracer.nextSpan();
-				this.processor.newSpanParser().parse(invocation, newSpan, span);
+				this.processor.newSpanParser().parse(this.invocation, this.newSpan, span);
 				span.start();
 			}
 			else {
@@ -251,7 +251,7 @@ class ReactorSleuthMethodInvocationProcessor
 
 		@Override
 		public Context currentContext() {
-			return context;
+			return this.context;
 		}
 
 		@Override

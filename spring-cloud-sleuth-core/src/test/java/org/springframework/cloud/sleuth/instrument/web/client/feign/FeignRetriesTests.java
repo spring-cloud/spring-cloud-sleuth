@@ -82,7 +82,7 @@ public class FeignRetriesTests {
 		Client client = (request, options) -> {
 			throw new IOException();
 		};
-		String url = "http://localhost:" + server.getPort();
+		String url = "http://localhost:" + this.server.getPort();
 
 		TestInterface api = Feign.builder()
 				.client(new TracingFeignClient(this.httpTracing, client))
@@ -98,7 +98,7 @@ public class FeignRetriesTests {
 
 	@Test
 	public void testRetriedWhenRequestEventuallyIsSent() throws Exception {
-		String url = "http://localhost:" + server.getPort();
+		String url = "http://localhost:" + this.server.getPort();
 		final AtomicInteger atomicInteger = new AtomicInteger();
 		// Client to simulate a retry scenario
 		final Client client = (request, options) -> {

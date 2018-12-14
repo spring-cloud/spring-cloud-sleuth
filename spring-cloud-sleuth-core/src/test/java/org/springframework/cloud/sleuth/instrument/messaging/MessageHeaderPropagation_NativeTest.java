@@ -36,7 +36,7 @@ public class MessageHeaderPropagation_NativeTest
 
 	@Override
 	protected MessageHeaderAccessor carrier() {
-		return carrier;
+		return this.carrier;
 	}
 
 	@Override

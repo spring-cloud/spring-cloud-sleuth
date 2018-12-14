@@ -130,8 +130,8 @@ public class TraceAutoConfiguration {
 			return B3Propagation.FACTORY;
 		}
 		ExtraFieldPropagation.FactoryBuilder factoryBuilder;
-		if (extraFieldPropagationFactoryBuilder != null) {
-			factoryBuilder = extraFieldPropagationFactoryBuilder;
+		if (this.extraFieldPropagationFactoryBuilder != null) {
+			factoryBuilder = this.extraFieldPropagationFactoryBuilder;
 		}
 		else {
 			factoryBuilder = ExtraFieldPropagation

@@ -65,7 +65,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 	@Before
 	public void setup() {
 		this.reporter.clear();
-		testBean.reset();
+		this.testBean.reset();
 	}
 
 	@Test
@@ -397,13 +397,13 @@ public class SleuthSpanCreatorAspectFluxTests {
 		Iterator<String> iterator = flux.toIterable().iterator();
 
 		then(this.reporter.getSpans()).isEmpty();
-		testBean.proceed();
+		this.testBean.proceed();
 
 		String result1 = iterator.next();
 		then(result1).isEqualTo(TEST_STRING1);
 		then(this.reporter.getSpans()).isEmpty();
 
-		testBean.proceed();
+		this.testBean.proceed();
 		String result2 = iterator.next();
 
 		then(result2).isEqualTo(TEST_STRING2);
@@ -486,8 +486,8 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		private Flux<String> testFlux = Flux
 				.defer(() -> Flux.just(TEST_STRING1, TEST_STRING2))
-				.delayUntil(s -> Mono.fromFuture(proceed.get()))
-				.doOnNext(s -> proceed.set(new CompletableFuture<>()));
+				.delayUntil(s -> Mono.fromFuture(this.proceed.get()))
+				.doOnNext(s -> this.proceed.set(new CompletableFuture<>()));
 
 		public TestBean(Tracer tracer) {
 			this.tracer = tracer;
@@ -495,80 +495,80 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		@Override
 		public void reset() {
-			proceed.set(new CompletableFuture<>());
+			this.proceed.set(new CompletableFuture<>());
 		}
 
 		public void proceed() {
-			proceed.get().complete(null);
+			this.proceed.get().complete(null);
 		}
 
 		@Override
 		public Flux<String> testMethod() {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@NewSpan
 		@Override
 		public Flux<String> testMethod2() {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		// tag::name_on_implementation[]
 		@NewSpan(name = "customNameOnTestMethod3")
 		@Override
 		public Flux<String> testMethod3() {
-			return testFlux;
+			return this.testFlux;
 		}
 		// end::name_on_implementation[]
 
 		@Override
 		public Flux<String> testMethod4() {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@Override
 		public Flux<String> testMethod5(String test) {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@NewSpan(name = "customNameOnTestMethod6")
 		@Override
 		public Flux<String> testMethod6(@SpanTag("testTag6") String test) {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@Override
 		public Flux<String> testMethod7() {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@Override
 		public Flux<String> testMethod8(String param) {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@NewSpan(name = "customNameOnTestMethod9")
 		@Override
 		public Flux<String> testMethod9(String param) {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@Override
 		public Flux<String> testMethod10(
 				@SpanTag(value = "customTestTag10") String param) {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@Override
 		public Flux<String> testMethod10_v2(
 				@SpanTag(key = "customTestTag10") String param) {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@ContinueSpan(log = "customTest")
 		@Override
 		public Flux<String> testMethod11(@SpanTag("customTestTag11") String param) {
-			return testFlux;
+			return this.testFlux;
 		}
 
 		@Override
@@ -590,13 +590,13 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		@Override
 		public Flux<Long> newSpanInTraceContext() {
-			return Flux.defer(() -> Flux.just(id(tracer)));
+			return Flux.defer(() -> Flux.just(id(this.tracer)));
 		}
 
 		@Override
 		public Flux<Long> newSpanInSubscriberContext() {
 			return Mono.subscriberContext()
-					.flatMapMany(context -> Flux.just(id(context, tracer)));
+					.flatMapMany(context -> Flux.just(id(context, this.tracer)));
 		}
 
 	}

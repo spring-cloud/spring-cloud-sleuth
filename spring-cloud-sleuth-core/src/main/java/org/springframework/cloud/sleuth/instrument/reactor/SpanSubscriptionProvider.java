@@ -64,7 +64,7 @@ final class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>>
 	}
 
 	SpanSubscription<T> newCoreSubscriber(Tracing tracing) {
-		Span root = context.hasKey(Span.class) ? context.get(Span.class)
+		Span root = this.context.hasKey(Span.class) ? this.context.get(Span.class)
 				: tracing.tracer().currentSpan();
 		return new ScopePassingSpanSubscriber<>(this.subscriber, this.context, tracing,
 				root);

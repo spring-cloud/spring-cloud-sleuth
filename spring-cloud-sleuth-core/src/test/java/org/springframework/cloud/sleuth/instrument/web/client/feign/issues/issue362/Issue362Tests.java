@@ -191,7 +191,7 @@ class CustomConfig {
 		public Exception decode(String methodKey, Response response) {
 			this.feignComponentAsserter.executedComponents.put(ErrorDecoder.class, true);
 			if (response.status() == 409) {
-				return new RetryableException("Article not Ready", new Date());
+				return new RetryableException("Article not Ready", Request.HttpMethod.GET, new Date());
 			}
 			else {
 				return super.decode(methodKey, response);
@@ -262,12 +262,12 @@ class SleuthTestController {
 
 	@RequestMapping("/test-ok")
 	public String ok() throws InterruptedException, ExecutionException {
-		return myFeignClient.ok();
+		return this.myFeignClient.ok();
 	}
 
 	@RequestMapping("/test-not-ok")
 	public String notOk() throws InterruptedException, ExecutionException {
-		return myFeignClient.exp();
+		return this.myFeignClient.exp();
 	}
 
 }

@@ -292,7 +292,7 @@ public class TraceWebFluxTests {
 		@GetMapping("/ping")
 		Mono<Long> ping() {
 			log.info("ping");
-			return Mono.just(tracer.currentSpan().context().spanId());
+			return Mono.just(this.tracer.currentSpan().context().spanId());
 		}
 
 		@GetMapping("/pingFromContext")
@@ -301,25 +301,25 @@ public class TraceWebFluxTests {
 			return Mono.subscriberContext()
 					.doOnSuccess(context -> log.info("Ping from context"))
 					.flatMap(context -> Mono
-							.just(tracer.currentSpan().context().spanId()));
+							.just(this.tracer.currentSpan().context().spanId()));
 		}
 
 		@GetMapping("/continueSpan")
 		Mono<Long> continueSpan() {
 			log.info("continueSpan");
-			return testBean.continueSpanInTraceContext();
+			return this.testBean.continueSpanInTraceContext();
 		}
 
 		@GetMapping("/newSpan1")
 		Mono<Long> newSpan1() {
 			log.info("newSpan1");
-			return testBean.newSpanInTraceContext();
+			return this.testBean.newSpanInTraceContext();
 		}
 
 		@GetMapping("/newSpan2")
 		Mono<Long> newSpan2() {
 			log.info("newSpan2");
-			return testBean.newSpanInSubscriberContext();
+			return this.testBean.newSpanInSubscriberContext();
 		}
 
 	}
@@ -367,7 +367,7 @@ class SleuthSpanCreatorAspectWebFlux {
 
 	public void shouldReturnSpanFromWebFluxTraceContext() {
 		setup();
-		Mono<Object> mono = webClient.get().uri("/test/ping").exchange()
+		Mono<Object> mono = this.webClient.get().uri("/test/ping").exchange()
 				.returnResult(Object.class).getResponseBody().single();
 
 		Object object = mono.block();
@@ -392,7 +392,7 @@ class SleuthSpanCreatorAspectWebFlux {
 
 	public void shouldReturnSpanFromWebFluxSubscriptionContext() {
 		setup();
-		Mono<Object> mono = webClient.get().uri("/test/pingFromContext").exchange()
+		Mono<Object> mono = this.webClient.get().uri("/test/pingFromContext").exchange()
 				.returnResult(Object.class).getResponseBody().single();
 
 		Object object = mono.block();
@@ -411,7 +411,7 @@ class SleuthSpanCreatorAspectWebFlux {
 
 	public void shouldContinueSpanInWebFlux() {
 		setup();
-		Mono<Object> mono = webClient.get().uri("/test/continueSpan").exchange()
+		Mono<Object> mono = this.webClient.get().uri("/test/continueSpan").exchange()
 				.returnResult(Object.class).getResponseBody().single();
 
 		Object object = mono.block();
@@ -430,7 +430,7 @@ class SleuthSpanCreatorAspectWebFlux {
 
 	public void shouldCreateNewSpanInWebFlux() {
 		setup();
-		Mono<Object> mono = webClient.get().uri("/test/newSpan1").exchange()
+		Mono<Object> mono = this.webClient.get().uri("/test/newSpan1").exchange()
 				.returnResult(Object.class).getResponseBody().single();
 
 		Object object = mono.block();
@@ -450,7 +450,7 @@ class SleuthSpanCreatorAspectWebFlux {
 
 	public void shouldCreateNewSpanInWebFluxInSubscriberContext() {
 		setup();
-		Mono<Object> mono = webClient.get().uri("/test/newSpan2").exchange()
+		Mono<Object> mono = this.webClient.get().uri("/test/newSpan2").exchange()
 				.returnResult(Object.class).getResponseBody().single();
 
 		Object object = mono.block();
@@ -471,7 +471,7 @@ class SleuthSpanCreatorAspectWebFlux {
 	public void shouldSetupCorrectSpanInHttpTrace() {
 		setup();
 
-		Mono<Object> mono = webClient.get().uri("/test/ping").exchange()
+		Mono<Object> mono = this.webClient.get().uri("/test/ping").exchange()
 				.returnResult(Object.class).getResponseBody().single();
 
 		Object object = mono.block();
@@ -485,7 +485,7 @@ class SleuthSpanCreatorAspectWebFlux {
 			then(spans.get(0).name()).isEqualTo("get /test/ping");
 			then(this.repository.getSpan()).isNotNull();
 			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId))
-					.isEqualTo(repository.getSpan().context().traceIdString());
+					.isEqualTo(this.repository.getSpan().context().traceIdString());
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -537,14 +537,14 @@ class TestBean {
 	@ContinueSpan
 	public Mono<Long> continueSpanInTraceContext() {
 		log.info("Continue");
-		Long span = tracer.currentSpan().context().spanId();
+		Long span = this.tracer.currentSpan().context().spanId();
 		return Mono.defer(() -> Mono.just(span));
 	}
 
 	@NewSpan(name = "newSpanInTraceContext")
 	public Mono<Long> newSpanInTraceContext() {
 		log.info("New Span in Trace Context");
-		return Mono.defer(() -> Mono.just(tracer.currentSpan().context().spanId()));
+		return Mono.defer(() -> Mono.just(this.tracer.currentSpan().context().spanId()));
 	}
 
 	@NewSpan(name = "newSpanInSubscriberContext")
@@ -553,7 +553,7 @@ class TestBean {
 		return Mono.subscriberContext()
 				.doOnSuccess(context -> log.info("New Span in deferred Trace Context"))
 				.flatMap(context -> Mono
-						.defer(() -> Mono.just(tracer.currentSpan().context().spanId())));
+						.defer(() -> Mono.just(this.tracer.currentSpan().context().spanId())));
 	}
 
 }

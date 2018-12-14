@@ -50,10 +50,10 @@ public class HelloWorldRestController {
 		requestMessage[1] = "Hellow World Message 2";
 		requestMessage[2] = "Hellow World Message 3";
 
-		PollableChannel outputChannel = (PollableChannel) applicationContext
+		PollableChannel outputChannel = (PollableChannel) this.applicationContext
 				.getBean("messagingOutputChannel");
 
-		MessagingGateway messagingGateway = (MessagingGateway) applicationContext
+		MessagingGateway messagingGateway = (MessagingGateway) this.applicationContext
 				.getBean("messagingGateway");
 
 		messagingGateway.processMessage(requestMessage);

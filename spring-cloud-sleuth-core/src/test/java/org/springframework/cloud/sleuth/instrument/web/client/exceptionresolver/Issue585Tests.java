@@ -125,7 +125,7 @@ class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	private void reportErrorSpan(String message) {
-		Span span = tracer.tracer().currentSpan();
+		Span span = this.tracer.tracer().currentSpan();
 		span.annotate("ERROR: " + message);
 		span.tag("custom", "tag");
 		logger.info("Foo");
@@ -156,7 +156,7 @@ class ExceptionResponse {
 	}
 
 	public String getErrorCode() {
-		return errorCode;
+		return this.errorCode;
 	}
 
 	public void setErrorCode(String errorCode) {
@@ -164,7 +164,7 @@ class ExceptionResponse {
 	}
 
 	public String getErrorMessage() {
-		return errorMessage;
+		return this.errorMessage;
 	}
 
 	public void setErrorMessage(String errorMessage) {
@@ -172,7 +172,7 @@ class ExceptionResponse {
 	}
 
 	public HttpStatus getHttpStatus() {
-		return httpStatus;
+		return this.httpStatus;
 	}
 
 	public void setHttpStatus(HttpStatus httpStatus) {
@@ -180,7 +180,7 @@ class ExceptionResponse {
 	}
 
 	public String getPath() {
-		return path;
+		return this.path;
 	}
 
 	public void setPath(String path) {
@@ -188,7 +188,7 @@ class ExceptionResponse {
 	}
 
 	public Long getEpochTime() {
-		return epochTime;
+		return this.epochTime;
 	}
 
 	public void setEpochTime(Long epochTime) {

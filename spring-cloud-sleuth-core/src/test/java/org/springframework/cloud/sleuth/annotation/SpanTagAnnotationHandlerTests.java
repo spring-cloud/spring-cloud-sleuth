@@ -58,7 +58,7 @@ public class SpanTagAnnotationHandlerTests {
 				.getMethod("getAnnotationForTagValueResolver", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = handler.resolveTagValue((SpanTag) annotation, "test");
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, "test");
 			assertThat(resolvedValue).isEqualTo("Value from myCustomTagValueResolver");
 		}
 		else {
@@ -73,7 +73,7 @@ public class SpanTagAnnotationHandlerTests {
 				.getMethod("getAnnotationForTagValueExpression", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = handler.resolveTagValue((SpanTag) annotation, "test");
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, "test");
 
 			assertThat(resolvedValue).isEqualTo("hello characters");
 		}
@@ -89,7 +89,7 @@ public class SpanTagAnnotationHandlerTests {
 				.getMethod("getAnnotationForArgumentToString", Long.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = handler.resolveTagValue((SpanTag) annotation, 15);
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, 15);
 			assertThat(resolvedValue).isEqualTo("15");
 		}
 		else {

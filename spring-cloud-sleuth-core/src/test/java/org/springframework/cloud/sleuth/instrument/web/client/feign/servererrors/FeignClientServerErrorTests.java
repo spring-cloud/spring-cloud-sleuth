@@ -98,8 +98,8 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnInternalServerError() {
-		try (Tracer.SpanInScope ws = tracer
-				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+		try (Tracer.SpanInScope ws = this.tracer
+				.withSpanInScope(this.tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.internalError();
 			fail("Must throw an exception");
@@ -121,8 +121,8 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnNotFound() {
-		try (Tracer.SpanInScope ws = tracer
-				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+		try (Tracer.SpanInScope ws = this.tracer
+				.withSpanInScope(this.tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.notFound();
 			fail("Must throw an exception");
@@ -144,8 +144,8 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnOk() {
-		try (Tracer.SpanInScope ws = tracer
-				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+		try (Tracer.SpanInScope ws = this.tracer
+				.withSpanInScope(this.tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.feignInterface.ok();
 		}
@@ -166,8 +166,8 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnOkWithCustomFeignConfiguration() {
-		try (Tracer.SpanInScope ws = tracer
-				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+		try (Tracer.SpanInScope ws = this.tracer
+				.withSpanInScope(this.tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.customConfFeignInterface.ok();
 			fail("Must throw an exception");
@@ -189,8 +189,8 @@ public class FeignClientServerErrorTests {
 
 	@Test
 	public void shouldCloseSpanOnNotFoundWithCustomFeignConfiguration() {
-		try (Tracer.SpanInScope ws = tracer
-				.withSpanInScope(tracer.nextSpan().name("foo").start())) {
+		try (Tracer.SpanInScope ws = this.tracer
+				.withSpanInScope(this.tracer.nextSpan().name("foo").start())) {
 			log.info("sending a request");
 			this.customConfFeignInterface.notFound();
 			fail("Must throw an exception");

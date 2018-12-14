@@ -61,125 +61,125 @@ public class ZipkinAutoConfigurationTests {
 
 	@After
 	public void close() {
-		if (context != null) {
-			context.close();
+		if (this.context != null) {
+			this.context.close();
 		}
 	}
 
 	@Test
 	public void defaultsToV2Endpoint() throws Exception {
-		context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url", server.url("/").toString());
-		context.register(ZipkinAutoConfiguration.class,
+		this.context = new AnnotationConfigApplicationContext();
+		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
+		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
 				Config.class);
-		context.refresh();
-		Span span = context.getBean(Tracing.class).tracer().nextSpan().name("foo")
+		this.context.refresh();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
 				.tag("foo", "bar").start();
 
 		span.finish();
 
 		Awaitility.await()
-				.untilAsserted(() -> then(server.getRequestCount()).isGreaterThan(0));
-		RecordedRequest request = server.takeRequest();
+				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
+		RecordedRequest request = this.server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v2/spans");
 		then(request.getBody().readUtf8()).contains("localEndpoint");
 	}
 
 	private MockEnvironment environment() {
-		context.setEnvironment(environment);
-		return environment;
+		this.context.setEnvironment(this.environment);
+		return this.environment;
 	}
 
 	@Test
 	public void encoderDirectsEndpoint() throws Exception {
-		context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url", server.url("/").toString());
+		this.context = new AnnotationConfigApplicationContext();
+		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
 		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
-		context.register(ZipkinAutoConfiguration.class,
+		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
 				Config.class);
-		context.refresh();
-		Span span = context.getBean(Tracing.class).tracer().nextSpan().name("foo")
+		this.context.refresh();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
 				.tag("foo", "bar").start();
 
 		span.finish();
 
 		Awaitility.await()
-				.untilAsserted(() -> then(server.getRequestCount()).isGreaterThan(0));
-		RecordedRequest request = server.takeRequest();
+				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
+		RecordedRequest request = this.server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v1/spans");
 		then(request.getBody().readUtf8()).contains("binaryAnnotations");
 	}
 
 	@Test
 	public void overrideRabbitMQQueue() throws Exception {
-		context = new AnnotationConfigApplicationContext();
+		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.rabbitmq.queue", "zipkin2");
-		context.register(PropertyPlaceholderAutoConfiguration.class,
+		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, ZipkinAutoConfiguration.class);
-		context.refresh();
+		this.context.refresh();
 
-		then(context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
+		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
 
-		context.close();
+		this.context.close();
 	}
 
 	@Test
 	public void overrideKafkaTopic() throws Exception {
-		context = new AnnotationConfigApplicationContext();
+		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.kafka.topic", "zipkin2");
 		environment().setProperty("spring.zipkin.sender.type", "kafka");
-		context.register(PropertyPlaceholderAutoConfiguration.class,
+		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class);
-		context.refresh();
+		this.context.refresh();
 
-		then(context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
+		then(this.context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
 
-		context.close();
+		this.context.close();
 	}
 
 	@Test
 	public void canOverrideBySender() throws Exception {
-		context = new AnnotationConfigApplicationContext();
+		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.sender.type", "web");
-		context.register(PropertyPlaceholderAutoConfiguration.class,
+		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
 				ZipkinAutoConfiguration.class);
-		context.refresh();
+		this.context.refresh();
 
-		then(context.getBean(Sender.class).getClass().getName())
+		then(this.context.getBean(Sender.class).getClass().getName())
 				.contains("RestTemplateSender");
 
-		context.close();
+		this.context.close();
 	}
 
 	@Test
 	public void canOverrideBySenderAndIsCaseInsensitive() throws Exception {
-		context = new AnnotationConfigApplicationContext();
+		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.sender.type", "WEB");
-		context.register(PropertyPlaceholderAutoConfiguration.class,
+		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
 				ZipkinAutoConfiguration.class);
-		context.refresh();
+		this.context.refresh();
 
-		then(context.getBean(Sender.class).getClass().getName())
+		then(this.context.getBean(Sender.class).getClass().getName())
 				.contains("RestTemplateSender");
 
-		context.close();
+		this.context.close();
 	}
 
 	@Test
 	public void rabbitWinsWhenKafkaPresent() throws Exception {
-		context = new AnnotationConfigApplicationContext();
-		context.register(PropertyPlaceholderAutoConfiguration.class,
+		this.context = new AnnotationConfigApplicationContext();
+		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
 				ZipkinAutoConfiguration.class);
-		context.refresh();
+		this.context.refresh();
 
-		then(context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
+		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
 
-		context.close();
+		this.context.close();
 	}
 
 	@Configuration

@@ -77,12 +77,12 @@ public class JmsTracingConfigurationTest {
 
 	@Test
 	public void tracesConnectionFactory() {
-		contextRunner.run(JmsTracingConfigurationTest::checkConnection);
+		this.contextRunner.run(JmsTracingConfigurationTest::checkConnection);
 	}
 
 	@Test
 	public void tracesXAConnectionFactories() {
-		contextRunner.withUserConfiguration(XAConfiguration.class).run(ctx -> {
+		this.contextRunner.withUserConfiguration(XAConfiguration.class).run(ctx -> {
 			clearSpans(ctx);
 			checkConnection(ctx);
 			checkXAConnection(ctx);
@@ -101,7 +101,7 @@ public class JmsTracingConfigurationTest {
 
 	@Test
 	public void tracesListener_jmsMessageListener() {
-		contextRunner.withUserConfiguration(SimpleJmsListenerConfiguration.class)
+		this.contextRunner.withUserConfiguration(SimpleJmsListenerConfiguration.class)
 				.run(ctx -> {
 					clearSpans(ctx);
 					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
@@ -129,7 +129,7 @@ public class JmsTracingConfigurationTest {
 			SimpleJmsListenerEndpoint endpoint = new SimpleJmsListenerEndpoint();
 			endpoint.setId("myCustomEndpointId");
 			endpoint.setDestination("myQueue");
-			endpoint.setMessageListener(simpleMessageListener(current));
+			endpoint.setMessageListener(simpleMessageListener(this.current));
 			registrar.registerEndpoint(endpoint);
 		}
 
@@ -146,7 +146,7 @@ public class JmsTracingConfigurationTest {
 
 	@Test
 	public void tracesListener_annotationMessageListener() {
-		contextRunner.withUserConfiguration(AnnotationJmsListenerConfiguration.class)
+		this.contextRunner.withUserConfiguration(AnnotationJmsListenerConfiguration.class)
 				.run(ctx -> {
 					clearSpans(ctx);
 					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
@@ -171,7 +171,7 @@ public class JmsTracingConfigurationTest {
 
 		@JmsListener(destination = "myQueue")
 		public void onMessage() {
-			assertThat(current.get()).extracting(TraceContext::parentIdAsLong)
+			assertThat(this.current.get()).extracting(TraceContext::parentIdAsLong)
 					.isNotEqualTo(0L);
 		}
 
@@ -179,7 +179,7 @@ public class JmsTracingConfigurationTest {
 
 	@Test
 	public void tracesListener_jcaMessageListener() {
-		contextRunner.withUserConfiguration(JcaJmsListenerConfiguration.class)
+		this.contextRunner.withUserConfiguration(JcaJmsListenerConfiguration.class)
 				.run(ctx -> {
 					clearSpans(ctx);
 					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
@@ -296,7 +296,7 @@ class JmsTestTracingConfiguration {
 	@Bean
 	Callable<Span> takeSpan() {
 		return () -> {
-			Span result = spans.poll(3, TimeUnit.SECONDS);
+			Span result = this.spans.poll(3, TimeUnit.SECONDS);
 			assertThat(result).withFailMessage("Span was not reported").isNotNull();
 			assertThat(result.annotations()).extracting(Annotation::value)
 					.doesNotContain(CONTEXT_LEAK);
@@ -319,7 +319,7 @@ class JmsTestTracingConfiguration {
 					contextLeak = true;
 				}
 			}
-			spans.add(s);
+			this.spans.add(s);
 			// throw so that we can see the path to the code that leaked the context
 			if (contextLeak) {
 				throw new AssertionError(

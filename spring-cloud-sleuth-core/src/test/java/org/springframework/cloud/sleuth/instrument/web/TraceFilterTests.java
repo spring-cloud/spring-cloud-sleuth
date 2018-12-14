@@ -128,7 +128,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void startsNewTrace() throws Exception {
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags())
@@ -143,7 +143,7 @@ public class TraceFilterTests {
 	public void shouldNotStoreHttpStatusCodeWhenResponseCodeHasNotYetBeenSet()
 			throws Exception {
 		this.response.setStatus(0);
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
@@ -158,7 +158,7 @@ public class TraceFilterTests {
 				.header(PARENT_SPAN_ID_NAME, SpanUtil.idToHex(3L))
 				.buildRequest(new MockServletContext());
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
@@ -177,7 +177,7 @@ public class TraceFilterTests {
 				.header(PARENT_SPAN_ID_NAME, SpanUtil.idToHex(3L))
 				.header(SAMPLED_ID_NAME, 0).buildRequest(new MockServletContext());
 
-		filter.doFilter(this.request, this.response, (req, resp) -> {
+		this.filter.doFilter(this.request, this.response, (req, resp) -> {
 			this.filterChain.doFilter(req, resp);
 			span.set(this.tracing.tracer().currentSpan());
 		});
@@ -190,7 +190,7 @@ public class TraceFilterTests {
 	public void continuesSpanInRequestAttr() throws Exception {
 		Span span = this.tracer.nextSpan().name("http:foo");
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 	}
@@ -200,7 +200,7 @@ public class TraceFilterTests {
 		Span span = this.tracer.nextSpan().name("http:foo");
 		this.response.setStatus(404);
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
@@ -213,7 +213,7 @@ public class TraceFilterTests {
 		this.response.setStatus(404);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 	}
 
 	@Test
@@ -222,7 +222,7 @@ public class TraceFilterTests {
 				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
 				.buildRequest(new MockServletContext());
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		verifyParentSpanHttpTags();
@@ -255,7 +255,7 @@ public class TraceFilterTests {
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		this.request.addHeader("X-Foo", "bar");
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
@@ -270,7 +270,7 @@ public class TraceFilterTests {
 		this.traceKeys.getHttp().getHeaders().add("x-foo");
 		this.request.addHeader("X-Foo", "bar");
 		this.request.addHeader("X-Foo", "spam");
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
@@ -293,7 +293,7 @@ public class TraceFilterTests {
 			}
 		};
 		try {
-			filter.doFilter(this.request, this.response, this.filterChain);
+			this.filter.doFilter(this.request, this.response, this.filterChain);
 		}
 		catch (RuntimeException e) {
 			assertEquals("Planned", e.getMessage());
@@ -314,7 +314,7 @@ public class TraceFilterTests {
 		this.response.setStatus(404);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 	}
 
 	@Test
@@ -324,7 +324,7 @@ public class TraceFilterTests {
 				.buildRequest(new MockServletContext());
 		this.response.setStatus(200);
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
@@ -337,7 +337,7 @@ public class TraceFilterTests {
 				.buildRequest(new MockServletContext());
 		this.response.setStatus(302);
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
@@ -349,7 +349,7 @@ public class TraceFilterTests {
 				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
 				.buildRequest(new MockServletContext());
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
@@ -363,7 +363,7 @@ public class TraceFilterTests {
 				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
 				.buildRequest(new MockServletContext());
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
@@ -388,7 +388,7 @@ public class TraceFilterTests {
 		this.request = builder().header(SPAN_FLAGS, 0)
 				.buildRequest(new MockServletContext());
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
@@ -429,7 +429,7 @@ public class TraceFilterTests {
 				.buildRequest(new MockServletContext());
 		this.response.setStatus(295);
 
-		filter.doFilter(this.request, this.response, this.filterChain);
+		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);

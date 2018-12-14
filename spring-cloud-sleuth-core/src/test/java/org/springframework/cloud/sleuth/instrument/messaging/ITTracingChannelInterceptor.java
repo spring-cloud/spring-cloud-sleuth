@@ -82,61 +82,61 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 
 	@Override
 	public void handleMessage(Message<?> msg) {
-		message = msg;
-		currentSpan = tracer.currentSpan();
-		if (message.getHeaders().containsKey("THROW_EXCEPTION")) {
+		this.message = msg;
+		this.currentSpan = this.tracer.currentSpan();
+		if (this.message.getHeaders().containsKey("THROW_EXCEPTION")) {
 			throw new RuntimeException("A terrible exception has occurred");
 		}
 	}
 
 	@Before
 	public void init() {
-		directChannel.subscribe(this);
-		executorChannel.subscribe(this);
+		this.directChannel.subscribe(this);
+		this.executorChannel.subscribe(this);
 	}
 
 	@After
 	public void close() {
-		directChannel.unsubscribe(this);
-		executorChannel.unsubscribe(this);
+		this.directChannel.unsubscribe(this);
+		this.executorChannel.unsubscribe(this);
 	}
 
 	// formerly known as TraceChannelInterceptorTest.executableSpanCreation
 	@Test
 	public void propagatesNoopSpan() {
-		directChannel.send(
+		this.directChannel.send(
 				MessageBuilder.withPayload("hi").setHeader("X-B3-Sampled", "0").build());
 
-		assertThat(message.getHeaders()).containsEntry("X-B3-Sampled", "0");
+		assertThat(this.message.getHeaders()).containsEntry("X-B3-Sampled", "0");
 
-		assertThat(currentSpan.isNoop()).isTrue();
+		assertThat(this.currentSpan.isNoop()).isTrue();
 	}
 
 	@Test
 	public void messageHeadersStillMutableForStomp() {
-		directChannel.send(MessageBuilder.withPayload("hi")
+		this.directChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader("stompCommand", "DISCONNECT").build());
 
 		assertThat(
-				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
+				MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class))
 						.isNotNull();
 
-		message = null;
-		directChannel.send(MessageBuilder.withPayload("hi")
+		this.message = null;
+		this.directChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader("simpMessageType", "sth").build());
 
 		assertThat(
-				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
+				MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class))
 						.isNotNull();
 	}
 
 	@Test
 	public void messageHeadersImmutableForNonStomp() {
-		directChannel
+		this.directChannel
 				.send(MessageBuilder.withPayload("hi").setHeader("foo", "bar").build());
 
 		assertThat(
-				MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class))
+				MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class))
 						.isNull();
 	}
 
