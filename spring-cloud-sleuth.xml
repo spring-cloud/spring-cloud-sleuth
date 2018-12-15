@@ -365,8 +365,7 @@ In extreme cases, too much baggage can crash the application, due to exceeding t
 <simpara>The following example shows setting baggage on a span:</simpara>
 <programlisting language="java" linenumbering="unnumbered">Span initialSpan = this.tracer.nextSpan().name("span").start();
 ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
-ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");
-}</programlisting>
+ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");</programlisting>
 <section xml:id="_baggage_versus_span_tags">
 <title>Baggage versus Span Tags</title>
 <simpara>Baggage travels with the trace (every child span contains the baggage of its parent).
@@ -1069,7 +1068,7 @@ baggage and propagation keys. E.g. <literal>spring.sleuth.log.slf4j.whitelisted-
 <title>Extracting a Propagated Context</title>
 <simpara>The <literal>TraceContext.Extractor&lt;C&gt;</literal> reads trace identifiers and sampling status from an incoming request or message.
 The carrier is usually a request object or headers.</simpara>
-<simpara>This utility is used in standard instrumentation (such as <literal>HttpServerHandler`</literal>) but can also be used for custom RPC or messaging code.</simpara>
+<simpara>This utility is used in standard instrumentation (such as <literal>HttpServerHandler</literal>) but can also be used for custom RPC or messaging code.</simpara>
 <simpara><literal>TraceContextOrSamplingFlags</literal> is usually used only with <literal>Tracer.nextSpan(extracted)</literal>, unless you are
 sharing span IDs between a client and a server.</simpara>
 </section>
