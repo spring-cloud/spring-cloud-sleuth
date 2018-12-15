@@ -220,7 +220,6 @@ The following example shows setting baggage on a span:
 [source,java]
 ----
 include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
-}
 ----
 
 ===== Baggage versus Span Tags

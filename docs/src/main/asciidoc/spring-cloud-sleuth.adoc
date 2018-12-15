@@ -461,7 +461,7 @@ IMPORTANT: Remember that adding entries to MDC can drastically decrease the perf
 The `TraceContext.Extractor<C>` reads trace identifiers and sampling status from an incoming request or message.
 The carrier is usually a request object or headers.
 
-This utility is used in standard instrumentation (such as `HttpServerHandler``) but can also be used for custom RPC or messaging code.
+This utility is used in standard instrumentation (such as `HttpServerHandler`) but can also be used for custom RPC or messaging code.
 
 `TraceContextOrSamplingFlags` is usually used only with `Tracer.nextSpan(extracted)`, unless you are
 sharing span IDs between a client and a server.
