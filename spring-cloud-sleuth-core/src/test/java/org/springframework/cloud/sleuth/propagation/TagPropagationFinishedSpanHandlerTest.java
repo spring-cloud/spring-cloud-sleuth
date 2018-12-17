@@ -15,6 +15,9 @@
  */
 package org.springframework.cloud.sleuth.propagation;
 
+import java.util.List;
+import java.util.Map;
+
 import brave.ScopedSpan;
 import brave.Tracer;
 import brave.propagation.ExtraFieldPropagation;
@@ -23,6 +26,7 @@ import brave.sampler.Sampler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,9 +34,6 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -63,9 +64,9 @@ public class TagPropagationFinishedSpanHandlerTest {
 
 	@Before
 	public void setUp() {
-		arrayListSpanReporter.clear();
-		span = tracer.startScopedSpan("my-scoped-span");
-		TraceContext context = span.context();
+		this.arrayListSpanReporter.clear();
+		this.span = this.tracer.startScopedSpan("my-scoped-span");
+		TraceContext context = this.span.context();
 		ExtraFieldPropagation.set(context, BAGGAGE_KEY, BAGGAGE_VALUE);
 		ExtraFieldPropagation.set(context, PROPAGATION_KEY, PROPAGATION_VALUE);
 		ExtraFieldPropagation.set(context, "others-propagation", "some value");
@@ -73,9 +74,9 @@ public class TagPropagationFinishedSpanHandlerTest {
 
 	@Test
 	public void shouldReportWithBaggageInTags() {
-		span.finish();
+		this.span.finish();
 
-		List<zipkin2.Span> spans = arrayListSpanReporter.getSpans();
+		List<zipkin2.Span> spans = this.arrayListSpanReporter.getSpans();
 		assertThat(spans).hasSize(1);
 		Map<String, String> tags = spans.get(0).tags();
 		assertThat(tags).hasSize(2);

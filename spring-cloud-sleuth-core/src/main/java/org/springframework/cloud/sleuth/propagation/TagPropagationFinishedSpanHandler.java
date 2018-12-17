@@ -16,15 +16,16 @@
 
 package org.springframework.cloud.sleuth.propagation;
 
+import java.util.AbstractMap;
+import java.util.Collection;
+import java.util.stream.Stream;
+
 import brave.handler.FinishedSpanHandler;
 import brave.handler.MutableSpan;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.TraceContext;
-import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 
-import java.util.AbstractMap;
-import java.util.Collection;
-import java.util.stream.Stream;
+import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 
 import static java.util.Objects.nonNull;
 
@@ -49,7 +50,7 @@ public class TagPropagationFinishedSpanHandler extends FinishedSpanHandler {
 
 	@Override
 	public boolean handle(TraceContext context, MutableSpan span) {
-		Stream.of(sleuthProperties.getBaggageKeys(), sleuthProperties.getPropagationKeys())
+		Stream.of(this.sleuthProperties.getBaggageKeys(), this.sleuthProperties.getPropagationKeys())
 				.flatMap(Collection::stream)
 				.filter(key -> this.tagPropagationProperties.getWhitelistedKeys().contains(key))
 				.map(baggageItemKey -> new AbstractMap.SimpleEntry<>(baggageItemKey,

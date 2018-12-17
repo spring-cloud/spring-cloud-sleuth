@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
 public class SleuthTagPropagationAutoConfiguration {
 
 	@Configuration
-	@ConditionalOnProperty(value = "spring.sleuth.propagation.tag.enabled")
+	@ConditionalOnProperty(value = "spring.sleuth.propagation.tag.enabled", matchIfMissing = true)
 	@EnableConfigurationProperties(SleuthTagPropagationProperties.class)
 	protected static class TagPropagationConfiguration {
 

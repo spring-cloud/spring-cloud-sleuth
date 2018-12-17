@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.sleuth.propagation;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Configuration properties of tag propagation.
@@ -50,7 +50,7 @@ public class SleuthTagPropagationProperties {
 	}
 
 	public List<String> getWhitelistedKeys() {
-		return whitelistedKeys;
+		return this.whitelistedKeys;
 	}
 
 	public void setWhitelistedKeys(List<String> whitelistedKeys) {

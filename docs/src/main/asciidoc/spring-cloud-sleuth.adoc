@@ -456,6 +456,9 @@ baggage and propagation keys. E.g. `spring.sleuth.log.slf4j.whitelisted-mdc-keys
 
 IMPORTANT: Remember that adding entries to MDC can drastically decrease the performance of your application!
 
+If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
+`spring.sleuth.propagation.tag.whitelisted-keys` with a list of whitelisted baggage keys. To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
+
 ==== Extracting a Propagated Context
 
 The `TraceContext.Extractor<C>` reads trace identifiers and sampling status from an incoming request or message.
