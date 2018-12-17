@@ -93,6 +93,26 @@ public class Slf4JSpanLoggerTest {
 	}
 
 	@Test
+	public void should_remove_entries_from_mdc_for_null_span() throws Exception {
+		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
+		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
+				"my-propagation-value");
+		this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
+
+		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
+		});
+
+		scope.close();
+
+		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+	}
+
+	@Test
 	public void should_remove_entries_from_mdc_from_null_span() throws Exception {
 		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");

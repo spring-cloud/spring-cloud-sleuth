@@ -77,8 +77,8 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		final String legacyPreviousSpanId = MDC.get(LEGACY_SPAN_ID_NAME);
 		final String legacySpanExportable = MDC.get(LEGACY_EXPORTABLE_NAME);
 		final List<AbstractMap.SimpleEntry<String, String>> previousMdc = Stream
-				.concat(whitelistedBaggageKeys(currentSpan),
-						whitelistedPropagationKeys(currentSpan))
+				.concat(whitelistedBaggageKeysWithValue(currentSpan),
+						whitelistedPropagationKeysWithValue(currentSpan))
 				.map((s) -> new AbstractMap.SimpleEntry<>(s, MDC.get(s)))
 				.collect(Collectors.toList());
 
@@ -102,9 +102,9 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 					log.trace("With parent: {}", currentSpan.parentId());
 				}
 			}
-			whitelistedBaggageKeys(currentSpan).forEach(
+			whitelistedBaggageKeysWithValue(currentSpan).forEach(
 					(s) -> MDC.put(s, ExtraFieldPropagation.get(currentSpan, s)));
-			whitelistedPropagationKeys(currentSpan).forEach(
+			whitelistedPropagationKeysWithValue(currentSpan).forEach(
 					(s) -> MDC.put(s, ExtraFieldPropagation.get(currentSpan, s)));
 		}
 		else {
@@ -116,8 +116,8 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			MDC.remove(LEGACY_PARENT_ID_NAME);
 			MDC.remove(LEGACY_SPAN_ID_NAME);
 			MDC.remove(LEGACY_EXPORTABLE_NAME);
-			whitelistedBaggageKeys(currentSpan).forEach(MDC::remove);
-			whitelistedPropagationKeys(currentSpan).forEach(MDC::remove);
+			whitelistedBaggageKeys().forEach(MDC::remove);
+			whitelistedPropagationKeys().forEach(MDC::remove);
 		}
 
 		/**
@@ -146,18 +146,30 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		return new ThreadContextCurrentTraceContextScope();
 	}
 
-	private Stream<String> whitelistedBaggageKeys(TraceContext context) {
+	private Stream<String> whitelistedBaggageKeys() {
 		return this.sleuthProperties.getBaggageKeys().stream().filter(
-				(s) -> this.sleuthSlf4jProperties.getWhitelistedMdcKeys().contains(s)
-						&& context != null
-						&& StringUtils.hasText(ExtraFieldPropagation.get(context, s)));
+				(s) -> this.sleuthSlf4jProperties.getWhitelistedMdcKeys().contains(s));
 	}
 
-	private Stream<String> whitelistedPropagationKeys(TraceContext context) {
+	private Stream<String> whitelistedBaggageKeysWithValue(TraceContext context) {
+		if (context == null) {
+			return Stream.empty();
+		}
+		return whitelistedBaggageKeys().filter(
+				(s) -> StringUtils.hasText(ExtraFieldPropagation.get(context, s)));
+	}
+
+	private Stream<String> whitelistedPropagationKeys() {
 		return this.sleuthProperties.getPropagationKeys().stream().filter(
-				(s) -> this.sleuthSlf4jProperties.getWhitelistedMdcKeys().contains(s)
-						&& context != null
-						&& StringUtils.hasText(ExtraFieldPropagation.get(context, s)));
+				(s) -> this.sleuthSlf4jProperties.getWhitelistedMdcKeys().contains(s));
+	}
+
+	private Stream<String> whitelistedPropagationKeysWithValue(TraceContext context) {
+		if (context == null) {
+			return Stream.empty();
+		}
+		return whitelistedPropagationKeys().filter(
+				(s) -> StringUtils.hasText(ExtraFieldPropagation.get(context, s)));
 	}
 
 	private void log(String text, TraceContext span) {
