@@ -23,7 +23,7 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-public class SleuthTagPropagationAutoConfigurationTest {
+public class SleuthTagPropagationAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(SleuthTagPropagationAutoConfiguration.class));
@@ -37,10 +37,8 @@ public class SleuthTagPropagationAutoConfigurationTest {
 	}
 
 	@Test
-	public void shouldNotCreateHandlerByDisablingIt() {
+	public void shouldNotCreateHandlerByDefault() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.propagation.tag.whitelisted-keys=some-key")
-				.withPropertyValues("spring.sleuth.propagation.tag.enabled=false")
 				.withUserConfiguration(TraceAutoConfiguration.class)
 				.run((context) -> {
 					assertThat(context).doesNotHaveBean(TagPropagationFinishedSpanHandler.class);
@@ -48,8 +46,9 @@ public class SleuthTagPropagationAutoConfigurationTest {
 	}
 
 	@Test
-	public void shouldCreateHandler() {
+	public void shouldCreateHandlerWhenEnabled() {
 		this.contextRunner
+				.withPropertyValues("spring.sleuth.propagation.tag.enabled=true")
 				.withPropertyValues("spring.sleuth.propagation.tag.whitelisted-keys=some-key")
 				.withUserConfiguration(TraceAutoConfiguration.class)
 				.run((context) -> {
