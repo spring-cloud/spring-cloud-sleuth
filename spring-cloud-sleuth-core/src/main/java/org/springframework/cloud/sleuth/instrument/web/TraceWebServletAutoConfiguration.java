@@ -82,7 +82,7 @@ public class TraceWebServletAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.web.exceptionThrowingFilterEnabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.web.exception-throwing-filter-enabled", matchIfMissing = true)
 	public FilterRegistrationBean exceptionThrowingFilter(
 			SleuthWebProperties webProperties) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
