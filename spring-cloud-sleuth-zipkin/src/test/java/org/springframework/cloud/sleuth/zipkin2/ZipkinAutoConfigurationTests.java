@@ -69,7 +69,8 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void defaultsToV2Endpoint() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
+		environment().setProperty("spring.zipkin.base-url",
+				this.server.url("/").toString());
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
 				Config.class);
@@ -79,8 +80,8 @@ public class ZipkinAutoConfigurationTests {
 
 		span.finish();
 
-		Awaitility.await()
-				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
+		Awaitility.await().untilAsserted(
+				() -> then(this.server.getRequestCount()).isGreaterThan(0));
 		RecordedRequest request = this.server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v2/spans");
 		then(request.getBody().readUtf8()).contains("localEndpoint");
@@ -94,7 +95,8 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void encoderDirectsEndpoint() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
+		environment().setProperty("spring.zipkin.base-url",
+				this.server.url("/").toString());
 		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
@@ -105,8 +107,8 @@ public class ZipkinAutoConfigurationTests {
 
 		span.finish();
 
-		Awaitility.await()
-				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
+		Awaitility.await().untilAsserted(
+				() -> then(this.server.getRequestCount()).isGreaterThan(0));
 		RecordedRequest request = this.server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v1/spans");
 		then(request.getBody().readUtf8()).contains("binaryAnnotations");

@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import brave.Tracing;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
 
@@ -61,9 +62,8 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public void execute(Runnable command) {
-		final Runnable r = new TraceRunnable(tracing(), spanNamer(), command,
-				this.spanName);
-		this.delegate.execute(r);
+		this.delegate.submit(ContextUtil.isContextInCreation(this.beanFactory) ? command
+				: new TraceRunnable(tracing(), spanNamer(), command, this.spanName));
 	}
 
 	@Override
@@ -94,45 +94,52 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		Callable<T> c = new TraceCallable<>(tracing(), spanNamer(), task, this.spanName);
-		return this.delegate.submit(c);
+		return this.delegate.submit(ContextUtil.isContextInCreation(this.beanFactory)
+				? task
+				: new TraceCallable<>(tracing(), spanNamer(), task, this.spanName));
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		Runnable r = new TraceRunnable(tracing(), spanNamer(), task, this.spanName);
-		return this.delegate.submit(r, result);
+		return this.delegate.submit(
+				ContextUtil.isContextInCreation(this.beanFactory) ? task
+						: new TraceRunnable(tracing(), spanNamer(), task, this.spanName),
+				result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		Runnable r = new TraceRunnable(tracing(), spanNamer(), task, this.spanName);
-		return this.delegate.submit(r);
+		return this.delegate.submit(ContextUtil.isContextInCreation(this.beanFactory)
+				? task : new TraceRunnable(tracing(), spanNamer(), task, this.spanName));
 	}
 
 	@Override
 	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
 			throws InterruptedException {
-		return this.delegate.invokeAll(wrapCallableCollection(tasks));
+		return this.delegate.invokeAll(ContextUtil.isContextInCreation(this.beanFactory)
+				? tasks : wrapCallableCollection(tasks));
 	}
 
 	@Override
 	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
 			long timeout, TimeUnit unit) throws InterruptedException {
-		return this.delegate.invokeAll(wrapCallableCollection(tasks), timeout, unit);
+		return this.delegate.invokeAll(ContextUtil.isContextInCreation(this.beanFactory)
+				? tasks : wrapCallableCollection(tasks), timeout, unit);
 	}
 
 	@Override
 	public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
 			throws InterruptedException, ExecutionException {
-		return this.delegate.invokeAny(wrapCallableCollection(tasks));
+		return this.delegate.invokeAny(ContextUtil.isContextInCreation(this.beanFactory)
+				? tasks : wrapCallableCollection(tasks));
 	}
 
 	@Override
 	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout,
 			TimeUnit unit)
 			throws InterruptedException, ExecutionException, TimeoutException {
-		return this.delegate.invokeAny(wrapCallableCollection(tasks), timeout, unit);
+		return this.delegate.invokeAny(ContextUtil.isContextInCreation(this.beanFactory)
+				? tasks : wrapCallableCollection(tasks), timeout, unit);
 	}
 
 	private <T> Collection<? extends Callable<T>> wrapCallableCollection(

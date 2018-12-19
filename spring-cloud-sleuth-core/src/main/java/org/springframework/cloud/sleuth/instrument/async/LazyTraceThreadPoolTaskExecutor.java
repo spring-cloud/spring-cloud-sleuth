@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
@@ -34,7 +35,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.concurrent.ListenableFuture;
 
 /**
- * Trace representation of {@link ThreadPoolTaskExecutor}.
+ * Trace representation of {@link ThreadPoolTaskExecutor}
  *
  * @author Marcin Grzejszczak
  * @since 1.0.10
@@ -61,35 +62,40 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	@Override
 	public void execute(Runnable task) {
-		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task));
+		this.delegate.execute(ContextUtil.isContextInCreation(this.beanFactory) ? task
+				: new TraceRunnable(tracing(), spanNamer(), task));
 	}
 
 	@Override
 	public void execute(Runnable task, long startTimeout) {
-		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task),
-				startTimeout);
+		this.delegate.execute(ContextUtil.isContextInCreation(this.beanFactory) ? task
+				: new TraceRunnable(tracing(), spanNamer(), task), startTimeout);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		return this.delegate.submit(new TraceRunnable(tracing(), spanNamer(), task));
+		return this.delegate.submit(ContextUtil.isContextInCreation(this.beanFactory)
+				? task : new TraceRunnable(tracing(), spanNamer(), task));
 	}
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		return this.delegate.submit(new TraceCallable<>(tracing(), spanNamer(), task));
+		return this.delegate.submit(ContextUtil.isContextInCreation(this.beanFactory)
+				? task : new TraceCallable<>(tracing(), spanNamer(), task));
 	}
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
 		return this.delegate
-				.submitListenable(new TraceRunnable(tracing(), spanNamer(), task));
+				.submitListenable(ContextUtil.isContextInCreation(this.beanFactory) ? task
+						: new TraceRunnable(tracing(), spanNamer(), task));
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
 		return this.delegate
-				.submitListenable(new TraceCallable<>(tracing(), spanNamer(), task));
+				.submitListenable(ContextUtil.isContextInCreation(this.beanFactory) ? task
+						: new TraceCallable<>(tracing(), spanNamer(), task));
 	}
 
 	@Override
@@ -100,6 +106,11 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	@Override
 	public void setThreadFactory(ThreadFactory threadFactory) {
 		this.delegate.setThreadFactory(threadFactory);
+	}
+
+	@Override
+	public void setThreadNamePrefix(String threadNamePrefix) {
+		this.delegate.setThreadNamePrefix(threadNamePrefix);
 	}
 
 	@Override
@@ -174,8 +185,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setThreadNamePrefix(String threadNamePrefix) {
-		this.delegate.setThreadNamePrefix(threadNamePrefix);
+	public void setThreadPriority(int threadPriority) {
+		this.delegate.setThreadPriority(threadPriority);
 	}
 
 	@Override
@@ -184,8 +195,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setThreadPriority(int threadPriority) {
-		this.delegate.setThreadPriority(threadPriority);
+	public void setDaemon(boolean daemon) {
+		this.delegate.setDaemon(daemon);
 	}
 
 	@Override
@@ -194,18 +205,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setDaemon(boolean daemon) {
-		this.delegate.setDaemon(daemon);
-	}
-
-	@Override
 	public void setThreadGroupName(String name) {
 		this.delegate.setThreadGroupName(name);
-	}
-
-	@Override
-	public ThreadGroup getThreadGroup() {
-		return this.delegate.getThreadGroup();
 	}
 
 	@Override
@@ -214,13 +215,13 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public Thread createThread(Runnable runnable) {
-		return this.delegate.createThread(runnable);
+	public ThreadGroup getThreadGroup() {
+		return this.delegate.getThreadGroup();
 	}
 
 	@Override
-	public int getCorePoolSize() {
-		return this.delegate.getCorePoolSize();
+	public Thread createThread(Runnable runnable) {
+		return this.delegate.createThread(runnable);
 	}
 
 	@Override
@@ -229,8 +230,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public int getMaxPoolSize() {
-		return this.delegate.getMaxPoolSize();
+	public int getCorePoolSize() {
+		return this.delegate.getCorePoolSize();
 	}
 
 	@Override
@@ -239,13 +240,18 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public int getKeepAliveSeconds() {
-		return this.delegate.getKeepAliveSeconds();
+	public int getMaxPoolSize() {
+		return this.delegate.getMaxPoolSize();
 	}
 
 	@Override
 	public void setKeepAliveSeconds(int keepAliveSeconds) {
 		this.delegate.setKeepAliveSeconds(keepAliveSeconds);
+	}
+
+	@Override
+	public int getKeepAliveSeconds() {
+		return this.delegate.getKeepAliveSeconds();
 	}
 
 	@Override
@@ -275,7 +281,7 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 			try {
 				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 			}
-			catch (NoSuchBeanDefinitionException ex) {
+			catch (NoSuchBeanDefinitionException e) {
 				log.warn(
 						"SpanNamer bean not found - will provide a manually created instance");
 				return new DefaultSpanNamer();

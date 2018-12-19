@@ -17,13 +17,12 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.AsyncConfigurer;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} that wraps an existing custom {@link AsyncConfigurer} in a
- * {@link LazyTraceAsyncCustomizer}.
+ * Auto-configuration} for asynchronous communication.
  *
  * @author Jesus Alonso
  * @since 2.1.0
@@ -31,5 +30,10 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 @Configuration
 @EnableConfigurationProperties(SleuthAsyncProperties.class)
 public class AsyncAutoConfiguration {
+
+	@Bean
+	ContextRefreshedListener traceContextRefreshedListener() {
+		return new ContextRefreshedListener();
+	}
 
 }

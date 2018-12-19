@@ -21,13 +21,14 @@ import java.util.concurrent.Executor;
 import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
- * {@link Executor} that wraps {@link Runnable} in a trace representation.
+ * {@link Executor} that wraps {@link Runnable} in a trace representation
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -51,11 +52,15 @@ public class LazyTraceExecutor implements Executor {
 
 	@Override
 	public void execute(Runnable command) {
+		if (ContextUtil.isContextInCreation(this.beanFactory)) {
+			this.delegate.execute(command);
+			return;
+		}
 		if (this.tracing == null) {
 			try {
 				this.tracing = this.beanFactory.getBean(Tracing.class);
 			}
-			catch (NoSuchBeanDefinitionException ex) {
+			catch (NoSuchBeanDefinitionException e) {
 				this.delegate.execute(command);
 				return;
 			}
@@ -69,7 +74,7 @@ public class LazyTraceExecutor implements Executor {
 			try {
 				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 			}
-			catch (NoSuchBeanDefinitionException ex) {
+			catch (NoSuchBeanDefinitionException e) {
 				log.warn(
 						"SpanNamer bean not found - will provide a manually created instance");
 				return new DefaultSpanNamer();
