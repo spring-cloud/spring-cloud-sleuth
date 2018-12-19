@@ -31,15 +31,18 @@ import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.sleuth.instrument.async.LazyTraceExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.AsyncClientHttpRequest;
@@ -180,6 +183,8 @@ public class MultipleAsyncRestTemplateTests {
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableAsync
+	// add the infrastructure role to ensure that the bean gets auto-proxied
+	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	static class CustomExecutorConfig extends AsyncConfigurerSupport {
 
 		@Autowired

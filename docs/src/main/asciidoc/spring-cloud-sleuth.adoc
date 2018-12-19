@@ -1307,6 +1307,10 @@ The following example shows how to set up such a custom `Executor`:
 include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]
 ----
 
+TIP: To ensure that your configuration gets post processed, remember
+to add the `@Role(BeanDefinition.ROLE_INFRASTRUCTURE)` on your
+`@Configuration` class
+
 === Messaging
 
 Features from this section can be disabled by setting the `spring.sleuth.messaging.enabled` property with value equal to `false`.
