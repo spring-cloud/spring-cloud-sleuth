@@ -1994,6 +1994,8 @@ The following example shows how to set up such a custom <literal>Executor</liter
 <programlisting language="java" linenumbering="unnumbered">@Configuration
 @EnableAutoConfiguration
 @EnableAsync
+// add the infrastructure role to ensure that the bean gets auto-proxied
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 static class CustomExecutorConfig extends AsyncConfigurerSupport {
 
 	@Autowired
@@ -2013,6 +2015,11 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 	}
 
 }</programlisting>
+<tip>
+<simpara>To ensure that your configuration gets post processed, remember
+to add the <literal>@Role(BeanDefinition.ROLE_INFRASTRUCTURE)</literal> on your
+<literal>@Configuration</literal> class</simpara>
+</tip>
 </section>
 </section>
 </section>
