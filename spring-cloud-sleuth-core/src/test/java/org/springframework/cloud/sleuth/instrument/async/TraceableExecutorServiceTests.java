@@ -77,8 +77,8 @@ public class TraceableExecutorServiceTests {
 
 	@Before
 	public void setup() {
-		this.traceManagerableExecutorService = new TraceableExecutorService(beanFactory(true),
-				this.executorService);
+		this.traceManagerableExecutorService = new TraceableExecutorService(
+				beanFactory(true), this.executorService);
 		this.reporter.clear();
 		this.spanVerifyingRunnable.clear();
 	}
@@ -211,8 +211,7 @@ public class TraceableExecutorServiceTests {
 		CompletableFuture<Long> completableFuture = CompletableFuture.supplyAsync(() -> {
 			// perform some logic
 			return 1_000_000L;
-		}, new TraceableExecutorService(beanFactory, executorService,
-				"calculateTax"));
+		}, new TraceableExecutorService(beanFactory, executorService, "calculateTax"));
 
 		then(completableFuture.get()).isEqualTo(1_000_000L);
 		then(this.tracer.currentSpan()).isNull();

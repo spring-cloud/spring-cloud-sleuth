@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
- * Internal class
+ * Utility class that verifies that context is in creation.
  *
  * @author Marcin Grzejszczak
  * @since 2.1.0

@@ -18,11 +18,11 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.springframework.context.ApplicationListener;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.SmartApplicationListener;
 
-class ContextRefreshedListener extends AtomicBoolean
-		implements ApplicationListener<ContextRefreshedEvent> {
+class ContextRefreshedListener extends AtomicBoolean implements SmartApplicationListener {
 
 	ContextRefreshedListener(boolean initialValue) {
 		super(initialValue);
@@ -31,8 +31,16 @@ class ContextRefreshedListener extends AtomicBoolean
 	ContextRefreshedListener() {
 	}
 
-	public void onApplicationEvent(ContextRefreshedEvent event) {
-		set(true);
+	@Override
+	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+		return ContextRefreshedEvent.class.isAssignableFrom(eventType);
+	}
+
+	@Override
+	public void onApplicationEvent(ApplicationEvent event) {
+		if (event instanceof ContextRefreshedEvent) {
+			set(true);
+		}
 	}
 
 }

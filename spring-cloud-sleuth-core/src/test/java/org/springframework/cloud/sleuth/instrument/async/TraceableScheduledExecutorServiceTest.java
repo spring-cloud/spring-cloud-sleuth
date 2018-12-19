@@ -109,7 +109,8 @@ public class TraceableScheduledExecutorServiceTest {
 	}
 
 	@Test
-	public void should_not_schedule_a_trace_runnable_when_context_not_ready() throws Exception {
+	public void should_not_schedule_a_trace_runnable_when_context_not_ready()
+			throws Exception {
 		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
 				.willReturn(new ContextRefreshedListener(false));
 		this.traceableScheduledExecutorService.schedule(aRunnable(), 1L, TimeUnit.DAYS);
@@ -121,7 +122,8 @@ public class TraceableScheduledExecutorServiceTest {
 	}
 
 	@Test
-	public void should_not_schedule_a_trace_callable_when_context_not_ready() throws Exception {
+	public void should_not_schedule_a_trace_callable_when_context_not_ready()
+			throws Exception {
 		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
 				.willReturn(new ContextRefreshedListener(false));
 		this.traceableScheduledExecutorService.schedule(aCallable(), 1L, TimeUnit.DAYS);
@@ -133,7 +135,8 @@ public class TraceableScheduledExecutorServiceTest {
 	}
 
 	@Test
-	public void should_not_schedule_at_fixed_rate_a_trace_runnable_when_context_not_ready() throws Exception {
+	public void should_not_schedule_at_fixed_rate_a_trace_runnable_when_context_not_ready()
+			throws Exception {
 		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
 				.willReturn(new ContextRefreshedListener(false));
 		this.traceableScheduledExecutorService.scheduleAtFixedRate(aRunnable(), 1L, 1L,
@@ -146,7 +149,8 @@ public class TraceableScheduledExecutorServiceTest {
 	}
 
 	@Test
-	public void should_not_schedule_with_fixed_delay_a_trace_runnable_when_context_not_ready() throws Exception {
+	public void should_not_schedule_with_fixed_delay_a_trace_runnable_when_context_not_ready()
+			throws Exception {
 		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
 				.willReturn(new ContextRefreshedListener(false));
 		this.traceableScheduledExecutorService.scheduleWithFixedDelay(aRunnable(), 1L, 1L,

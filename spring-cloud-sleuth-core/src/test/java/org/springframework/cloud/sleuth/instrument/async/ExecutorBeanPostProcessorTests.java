@@ -30,7 +30,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brave.Tracer;
 import brave.Tracing;
 import org.aopalliance.aop.Advice;
 import org.junit.After;
@@ -41,14 +40,13 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ClassUtils;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -76,6 +74,8 @@ public class ExecutorBeanPostProcessorTests {
 		Mockito.when(this.beanFactory.getBean(Tracing.class)).thenReturn(this.tracing);
 		Mockito.when(this.beanFactory.getBean(SpanNamer.class))
 				.thenReturn(new DefaultSpanNamer());
+		Mockito.when(this.beanFactory.getBean(ContextRefreshedListener.class))
+				.thenReturn(new ContextRefreshedListener(true));
 	}
 
 	@After
