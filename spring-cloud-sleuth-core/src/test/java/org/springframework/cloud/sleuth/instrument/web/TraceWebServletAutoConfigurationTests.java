@@ -31,25 +31,22 @@ public class TraceWebServletAutoConfigurationTests {
 	private static final String EXCEPTION_LOGGING_FILTER_BEAN_NAME = "exceptionThrowingFilter";
 
 	private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(
-					TraceAutoConfiguration.class,
-					TraceHttpAutoConfiguration.class,
-					TraceWebAutoConfiguration.class,
-					TraceWebServletAutoConfiguration.class
-			));
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+					TraceHttpAutoConfiguration.class, TraceWebAutoConfiguration.class,
+					TraceWebServletAutoConfiguration.class));
 
 	@Test
 	public void shouldCreateExceptionLoggingFilterBeanByDefault() {
-		this.contextRunner
-				.run((context) -> {
-					assertThat(context).hasBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
-				});
+		this.contextRunner.run((context) -> {
+			assertThat(context).hasBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
+		});
 	}
 
 	@Test
 	public void shouldCreateExceptionLoggingFilterBeanIfExplicitlyEnabled() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.web.exception-throwing-filter-enabled=true")
+				.withPropertyValues(
+						"spring.sleuth.web.exception-logging-filter-enabled=true")
 				.run((context) -> {
 					assertThat(context).hasBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
 				});
@@ -58,18 +55,23 @@ public class TraceWebServletAutoConfigurationTests {
 	@Test
 	public void shouldNotCreateExceptionLoggingFilterBeanIfDisabledInProperties() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.web.exception-throwing-filter-enabled=false")
+				.withPropertyValues(
+						"spring.sleuth.web.exception-logging-filter-enabled=false")
 				.run((context) -> {
-					assertThat(context).doesNotHaveBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
+					assertThat(context)
+							.doesNotHaveBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
 				});
 	}
 
 	@Test
 	public void shouldNotCreateExceptionLoggingFilterBeanIfDisabledInPropertiesUsingCamelCase() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.web.exceptionThrowingFilterEnabled=false")
+				.withPropertyValues(
+						"spring.sleuth.web.exceptionLoggingFilterEnabled=false")
 				.run((context) -> {
-					assertThat(context).doesNotHaveBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
+					assertThat(context)
+							.doesNotHaveBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
 				});
 	}
+
 }

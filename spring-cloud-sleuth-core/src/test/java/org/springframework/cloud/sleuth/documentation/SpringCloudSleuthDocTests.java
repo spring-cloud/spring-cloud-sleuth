@@ -269,7 +269,8 @@ public class SpringCloudSleuthDocTests {
 				"calculateTax");
 		// Wrapping `Runnable` with `Tracing`. That way the current span will be available
 		// in the thread of `Runnable`
-		Runnable traceRunnableFromTracer = this.tracing.currentTraceContext().wrap(runnable);
+		Runnable traceRunnableFromTracer = this.tracing.currentTraceContext()
+				.wrap(runnable);
 		// end::trace_runnable[]
 
 		then(traceRunnable).isExactlyInstanceOf(TraceRunnable.class);
@@ -291,8 +292,8 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceCallable` creation with explicit "calculateTax" Span name
-		Callable<String> traceCallable = new TraceCallable<>(this.tracing, spanNamer, callable,
-				"calculateTax");
+		Callable<String> traceCallable = new TraceCallable<>(this.tracing, spanNamer,
+				callable, "calculateTax");
 		// Wrapping `Callable` with `Tracing`. That way the current span will be available
 		// in the thread of `Callable`
 		Callable<String> traceCallableFromTracer = this.tracing.currentTraceContext()

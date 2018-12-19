@@ -42,7 +42,7 @@ public class SleuthTagPropagationAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.propagation.tag.whitelisted-keys")
 		public FinishedSpanHandler finishedSpanHandler(SleuthProperties sleuthProperties,
-													   SleuthTagPropagationProperties tagPropagationProperties) {
+				SleuthTagPropagationProperties tagPropagationProperties) {
 			return new TagPropagationFinishedSpanHandler(sleuthProperties,
 					tagPropagationProperties);
 		}

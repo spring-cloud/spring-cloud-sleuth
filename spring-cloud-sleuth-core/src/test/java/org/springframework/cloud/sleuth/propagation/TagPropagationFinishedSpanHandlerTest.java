@@ -44,14 +44,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage",
 		"spring.sleuth.propagation-keys=my-propagation,others-propagation",
-		"spring.sleuth.propagation.tag.whitelisted-keys=my-baggage,my-propagation"},
-		classes = TagPropagationFinishedSpanHandlerTest.TestConfiguration.class)
+		"spring.sleuth.propagation.tag.whitelisted-keys=my-baggage,my-propagation" }, classes = TagPropagationFinishedSpanHandlerTest.TestConfiguration.class)
 public class TagPropagationFinishedSpanHandlerTest {
 
 	private static final String BAGGAGE_KEY = "my-baggage";
+
 	private static final String BAGGAGE_VALUE = "332323";
 
 	private static final String PROPAGATION_KEY = "my-propagation";
+
 	private static final String PROPAGATION_VALUE = "332323";
 
 	@Autowired

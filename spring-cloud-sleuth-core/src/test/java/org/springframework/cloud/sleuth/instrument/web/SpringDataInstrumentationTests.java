@@ -182,8 +182,8 @@ class Reservation {
 
 	@Override
 	public String toString() {
-		return "Reservation{" + "id=" + this.id + ", reservationName='" + this.reservationName
-				+ '\'' + '}';
+		return "Reservation{" + "id=" + this.id + ", reservationName='"
+				+ this.reservationName + '\'' + '}';
 	}
 
 	Reservation() {// why JPA why???

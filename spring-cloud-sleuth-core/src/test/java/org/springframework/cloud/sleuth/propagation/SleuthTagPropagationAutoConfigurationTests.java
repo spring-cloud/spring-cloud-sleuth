@@ -22,38 +22,39 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 public class SleuthTagPropagationAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(SleuthTagPropagationAutoConfiguration.class));
+			.withConfiguration(
+					AutoConfigurations.of(SleuthTagPropagationAutoConfiguration.class));
 
 	@Test
 	public void shouldNotCreateHandler() {
-		this.contextRunner
-				.run((context) -> {
-					assertThat(context).doesNotHaveBean(TagPropagationFinishedSpanHandler.class);
-				});
+		this.contextRunner.run((context) -> {
+			assertThat(context).doesNotHaveBean(TagPropagationFinishedSpanHandler.class);
+		});
 	}
 
 	@Test
 	public void shouldNotCreateHandlerByDisablingIt() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.propagation.tag.whitelisted-keys=some-key")
+				.withPropertyValues(
+						"spring.sleuth.propagation.tag.whitelisted-keys=some-key")
 				.withPropertyValues("spring.sleuth.propagation.tag.enabled=false")
-				.withUserConfiguration(TraceAutoConfiguration.class)
-				.run((context) -> {
-					assertThat(context).doesNotHaveBean(TagPropagationFinishedSpanHandler.class);
+				.withUserConfiguration(TraceAutoConfiguration.class).run((context) -> {
+					assertThat(context)
+							.doesNotHaveBean(TagPropagationFinishedSpanHandler.class);
 				});
 	}
 
 	@Test
 	public void shouldCreateHandler() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.propagation.tag.whitelisted-keys=some-key")
-				.withUserConfiguration(TraceAutoConfiguration.class)
-				.run((context) -> {
-					assertThat(context).hasSingleBean(TagPropagationFinishedSpanHandler.class);
+				.withPropertyValues(
+						"spring.sleuth.propagation.tag.whitelisted-keys=some-key")
+				.withUserConfiguration(TraceAutoConfiguration.class).run((context) -> {
+					assertThat(context)
+							.hasSingleBean(TagPropagationFinishedSpanHandler.class);
 				});
 	}
 

@@ -102,8 +102,8 @@ public class MultipleAsyncRestTemplateTests {
 		Span span = this.tracer.nextSpan().name("foo");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			String result = this.asyncRestTemplate
-					.getForEntity("http://localhost:" + this.port + "/foo", String.class).get()
-					.getBody();
+					.getForEntity("http://localhost:" + this.port + "/foo", String.class)
+					.get().getBody();
 			then(span.context().traceIdString()).isEqualTo(result);
 		}
 		finally {

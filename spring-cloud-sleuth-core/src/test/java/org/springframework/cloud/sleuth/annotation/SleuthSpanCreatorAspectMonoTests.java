@@ -624,7 +624,8 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		@Override
 		public Mono<Long> newSpanInSubscriberContext() {
-			return Mono.subscriberContext().flatMap(context -> Mono.just(id(this.tracer)));
+			return Mono.subscriberContext()
+					.flatMap(context -> Mono.just(id(this.tracer)));
 		}
 
 	}
@@ -643,8 +644,9 @@ public class SleuthSpanCreatorAspectMonoTests {
 		@NewSpan(name = "outerSpanInTraceContext")
 		public Mono<Pair<Pair<Long, Long>, Long>> outerNewSpanInTraceContext() {
 			return Mono.defer(() -> Mono.just(id(this.tracer))
-					.zipWith(this.testBeanInterface.newSpanInTraceContext()).map(pair -> Pair
-							.of(Pair.of(pair.getT1(), id(this.tracer)), pair.getT2())));
+					.zipWith(this.testBeanInterface.newSpanInTraceContext())
+					.map(pair -> Pair.of(Pair.of(pair.getT1(), id(this.tracer)),
+							pair.getT2())));
 		}
 
 		@NewSpan(name = "outerSpanInSubscriberContext")

@@ -19,30 +19,30 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	@Test
 	public void stillCreatesDefault() {
 		this.contextRunner.run((context) -> {
-					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.isEqualTo(B3Propagation.FACTORY);
-				});
+			BDDAssertions.then(context.getBean(Propagation.Factory.class))
+					.isEqualTo(B3Propagation.FACTORY);
+		});
 	}
 
 	@Test
 	public void allowsCustomization() {
-		this.contextRunner
-				.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.hasFieldOrPropertyWithValue("delegate", B3Propagation.FACTORY);
+							.hasFieldOrPropertyWithValue("delegate",
+									B3Propagation.FACTORY);
 				});
 	}
 
 	@Test
 	public void allowsCustomizationOfBuilder() {
-		this.contextRunner
-				.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
 				.withUserConfiguration(CustomPropagationFactoryBuilderConfig.class)
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.hasFieldOrPropertyWithValue("delegate", B3SinglePropagation.FACTORY);
-		});
+							.hasFieldOrPropertyWithValue("delegate",
+									B3SinglePropagation.FACTORY);
+				});
 	}
 
 	@Configuration

@@ -57,8 +57,8 @@ public class ScopePassingSpanSubscriberTests {
 		Span span = this.tracing.tracer().nextSpan();
 		try (Tracer.SpanInScope ws = this.tracing.tracer()
 				.withSpanInScope(span.start())) {
-			CoreSubscriber<?> subscriber = ReactorSleuth
-					.scopePassingSpanSubscription(this.tracing, new BaseSubscriber<Object>() {
+			CoreSubscriber<?> subscriber = ReactorSleuth.scopePassingSpanSubscription(
+					this.tracing, new BaseSubscriber<Object>() {
 					});
 
 			then(subscriber.currentContext().get(Span.class)).isEqualTo(span);

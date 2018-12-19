@@ -57,8 +57,15 @@ public class SleuthWebProperties {
 
 	/**
 	 * Flag to toggle the presence of a filter that logs thrown exceptions.
+	 * @deprecated use {@link #exceptionLoggingFilterEnabled}
 	 */
+	@Deprecated
 	private boolean exceptionThrowingFilterEnabled = true;
+
+	/**
+	 * Flag to toggle the presence of a filter that logs thrown exceptions.
+	 */
+	private boolean exceptionLoggingFilterEnabled = true;
 
 	/**
 	 * Properties related to HTTP clients.
@@ -108,6 +115,14 @@ public class SleuthWebProperties {
 	public void setExceptionThrowingFilterEnabled(
 			boolean exceptionThrowingFilterEnabled) {
 		this.exceptionThrowingFilterEnabled = exceptionThrowingFilterEnabled;
+	}
+
+	public boolean isExceptionLoggingFilterEnabled() {
+		return this.exceptionLoggingFilterEnabled;
+	}
+
+	public void setExceptionLoggingFilterEnabled(boolean exceptionLoggingFilterEnabled) {
+		this.exceptionLoggingFilterEnabled = exceptionLoggingFilterEnabled;
 	}
 
 	public Client getClient() {

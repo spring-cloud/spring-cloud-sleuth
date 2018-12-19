@@ -259,10 +259,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				this.done = true;
 				try {
 					// decorate response body
-					this.actual.onNext(ClientResponse.from(response)
-							.body(response.bodyToFlux(DataBuffer.class)
-									.transform(this.scopePassingTransformer))
-							.build());
+					this.actual
+							.onNext(ClientResponse.from(response)
+									.body(response.bodyToFlux(DataBuffer.class)
+											.transform(this.scopePassingTransformer))
+									.build());
 				}
 				finally {
 					terminateSpan(response, null);
@@ -304,8 +305,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			void terminateSpanOnCancel() {
 				if (log.isDebugEnabled()) {
-					log.debug("Subscription was cancelled. Will close the span [" + this.span
-							+ "]");
+					log.debug("Subscription was cancelled. Will close the span ["
+							+ this.span + "]");
 				}
 
 				this.span.tag("error", CANCELLED_SUBSCRIPTION_ERROR);
@@ -316,8 +317,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					@Nullable Throwable throwable) {
 				if (clientResponse == null || clientResponse.statusCode() == null) {
 					if (log.isDebugEnabled()) {
-						log.debug("No response was returned. Will close the span [" + this.span
-								+ "]");
+						log.debug("No response was returned. Will close the span ["
+								+ this.span + "]");
 					}
 					handleReceive(this.span, this.ws, clientResponse, throwable);
 					return;

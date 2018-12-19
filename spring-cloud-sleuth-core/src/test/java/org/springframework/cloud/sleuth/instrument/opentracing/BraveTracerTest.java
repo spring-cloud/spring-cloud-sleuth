@@ -178,8 +178,8 @@ public class BraveTracerTest {
 			try (Scope scopeB = this.opentracing.buildSpan("spanB").startActive(false)) {
 				idOfSpanB = getTraceContext(scopeB).spanId();
 				parentIdOfSpanB = getTraceContext(scopeB).parentId();
-				shouldBeIdOfSpanB = getTraceContext(this.opentracing.scopeManager().active())
-						.spanId();
+				shouldBeIdOfSpanB = getTraceContext(
+						this.opentracing.scopeManager().active()).spanId();
 			}
 			shouldBeIdOfSpanA = getTraceContext(this.opentracing.scopeManager().active())
 					.spanId();
@@ -212,7 +212,8 @@ public class BraveTracerTest {
 		Long idOfSpanA = spanA.context().spanId();
 		try (SpanInScope scopeA = this.brave.tracer().withSpanInScope(spanA)) {
 
-			Span spanB = this.brave.tracer().newChild(spanA.context()).name("spanB").start();
+			Span spanB = this.brave.tracer().newChild(spanA.context()).name("spanB")
+					.start();
 			idOfSpanB = spanB.context().spanId();
 			parentIdOfSpanB = spanB.context().parentId();
 			try (SpanInScope scopeB = this.brave.tracer().withSpanInScope(spanB)) {
@@ -224,7 +225,8 @@ public class BraveTracerTest {
 
 			shouldBeIdOfSpanA = this.brave.currentTraceContext().get().spanId();
 
-			Span spanC = this.brave.tracer().newChild(spanA.context()).name("spanC").start();
+			Span spanC = this.brave.tracer().newChild(spanA.context()).name("spanC")
+					.start();
 			parentIdOfSpanC = spanC.context().parentId();
 			try (SpanInScope scopeC = this.brave.tracer().withSpanInScope(spanC)) {
 				// nothing to do here
@@ -277,7 +279,8 @@ public class BraveTracerTest {
 	@Test
 	public void implicitParentFromSpanManager_start_ignoreActiveSpan() {
 		try (Scope scopeA = this.opentracing.buildSpan("spanA").startActive(true)) {
-			BraveSpan span = this.opentracing.buildSpan("spanB").ignoreActiveSpan().start();
+			BraveSpan span = this.opentracing.buildSpan("spanB").ignoreActiveSpan()
+					.start();
 			assertThat(span.unwrap().context().parentId()).isNull(); // new trace
 		}
 	}

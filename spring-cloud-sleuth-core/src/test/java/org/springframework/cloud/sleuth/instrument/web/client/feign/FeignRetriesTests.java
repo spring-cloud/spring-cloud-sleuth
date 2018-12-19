@@ -111,7 +111,8 @@ public class FeignRetriesTests {
 				// with the second retry (first retry) we send back good result
 				return Response.builder().status(200).reason("OK")
 						.headers(new HashMap<>()).body("OK", Charset.defaultCharset())
-						.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(), Request.Body.empty()))
+						.request(Request.create(Request.HttpMethod.POST, "/foo",
+								new HashMap<>(), Request.Body.empty()))
 						.build();
 			}
 		};

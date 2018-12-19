@@ -117,17 +117,15 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 		this.directChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader("stompCommand", "DISCONNECT").build());
 
-		assertThat(
-				MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class))
-						.isNotNull();
+		assertThat(MessageHeaderAccessor.getAccessor(this.message,
+				MessageHeaderAccessor.class)).isNotNull();
 
 		this.message = null;
 		this.directChannel.send(MessageBuilder.withPayload("hi")
 				.setHeader("simpMessageType", "sth").build());
 
-		assertThat(
-				MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class))
-						.isNotNull();
+		assertThat(MessageHeaderAccessor.getAccessor(this.message,
+				MessageHeaderAccessor.class)).isNotNull();
 	}
 
 	@Test
@@ -135,9 +133,8 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 		this.directChannel
 				.send(MessageBuilder.withPayload("hi").setHeader("foo", "bar").build());
 
-		assertThat(
-				MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class))
-						.isNull();
+		assertThat(MessageHeaderAccessor.getAccessor(this.message,
+				MessageHeaderAccessor.class)).isNull();
 	}
 
 	@Configuration

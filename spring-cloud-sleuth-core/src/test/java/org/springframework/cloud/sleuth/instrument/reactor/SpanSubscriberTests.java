@@ -253,8 +253,8 @@ public class SpanSubscriberTests {
 		final AtomicReference<Long> spanInZipOperation = new AtomicReference<>();
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initSpan)) {
-			Mono.fromCallable(this.tracer::currentSpan).map(span -> span.context().spanId())
-					.doOnNext(spanInOperation::set)
+			Mono.fromCallable(this.tracer::currentSpan)
+					.map(span -> span.context().spanId()).doOnNext(spanInOperation::set)
 					.zipWith(Mono.fromCallable(this.tracer::currentSpan)
 							.map(span -> span.context().spanId())
 							.doOnNext(spanInZipOperation::set))

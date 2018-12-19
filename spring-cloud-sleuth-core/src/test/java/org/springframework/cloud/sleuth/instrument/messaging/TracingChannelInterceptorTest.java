@@ -187,8 +187,8 @@ public class TracingChannelInterceptorTest {
 
 		assertThat(messages.get(0).getHeaders()).doesNotContainKeys("X-B3-TraceId",
 				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
-		assertThat(this.spans).flatExtracting(Span::kind).containsExactly(Span.Kind.CONSUMER,
-				null);
+		assertThat(this.spans).flatExtracting(Span::kind)
+				.containsExactly(Span.Kind.CONSUMER, null);
 	}
 
 	/**
@@ -242,8 +242,8 @@ public class TracingChannelInterceptorTest {
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(this.spans).flatExtracting(Span::kind).containsExactly(Span.Kind.CONSUMER,
-				null, Span.Kind.PRODUCER);
+		assertThat(this.spans).flatExtracting(Span::kind)
+				.containsExactly(Span.Kind.CONSUMER, null, Span.Kind.PRODUCER);
 	}
 
 	@Test

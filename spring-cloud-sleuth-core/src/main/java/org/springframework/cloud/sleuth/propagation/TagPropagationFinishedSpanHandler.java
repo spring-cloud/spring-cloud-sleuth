@@ -43,16 +43,17 @@ public class TagPropagationFinishedSpanHandler extends FinishedSpanHandler {
 	private final SleuthTagPropagationProperties tagPropagationProperties;
 
 	public TagPropagationFinishedSpanHandler(SleuthProperties sleuthProperties,
-											 SleuthTagPropagationProperties tagPropagationProperties) {
+			SleuthTagPropagationProperties tagPropagationProperties) {
 		this.sleuthProperties = sleuthProperties;
 		this.tagPropagationProperties = tagPropagationProperties;
 	}
 
 	@Override
 	public boolean handle(TraceContext context, MutableSpan span) {
-		Stream.of(this.sleuthProperties.getBaggageKeys(), this.sleuthProperties.getPropagationKeys())
-				.flatMap(Collection::stream)
-				.filter(key -> this.tagPropagationProperties.getWhitelistedKeys().contains(key))
+		Stream.of(this.sleuthProperties.getBaggageKeys(),
+				this.sleuthProperties.getPropagationKeys()).flatMap(Collection::stream)
+				.filter(key -> this.tagPropagationProperties.getWhitelistedKeys()
+						.contains(key))
 				.map(baggageItemKey -> new AbstractMap.SimpleEntry<>(baggageItemKey,
 						ExtraFieldPropagation.get(context, baggageItemKey)))
 				.filter(entry -> nonNull(entry.getValue()))

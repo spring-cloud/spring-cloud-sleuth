@@ -311,7 +311,8 @@ public class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			String response = this.httpClientBuilder.build().execute(
-					new HttpGet("http://localhost:" + this.port), new BasicResponseHandler());
+					new HttpGet("http://localhost:" + this.port),
+					new BasicResponseHandler());
 
 			then(response).isNotEmpty();
 		}

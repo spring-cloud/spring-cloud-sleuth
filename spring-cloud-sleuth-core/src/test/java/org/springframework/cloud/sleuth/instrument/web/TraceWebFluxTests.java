@@ -552,8 +552,8 @@ class TestBean {
 		log.info("New Span in Subscriber Context");
 		return Mono.subscriberContext()
 				.doOnSuccess(context -> log.info("New Span in deferred Trace Context"))
-				.flatMap(context -> Mono
-						.defer(() -> Mono.just(this.tracer.currentSpan().context().spanId())));
+				.flatMap(context -> Mono.defer(
+						() -> Mono.just(this.tracer.currentSpan().context().spanId())));
 	}
 
 }
