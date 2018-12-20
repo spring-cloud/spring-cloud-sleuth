@@ -123,7 +123,7 @@ That means that, if there were two spans sent to Zipkin with Server Received and
 
 Why is there a difference between the seven and four spans in this case?
 
-* Two spans come from the `http:/start` span. It has the Server Received (`sr`) and Server Sent (`ss`) annotations.
+* One span comes from the `http:/start` span. It has the Server Received (`sr`) and Server Sent (`ss`) annotations.
 * Two spans come from the RPC call from `service1` to `service2` to the `http:/foo` endpoint.
 The Client Sent (`cs`) and Client Received (`cr`) events took place on the `service1` side.
 Server Received (`sr`) and Server Sent (`ss`) events took place on the `service2` side.
@@ -344,7 +344,6 @@ The following example shows setting baggage on a span:
 Span initialSpan = this.tracer.nextSpan().name("span").start();
 ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
 ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");
-}
 ----
 
 ===== Baggage versus Span Tags
@@ -380,9 +379,9 @@ spring.sleuth:
 [source,java]
 ----
 initialSpan.tag("foo",
-        ExtraFieldPropagation.get(initialSpan.context(), "foo"));
+		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
 initialSpan.tag("UPPER_CASE",
-        ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
+		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
 ----
 
 [[sleuth-adding-project]]
@@ -555,6 +554,8 @@ dependencies {
 
 You can watch a video of https://twitter.com/reshmi9k[Reshmi Krishna] and https://twitter.com/mgrzejszczak[Marcin Grzejszczak] talking about Spring Cloud
 Sleuth and Zipkin https://content.pivotal.io/springone-platform-2017/distributed-tracing-latency-analysis-for-your-microservices-grzejszczak-krishna[by clicking here].
+
+video::Vdwn7LvIPl0[youtube, width=640, height=480]
 
 You can check different setups of Sleuth and Brave https://github.com/openzipkin/sleuth-webmvc-example[in the openzipkin/sleuth-webmvc-example repository].
 

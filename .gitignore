@@ -21,3 +21,4 @@ _site/
 /spring-cloud-sleuth-core/nbactions.xml
 jmh-result.csv
 pom.xml.versionsBackup
+.vscode/
