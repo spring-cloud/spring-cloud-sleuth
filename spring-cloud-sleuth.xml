@@ -114,7 +114,7 @@ That means that, if there were two spans sent to Zipkin with Server Received and
 <simpara>Why is there a difference between the seven and four spans in this case?</simpara>
 <itemizedlist>
 <listitem>
-<simpara>Two spans come from the <literal>http:/start</literal> span. It has the Server Received (<literal>sr</literal>) and Server Sent (<literal>ss</literal>) annotations.</simpara>
+<simpara>One span comes from the <literal>http:/start</literal> span. It has the Server Received (<literal>sr</literal>) and Server Sent (<literal>ss</literal>) annotations.</simpara>
 </listitem>
 <listitem>
 <simpara>Two spans come from the RPC call from <literal>service1</literal> to <literal>service2</literal> to the <literal>http:/foo</literal> endpoint.
