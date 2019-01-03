@@ -123,7 +123,7 @@ That means that, if there were two spans sent to Zipkin with Server Received and
 
 Why is there a difference between the seven and four spans in this case?
 
-* Two spans come from the `http:/start` span. It has the Server Received (`sr`) and Server Sent (`ss`) annotations.
+* One span comes from the `http:/start` span. It has the Server Received (`sr`) and Server Sent (`ss`) annotations.
 * Two spans come from the RPC call from `service1` to `service2` to the `http:/foo` endpoint.
 The Client Sent (`cs`) and Client Received (`cr`) events took place on the `service1` side.
 Server Received (`sr`) and Server Sent (`ss`) events took place on the `service2` side.
@@ -344,7 +344,6 @@ The following example shows setting baggage on a span:
 Span initialSpan = this.tracer.nextSpan().name("span").start();
 ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
 ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");
-}
 ----
 
 ===== Baggage versus Span Tags
