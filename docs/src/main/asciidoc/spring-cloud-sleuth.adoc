@@ -331,6 +331,8 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 TIP: You can set the HTTP header `X-B3-Flags` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
 Doing so forces the current span to be exportable regardless of the sampling decision.
 
+In order to use the rate-limited sampler set the `spring.sleuth.sampler.ratelimit` property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).
+
 == Propagation
 
 Propagation is needed to ensure activities originating from the same root are collected together in the same trace.
