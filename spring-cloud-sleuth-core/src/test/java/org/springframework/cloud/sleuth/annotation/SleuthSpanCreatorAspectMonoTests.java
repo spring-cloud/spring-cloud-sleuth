@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
@@ -24,6 +28,10 @@ import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import reactor.core.publisher.Mono;
+import zipkin2.Annotation;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,21 +39,16 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.util.Pair;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import reactor.core.publisher.Mono;
-import zipkin2.Annotation;
-import zipkin2.reporter.Reporter;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectMonoTests.TestBean.TEST_STRING;
 import static reactor.core.publisher.Mono.just;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectMonoTests.TestConfiguration.class)
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
+@DirtiesContext
 public class SleuthSpanCreatorAspectMonoTests {
 
 	@Autowired
