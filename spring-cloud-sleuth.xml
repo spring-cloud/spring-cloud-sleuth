@@ -970,6 +970,7 @@ public Sampler defaultSampler() {
 <simpara>You can set the HTTP header <literal>X-B3-Flags</literal> to <literal>1</literal>, or, when doing messaging, you can set the <literal>spanFlags</literal> header to <literal>1</literal>.
 Doing so forces the current span to be exportable regardless of the sampling decision.</simpara>
 </tip>
+<simpara>In order to use the rate-limited sampler set the <literal>spring.sleuth.sampler.rate</literal> property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).</simpara>
 </section>
 </chapter>
 <chapter xml:id="_propagation">
