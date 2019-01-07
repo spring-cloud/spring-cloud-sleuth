@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
@@ -30,6 +31,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
@@ -38,7 +41,6 @@ import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
-
 import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
@@ -48,7 +50,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,9 +61,6 @@ import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import zipkin2.reporter.Reporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -105,6 +103,7 @@ public class TraceWebFluxTests {
 		ClientResponse nonSampledResponse = whenNonSampledRequestIsSent(port);
 		// then
 		thenNoSpanWasReported(accumulator, nonSampledResponse, controller2);
+		accumulator.clear();
 
 		// when
 		ClientResponse skippedPatternResponse = whenRequestIsSentToSkippedPattern(port);
@@ -138,11 +137,13 @@ public class TraceWebFluxTests {
 			ClientResponse response) {
 		Awaitility.await().untilAsserted(() -> {
 			then(response.statusCode().value()).isEqualTo(200);
-			then(accumulator.getSpans()).hasSize(1);
 		});
-		then(accumulator.getSpans().get(0).name()).isEqualTo("get /api/c2/{id}");
-		then(accumulator.getSpans().get(0).tags())
-				.containsEntry("mvc.controller.method", "successful")
+		List<zipkin2.Span> spans = accumulator.getSpans().stream()
+				.filter(span -> span.name().equals("get /api/c2/{id}"))
+				.collect(Collectors.toList());
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("get /api/c2/{id}");
+		then(spans.get(0).tags()).containsEntry("mvc.controller.method", "successful")
 				.containsEntry("mvc.controller.class", "Controller2");
 	}
 
@@ -150,9 +151,10 @@ public class TraceWebFluxTests {
 			ClientResponse response) {
 		Awaitility.await().untilAsserted(() -> {
 			then(response.statusCode().value()).isEqualTo(200);
-			then(accumulator.getSpans()).hasSize(1);
 		});
-		then(accumulator.getSpans().get(0).name()).isEqualTo("get");
+		List<zipkin2.Span> spans = accumulator.getSpans().stream()
+				.filter(span -> span.name().equals("get")).collect(Collectors.toList());
+		then(spans).hasSize(1);
 	}
 
 	private void thenNoSpanWasReported(ArrayListSpanReporter accumulator,

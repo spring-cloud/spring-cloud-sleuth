@@ -16,28 +16,8 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import brave.sampler.Sampler;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.client.serviceregistry.Registration;
-import org.springframework.cloud.commons.util.InetUtils;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.sampler.ProbabilityBasedSampler;
-import org.springframework.cloud.sleuth.sampler.SamplerProperties;
-import org.springframework.cloud.sleuth.zipkin2.sender.ZipkinSenderConfigurationImportSelector;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
-import org.springframework.web.client.RestTemplate;
+import java.util.concurrent.TimeUnit;
+
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
 import zipkin2.reporter.AsyncReporter;
@@ -46,12 +26,29 @@ import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.Sender;
 
-import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.serviceregistry.Registration;
+import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.sampler.SamplerAutoConfiguration;
+import org.springframework.cloud.sleuth.zipkin2.sender.ZipkinSenderConfigurationImportSelector;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} enables reporting to Zipkin via HTTP. Has a default {@link Sampler}
- * set as {@link ProbabilityBasedSampler}.
+ * Auto-configuration} enables reporting to Zipkin via HTTP. Has a default sampler set
+ * from the {@link SamplerAutoConfiguration}
  *
  * The {@link ZipkinRestTemplateCustomizer} allows you to customize the
  * {@link RestTemplate} that is used to send Spans to Zipkin. Its default implementation -
@@ -59,16 +56,16 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Spencer Gibb
  * @since 1.0.0
- * @see ProbabilityBasedSampler
+ * @see SamplerAutoConfiguration
  * @see ZipkinRestTemplateCustomizer
  * @see DefaultZipkinRestTemplateCustomizer
  */
 @Configuration
-@EnableConfigurationProperties({ ZipkinProperties.class, SamplerProperties.class })
+@EnableConfigurationProperties(ZipkinProperties.class)
 @ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 @AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
-@Import(ZipkinSenderConfigurationImportSelector.class)
+@Import({ ZipkinSenderConfigurationImportSelector.class, SamplerAutoConfiguration.class })
 public class ZipkinAutoConfiguration {
 
 	/**
@@ -105,31 +102,6 @@ public class ZipkinAutoConfiguration {
 	@ConditionalOnMissingBean
 	ReporterMetrics sleuthReporterMetrics() {
 		return new InMemoryReporterMetrics();
-	}
-
-	@Configuration
-	@ConditionalOnBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
-	protected static class RefreshScopedProbabilityBasedSamplerConfiguration {
-
-		@Bean
-		@RefreshScope
-		@ConditionalOnMissingBean
-		public Sampler defaultTraceSampler(SamplerProperties config) {
-			return new ProbabilityBasedSampler(config);
-		}
-
-	}
-
-	@Configuration
-	@ConditionalOnMissingBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
-	protected static class NonRefreshScopeProbabilityBasedSamplerConfiguration {
-
-		@Bean
-		@ConditionalOnMissingBean
-		public Sampler defaultTraceSampler(SamplerProperties config) {
-			return new ProbabilityBasedSampler(config);
-		}
-
 	}
 
 	@Configuration
