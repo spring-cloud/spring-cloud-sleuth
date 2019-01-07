@@ -81,6 +81,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 */
 	private static final String REMOTE_SERVICE_NAME = "broker";
 
+	public static final String STREAM_DIRECT_CHANNEL = "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel";
+
 	final Tracing tracing;
 
 	final Tracer tracer;
@@ -94,6 +96,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	final boolean integrationObjectSupportPresent;
 
 	private final boolean hasDirectChannelClass;
+
+	// special case of a Stream
+	private final Class<?> directWithAttributesChannelClass;
 
 	@Autowired
 	TracingChannelInterceptor(Tracing tracing) {
@@ -113,6 +118,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 				"org.springframework.integration.context.IntegrationObjectSupport", null);
 		this.hasDirectChannelClass = ClassUtils
 				.isPresent("org.springframework.integration.channel.DirectChannel", null);
+		this.directWithAttributesChannelClass = ClassUtils
+				.isPresent(STREAM_DIRECT_CHANNEL, null)
+						? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
 	}
 
 	public static TracingChannelInterceptor create(Tracing tracing) {
@@ -195,8 +203,20 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	private boolean isDirectChannel(MessageChannel channel) {
-		return this.hasDirectChannelClass
-				&& DirectChannel.class.isAssignableFrom(AopUtils.getTargetClass(channel));
+		Class<?> targetClass = AopUtils.getTargetClass(channel);
+		boolean directChannel = this.hasDirectChannelClass
+				&& DirectChannel.class.isAssignableFrom(targetClass);
+		if (!directChannel) {
+			return false;
+		}
+		if (this.directWithAttributesChannelClass == null) {
+			return true;
+		}
+		return !isStreamSpecialDirectChannel(targetClass);
+	}
+
+	private boolean isStreamSpecialDirectChannel(Class<?> targetClass) {
+		return this.directWithAttributesChannelClass.isAssignableFrom(targetClass);
 	}
 
 	@Override
