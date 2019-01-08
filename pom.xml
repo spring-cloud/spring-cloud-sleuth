@@ -156,6 +156,13 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-gateway-dependencies</artifactId>
+				<version>${spring-cloud-gateway.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-stream-dependencies</artifactId>
 				<version>${spring-cloud-stream.version}</version>
 				<type>pom</type>
@@ -244,6 +251,7 @@
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
 		<spring-cloud-build.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-build.version>
 		<spring-cloud-commons.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-gateway.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-gateway.version>
 		<spring-cloud-stream.version>Fishtown.BUILD-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
