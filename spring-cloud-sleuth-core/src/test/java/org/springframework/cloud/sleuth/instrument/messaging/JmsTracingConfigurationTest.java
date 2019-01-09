@@ -22,6 +22,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -37,15 +38,19 @@ import brave.propagation.TraceContext;
 import org.apache.activemq.ra.ActiveMQActivationSpec;
 import org.apache.activemq.ra.ActiveMQResourceAdapter;
 import org.junit.Test;
+import zipkin2.Annotation;
+import zipkin2.Span;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jms.JmsAutoConfiguration;
 import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration;
 import org.springframework.boot.jms.XAConnectionFactoryWrapper;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jca.support.ResourceAdapterFactoryBean;
@@ -57,8 +62,6 @@ import org.springframework.jms.config.JmsListenerEndpointRegistrar;
 import org.springframework.jms.config.SimpleJmsListenerEndpoint;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.endpoint.JmsMessageEndpointManager;
-import zipkin2.Annotation;
-import zipkin2.Span;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -273,7 +276,8 @@ public class JmsTracingConfigurationTest {
 }
 
 @Configuration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = { GatewayAutoConfiguration.class,
+		GatewayClassPathWarningAutoConfiguration.class })
 class JmsTestTracingConfiguration {
 
 	static final String CONTEXT_LEAK = "context.leak";

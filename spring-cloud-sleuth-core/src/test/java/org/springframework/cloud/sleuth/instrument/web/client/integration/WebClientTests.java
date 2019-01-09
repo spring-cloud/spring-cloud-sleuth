@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 import javax.servlet.http.HttpServletRequest;
 
 import brave.Span;
@@ -55,6 +56,13 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import reactor.core.publisher.Hooks;
+import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.HttpClientResponse;
+import zipkin2.Annotation;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -66,6 +74,8 @@ import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -86,12 +96,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Hooks;
-import reactor.core.scheduler.Schedulers;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.http.client.HttpClientResponse;
-import zipkin2.Annotation;
-import zipkin2.reporter.Reporter;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -510,7 +514,9 @@ public class WebClientTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
+	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
+			GatewayClassPathWarningAutoConfiguration.class,
+			GatewayAutoConfiguration.class })
 	@EnableFeignClients
 	@RibbonClient(value = "fooservice", configuration = SimpleRibbonClientConfiguration.class)
 	public static class TestConfiguration {
