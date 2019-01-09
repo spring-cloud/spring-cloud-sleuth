@@ -15,6 +15,8 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.Collections;
+
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpClientHandler;
@@ -44,24 +46,18 @@ class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 	@Override
 	public HttpHeaders filter(HttpHeaders input, ServerWebExchange exchange) {
-		Object storedSpan = exchange.getAttribute(SPAN_ATTRIBUTE);
 		if (log.isDebugEnabled()) {
 			log.debug("Will instrument the HTTP request headers");
 		}
-		Span span = clientSent(exchange, storedSpan);
+		ServerHttpRequest.Builder builder = exchange.getRequest().mutate();
+		Span span = this.handler.handleSend(this.injector, builder);
 		if (log.isDebugEnabled()) {
-			log.debug("Client span created for the request " + span);
+			log.debug(
+					"Client span  " + span + " created for the request. New headers are "
+							+ builder.build().getHeaders().toSingleValueMap());
 		}
 		exchange.getAttributes().put(SPAN_ATTRIBUTE, span);
-		return new HttpHeaders(exchange.getRequest().getHeaders());
-	}
-
-	private Span clientSent(ServerWebExchange exchange, Object storedSpan) {
-		if (storedSpan != null) {
-			return this.handler.handleSend(this.injector, exchange.getRequest(),
-					(Span) storedSpan);
-		}
-		return this.handler.handleSend(this.injector, exchange.getRequest());
+		return new HttpHeaders(builder.build().getHeaders());
 	}
 
 	@Override
@@ -73,7 +69,8 @@ class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 class TraceResponseHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
-	private static final Log log = LogFactory.getLog(TraceResponseHttpHeadersFilter.class);
+	private static final Log log = LogFactory
+			.getLog(TraceResponseHttpHeadersFilter.class);
 
 	static HttpHeadersFilter create(HttpTracing httpTracing) {
 		return new TraceResponseHttpHeadersFilter(httpTracing);
@@ -94,7 +91,7 @@ class TraceResponseHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		}
 		this.handler.handleReceive(exchange.getResponse(), null, (Span) storedSpan);
 		if (log.isDebugEnabled()) {
-			log.debug("The response was handled");
+			log.debug("The response was handled for span " + storedSpan);
 		}
 		return new HttpHeaders(input);
 	}
@@ -110,25 +107,24 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 
 	static final String SPAN_ATTRIBUTE = Span.class.getName();
 
-	private static final Propagation.Setter<ServerHttpRequest, String> SETTER = new Propagation.Setter<ServerHttpRequest, String>() {
+	private static final Propagation.Setter<ServerHttpRequest.Builder, String> SETTER = new Propagation.Setter<ServerHttpRequest.Builder, String>() {
 		@Override
-		public void put(ServerHttpRequest carrier, String key, String value) {
-			if (!carrier.getHeaders().containsKey(key)) {
-				carrier.getHeaders().add(key, value);
-			}
+		public void put(ServerHttpRequest.Builder carrier, String key, String value) {
+			carrier.headers(httpHeaders -> httpHeaders.replace(key,
+					Collections.singletonList(value)));
 		}
 
 		@Override
 		public String toString() {
-			return "ServerHttpRequest::HttpHeaders::add";
+			return "ServerHttpRequest.Builder::header";
 		}
 	};
 
 	final Tracer tracer;
 
-	final HttpClientHandler<ServerHttpRequest, ServerHttpResponse> handler;
+	final HttpClientHandler<ServerHttpRequest.Builder, ServerHttpResponse> handler;
 
-	final TraceContext.Injector<ServerHttpRequest> injector;
+	final TraceContext.Injector<ServerHttpRequest.Builder> injector;
 
 	final HttpTracing httpTracing;
 
@@ -139,22 +135,22 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 		this.httpTracing = httpTracing;
 	}
 
-	private static class ServerHttpAdapter
-			extends brave.http.HttpClientAdapter<ServerHttpRequest, ServerHttpResponse> {
+	private static class ServerHttpAdapter extends
+			brave.http.HttpClientAdapter<ServerHttpRequest.Builder, ServerHttpResponse> {
 
 		@Override
-		public String method(ServerHttpRequest request) {
-			return request.getMethodValue();
+		public String method(ServerHttpRequest.Builder request) {
+			return request.build().getMethodValue();
 		}
 
 		@Override
-		public String url(ServerHttpRequest request) {
-			return request.getURI().toString();
+		public String url(ServerHttpRequest.Builder request) {
+			return request.build().getURI().toString();
 		}
 
 		@Override
-		public String requestHeader(ServerHttpRequest request, String name) {
-			Object result = request.getHeaders().get(name);
+		public String requestHeader(ServerHttpRequest.Builder request, String name) {
+			Object result = request.build().getHeaders().get(name);
 			return result != null ? result.toString() : "";
 		}
 
