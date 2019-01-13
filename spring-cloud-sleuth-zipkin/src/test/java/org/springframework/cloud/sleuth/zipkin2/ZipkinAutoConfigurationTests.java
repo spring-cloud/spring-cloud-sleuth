@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
+import java.util.List;
+
 import brave.Span;
 import brave.Tracing;
 import brave.handler.FinishedSpanHandler;
@@ -38,6 +40,9 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mock.env.MockEnvironment;
+import zipkin2.Call;
+import zipkin2.codec.Encoding;
+import zipkin2.reporter.Reporter;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.amqp.RabbitMQSender;
 import zipkin2.reporter.kafka11.KafkaSender;
@@ -184,6 +189,25 @@ public class ZipkinAutoConfigurationTests {
 		this.context.close();
 	}
 
+	@Test
+	public void supportsMultipleReporters() {
+		this.context = new AnnotationConfigApplicationContext();
+		environment().setProperty("spring.zipkin.base-url",
+				this.server.url("/").toString());
+		this.context.register(ZipkinAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
+				MultipleReportersConfig.class);
+		this.context.refresh();
+
+		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
+		then(this.context.getBeansOfType(Sender.class)).containsKeys("zipkinSender", "otherSender");
+
+		then(this.context.getBeansOfType(Reporter.class)).hasSize(2);
+		then(this.context.getBeansOfType(Reporter.class)).containsKeys("zipkinReporter", "otherReporter");
+
+		this.context.close();
+	}
+
 	@Configuration
 	protected static class Config {
 
@@ -215,6 +239,43 @@ public class ZipkinAutoConfigurationTests {
 				public boolean handle(TraceContext traceContext, MutableSpan span) {
 					span.name(span.name() + " bar");
 					return true; // keep this span
+				}
+			};
+		}
+
+	}
+
+	@Configuration
+	protected static class MultipleReportersConfig {
+
+		@Bean
+		Reporter<zipkin2.Span> otherReporter() {
+			return span -> {
+
+			};
+		}
+
+		@Bean
+		Sender otherSender() {
+			return new Sender() {
+				@Override
+				public Encoding encoding() {
+					return null;
+				}
+
+				@Override
+				public int messageMaxBytes() {
+					return 0;
+				}
+
+				@Override
+				public int messageSizeInBytes(List<byte[]> encodedSpans) {
+					return 0;
+				}
+
+				@Override
+				public Call<Void> sendSpans(List<byte[]> encodedSpans) {
+					return null;
 				}
 			};
 		}

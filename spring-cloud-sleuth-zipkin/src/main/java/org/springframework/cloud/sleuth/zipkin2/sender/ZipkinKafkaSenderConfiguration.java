@@ -42,7 +42,7 @@ class ZipkinKafkaSenderConfiguration {
 	@Value("${spring.zipkin.kafka.topic:zipkin}")
 	private String topic;
 
-	@Bean
+	@Bean("zipkinSender")
 	Sender kafkaSender(KafkaProperties config) {
 		Map<String, Object> properties = config.buildProducerProperties();
 		properties.put("key.serializer", ByteArraySerializer.class.getName());

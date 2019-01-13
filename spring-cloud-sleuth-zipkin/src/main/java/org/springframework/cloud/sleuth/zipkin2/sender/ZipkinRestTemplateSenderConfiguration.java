@@ -50,7 +50,7 @@ class ZipkinRestTemplateSenderConfiguration {
 	@Autowired
 	ZipkinUrlExtractor extractor;
 
-	@Bean
+	@Bean("zipkinSender")
 	@ConditionalOnMissingBean
 	public Sender restTemplateSender(ZipkinProperties zipkin,
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {

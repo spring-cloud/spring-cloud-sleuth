@@ -27,6 +27,7 @@ import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -72,10 +73,11 @@ public class ZipkinAutoConfiguration {
 	 * Accepts a sender so you can plug-in any standard one. Returns a Reporter so you can
 	 * also replace with a standard one.
 	 */
-	@Bean
+	@Bean("zipkinReporter")
 	@ConditionalOnMissingBean
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
-			ZipkinProperties zipkin, Sender sender, BytesEncoder<Span> spanBytesEncoder) {
+			ZipkinProperties zipkin, @Qualifier("zipkinSender") Sender sender,
+			BytesEncoder<Span> spanBytesEncoder) {
 		return AsyncReporter.builder(sender).queuedMaxSpans(1000) // historical
 																	// constraint. Note:
 																	// AsyncReporter

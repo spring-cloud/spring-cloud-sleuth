@@ -36,7 +36,7 @@ class ZipkinRabbitSenderConfiguration {
 	@Value("${spring.zipkin.rabbitmq.queue:zipkin}")
 	private String queue;
 
-	@Bean
+	@Bean("zipkinSender")
 	Sender rabbitSender(CachingConnectionFactory connectionFactory,
 			RabbitProperties config) {
 		return RabbitMQSender.newBuilder()
