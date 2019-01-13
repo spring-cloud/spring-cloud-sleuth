@@ -24,11 +24,16 @@ import org.springframework.context.event.SmartApplicationListener;
 
 class ContextRefreshedListener extends AtomicBoolean implements SmartApplicationListener {
 
+	static ContextRefreshedListener INSTANCE = new ContextRefreshedListener();
+
+	// used for tests
 	ContextRefreshedListener(boolean initialValue) {
 		super(initialValue);
+		INSTANCE = this;
 	}
 
 	ContextRefreshedListener() {
+		INSTANCE = this;
 	}
 
 	@Override
@@ -41,6 +46,10 @@ class ContextRefreshedListener extends AtomicBoolean implements SmartApplication
 		if (event instanceof ContextRefreshedEvent) {
 			set(true);
 		}
+	}
+
+	static ContextRefreshedListener instance() {
+		return INSTANCE;
 	}
 
 }

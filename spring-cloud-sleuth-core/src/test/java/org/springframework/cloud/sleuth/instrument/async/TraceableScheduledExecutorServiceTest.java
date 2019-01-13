@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +33,7 @@ import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanNamer;
@@ -64,6 +66,11 @@ public class TraceableScheduledExecutorServiceTest {
 	@Before
 	public void setup() {
 		beanFactory();
+	}
+
+	@After
+	public void cleanup() {
+		ContextRefreshedListener.INSTANCE = new ContextRefreshedListener(false);
 	}
 
 	@Test
@@ -111,8 +118,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@Test
 	public void should_not_schedule_a_trace_runnable_when_context_not_ready()
 			throws Exception {
-		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
-				.willReturn(new ContextRefreshedListener(false));
+		ContextRefreshedListener.INSTANCE = new ContextRefreshedListener(false);
 		this.traceableScheduledExecutorService.schedule(aRunnable(), 1L, TimeUnit.DAYS);
 
 		then(this.scheduledExecutorService).should(never()).schedule(
@@ -124,8 +130,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@Test
 	public void should_not_schedule_a_trace_callable_when_context_not_ready()
 			throws Exception {
-		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
-				.willReturn(new ContextRefreshedListener(false));
+		ContextRefreshedListener.INSTANCE = new ContextRefreshedListener(false);
 		this.traceableScheduledExecutorService.schedule(aCallable(), 1L, TimeUnit.DAYS);
 
 		then(this.scheduledExecutorService).should(never()).schedule(
@@ -137,8 +142,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@Test
 	public void should_not_schedule_at_fixed_rate_a_trace_runnable_when_context_not_ready()
 			throws Exception {
-		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
-				.willReturn(new ContextRefreshedListener(false));
+		ContextRefreshedListener.INSTANCE = new ContextRefreshedListener(false);
 		this.traceableScheduledExecutorService.scheduleAtFixedRate(aRunnable(), 1L, 1L,
 				TimeUnit.DAYS);
 
@@ -151,8 +155,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@Test
 	public void should_not_schedule_with_fixed_delay_a_trace_runnable_when_context_not_ready()
 			throws Exception {
-		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
-				.willReturn(new ContextRefreshedListener(false));
+		ContextRefreshedListener.INSTANCE = new ContextRefreshedListener(false);
 		this.traceableScheduledExecutorService.scheduleWithFixedDelay(aRunnable(), 1L, 1L,
 				TimeUnit.DAYS);
 
@@ -184,8 +187,7 @@ public class TraceableScheduledExecutorServiceTest {
 				.willReturn(this.tracing);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class))
 				.willReturn(new DefaultSpanNamer());
-		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
-				.willReturn(new ContextRefreshedListener(true));
+		ContextRefreshedListener.INSTANCE = new ContextRefreshedListener(true);
 		return this.beanFactory;
 	}
 

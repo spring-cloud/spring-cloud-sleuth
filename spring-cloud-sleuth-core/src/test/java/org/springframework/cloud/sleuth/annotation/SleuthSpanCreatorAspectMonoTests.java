@@ -424,6 +424,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		});
 	}
 
+	@DirtiesContext
 	@Test
 	public void shouldReturnNewSpanFromSubscriberContext() {
 		Mono<Long> mono = this.testBean.newSpanInSubscriberContext();
@@ -441,6 +442,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		});
 	}
 
+	@DirtiesContext
 	@Test
 	public void shouldReturnNewSpanFromSubscriberContextOuter() {
 		Mono<Pair<Pair<Long, Long>, Long>> mono = this.testBeanOuter

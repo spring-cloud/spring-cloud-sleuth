@@ -25,7 +25,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
- * Utility class that verifies that context is in creation.
+ * Utility class that verifies that context is in creation. TODO: Consider getting this
+ * info from Spring Framework
  *
  * @author Marcin Grzejszczak
  * @since 2.1.0
@@ -39,10 +40,12 @@ class ContextUtil {
 	static boolean isContextInCreation(BeanFactory beanFactory) {
 		ContextRefreshedListener bean = CACHE.compute(beanFactory,
 				(beanFactory1, contextRefreshedListener) -> {
-					if (contextRefreshedListener != null) {
+					if (contextRefreshedListener != null
+							&& contextRefreshedListener.get()) {
 						return contextRefreshedListener;
 					}
-					return beanFactory.getBean(ContextRefreshedListener.class);
+					// TODO: There has to be a better way than this
+					return ContextRefreshedListener.instance();
 				});
 		boolean contextRefreshed = bean.get();
 		if (!contextRefreshed && log.isDebugEnabled()) {

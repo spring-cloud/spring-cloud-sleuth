@@ -74,8 +74,6 @@ public class ExecutorBeanPostProcessorTests {
 		Mockito.when(this.beanFactory.getBean(Tracing.class)).thenReturn(this.tracing);
 		Mockito.when(this.beanFactory.getBean(SpanNamer.class))
 				.thenReturn(new DefaultSpanNamer());
-		Mockito.when(this.beanFactory.getBean(ContextRefreshedListener.class))
-				.thenReturn(new ContextRefreshedListener(true));
 	}
 
 	@After
