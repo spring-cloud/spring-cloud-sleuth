@@ -63,6 +63,9 @@ public class TraceAutoConfiguration {
 	public static final String TRACER_BEAN_NAME = "tracer";
 
 	@Autowired(required = false)
+	List<Reporter<zipkin2.Span>> spanReporters = new ArrayList<>();
+
+	@Autowired(required = false)
 	List<SpanAdjuster> spanAdjusters = new ArrayList<>();
 
 	@Autowired(required = false)
@@ -80,12 +83,11 @@ public class TraceAutoConfiguration {
 	Tracing tracing(
 			@Value("${spring.zipkin.service.name:${spring.application.name:default}}") String serviceName,
 			Propagation.Factory factory, CurrentTraceContext currentTraceContext,
-			Reporter<zipkin2.Span> reporter, Sampler sampler, ErrorParser errorParser,
-			SleuthProperties sleuthProperties) {
+			Sampler sampler, ErrorParser errorParser, SleuthProperties sleuthProperties) {
 		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
 				.errorParser(errorParser).localServiceName(serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
-				.spanReporter(adjustedReporter(reporter))
+				.spanReporter(compositeReporter())
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin());
 		for (FinishedSpanHandler finishedSpanHandlerFactory : this.finishedSpanHandlers) {
@@ -94,13 +96,15 @@ public class TraceAutoConfiguration {
 		return builder.build();
 	}
 
-	private Reporter<zipkin2.Span> adjustedReporter(Reporter<zipkin2.Span> delegate) {
+	private Reporter<zipkin2.Span> compositeReporter() {
 		return (span) -> {
 			Span spanToAdjust = span;
 			for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
 				spanToAdjust = spanAdjuster.adjust(spanToAdjust);
 			}
-			delegate.report(spanToAdjust);
+			for (Reporter<zipkin2.Span> spanReporter : this.spanReporters) {
+				spanReporter.report(spanToAdjust);
+			}
 		};
 	}
 
