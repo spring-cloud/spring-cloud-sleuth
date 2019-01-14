@@ -28,6 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateCustomizer;
@@ -50,7 +51,7 @@ class ZipkinRestTemplateSenderConfiguration {
 	@Autowired
 	ZipkinUrlExtractor extractor;
 
-	@Bean("zipkinSender")
+	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 	@ConditionalOnMissingBean
 	public Sender restTemplateSender(ZipkinProperties zipkin,
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {

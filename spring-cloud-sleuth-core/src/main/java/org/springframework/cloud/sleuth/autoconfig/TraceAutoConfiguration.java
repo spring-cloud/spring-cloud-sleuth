@@ -50,6 +50,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
+ * @author Tim Ysewyn
  * @since 2.0.0
  */
 @Configuration

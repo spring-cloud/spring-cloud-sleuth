@@ -42,6 +42,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.mock.env.MockEnvironment;
 import zipkin2.Call;
 import zipkin2.codec.Encoding;
+import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.amqp.RabbitMQSender;
@@ -190,22 +191,37 @@ public class ZipkinAutoConfigurationTests {
 	}
 
 	@Test
-	public void supportsMultipleReporters() {
+	public void supportsMultipleReporters() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url",
 				this.server.url("/").toString());
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				MultipleReportersConfig.class);
+				Config.class, MultipleReportersConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
-		then(this.context.getBeansOfType(Sender.class)).containsKeys("zipkinSender", "otherSender");
+		then(this.context.getBeansOfType(Sender.class)).containsKeys("zipkinSender",
+				"otherSender");
 
 		then(this.context.getBeansOfType(Reporter.class)).hasSize(2);
-		then(this.context.getBeansOfType(Reporter.class)).containsKeys("zipkinReporter", "otherReporter");
+		then(this.context.getBeansOfType(Reporter.class)).containsKeys("zipkinReporter",
+				"otherReporter");
 
-		this.context.close();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
+				.tag("foo", "bar").start();
+
+		span.finish();
+
+		Awaitility.await().untilAsserted(
+				() -> then(this.server.getRequestCount()).isGreaterThan(0));
+		RecordedRequest request = this.server.takeRequest();
+		then(request.getPath()).isEqualTo("/api/v2/spans");
+		then(request.getBody().readUtf8()).contains("localEndpoint");
+
+		MultipleReportersConfig.OtherSender sender = this.context
+				.getBean(MultipleReportersConfig.OtherSender.class);
+		Awaitility.await().untilAsserted(() -> then(sender.isSpanSent()).isTrue());
 	}
 
 	@Configuration
@@ -250,34 +266,43 @@ public class ZipkinAutoConfigurationTests {
 
 		@Bean
 		Reporter<zipkin2.Span> otherReporter() {
-			return span -> {
-
-			};
+			return AsyncReporter.create(otherSender());
 		}
 
 		@Bean
-		Sender otherSender() {
-			return new Sender() {
-				@Override
-				public Encoding encoding() {
-					return null;
-				}
+		OtherSender otherSender() {
+			return new OtherSender();
+		}
 
-				@Override
-				public int messageMaxBytes() {
-					return 0;
-				}
+		static class OtherSender extends Sender {
 
-				@Override
-				public int messageSizeInBytes(List<byte[]> encodedSpans) {
-					return 0;
-				}
+			private boolean spanSent = false;
 
-				@Override
-				public Call<Void> sendSpans(List<byte[]> encodedSpans) {
-					return null;
-				}
-			};
+			boolean isSpanSent() {
+				return this.spanSent;
+			}
+
+			@Override
+			public Encoding encoding() {
+				return Encoding.JSON;
+			}
+
+			@Override
+			public int messageMaxBytes() {
+				return Integer.MAX_VALUE;
+			}
+
+			@Override
+			public int messageSizeInBytes(List<byte[]> encodedSpans) {
+				return encoding().listSizeInBytes(encodedSpans);
+			}
+
+			@Override
+			public Call<Void> sendSpans(List<byte[]> encodedSpans) {
+				this.spanSent = true;
+				return Call.create(null);
+			}
+
 		}
 
 	}

@@ -56,6 +56,7 @@ import org.springframework.web.client.RestTemplate;
  * {@link DefaultZipkinRestTemplateCustomizer} adds the GZip compression.
  *
  * @author Spencer Gibb
+ * @author Tim Ysewyn
  * @since 1.0.0
  * @see SamplerAutoConfiguration
  * @see ZipkinRestTemplateCustomizer
@@ -70,13 +71,25 @@ import org.springframework.web.client.RestTemplate;
 public class ZipkinAutoConfiguration {
 
 	/**
+	 * Zipkin reporter bean name. Name of the bean matters for supporting multiple tracing
+	 * systems.
+	 */
+	public static final String REPORTER_BEAN_NAME = "zipkinReporter";
+
+	/**
+	 * Zipkin sender bean name. Name of the bean matters for supporting multiple tracing
+	 * systems.
+	 */
+	public static final String SENDER_BEAN_NAME = "zipkinSender";
+
+	/**
 	 * Accepts a sender so you can plug-in any standard one. Returns a Reporter so you can
 	 * also replace with a standard one.
 	 */
-	@Bean("zipkinReporter")
+	@Bean(REPORTER_BEAN_NAME)
 	@ConditionalOnMissingBean
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
-			ZipkinProperties zipkin, @Qualifier("zipkinSender") Sender sender,
+			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender,
 			BytesEncoder<Span> spanBytesEncoder) {
 		return AsyncReporter.builder(sender).queuedMaxSpans(1000) // historical
 																	// constraint. Note:

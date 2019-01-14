@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +43,7 @@ class ZipkinKafkaSenderConfiguration {
 	@Value("${spring.zipkin.kafka.topic:zipkin}")
 	private String topic;
 
-	@Bean("zipkinSender")
+	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 	Sender kafkaSender(KafkaProperties config) {
 		Map<String, Object> properties = config.buildProducerProperties();
 		properties.put("key.serializer", ByteArraySerializer.class.getName());
