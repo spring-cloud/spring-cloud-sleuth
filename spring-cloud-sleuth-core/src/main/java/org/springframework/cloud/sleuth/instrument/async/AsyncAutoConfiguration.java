@@ -33,7 +33,7 @@ public class AsyncAutoConfiguration {
 
 	@Bean
 	ContextRefreshedListener traceContextRefreshedListener() {
-		return new ContextRefreshedListener();
+		return new ContextRefreshedListener(false);
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.cloud.sleuth.instrument.async;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
 
-/**
- * Utility class that verifies that context is in creation.
- *
- * @author Marcin Grzejszczak
- * @since 2.1.0
- */
-class ContextUtil {
+public class ContextRefreshedListenerAccessor {
 
-	private static final Log log = LogFactory.getLog(ContextUtil.class);
-
-	static boolean isContextInCreation(BeanFactory beanFactory) {
-		boolean contextRefreshed = ContextRefreshedListener.getBean(beanFactory).get();
-		if (!contextRefreshed && log.isDebugEnabled()) {
-			log.debug("Context is not ready yet");
-		}
-		return !contextRefreshed;
+	public static void set(BeanFactory beanFactory, boolean refreshed) {
+		ContextRefreshedListener.CACHE.put(beanFactory,
+				new ContextRefreshedListener(refreshed));
 	}
 
 }

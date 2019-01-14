@@ -16,19 +16,32 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.SmartApplicationListener;
 
 class ContextRefreshedListener extends AtomicBoolean implements SmartApplicationListener {
+
+	private static final Log log = LogFactory.getLog(ContextRefreshedListener.class);
+
+	static final Map<BeanFactory, ContextRefreshedListener> CACHE = new ConcurrentHashMap<>();
 
 	ContextRefreshedListener(boolean initialValue) {
 		super(initialValue);
 	}
 
 	ContextRefreshedListener() {
+		this(false);
 	}
 
 	@Override
@@ -39,8 +52,23 @@ class ContextRefreshedListener extends AtomicBoolean implements SmartApplication
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		if (event instanceof ContextRefreshedEvent) {
-			set(true);
+			if (log.isDebugEnabled()) {
+				log.debug("Context successfully refreshed");
+			}
+			ContextRefreshedEvent contextRefreshedEvent = (ContextRefreshedEvent) event;
+			ApplicationContext context = contextRefreshedEvent.getApplicationContext();
+			BeanFactory beanFactory = context;
+			if (context instanceof ConfigurableApplicationContext) {
+				beanFactory = ((ConfigurableApplicationContext) context).getBeanFactory();
+			}
+			ContextRefreshedListener listener = CACHE.getOrDefault(beanFactory, this);
+			listener.set(true);
+			CACHE.put(beanFactory, listener);
 		}
+	}
+
+	static ContextRefreshedListener getBean(BeanFactory beanFactory) {
+		return CACHE.getOrDefault(beanFactory, new ContextRefreshedListener(false));
 	}
 
 }
