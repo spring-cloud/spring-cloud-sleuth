@@ -82,24 +82,23 @@ public class ZipkinAutoConfiguration {
 	 */
 	public static final String SENDER_BEAN_NAME = "zipkinSender";
 
-	/**
-	 * Accepts a sender so you can plug-in any standard one. Returns a Reporter so you can
-	 * also replace with a standard one.
-	 */
 	@Bean(REPORTER_BEAN_NAME)
-	@ConditionalOnMissingBean
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
-			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender,
-			BytesEncoder<Span> spanBytesEncoder) {
+			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender) {
 		return AsyncReporter.builder(sender).queuedMaxSpans(1000) // historical
 																	// constraint. Note:
 																	// AsyncReporter
 																	// supports memory
 																	// bounds
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
-				.metrics(reporterMetrics).build(spanBytesEncoder);
+				.metrics(reporterMetrics).build(zipkin.getEncoder());
 	}
 
+	/**
+	 * Deprecated because this is not used in this codebase anymore. Kept for libraries
+	 * which are depending on Zipkin.
+	 * @deprecated
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public BytesEncoder<Span> spanBytesEncoder(ZipkinProperties zipkinProperties) {
