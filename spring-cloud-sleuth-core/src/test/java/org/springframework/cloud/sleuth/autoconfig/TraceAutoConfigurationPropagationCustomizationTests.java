@@ -35,6 +35,15 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	}
 
 	@Test
+	public void defaultValueUsedWhenApplicationNameNotSet() {
+		this.contextRunner.withPropertyValues("spring.application.name=")
+				.run((context) -> {
+					BDDAssertions.then(context.getBean(Propagation.Factory.class))
+							.isEqualTo(B3Propagation.FACTORY);
+				});
+	}
+
+	@Test
 	public void allowsCustomizationOfBuilder() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
 				.withUserConfiguration(CustomPropagationFactoryBuilderConfig.class)

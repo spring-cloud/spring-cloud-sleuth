@@ -30,6 +30,7 @@ import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
+import org.springframework.util.StringUtils;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
@@ -62,6 +63,11 @@ public class TraceAutoConfiguration {
 	 */
 	public static final String TRACER_BEAN_NAME = "tracer";
 
+	/**
+	 * Default value used for service name if none provided.
+	 */
+	public static final String DEFAULT_SERVICE_NAME = "default";
+
 	@Autowired(required = false)
 	List<SpanAdjuster> spanAdjusters = new ArrayList<>();
 
@@ -83,7 +89,8 @@ public class TraceAutoConfiguration {
 			Reporter<zipkin2.Span> reporter, Sampler sampler, ErrorParser errorParser,
 			SleuthProperties sleuthProperties) {
 		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
-				.errorParser(errorParser).localServiceName(serviceName)
+				.errorParser(errorParser)
+				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME : serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
 				.spanReporter(adjustedReporter(reporter))
 				.traceId128Bit(sleuthProperties.isTraceId128())
