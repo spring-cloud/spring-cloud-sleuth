@@ -125,7 +125,8 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.rabbitmq.queue", "zipkin2");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class, ZipkinAutoConfiguration.class);
+				RabbitAutoConfiguration.class, ZipkinAutoConfiguration.class,
+				TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
@@ -139,7 +140,8 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.kafka.topic", "zipkin2");
 		environment().setProperty("spring.zipkin.sender.type", "kafka");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
-				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class);
+				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class,
+				TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
@@ -153,7 +155,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "web");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class).getClass().getName())
@@ -168,7 +170,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "WEB");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class).getClass().getName())
@@ -182,7 +184,7 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);

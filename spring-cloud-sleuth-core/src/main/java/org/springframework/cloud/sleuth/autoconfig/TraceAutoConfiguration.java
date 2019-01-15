@@ -31,7 +31,9 @@ import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import zipkin2.Span;
+import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
+import zipkin2.reporter.ReporterMetrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -169,6 +171,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	CurrentTraceContext.Builder sleuthCurrentTraceContextBuilder() {
 		return ThreadLocalCurrentTraceContext.newBuilder();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	ReporterMetrics sleuthReporterMetrics() {
+		return new InMemoryReporterMetrics();
 	}
 
 	@Bean

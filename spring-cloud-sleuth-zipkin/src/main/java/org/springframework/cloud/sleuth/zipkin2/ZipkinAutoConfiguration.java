@@ -64,7 +64,8 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration
 @EnableConfigurationProperties(ZipkinProperties.class)
-@ConditionalOnProperty(value = "spring.zipkin.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled",
+		"spring.zipkin.enabled" }, matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 @AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
 @Import({ ZipkinSenderConfigurationImportSelector.class, SamplerAutoConfiguration.class })
@@ -110,12 +111,6 @@ public class ZipkinAutoConfiguration {
 	public ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer(
 			ZipkinProperties zipkinProperties) {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	ReporterMetrics sleuthReporterMetrics() {
-		return new InMemoryReporterMetrics();
 	}
 
 	@Configuration
