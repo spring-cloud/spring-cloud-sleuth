@@ -83,6 +83,7 @@ public class ZipkinAutoConfiguration {
 	public static final String SENDER_BEAN_NAME = "zipkinSender";
 
 	@Bean(REPORTER_BEAN_NAME)
+	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
 			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender) {
 		return AsyncReporter.builder(sender).queuedMaxSpans(1000) // historical
