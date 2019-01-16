@@ -18,9 +18,7 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import zipkin2.Span;
@@ -60,8 +58,7 @@ import org.springframework.util.Assert;
  * @deprecated
  */
 @Configuration
-@ConditionalOnProperty(value = { "spring.sleuth.enabled",
-		"spring.zipkin.enabled" }, matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled" }, matchIfMissing = true)
 @AutoConfigureAfter({ ZipkinAutoConfiguration.class })
 @Deprecated
 public class ZipkinBackwardsCompatibilityAutoConfiguration {
