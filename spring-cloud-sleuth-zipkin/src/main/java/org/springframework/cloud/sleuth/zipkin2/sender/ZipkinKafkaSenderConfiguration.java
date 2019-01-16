@@ -35,7 +35,7 @@ import zipkin2.reporter.kafka11.KafkaSender;
 @Configuration
 @ConditionalOnClass(ByteArraySerializer.class)
 @ConditionalOnBean(KafkaProperties.class)
-@ConditionalOnMissingBean(Sender.class)
+@ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 @Conditional(ZipkinSenderCondition.class)
 @ConditionalOnProperty(value = "spring.zipkin.sender.type", havingValue = "kafka")
 class ZipkinKafkaSenderConfiguration {

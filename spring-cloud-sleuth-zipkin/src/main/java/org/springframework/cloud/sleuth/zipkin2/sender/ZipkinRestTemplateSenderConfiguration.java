@@ -43,7 +43,7 @@ import org.springframework.web.client.RestTemplate;
 import zipkin2.reporter.Sender;
 
 @Configuration
-@ConditionalOnMissingBean(Sender.class)
+@ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 @Conditional(ZipkinSenderCondition.class)
 @EnableConfigurationProperties(ZipkinSenderProperties.class)
 class ZipkinRestTemplateSenderConfiguration {
@@ -52,7 +52,6 @@ class ZipkinRestTemplateSenderConfiguration {
 	ZipkinUrlExtractor extractor;
 
 	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-	@ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 	public Sender restTemplateSender(ZipkinProperties zipkin,
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, this.extractor);

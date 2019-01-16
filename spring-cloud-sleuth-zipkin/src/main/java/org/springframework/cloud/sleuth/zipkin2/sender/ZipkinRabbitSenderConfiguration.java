@@ -30,7 +30,7 @@ import zipkin2.reporter.amqp.RabbitMQSender;
 
 @Configuration
 @ConditionalOnBean(CachingConnectionFactory.class)
-@ConditionalOnMissingBean(Sender.class)
+@ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 @Conditional(ZipkinSenderCondition.class)
 class ZipkinRabbitSenderConfiguration {
 
