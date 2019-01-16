@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
 import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.Sender;
@@ -85,21 +86,14 @@ public class ZipkinAutoConfiguration {
 	@Bean(REPORTER_BEAN_NAME)
 	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
-			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender) {
-		return AsyncReporter.builder(sender).queuedMaxSpans(1000) // historical
-																	// constraint. Note:
-																	// AsyncReporter
-																	// supports memory
-																	// bounds
+			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender,
+			BytesEncoder<Span> spanBytesEncoder) {
+		// historical constraint. Note: AsyncReporter supports memory bounds
+		return AsyncReporter.builder(sender).queuedMaxSpans(1000)
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
-				.metrics(reporterMetrics).build(zipkin.getEncoder());
+				.metrics(reporterMetrics).build(spanBytesEncoder);
 	}
 
-	/**
-	 * Deprecated because this is not used in this codebase anymore. Kept for libraries
-	 * which are depending on Zipkin.
-	 * @deprecated
-	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public BytesEncoder<Span> spanBytesEncoder(ZipkinProperties zipkinProperties) {
@@ -111,6 +105,18 @@ public class ZipkinAutoConfiguration {
 	public ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer(
 			ZipkinProperties zipkinProperties) {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
+	}
+
+	/**
+	 * Deprecated because this is moved to {@link TraceAutoConfiguration}. Left for
+	 * backwards compatibility reasons.
+	 * @deprecated
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	@Deprecated
+	ReporterMetrics zipkinReporterMetrics() {
+		return new InMemoryReporterMetrics();
 	}
 
 	@Configuration
