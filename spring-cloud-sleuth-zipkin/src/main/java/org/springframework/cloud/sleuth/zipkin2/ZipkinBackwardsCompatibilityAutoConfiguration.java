@@ -61,7 +61,7 @@ import org.springframework.util.Assert;
 @ConditionalOnProperty(value = { "spring.sleuth.enabled" }, matchIfMissing = true)
 @AutoConfigureAfter({ ZipkinAutoConfiguration.class })
 @Deprecated
-public class ZipkinBackwardsCompatibilityAutoConfiguration {
+class ZipkinBackwardsCompatibilityAutoConfiguration {
 
 	/**
 	 * Reporter that is depending on a {@link Sender} bean which is created in another
@@ -70,9 +70,8 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 	@Bean
 	@Conditional(BackwardsCompatibilityCondition.class)
 	@Deprecated
-	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
-			ZipkinProperties zipkin, BytesEncoder<Span> spanBytesEncoder,
-			DefaultListableBeanFactory beanFactory) {
+	Reporter<Span> reporter(ReporterMetrics reporterMetrics, ZipkinProperties zipkin,
+			BytesEncoder<Span> spanBytesEncoder, DefaultListableBeanFactory beanFactory) {
 		List<String> beanNames = new ArrayList<>(
 				Arrays.asList(beanFactory.getBeanNamesForType(Sender.class)));
 		beanNames.remove(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
@@ -90,7 +89,7 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@Deprecated
-	public BytesEncoder<Span> spanBytesEncoder(ZipkinProperties zipkinProperties) {
+	BytesEncoder<Span> spanBytesEncoder(ZipkinProperties zipkinProperties) {
 		return zipkinProperties.getEncoder();
 	}
 
