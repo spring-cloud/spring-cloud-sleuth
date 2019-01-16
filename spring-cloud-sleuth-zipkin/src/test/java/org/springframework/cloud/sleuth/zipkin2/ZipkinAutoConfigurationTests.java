@@ -203,12 +203,12 @@ public class ZipkinAutoConfigurationTests {
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
-		then(this.context.getBeansOfType(Sender.class)).containsKeys("zipkinSender",
-				"otherSender");
+		then(this.context.getBeansOfType(Sender.class))
+				.containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME, "otherSender");
 
 		then(this.context.getBeansOfType(Reporter.class)).hasSize(2);
-		then(this.context.getBeansOfType(Reporter.class)).containsKeys("zipkinReporter",
-				"otherReporter");
+		then(this.context.getBeansOfType(Reporter.class)).containsKeys(
+				ZipkinAutoConfiguration.REPORTER_BEAN_NAME, "otherReporter");
 
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
 				.tag("foo", "bar").start();
@@ -223,6 +223,34 @@ public class ZipkinAutoConfigurationTests {
 
 		MultipleReportersConfig.OtherSender sender = this.context
 				.getBean(MultipleReportersConfig.OtherSender.class);
+		Awaitility.await().untilAsserted(() -> then(sender.isSpanSent()).isTrue());
+	}
+
+	@Test
+	public void shouldOverrideDefaultBeans() {
+		this.context = new AnnotationConfigApplicationContext();
+		this.context.register(ZipkinAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
+				Config.class, MyConfig.class);
+		this.context.refresh();
+
+		then(this.context.getBeansOfType(Sender.class)).hasSize(1);
+		then(this.context.getBeansOfType(Sender.class))
+				.containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
+
+		then(this.context.getBeansOfType(Reporter.class)).hasSize(1);
+		then(this.context.getBeansOfType(Reporter.class))
+				.containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME);
+
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
+				.tag("foo", "bar").start();
+
+		span.finish();
+
+		Awaitility.await()
+				.untilAsserted(() -> then(this.server.getRequestCount()).isEqualTo(0));
+
+		MyConfig.MySender sender = this.context.getBean(MyConfig.MySender.class);
 		Awaitility.await().untilAsserted(() -> then(sender.isSpanSent()).isTrue());
 	}
 
@@ -308,5 +336,55 @@ public class ZipkinAutoConfigurationTests {
 		}
 
 	}
+
+	// tag::override_default_beans[]
+
+	@Configuration
+	protected static class MyConfig {
+
+		@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
+		Reporter<zipkin2.Span> myReporter() {
+			return AsyncReporter.create(mySender());
+		}
+
+		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+		MySender mySender() {
+			return new MySender();
+		}
+
+		static class MySender extends Sender {
+
+			private boolean spanSent = false;
+
+			boolean isSpanSent() {
+				return this.spanSent;
+			}
+
+			@Override
+			public Encoding encoding() {
+				return Encoding.JSON;
+			}
+
+			@Override
+			public int messageMaxBytes() {
+				return Integer.MAX_VALUE;
+			}
+
+			@Override
+			public int messageSizeInBytes(List<byte[]> encodedSpans) {
+				return encoding().listSizeInBytes(encodedSpans);
+			}
+
+			@Override
+			public Call<Void> sendSpans(List<byte[]> encodedSpans) {
+				this.spanSent = true;
+				return Call.create(null);
+			}
+
+		}
+
+	}
+
+	// end::override_default_beans[]
 
 }
