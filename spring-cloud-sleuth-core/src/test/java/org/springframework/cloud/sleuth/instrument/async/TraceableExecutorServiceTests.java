@@ -231,8 +231,7 @@ public class TraceableExecutorServiceTests {
 				.willReturn(this.tracing);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class))
 				.willReturn(new DefaultSpanNamer());
-		BDDMockito.given(this.beanFactory.getBean(ContextRefreshedListener.class))
-				.willReturn(new ContextRefreshedListener(refreshed));
+		ContextRefreshedListenerAccessor.set(this.beanFactory, refreshed);
 		return this.beanFactory;
 	}
 

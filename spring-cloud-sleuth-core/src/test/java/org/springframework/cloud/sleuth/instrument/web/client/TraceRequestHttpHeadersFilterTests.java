@@ -16,12 +16,13 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 public class TraceRequestHttpHeadersFilterTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.spanReporter(this.reporter).build();
-	HttpTracing httpTracing = HttpTracing
-			.newBuilder(this.tracing).build();
+
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
 	@Test
 	public void should_override_any_tracing_headers() {
@@ -29,13 +30,9 @@ public class TraceRequestHttpHeadersFilterTests {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-B3-TraceId", "52f112af7472aff0");
 		httpHeaders.set("X-B3-SpanId", "53e6ab6fc5dfee58");
-		MockServerHttpRequest request = MockServerHttpRequest
-				.post("foo/bar")
-				.headers(httpHeaders)
-				.build();
-		MockServerWebExchange exchange = MockServerWebExchange
-				.builder(request)
-				.build();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
+				.headers(httpHeaders).build();
+		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
 		HttpHeaders filteredHeaders = filter.filter(httpHeaders, exchange);
 
@@ -43,7 +40,10 @@ public class TraceRequestHttpHeadersFilterTests {
 				.isNotEqualTo(httpHeaders.get("X-B3-TraceId"));
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId"))
 				.isNotEqualTo(httpHeaders.get("X-B3-SpanId"));
-		BDDAssertions.then((Object) exchange.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE)).isNotNull();
+		BDDAssertions
+				.then((Object) exchange
+						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
+				.isNotNull();
 	}
 
 }
