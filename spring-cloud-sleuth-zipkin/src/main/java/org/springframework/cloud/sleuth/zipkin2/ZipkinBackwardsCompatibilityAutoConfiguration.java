@@ -30,7 +30,7 @@ import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -59,7 +59,7 @@ import org.springframework.util.Assert;
  */
 @Configuration
 @ConditionalOnProperty(value = { "spring.sleuth.enabled" }, matchIfMissing = true)
-@AutoConfigureAfter({ ZipkinAutoConfiguration.class })
+@AutoConfigureBefore(ZipkinAutoConfiguration.class)
 @Deprecated
 class ZipkinBackwardsCompatibilityAutoConfiguration {
 
