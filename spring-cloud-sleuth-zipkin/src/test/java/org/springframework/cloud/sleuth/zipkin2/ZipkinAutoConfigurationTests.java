@@ -241,7 +241,8 @@ public class ZipkinAutoConfigurationTests {
 				this.server.url("/").toString());
 		this.context.register(BackwardsCompatibilityConfig.class,
 				ZipkinBackwardsCompatibilityAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class, Config.class);
+				ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
+				TraceAutoConfiguration.class, Config.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
