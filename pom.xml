@@ -249,14 +249,14 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
-		<spring-cloud-build.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-build.version>
+		<spring-cloud-build.version>2.1.2.BUILD-SNAPSHOT</spring-cloud-build.version>
 		<spring-cloud-commons.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-commons.version>
 		<spring-cloud-gateway.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-gateway.version>
 		<spring-cloud-stream.version>Fishtown.BUILD-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.1.0.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.6.1</brave.version>
-		<spring-security-boot-autoconfigure.version>2.0.4.RELEASE</spring-security-boot-autoconfigure.version>
+		<spring-security-boot-autoconfigure.version>2.1.2.RELEASE</spring-security-boot-autoconfigure.version>
 	</properties>
 
 	<profiles>
