@@ -105,6 +105,17 @@ class ZipkinBackwardsCompatibilityAutoConfiguration {
 		return new InMemoryReporterMetrics();
 	}
 
+	/**
+	 * Old approach:
+	 * - one sender
+	 * - one reporter
+	 *
+	 * This auto configuration verifies if we have the old approach. In which
+	 * case we define the missing beans.
+	 *
+	 * In case of having more senders and more reporters, we don't need to
+	 * use the backward compatiblity bean setup.
+	 */
 	static class BackwardsCompatibilityCondition extends SpringBootCondition
 			implements ConfigurationCondition {
 
@@ -126,9 +137,9 @@ class ZipkinBackwardsCompatibilityAutoConfiguration {
 			// Previously we supported 1 Sender bean at a time
 			// which could be overridden by another auto-configuration.
 			// Now we support both the overridden bean and our default zipkinSender bean.
-			if (foundSenders < 2) {
+			if (foundSenders > 1) {
 				return ConditionOutcome.noMatch(
-						"We don't support backwards compatibility for more than 2 Sender beans");
+						"We don't support backwards compatibility for more than 1 Sender beans");
 			}
 			int foundReporters = listableBeanFactory
 					.getBeanNamesForType(Reporter.class).length;
