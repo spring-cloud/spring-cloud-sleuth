@@ -73,15 +73,16 @@ public final class HelloServiceGrpc {
 	}
 
 	/**
-	 * Creates a new blocking-style stub that supports unary and streaming output calls on
-	 * the service
+	 * Creates a new blocking-style stub that supports unary and streaming
+	 * output calls on the service
 	 */
 	public static HelloServiceBlockingStub newBlockingStub(io.grpc.Channel channel) {
 		return new HelloServiceBlockingStub(channel);
 	}
 
 	/**
-	 * Creates a new ListenableFuture-style stub that supports unary calls on the service
+	 * Creates a new ListenableFuture-style stub that supports unary calls on
+	 * the service
 	 */
 	public static HelloServiceFutureStub newFutureStub(io.grpc.Channel channel) {
 		return new HelloServiceFutureStub(channel);

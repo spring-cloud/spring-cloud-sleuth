@@ -389,7 +389,8 @@ public class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			this.webClient.get().uri("http://localhost:" + this.port + "/noresponse")
-					.retrieve().bodyToMono(String.class).timeout(Duration.ofMillis(0))
+					.retrieve().bodyToMono(String.class)
+					.timeout(Duration.ofMillis(0))
 					.block();
 		}
 		catch (Exception e) {
