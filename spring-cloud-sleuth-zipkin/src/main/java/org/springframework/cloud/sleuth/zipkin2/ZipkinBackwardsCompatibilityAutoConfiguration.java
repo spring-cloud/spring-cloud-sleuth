@@ -106,9 +106,7 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 	}
 
 	/**
-	 * Old approach:
-	 * - one sender
-	 * - one reporter
+	 * Old approach: - one sender - one reporter
 	 *
 	 * This auto configuration verifies if we have the old approach. In which case we
 	 * define the missing beans.
