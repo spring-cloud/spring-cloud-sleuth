@@ -31,6 +31,14 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import zipkin2.Call;
+import zipkin2.codec.Encoding;
+import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.Reporter;
+import zipkin2.reporter.Sender;
+import zipkin2.reporter.amqp.RabbitMQSender;
+import zipkin2.reporter.kafka11.KafkaSender;
+
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
@@ -40,13 +48,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mock.env.MockEnvironment;
-import zipkin2.Call;
-import zipkin2.codec.Encoding;
-import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.Reporter;
-import zipkin2.reporter.Sender;
-import zipkin2.reporter.amqp.RabbitMQSender;
-import zipkin2.reporter.kafka11.KafkaSender;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -238,10 +239,9 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url",
 				this.server.url("/").toString());
-		this.context.register(ZipkinAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class, BackwardsCompatibilityConfig.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+		this.context.register(BackwardsCompatibilityConfig.class,
+				ZipkinBackwardsCompatibilityAutoConfiguration.class,
+				ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class, Config.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
