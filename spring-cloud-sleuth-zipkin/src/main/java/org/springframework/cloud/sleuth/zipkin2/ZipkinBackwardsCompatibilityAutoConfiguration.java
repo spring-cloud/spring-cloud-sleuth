@@ -61,7 +61,7 @@ import org.springframework.util.Assert;
 @ConditionalOnProperty(value = { "spring.sleuth.enabled" }, matchIfMissing = true)
 @AutoConfigureBefore(ZipkinAutoConfiguration.class)
 @Deprecated
-class ZipkinBackwardsCompatibilityAutoConfiguration {
+public class ZipkinBackwardsCompatibilityAutoConfiguration {
 
 	/**
 	 * Reporter that is depending on a {@link Sender} bean which is created in another
@@ -110,11 +110,11 @@ class ZipkinBackwardsCompatibilityAutoConfiguration {
 	 * - one sender
 	 * - one reporter
 	 *
-	 * This auto configuration verifies if we have the old approach. In which
-	 * case we define the missing beans.
+	 * This auto configuration verifies if we have the old approach. In which case we
+	 * define the missing beans.
 	 *
-	 * In case of having more senders and more reporters, we don't need to
-	 * use the backward compatiblity bean setup.
+	 * In case of having 0 or more than 1 sender and there is a reporter, we don't need to
+	 * use the backward compatibility bean setup.
 	 */
 	static class BackwardsCompatibilityCondition extends SpringBootCondition
 			implements ConfigurationCondition {
@@ -137,16 +137,18 @@ class ZipkinBackwardsCompatibilityAutoConfiguration {
 			// Previously we supported 1 Sender bean at a time
 			// which could be overridden by another auto-configuration.
 			// Now we support both the overridden bean and our default zipkinSender bean.
-			if (foundSenders > 1) {
+			// Since this config is adapting the old config we're searching for exactly 1
+			// `Sender` bean before `ZipkinAutoConfiguration` kicks in.
+			if (foundSenders != 1) {
 				return ConditionOutcome.noMatch(
-						"We don't support backwards compatibility for more than 1 Sender beans");
+						"None or multiple Sender beans found - no reason to apply backwards compatibility");
 			}
 			int foundReporters = listableBeanFactory
 					.getBeanNamesForType(Reporter.class).length;
 			// Check if we need to provide a Reporter bean for the overridden Sender bean
-			if (foundReporters == foundSenders) {
+			if (foundReporters > 0) {
 				return ConditionOutcome.noMatch(
-						"Both tracing systems already define their own Reporter bean");
+						"The old config setup already defines its own Reporter bean");
 			}
 			return ConditionOutcome.match();
 		}
