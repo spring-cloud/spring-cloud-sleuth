@@ -601,6 +601,58 @@ dependencies {
 </calloutlist>
 </section>
 </section>
+<section xml:id="_overriding_the_auto_configuration_of_zipkin">
+<title>Overriding the auto-configuration of Zipkin</title>
+<simpara>Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
+In order to get this to work, every tracing system needs to have a <literal>Reporter&lt;Span&gt;</literal> and <literal>Sender</literal>.
+If you want to override the provided beans you need to give them a specific name.
+To do this you can use respectively <literal>ZipkinAutoConfiguration.REPORTER_BEAN_NAME</literal> and <literal>ZipkinAutoConfiguration.SENDER_BEAN_NAME</literal>.</simpara>
+<programlisting language="java" linenumbering="unnumbered">@Configuration
+protected static class MyConfig {
+
+	@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
+	Reporter&lt;zipkin2.Span&gt; myReporter() {
+		return AsyncReporter.create(mySender());
+	}
+
+	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+	MySender mySender() {
+		return new MySender();
+	}
+
+	static class MySender extends Sender {
+
+		private boolean spanSent = false;
+
+		boolean isSpanSent() {
+			return this.spanSent;
+		}
+
+		@Override
+		public Encoding encoding() {
+			return Encoding.JSON;
+		}
+
+		@Override
+		public int messageMaxBytes() {
+			return Integer.MAX_VALUE;
+		}
+
+		@Override
+		public int messageSizeInBytes(List&lt;byte[]&gt; encodedSpans) {
+			return encoding().listSizeInBytes(encodedSpans);
+		}
+
+		@Override
+		public Call&lt;Void&gt; sendSpans(List&lt;byte[]&gt; encodedSpans) {
+			this.spanSent = true;
+			return Call.create(null);
+		}
+
+	}
+
+}</programlisting>
+</section>
 </chapter>
 <chapter xml:id="_additional_resources">
 <title>Additional Resources</title>

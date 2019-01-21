@@ -241,4 +241,51 @@ dependencies {
     compile <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"org.springframework.cloud:spring-cloud-starter-zipkin"</span> <a name="CO6-2" href="#CO6-2"></a><span><img src="images/callouts/2.png" alt="2" border="0"></span>
     compile <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"org.springframework.amqp:spring-rabbit"</span> <a name="CO6-3" href="#CO6-3"></a><span><img src="images/callouts/3.png" alt="3" border="0"></span>
 }</pre><p class="secondary">
-</p><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-1"><span><img src="images/callouts/1.png" alt="1" border="0"></span></a> </p></td><td valign="top" align="left"><p>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</p></td></tr><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-2"><span><img src="images/callouts/2.png" alt="2" border="0"></span></a> </p></td><td valign="top" align="left"><p>Add the dependency to <code class="literal">spring-cloud-starter-zipkin</code>. That way, all nested dependencies get downloaded.</p></td></tr><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-3"><span><img src="images/callouts/3.png" alt="3" border="0"></span></a> </p></td><td valign="top" align="left"><p>To automatically configure RabbitMQ, add the <code class="literal">spring-rabbit</code> dependency.</p></td></tr></table></div></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi_pr01.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__additional_resources.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;2.&nbsp;Additional Resources</td></tr></table></div></body></html>
+</p><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-1"><span><img src="images/callouts/1.png" alt="1" border="0"></span></a> </p></td><td valign="top" align="left"><p>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</p></td></tr><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-2"><span><img src="images/callouts/2.png" alt="2" border="0"></span></a> </p></td><td valign="top" align="left"><p>Add the dependency to <code class="literal">spring-cloud-starter-zipkin</code>. That way, all nested dependencies get downloaded.</p></td></tr><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-3"><span><img src="images/callouts/3.png" alt="3" border="0"></span></a> </p></td><td valign="top" align="left"><p>To automatically configure RabbitMQ, add the <code class="literal">spring-rabbit</code> dependency.</p></td></tr></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_overriding_the_auto_configuration_of_zipkin" href="#_overriding_the_auto_configuration_of_zipkin"></a>1.4&nbsp;Overriding the auto-configuration of Zipkin</h2></div></div></div><p>Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
+In order to get this to work, every tracing system needs to have a <code class="literal">Reporter&lt;Span&gt;</code> and <code class="literal">Sender</code>.
+If you want to override the provided beans you need to give them a specific name.
+To do this you can use respectively <code class="literal">ZipkinAutoConfiguration.REPORTER_BEAN_NAME</code> and <code class="literal">ZipkinAutoConfiguration.SENDER_BEAN_NAME</code>.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Configuration</span></em>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">protected</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> MyConfig {
+
+	<em><span class="hl-annotation" style="color: gray">@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)</span></em>
+	Reporter&lt;zipkin2.Span&gt; myReporter() {
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> AsyncReporter.create(mySender());
+	}
+
+	<em><span class="hl-annotation" style="color: gray">@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)</span></em>
+	MySender mySender() {
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> MySender();
+	}
+
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> MySender <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">extends</span> Sender {
+
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">private</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> spanSent = false;
+
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> isSpanSent() {
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.spanSent;
+		}
+
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Encoding encoding() {
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> Encoding.JSON;
+		}
+
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">int</span> messageMaxBytes() {
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> Integer.MAX_VALUE;
+		}
+
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">int</span> messageSizeInBytes(List&lt;<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">byte</span>[]&gt; encodedSpans) {
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> encoding().listSizeInBytes(encodedSpans);
+		}
+
+		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Call&lt;Void&gt; sendSpans(List&lt;<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">byte</span>[]&gt; encodedSpans) {
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.spanSent = true;
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> Call.create(null);
+		}
+
+	}
+
+}</pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi_pr01.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__additional_resources.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;2.&nbsp;Additional Resources</td></tr></table></div></body></html>
