@@ -25,7 +25,7 @@ public class TraceRequestHttpHeadersFilterTests {
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
 	@Test
-	public void should_override_any_tracing_headers() {
+	public void should_override_span_tracing_headers() {
 		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-B3-TraceId", "52f112af7472aff0");
@@ -40,6 +40,24 @@ public class TraceRequestHttpHeadersFilterTests {
 				.isNotEqualTo(httpHeaders.get("X-B3-TraceId"));
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId"))
 				.isNotEqualTo(httpHeaders.get("X-B3-SpanId"));
+		BDDAssertions
+				.then((Object) exchange
+						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
+				.isNotNull();
+	}
+
+	@Test
+	public void should_set_tracing_headers() {
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
+		HttpHeaders httpHeaders = new HttpHeaders();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
+				.headers(httpHeaders).build();
+		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
+
+		HttpHeaders filteredHeaders = filter.filter(httpHeaders, exchange);
+
+		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
+		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
 		BDDAssertions
 				.then((Object) exchange
 						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))

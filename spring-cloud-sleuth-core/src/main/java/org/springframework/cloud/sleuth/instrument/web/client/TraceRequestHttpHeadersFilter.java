@@ -15,8 +15,6 @@
  */
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.util.Collections;
-
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpClientHandler;
@@ -110,8 +108,7 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 	private static final Propagation.Setter<ServerHttpRequest.Builder, String> SETTER = new Propagation.Setter<ServerHttpRequest.Builder, String>() {
 		@Override
 		public void put(ServerHttpRequest.Builder carrier, String key, String value) {
-			carrier.headers(httpHeaders -> httpHeaders.replace(key,
-					Collections.singletonList(value)));
+			carrier.headers(httpHeaders -> httpHeaders.set(key, value));
 		}
 
 		@Override
