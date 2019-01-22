@@ -148,18 +148,12 @@ public class TraceMessagingAutoConfiguration {
 			return new TracingConnectionFactoryBeanPostProcessor(beanFactory);
 		}
 
-		/** Choose the tracing endpoint registry */
-		@Bean
-		TracingJmsListenerEndpointRegistry tracingJmsListenerEndpointRegistry(
-				JmsTracing jmsTracing, CurrentTraceContext current) {
-			return new TracingJmsListenerEndpointRegistry(jmsTracing, current);
-		}
-
 		/** Setup the tracing endpoint registry */
 		@Bean
-		JmsListenerConfigurer configureTracing(
-				TracingJmsListenerEndpointRegistry registry) {
-			return registrar -> registrar.setEndpointRegistry(registry);
+		JmsListenerConfigurer configureTracing(JmsTracing jmsTracing,
+				CurrentTraceContext current) {
+			return registrar -> registrar.setEndpointRegistry(
+					new TracingJmsListenerEndpointRegistry(jmsTracing, current));
 		}
 
 	}

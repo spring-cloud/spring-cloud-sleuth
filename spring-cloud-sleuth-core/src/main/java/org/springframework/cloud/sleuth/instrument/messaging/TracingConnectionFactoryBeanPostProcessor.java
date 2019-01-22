@@ -33,6 +33,7 @@ import javax.jms.XAJMSContext;
 import brave.Span;
 import brave.jms.JmsTracing;
 import brave.propagation.CurrentTraceContext;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -42,7 +43,6 @@ import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.config.MethodJmsListenerEndpoint;
 import org.springframework.jms.config.SimpleJmsListenerEndpoint;
 import org.springframework.jms.connection.CachingConnectionFactory;
-import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter;
 import org.springframework.jms.listener.endpoint.JmsMessageEndpointManager;
 import org.springframework.lang.Nullable;
@@ -306,9 +306,9 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 
 	/**
 	 * It would be better to trace by wrapping, but
-	 * {@link MethodJmsListenerEndpoint#createMessageListener(MessageListenerContainer)},
-	 * is protected so we can't call it from outside code. In other words, a forwarding
-	 * pattern can't be used. Instead, we copy state from the input.
+	 * {@link MethodJmsListenerEndpoint#createMessageListenerInstance()}, is protected so
+	 * we can't call it from outside code. In other words, a forwarding pattern can't be
+	 * used. Instead, we copy state from the input.
 	 * <p>
 	 * NOTE: As {@linkplain MethodJmsListenerEndpoint} is neither final, nor effectively
 	 * final. For this reason we can't ensure copying will get all state. For example, a
