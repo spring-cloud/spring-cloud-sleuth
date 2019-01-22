@@ -550,64 +550,6 @@ dependencies {
 <2> Add the dependency to `spring-cloud-starter-zipkin`. That way, all nested dependencies get downloaded.
 <3> To automatically configure RabbitMQ, add the `spring-rabbit` dependency.
 
-=== Overriding the auto-configuration of Zipkin
-
-Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
-In order to get this to work, every tracing system needs to have a `Reporter<Span>` and `Sender`.
-If you want to override the provided beans you need to give them a specific name.
-To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME` and `ZipkinAutoConfiguration.SENDER_BEAN_NAME`.
-
-[source,java]
-----
-
-@Configuration
-protected static class MyConfig {
-
-    @Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
-    Reporter<zipkin2.Span> myReporter() {
-        return AsyncReporter.create(mySender());
-    }
-
-    @Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-    MySender mySender() {
-        return new MySender();
-    }
-
-    static class MySender extends Sender {
-
-        private boolean spanSent = false;
-
-        boolean isSpanSent() {
-            return this.spanSent;
-        }
-
-        @Override
-        public Encoding encoding() {
-            return Encoding.JSON;
-        }
-
-        @Override
-        public int messageMaxBytes() {
-            return Integer.MAX_VALUE;
-        }
-
-        @Override
-        public int messageSizeInBytes(List<byte[]> encodedSpans) {
-            return encoding().listSizeInBytes(encodedSpans);
-        }
-
-        @Override
-        public Call<Void> sendSpans(List<byte[]> encodedSpans) {
-            this.spanSent = true;
-            return Call.create(null);
-        }
-
-    }
-
-}
-
-----
-
 == Additional Resources
 
 You can watch a video of https://twitter.com/reshmi9k[Reshmi Krishna] and https://twitter.com/mgrzejszczak[Marcin Grzejszczak] talking about Spring Cloud
