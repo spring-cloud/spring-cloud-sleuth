@@ -58,7 +58,8 @@ import org.springframework.util.Assert;
  * @deprecated
  */
 @Configuration
-@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" }, matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled",
+		"spring.zipkin.enabled" }, matchIfMissing = true)
 @AutoConfigureBefore(ZipkinAutoConfiguration.class)
 @Deprecated
 public class ZipkinBackwardsCompatibilityAutoConfiguration {

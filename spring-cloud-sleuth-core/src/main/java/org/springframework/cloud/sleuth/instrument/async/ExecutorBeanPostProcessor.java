@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.aopalliance.aop.Advice;
@@ -181,14 +180,6 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		factory.setProxyTargetClass(cglibProxy);
 		factory.addAdvice(advice);
 		factory.setTarget(bean);
-		if (JavaVersion.current().isJava11Compatible()) {
-			if (log.isDebugEnabled()) {
-				log.debug("Creating an additional ClassLoader for JDK11");
-			}
-			factory.setBeanClassLoader(new ClassLoader(this.getClass().getClassLoader()) {
-
-			});
-		}
 		return getObject(factory);
 	}
 

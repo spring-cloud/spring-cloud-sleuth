@@ -35,8 +35,7 @@ public class ZipkinBackwardsCompatibilityAutoConfigurationTests {
 	private ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(
 					ZipkinBackwardsCompatibilityAutoConfiguration.class,
-					ZipkinAutoConfiguration.class,
-					TraceAutoConfiguration.class));
+					ZipkinAutoConfiguration.class, TraceAutoConfiguration.class));
 
 	@Test
 	public void shouldLoadBeans() {
@@ -50,26 +49,24 @@ public class ZipkinBackwardsCompatibilityAutoConfigurationTests {
 
 	@Test
 	public void shouldNotLoadBackwardsCompatibilityConfigWhenZipkinDisabled() {
-		this.contextRunner
-				.withPropertyValues("spring.zipkin.enabled=false")
+		this.contextRunner.withPropertyValues("spring.zipkin.enabled=false")
 				.run(context -> {
-				assertThat(context.getBeansOfType(ZipkinProperties.class)).isEmpty();
-				assertThat(context.getBeansOfType(BytesEncoder.class)).isEmpty();
-				assertThat(context.getBean(ReporterMetrics.class)).isNotNull(); // TraceAutoConfiguration
-				assertThat(context.getBean(Reporter.class)).isNotNull(); // noOpSpanReporter
-		});
+					assertThat(context.getBeansOfType(ZipkinProperties.class)).isEmpty();
+					assertThat(context.getBeansOfType(BytesEncoder.class)).isEmpty();
+					assertThat(context.getBean(ReporterMetrics.class)).isNotNull(); // TraceAutoConfiguration
+					assertThat(context.getBean(Reporter.class)).isNotNull(); // noOpSpanReporter
+				});
 	}
 
 	@Test
 	public void shouldNotLoadBackwardsCompatibilityConfigWhenSleuthDisabled() {
-		this.contextRunner
-				.withPropertyValues("spring.sleuth.enabled=false")
+		this.contextRunner.withPropertyValues("spring.sleuth.enabled=false")
 				.run(context -> {
-				assertThat(context.getBeansOfType(ZipkinProperties.class)).isEmpty();
-				assertThat(context.getBeansOfType(BytesEncoder.class)).isEmpty();
-				assertThat(context.getBeansOfType(ReporterMetrics.class)).isEmpty();
-				assertThat(context.getBeansOfType(Reporter.class)).isEmpty();
-		});
+					assertThat(context.getBeansOfType(ZipkinProperties.class)).isEmpty();
+					assertThat(context.getBeansOfType(BytesEncoder.class)).isEmpty();
+					assertThat(context.getBeansOfType(ReporterMetrics.class)).isEmpty();
+					assertThat(context.getBeansOfType(Reporter.class)).isEmpty();
+				});
 	}
 
 }
