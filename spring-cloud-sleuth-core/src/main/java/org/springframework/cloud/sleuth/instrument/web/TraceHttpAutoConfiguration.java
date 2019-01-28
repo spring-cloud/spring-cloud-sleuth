@@ -23,7 +23,6 @@ import brave.http.HttpClientParser;
 import brave.http.HttpSampler;
 import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -32,6 +31,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -49,34 +49,22 @@ public class TraceHttpAutoConfiguration {
 
 	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
-	@Autowired
-	HttpClientParser clientParser;
-
-	@Autowired
-	HttpServerParser serverParser;
-
-	@Autowired
-	@ClientSampler
-	HttpSampler clientSampler;
-
-	@Autowired(required = false)
-	@ServerSampler
-	HttpSampler serverSampler;
-
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
-	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider) {
-		HttpSampler serverSampler = combineUserProvidedSamplerWithSkipPatternSampler(
-				provider);
-		return HttpTracing.newBuilder(tracing).clientParser(this.clientParser)
-				.serverParser(this.serverParser).clientSampler(this.clientSampler)
-				.serverSampler(serverSampler).build();
+	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
+			HttpClientParser clientParser, HttpServerParser serverParser,
+			@ClientSampler HttpSampler clientSampler,
+			@Nullable @ServerSampler HttpSampler serverSampler) {
+		HttpSampler combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
+				serverSampler, provider);
+		return HttpTracing.newBuilder(tracing).clientParser(clientParser)
+				.serverParser(serverParser).clientSampler(clientSampler)
+				.serverSampler(combinedSampler).build();
 	}
 
 	private HttpSampler combineUserProvidedSamplerWithSkipPatternSampler(
-			SkipPatternProvider provider) {
-		HttpSampler serverSampler = this.serverSampler;
+			HttpSampler serverSampler, SkipPatternProvider provider) {
 		SleuthHttpSampler skipPatternSampler = new SleuthHttpSampler(provider);
 		if (serverSampler == null) {
 			return skipPatternSampler;

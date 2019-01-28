@@ -8,8 +8,11 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.GenericApplicationContext;
 
 public class TraceAutoConfigurationPropagationCustomizationTests {
 
@@ -40,6 +43,18 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
 							.isEqualTo(B3Propagation.FACTORY);
+				});
+	}
+
+	@Test
+	public void hasNoCycles() {
+		this.contextRunner
+				.withConfiguration(AutoConfigurations.of(TraceWebAutoConfiguration.class,
+						TraceHttpAutoConfiguration.class))
+				.withInitializer(c -> ((GenericApplicationContext) c)
+						.setAllowCircularReferences(false))
+				.run((context) -> {
+					BDDAssertions.then(context.isRunning()).isEqualTo(true);
 				});
 	}
 

@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.autoconfig;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import brave.CurrentSpanCustomizer;
@@ -37,6 +38,7 @@ import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 
+import org.springframework.lang.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -74,9 +76,6 @@ public class TraceAutoConfiguration {
 	public static final String DEFAULT_SERVICE_NAME = "default";
 
 	@Autowired(required = false)
-	List<Reporter<zipkin2.Span>> spanReporters = new ArrayList<>();
-
-	@Autowired(required = false)
 	List<SpanAdjuster> spanAdjusters = new ArrayList<>();
 
 	@Autowired(required = false)
@@ -94,14 +93,15 @@ public class TraceAutoConfiguration {
 	Tracing tracing(
 			@Value("${spring.zipkin.service.name:${spring.application.name:default}}") String serviceName,
 			Propagation.Factory factory, CurrentTraceContext currentTraceContext,
-			Sampler sampler, ErrorParser errorParser, SleuthProperties sleuthProperties) {
+			Sampler sampler, ErrorParser errorParser, SleuthProperties sleuthProperties,
+			@Nullable List<Reporter<zipkin2.Span>> spanReporters) {
 		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
 				.errorParser(errorParser)
 				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME
 						: serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
-				.spanReporter(
-						new CompositeReporter(this.spanAdjusters, this.spanReporters))
+				.spanReporter(new CompositeReporter(this.spanAdjusters,
+						spanReporters != null ? spanReporters : Collections.emptyList()))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin());
 		for (FinishedSpanHandler finishedSpanHandlerFactory : this.finishedSpanHandlers) {
