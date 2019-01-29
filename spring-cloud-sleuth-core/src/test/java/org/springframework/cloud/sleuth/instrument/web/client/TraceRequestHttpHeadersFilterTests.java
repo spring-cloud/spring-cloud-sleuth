@@ -31,6 +31,7 @@ public class TraceRequestHttpHeadersFilterTests {
 		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
+		httpHeaders.set("X-Auth-User", "aaaa");
 		httpHeaders.set("X-B3-TraceId", "52f112af7472aff0");
 		httpHeaders.set("X-B3-SpanId", "53e6ab6fc5dfee58");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
@@ -47,6 +48,8 @@ public class TraceRequestHttpHeadersFilterTests {
 				.isEqualTo(Collections.singletonList("World"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
+		BDDAssertions.then(filteredHeaders.get("X-Auth-User"))
+				.hasSize(1);
 		BDDAssertions
 				.then((Object) exchange
 						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
@@ -79,6 +82,7 @@ public class TraceRequestHttpHeadersFilterTests {
 	private HttpHeaders requestHeaders() {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-Hello-Request", "Request World");
+		headers.add("X-Auth-User", "aaaa");
 		return headers;
 	}
 
