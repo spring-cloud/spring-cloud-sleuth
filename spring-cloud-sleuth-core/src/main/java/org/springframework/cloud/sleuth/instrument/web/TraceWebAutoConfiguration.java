@@ -16,6 +16,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -25,6 +26,8 @@ import brave.Tracing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
+import org.springframework.boot.actuate.endpoint.EndpointsSupplier;
+import org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -89,44 +92,68 @@ public class TraceWebAutoConfiguration {
 			return () -> getPatternForManagementServerProperties(
 					managementServerProperties);
 		}
-
 	}
 
 	@Configuration
-	@ConditionalOnClass({ ServerProperties.class, WebEndpointProperties.class })
-	protected static class ServerSkipPatternProviderConfig {
+	@ConditionalOnClass({ServerProperties.class, EndpointsSupplier.class,
+			ExposableWebEndpoint.class})
+	protected static class ActuatorSkipPatternProviderConfig {
 
-		/**
-		 * Uses {@link ServerProperties#getServlet()#getContextPath()} and
-		 * {@link WebEndpointProperties#getBasePath()} to skip Actuator endpoints.
-		 */
-		static Optional<Pattern> getPatternForServerProperties(
-				ServerProperties serverProperties,
-				WebEndpointProperties webEndpointProperties) {
+		static Optional<Pattern> getEndpointsPatterns(ServerProperties serverProperties,
+													  WebEndpointProperties webEndpointProperties,
+													  EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
+			Collection<ExposableWebEndpoint> endpoints = endpointsSupplier.getEndpoints();
+
+			if (endpoints.isEmpty()) {
+				return Optional.empty();
+			}
+
 			String contextPath = serverProperties.getServlet().getContextPath();
-			if (StringUtils.hasText(contextPath)) {
-				return Optional.of(Pattern.compile(
-						contextPath + webEndpointProperties.getBasePath() + ".*"));
+
+			int size = endpoints.size();
+			int i = 0;
+
+			StringBuilder sb = new StringBuilder();
+			for (ExposableWebEndpoint endpoint : endpoints) {
+				i++;
+
+				if (StringUtils.hasText(contextPath)) {
+					sb.append(contextPath);
+				}
+
+				if (!webEndpointProperties.getBasePath().equals("/")) {
+					sb.append(webEndpointProperties.getBasePath());
+				}
+				sb.append("/")
+					.append(endpoint.getRootPath())
+						.append(".*");
+
+				if (i < size) {
+					sb.append("|");
+				}
+			}
+
+			String pattern = sb.toString();
+			if (StringUtils.hasText(pattern)) {
+				return Optional.of(Pattern.compile(pattern));
 			}
 			return Optional.empty();
 		}
 
 		@Bean
-		@ConditionalOnBean({ ServerProperties.class, WebEndpointProperties.class })
-		public SingleSkipPattern skipPatternForServerProperties(
+		public SingleSkipPattern skipPatternForActuatorEndpoints(
 				final ServerProperties serverProperties,
-				final WebEndpointProperties webEndpointProperties) {
-			return () -> getPatternForServerProperties(serverProperties,
-					webEndpointProperties);
+				final WebEndpointProperties webEndpointProperties,
+				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
+			return () -> getEndpointsPatterns(serverProperties, webEndpointProperties, endpointsSupplier);
 		}
-
 	}
 
 	@Configuration
 	static class DefaultSkipPatternConfig {
 
 		private static String combinedPattern(String skipPattern,
-				String additionalSkipPattern) {
+											  String additionalSkipPattern) {
 			String pattern = skipPattern;
 			if (!StringUtils.hasText(skipPattern)) {
 				pattern = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
@@ -144,7 +171,5 @@ public class TraceWebAutoConfiguration {
 					Pattern.compile(combinedPattern(sleuthWebProperties.getSkipPattern(),
 							sleuthWebProperties.getAdditionalSkipPattern())));
 		}
-
 	}
-
 }
