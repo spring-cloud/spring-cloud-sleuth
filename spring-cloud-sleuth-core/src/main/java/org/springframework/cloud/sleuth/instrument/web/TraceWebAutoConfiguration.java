@@ -97,6 +97,7 @@ public class TraceWebAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass({ServerProperties.class, EndpointsSupplier.class,
 			ExposableWebEndpoint.class})
+	@ConditionalOnBean(ServerProperties.class)
 	protected static class ActuatorSkipPatternProviderConfig {
 
 		static Optional<Pattern> getEndpointsPatterns(ServerProperties serverProperties,
