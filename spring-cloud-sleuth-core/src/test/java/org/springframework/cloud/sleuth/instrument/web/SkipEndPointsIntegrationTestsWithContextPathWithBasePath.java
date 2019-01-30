@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.issues.issue971;
+package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Tracer;
 import brave.sampler.Sampler;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +39,11 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = DemoSleuthSkipApplicationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+@SpringBootTest(classes = SkipEndPointsIntegrationTestsWithContextPathWithBasePath.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
 		"management.endpoints.web.exposure.include:*",
 		"server.servlet.context-path:/context-path",
 		"spring.sleuth.http.legacy.enabled:true" })
-public class DemoSleuthSkipApplicationTests {
+public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 
 	@Autowired
 	ArrayListSpanReporter accumulator;
@@ -51,6 +53,12 @@ public class DemoSleuthSkipApplicationTests {
 
 	@LocalServerPort
 	int port;
+
+	@Before
+	@After
+	public void clearSpans() {
+		this.accumulator.clear();
+	}
 
 	@Test
 	public void should_not_sample_skipped_endpoint_with_context_path() {

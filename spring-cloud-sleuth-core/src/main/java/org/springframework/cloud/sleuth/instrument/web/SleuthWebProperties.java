@@ -31,7 +31,7 @@ public class SleuthWebProperties {
 	/**
 	 * Default set of skip patterns.
 	 */
-	public static final String DEFAULT_SKIP_PATTERN = "/api-docs.*|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream|/application/.*|/cloudfoundryapplication";
+	public static final String DEFAULT_SKIP_PATTERN = "/api-docs.*|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream";
 
 	/**
 	 * When true enables instrumentation for web applications.

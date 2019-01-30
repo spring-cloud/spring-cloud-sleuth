@@ -28,6 +28,7 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointPr
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.actuate.endpoint.EndpointsSupplier;
 import org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint;
+import org.springframework.boot.actuate.endpoint.web.PathMappedEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -92,17 +93,18 @@ public class TraceWebAutoConfiguration {
 			return () -> getPatternForManagementServerProperties(
 					managementServerProperties);
 		}
+
 	}
 
 	@Configuration
-	@ConditionalOnClass({ServerProperties.class, EndpointsSupplier.class,
-			ExposableWebEndpoint.class})
+	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class,
+			ExposableWebEndpoint.class })
 	@ConditionalOnBean(ServerProperties.class)
 	protected static class ActuatorSkipPatternProviderConfig {
 
 		static Optional<Pattern> getEndpointsPatterns(ServerProperties serverProperties,
-													  WebEndpointProperties webEndpointProperties,
-													  EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
+				WebEndpointProperties webEndpointProperties,
+				EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
 			Collection<ExposableWebEndpoint> endpoints = endpointsSupplier.getEndpoints();
 
 			if (endpoints.isEmpty()) {
@@ -111,34 +113,27 @@ public class TraceWebAutoConfiguration {
 
 			String contextPath = serverProperties.getServlet().getContextPath();
 
-			int size = endpoints.size();
-			int i = 0;
-
-			StringBuilder sb = new StringBuilder();
-			for (ExposableWebEndpoint endpoint : endpoints) {
-				i++;
-
-				if (StringUtils.hasText(contextPath)) {
-					sb.append(contextPath);
-				}
-
-				if (!webEndpointProperties.getBasePath().equals("/")) {
-					sb.append(webEndpointProperties.getBasePath());
-				}
-				sb.append("/")
-					.append(endpoint.getRootPath())
-						.append(".*");
-
-				if (i < size) {
-					sb.append("|");
-				}
-			}
-
-			String pattern = sb.toString();
+			String pattern = endpoints.stream().map(PathMappedEndpoint::getRootPath)
+					.map(path -> path + "|" + path + "/.*").collect(
+							Collectors.joining("|",
+									getPathPrefix(contextPath,
+											webEndpointProperties.getBasePath()) + "/(",
+									")"));
 			if (StringUtils.hasText(pattern)) {
 				return Optional.of(Pattern.compile(pattern));
 			}
 			return Optional.empty();
+		}
+
+		private static String getPathPrefix(String contextPath, String actuatorBasePath) {
+			String result = "";
+			if (StringUtils.hasText(contextPath)) {
+				result += contextPath;
+			}
+			if (!actuatorBasePath.equals("/")) {
+				result += actuatorBasePath;
+			}
+			return result;
 		}
 
 		@Bean
@@ -146,15 +141,17 @@ public class TraceWebAutoConfiguration {
 				final ServerProperties serverProperties,
 				final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(serverProperties, webEndpointProperties, endpointsSupplier);
+			return () -> getEndpointsPatterns(serverProperties, webEndpointProperties,
+					endpointsSupplier);
 		}
+
 	}
 
 	@Configuration
 	static class DefaultSkipPatternConfig {
 
 		private static String combinedPattern(String skipPattern,
-											  String additionalSkipPattern) {
+				String additionalSkipPattern) {
 			String pattern = skipPattern;
 			if (!StringUtils.hasText(skipPattern)) {
 				pattern = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
@@ -172,5 +169,7 @@ public class TraceWebAutoConfiguration {
 					Pattern.compile(combinedPattern(sleuthWebProperties.getSkipPattern(),
 							sleuthWebProperties.getAdditionalSkipPattern())));
 		}
+
 	}
+
 }

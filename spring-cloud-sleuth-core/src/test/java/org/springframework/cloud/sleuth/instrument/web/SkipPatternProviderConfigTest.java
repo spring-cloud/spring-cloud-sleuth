@@ -88,7 +88,8 @@ public class SkipPatternProviderConfigTest {
 	public void should_return_empty_when_no_endpoints() {
 		EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier = Collections::emptyList;
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpoints(new ServerProperties(), new WebEndpointProperties(), endpointsSupplier)
+				.skipPatternForActuatorEndpoints(new ServerProperties(),
+						new WebEndpointProperties(), endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isEmpty();
@@ -105,13 +106,14 @@ public class SkipPatternProviderConfigTest {
 			return Arrays.asList(infoEndpoint, healthEndpoint);
 		};
 
-
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,endpointsSupplier)
+				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,
+						endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
-		then(pattern.get().pattern()).isEqualTo("/actuator/info.*|/actuator/health.*");
+		then(pattern.get().pattern())
+				.isEqualTo("/actuator/(info|info/.*|health|health/.*)");
 	}
 
 	@Test
@@ -128,12 +130,13 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpoints(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,
+						endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
 		then(pattern.get().pattern())
-				.isEqualTo("foo/actuator/info.*|foo/actuator/health.*");
+				.isEqualTo("foo/actuator/(info|info/.*|health|health/.*)");
 	}
 
 	@Test
@@ -150,11 +153,12 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpoints(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,
+						endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
-		then(pattern.get().pattern()).isEqualTo("/info.*|/health.*");
+		then(pattern.get().pattern()).isEqualTo("/(info|info/.*|health|health/.*)");
 	}
 
 	@Test
@@ -172,11 +176,12 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpoints(properties,webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,
+						endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
-		then(pattern.get().pattern()).isEqualTo("foo/info.*|foo/health.*");
+		then(pattern.get().pattern()).isEqualTo("foo/(info|info/.*|health|health/.*)");
 	}
 
 	@Test
