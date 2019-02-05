@@ -1806,6 +1806,9 @@ For example, if the request was sent to <literal>/this/that</literal> then the n
 You can configure which URIs you would like to skip by setting the <literal>spring.sleuth.web.skipPattern</literal> property.
 If you have <literal>ManagementServerProperties</literal> on classpath, its value of <literal>contextPath</literal> gets appended to the provided skip pattern.
 If you want to reuse the Sleuth&#8217;s default skip patterns and just append your own, pass those patterns by using the <literal>spring.sleuth.web.additionalSkipPattern</literal>.</simpara>
+<simpara>By default, all the spring boot actuator endpoints are automatically added to the skip pattern.
+If you want to disable this behaviour set <literal>spring.sleuth.web.ignore-auto-configured-skip-patterns</literal>
+to <literal>true</literal>.</simpara>
 <simpara>To change the order of tracing filter registration, please set the
 <literal>spring.sleuth.web.filter-order</literal> property.</simpara>
 <simpara>To disable the filter that logs uncaught exceptions you can disable the
