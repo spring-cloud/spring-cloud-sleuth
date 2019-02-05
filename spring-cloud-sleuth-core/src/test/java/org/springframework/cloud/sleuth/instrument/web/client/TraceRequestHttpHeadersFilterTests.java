@@ -48,8 +48,7 @@ public class TraceRequestHttpHeadersFilterTests {
 				.isEqualTo(Collections.singletonList("World"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
-		BDDAssertions.then(filteredHeaders.get("X-Auth-User"))
-				.hasSize(1);
+		BDDAssertions.then(filteredHeaders.get("X-Auth-User")).hasSize(1);
 		BDDAssertions
 				.then((Object) exchange
 						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))

@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -24,6 +26,10 @@ import org.junit.Test;
 
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
+import org.springframework.boot.actuate.endpoint.EndpointId;
+import org.springframework.boot.actuate.endpoint.EndpointsSupplier;
+import org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint;
+import org.springframework.boot.actuate.endpoint.web.WebOperation;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -79,27 +85,103 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	@Test
-	public void should_return_empty_when_server_props_have_no_context_path()
-			throws Exception {
-		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ServerSkipPatternProviderConfig()
-				.skipPatternForServerProperties(new ServerProperties(),
-						new WebEndpointProperties())
+	public void should_return_empty_when_no_endpoints() {
+		EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier = Collections::emptyList;
+		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
+				.skipPatternForActuatorEndpoints(new ServerProperties(),
+						new WebEndpointProperties(), endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isEmpty();
 	}
 
 	@Test
-	public void should_return_server_props_with_context_path() throws Exception {
+	public void should_return_endpoints_without_context_path() {
 		ServerProperties properties = new ServerProperties();
-		properties.getServlet().setContextPath("foo");
+		WebEndpointProperties webEndpointProperties = new WebEndpointProperties();
+		EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier = () -> {
+			ExposableWebEndpoint infoEndpoint = createEndpoint("info");
+			ExposableWebEndpoint healthEndpoint = createEndpoint("health");
 
-		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ServerSkipPatternProviderConfig()
-				.skipPatternForServerProperties(properties, new WebEndpointProperties())
+			return Arrays.asList(infoEndpoint, healthEndpoint);
+		};
+
+		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
+				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,
+						endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
-		then(pattern.get().pattern()).isEqualTo("foo/actuator.*");
+		then(pattern.get().pattern())
+				.isEqualTo("/actuator/(info|info/.*|health|health/.*)");
+	}
+
+	@Test
+	public void should_return_endpoints_with_context_path() {
+		WebEndpointProperties webEndpointProperties = new WebEndpointProperties();
+		ServerProperties properties = new ServerProperties();
+		properties.getServlet().setContextPath("foo");
+
+		EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier = () -> {
+			ExposableWebEndpoint infoEndpoint = createEndpoint("info");
+			ExposableWebEndpoint healthEndpoint = createEndpoint("health");
+
+			return Arrays.asList(infoEndpoint, healthEndpoint);
+		};
+
+		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
+				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,
+						endpointsSupplier)
+				.skipPattern();
+
+		then(pattern).isNotEmpty();
+		then(pattern.get().pattern())
+				.isEqualTo("foo/actuator/(info|info/.*|health|health/.*)");
+	}
+
+	@Test
+	public void should_return_endpoints_without_context_path_and_base_path_set_to_root() {
+		ServerProperties properties = new ServerProperties();
+		WebEndpointProperties webEndpointProperties = new WebEndpointProperties();
+		webEndpointProperties.setBasePath("/");
+
+		EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier = () -> {
+			ExposableWebEndpoint infoEndpoint = createEndpoint("info");
+			ExposableWebEndpoint healthEndpoint = createEndpoint("health");
+
+			return Arrays.asList(infoEndpoint, healthEndpoint);
+		};
+
+		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
+				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,
+						endpointsSupplier)
+				.skipPattern();
+
+		then(pattern).isNotEmpty();
+		then(pattern.get().pattern()).isEqualTo("/(info|info/.*|health|health/.*)");
+	}
+
+	@Test
+	public void should_return_endpoints_with_context_path_and_base_path_set_to_root() {
+		WebEndpointProperties webEndpointProperties = new WebEndpointProperties();
+		webEndpointProperties.setBasePath("/");
+		ServerProperties properties = new ServerProperties();
+		properties.getServlet().setContextPath("foo");
+
+		EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier = () -> {
+			ExposableWebEndpoint infoEndpoint = createEndpoint("info");
+			ExposableWebEndpoint healthEndpoint = createEndpoint("health");
+
+			return Arrays.asList(infoEndpoint, healthEndpoint);
+		};
+
+		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
+				.skipPatternForActuatorEndpoints(properties, webEndpointProperties,
+						endpointsSupplier)
+				.skipPattern();
+
+		then(pattern).isNotEmpty();
+		then(pattern.get().pattern()).isEqualTo("foo/(info|info/.*|health|health/.*)");
 	}
 
 	@Test
@@ -118,6 +200,31 @@ public class SkipPatternProviderConfigTest {
 
 	private SingleSkipPattern bar() {
 		return () -> Optional.of(Pattern.compile("bar"));
+	}
+
+	private ExposableWebEndpoint createEndpoint(final String name) {
+		return new ExposableWebEndpoint() {
+
+			@Override
+			public String getRootPath() {
+				return name;
+			}
+
+			@Override
+			public EndpointId getEndpointId() {
+				return EndpointId.of(name);
+			}
+
+			@Override
+			public boolean isEnableByDefault() {
+				return false;
+			}
+
+			@Override
+			public Collection<WebOperation> getOperations() {
+				return null;
+			}
+		};
 	}
 
 }

@@ -16,6 +16,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -25,6 +26,9 @@ import brave.Tracing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
+import org.springframework.boot.actuate.endpoint.EndpointsSupplier;
+import org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint;
+import org.springframework.boot.actuate.endpoint.web.PathMappedEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -66,6 +70,7 @@ public class TraceWebAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(ManagementServerProperties.class)
+	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false", matchIfMissing = true)
 	protected static class ManagementSkipPatternProviderConfig {
 
 		/**
@@ -93,31 +98,53 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass({ ServerProperties.class, WebEndpointProperties.class })
-	protected static class ServerSkipPatternProviderConfig {
+	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class,
+			ExposableWebEndpoint.class })
+	@ConditionalOnBean(ServerProperties.class)
+	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false", matchIfMissing = true)
+	protected static class ActuatorSkipPatternProviderConfig {
 
-		/**
-		 * Uses {@link ServerProperties#getServlet()#getContextPath()} and
-		 * {@link WebEndpointProperties#getBasePath()} to skip Actuator endpoints.
-		 */
-		static Optional<Pattern> getPatternForServerProperties(
-				ServerProperties serverProperties,
-				WebEndpointProperties webEndpointProperties) {
+		static Optional<Pattern> getEndpointsPatterns(ServerProperties serverProperties,
+				WebEndpointProperties webEndpointProperties,
+				EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
+			Collection<ExposableWebEndpoint> endpoints = endpointsSupplier.getEndpoints();
+
+			if (endpoints.isEmpty()) {
+				return Optional.empty();
+			}
+
 			String contextPath = serverProperties.getServlet().getContextPath();
-			if (StringUtils.hasText(contextPath)) {
-				return Optional.of(Pattern.compile(
-						contextPath + webEndpointProperties.getBasePath() + ".*"));
+
+			String pattern = endpoints.stream().map(PathMappedEndpoint::getRootPath)
+					.map(path -> path + "|" + path + "/.*").collect(
+							Collectors.joining("|",
+									getPathPrefix(contextPath,
+											webEndpointProperties.getBasePath()) + "/(",
+									")"));
+			if (StringUtils.hasText(pattern)) {
+				return Optional.of(Pattern.compile(pattern));
 			}
 			return Optional.empty();
 		}
 
+		private static String getPathPrefix(String contextPath, String actuatorBasePath) {
+			String result = "";
+			if (StringUtils.hasText(contextPath)) {
+				result += contextPath;
+			}
+			if (!actuatorBasePath.equals("/")) {
+				result += actuatorBasePath;
+			}
+			return result;
+		}
+
 		@Bean
-		@ConditionalOnBean({ ServerProperties.class, WebEndpointProperties.class })
-		public SingleSkipPattern skipPatternForServerProperties(
+		public SingleSkipPattern skipPatternForActuatorEndpoints(
 				final ServerProperties serverProperties,
-				final WebEndpointProperties webEndpointProperties) {
-			return () -> getPatternForServerProperties(serverProperties,
-					webEndpointProperties);
+				final WebEndpointProperties webEndpointProperties,
+				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
+			return () -> getEndpointsPatterns(serverProperties, webEndpointProperties,
+					endpointsSupplier);
 		}
 
 	}

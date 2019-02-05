@@ -31,7 +31,7 @@ public class SleuthWebProperties {
 	/**
 	 * Default set of skip patterns.
 	 */
-	public static final String DEFAULT_SKIP_PATTERN = "/api-docs.*|/autoconfig|/configprops|/dump|/health|/info|/metrics.*|/mappings|/trace|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream|/application/.*|/actuator.*|/cloudfoundryapplication";
+	public static final String DEFAULT_SKIP_PATTERN = "/api-docs.*|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream";
 
 	/**
 	 * When true enables instrumentation for web applications.
@@ -66,6 +66,12 @@ public class SleuthWebProperties {
 	 * Flag to toggle the presence of a filter that logs thrown exceptions.
 	 */
 	private boolean exceptionLoggingFilterEnabled = true;
+
+	/**
+	 * If set to true, auto-configured skip patterns will be ignored.
+	 * @see TraceWebAutoConfiguration
+	 */
+	private boolean ignoreAutoConfiguredSkipPatterns = false;
 
 	/**
 	 * Properties related to HTTP clients.
@@ -123,6 +129,15 @@ public class SleuthWebProperties {
 
 	public void setExceptionLoggingFilterEnabled(boolean exceptionLoggingFilterEnabled) {
 		this.exceptionLoggingFilterEnabled = exceptionLoggingFilterEnabled;
+	}
+
+	public boolean isIgnoreAutoConfiguredSkipPatterns() {
+		return ignoreAutoConfiguredSkipPatterns;
+	}
+
+	public void setIgnoreAutoConfiguredSkipPatterns(
+			boolean ignoreAutoConfiguredSkipPatterns) {
+		this.ignoreAutoConfiguredSkipPatterns = ignoreAutoConfiguredSkipPatterns;
 	}
 
 	public Client getClient() {
