@@ -146,7 +146,17 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	@Override
 	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-		return new MonoWebClientTrace(next, request, this);
+		ClientRequest.Builder builder = ClientRequest.from(request);
+		if (log.isDebugEnabled()) {
+			log.debug("Instrumenting WebClient call");
+		}
+		Span span = handler().handleSend(injector(), builder, request,
+				tracer().nextSpan());
+		if (log.isDebugEnabled()) {
+			log.debug("Handled send of " + span);
+		}
+
+		return new MonoWebClientTrace(next, builder.build(), this, span);
 	}
 
 	private static final class MonoWebClientTrace extends Mono<ClientResponse> {
@@ -165,8 +175,10 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
 
+		private final Span span;
+
 		MonoWebClientTrace(ExchangeFunction next, ClientRequest request,
-				TraceExchangeFilterFunction parent) {
+				TraceExchangeFilterFunction parent, Span span) {
 			this.next = next;
 			this.request = request;
 			this.tracer = parent.tracer();
@@ -174,28 +186,16 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			this.injector = parent.injector();
 			this.tracing = parent.httpTracing().tracing();
 			this.scopePassingTransformer = parent.scopePassingTransformer;
+			this.span = span;
 		}
 
 		@Override
 		public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
-			final ClientRequest.Builder builder = ClientRequest.from(this.request);
 
 			Context context = subscriber.currentContext();
 
-			this.next.exchange(builder.build()).subscribe(new WebClientTracerSubscriber(
-					subscriber, context, findOrCreateSpan(builder), this));
-		}
-
-		private Span findOrCreateSpan(ClientRequest.Builder builder) {
-			if (log.isDebugEnabled()) {
-				log.debug("Instrumenting WebClient call");
-			}
-			Span clientSpan = this.handler.handleSend(this.injector, builder,
-					this.request, this.tracer.nextSpan());
-			if (log.isDebugEnabled()) {
-				log.debug("Handled send of " + clientSpan);
-			}
-			return clientSpan;
+			this.next.exchange(request).subscribe(
+					new WebClientTracerSubscriber(subscriber, context, span, this));
 		}
 
 		static final class WebClientTracerSubscriber
