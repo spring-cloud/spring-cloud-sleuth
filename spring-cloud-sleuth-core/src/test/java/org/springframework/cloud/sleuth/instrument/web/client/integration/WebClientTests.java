@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -489,6 +490,28 @@ public class WebClientTests {
 		then(this.tracer.currentSpan()).isNull();
 		then(this.customizer.isExecuted()).isTrue();
 		then(this.reporter.getSpans()).extracting("kind.name").contains("CLIENT");
+	}
+
+	@Test
+	public void should_add_headers_eagerly() {
+		Span span = this.tracer.nextSpan().name("foo").start();
+
+		AtomicReference<String> traceId = new AtomicReference<>();
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			this.webClientBuilder
+					.filter((request, exchange) -> {
+						traceId.set(request.headers().getFirst("X-B3-SpanId"));
+
+						return exchange.exchange(request);
+					})
+					.build()
+					.get().uri("http://localhost:" + this.port + "/traceid")
+					.retrieve().bodyToMono(String.class).block();
+		}
+		finally {
+			span.finish();
+		}
+		then(traceId).doesNotHaveValue(null);
 	}
 
 	private String getHeader(ResponseEntity<String> response, String name) {
