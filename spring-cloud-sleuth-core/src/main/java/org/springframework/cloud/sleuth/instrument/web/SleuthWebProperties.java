@@ -68,6 +68,12 @@ public class SleuthWebProperties {
 	private boolean exceptionLoggingFilterEnabled = true;
 
 	/**
+	 * If set to true, auto-configured skip patterns will be ignored.
+	 * @see TraceWebAutoConfiguration
+	 */
+	private boolean ignoreAutoConfiguredSkipPatterns = false;
+
+	/**
 	 * Properties related to HTTP clients.
 	 */
 	private Client client = new Client();
@@ -123,6 +129,15 @@ public class SleuthWebProperties {
 
 	public void setExceptionLoggingFilterEnabled(boolean exceptionLoggingFilterEnabled) {
 		this.exceptionLoggingFilterEnabled = exceptionLoggingFilterEnabled;
+	}
+
+	public boolean isIgnoreAutoConfiguredSkipPatterns() {
+		return ignoreAutoConfiguredSkipPatterns;
+	}
+
+	public void setIgnoreAutoConfiguredSkipPatterns(
+			boolean ignoreAutoConfiguredSkipPatterns) {
+		this.ignoreAutoConfiguredSkipPatterns = ignoreAutoConfiguredSkipPatterns;
 	}
 
 	public Client getClient() {
