@@ -102,38 +102,64 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			}
 		};
 
-		final Tracer tracer;
+		final BeanFactory beanFactory;
 
-		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+		HttpTracing httpTracing;
 
-		final TraceContext.Injector<HttpHeaders> injector;
+		Tracer tracer;
 
-		final HttpTracing httpTracing;
+		HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
-		final Propagation<String> propagation;
+		TraceContext.Injector<HttpHeaders> injector;
 
-		TracingDoOnRequest(HttpTracing httpTracing) {
-			this.tracer = httpTracing.tracing().tracer();
-			this.handler = HttpClientHandler.create(httpTracing, new HttpAdapter());
-			this.propagation = httpTracing.tracing().propagation();
-			this.injector = this.propagation.injector(SETTER);
-			this.httpTracing = httpTracing;
+		Propagation<String> propagation;
+
+		TracingDoOnRequest(BeanFactory beanFactory) {
+			this.beanFactory = beanFactory;
+		}
+
+		private HttpTracing httpTracing() {
+			if (this.httpTracing == null) {
+				this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
+			}
+			return this.httpTracing;
+		}
+
+		private Propagation<String> propagation() {
+			if (this.propagation == null) {
+				this.propagation = httpTracing().tracing().propagation();
+			}
+			return this.propagation;
+		}
+
+		private TraceContext.Injector<HttpHeaders> injector() {
+			if (this.injector == null) {
+				this.injector = propagation().injector(SETTER);
+			}
+			return this.injector;
+		}
+
+		private HttpClientHandler<HttpClientRequest, HttpClientResponse> handler() {
+			if (this.handler == null) {
+				this.handler = HttpClientHandler.create(httpTracing(), new HttpAdapter());
+			}
+			return this.handler;
 		}
 
 		static TracingDoOnRequest create(BeanFactory beanFactory) {
-			return new TracingDoOnRequest(beanFactory.getBean(HttpTracing.class));
+			return new TracingDoOnRequest(beanFactory);
 		}
 
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
-			if (this.propagation.keys().stream()
+			if (propagation().keys().stream()
 					.anyMatch(key -> req.requestHeaders().contains(key))) {
 				// request already instrumented
 				return;
 			}
 			AtomicReference reference = req.currentContext()
 					.getOrDefault(AtomicReference.class, new AtomicReference());
-			Span span = this.handler.handleSend(this.injector, req.requestHeaders(), req,
+			Span span = handler().handleSend(injector(), req.requestHeaders(), req,
 					(Span) reference.get());
 			reference.set(span);
 		}
@@ -143,12 +169,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingDoOnResponse extends AbstractTracingDoOnHandler
 			implements BiConsumer<HttpClientResponse, Connection> {
 
-		TracingDoOnResponse(HttpTracing httpTracing) {
-			super(httpTracing);
+		TracingDoOnResponse(BeanFactory beanFactory) {
+			super(beanFactory);
 		}
 
 		static TracingDoOnResponse create(BeanFactory beanFactory) {
-			return new TracingDoOnResponse(beanFactory.getBean(HttpTracing.class));
+			return new TracingDoOnResponse(beanFactory);
 		}
 
 		@Override
@@ -161,12 +187,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingDoOnErrorRequest extends AbstractTracingDoOnHandler
 			implements BiConsumer<HttpClientRequest, Throwable> {
 
-		TracingDoOnErrorRequest(HttpTracing httpTracing) {
-			super(httpTracing);
+		TracingDoOnErrorRequest(BeanFactory beanFactory) {
+			super(beanFactory);
 		}
 
 		static TracingDoOnErrorRequest create(BeanFactory beanFactory) {
-			return new TracingDoOnErrorRequest(beanFactory.getBean(HttpTracing.class));
+			return new TracingDoOnErrorRequest(beanFactory);
 		}
 
 		@Override
@@ -179,12 +205,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingDoOnErrorResponse extends AbstractTracingDoOnHandler
 			implements BiConsumer<HttpClientResponse, Throwable> {
 
-		TracingDoOnErrorResponse(HttpTracing httpTracing) {
-			super(httpTracing);
+		TracingDoOnErrorResponse(BeanFactory beanFactory) {
+			super(beanFactory);
 		}
 
 		static TracingDoOnErrorResponse create(BeanFactory beanFactory) {
-			return new TracingDoOnErrorResponse(beanFactory.getBean(HttpTracing.class));
+			return new TracingDoOnErrorResponse(beanFactory);
 		}
 
 		@Override
@@ -196,13 +222,28 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	private static abstract class AbstractTracingDoOnHandler {
 
-		final Tracer tracer;
+		final BeanFactory beanFactory;
 
-		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+		HttpTracing httpTracing;
 
-		AbstractTracingDoOnHandler(HttpTracing httpTracing) {
-			this.tracer = httpTracing.tracing().tracer();
-			this.handler = HttpClientHandler.create(httpTracing, new HttpAdapter());
+		HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+
+		AbstractTracingDoOnHandler(BeanFactory beanFactory) {
+			this.beanFactory = beanFactory;
+		}
+
+		private HttpTracing httpTracing() {
+			if (this.httpTracing == null) {
+				this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
+			}
+			return this.httpTracing;
+		}
+
+		private HttpClientHandler<HttpClientRequest, HttpClientResponse> handler() {
+			if (this.handler == null) {
+				this.handler = HttpClientHandler.create(httpTracing(), new HttpAdapter());
+			}
+			return this.handler;
 		}
 
 		protected void handle(HttpClientResponse httpClientResponse,
@@ -212,7 +253,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			if (reference == null || reference.get() == null) {
 				return;
 			}
-			this.handler.handleReceive(httpClientResponse, throwable,
+			handler().handleReceive(httpClientResponse, throwable,
 					(Span) reference.get());
 		}
 

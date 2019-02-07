@@ -498,15 +498,12 @@ public class WebClientTests {
 
 		AtomicReference<String> traceId = new AtomicReference<>();
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			this.webClientBuilder
-					.filter((request, exchange) -> {
-						traceId.set(request.headers().getFirst("X-B3-SpanId"));
+			this.webClientBuilder.filter((request, exchange) -> {
+				traceId.set(request.headers().getFirst("X-B3-SpanId"));
 
-						return exchange.exchange(request);
-					})
-					.build()
-					.get().uri("http://localhost:" + this.port + "/traceid")
-					.retrieve().bodyToMono(String.class).block();
+				return exchange.exchange(request);
+			}).build().get().uri("http://localhost:" + this.port + "/traceid").retrieve()
+					.bodyToMono(String.class).block();
 		}
 		finally {
 			span.finish();
