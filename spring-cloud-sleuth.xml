@@ -1440,10 +1440,10 @@ void testMethod4();</programlisting>
 <simpara>If you provide the value in the annotation (either directly or by setting the <literal>name</literal> parameter), the created span has the provided value as the name.</simpara>
 <programlisting language="java" linenumbering="unnumbered">// method declaration
 @NewSpan(name = "customNameOnTestMethod5")
-void testMethod5(@SpanTag("testTag") String param);
+void testMethod5();
 
 // and method execution
-this.testBean.testMethod5("test");</programlisting>
+this.testBean.testMethod5();</programlisting>
 <simpara>You can combine both the name and a tag. Let&#8217;s focus on the latter.
 In this case, the value of the annotated method&#8217;s parameter runtime value becomes the value of the tag.
 In our sample, the tag key is <literal>testTag</literal>, and the tag value is <literal>test</literal>.</simpara>
@@ -1460,10 +1460,10 @@ concrete one wins (in this case <literal>customNameOnTestMethod3</literal> is se
 <simpara>If you want to add tags and annotations to an existing span, you can use the <literal>@ContinueSpan</literal> annotation, as shown in the following example:</simpara>
 <programlisting language="java" linenumbering="unnumbered">// method declaration
 @ContinueSpan(log = "testMethod11")
-void testMethod11(@SpanTag("testTag11") String param);
+void testMethod11();
 
 // method execution
-this.testBean.testMethod11("test");
+this.testBean.testMethod11();
 this.testBean.testMethod13();</programlisting>
 <simpara>(Note that, in contrast with the <literal>@NewSpan</literal> annotation ,you can also add logs with the <literal>log</literal> parameter.)</simpara>
 <simpara>That way, the span gets continued and:</simpara>
@@ -1503,13 +1503,12 @@ The default implementation uses SPEL expression resolution.
 Its class name has to be passed as the value of the <literal>resolver</literal> attribute.</simpara>
 <simpara>Consider the following annotated method:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@NewSpan
-public void getAnnotationForTagValueResolver(
-		@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
+public void getAnnotationForTagValueResolver() {
 }</programlisting>
 <simpara>Now further consider the following <literal>TagValueResolver</literal> bean implementation:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Bean(name = "myCustomTagValueResolver")
 public TagValueResolver tagValueResolver() {
-	return parameter -&gt; "Value from myCustomTagValueResolver";
+	return () -&gt; "Value from myCustomTagValueResolver";
 }</programlisting>
 <simpara>The two preceding examples lead to setting a tag value equal to <literal>Value from myCustomTagValueResolver</literal>.</simpara>
 </section>
@@ -1517,8 +1516,7 @@ public TagValueResolver tagValueResolver() {
 <title>Resolving Expressions for a Value</title>
 <simpara>Consider the following annotated method:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@NewSpan
-public void getAnnotationForTagValueExpression(
-		@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
+public void getAnnotationForTagValueExpression() {
 }</programlisting>
 <simpara>No custom implementation of a <literal>TagValueExpressionResolver</literal> leads to evaluation of the SPEL expression, and a tag with a value of <literal>4 characters</literal> is set on the span.
 If you want to use some other expression resolution mechanism, you can create your own implementation of the bean.</simpara>
@@ -1527,7 +1525,7 @@ If you want to use some other expression resolution mechanism, you can create yo
 <title>Using the <literal>toString()</literal> method</title>
 <simpara>Consider the following annotated method:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@NewSpan
-public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
+public void getAnnotationForArgumentToString() {
 }</programlisting>
 <simpara>Running the preceding method with a value of <literal>15</literal> leads to setting a tag with a String value of <literal>"15"</literal>.</simpara>
 </section>
