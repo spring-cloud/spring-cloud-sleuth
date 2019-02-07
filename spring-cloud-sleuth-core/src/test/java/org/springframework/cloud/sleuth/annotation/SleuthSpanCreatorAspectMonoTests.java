@@ -48,7 +48,7 @@ import static reactor.core.publisher.Mono.just;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectMonoTests.TestConfiguration.class)
 @RunWith(SpringRunner.class)
-@DirtiesContext
+@DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
 public class SleuthSpanCreatorAspectMonoTests {
 
 	@Autowired
