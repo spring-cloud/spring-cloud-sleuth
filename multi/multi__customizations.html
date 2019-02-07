@@ -55,8 +55,7 @@ You can customize the tags or modify the response headers by registering your ow
 		chain.doFilter(request, response);
 	}
 
-}
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// end::response_headers[]</span></pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_service_name" href="#_custom_service_name"></a>12.3&nbsp;Custom service name</h2></div></div></div><p>By default, Sleuth assumes that, when you send a span to Zipkin, you want the span&#8217;s service name to be equal to the value of the <code class="literal">spring.application.name</code> property.
+}</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_service_name" href="#_custom_service_name"></a>12.3&nbsp;Custom service name</h2></div></div></div><p>By default, Sleuth assumes that, when you send a span to Zipkin, you want the span&#8217;s service name to be equal to the value of the <code class="literal">spring.application.name</code> property.
 That is not always the case, though.
 There are situations in which you want to explicitly provide a different service name for all spans coming from your application.
 To achieve that, you can pass the following property to your application to override that value (the example is for a service named <code class="literal">myService</code>):</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.service.name</span>: myService</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_customization_of_reported_spans" href="#_customization_of_reported_spans"></a>12.4&nbsp;Customization of Reported Spans</h2></div></div></div><p>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.

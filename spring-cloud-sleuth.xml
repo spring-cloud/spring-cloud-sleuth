@@ -1366,12 +1366,14 @@ The name should be low cardinality, so it should not include identifiers.</simpa
 <section xml:id="_spanname_annotation">
 <title><literal>@SpanName</literal> Annotation</title>
 <simpara>You can name the span explicitly by using the <literal>@SpanName</literal> annotation, as shown in the following example:</simpara>
-<programlisting language="java" linenumbering="unnumbered">@SpanName("calculateTax")
-class TaxCountingRunnable implements Runnable {
+<programlisting language="java" linenumbering="unnumbered">	@SpanName("calculateTax")
+	class TaxCountingRunnable implements Runnable {
 
-	@Override
-	public void run() {
-		// perform logic
+		@Override
+		public void run() {
+			// perform logic
+		}
+
 	}
 
 }</programlisting>
@@ -1601,8 +1603,7 @@ class MyFilter extends GenericFilterBean {
 		chain.doFilter(request, response);
 	}
 
-}
-// end::response_headers[]</programlisting>
+}</programlisting>
 </section>
 <section xml:id="_custom_service_name">
 <title>Custom service name</title>
