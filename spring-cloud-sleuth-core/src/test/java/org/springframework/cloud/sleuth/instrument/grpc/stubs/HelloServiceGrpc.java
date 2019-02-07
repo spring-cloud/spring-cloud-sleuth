@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,13 +31,17 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 @javax.annotation.Generated(value = "by gRPC proto compiler (version 1.15.1)", comments = "Source: HelloService.proto")
 public final class HelloServiceGrpc {
 
-	private HelloServiceGrpc() {
-	}
-
 	public static final String SERVICE_NAME = "HelloService";
+
+	private static final int METHODID_SAY_HELLO = 0;
 
 	// Static method descriptors that strictly reflect the proto.
 	private static volatile io.grpc.MethodDescriptor<HelloRequest, HelloReply> getSayHelloMethod;
+
+	private static volatile io.grpc.ServiceDescriptor serviceDescriptor;
+
+	private HelloServiceGrpc() {
+	}
 
 	@io.grpc.stub.annotations.RpcMethod(fullMethodName = SERVICE_NAME + '/'
 			+ "SayHello", requestType = HelloRequest.class, responseType = HelloReply.class, methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
@@ -85,6 +89,22 @@ public final class HelloServiceGrpc {
 	 */
 	public static HelloServiceFutureStub newFutureStub(io.grpc.Channel channel) {
 		return new HelloServiceFutureStub(channel);
+	}
+
+	public static io.grpc.ServiceDescriptor getServiceDescriptor() {
+		io.grpc.ServiceDescriptor result = serviceDescriptor;
+		if (result == null) {
+			synchronized (HelloServiceGrpc.class) {
+				result = serviceDescriptor;
+				if (result == null) {
+					serviceDescriptor = result = io.grpc.ServiceDescriptor
+							.newBuilder(SERVICE_NAME)
+							.setSchemaDescriptor(new HelloServiceFileDescriptorSupplier())
+							.addMethod(getSayHelloMethod()).build();
+				}
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -222,8 +242,6 @@ public final class HelloServiceGrpc {
 
 	}
 
-	private static final int METHODID_SAY_HELLO = 0;
-
 	private static final class MethodHandlers<Req, Resp>
 			implements io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
 			io.grpc.stub.ServerCalls.ServerStreamingMethod<Req, Resp>,
@@ -307,24 +325,6 @@ public final class HelloServiceGrpc {
 			return getServiceDescriptor().findMethodByName(this.methodName);
 		}
 
-	}
-
-	private static volatile io.grpc.ServiceDescriptor serviceDescriptor;
-
-	public static io.grpc.ServiceDescriptor getServiceDescriptor() {
-		io.grpc.ServiceDescriptor result = serviceDescriptor;
-		if (result == null) {
-			synchronized (HelloServiceGrpc.class) {
-				result = serviceDescriptor;
-				if (result == null) {
-					serviceDescriptor = result = io.grpc.ServiceDescriptor
-							.newBuilder(SERVICE_NAME)
-							.setSchemaDescriptor(new HelloServiceFileDescriptorSupplier())
-							.addMethod(getSayHelloMethod()).build();
-				}
-			}
-		}
-		return result;
 	}
 
 }

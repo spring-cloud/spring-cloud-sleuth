@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into its trace
- * representation
+ * representation.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
@@ -99,11 +99,6 @@ final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	private static final Log log = LogFactory.getLog(TraceExchangeFilterFunction.class);
-
-	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
-
-	private static final String CANCELLED_SUBSCRIPTION_ERROR = "CANCELLED";
-
 	static final Propagation.Setter<ClientRequest.Builder, String> SETTER = new Propagation.Setter<ClientRequest.Builder, String>() {
 		@Override
 		public void put(ClientRequest.Builder carrier, String key, String value) {
@@ -122,9 +117,9 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		}
 	};
 
-	public static ExchangeFilterFunction create(BeanFactory beanFactory) {
-		return new TraceExchangeFilterFunction(beanFactory);
-	}
+	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
+
+	private static final String CANCELLED_SUBSCRIPTION_ERROR = "CANCELLED";
 
 	final BeanFactory beanFactory;
 
@@ -144,6 +139,10 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				.scopePassingSpanOperator(beanFactory);
 	}
 
+	public static ExchangeFilterFunction create(BeanFactory beanFactory) {
+		return new TraceExchangeFilterFunction(beanFactory);
+	}
+
 	@Override
 	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
 		ClientRequest.Builder builder = ClientRequest.from(request);
@@ -157,6 +156,38 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		}
 
 		return new MonoWebClientTrace(next, builder.build(), this, span);
+	}
+
+	@SuppressWarnings("unchecked")
+	HttpClientHandler<ClientRequest, ClientResponse> handler() {
+		if (this.handler == null) {
+			this.handler = HttpClientHandler.create(
+					this.beanFactory.getBean(HttpTracing.class),
+					new TraceExchangeFilterFunction.HttpAdapter());
+		}
+		return this.handler;
+	}
+
+	Tracer tracer() {
+		if (this.tracer == null) {
+			this.tracer = httpTracing().tracing().tracer();
+		}
+		return this.tracer;
+	}
+
+	HttpTracing httpTracing() {
+		if (this.httpTracing == null) {
+			this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
+		}
+		return this.httpTracing;
+	}
+
+	TraceContext.Injector<ClientRequest.Builder> injector() {
+		if (this.injector == null) {
+			this.injector = this.beanFactory.getBean(HttpTracing.class).tracing()
+					.propagation().injector(SETTER);
+		}
+		return this.injector;
 	}
 
 	private static final class MonoWebClientTrace extends Mono<ClientResponse> {
@@ -341,38 +372,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		}
 
-	}
-
-	@SuppressWarnings("unchecked")
-	HttpClientHandler<ClientRequest, ClientResponse> handler() {
-		if (this.handler == null) {
-			this.handler = HttpClientHandler.create(
-					this.beanFactory.getBean(HttpTracing.class),
-					new TraceExchangeFilterFunction.HttpAdapter());
-		}
-		return this.handler;
-	}
-
-	Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = httpTracing().tracing().tracer();
-		}
-		return this.tracer;
-	}
-
-	HttpTracing httpTracing() {
-		if (this.httpTracing == null) {
-			this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
-		}
-		return this.httpTracing;
-	}
-
-	TraceContext.Injector<ClientRequest.Builder> injector() {
-		if (this.injector == null) {
-			this.injector = this.beanFactory.getBean(HttpTracing.class).tracing()
-					.propagation().injector(SETTER);
-		}
-		return this.injector;
 	}
 
 	static final class HttpAdapter

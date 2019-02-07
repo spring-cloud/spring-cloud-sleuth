@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import brave.Tracing;
+
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.util.concurrent.ListenableFuture;
 
@@ -27,8 +28,8 @@ import org.springframework.util.concurrent.ListenableFuture;
  * AsyncListenableTaskExecutor that wraps all Runnable / Callable tasks into their trace
  * related representation.
  *
- * @since 1.0.0
  * @author Marcin Grzejszczak
+ * @since 1.0.0
  * @see brave.propagation.CurrentTraceContext#wrap(Runnable)
  * @see brave.propagation.CurrentTraceContext#wrap(Callable)
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.assertj.core.api.BDDAssertions;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
-
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
@@ -42,6 +30,19 @@ import brave.spring.web.TracingClientHttpRequestInterceptor;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
+import org.assertj.core.api.BDDAssertions;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
+
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * @author Marcin Grzejszczak
@@ -51,8 +52,6 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 	@Rule
 	public final MockWebServer mockWebServer = new MockWebServer();
 
-	private RestTemplate template = new RestTemplate(clientHttpRequestFactory());
-
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
 	Tracing tracing = Tracing.newBuilder()
@@ -61,6 +60,8 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 			.spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
+
+	private RestTemplate template = new RestTemplate(clientHttpRequestFactory());
 
 	@Before
 	public void setup() {
@@ -85,7 +86,7 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 			this.template.getForEntity(
 					"http://localhost:" + this.mockWebServer.getPort() + "/exception",
 					Map.class).getBody();
-			Assert.fail("should throw an exception");
+			fail("should throw an exception");
 		}
 		catch (RuntimeException e) {
 			BDDAssertions.then(e).hasRootCauseInstanceOf(IOException.class);

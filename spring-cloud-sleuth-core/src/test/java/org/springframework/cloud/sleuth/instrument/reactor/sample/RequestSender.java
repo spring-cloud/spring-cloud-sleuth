@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,11 @@ import brave.Span;
 import brave.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import org.springframework.http.HttpMethod;
+import org.springframework.web.reactive.function.client.WebClient;
 
 class RequestSender {
 
@@ -37,7 +38,7 @@ class RequestSender {
 
 	Span span;
 
-	public RequestSender(WebClient webClient, Tracer tracer) {
+	RequestSender(WebClient webClient, Tracer tracer) {
 		this.webClient = webClient;
 		this.tracer = tracer;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
- * A decorator class for {@link ScheduledExecutorService} to support tracing in Executors
+ * A decorator class for {@link ScheduledExecutorService} to support tracing in Executors.
  *
  * @author Gaurav Rai Mazra
  * @since 1.0.0

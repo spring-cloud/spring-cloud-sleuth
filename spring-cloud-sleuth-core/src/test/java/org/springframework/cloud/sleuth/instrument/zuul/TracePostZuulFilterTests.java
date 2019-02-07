@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.cloud.netflix.zuul.metrics.EmptyTracerFactory;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
@@ -66,9 +68,9 @@ public class TracePostZuulFilterTests {
 			.clientParser(SleuthHttpParserAccessor.getClient())
 			.serverParser(SleuthHttpParserAccessor.getServer(new ErrorParser())).build();
 
-	private TracePostZuulFilter filter = new TracePostZuulFilter(this.httpTracing);
-
 	RequestContext requestContext = new RequestContext();
+
+	private TracePostZuulFilter filter = new TracePostZuulFilter(this.httpTracing);
 
 	@After
 	public void clean() {

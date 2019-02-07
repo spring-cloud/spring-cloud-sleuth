@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,28 +18,13 @@ package org.springframework.cloud.sleuth.instrument.grpc.stubs;
 
 public final class HelloServiceOuterClass {
 
-	private HelloServiceOuterClass() {
-	}
-
-	public static void registerAllExtensions(
-			com.google.protobuf.ExtensionRegistryLite registry) {
-	}
-
-	public static void registerAllExtensions(
-			com.google.protobuf.ExtensionRegistry registry) {
-		registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
-	}
-
 	static final com.google.protobuf.Descriptors.Descriptor internal_static_sample_grpc_HelloRequest_descriptor;
 	static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_sample_grpc_HelloRequest_fieldAccessorTable;
 	static final com.google.protobuf.Descriptors.Descriptor internal_static_sample_grpc_HelloReply_descriptor;
 	static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_sample_grpc_HelloReply_fieldAccessorTable;
 
-	public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
-		return descriptor;
-	}
-
 	private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
+
 	static {
 		java.lang.String[] descriptorData = {
 				"\n\022HelloService.proto\022\013sample.grpc\"\034\n\014Hel"
@@ -68,6 +53,22 @@ public final class HelloServiceOuterClass {
 		internal_static_sample_grpc_HelloReply_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
 				internal_static_sample_grpc_HelloReply_descriptor,
 				new java.lang.String[] { "Message", });
+	}
+
+	private HelloServiceOuterClass() {
+	}
+
+	public static void registerAllExtensions(
+			com.google.protobuf.ExtensionRegistryLite registry) {
+	}
+
+	public static void registerAllExtensions(
+			com.google.protobuf.ExtensionRegistry registry) {
+		registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
+	}
+
+	public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
+		return descriptor;
 	}
 
 	// @@protoc_insertion_point(outer_class_scope)

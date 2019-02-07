@@ -53,6 +53,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * Not using {@linkplain SpringBootTest} as we need to change properties per test.
+ *
+ * @author Adrian Cole
  */
 public class ZipkinAutoConfigurationTests {
 

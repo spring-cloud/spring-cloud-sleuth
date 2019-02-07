@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,25 +25,28 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.sampler.Sampler;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.rule.OutputCapture;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -54,10 +57,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
-
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
@@ -67,11 +67,11 @@ import static org.assertj.core.api.BDDAssertions.then;
 				"spring.application.name=exceptionservice" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class WebClientExceptionTests {
 
-	private static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
-
 	@ClassRule
 	public static final SpringClassRule SCR = new SpringClassRule();
+
+	private static final Log log = LogFactory
+			.getLog(MethodHandles.lookup().lookupClass());
 
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
@@ -107,7 +107,7 @@ public class WebClientExceptionTests {
 		try (Tracer.SpanInScope ws = this.tracer.tracer().withSpanInScope(span)) {
 			log.info("Started new span " + span);
 			provider.get(this);
-			Assert.fail("should throw an exception");
+			fail("should throw an exception");
 		}
 		catch (RuntimeException e) {
 			// SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
@@ -134,6 +134,13 @@ public class WebClientExceptionTests {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/")
 		ResponseEntity<String> shouldFailToConnect();
+
+	}
+
+	@FunctionalInterface
+	interface ResponseEntityProvider {
+
+		ResponseEntity<?> get(WebClientExceptionTests webClientTests);
 
 	}
 
@@ -174,13 +181,6 @@ public class WebClientExceptionTests {
 					.singletonList(new Server("invalid.host.to.break.tests", 1234)));
 			return balancer;
 		}
-
-	}
-
-	@FunctionalInterface
-	interface ResponseEntityProvider {
-
-		ResponseEntity<?> get(WebClientExceptionTests webClientTests);
 
 	}
 

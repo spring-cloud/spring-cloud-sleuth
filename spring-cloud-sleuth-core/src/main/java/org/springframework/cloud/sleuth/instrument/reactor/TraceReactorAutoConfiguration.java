@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,10 +62,10 @@ public class TraceReactorAutoConfiguration {
 	@ConditionalOnBean(Tracing.class)
 	static class TraceReactorConfiguration {
 
-		private static final Log log = LogFactory.getLog(TraceReactorConfiguration.class);
-
 		static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class
 				.getName();
+
+		private static final Log log = LogFactory.getLog(TraceReactorConfiguration.class);
 
 		@Bean
 		// for tests

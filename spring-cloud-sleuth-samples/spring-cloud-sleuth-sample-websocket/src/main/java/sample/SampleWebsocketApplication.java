@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,10 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 @EnableWebSocketMessageBroker
 public class SampleWebsocketApplication extends AbstractWebSocketMessageBrokerConfigurer {
 
+	public static void main(String[] args) {
+		SpringApplication.run(SampleWebsocketApplication.class, args);
+	}
+
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 		config.enableSimpleBroker("/topic");
@@ -36,10 +40,6 @@ public class SampleWebsocketApplication extends AbstractWebSocketMessageBrokerCo
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/hello").withSockJS();
-	}
-
-	public static void main(String[] args) {
-		SpringApplication.run(SampleWebsocketApplication.class, args);
 	}
 
 }

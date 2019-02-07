@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.core.annotation.AnnotationUtils;
 
 /**
@@ -32,13 +33,13 @@ import org.springframework.core.annotation.AnnotationUtils;
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
-class SleuthAnnotationUtils {
+final class SleuthAnnotationUtils {
+
+	private static final Log log = LogFactory.getLog(SleuthAnnotationUtils.class);
 
 	private SleuthAnnotationUtils() {
 
 	}
-
-	private static final Log log = LogFactory.getLog(SleuthAnnotationUtils.class);
 
 	static boolean isMethodAnnotated(Method method) {
 		return findAnnotation(method, NewSpan.class) != null

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,16 @@ import brave.ScopedSpan;
 import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.TraceContext;
+
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
  * Callable that passes Span between threads. The Span name is taken either from the
  * passed value or from the {@link SpanNamer} interface.
  *
+ * @param <V> - return type from callable
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
- * @param <V> - return type from callable
  * @since 1.0.0
  */
 public class TraceCallable<V> implements Callable<V> {

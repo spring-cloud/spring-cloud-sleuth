@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,15 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.sampler.Sampler;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.sampler.Sampler;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.http.HttpHeaders;
@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -53,14 +54,6 @@ import static org.assertj.core.api.BDDAssertions.then;
  *
  */
 public class TraceRestTemplateInterceptorTests {
-
-	private TestController testController = new TestController();
-
-	private MockMvc mockMvc = MockMvcBuilders.standaloneSetup(this.testController)
-			.build();
-
-	private RestTemplate template = new RestTemplate(
-			new MockMvcClientHttpRequestFactory(this.mockMvc));
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
@@ -72,6 +65,14 @@ public class TraceRestTemplateInterceptorTests {
 	Tracer tracer = this.tracing.tracer();
 
 	TraceKeys traceKeys = new TraceKeys();
+
+	private TestController testController = new TestController();
+
+	private MockMvc mockMvc = MockMvcBuilders.standaloneSetup(this.testController)
+			.build();
+
+	private RestTemplate template = new RestTemplate(
+			new MockMvcClientHttpRequestFactory(this.mockMvc));
 
 	@Before
 	public void setup() {
@@ -167,7 +168,7 @@ public class TraceRestTemplateInterceptorTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.template.getForEntity("/exception", Map.class).getBody();
-			Assert.fail("should throw an exception");
+			fail("should throw an exception");
 		}
 		catch (RuntimeException e) {
 			then(e).hasMessage("500 Internal Server Error");

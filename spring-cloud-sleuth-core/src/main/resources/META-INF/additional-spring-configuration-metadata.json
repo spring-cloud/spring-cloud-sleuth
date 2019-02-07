@@ -1,56 +1,58 @@
-{"properties": [
-  {
-    "name": "spring.sleuth.integration.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable Spring Integration sleuth instrumentation.",
-    "defaultValue": true
-  },
-  {
-    "name": "spring.sleuth.integration.websockets.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable tracing for WebSockets.",
-    "defaultValue": true
-  },
-  {
-    "name": "spring.sleuth.async.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable instrumenting async related components so that the tracing information is passed between threads.",
-    "defaultValue": true
-  },
-  {
-    "name": "spring.sleuth.async.configurer.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable default AsyncConfigurer.",
-    "defaultValue": true
-  },
-  {
-    "name": "spring.sleuth.hystrix.strategy.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable custom HystrixConcurrencyStrategy that wraps all Callable instances into their Sleuth representative - the TraceCallable.",
-    "defaultValue": true
-  },
-  {
-    "name": "spring.sleuth.feign.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable span information propagation when using Feign.",
-    "defaultValue": true
-  },
-  {
-    "name": "spring.sleuth.feign.processor.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable post processor that wraps Feign Context in its tracing representations.",
-    "defaultValue": true
-  },
-  {
-    "name": "spring.sleuth.zuul.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable span information propagation when using Zuul.",
-    "defaultValue": true
-  }, 
-  {
-    "name": "spring.sleuth.grpc.enabled",
-    "type": "java.lang.Boolean",
-    "description": "Enable span information propagation when using GRPC.",
-    "defaultValue": true
-  }
-]}
+{
+  "properties": [
+    {
+      "name": "spring.sleuth.integration.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Integration sleuth instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.integration.websockets.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing for WebSockets.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.async.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable instrumenting async related components so that the tracing information is passed between threads.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.async.configurer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable default AsyncConfigurer.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.hystrix.strategy.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable custom HystrixConcurrencyStrategy that wraps all Callable instances into their Sleuth representative - the TraceCallable.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.feign.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable span information propagation when using Feign.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.feign.processor.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable post processor that wraps Feign Context in its tracing representations.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.zuul.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable span information propagation when using Zuul.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.grpc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable span information propagation when using GRPC.",
+      "defaultValue": true
+    }
+  ]
+}

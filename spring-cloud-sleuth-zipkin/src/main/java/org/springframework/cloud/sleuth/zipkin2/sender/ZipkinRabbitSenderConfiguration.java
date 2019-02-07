@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.zipkin2.sender;
 
+import zipkin2.reporter.Sender;
+import zipkin2.reporter.amqp.RabbitMQSender;
+
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
@@ -25,8 +28,6 @@ import org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import zipkin2.reporter.Sender;
-import zipkin2.reporter.amqp.RabbitMQSender;
 
 @Configuration
 @ConditionalOnBean(CachingConnectionFactory.class)

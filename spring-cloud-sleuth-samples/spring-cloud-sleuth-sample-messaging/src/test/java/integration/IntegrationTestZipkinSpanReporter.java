@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package integration;
 
 import java.util.Collections;
@@ -20,12 +21,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
-
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
 /**
- * Span Collector that logs spans and adds Spans to a list
+ * Span Collector that logs spans and adds Spans to a list.
  *
  * @author Marcin Grzejszczak
  */

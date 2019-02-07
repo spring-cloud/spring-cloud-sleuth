@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,22 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+
 import brave.Span;
 import brave.http.HttpTracing;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,9 +52,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.GenericFilterBean;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = TraceCustomFilterResponseInjectorTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TraceCustomFilterResponseInjectorTests.Config.class, webEnvironment = RANDOM_PORT)
 @DirtiesContext
 public class TraceCustomFilterResponseInjectorTests {
 
@@ -119,7 +122,7 @@ public class TraceCustomFilterResponseInjectorTests {
 
 		private final HttpTracing httpTracing;
 
-		public HttpResponseInjectingTraceFilter(HttpTracing httpTracing) {
+		HttpResponseInjectingTraceFilter(HttpTracing httpTracing) {
 			this.httpTracing = httpTracing;
 		}
 

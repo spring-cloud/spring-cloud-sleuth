@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+
 import javax.servlet.ServletException;
 
 import brave.spring.web.TracingClientHttpRequestInterceptor;
@@ -33,6 +35,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -44,8 +47,7 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
- * We're checking how much overhead does the instrumentation
- * of the RestTemplate take
+ * We're checking how much overhead does the instrumentation of the RestTemplate take
  */
 @Measurement(iterations = 5)
 @Warmup(iterations = 10)
@@ -55,20 +57,37 @@ import static org.assertj.core.api.BDDAssertions.then;
 @Threads(Threads.MAX)
 public class RestTemplateBenchmark {
 
+	@Benchmark
+	public void syncEndpointWithoutSleuth(BenchmarkContext context)
+			throws IOException, ServletException {
+		then(context.untracedTemplate.getForObject("/foo", String.class))
+				.isEqualTo("foo");
+	}
+
+	@Benchmark
+	public void syncEndpointWithSleuth(BenchmarkContext context)
+			throws ServletException, IOException {
+		then(context.tracedTemplate.getForObject("/foo", String.class)).isEqualTo("foo");
+	}
+
 	@State(Scope.Benchmark)
 	public static class BenchmarkContext {
+
 		volatile ConfigurableApplicationContext withSleuth;
+
 		volatile MockMvc mockMvc;
+
 		volatile RestTemplate tracedTemplate;
+
 		volatile RestTemplate untracedTemplate;
 
-		@Setup public void setup() {
-			new SpringApplication(
-					SleuthBenchmarkingSpringApp.class)
-					.run("--spring.jmx.enabled=false",
-							"--spring.application.name=withSleuth");
-			this.mockMvc = MockMvcBuilders.standaloneSetup(
-					this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
+		@Setup
+		public void setup() {
+			new SpringApplication(SleuthBenchmarkingSpringApp.class).run(
+					"--spring.jmx.enabled=false", "--spring.application.name=withSleuth");
+			this.mockMvc = MockMvcBuilders
+					.standaloneSetup(
+							this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
 					.build();
 			this.tracedTemplate = new RestTemplate(
 					new MockMvcClientHttpRequestFactory(this.mockMvc));
@@ -78,22 +97,12 @@ public class RestTemplateBenchmark {
 					new MockMvcClientHttpRequestFactory(this.mockMvc));
 		}
 
-		@TearDown public void clean() {
+		@TearDown
+		public void clean() {
 			this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class).clean();
 			this.withSleuth.close();
 		}
-	}
 
-	@Benchmark
-	public void syncEndpointWithoutSleuth(BenchmarkContext context)
-			throws IOException, ServletException {
-		then(context.untracedTemplate.getForObject("/foo", String.class)).isEqualTo("foo");
-	}
-
-	@Benchmark
-	public void syncEndpointWithSleuth(BenchmarkContext context)
-			throws ServletException, IOException {
-		then(context.tracedTemplate.getForObject("/foo", String.class)).isEqualTo("foo");
 	}
 
 }

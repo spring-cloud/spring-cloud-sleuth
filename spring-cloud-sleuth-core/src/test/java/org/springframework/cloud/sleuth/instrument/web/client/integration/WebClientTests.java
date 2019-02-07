@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,6 +108,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @DirtiesContext
 public class WebClientTests {
 
+	@ClassRule
+	public static final SpringClassRule SCR = new SpringClassRule();
 	static final String TRACE_ID_NAME = "X-B3-TraceId";
 	static final String SPAN_ID_NAME = "X-B3-SpanId";
 	static final String SAMPLED_NAME = "X-B3-Sampled";
@@ -115,9 +117,6 @@ public class WebClientTests {
 
 	private static final org.apache.commons.logging.Log log = LogFactory
 			.getLog(MethodHandles.lookup().lookupClass());
-
-	@ClassRule
-	public static final SpringClassRule SCR = new SpringClassRule();
 
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
@@ -165,17 +164,17 @@ public class WebClientTests {
 	@Autowired
 	MyRestTemplateCustomizer customizer;
 
+	@BeforeClass
+	public static void cleanup() {
+		Hooks.resetOnLastOperator();
+		Schedulers.resetFactory();
+	}
+
 	@After
 	public void close() {
 		this.reporter.clear();
 		this.testErrorController.clear();
 		this.fooController.clear();
-	}
-
-	@BeforeClass
-	public static void cleanup() {
-		Hooks.resetOnLastOperator();
-		Schedulers.resetFactory();
 	}
 
 	@Test
@@ -533,6 +532,14 @@ public class WebClientTests {
 
 	}
 
+	@FunctionalInterface
+	interface ResponseEntityProvider {
+
+		@SuppressWarnings("rawtypes")
+		ResponseEntity get(WebClientTests webClientTests);
+
+	}
+
 	@Configuration
 	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
 			GatewayClassPathWarningAutoConfiguration.class,
@@ -699,14 +706,6 @@ public class WebClientTests {
 					Collections.singletonList(new Server("localhost", this.port)));
 			return balancer;
 		}
-
-	}
-
-	@FunctionalInterface
-	interface ResponseEntityProvider {
-
-		@SuppressWarnings("rawtypes")
-		ResponseEntity get(WebClientTests webClientTests);
 
 	}
 

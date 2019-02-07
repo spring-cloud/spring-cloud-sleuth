@@ -21,6 +21,8 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import zipkin2.reporter.Sender;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -40,7 +42,6 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import zipkin2.reporter.Sender;
 
 @Configuration
 @ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
@@ -58,6 +59,16 @@ class ZipkinRestTemplateSenderConfiguration {
 		zipkinRestTemplateCustomizer.customize(restTemplate);
 		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(),
 				zipkin.getEncoder());
+	}
+
+	@Bean
+	ZipkinUrlExtractor zipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
+		return new ZipkinUrlExtractor() {
+			@Override
+			public URI zipkinUrl(ZipkinProperties zipkinProperties) {
+				return zipkinLoadBalancer.instance();
+			}
+		};
 	}
 
 	@Configuration
@@ -110,15 +121,16 @@ class ZipkinRestTemplateSenderConfiguration {
 
 	}
 
-	@Bean
-	ZipkinUrlExtractor zipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
-		return new ZipkinUrlExtractor() {
-			@Override
-			public URI zipkinUrl(ZipkinProperties zipkinProperties) {
-				return zipkinLoadBalancer.instance();
-			}
-		};
-	}
+}
+
+/**
+ * Internal interface to provide a way to retrieve Zipkin URI. If there's no discovery
+ * client then this value will be taken from the properties. Otherwise host will be
+ * assumed to be a service id.
+ */
+interface ZipkinUrlExtractor {
+
+	URI zipkinUrl(ZipkinProperties zipkinProperties);
 
 }
 
@@ -165,17 +177,6 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 			return originalUrl;
 		}
 	}
-
-}
-
-/**
- * Internal interface to provide a way to retrieve Zipkin URI. If there's no discovery
- * client then this value will be taken from the properties. Otherwise host will be
- * assumed to be a service id.
- */
-interface ZipkinUrlExtractor {
-
-	URI zipkinUrl(ZipkinProperties zipkinProperties);
 
 }
 

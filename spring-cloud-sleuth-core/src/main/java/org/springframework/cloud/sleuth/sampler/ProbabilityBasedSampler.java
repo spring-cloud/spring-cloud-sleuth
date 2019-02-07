@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,8 @@ import brave.sampler.Sampler;
  * <h3>Implementation</h3>
  *
  * <p>
- * Taken from <a href=
- * "https://github.com/openzipkin/zipkin-java/blob/traceid-sampler/zipkin/src/main/java/zipkin/CountingTraceIdSampler.java">Zipkin
- * project</a>
+ * Taken from <a href= "https://github.com/openzipkin/zipkin-java/blob/traceid-sampler/
+ * zipkin/src/main/java/zipkin/CountingTraceIdSampler.java">Zipkin project</a>
  * </p>
  *
  * <p>
@@ -58,31 +57,13 @@ public class ProbabilityBasedSampler extends Sampler {
 		this.configuration = configuration;
 	}
 
-	@Override
-	public boolean isSampled(long traceId) {
-		if (this.configuration.getProbability() == 0) {
-			return false;
-		}
-		else if (this.configuration.getProbability() == 1.0f) {
-			return true;
-		}
-		synchronized (this) {
-			final int i = this.counter.getAndIncrement();
-			boolean result = this.sampleDecisions.get(i);
-			if (i == 99) {
-				this.counter.set(0);
-			}
-			return result;
-		}
-	}
-
 	/**
 	 * Reservoir sampling algorithm borrowed from Stack Overflow.
 	 *
 	 * http://stackoverflow.com/questions/12817946/generate-a-random-bitset-with-n-1s
-	 * @param size
-	 * @param cardinality
-	 * @param rnd
+	 * @param size size of the bit set
+	 * @param cardinality cardinality of the bit set
+	 * @param rnd random generator
 	 * @return a random bitset
 	 */
 	static BitSet randomBitSet(int size, int cardinality, Random rnd) {
@@ -102,6 +83,24 @@ public class ProbabilityBasedSampler extends Sampler {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public boolean isSampled(long traceId) {
+		if (this.configuration.getProbability() == 0) {
+			return false;
+		}
+		else if (this.configuration.getProbability() == 1.0f) {
+			return true;
+		}
+		synchronized (this) {
+			final int i = this.counter.getAndIncrement();
+			boolean result = this.sampleDecisions.get(i);
+			if (i == 99) {
+				this.counter.set(0);
+			}
+			return result;
+		}
 	}
 
 }

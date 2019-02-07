@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -38,6 +40,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -64,35 +67,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(Threads.MAX)
 public class HttpFilterBenchmarks {
-
-	@State(Scope.Benchmark)
-	public static class BenchmarkContext {
-		volatile ConfigurableApplicationContext withSleuth;
-		volatile DummyFilter dummyFilter = new DummyFilter();
-		volatile TracingFilter tracingFilter;
-		volatile MockMvc mockMvcForTracedController;
-		volatile MockMvc mockMvcForUntracedController;
-
-		@Setup public void setup() {
-			this.withSleuth = new SpringApplication(
-					SleuthBenchmarkingSpringApp.class)
-					.run("--spring.jmx.enabled=false",
-							"--spring.application.name=withSleuth");
-			this.tracingFilter = this.withSleuth.getBean(TracingFilter.class);
-			this.mockMvcForTracedController = MockMvcBuilders.standaloneSetup(
-					this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
-					.build();
-			this.mockMvcForUntracedController = MockMvcBuilders.standaloneSetup(
-					new VanillaController())
-					.build();
-		}
-
-
-		@TearDown public void clean() {
-			this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class).clean();
-			this.withSleuth.close();
-		}
-	}
 
 	@Benchmark
 	@Measurement(iterations = 5, time = 1)
@@ -133,38 +107,80 @@ public class HttpFilterBenchmarks {
 	}
 
 	private MockHttpServletRequestBuilder builder() {
-		return get("/").accept(MediaType.APPLICATION_JSON)
-				.header("User-Agent", "MockMvc");
+		return get("/").accept(MediaType.APPLICATION_JSON).header("User-Agent",
+				"MockMvc");
 	}
 
-	private void performRequest(MockMvc mockMvc, String url, String expectedResult) throws Exception {
-		MvcResult mvcResult = mockMvc.perform(get("/" + url))
-				.andExpect(status().isOk())
-				.andExpect(request().asyncStarted())
-				.andReturn();
+	private void performRequest(MockMvc mockMvc, String url, String expectedResult)
+			throws Exception {
+		MvcResult mvcResult = mockMvc.perform(get("/" + url)).andExpect(status().isOk())
+				.andExpect(request().asyncStarted()).andReturn();
 
-		mockMvc.perform(asyncDispatch(mvcResult))
-				.andExpect(status().isOk())
+		mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk())
 				.andExpect(content().string(expectedResult));
+	}
+
+	@State(Scope.Benchmark)
+	public static class BenchmarkContext {
+
+		volatile ConfigurableApplicationContext withSleuth;
+
+		volatile DummyFilter dummyFilter = new DummyFilter();
+
+		volatile TracingFilter tracingFilter;
+
+		volatile MockMvc mockMvcForTracedController;
+
+		volatile MockMvc mockMvcForUntracedController;
+
+		@Setup
+		public void setup() {
+			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class)
+					.run("--spring.jmx.enabled=false",
+							"--spring.application.name=withSleuth");
+			this.tracingFilter = this.withSleuth.getBean(TracingFilter.class);
+			this.mockMvcForTracedController = MockMvcBuilders
+					.standaloneSetup(
+							this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
+					.build();
+			this.mockMvcForUntracedController = MockMvcBuilders
+					.standaloneSetup(new VanillaController()).build();
+		}
+
+		@TearDown
+		public void clean() {
+			this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class).clean();
+			this.withSleuth.close();
+		}
+
 	}
 
 	private static class DummyFilter implements Filter {
 
-		@Override public void init(FilterConfig filterConfig) throws ServletException {}
+		@Override
+		public void init(FilterConfig filterConfig) throws ServletException {
+		}
 
-		@Override public void doFilter(ServletRequest request, ServletResponse response,
+		@Override
+		public void doFilter(ServletRequest request, ServletResponse response,
 				FilterChain chain) throws IOException, ServletException {
 			chain.doFilter(request, response);
 		}
 
-		@Override public void destroy() { }
+		@Override
+		public void destroy() {
+		}
+
 	}
-	
+
 	@RestController
 	private static class VanillaController {
+
 		@RequestMapping("/vanilla")
 		public Callable<String> vanilla() {
 			return () -> "vanilla";
 		}
+
 	}
+
 }

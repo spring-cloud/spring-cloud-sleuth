@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * This class uses stubs and skeletons that were generated originally by the gRPC maven
  * plugin and copied into a "stubs" sub-package.
  *
- * @author tyler.vangorder
+ * @author Tyler Van Gorder
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = GrpcTracingIntegrationTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
@@ -123,6 +123,12 @@ public class GrpcTracingIntegrationTests {
 		assertThat(clientInterceptors).hasSize(1);
 	}
 
+	public interface HelloServiceClient {
+
+		String sayHello(String name) throws Exception;
+
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	@Import(HelloGrpcService.class)
@@ -169,12 +175,6 @@ public class GrpcTracingIntegrationTests {
 			responseObserver.onNext(reply);
 			responseObserver.onCompleted();
 		}
-
-	}
-
-	public static interface HelloServiceClient {
-
-		String sayHello(String name) throws Exception;
 
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,12 @@ import java.util.stream.Collectors;
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
-import zipkin2.Annotation;
-import zipkin2.reporter.Reporter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import zipkin2.Annotation;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -322,10 +323,10 @@ public class SleuthSpanCreatorAspectTests {
 		void testMethod9(String param);
 
 		@ContinueSpan(log = "customTest")
-		void testMethod10(@SpanTag(value = "testTag10") String param);
+		void testMethod10(@SpanTag("testTag10") String param);
 
 		@ContinueSpan(log = "customTest")
-		void testMethod10_v2(@SpanTag(key = "testTag10") String param);
+		void testMethod10_v2(@SpanTag("testTag10") String param);
 
 		// tag::continue_span[]
 		@ContinueSpan(log = "testMethod11")
@@ -388,7 +389,7 @@ public class SleuthSpanCreatorAspectTests {
 		}
 
 		@Override
-		public void testMethod10(@SpanTag(value = "customTestTag10") String param) {
+		public void testMethod10(@SpanTag("customTestTag10") String param) {
 
 		}
 

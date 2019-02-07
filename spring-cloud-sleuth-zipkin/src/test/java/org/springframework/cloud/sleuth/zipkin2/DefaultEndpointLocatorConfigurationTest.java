@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -41,6 +42,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Matcin Wielgus
  */
 public class DefaultEndpointLocatorConfigurationTest {
+
+	public static final byte[] ADDRESS1234 = { 1, 2, 3, 4 };
+
+	Environment environment = new MockEnvironment();
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
@@ -100,70 +105,6 @@ public class DefaultEndpointLocatorConfigurationTest {
 				.isSameAs(ConfigurationWithCustomLocator.locator);
 		ctxt.close();
 	}
-
-	@Configuration
-	@EnableAutoConfiguration
-	public static class EmptyConfiguration {
-
-	}
-
-	@Configuration
-	@EnableAutoConfiguration
-	public static class ConfigurationWithRegistration {
-
-		@Bean
-		public Registration getRegistration() {
-			return new Registration() {
-				@Override
-				public String getServiceId() {
-					return "from-registration";
-				}
-
-				@Override
-				public String getHost() {
-					return null;
-				}
-
-				@Override
-				public int getPort() {
-					return 0;
-				}
-
-				@Override
-				public boolean isSecure() {
-					return false;
-				}
-
-				@Override
-				public URI getUri() {
-					return null;
-				}
-
-				@Override
-				public Map<String, String> getMetadata() {
-					return null;
-				}
-			};
-		}
-
-	}
-
-	@Configuration
-	@EnableAutoConfiguration
-	public static class ConfigurationWithCustomLocator {
-
-		static EndpointLocator locator = Mockito.mock(EndpointLocator.class);
-
-		@Bean
-		public EndpointLocator getEndpointLocator() {
-			return locator;
-		}
-
-	}
-
-	public static final byte[] ADDRESS1234 = { 1, 2, 3, 4 };
-
-	Environment environment = new MockEnvironment();
 
 	@Test
 	public void portDefaultsTo8080() throws UnknownHostException {
@@ -234,6 +175,66 @@ public class DefaultEndpointLocatorConfigurationTest {
 		Mockito.when(mocked.findFirstNonLoopbackAddress())
 				.thenReturn(InetAddress.getByAddress(address));
 		return mocked;
+	}
+
+	@Configuration
+	@EnableAutoConfiguration
+	public static class EmptyConfiguration {
+
+	}
+
+	@Configuration
+	@EnableAutoConfiguration
+	public static class ConfigurationWithRegistration {
+
+		@Bean
+		public Registration getRegistration() {
+			return new Registration() {
+				@Override
+				public String getServiceId() {
+					return "from-registration";
+				}
+
+				@Override
+				public String getHost() {
+					return null;
+				}
+
+				@Override
+				public int getPort() {
+					return 0;
+				}
+
+				@Override
+				public boolean isSecure() {
+					return false;
+				}
+
+				@Override
+				public URI getUri() {
+					return null;
+				}
+
+				@Override
+				public Map<String, String> getMetadata() {
+					return null;
+				}
+			};
+		}
+
+	}
+
+	@Configuration
+	@EnableAutoConfiguration
+	public static class ConfigurationWithCustomLocator {
+
+		static EndpointLocator locator = Mockito.mock(EndpointLocator.class);
+
+		@Bean
+		public EndpointLocator getEndpointLocator() {
+			return locator;
+		}
+
 	}
 
 }

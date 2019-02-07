@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
@@ -74,7 +75,7 @@ public class TraceWebAspect {
 
 	@Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
 	private void anyRestControllerAnnotated() {
-	}// NOSONAR
+	} // NOSONAR
 
 	@Pointcut("@within(org.springframework.stereotype.Controller)")
 	private void anyControllerAnnotated() {

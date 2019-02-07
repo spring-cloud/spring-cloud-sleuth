@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-
 package org.springframework.cloud.sleuth.benchmarks.app.webflux;
 
-import brave.Tracer;
+import java.util.regex.Pattern;
+
 import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Mono;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -34,23 +37,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.util.SocketUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
-
-import java.util.regex.Pattern;
-
 
 /**
  * @author alvin
  */
 @SpringBootApplication
 @RestController
-public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<ReactiveWebServerInitializedEvent> {
+public class SleuthBenchmarkingSpringWebFluxApp
+		implements ApplicationListener<ReactiveWebServerInitializedEvent> {
 
-	private static final Log log = LogFactory.getLog(SleuthBenchmarkingSpringWebFluxApp.class);
+	private static final Log log = LogFactory
+			.getLog(SleuthBenchmarkingSpringWebFluxApp.class);
 
 	public int port;
+
+	public static void main(String... args) {
+		new SpringApplicationBuilder(SleuthBenchmarkingSpringWebFluxApp.class)
+				.web(WebApplicationType.REACTIVE).application().run(args);
+	}
 
 	@RequestMapping("/foo")
 	public Mono<String> foo() {
@@ -67,18 +71,12 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 		return () -> Pattern.compile("");
 	}
 
-
 	@Bean
-	NettyReactiveWebServerFactory nettyReactiveWebServerFactory(@Value("${server.port:0}") int serverPort) {
+	NettyReactiveWebServerFactory nettyReactiveWebServerFactory(
+			@Value("${server.port:0}") int serverPort) {
 		log.info("Starting container at port [" + serverPort + "]");
-		return new NettyReactiveWebServerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
-	}
-
-	public static void main(String... args) {
-		new SpringApplicationBuilder(SleuthBenchmarkingSpringWebFluxApp.class)
-				.web(WebApplicationType.REACTIVE)
-				.application()
-				.run(args);
+		return new NettyReactiveWebServerFactory(
+				serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
 	}
 
 	@Bean
@@ -86,11 +84,9 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 		return Reporter.NOOP;
 	}
 
-
-
 	@Override
 	public void onApplicationEvent(ReactiveWebServerInitializedEvent event) {
 		this.port = event.getWebServer().getPort();
 	}
-}
 
+}

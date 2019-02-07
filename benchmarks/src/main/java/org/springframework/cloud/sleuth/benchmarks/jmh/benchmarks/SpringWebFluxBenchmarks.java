@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
@@ -41,15 +45,13 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.benchmarks.app.webflux.SleuthBenchmarkingSpringWebFluxApp;
 import org.springframework.context.ConfigurableApplicationContext;
-import zipkin2.reporter.Reporter;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Measurement(iterations = 5, time = 1)
 @Warmup(iterations = 10, time = 1)
@@ -60,31 +62,34 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark)
 public class SpringWebFluxBenchmarks {
 
+	protected static TraceContext defaultTraceContext = TraceContext.newBuilder()
+			.traceIdHigh(333L).traceId(444L).spanId(3).sampled(true).build();
 	protected ConfigurableApplicationContext applicationContext;
 	protected SleuthBenchmarkingSpringWebFluxApp springWebFluxApp;
 	CloseableHttpClient client;
 	CloseableHttpClient tracedClient;
 	CloseableHttpClient unsampledClient;
+	private String baseUrl;
 
-	protected static TraceContext defaultTraceContext =
-			TraceContext.newBuilder().traceIdHigh(333L).traceId(444L).spanId(3).sampled(true).build();
+	public static void main(String[] args) throws RunnerException {
+		Options opt = new OptionsBuilder()
+				.include(".*" + SpringWebFluxBenchmarks.class.getSimpleName() + ".*")
+				.build();
+
+		new Runner(opt).run();
+	}
 
 	public String getBaseUrl() {
 		return baseUrl;
 	}
 
-	private String baseUrl;
-
 	protected CloseableHttpClient newClient(HttpTracing httpTracing) {
-		return TracingHttpClientBuilder.create(httpTracing)
-				.disableAutomaticRetries()
+		return TracingHttpClientBuilder.create(httpTracing).disableAutomaticRetries()
 				.build();
 	}
 
 	protected CloseableHttpClient newClient() {
-		return HttpClients.custom()
-				.disableAutomaticRetries()
-				.build();
+		return HttpClients.custom().disableAutomaticRetries().build();
 	}
 
 	protected void get(CloseableHttpClient client) throws Exception {
@@ -95,31 +100,27 @@ public class SpringWebFluxBenchmarks {
 		client.close();
 	}
 
-
 	@Setup
 	public void setup() {
 		ConfigurableApplicationContext context = initContext();
 		this.applicationContext = context;
-		this.springWebFluxApp = this.applicationContext.getBean(
-				SleuthBenchmarkingSpringWebFluxApp.class);
+		this.springWebFluxApp = this.applicationContext
+				.getBean(SleuthBenchmarkingSpringWebFluxApp.class);
 		baseUrl = "http://127.0.0.1:" + springWebFluxApp.port + "/foo";
 		client = newClient();
-		tracedClient = newClient(HttpTracing.create(
-				Tracing.newBuilder().spanReporter(Reporter.NOOP).build()
-		));
-		unsampledClient = newClient(HttpTracing.create(
-				Tracing.newBuilder().sampler(Sampler.NEVER_SAMPLE).spanReporter(Reporter.NOOP).build()
-		));
+		tracedClient = newClient(HttpTracing
+				.create(Tracing.newBuilder().spanReporter(Reporter.NOOP).build()));
+		unsampledClient = newClient(HttpTracing.create(Tracing.newBuilder()
+				.sampler(Sampler.NEVER_SAMPLE).spanReporter(Reporter.NOOP).build()));
 		postSetUp();
 	}
 
 	protected ConfigurableApplicationContext initContext() {
-		SpringApplication application = new SpringApplicationBuilder(SleuthBenchmarkingSpringWebFluxApp.class)
-				.web(WebApplicationType.REACTIVE)
-				.application();
+		SpringApplication application = new SpringApplicationBuilder(
+				SleuthBenchmarkingSpringWebFluxApp.class).web(WebApplicationType.REACTIVE)
+						.application();
 		customSpringApplication(application);
-		return application
-				.run(runArgs());
+		return application.run(runArgs());
 	}
 
 	protected void customSpringApplication(SpringApplication springApplication) {
@@ -129,13 +130,11 @@ public class SpringWebFluxBenchmarks {
 	protected void postSetUp() {
 	}
 
-
 	protected String[] runArgs() {
-		return new String[]{"--spring.jmx.enabled=false",
+		return new String[] { "--spring.jmx.enabled=false",
 				"--spring.application.name=defaultTraceContext",
-				"--spring.sleuth.enabled=true"};
+				"--spring.sleuth.enabled=true" };
 	}
-
 
 	@TearDown
 	public void clean() throws Exception {
@@ -146,7 +145,8 @@ public class SpringWebFluxBenchmarks {
 		try {
 
 			this.applicationContext.close();
-		} catch (Exception ig) {
+		}
+		catch (Exception ig) {
 
 		}
 	}
@@ -168,18 +168,10 @@ public class SpringWebFluxBenchmarks {
 
 	@Benchmark
 	public void tracedClient_get_resumeTrace() throws Exception {
-		try (CurrentTraceContext.Scope scope = Tracing.current().currentTraceContext().newScope(defaultTraceContext)) {
+		try (CurrentTraceContext.Scope scope = Tracing.current().currentTraceContext()
+				.newScope(defaultTraceContext)) {
 			get(tracedClient);
 		}
 	}
-
-	public static void main(String[] args) throws RunnerException {
-		Options opt = new OptionsBuilder()
-				.include(".*" + SpringWebFluxBenchmarks.class.getSimpleName() + ".*")
-				.build();
-
-		new Runner(opt).run();
-	}
-
 
 }

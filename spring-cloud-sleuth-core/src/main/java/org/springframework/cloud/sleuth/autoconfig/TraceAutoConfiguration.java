@@ -38,7 +38,6 @@ import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 
-import org.springframework.lang.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -49,6 +48,7 @@ import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -108,66 +108,6 @@ public class TraceAutoConfiguration {
 			builder.addFinishedSpanHandler(finishedSpanHandlerFactory);
 		}
 		return builder.build();
-	}
-
-	private static class CompositeReporter implements Reporter<zipkin2.Span> {
-
-		private static final Log log = LogFactory.getLog(CompositeReporter.class);
-
-		private final List<SpanAdjuster> spanAdjusters;
-
-		private final Reporter<zipkin2.Span> spanReporter;
-
-		private CompositeReporter(List<SpanAdjuster> spanAdjusters,
-				List<Reporter<Span>> spanReporters) {
-			this.spanAdjusters = spanAdjusters;
-			this.spanReporter = spanReporters.size() == 1 ? spanReporters.get(0)
-					: new ListReporter(spanReporters);
-		}
-
-		private static class ListReporter implements Reporter<zipkin2.Span> {
-
-			private final List<Reporter<Span>> spanReporters;
-
-			private ListReporter(List<Reporter<Span>> spanReporters) {
-				this.spanReporters = spanReporters;
-			}
-
-			@Override
-			public void report(Span span) {
-				for (Reporter<zipkin2.Span> spanReporter : this.spanReporters) {
-					try {
-						spanReporter.report(span);
-					}
-					catch (Exception ex) {
-						log.warn("Exception occurred while trying to report the span "
-								+ span, ex);
-					}
-				}
-			}
-
-			@Override
-			public String toString() {
-				return "ListReporter{" + "spanReporters=" + this.spanReporters + '}';
-			}
-
-		}
-
-		@Override
-		public void report(Span span) {
-			Span spanToAdjust = span;
-			for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
-				spanToAdjust = spanAdjuster.adjust(spanToAdjust);
-			}
-			this.spanReporter.report(spanToAdjust);
-		}
-
-		@Override
-		public String toString() {
-			return "CompositeReporter{" + "spanAdjusters=" + this.spanAdjusters
-					+ ", spanReporters=" + this.spanReporter + '}';
-		}
-
 	}
 
 	@Bean(name = TRACER_BEAN_NAME)
@@ -255,6 +195,66 @@ public class TraceAutoConfiguration {
 	// NOTE: stable bean name as might be used outside sleuth
 	CurrentSpanCustomizer spanCustomizer(Tracing tracing) {
 		return CurrentSpanCustomizer.create(tracing);
+	}
+
+	private static final class CompositeReporter implements Reporter<zipkin2.Span> {
+
+		private static final Log log = LogFactory.getLog(CompositeReporter.class);
+
+		private final List<SpanAdjuster> spanAdjusters;
+
+		private final Reporter<zipkin2.Span> spanReporter;
+
+		private CompositeReporter(List<SpanAdjuster> spanAdjusters,
+				List<Reporter<Span>> spanReporters) {
+			this.spanAdjusters = spanAdjusters;
+			this.spanReporter = spanReporters.size() == 1 ? spanReporters.get(0)
+					: new ListReporter(spanReporters);
+		}
+
+		@Override
+		public void report(Span span) {
+			Span spanToAdjust = span;
+			for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
+				spanToAdjust = spanAdjuster.adjust(spanToAdjust);
+			}
+			this.spanReporter.report(spanToAdjust);
+		}
+
+		@Override
+		public String toString() {
+			return "CompositeReporter{" + "spanAdjusters=" + this.spanAdjusters
+					+ ", spanReporters=" + this.spanReporter + '}';
+		}
+
+		private static final class ListReporter implements Reporter<zipkin2.Span> {
+
+			private final List<Reporter<Span>> spanReporters;
+
+			private ListReporter(List<Reporter<Span>> spanReporters) {
+				this.spanReporters = spanReporters;
+			}
+
+			@Override
+			public void report(Span span) {
+				for (Reporter<zipkin2.Span> spanReporter : this.spanReporters) {
+					try {
+						spanReporter.report(span);
+					}
+					catch (Exception ex) {
+						log.warn("Exception occurred while trying to report the span "
+								+ span, ex);
+					}
+				}
+			}
+
+			@Override
+			public String toString() {
+				return "ListReporter{" + "spanReporters=" + this.spanReporters + '}';
+			}
+
+		}
+
 	}
 
 }

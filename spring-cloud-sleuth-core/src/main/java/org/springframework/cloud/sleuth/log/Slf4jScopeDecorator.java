@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import brave.propagation.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
 import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 import org.springframework.util.StringUtils;
 
@@ -63,6 +64,15 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			SleuthSlf4jProperties sleuthSlf4jProperties) {
 		this.sleuthProperties = sleuthProperties;
 		this.sleuthSlf4jProperties = sleuthSlf4jProperties;
+	}
+
+	static void replace(String key, @Nullable String value) {
+		if (value != null) {
+			MDC.put(key, value);
+		}
+		else {
+			MDC.remove(key);
+		}
 	}
 
 	@Override
@@ -178,15 +188,6 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		}
 		if (log.isTraceEnabled()) {
 			log.trace(text, span);
-		}
-	}
-
-	static void replace(String key, @Nullable String value) {
-		if (value != null) {
-			MDC.put(key, value);
-		}
-		else {
-			MDC.remove(key);
 		}
 	}
 

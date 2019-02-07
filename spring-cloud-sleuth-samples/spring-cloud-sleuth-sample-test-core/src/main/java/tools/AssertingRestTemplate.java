@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package tools;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.net.URI;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -31,7 +33,7 @@ import org.springframework.web.client.RestTemplate;
 /**
  *
  * RestTemplate that logs erroneous responses and throws AssertionsError on any connection
- * issues
+ * issues.
  *
  * @author Marcin Grzejszczak
  */

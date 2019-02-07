@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.Map;
 import brave.propagation.Propagation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.LinkedMultiValueMap;
@@ -121,8 +122,9 @@ enum MessageHeaderPropagation
 			Object nativeHeaders = accessor
 					.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 			if (nativeHeaders == null) {
+				nativeHeaders = new LinkedMultiValueMap<>();
 				accessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
-						nativeHeaders = new LinkedMultiValueMap<>());
+						nativeHeaders);
 			}
 			if (nativeHeaders instanceof Map<?, ?>) {
 				((Map) nativeHeaders).put(key, Collections.singletonList(value));

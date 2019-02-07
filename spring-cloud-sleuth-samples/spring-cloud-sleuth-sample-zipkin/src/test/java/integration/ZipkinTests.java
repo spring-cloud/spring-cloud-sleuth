@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package integration;
 
 import java.util.ArrayList;
@@ -28,14 +29,15 @@ import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
 import tools.SpanUtil;
 import zipkin2.Span;
 import zipkin2.codec.SpanBytesDecoder;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,13 +62,13 @@ public class ZipkinTests extends AbstractIntegrationTest {
 
 	private static final String APP_NAME = "testsleuthzipkin";
 
+	@Autowired
+	ZipkinProperties zipkinProperties;
+
 	@Value("${local.server.port}")
 	private int port = 3380;
 
 	private String sampleAppUrl = "http://localhost:" + this.port;
-
-	@Autowired
-	ZipkinProperties zipkinProperties;
 
 	@Test
 	public void should_propagate_spans_to_zipkin() throws Exception {
@@ -83,24 +85,6 @@ public class ZipkinTests extends AbstractIntegrationTest {
 
 	String getAppName() {
 		return APP_NAME;
-	}
-
-	@Configuration
-	public static class WaitUntilZipkinIsUpConfig {
-
-		@Bean
-		@Primary
-		ZipkinProperties testZipkinProperties() {
-			ZipkinProperties zipkinProperties = new ZipkinProperties();
-			zipkinProperties.setBaseUrl(zipkin.url("/").toString());
-			return zipkinProperties;
-		}
-
-		@Bean
-		Sampler sampler() {
-			return Sampler.ALWAYS_SAMPLE;
-		}
-
 	}
 
 	void spansSentToZipkin(MockWebServer zipkin, long traceId)
@@ -153,6 +137,24 @@ public class ZipkinTests extends AbstractIntegrationTest {
 
 	String getRequiredTagKey() {
 		return "random-sleep-millis";
+	}
+
+	@Configuration
+	public static class WaitUntilZipkinIsUpConfig {
+
+		@Bean
+		@Primary
+		ZipkinProperties testZipkinProperties() {
+			ZipkinProperties zipkinProperties = new ZipkinProperties();
+			zipkinProperties.setBaseUrl(zipkin.url("/").toString());
+			return zipkinProperties;
+		}
+
+		@Bean
+		Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
+
 	}
 
 }

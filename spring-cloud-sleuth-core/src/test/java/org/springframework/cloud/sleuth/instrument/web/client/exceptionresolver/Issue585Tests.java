@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client.exceptionresolver;
 
 import java.time.Instant;
+
 import javax.servlet.http.HttpServletRequest;
 
 import brave.Span;
@@ -27,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -114,7 +116,7 @@ class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 	@Autowired
 	private Tracing tracer;
 
-	@ExceptionHandler(value = { Exception.class })
+	@ExceptionHandler(Exception.class)
 	protected ResponseEntity<ExceptionResponse> handleDefaultError(Exception ex,
 			HttpServletRequest request) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse("ERR-01",

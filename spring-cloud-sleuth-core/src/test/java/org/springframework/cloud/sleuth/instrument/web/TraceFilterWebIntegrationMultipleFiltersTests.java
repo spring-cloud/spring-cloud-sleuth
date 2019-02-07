@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
+
 import javax.annotation.PreDestroy;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -32,6 +33,7 @@ import brave.Tracing;
 import brave.sampler.Sampler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -161,9 +163,9 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 
 	static class MyFilter extends GenericFilterBean {
 
-		AtomicReference<Span> span = new AtomicReference<>();
-
 		private final Tracing tracer;
+
+		AtomicReference<Span> span = new AtomicReference<>();
 
 		MyFilter(Tracing tracer) {
 			this.tracer = tracer;

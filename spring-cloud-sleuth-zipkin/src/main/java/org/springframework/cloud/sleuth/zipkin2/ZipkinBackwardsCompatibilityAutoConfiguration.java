@@ -50,12 +50,12 @@ import org.springframework.util.Assert;
  * multiple tracing systems on the classpath.
  *
  * Needs to be auto-configured before {@link ZipkinAutoConfiguration} in order to create a
- * {@link Reporter<Span> span reporter} if needed.
+ * {@link Reporter span reporter} if needed.
  *
  * @author Tim Ysewyn
  * @since 2.1.0
  * @see ZipkinAutoConfiguration
- * @deprecated
+ * @deprecated left for backward compatibility
  */
 @Configuration
 @ConditionalOnProperty(value = { "spring.sleuth.enabled",
@@ -67,6 +67,12 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 	/**
 	 * Reporter that is depending on a {@link Sender} bean which is created in another
 	 * auto-configuration than {@link ZipkinAutoConfiguration}.
+	 * @param reporterMetrics metrics
+	 * @param zipkin zipkin properties
+	 * @param spanBytesEncoder encoder
+	 * @param beanFactory Spring's Bean Factory
+	 * @return span reporter
+	 * @deprecated left for backwards compatibility
 	 */
 	@Bean
 	@Conditional(BackwardsCompatibilityCondition.class)
@@ -84,8 +90,10 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 	}
 
 	/**
-	 * Only used for creating a reporter bean with the method above
-	 * @deprecated
+	 * Only used for creating a reporter bean with the method above.
+	 * @param zipkinProperties zipkin properties
+	 * @return bytes encoder
+	 * @deprecated left for backwards compatibility
 	 */
 	@Bean
 	@ConditionalOnMissingBean
@@ -97,7 +105,8 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 	/**
 	 * Deprecated because this is moved to {@link TraceAutoConfiguration}. Left for
 	 * backwards compatibility reasons.
-	 * @deprecated
+	 * @return reporter metrics
+	 * @deprecated left for backwards compatibility
 	 */
 	@Bean
 	@ConditionalOnMissingBean

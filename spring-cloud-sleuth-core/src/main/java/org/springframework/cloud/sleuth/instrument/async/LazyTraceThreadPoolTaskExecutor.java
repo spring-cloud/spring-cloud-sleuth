@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.concurrent.ListenableFuture;
 
 /**
- * Trace representation of {@link ThreadPoolTaskExecutor}
+ * Trace representation of {@link ThreadPoolTaskExecutor}.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.10
@@ -106,11 +106,6 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	@Override
 	public void setThreadFactory(ThreadFactory threadFactory) {
 		this.delegate.setThreadFactory(threadFactory);
-	}
-
-	@Override
-	public void setThreadNamePrefix(String threadNamePrefix) {
-		this.delegate.setThreadNamePrefix(threadNamePrefix);
 	}
 
 	@Override
@@ -185,8 +180,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setThreadPriority(int threadPriority) {
-		this.delegate.setThreadPriority(threadPriority);
+	public void setThreadNamePrefix(String threadNamePrefix) {
+		this.delegate.setThreadNamePrefix(threadNamePrefix);
 	}
 
 	@Override
@@ -195,8 +190,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setDaemon(boolean daemon) {
-		this.delegate.setDaemon(daemon);
+	public void setThreadPriority(int threadPriority) {
+		this.delegate.setThreadPriority(threadPriority);
 	}
 
 	@Override
@@ -205,13 +200,13 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setThreadGroupName(String name) {
-		this.delegate.setThreadGroupName(name);
+	public void setDaemon(boolean daemon) {
+		this.delegate.setDaemon(daemon);
 	}
 
 	@Override
-	public void setThreadGroup(ThreadGroup threadGroup) {
-		this.delegate.setThreadGroup(threadGroup);
+	public void setThreadGroupName(String name) {
+		this.delegate.setThreadGroupName(name);
 	}
 
 	@Override
@@ -220,13 +215,13 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public Thread createThread(Runnable runnable) {
-		return this.delegate.createThread(runnable);
+	public void setThreadGroup(ThreadGroup threadGroup) {
+		this.delegate.setThreadGroup(threadGroup);
 	}
 
 	@Override
-	public void setCorePoolSize(int corePoolSize) {
-		this.delegate.setCorePoolSize(corePoolSize);
+	public Thread createThread(Runnable runnable) {
+		return this.delegate.createThread(runnable);
 	}
 
 	@Override
@@ -235,8 +230,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setMaxPoolSize(int maxPoolSize) {
-		this.delegate.setMaxPoolSize(maxPoolSize);
+	public void setCorePoolSize(int corePoolSize) {
+		this.delegate.setCorePoolSize(corePoolSize);
 	}
 
 	@Override
@@ -245,13 +240,18 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setKeepAliveSeconds(int keepAliveSeconds) {
-		this.delegate.setKeepAliveSeconds(keepAliveSeconds);
+	public void setMaxPoolSize(int maxPoolSize) {
+		this.delegate.setMaxPoolSize(maxPoolSize);
 	}
 
 	@Override
 	public int getKeepAliveSeconds() {
 		return this.delegate.getKeepAliveSeconds();
+	}
+
+	@Override
+	public void setKeepAliveSeconds(int keepAliveSeconds) {
+		this.delegate.setKeepAliveSeconds(keepAliveSeconds);
 	}
 
 	@Override

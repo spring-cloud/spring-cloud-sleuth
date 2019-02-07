@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package tools;
 
 import java.lang.invoke.MethodHandles;
@@ -21,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
+
 import org.springframework.web.client.RestTemplate;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -39,6 +41,11 @@ public abstract class AbstractIntegrationTest {
 
 	protected final RestTemplate restTemplate = new AssertingRestTemplate();
 
+	public static ConditionFactory await() {
+		return Awaitility.await().pollInterval(POLL_INTERVAL, SECONDS).atMost(TIMEOUT,
+				SECONDS);
+	}
+
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint,
 			long traceId) {
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, traceId);
@@ -47,11 +54,6 @@ public abstract class AbstractIntegrationTest {
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint,
 			long traceId, Long spanId) {
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, spanId);
-	}
-
-	public static ConditionFactory await() {
-		return Awaitility.await().pollInterval(POLL_INTERVAL, SECONDS).atMost(TIMEOUT,
-				SECONDS);
 	}
 
 }

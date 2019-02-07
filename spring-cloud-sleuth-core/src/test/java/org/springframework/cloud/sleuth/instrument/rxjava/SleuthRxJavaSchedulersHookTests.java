@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,15 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -46,6 +47,8 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Shivang Shah
  */
 public class SleuthRxJavaSchedulersHookTests {
+
+	private static StringBuilder caller;
 
 	List<String> threadsToIgnore = new ArrayList<>();
 
@@ -63,8 +66,6 @@ public class SleuthRxJavaSchedulersHookTests {
 		this.tracing.close();
 		this.reporter.clear();
 	}
-
-	private static StringBuilder caller;
 
 	@Before
 	@After

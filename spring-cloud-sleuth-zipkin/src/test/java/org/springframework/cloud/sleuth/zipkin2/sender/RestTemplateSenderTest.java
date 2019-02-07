@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,19 @@
 package org.springframework.cloud.sleuth.zipkin2.sender;
 
 import java.util.stream.Stream;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.web.client.RestTemplate;
 import zipkin2.Call;
 import zipkin2.Endpoint;
 import zipkin2.Span;
 import zipkin2.codec.Encoding;
 import zipkin2.codec.SpanBytesEncoder;
+
+import org.springframework.web.client.RestTemplate;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,7 +54,10 @@ public class RestTemplateSenderTest {
 	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint,
 			JSON_V2);
 
-	/** Tests that json is not manipulated as a side-effect of using rest template. */
+	/**
+	 * Tests that json is not manipulated as a side-effect of using rest template.
+	 * @throws Exception when span sending or receiving fails
+	 */
 	@Test
 	public void jsonIsNormal() throws Exception {
 		this.server.enqueue(new MockResponse());

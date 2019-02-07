@@ -14,8 +14,8 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xmlns="http://maven.apache.org/POM/4.0.0"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -249,7 +249,8 @@
 											<mainClass>org.openjdk.jmh.Main</mainClass>
 										</transformer>
 									</transformers>
-									<createDependencyReducedPom>false</createDependencyReducedPom>
+									<createDependencyReducedPom>false
+									</createDependencyReducedPom>
 								</configuration>
 							</execution>
 						</executions>
@@ -281,7 +282,9 @@
 									<goal>start</goal>
 								</goals>
 								<configuration>
-									<jvmArguments>"-Dserver.port=9875" "-Dspring.sleuth.enabled=false"</jvmArguments>
+									<jvmArguments>"-Dserver.port=9875"
+										"-Dspring.sleuth.enabled=false"
+									</jvmArguments>
 									<jmxPort>8875</jmxPort>
 									<fork>true</fork>
 								</configuration>
@@ -344,7 +347,8 @@
 							<suppressJMeterOutput>false</suppressJMeterOutput>
 							<ignoreResultFailures>true</ignoreResultFailures>
 							<propertiesJMeter>
-								<jmeter.save.saveservice.thread_counts>true</jmeter.save.saveservice.thread_counts>
+								<jmeter.save.saveservice.thread_counts>true
+								</jmeter.save.saveservice.thread_counts>
 								<sampleresult.useNanoTime>true</sampleresult.useNanoTime>
 							</propertiesJMeter>
 							<jmeterPlugins>
@@ -424,7 +428,9 @@
 						<artifactId>jmeter-analysis-maven-plugin</artifactId>
 						<version>1.0.6</version>
 						<configuration>
-							<targetDirectory>${project.build.directory}/jmeter/results/analysis/</targetDirectory>
+							<targetDirectory>
+								${project.build.directory}/jmeter/results/analysis/
+							</targetDirectory>
 						</configuration>
 						<executions>
 							<execution>
@@ -434,7 +440,9 @@
 									<goal>analyze</goal>
 								</goals>
 								<configuration>
-									<source>${project.build.directory}/jmeter/results/AsyncHttpBenchmarks.jtl</source>
+									<source>
+										${project.build.directory}/jmeter/results/AsyncHttpBenchmarks.jtl
+									</source>
 								</configuration>
 							</execution>
 							<execution>
@@ -444,7 +452,9 @@
 									<goal>analyze</goal>
 								</goals>
 								<configuration>
-									<source>${project.build.directory}/jmeter/results/AsyncMethodBenchmarks.jtl</source>
+									<source>
+										${project.build.directory}/jmeter/results/AsyncMethodBenchmarks.jtl
+									</source>
 								</configuration>
 							</execution>
 							<execution>
@@ -454,7 +464,9 @@
 									<goal>analyze</goal>
 								</goals>
 								<configuration>
-									<source>${project.build.directory}/jmeter/results/SyncHttpBenchmarks.jtl</source>
+									<source>
+										${project.build.directory}/jmeter/results/SyncHttpBenchmarks.jtl
+									</source>
 								</configuration>
 							</execution>
 							<execution>
@@ -464,7 +476,9 @@
 									<goal>analyze</goal>
 								</goals>
 								<configuration>
-									<source>${project.build.directory}/jmeter/results/*.jtl</source>
+									<source>
+										${project.build.directory}/jmeter/results/*.jtl
+									</source>
 								</configuration>
 							</execution>
 						</executions>
@@ -481,25 +495,34 @@
 								</goals>
 								<phase>verify</phase>
 								<configuration>
-									<inputFile>${project.build.directory}/jmeter/results/AsyncHttpBenchmarks.jtl</inputFile>
+									<inputFile>
+										${project.build.directory}/jmeter/results/AsyncHttpBenchmarks.jtl
+									</inputFile>
 									<graphs>
 										<graph>
 											<pluginType>ResponseTimesOverTime</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/AsyncHttpBenchmarks-ResponseTimesOverTime.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/AsyncHttpBenchmarks-ResponseTimesOverTime.png
+											</outputFile>
 										</graph>
 										<graph>
-											<pluginType>ResponseTimesPercentiles</pluginType>
+											<pluginType>ResponseTimesPercentiles
+											</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/AsyncHttpBenchmarks-ResponseTimesPercentiles.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/AsyncHttpBenchmarks-ResponseTimesPercentiles.png
+											</outputFile>
 										</graph>
 										<graph>
 											<pluginType>LatenciesOverTime</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/AsyncHttpBenchmarks-LatenciesOverTime.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/AsyncHttpBenchmarks-LatenciesOverTime.png
+											</outputFile>
 										</graph>
 									</graphs>
 								</configuration>
@@ -511,25 +534,34 @@
 								</goals>
 								<phase>verify</phase>
 								<configuration>
-									<inputFile>${project.build.directory}/jmeter/results/AsyncMethodBenchmarks.jtl</inputFile>
+									<inputFile>
+										${project.build.directory}/jmeter/results/AsyncMethodBenchmarks.jtl
+									</inputFile>
 									<graphs>
 										<graph>
 											<pluginType>ResponseTimesOverTime</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/AsyncMethodBenchmarks-ResponseTimesOverTime.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/AsyncMethodBenchmarks-ResponseTimesOverTime.png
+											</outputFile>
 										</graph>
 										<graph>
-											<pluginType>ResponseTimesPercentiles</pluginType>
+											<pluginType>ResponseTimesPercentiles
+											</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/AsyncMethodBenchmarks-ResponseTimesPercentiles.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/AsyncMethodBenchmarks-ResponseTimesPercentiles.png
+											</outputFile>
 										</graph>
 										<graph>
 											<pluginType>LatenciesOverTime</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/AsyncMethodBenchmarks-LatenciesOverTime.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/AsyncMethodBenchmarks-LatenciesOverTime.png
+											</outputFile>
 										</graph>
 									</graphs>
 								</configuration>
@@ -541,25 +573,34 @@
 								</goals>
 								<phase>verify</phase>
 								<configuration>
-									<inputFile>${project.build.directory}/jmeter/results/SyncHttpBenchmarks.jtl</inputFile>
+									<inputFile>
+										${project.build.directory}/jmeter/results/SyncHttpBenchmarks.jtl
+									</inputFile>
 									<graphs>
 										<graph>
 											<pluginType>ResponseTimesOverTime</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/SyncHttpBenchmarks-ResponseTimesOverTime.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/SyncHttpBenchmarks-ResponseTimesOverTime.png
+											</outputFile>
 										</graph>
 										<graph>
-											<pluginType>ResponseTimesPercentiles</pluginType>
+											<pluginType>ResponseTimesPercentiles
+											</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/SyncHttpBenchmarks-ResponseTimesPercentiles.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/SyncHttpBenchmarks-ResponseTimesPercentiles.png
+											</outputFile>
 										</graph>
 										<graph>
 											<pluginType>LatenciesOverTime</pluginType>
 											<width>800</width>
 											<height>600</height>
-											<outputFile>${project.build.directory}/jmeter/results/SyncHttpBenchmarks-LatenciesOverTime.png</outputFile>
+											<outputFile>
+												${project.build.directory}/jmeter/results/SyncHttpBenchmarks-LatenciesOverTime.png
+											</outputFile>
 										</graph>
 									</graphs>
 								</configuration>

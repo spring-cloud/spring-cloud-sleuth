@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import brave.sampler.Sampler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
@@ -50,11 +51,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @TestPropertySource(properties = { "spring.application.name=multiplehopsintegrationtests",
 		"spring.sleuth.http.legacy.enabled=true" })
-@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("baggage")
 public class MultipleHopsIntegrationTests {
 

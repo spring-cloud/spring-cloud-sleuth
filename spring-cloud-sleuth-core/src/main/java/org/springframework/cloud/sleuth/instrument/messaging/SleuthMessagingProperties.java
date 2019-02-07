@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Properties for messaging
+ * Properties for messaging.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
@@ -48,7 +48,7 @@ public class SleuthMessagingProperties {
 	}
 
 	/**
-	 * Properties for Spring Integration
+	 * Properties for Spring Integration.
 	 *
 	 * @author Marcin Grzejszczak
 	 */
@@ -56,7 +56,7 @@ public class SleuthMessagingProperties {
 
 		/**
 		 * An array of patterns against which channel names will be matched.
-		 * @see org.springframework.integration.config.GlobalChannelInterceptor#patterns().
+		 * @see org.springframework.integration.config.GlobalChannelInterceptor#patterns()
 		 * Defaults to any channel name not matching the Hystrix Stream channel name.
 		 */
 		private String[] patterns = new String[] { "!hystrixStreamOutput*", "*" };
@@ -145,6 +145,9 @@ public class SleuthMessagingProperties {
 
 	}
 
+	/**
+	 * RabbitMQ configuration.
+	 */
 	public static class Rabbit {
 
 		private boolean enabled;
@@ -169,6 +172,9 @@ public class SleuthMessagingProperties {
 
 	}
 
+	/**
+	 * Kafka configuration.
+	 */
 	public static class Kafka {
 
 		private boolean enabled;
@@ -193,6 +199,9 @@ public class SleuthMessagingProperties {
 
 	}
 
+	/**
+	 * JMS configuration.
+	 */
 	public static class Jms {
 
 		private boolean enabled;

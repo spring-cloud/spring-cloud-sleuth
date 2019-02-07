@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -76,7 +77,7 @@ public class Issue410Tests {
 	RestTemplate restTemplate;
 
 	/**
-	 * Related to issue #445
+	 * Related to issue #445.
 	 */
 	@Autowired
 	Application.MyService executorService;
@@ -126,7 +127,7 @@ public class Issue410Tests {
 	}
 
 	/**
-	 * Related to issue #423
+	 * Related to issue #423.
 	 */
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_executor() {
@@ -151,7 +152,7 @@ public class Issue410Tests {
 	}
 
 	/**
-	 * Related to issue #423
+	 * Related to issue #423.
 	 */
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_task_scheduler() {
@@ -209,8 +210,6 @@ class AsyncTask {
 
 	private static final Log log = LogFactory.getLog(AsyncTask.class);
 
-	private AtomicReference<Span> span = new AtomicReference<>();
-
 	@Autowired
 	Tracer tracer;
 
@@ -224,6 +223,8 @@ class AsyncTask {
 
 	@Autowired
 	BeanFactory beanFactory;
+
+	private AtomicReference<Span> span = new AtomicReference<>();
 
 	@Async("poolTaskExecutor")
 	public void runWithPool() {
@@ -335,7 +336,8 @@ class Application {
 	}
 
 	/**
-	 * Related to issue #445
+	 * Related to issue #445.
+	 * @return service bean
 	 */
 	@Bean
 	public MyService executorService() {

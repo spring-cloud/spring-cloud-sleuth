@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
@@ -55,9 +56,17 @@ import org.springframework.util.ClassUtils;
  * This implementation uses {@link ThreadLocalSpan} to propagate context between
  * callbacks. This is an alternative to {@code ThreadStatePropagationChannelInterceptor}
  * which is less sensitive to message manipulation by other interceptors.
+ *
+ * @author Marcin Grzejszczak
  */
 public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		implements ExecutorChannelInterceptor {
+
+	/**
+	 * Name of the class in Spring Cloud Stream that is a direct channel.
+	 */
+	public static final String STREAM_DIRECT_CHANNEL = "org.springframework."
+			+ "cloud.stream.messaging.DirectWithAttributesChannel";
 
 	private static final Log log = LogFactory.getLog(TracingChannelInterceptor.class);
 
@@ -80,8 +89,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 * "http.route".
 	 */
 	private static final String REMOTE_SERVICE_NAME = "broker";
-
-	public static final String STREAM_DIRECT_CHANNEL = "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel";
 
 	final Tracing tracing;
 
@@ -134,6 +141,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 * <p>
 	 * This creates a child from identifiers extracted from the message headers, or a new
 	 * span if one couldn't be extracted.
+	 * @param message message to use for span creation
+	 * @return span to be created
 	 */
 	public Span nextSpan(Message<?> message) {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
@@ -329,7 +338,10 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	/**
-	 * When an upstream context was not present, lookup keys are unlikely added
+	 * When an upstream context was not present, lookup keys are unlikely added.
+	 * @param message a message to append tags to
+	 * @param result span to customize
+	 * @param channel channel to which a message was sent
 	 */
 	void addTags(Message<?> message, SpanCustomizer result, MessageChannel channel) {
 		// TODO topic etc
@@ -360,12 +372,14 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	void finishSpan(Exception error) {
 		Span span = this.threadLocalSpan.remove();
-		if (span == null || span.isNoop())
+		if (span == null || span.isNoop()) {
 			return;
+		}
 		if (error != null) { // an error occurred, adding error to span
 			String message = error.getMessage();
-			if (message == null)
+			if (message == null) {
 				message = error.getClass().getSimpleName();
+			}
 			span.tag("error", message);
 		}
 		span.finish();

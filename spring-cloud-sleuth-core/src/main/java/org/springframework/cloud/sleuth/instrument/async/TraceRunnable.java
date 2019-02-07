@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import brave.ScopedSpan;
 import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.TraceContext;
+
 import org.springframework.cloud.sleuth.SpanNamer;
 
 /**
@@ -33,7 +34,8 @@ import org.springframework.cloud.sleuth.SpanNamer;
 public class TraceRunnable implements Runnable {
 
 	/**
-	 * Since we don't know the exact operation name we provide a default name for the Span
+	 * Since we don't know the exact operation name we provide a default name for the
+	 * Span.
 	 */
 	private static final String DEFAULT_SPAN_NAME = "async";
 

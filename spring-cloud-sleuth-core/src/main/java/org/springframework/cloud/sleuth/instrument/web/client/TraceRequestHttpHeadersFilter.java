@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import brave.Span;
@@ -30,16 +31,16 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
 
-class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
+final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 	private static final Log log = LogFactory.getLog(TraceRequestHttpHeadersFilter.class);
 
-	static HttpHeadersFilter create(HttpTracing httpTracing) {
-		return new TraceRequestHttpHeadersFilter(httpTracing);
-	}
-
 	private TraceRequestHttpHeadersFilter(HttpTracing httpTracing) {
 		super(httpTracing);
+	}
+
+	static HttpHeadersFilter create(HttpTracing httpTracing) {
+		return new TraceRequestHttpHeadersFilter(httpTracing);
 	}
 
 	@Override
@@ -68,17 +69,17 @@ class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 }
 
-class TraceResponseHttpHeadersFilter extends AbstractHttpHeadersFilter {
+final class TraceResponseHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 	private static final Log log = LogFactory
 			.getLog(TraceResponseHttpHeadersFilter.class);
 
-	static HttpHeadersFilter create(HttpTracing httpTracing) {
-		return new TraceResponseHttpHeadersFilter(httpTracing);
-	}
-
 	private TraceResponseHttpHeadersFilter(HttpTracing httpTracing) {
 		super(httpTracing);
+	}
+
+	static HttpHeadersFilter create(HttpTracing httpTracing) {
+		return new TraceResponseHttpHeadersFilter(httpTracing);
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Feign client wrapper
+ * Feign client wrapper.
  *
  * @author Marcin Grzejsczak
  * @since 2.0.0
@@ -97,8 +97,8 @@ final class TracingFeignClient implements Client {
 		Response response = null;
 		Throwable error = null;
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			return response = this.delegate.execute(modifiedRequest(request, headers),
-					options);
+			response = this.delegate.execute(modifiedRequest(request, headers), options);
+			return response;
 		}
 		catch (IOException | RuntimeException | Error e) {
 			error = e;

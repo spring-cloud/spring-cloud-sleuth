@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,12 +36,6 @@ public class SpelTagValueExpressionResolverTests {
 		then(resolved).isEqualTo("hello world");
 	}
 
-	public static class MyObject {
-
-		public String name;
-
-	}
-
 	@Test
 	public void should_use_to_string_if_expression_is_not_analyzed_properly()
 			throws Exception {
@@ -50,6 +44,12 @@ public class SpelTagValueExpressionResolverTests {
 		String resolved = resolver.resolve("invalid() structure + 1", new Foo());
 
 		then(resolved).isEqualTo("BAR");
+	}
+
+	public static class MyObject {
+
+		public String name;
+
 	}
 
 }

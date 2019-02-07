@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,10 @@ public class SampleMessagingApplication {
 	@Autowired
 	private SampleRequestResponse transformer;
 
+	public static void main(String[] args) {
+		SpringApplication.run(SampleMessagingApplication.class, args);
+	}
+
 	@RequestMapping("/")
 	public String home() {
 		String msg = "Hello";
@@ -63,10 +67,6 @@ public class SampleMessagingApplication {
 	@Bean
 	public RestTemplate restTemplate() {
 		return new RestTemplate();
-	}
-
-	public static void main(String[] args) {
-		SpringApplication.run(SampleMessagingApplication.class, args);
 	}
 
 }

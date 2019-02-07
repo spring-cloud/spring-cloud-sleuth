@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,22 +21,22 @@ import java.util.concurrent.atomic.AtomicReference;
 import brave.Span;
 import brave.Tracing;
 import brave.sampler.Sampler;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.strategy.HystrixPlugins;
 import org.awaitility.Awaitility;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
+import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import com.netflix.hystrix.strategy.HystrixPlugins;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -103,9 +103,9 @@ public class HystrixAnnotationsIntegrationTests {
 
 	public static class HystrixCommandInvocationSpanCatcher {
 
-		AtomicReference<Span> spanCaughtFromHystrixThread;
-
 		private final Tracing tracing;
+
+		AtomicReference<Span> spanCaughtFromHystrixThread;
 
 		public HystrixCommandInvocationSpanCatcher(Tracing tracing) {
 			this.tracing = tracing;

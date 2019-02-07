@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,6 @@ import java.util.concurrent.TimeUnit;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
-
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
@@ -42,6 +33,15 @@ import com.netflix.hystrix.strategy.executionhook.HystrixCommandExecutionHook;
 import com.netflix.hystrix.strategy.metrics.HystrixMetricsPublisher;
 import com.netflix.hystrix.strategy.properties.HystrixPropertiesStrategy;
 import com.netflix.hystrix.strategy.properties.HystrixProperty;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+
+import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 

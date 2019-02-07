@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@ package org.springframework.cloud.sleuth.annotation;
 import java.util.List;
 
 import brave.sampler.Sampler;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -74,14 +75,6 @@ public class SleuthSpanCreatorAspectNegativeTests {
 
 	}
 
-	protected static class NotAnnotatedTestBean implements NotAnnotatedTestBeanInterface {
-
-		@Override
-		public void testMethod() {
-		}
-
-	}
-
 	protected interface TestBeanInterface {
 
 		@NewSpan
@@ -100,6 +93,14 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		void testMethod6(String test);
 
 		void testMethod7();
+
+	}
+
+	protected static class NotAnnotatedTestBean implements NotAnnotatedTestBeanInterface {
+
+		@Override
+		public void testMethod() {
+		}
 
 	}
 

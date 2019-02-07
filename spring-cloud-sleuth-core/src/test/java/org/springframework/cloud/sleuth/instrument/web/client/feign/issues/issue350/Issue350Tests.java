@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,19 @@ import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.Logger;
 import org.junit.Before;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -45,6 +46,17 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.assertj.core.api.BDDAssertions.then;
+
+@FeignClient(name = "myFeignClient", url = "localhost:9988")
+interface MyFeignClient {
+
+	@RequestMapping("/service/ok")
+	String ok();
+
+	@RequestMapping("/service/not-ok")
+	String exp();
+
+}
 
 /**
  * @author Marcin Grzejszczak
@@ -126,17 +138,6 @@ class ServiceTestController {
 	public String notOk() throws InterruptedException, ExecutionException {
 		return "Not OK";
 	}
-
-}
-
-@FeignClient(name = "myFeignClient", url = "localhost:9988")
-interface MyFeignClient {
-
-	@RequestMapping("/service/ok")
-	String ok();
-
-	@RequestMapping("/service/not-ok")
-	String exp();
 
 }
 

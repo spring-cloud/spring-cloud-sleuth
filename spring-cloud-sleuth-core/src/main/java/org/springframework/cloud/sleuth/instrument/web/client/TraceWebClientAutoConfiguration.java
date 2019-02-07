@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} enables span information propagation when using
- * {@link RestTemplate}
+ * {@link RestTemplate}.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
@@ -296,7 +296,7 @@ class LazyTracingClientHttpRequestInterceptor implements ClientHttpRequestInterc
 
 	private TracingClientHttpRequestInterceptor interceptor;
 
-	public LazyTracingClientHttpRequestInterceptor(BeanFactory beanFactory) {
+	LazyTracingClientHttpRequestInterceptor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 

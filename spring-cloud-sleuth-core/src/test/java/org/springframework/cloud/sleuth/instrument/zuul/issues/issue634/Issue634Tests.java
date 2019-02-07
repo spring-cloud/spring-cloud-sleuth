@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,26 +23,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.sampler.Sampler;
+import com.netflix.zuul.ZuulFilter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.netflix.zuul.ZuulFilter;
-
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestZuulApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+@SpringBootTest(classes = TestZuulApplication.class, webEnvironment = RANDOM_PORT, properties = {
 		"feign.hystrix.enabled=false", "zuul.routes.dp.path:/display/**",
 		"zuul.routes.dp.path.url: http://localhost:9987/unknown" })
 @DirtiesContext
@@ -100,9 +101,9 @@ class TestZuulApplication {
 
 class TraceCheckingSpanFilter extends ZuulFilter {
 
-	private final Tracing tracer;
-
 	final Map<Long, Integer> counter = new ConcurrentHashMap<>();
+
+	private final Tracing tracer;
 
 	TraceCheckingSpanFilter(Tracing tracer) {
 		this.tracer = tracer;

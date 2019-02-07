@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import org.junit.After;
 import org.junit.Test;
+import zipkin2.Span;
+
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.messaging.Message;
@@ -41,7 +43,6 @@ import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
-import zipkin2.Span;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.messaging.support.NativeMessageHeaderAccessor.NATIVE_HEADERS;
@@ -151,7 +152,7 @@ public class TracingChannelInterceptorTest {
 
 	/**
 	 * We have to inject headers on a polling receive as any future processor will come
-	 * later
+	 * later.
 	 */
 	@Test
 	public void pollingReceive_injectsConsumerSpan() {

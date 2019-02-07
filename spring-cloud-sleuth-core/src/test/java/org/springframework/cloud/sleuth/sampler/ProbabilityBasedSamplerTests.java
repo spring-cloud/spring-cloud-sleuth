@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public class ProbabilityBasedSamplerTests {
 
-	SamplerProperties samplerConfiguration = new SamplerProperties();
-
 	private static Random RANDOM = new Random();
+
+	SamplerProperties samplerConfiguration = new SamplerProperties();
 
 	@Test
 	public void should_pass_all_samples_when_config_has_1_probability() throws Exception {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
 
 import java.io.BufferedReader;
@@ -35,10 +36,15 @@ import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpr
 public class ProcessLauncherState {
 
 	private Process started;
+
 	private List<String> args;
+
 	private List<String> extraArgs;
+
 	private File home;
+
 	private String mainClass = SleuthBenchmarkingSpringApp.class.getName();
+
 	private int length;
 
 	public ProcessLauncherState(String dir, String... args) {
@@ -56,6 +62,21 @@ public class ProcessLauncherState {
 		}
 		this.length = args.length;
 		this.home = new File(dir);
+	}
+
+	protected static String output(InputStream inputStream, String marker)
+			throws IOException {
+		StringBuilder sb = new StringBuilder();
+		BufferedReader br = null;
+		br = new BufferedReader(new InputStreamReader(inputStream));
+		String line = null;
+		while ((line = br.readLine()) != null && !line.contains(marker)) {
+			sb.append(line + System.getProperty("line.separator"));
+		}
+		if (line != null) {
+			sb.append(line + System.getProperty("line.separator"));
+		}
+		return sb.toString();
 	}
 
 	public void setMainClass(String mainClass) {
@@ -101,7 +122,7 @@ public class ProcessLauncherState {
 	public void run() throws Exception {
 		List<String> args = new ArrayList<>(this.args);
 		args.add(args.size() - this.length, this.mainClass);
-		if (extraArgs!=null) {
+		if (extraArgs != null) {
 			args.addAll(extraArgs);
 		}
 		ProcessBuilder builder = new ProcessBuilder(args);
@@ -122,22 +143,8 @@ public class ProcessLauncherState {
 		System.out.println(output(started.getInputStream(), "Started"));
 	}
 
-	protected static String output(InputStream inputStream, String marker)
-			throws IOException {
-		StringBuilder sb = new StringBuilder();
-		BufferedReader br = null;
-		br = new BufferedReader(new InputStreamReader(inputStream));
-		String line = null;
-		while ((line = br.readLine()) != null && !line.contains(marker)) {
-			sb.append(line + System.getProperty("line.separator"));
-		}
-		if (line != null) {
-			sb.append(line + System.getProperty("line.separator"));
-		}
-		return sb.toString();
-	}
-
 	public File getHome() {
 		return home;
 	}
+
 }

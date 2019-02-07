@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import javax.annotation.PreDestroy;
 
 import brave.Span;
@@ -31,6 +32,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -53,6 +55,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Ported from
  * org.springframework.cloud.sleuth.instrument.messaging.TraceChannelInterceptorTest to
  * allow sleuth to decommission its implementation.
+ *
+ * @author Marcin Grzejszczak
  */
 @SpringBootTest(classes = ITTracingChannelInterceptor.App.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
@@ -141,6 +145,8 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 	@EnableAutoConfiguration
 	static class App {
 
+		ExecutorService service = Executors.newSingleThreadExecutor();
+
 		@Bean
 		List<zipkin2.Span> spans() {
 			return new ArrayList<>();
@@ -158,8 +164,6 @@ public class ITTracingChannelInterceptor implements MessageHandler {
 		Tracer tracer() {
 			return tracing().tracer();
 		}
-
-		ExecutorService service = Executors.newSingleThreadExecutor();
 
 		@Bean
 		ExecutorChannel executorChannel() {

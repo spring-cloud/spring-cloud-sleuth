@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
@@ -33,13 +35,14 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
-import zipkin2.reporter.Reporter;
+
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.NONE;
 
 /**
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class, webEnvironment = NONE)
 public class FinishedSpanHandlerTests {
 
 	@Autowired

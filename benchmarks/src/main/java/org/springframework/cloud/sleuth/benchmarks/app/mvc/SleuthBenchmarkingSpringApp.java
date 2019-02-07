@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
+
 import javax.annotation.PreDestroy;
 
 import brave.Span;
@@ -29,6 +30,7 @@ import brave.Tracer;
 import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -54,8 +56,8 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 @RestController
 @EnableAsync
-public class SleuthBenchmarkingSpringApp implements
-		ApplicationListener<ServletWebServerInitializedEvent> {
+public class SleuthBenchmarkingSpringApp
+		implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(SleuthBenchmarkingSpringApp.class);
 
@@ -63,8 +65,15 @@ public class SleuthBenchmarkingSpringApp implements
 
 	public int port;
 
-	@Autowired(required = false) Tracer tracer;
-	@Autowired AClass aClass;
+	@Autowired(required = false)
+	Tracer tracer;
+
+	@Autowired
+	AClass aClass;
+
+	public static void main(String... args) {
+		SpringApplication.run(SleuthBenchmarkingSpringApp.class, args);
+	}
 
 	@RequestMapping("/foo")
 	public String foo() {
@@ -100,9 +109,11 @@ public class SleuthBenchmarkingSpringApp implements
 	}
 
 	@Bean
-	public ServletWebServerFactory servletContainer(@Value("${server.port:0}") int serverPort) {
+	public ServletWebServerFactory servletContainer(
+			@Value("${server.port:0}") int serverPort) {
 		log.info("Starting container at port [" + serverPort + "]");
-		return new TomcatServletWebServerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
+		return new TomcatServletWebServerFactory(
+				serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
 	}
 
 	@PreDestroy
@@ -110,21 +121,26 @@ public class SleuthBenchmarkingSpringApp implements
 		this.pool.shutdownNow();
 	}
 
- 	@Bean Sampler alwaysSampler() {
+	@Bean
+	Sampler alwaysSampler() {
 		return Sampler.ALWAYS_SAMPLE;
 	}
 
-	@Bean AnotherClass anotherClass() {
+	@Bean
+	AnotherClass anotherClass() {
 		return new AnotherClass(this.tracer);
 	}
 
-	@Bean AClass aClass() {
+	@Bean
+	AClass aClass() {
 		return new AClass(this.tracer, anotherClass());
 	}
 
-	@Bean SkipPatternProvider patternProvider() {
+	@Bean
+	SkipPatternProvider patternProvider() {
 		return new SkipPatternProvider() {
-			@Override public Pattern skipPattern() {
+			@Override
+			public Pattern skipPattern() {
 				return Pattern.compile("");
 			}
 		};
@@ -134,12 +150,12 @@ public class SleuthBenchmarkingSpringApp implements
 		return this.pool;
 	}
 
-	public static void main(String... args) {
-		SpringApplication.run(SleuthBenchmarkingSpringApp.class, args);
-	}
 }
+
 class AClass {
+
 	private final Tracer tracer;
+
 	private final AnotherClass anotherClass;
 
 	AClass(Tracer tracer, AnotherClass anotherClass) {
@@ -151,7 +167,8 @@ class AClass {
 		Span manual = this.tracer.nextSpan().name("span-name");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(manual.start())) {
 			return this.anotherClass.continuedSpan();
-		} finally {
+		}
+		finally {
 			manual.finish();
 		}
 	}
@@ -160,9 +177,11 @@ class AClass {
 	public String newSpan() {
 		return this.anotherClass.continuedAnnotation("bar");
 	}
+
 }
 
 class AnotherClass {
+
 	private final Tracer tracer;
 
 	AnotherClass(Tracer tracer) {
@@ -182,4 +201,5 @@ class AnotherClass {
 		span.annotate("continuedspan.after");
 		return response;
 	}
+
 }

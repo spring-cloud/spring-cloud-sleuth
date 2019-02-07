@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.sampler.Sampler;
+import com.netflix.loadbalancer.Server;
+import com.netflix.loadbalancer.ServerList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.BDDAssertions;
@@ -33,12 +35,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.netflix.ribbon.StaticServerList;
@@ -46,6 +48,7 @@ import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.cloud.netflix.zuul.filters.discovery.DiscoveryClientRouteLocator;
+import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpEntity;
@@ -61,9 +64,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.ServerList;
-
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,9 +78,6 @@ public class TraceZuulIntegrationTests {
 	private static final Log log = LogFactory
 			.getLog(MethodHandles.lookup().lookupClass());
 
-	@Value("${local.server.port}")
-	private int port;
-
 	@Autowired
 	Tracing tracing;
 
@@ -89,6 +86,9 @@ public class TraceZuulIntegrationTests {
 
 	@Autowired
 	RestTemplate restTemplate;
+
+	@Value("${local.server.port}")
+	private int port;
 
 	@Before
 	@After
@@ -220,7 +220,7 @@ class SampleZuulProxyApplication {
 
 class MyRouteLocator extends DiscoveryClientRouteLocator {
 
-	public MyRouteLocator(String servletPath, DiscoveryClient discovery,
+	MyRouteLocator(String servletPath, DiscoveryClient discovery,
 			ZuulProperties properties) {
 		super(servletPath, discovery, properties);
 	}

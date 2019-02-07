@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@ package org.springframework.cloud.sleuth.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.annotation.PostConstruct;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
+
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.aop.Pointcut;
@@ -88,6 +90,34 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 	}
 
 	/**
+	 * Checks if a method is properly annotated with a given Sleuth annotation.
+	 */
+	private static class AnnotationMethodsResolver {
+
+		private final Class<? extends Annotation> annotationType;
+
+		AnnotationMethodsResolver(Class<? extends Annotation> annotationType) {
+			this.annotationType = annotationType;
+		}
+
+		boolean hasAnnotatedMethods(Class<?> clazz) {
+			final AtomicBoolean found = new AtomicBoolean(false);
+			ReflectionUtils.doWithMethods(clazz, (method -> {
+				if (found.get()) {
+					return;
+				}
+				Annotation annotation = AnnotationUtils.findAnnotation(method,
+						AnnotationMethodsResolver.this.annotationType);
+				if (annotation != null) {
+					found.set(true);
+				}
+			}));
+			return found.get();
+		}
+
+	}
+
+	/**
 	 * Checks if a class or a method is is annotated with Sleuth related annotations.
 	 */
 	private final class AnnotationClassOrMethodOrArgsPointcut
@@ -126,34 +156,6 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 		@Override
 		public boolean matches(Class<?> clazz) {
 			return super.matches(clazz) || this.methodResolver.hasAnnotatedMethods(clazz);
-		}
-
-	}
-
-	/**
-	 * Checks if a method is properly annotated with a given Sleuth annotation.
-	 */
-	private static class AnnotationMethodsResolver {
-
-		private final Class<? extends Annotation> annotationType;
-
-		AnnotationMethodsResolver(Class<? extends Annotation> annotationType) {
-			this.annotationType = annotationType;
-		}
-
-		boolean hasAnnotatedMethods(Class<?> clazz) {
-			final AtomicBoolean found = new AtomicBoolean(false);
-			ReflectionUtils.doWithMethods(clazz, (method -> {
-				if (found.get()) {
-					return;
-				}
-				Annotation annotation = AnnotationUtils.findAnnotation(method,
-						AnnotationMethodsResolver.this.annotationType);
-				if (annotation != null) {
-					found.set(true);
-				}
-			}));
-			return found.get();
 		}
 
 	}

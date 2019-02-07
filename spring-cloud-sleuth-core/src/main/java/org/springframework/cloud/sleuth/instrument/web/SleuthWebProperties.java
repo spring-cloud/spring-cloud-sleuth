@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ public class SleuthWebProperties {
 	/**
 	 * Default set of skip patterns.
 	 */
-	public static final String DEFAULT_SKIP_PATTERN = "/api-docs.*|/swagger.*|.*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream";
+	public static final String DEFAULT_SKIP_PATTERN = "/api-docs.*|/swagger.*|"
+			+ ".*\\.png|.*\\.css|.*\\.js|.*\\.html|/favicon.ico|/hystrix.stream";
 
 	/**
 	 * When true enables instrumentation for web applications.

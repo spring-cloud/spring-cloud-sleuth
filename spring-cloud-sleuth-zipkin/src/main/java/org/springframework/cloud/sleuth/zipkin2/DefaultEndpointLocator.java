@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import java.net.InetAddress;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import zipkin2.Endpoint;
+
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.client.serviceregistry.Registration;
@@ -29,10 +31,9 @@ import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
-import zipkin2.Endpoint;
 
 /**
- * {@link EndpointLocator} implementation that:
+ * {@link EndpointLocator} implementation that.
  *
  * <ul>
  * <li><b>serviceName</b> - from {@link ServerProperties} or {@link Registration}</li>

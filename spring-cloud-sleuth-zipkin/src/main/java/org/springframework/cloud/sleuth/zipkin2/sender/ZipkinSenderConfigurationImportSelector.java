@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,15 @@ package org.springframework.cloud.sleuth.zipkin2.sender;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.type.AnnotationMetadata;
 
+/**
+ * Import selector depending on the sender type.
+ *
+ * @author Adrian Cole
+ */
 public class ZipkinSenderConfigurationImportSelector implements ImportSelector {
 
 	static final Map<String, String> MAPPINGS;
@@ -36,11 +42,6 @@ public class ZipkinSenderConfigurationImportSelector implements ImportSelector {
 		MAPPINGS = Collections.unmodifiableMap(mappings);
 	}
 
-	@Override
-	public String[] selectImports(AnnotationMetadata importingClassMetadata) {
-		return MAPPINGS.values().toArray(new String[0]);
-	}
-
 	static String getType(String configurationClassName) {
 		for (Map.Entry<String, String> entry : MAPPINGS.entrySet()) {
 			if (entry.getValue().equals(configurationClassName)) {
@@ -49,6 +50,11 @@ public class ZipkinSenderConfigurationImportSelector implements ImportSelector {
 		}
 		throw new IllegalStateException(
 				"Unknown configuration class " + configurationClassName);
+	}
+
+	@Override
+	public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+		return MAPPINGS.values().toArray(new String[0]);
 	}
 
 }

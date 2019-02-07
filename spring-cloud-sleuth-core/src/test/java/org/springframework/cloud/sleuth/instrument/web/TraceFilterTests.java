@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
+
 import javax.servlet.Filter;
 
 import brave.ErrorParser;
@@ -32,6 +33,7 @@ import brave.servlet.TracingFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.http.HttpMethod;
@@ -43,8 +45,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
@@ -296,7 +298,7 @@ public class TraceFilterTests {
 			this.filter.doFilter(this.request, this.response, this.filterChain);
 		}
 		catch (RuntimeException e) {
-			assertEquals("Planned", e.getMessage());
+			assertThat(e.getMessage()).isEqualTo("Planned");
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
@@ -460,6 +462,7 @@ public class TraceFilterTests {
 	/**
 	 * Shows the expansion of {@link import
 	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
+	 * @param status http status
 	 */
 	public void verifyParentSpanHttpTags(HttpStatus status) {
 		then(this.reporter.getSpans().size()).isGreaterThan(0);

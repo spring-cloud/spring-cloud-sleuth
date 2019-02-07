@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -254,9 +254,9 @@ public class TraceWebFluxTests {
 	@RestController
 	static class Controller2 {
 
-		Span span;
-
 		private final Tracer tracer;
+
+		Span span;
 
 		Controller2(Tracer tracer) {
 			this.tracer = tracer;
@@ -339,6 +339,10 @@ class SleuthSpanCreatorAspectWebFlux {
 
 	private final ArrayListSpanReporter reporter;
 
+	int port;
+
+	private WebTestClient webClient;
+
 	SleuthSpanCreatorAspectWebFlux(Tracer tracer,
 			AccessLoggingHttpTraceRepository repository, ArrayListSpanReporter reporter) {
 		this.tracer = tracer;
@@ -346,17 +350,13 @@ class SleuthSpanCreatorAspectWebFlux {
 		this.reporter = reporter;
 	}
 
-	private WebTestClient webClient;
-
-	int port;
-
-	void setPort(int port) {
-		this.port = port;
-	}
-
 	private static String toHexString(Long value) {
 		BDDAssertions.then(value).isNotNull();
 		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
+	}
+
+	void setPort(int port) {
+		this.port = port;
 	}
 
 	public void setup() {

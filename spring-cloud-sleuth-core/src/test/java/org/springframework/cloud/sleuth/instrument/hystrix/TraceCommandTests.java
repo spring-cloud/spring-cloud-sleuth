@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.sampler.Sampler;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.sampler.Sampler;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
@@ -33,6 +33,7 @@ import com.netflix.hystrix.strategy.HystrixPlugins;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;

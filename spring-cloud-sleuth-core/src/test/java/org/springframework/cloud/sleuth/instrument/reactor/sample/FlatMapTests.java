@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import zipkin2.Span;
+
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -44,11 +50,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import zipkin2.Span;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
@@ -58,6 +59,9 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class FlatMapTests {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(FlatMapTests.class);
+
+	@Rule
+	public OutputCapture capture = new OutputCapture();
 
 	@BeforeClass
 	public static void setup() {
@@ -70,9 +74,6 @@ public class FlatMapTests {
 	public static void cleanup() {
 		Issue866Configuration.hook = null;
 	}
-
-	@Rule
-	public OutputCapture capture = new OutputCapture();
 
 	@Test
 	public void should_work_with_flat_maps() {

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -118,6 +119,10 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			this.beanFactory = beanFactory;
 		}
 
+		static TracingDoOnRequest create(BeanFactory beanFactory) {
+			return new TracingDoOnRequest(beanFactory);
+		}
+
 		private HttpTracing httpTracing() {
 			if (this.httpTracing == null) {
 				this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
@@ -144,10 +149,6 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 				this.handler = HttpClientHandler.create(httpTracing(), new HttpAdapter());
 			}
 			return this.handler;
-		}
-
-		static TracingDoOnRequest create(BeanFactory beanFactory) {
-			return new TracingDoOnRequest(beanFactory);
 		}
 
 		@Override

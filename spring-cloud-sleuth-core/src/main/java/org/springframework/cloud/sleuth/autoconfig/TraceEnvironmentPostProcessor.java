@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,8 +48,8 @@ public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		// traces in logs without having to configure it.
 		if (Boolean
 				.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
-			map.put("logging.pattern.level",
-					"%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]");
+			map.put("logging.pattern.level", "%5p [${spring.zipkin.service.name:"
+					+ "${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]");
 		}
 		addOrReplace(environment.getPropertySources(), map);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,9 +45,9 @@ import org.springframework.util.StringUtils;
 class ReactorSleuthMethodInvocationProcessor
 		extends AbstractSleuthMethodInvocationProcessor {
 
-	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor;
-
 	Tracing tracing;
+
+	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor;
 
 	Tracing tracing() {
 		if (this.tracing == null) {
@@ -98,6 +98,19 @@ class ReactorSleuthMethodInvocationProcessor
 			throw new IllegalArgumentException(
 					"Unexpected type of publisher: " + publisher.getClass());
 		}
+	}
+
+	private boolean isReactorReturnType(Class<?> returnType) {
+		return Flux.class.equals(returnType) || Mono.class.equals(returnType);
+	}
+
+	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor() {
+		if (this.nonReactorSleuthMethodInvocationProcessor == null) {
+			this.nonReactorSleuthMethodInvocationProcessor = new NonReactorSleuthMethodInvocationProcessor();
+			this.nonReactorSleuthMethodInvocationProcessor
+					.setBeanFactory(this.beanFactory);
+		}
+		return this.nonReactorSleuthMethodInvocationProcessor;
 	}
 
 	private static final class FluxSpan extends FluxOperator<Object, Object> {
@@ -305,19 +318,6 @@ class ReactorSleuthMethodInvocationProcessor
 			return null;
 		}
 
-	}
-
-	private boolean isReactorReturnType(Class<?> returnType) {
-		return Flux.class.equals(returnType) || Mono.class.equals(returnType);
-	}
-
-	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor() {
-		if (this.nonReactorSleuthMethodInvocationProcessor == null) {
-			this.nonReactorSleuthMethodInvocationProcessor = new NonReactorSleuthMethodInvocationProcessor();
-			this.nonReactorSleuthMethodInvocationProcessor
-					.setBeanFactory(this.beanFactory);
-		}
-		return this.nonReactorSleuthMethodInvocationProcessor;
 	}
 
 }

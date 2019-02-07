@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,11 @@ public class RunSleuthJmhBenchmarksFromIde {
 	// Convenience main entry-point for testing from IDE
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
-				.include(RunSleuthJmhBenchmarksFromIde.class.getPackage().getName() + ".benchmarks.*")
+				.include(RunSleuthJmhBenchmarksFromIde.class.getPackage().getName()
+						+ ".benchmarks.*")
 				.build();
 
 		new Runner(opt).run();
 	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.instrument.opentracing;
 
 import java.util.LinkedHashMap;
@@ -33,6 +34,8 @@ import io.opentracing.propagation.TextMapInjectAdapter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import zipkin2.Annotation;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,11 +43,10 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
-import zipkin2.Annotation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.Assert.assertEquals;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.NONE;
 
 /**
  * This shows how one might make an OpenTracing adapter for Brave, and how to navigate in
@@ -52,9 +54,11 @@ import static org.junit.Assert.assertEquals;
  *
  * Adopted from:
  * https://github.com/openzipkin-contrib/brave-opentracing/tree/master/src/test/java/brave/opentracing
+ *
+ * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = "spring.sleuth.baggage-keys=country-code,user-id")
+@SpringBootTest(webEnvironment = NONE, properties = "spring.sleuth.baggage-keys=country-code,user-id")
 public class BraveTracerTest {
 
 	@Autowired
@@ -65,6 +69,10 @@ public class BraveTracerTest {
 
 	@Autowired
 	BraveTracer opentracing;
+
+	private static TraceContext getTraceContext(Scope scope) {
+		return ((BraveSpanContext) scope.span().context()).unwrap();
+	}
 
 	@Test
 	public void startWithOpenTracingAndFinishWithBrave() {
@@ -188,12 +196,16 @@ public class BraveTracerTest {
 			}
 		}
 
-		assertEquals("SpanA should have been active again after closing B", idOfSpanA,
-				shouldBeIdOfSpanA);
-		assertEquals("SpanB should have been active prior to its closure", idOfSpanB,
-				shouldBeIdOfSpanB);
-		assertEquals("SpanB's parent should be SpanA", idOfSpanA, parentIdOfSpanB);
-		assertEquals("SpanC's parent should be SpanA", idOfSpanA, parentIdOfSpanC);
+		assertThat(shouldBeIdOfSpanA)
+				.as("SpanA should have been active again after closing B")
+				.isEqualTo(idOfSpanA);
+		assertThat(shouldBeIdOfSpanB)
+				.as("SpanB should have been active prior to its closure")
+				.isEqualTo(idOfSpanB);
+		assertThat(parentIdOfSpanB).as("SpanB's parent should be SpanA")
+				.isEqualTo(idOfSpanA);
+		assertThat(parentIdOfSpanC).as("SpanC's parent should be SpanA")
+				.isEqualTo(idOfSpanA);
 	}
 
 	@Test
@@ -239,12 +251,16 @@ public class BraveTracerTest {
 			spanA.finish();
 		}
 
-		assertEquals("SpanA should have been active again after closing B", idOfSpanA,
-				shouldBeIdOfSpanA);
-		assertEquals("SpanB should have been active prior to its closure", idOfSpanB,
-				shouldBeIdOfSpanB);
-		assertEquals("SpanB's parent should be SpanA", idOfSpanA, parentIdOfSpanB);
-		assertEquals("SpanC's parent should be SpanA", idOfSpanA, parentIdOfSpanC);
+		assertThat(shouldBeIdOfSpanA)
+				.as("SpanA should have been active again after closing B")
+				.isEqualTo(idOfSpanA);
+		assertThat(shouldBeIdOfSpanB)
+				.as("SpanB should have been active prior to its closure")
+				.isEqualTo(idOfSpanB);
+		assertThat(parentIdOfSpanB).as("SpanB's parent should be SpanA")
+				.isEqualTo(idOfSpanA);
+		assertThat(parentIdOfSpanC).as("SpanC's parent should be SpanA")
+				.isEqualTo(idOfSpanA);
 	}
 
 	@Test
@@ -297,10 +313,6 @@ public class BraveTracerTest {
 		this.opentracing.buildSpan("encode").start().setTag("error", false).finish();
 
 		assertThat(this.spans.getSpans().get(0).tags()).isEmpty();
-	}
-
-	private static TraceContext getTraceContext(Scope scope) {
-		return ((BraveSpanContext) scope.span().context()).unwrap();
 	}
 
 	@Before

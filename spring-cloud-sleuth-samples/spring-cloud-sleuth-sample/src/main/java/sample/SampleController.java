@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import brave.Span;
 import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
@@ -39,6 +40,8 @@ public class SampleController
 
 	private static final Log log = LogFactory.getLog(SampleController.class);
 
+	private final Random random = new Random();
+
 	@Autowired
 	private RestTemplate restTemplate;
 
@@ -47,8 +50,6 @@ public class SampleController
 
 	@Autowired
 	private SampleBackground controller;
-
-	private final Random random = new Random();
 
 	private int port;
 

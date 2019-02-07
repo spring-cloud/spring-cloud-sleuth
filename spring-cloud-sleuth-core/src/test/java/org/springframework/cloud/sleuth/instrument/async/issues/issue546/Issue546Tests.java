@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -85,21 +86,21 @@ class Controller {
 
 	private final Tracing tracer;
 
-	public Controller(AsyncRestTemplate traceAsyncRestTemplate, Tracing tracer) {
+	@Value("${server.port}")
+	private String port;
+
+	Controller(AsyncRestTemplate traceAsyncRestTemplate, Tracing tracer) {
 		this.traceAsyncRestTemplate = traceAsyncRestTemplate;
 		this.tracer = tracer;
 	}
 
-	@Value("${server.port}")
-	private String port;
-
-	@RequestMapping(value = "/bean")
+	@RequestMapping("/bean")
 	public HogeBean bean() {
 		log.info("(/bean) I got a request!");
 		return new HogeBean("test", 18);
 	}
 
-	@RequestMapping(value = "/trace-async-rest-template")
+	@RequestMapping("/trace-async-rest-template")
 	public void asyncTest(@RequestParam(required = false) boolean isSleep)
 			throws InterruptedException {
 		log.info("(/trace-async-rest-template) I got a request!");
@@ -132,7 +133,7 @@ class HogeBean {
 
 	private int age;
 
-	public HogeBean(String name, int age) {
+	HogeBean(String name, int age) {
 		this.name = name;
 		this.age = age;
 	}

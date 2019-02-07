@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,11 @@ import java.util.Collections;
 
 import brave.propagation.Propagation;
 import org.junit.Test;
+
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MessageHeaderPropagationTest
 		extends PropagationSetterTest<MessageHeaderAccessor, String> {
@@ -58,7 +59,7 @@ public class MessageHeaderPropagationTest
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124".getBytes());
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124000000".getBytes());
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
-		assertEquals("48485a3953bb6124000000", value);
+		assertThat(value).isEqualTo("48485a3953bb6124000000");
 	}
 
 	@Test
@@ -67,7 +68,7 @@ public class MessageHeaderPropagationTest
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124");
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
-		assertEquals("48485a3953bb61240000000", value);
+		assertThat(value).isEqualTo("48485a3953bb61240000000");
 	}
 
 	@Test
@@ -76,7 +77,7 @@ public class MessageHeaderPropagationTest
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124");
 		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "non existent key");
-		assertNull(value);
+		assertThat(value).isNull();
 	}
 
 	@Test

@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.beans.factory.BeanFactory;
 
-public class ContextRefreshedListenerAccessor {
+public final class ContextRefreshedListenerAccessor {
+
+	private ContextRefreshedListenerAccessor() {
+		throw new IllegalStateException("Can't instantiate a utility class");
+	}
 
 	public static void set(BeanFactory beanFactory, boolean refreshed) {
 		ContextRefreshedListener.CACHE.put(beanFactory,

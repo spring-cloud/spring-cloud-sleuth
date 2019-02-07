@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import brave.Span;
 import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.integration.annotation.Aggregator;
@@ -37,6 +38,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+@MessagingGateway(name = "greeter")
+interface Sender {
+
+	@Gateway(requestChannel = "greetings")
+	void send(String message);
+
+}
 
 @RestController
 @MessageEndpoint
@@ -108,14 +117,6 @@ public class DemoApplication {
 
 }
 
-@MessagingGateway(name = "greeter")
-interface Sender {
-
-	@Gateway(requestChannel = "greetings")
-	void send(String message);
-
-}
-
 class Greeting {
 
 	private String message;
@@ -123,7 +124,7 @@ class Greeting {
 	Greeting() {
 	}
 
-	public Greeting(String message) {
+	Greeting(String message) {
 		super();
 		this.message = message;
 	}

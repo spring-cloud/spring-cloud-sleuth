@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,15 +85,6 @@ public class ExecutorBeanPostProcessorTests {
 		then(ClassUtils.isCglibProxy(o)).isTrue();
 	}
 
-	class Foo implements Executor {
-
-		@Override
-		public void execute(Runnable command) {
-
-		}
-
-	}
-
 	@Test
 	public void should_fallback_to_sleuth_implementation_when_cglib_cannot_be_created()
 			throws Exception {
@@ -133,10 +124,6 @@ public class ExecutorBeanPostProcessorTests {
 
 		then(o).isInstanceOf(FooThreadPoolTaskExecutor.class);
 		then(ClassUtils.isCglibProxy(o)).isTrue();
-	}
-
-	class FooThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
-
 	}
 
 	@Test
@@ -300,6 +287,19 @@ public class ExecutorBeanPostProcessorTests {
 		then(ClassUtils.isCglibProxy(o)).isTrue();
 		thenThrownBy(() -> ((RejectedExecutionExecutor) o).execute(() -> {
 		})).isInstanceOf(RejectedExecutionException.class).hasMessage("rejected");
+	}
+
+	class Foo implements Executor {
+
+		@Override
+		public void execute(Runnable command) {
+
+		}
+
+	}
+
+	class FooThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
+
 	}
 
 	class RejectedExecutionExecutor implements Executor {

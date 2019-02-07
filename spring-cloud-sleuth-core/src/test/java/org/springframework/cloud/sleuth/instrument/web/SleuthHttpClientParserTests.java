@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-
 import brave.SpanCustomizer;
 import brave.http.HttpClientAdapter;
+import org.junit.Test;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 /**
- * Test case for HttpTraceKeysInjector
+ * Test case for HttpTraceKeysInjector.
  *
  * @author Sven Zethelius
  */

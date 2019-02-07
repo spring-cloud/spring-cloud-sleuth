@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,14 @@ import io.grpc.ManagedChannelBuilder;
  * Callback interface that can be implemented by beans wishing to further customize the
  * {@link io.grpc.ManagedChannelBuilder} via the {@link SpringAwareManagedChannelBuilder}.
  *
- * @author tyler.vangorder
+ * @author Tyler Van Gorder
  */
 public interface GrpcManagedChannelBuilderCustomizer {
 
+	/**
+	 * Customizes the channel builder.
+	 * @param managedChannelBuilder the builder to customize
+	 */
 	void customize(ManagedChannelBuilder<?> managedChannelBuilder);
 
 }

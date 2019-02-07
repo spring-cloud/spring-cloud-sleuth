@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,18 +24,36 @@ package org.springframework.cloud.sleuth.instrument.messaging;
  * @author Marcin Grzejszczak
  * @since 1.0.4
  */
-public class TraceMessageHeaders {
+public final class TraceMessageHeaders {
 
+	/**
+	 * Span ID message header name.
+	 */
 	public static final String SPAN_ID_NAME = "spanId";
 
+	/**
+	 * Span sampled message header name.
+	 */
 	public static final String SAMPLED_NAME = "spanSampled";
 
+	/**
+	 * Parent span ID message header name.
+	 */
 	public static final String PARENT_ID_NAME = "spanParentSpanId";
 
+	/**
+	 * Trace ID message header name.
+	 */
 	public static final String TRACE_ID_NAME = "spanTraceId";
 
+	/**
+	 * Span name message header name.
+	 */
 	public static final String SPAN_NAME_NAME = "spanName";
 
+	/**
+	 * Span flags message header name.
+	 */
 	public static final String SPAN_FLAGS_NAME = "spanFlags";
 
 	private TraceMessageHeaders() {

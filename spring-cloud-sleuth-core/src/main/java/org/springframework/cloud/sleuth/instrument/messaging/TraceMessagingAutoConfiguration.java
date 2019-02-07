@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.ProxyFactoryBean;
@@ -148,7 +149,7 @@ public class TraceMessagingAutoConfiguration {
 			return new TracingConnectionFactoryBeanPostProcessor(beanFactory);
 		}
 
-		/** Setup the tracing endpoint registry */
+		// Setup the tracing endpoint registry.
 		@Bean
 		JmsListenerConfigurer configureTracing(JmsTracing jmsTracing,
 				CurrentTraceContext current) {
@@ -312,8 +313,9 @@ class MessageListenerMethodInterceptor<T extends MessageListener>
 		}
 		catch (RuntimeException | Error e) {
 			String message = e.getMessage();
-			if (message == null)
+			if (message == null) {
 				message = e.getClass().getSimpleName();
+			}
 			span.tag("error", message);
 			throw e;
 		}

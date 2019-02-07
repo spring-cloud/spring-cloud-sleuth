@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
 
 import org.openjdk.jmh.annotations.Benchmark;
@@ -42,27 +43,34 @@ public class StartupBenchmark {
 		state.setExtraArgs("--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
-	
+
 	@Benchmark
 	public void withoutAsync(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.async.enabled=false",
+				"--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutScheduled(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.scheduled.enabled=false", "--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.scheduled.enabled=false",
+				"--spring.sleuth.async.enabled=false",
+				"--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutWeb(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.web.enabled=false", "--spring.sleuth.scheduled.enabled=false", "--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.web.enabled=false",
+				"--spring.sleuth.scheduled.enabled=false",
+				"--spring.sleuth.async.enabled=false",
+				"--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@State(Scope.Benchmark)
 	public static class ApplicationState extends ProcessLauncherState {
+
 		public ApplicationState() {
 			super("target", "--server.port=0");
 		}
@@ -71,6 +79,7 @@ public class StartupBenchmark {
 		public void stop() throws Exception {
 			super.after();
 		}
+
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
-import org.springframework.web.client.RestTemplate;
-
 import zipkin2.Call;
 import zipkin2.Callback;
 import zipkin2.CheckResult;
@@ -34,6 +28,12 @@ import zipkin2.codec.BytesEncoder;
 import zipkin2.codec.Encoding;
 import zipkin2.reporter.BytesMessageEncoder;
 import zipkin2.reporter.Sender;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.web.client.RestTemplate;
 
 import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
 
@@ -48,6 +48,11 @@ final class RestTemplateSender extends Sender {
 	final MediaType mediaType;
 
 	final BytesMessageEncoder messageEncoder;
+
+	/**
+	 * close is typically called from a different thread.
+	 */
+	transient boolean closeCalled;
 
 	RestTemplateSender(RestTemplate restTemplate, String baseUrl,
 			BytesEncoder<Span> encoder) {
@@ -89,15 +94,11 @@ final class RestTemplateSender extends Sender {
 		return encoding().listSizeInBytes(spans);
 	}
 
-	/**
-	 * close is typically called from a different thread
-	 */
-	transient boolean closeCalled;
-
 	@Override
 	public Call<Void> sendSpans(List<byte[]> encodedSpans) {
-		if (this.closeCalled)
+		if (this.closeCalled) {
 			throw new IllegalStateException("close");
+		}
 		return new HttpPostCall(this.messageEncoder.encode(encodedSpans));
 	}
 

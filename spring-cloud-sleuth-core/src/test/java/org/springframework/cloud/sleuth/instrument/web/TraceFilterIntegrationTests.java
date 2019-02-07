@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.io.IOException;
+import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
 
 import brave.Span;
 import brave.Tracer;
@@ -38,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.MDC;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -76,6 +78,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	private static Log logger = LogFactory.getLog(TraceFilterIntegrationTests.class);
 
+	private static Span span;
+
 	@Autowired
 	TracingFilter traceFilter;
 
@@ -87,8 +91,6 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Autowired
 	Tracer tracer;
-
-	private static Span span;
 
 	@Before
 	@After
@@ -319,6 +321,22 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		private static final Log log = LogFactory.getLog(Config.class);
 
+		@Bean
+		public ArrayListSpanReporter testSpanReporter() {
+			return new ArrayListSpanReporter();
+		}
+
+		@Bean
+		Sampler alwaysSampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
+
+		@Bean
+		@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
+		Filter myFilter(Tracer tracer) {
+			return new MyFilter(tracer);
+		}
+
 		@RestController
 		public static class TestController {
 
@@ -367,22 +385,6 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 				return managementServerProperties;
 			}
 
-		}
-
-		@Bean
-		public ArrayListSpanReporter testSpanReporter() {
-			return new ArrayListSpanReporter();
-		}
-
-		@Bean
-		Sampler alwaysSampler() {
-			return Sampler.ALWAYS_SAMPLE;
-		}
-
-		@Bean
-		@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
-		Filter myFilter(Tracer tracer) {
-			return new MyFilter(tracer);
 		}
 
 	}

@@ -18,7 +18,11 @@ package org.springframework.cloud.sleuth.zipkin2.sender;
 
 import java.util.List;
 import java.util.Map;
+
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import zipkin2.reporter.Sender;
+import zipkin2.reporter.kafka11.KafkaSender;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -29,8 +33,6 @@ import org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import zipkin2.reporter.Sender;
-import zipkin2.reporter.kafka11.KafkaSender;
 
 @Configuration
 @ConditionalOnClass(ByteArraySerializer.class)
@@ -43,6 +45,17 @@ class ZipkinKafkaSenderConfiguration {
 	@Value("${spring.zipkin.kafka.topic:zipkin}")
 	private String topic;
 
+	static String join(List<?> parts) {
+		StringBuilder to = new StringBuilder();
+		for (int i = 0, length = parts.size(); i < length; i++) {
+			to.append(parts.get(i));
+			if (i + 1 < length) {
+				to.append(',');
+			}
+		}
+		return to.toString();
+	}
+
 	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 	Sender kafkaSender(KafkaProperties config) {
 		Map<String, Object> properties = config.buildProducerProperties();
@@ -54,17 +67,6 @@ class ZipkinKafkaSenderConfiguration {
 			properties.put("bootstrap.servers", join((List) bootstrapServers));
 		}
 		return KafkaSender.newBuilder().topic(this.topic).overrides(properties).build();
-	}
-
-	static String join(List<?> parts) {
-		StringBuilder to = new StringBuilder();
-		for (int i = 0, length = parts.size(); i < length; i++) {
-			to.append(parts.get(i));
-			if (i + 1 < length) {
-				to.append(',');
-			}
-		}
-		return to.toString();
 	}
 
 }

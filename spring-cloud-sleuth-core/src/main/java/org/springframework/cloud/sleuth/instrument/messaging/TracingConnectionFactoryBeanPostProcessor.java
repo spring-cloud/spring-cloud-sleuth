@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ import org.springframework.jms.listener.endpoint.JmsMessageEndpointManager;
 import org.springframework.lang.Nullable;
 
 /**
- * {@link BeanPostProcessor} wrapping around JMS {@link ConnectionFactory}
+ * {@link BeanPostProcessor} wrapping around JMS {@link ConnectionFactory}.
  *
  * @author Adrian Cole
  * @since 2.1.0
@@ -134,14 +134,16 @@ class LazyXAConnectionFactory implements XAConnectionFactory {
 		if (this.jmsTracing != null) {
 			return this.jmsTracing;
 		}
-		return this.jmsTracing = this.beanFactory.getBean(JmsTracing.class);
+		this.jmsTracing = this.beanFactory.getBean(JmsTracing.class);
+		return this.jmsTracing;
 	}
 
 	private XAConnectionFactory wrappedDelegate() {
 		if (this.wrappedDelegate != null) {
 			return this.wrappedDelegate;
 		}
-		return this.wrappedDelegate = jmsTracing().xaConnectionFactory(this.delegate);
+		this.wrappedDelegate = jmsTracing().xaConnectionFactory(this.delegate);
+		return this.wrappedDelegate;
 	}
 
 }
@@ -195,14 +197,16 @@ class LazyConnectionFactory implements ConnectionFactory {
 		if (this.jmsTracing != null) {
 			return this.jmsTracing;
 		}
-		return this.jmsTracing = this.beanFactory.getBean(JmsTracing.class);
+		this.jmsTracing = this.beanFactory.getBean(JmsTracing.class);
+		return this.jmsTracing;
 	}
 
 	private ConnectionFactory wrappedDelegate() {
 		if (this.wrappedDelegate != null) {
 			return this.wrappedDelegate;
 		}
-		return this.wrappedDelegate = jmsTracing().connectionFactory(this.delegate);
+		this.wrappedDelegate = jmsTracing().connectionFactory(this.delegate);
+		return this.wrappedDelegate;
 	}
 
 }
@@ -229,7 +233,8 @@ class LazyMessageListener implements MessageListener {
 		if (this.jmsTracing != null) {
 			return this.jmsTracing;
 		}
-		return this.jmsTracing = this.beanFactory.getBean(JmsTracing.class);
+		this.jmsTracing = this.beanFactory.getBean(JmsTracing.class);
+		return this.jmsTracing;
 	}
 
 	private MessageListener wrappedDelegate() {
@@ -242,7 +247,7 @@ class LazyMessageListener implements MessageListener {
 
 /**
  * This ensures listeners end up continuing the trace from
- * {@link MessageConsumer#receive()}
+ * {@link MessageConsumer#receive()}.
  */
 class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 
@@ -295,11 +300,14 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 	/**
 	 * This wraps the {@link SimpleJmsListenerEndpoint#getMessageListener()} delegate in a
 	 * new span.
+	 * @param source jms endpoint
+	 * @return wrapped endpoint
 	 */
 	SimpleJmsListenerEndpoint trace(SimpleJmsListenerEndpoint source) {
 		MessageListener delegate = source.getMessageListener();
-		if (delegate == null)
+		if (delegate == null) {
 			return source;
+		}
 		source.setMessageListener(this.jmsTracing.messageListener(delegate, false));
 		return source;
 	}
@@ -315,6 +323,8 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 	 * subtype could hold state we aren't aware of, or change behavior. We can consider
 	 * checking that input is not a subtype, and most conservatively leaving unknown
 	 * subtypes untraced.
+	 * @param source jms endpoint
+	 * @return wrapped endpoint
 	 */
 	MethodJmsListenerEndpoint trace(MethodJmsListenerEndpoint source) {
 		// Skip out rather than incompletely copying the source
@@ -360,7 +370,7 @@ class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 }
 
 /**
- * This wraps the message listener in a child span
+ * This wraps the message listener in a child span.
  */
 final class TracingMessagingMessageListenerAdapter
 		extends MessagingMessageListenerAdapter {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,6 +78,38 @@ public class JmsTracingConfigurationTest {
 							JcaJmsListenerConfiguration.class,
 							JmsTestTracingConfiguration.class));
 
+	static void clearSpans(AssertableApplicationContext ctx) throws JMSException {
+		ctx.getBean(JmsTestTracingConfiguration.class).clearSpan();
+	}
+
+	static void checkConnection(AssertableApplicationContext ctx) throws JMSException {
+		// Not using try-with-resources as that doesn't exist in JMS 1.1
+		Connection con = ctx.getBean(ConnectionFactory.class).createConnection();
+		try {
+			con.setExceptionListener(exception -> {
+			});
+			assertThat(con.getExceptionListener().getClass().getName())
+					.startsWith("brave.jms.TracingExceptionListener");
+		}
+		finally {
+			con.close();
+		}
+	}
+
+	static void checkXAConnection(AssertableApplicationContext ctx) throws JMSException {
+		// Not using try-with-resources as that doesn't exist in JMS 1.1
+		XAConnection con = ctx.getBean(XAConnectionFactory.class).createXAConnection();
+		try {
+			con.setExceptionListener(exception -> {
+			});
+			assertThat(con.getExceptionListener().getClass().getName())
+					.startsWith("brave.jms.TracingExceptionListener");
+		}
+		finally {
+			con.close();
+		}
+	}
+
 	@Test
 	public void tracesConnectionFactory() {
 		this.contextRunner.run(JmsTracingConfigurationTest::checkConnection);
@@ -90,16 +122,6 @@ public class JmsTracingConfigurationTest {
 			checkConnection(ctx);
 			checkXAConnection(ctx);
 		});
-	}
-
-	@AutoConfigureBefore(ActiveMQAutoConfiguration.class)
-	static class XAConfiguration {
-
-		@Bean
-		XAConnectionFactoryWrapper xaConnectionFactoryWrapper() {
-			return connectionFactory -> (ConnectionFactory) connectionFactory;
-		}
-
 	}
 
 	@Test
@@ -118,6 +140,52 @@ public class JmsTracingConfigurationTest {
 					assertThat(trace).extracting(Span::name).contains("send", "receive",
 							"on-message");
 				});
+	}
+
+	@Test
+	public void tracesListener_annotationMessageListener() {
+		this.contextRunner.withUserConfiguration(AnnotationJmsListenerConfiguration.class)
+				.run(ctx -> {
+					clearSpans(ctx);
+					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
+
+					Callable<Span> takeSpan = ctx.getBean("takeSpan", Callable.class);
+					List<Span> trace = Arrays.asList(takeSpan.call(), takeSpan.call(),
+							takeSpan.call());
+
+					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
+							.isEqualTo(trace.get(0).traceId()));
+					assertThat(trace).extracting(Span::name)
+							.containsExactlyInAnyOrder("send", "receive", "on-message");
+				});
+	}
+
+	@Test
+	public void tracesListener_jcaMessageListener() {
+		this.contextRunner.withUserConfiguration(JcaJmsListenerConfiguration.class)
+				.run(ctx -> {
+					clearSpans(ctx);
+					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
+
+					Callable<Span> takeSpan = ctx.getBean("takeSpan", Callable.class);
+					List<Span> trace = Arrays.asList(takeSpan.call(), takeSpan.call(),
+							takeSpan.call());
+
+					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
+							.isEqualTo(trace.get(0).traceId()));
+					assertThat(trace).extracting(Span::name)
+							.containsExactlyInAnyOrder("send", "receive", "on-message");
+				});
+	}
+
+	@AutoConfigureBefore(ActiveMQAutoConfiguration.class)
+	static class XAConfiguration {
+
+		@Bean
+		XAConnectionFactoryWrapper xaConnectionFactoryWrapper() {
+			return connectionFactory -> (ConnectionFactory) connectionFactory;
+		}
+
 	}
 
 	@Configuration
@@ -147,24 +215,6 @@ public class JmsTracingConfigurationTest {
 
 	}
 
-	@Test
-	public void tracesListener_annotationMessageListener() {
-		this.contextRunner.withUserConfiguration(AnnotationJmsListenerConfiguration.class)
-				.run(ctx -> {
-					clearSpans(ctx);
-					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
-
-					Callable<Span> takeSpan = ctx.getBean("takeSpan", Callable.class);
-					List<Span> trace = Arrays.asList(takeSpan.call(), takeSpan.call(),
-							takeSpan.call());
-
-					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
-							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).extracting(Span::name)
-							.containsExactlyInAnyOrder("send", "receive", "on-message");
-				});
-	}
-
 	@Configuration
 	@EnableJms
 	static class AnnotationJmsListenerConfiguration {
@@ -178,24 +228,6 @@ public class JmsTracingConfigurationTest {
 					.isNotEqualTo(0L);
 		}
 
-	}
-
-	@Test
-	public void tracesListener_jcaMessageListener() {
-		this.contextRunner.withUserConfiguration(JcaJmsListenerConfiguration.class)
-				.run(ctx -> {
-					clearSpans(ctx);
-					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
-
-					Callable<Span> takeSpan = ctx.getBean("takeSpan", Callable.class);
-					List<Span> trace = Arrays.asList(takeSpan.call(), takeSpan.call(),
-							takeSpan.call());
-
-					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
-							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).extracting(Span::name)
-							.containsExactlyInAnyOrder("send", "receive", "on-message");
-				});
 	}
 
 	@Configuration
@@ -241,38 +273,6 @@ public class JmsTracingConfigurationTest {
 
 	}
 
-	static void clearSpans(AssertableApplicationContext ctx) throws JMSException {
-		ctx.getBean(JmsTestTracingConfiguration.class).clearSpan();
-	}
-
-	static void checkConnection(AssertableApplicationContext ctx) throws JMSException {
-		// Not using try-with-resources as that doesn't exist in JMS 1.1
-		Connection con = ctx.getBean(ConnectionFactory.class).createConnection();
-		try {
-			con.setExceptionListener(exception -> {
-			});
-			assertThat(con.getExceptionListener().getClass().getName())
-					.startsWith("brave.jms.TracingExceptionListener");
-		}
-		finally {
-			con.close();
-		}
-	}
-
-	static void checkXAConnection(AssertableApplicationContext ctx) throws JMSException {
-		// Not using try-with-resources as that doesn't exist in JMS 1.1
-		XAConnection con = ctx.getBean(XAConnectionFactory.class).createXAConnection();
-		try {
-			con.setExceptionListener(exception -> {
-			});
-			assertThat(con.getExceptionListener().getClass().getName())
-					.startsWith("brave.jms.TracingExceptionListener");
-		}
-		finally {
-			con.close();
-		}
-	}
-
 }
 
 @Configuration
@@ -295,7 +295,8 @@ class JmsTestTracingConfiguration {
 	}
 
 	/**
-	 * Call this to block until a span was reported
+	 * Call this to block until a span was reported.
+	 * @return span from queue
 	 */
 	@Bean
 	Callable<Span> takeSpan() {

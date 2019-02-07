@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.log;
 
 import brave.propagation.CurrentTraceContext;
 import org.slf4j.MDC;
+
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,7 +44,7 @@ import org.springframework.context.annotation.Configuration;
 public class SleuthLogAutoConfiguration {
 
 	/**
-	 * Configuration for Slfj4
+	 * Configuration for Slfj4.
 	 */
 	@Configuration
 	@ConditionalOnClass(MDC.class)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,17 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 	@Autowired
 	ArrayListSpanReporter reporter;
+
+	private static String toHexString(long value) {
+		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
+	}
+
+	protected static Long id(Tracer tracer) {
+		if (tracer.currentSpan() == null) {
+			throw new IllegalStateException("Current Span is supposed to have a value!");
+		}
+		return tracer.currentSpan().context().spanId();
+	}
 
 	@Before
 	public void setup() {
@@ -467,10 +478,6 @@ public class SleuthSpanCreatorAspectMonoTests {
 		});
 	}
 
-	private static String toHexString(long value) {
-		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
-	}
-
 	protected interface TestBeanInterface {
 
 		// tag::annotated_method[]
@@ -504,7 +511,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		Mono<String> testMethod9(String param);
 
 		@ContinueSpan(log = "customTest")
-		Mono<String> testMethod10(@SpanTag(value = "testTag10") String param);
+		Mono<String> testMethod10(@SpanTag("testTag10") String param);
 
 		@ContinueSpan(log = "customTest")
 		Mono<String> testMethod10_v2(@SpanTag(key = "testTag10") String param);
@@ -592,8 +599,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		@Override
-		public Mono<String> testMethod10(
-				@SpanTag(value = "customTestTag10") String param) {
+		public Mono<String> testMethod10(@SpanTag("customTestTag10") String param) {
 			return TEST_MONO;
 		}
 
@@ -662,13 +668,6 @@ public class SleuthSpanCreatorAspectMonoTests {
 									pair.getT2())));
 		}
 
-	}
-
-	protected static Long id(Tracer tracer) {
-		if (tracer.currentSpan() == null) {
-			throw new IllegalStateException("Current Span is supposed to have a value!");
-		}
-		return tracer.currentSpan().context().spanId();
 	}
 
 	@Configuration

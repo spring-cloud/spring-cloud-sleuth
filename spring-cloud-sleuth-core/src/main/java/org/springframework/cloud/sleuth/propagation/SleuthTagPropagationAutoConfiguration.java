@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.propagation;
 
 import brave.handler.FinishedSpanHandler;
+
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -40,7 +41,7 @@ public class SleuthTagPropagationAutoConfiguration {
 	protected static class TagPropagationConfiguration {
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.sleuth.propagation.tag.whitelisted-keys")
+		@ConditionalOnProperty("spring.sleuth.propagation.tag.whitelisted-keys")
 		public FinishedSpanHandler finishedSpanHandler(SleuthProperties sleuthProperties,
 				SleuthTagPropagationProperties tagPropagationProperties) {
 			return new TagPropagationFinishedSpanHandler(sleuthProperties,

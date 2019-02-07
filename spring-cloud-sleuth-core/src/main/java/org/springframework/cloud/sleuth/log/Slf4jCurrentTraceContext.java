@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,15 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 	private static final Logger log = LoggerFactory
 			.getLogger(Slf4jCurrentTraceContext.class);
 
+	final CurrentTraceContext delegate;
+
+	Slf4jCurrentTraceContext(CurrentTraceContext delegate) {
+		if (delegate == null) {
+			throw new NullPointerException("delegate == null");
+		}
+		this.delegate = delegate;
+	}
+
 	public static Slf4jCurrentTraceContext create() {
 		return create(CurrentTraceContext.Default.inheritable());
 	}
@@ -62,13 +71,13 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 		return new Slf4jCurrentTraceContext(delegate);
 	}
 
-	final CurrentTraceContext delegate;
-
-	Slf4jCurrentTraceContext(CurrentTraceContext delegate) {
-		if (delegate == null) {
-			throw new NullPointerException("delegate == null");
+	static void replace(String key, @Nullable String value) {
+		if (value != null) {
+			MDC.put(key, value);
 		}
-		this.delegate = delegate;
+		else {
+			MDC.remove(key);
+		}
 	}
 
 	@Override
@@ -152,15 +161,6 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 		}
 		if (log.isTraceEnabled()) {
 			log.trace(text, span);
-		}
-	}
-
-	static void replace(String key, @Nullable String value) {
-		if (value != null) {
-			MDC.put(key, value);
-		}
-		else {
-			MDC.remove(key);
 		}
 	}
 

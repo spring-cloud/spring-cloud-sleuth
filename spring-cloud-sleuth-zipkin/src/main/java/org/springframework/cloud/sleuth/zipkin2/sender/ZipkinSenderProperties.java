@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.zipkin2.sender;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Properties for Zipkin sender
+ * Properties for Zipkin sender.
  *
  * @author Marcin Grzejszczak
  * @since 1.3.1
@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ZipkinSenderProperties {
 
 	/**
-	 * Means of sending spans to Zipkin
+	 * Means of sending spans to Zipkin.
 	 */
 	private SenderType type;
 
@@ -40,9 +40,25 @@ public class ZipkinSenderProperties {
 		this.type = type;
 	}
 
+	/**
+	 * Types of a sender.
+	 */
 	public enum SenderType {
 
-		RABBIT, KAFKA, WEB
+		/**
+		 * RabbitMQ sender.
+		 */
+		RABBIT,
+
+		/**
+		 * Kafka sender.
+		 */
+		KAFKA,
+
+		/**
+		 * HTTP based sender.
+		 */
+		WEB
 
 	}
 

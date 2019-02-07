@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,11 @@ import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.BDDAssertions.then;
+
+@RepositoryRestResource
+interface ReservationRepository extends JpaRepository<Reservation, Long> {
+
+}
 
 /**
  * @author Marcin Grzejszczak
@@ -146,7 +151,7 @@ class SampleRecords {
 
 	private final ReservationRepository reservationRepository;
 
-	public SampleRecords(ReservationRepository reservationRepository) {
+	SampleRecords(ReservationRepository reservationRepository) {
 		this.reservationRepository = reservationRepository;
 	}
 
@@ -160,11 +165,6 @@ class SampleRecords {
 
 }
 
-@RepositoryRestResource
-interface ReservationRepository extends JpaRepository<Reservation, Long> {
-
-}
-
 @Entity
 class Reservation {
 
@@ -173,6 +173,14 @@ class Reservation {
 	private Long id; // id
 
 	private String reservationName; // reservation_name
+
+	Reservation() { // why JPA why???
+	}
+
+	Reservation(String reservationName) {
+
+		this.reservationName = reservationName;
+	}
 
 	public Long getId() {
 		return this.id;
@@ -186,14 +194,6 @@ class Reservation {
 	public String toString() {
 		return "Reservation{" + "id=" + this.id + ", reservationName='"
 				+ this.reservationName + '\'' + '}';
-	}
-
-	Reservation() {// why JPA why???
-	}
-
-	public Reservation(String reservationName) {
-
-		this.reservationName = reservationName;
 	}
 
 }

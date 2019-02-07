@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import zipkin2.codec.SpanBytesEncoder;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 /**
- * Zipkin settings
+ * Zipkin settings.
  *
  * @author Spencer Gibb
  * @since 1.0.0
@@ -32,23 +32,23 @@ public class ZipkinProperties {
 	/**
 	 * URL of the zipkin query server instance. You can also provide the service id of the
 	 * Zipkin server if Zipkin's registered in service discovery (e.g.
-	 * http://zipkinserver/)
+	 * http://zipkinserver/).
 	 */
 	private String baseUrl = "http://localhost:9411/";
 
 	/**
 	 * If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl} as a URL
-	 * always
+	 * always.
 	 */
 	private Boolean discoveryClientEnabled;
 
 	/**
-	 * Enables sending spans to Zipkin
+	 * Enables sending spans to Zipkin.
 	 */
 	private boolean enabled = true;
 
 	/**
-	 * Timeout in seconds before pending spans will be sent in batches to Zipkin
+	 * Timeout in seconds before pending spans will be sent in batches to Zipkin.
 	 */
 	private int messageTimeout = 1;
 
@@ -59,7 +59,7 @@ public class ZipkinProperties {
 	private SpanBytesEncoder encoder = SpanBytesEncoder.JSON_V2;
 
 	/**
-	 * Configuration related to compressions of spans sent to Zipkin
+	 * Configuration related to compressions of spans sent to Zipkin.
 	 */
 	private Compression compression = new Compression();
 
@@ -71,12 +71,24 @@ public class ZipkinProperties {
 		return this.locator;
 	}
 
+	public void setLocator(Locator locator) {
+		this.locator = locator;
+	}
+
 	public String getBaseUrl() {
 		return this.baseUrl;
 	}
 
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
+	}
+
 	public boolean isEnabled() {
 		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	public Boolean getDiscoveryClientEnabled() {
@@ -91,36 +103,24 @@ public class ZipkinProperties {
 		return this.messageTimeout;
 	}
 
-	public Compression getCompression() {
-		return this.compression;
-	}
-
-	public Service getService() {
-		return this.service;
-	}
-
-	public void setBaseUrl(String baseUrl) {
-		this.baseUrl = baseUrl;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
 	public void setMessageTimeout(int messageTimeout) {
 		this.messageTimeout = messageTimeout;
+	}
+
+	public Compression getCompression() {
+		return this.compression;
 	}
 
 	public void setCompression(Compression compression) {
 		this.compression = compression;
 	}
 
-	public void setService(Service service) {
-		this.service = service;
+	public Service getService() {
+		return this.service;
 	}
 
-	public void setLocator(Locator locator) {
-		this.locator = locator;
+	public void setService(Service service) {
+		this.service = service;
 	}
 
 	public SpanBytesEncoder getEncoder() {
@@ -131,7 +131,7 @@ public class ZipkinProperties {
 		this.encoder = encoder;
 	}
 
-	/** When enabled, spans are gzipped before sent to the zipkin server */
+	/** When enabled, spans are gzipped before sent to the zipkin server. */
 	public static class Compression {
 
 		private boolean enabled = false;
@@ -148,13 +148,13 @@ public class ZipkinProperties {
 
 	/**
 	 * When set will override the default {@code spring.application.name} value of the
-	 * service id
+	 * service id.
 	 */
 	public static class Service {
 
 		/**
 		 * The name of the service, from which the Span was sent via HTTP, that should
-		 * appear in Zipkin
+		 * appear in Zipkin.
 		 */
 		private String name;
 
@@ -185,9 +185,12 @@ public class ZipkinProperties {
 			this.discovery = discovery;
 		}
 
+		/**
+		 * Discovery Locator properties.
+		 */
 		public static class Discovery {
 
-			/** Enabling of locating the host name via service discovery */
+			/** Enabling of locating the host name via service discovery. */
 			private boolean enabled;
 
 			public boolean isEnabled() {

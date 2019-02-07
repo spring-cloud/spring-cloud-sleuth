@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import brave.Span;
 import brave.Tracer;
 import org.junit.Test;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -29,7 +30,9 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
- * Example taken from https://github.com/spring-cloud/spring-cloud-sleuth/issues/943
+ * Example taken from https://github.com/spring-cloud/spring-cloud-sleuth/issues/943 .
+ *
+ * @author Marcin Grzejszczak
  */
 public class Issue943Tests {
 

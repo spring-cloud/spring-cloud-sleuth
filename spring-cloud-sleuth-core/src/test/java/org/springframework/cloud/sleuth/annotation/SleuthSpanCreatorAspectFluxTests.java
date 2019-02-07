@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,25 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 	@Autowired
 	ArrayListSpanReporter reporter;
+
+	private static String toHexString(Long value) {
+		then(value).isNotNull();
+		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
+	}
+
+	protected static Long id(Tracer tracer) {
+		if (tracer.currentSpan() == null) {
+			throw new IllegalStateException("Current Span is supposed to have a value!");
+		}
+		return tracer.currentSpan().context().spanId();
+	}
+
+	protected static Long id(Context context, Tracer tracer) {
+		if (context.hasKey(Span.class)) {
+			return context.get(Span.class).context().spanId();
+		}
+		return id(tracer);
+	}
 
 	@Before
 	public void setup() {
@@ -388,11 +407,6 @@ public class SleuthSpanCreatorAspectFluxTests {
 		});
 	}
 
-	private static String toHexString(Long value) {
-		then(value).isNotNull();
-		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
-	}
-
 	private void verifyNoSpansUntilFluxComplete(Flux<String> flux) {
 		Iterator<String> iterator = flux.toIterable().iterator();
 
@@ -442,7 +456,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		Flux<String> testMethod9(String param);
 
 		@ContinueSpan(log = "customTest")
-		Flux<String> testMethod10(@SpanTag(value = "testTag10") String param);
+		Flux<String> testMethod10(@SpanTag("testTag10") String param);
 
 		@ContinueSpan(log = "customTest")
 		Flux<String> testMethod10_v2(@SpanTag(key = "testTag10") String param);
@@ -554,8 +568,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		}
 
 		@Override
-		public Flux<String> testMethod10(
-				@SpanTag(value = "customTestTag10") String param) {
+		public Flux<String> testMethod10(@SpanTag("customTestTag10") String param) {
 			return this.testFlux;
 		}
 
@@ -599,20 +612,6 @@ public class SleuthSpanCreatorAspectFluxTests {
 					.flatMapMany(context -> Flux.just(id(context, this.tracer)));
 		}
 
-	}
-
-	protected static Long id(Tracer tracer) {
-		if (tracer.currentSpan() == null) {
-			throw new IllegalStateException("Current Span is supposed to have a value!");
-		}
-		return tracer.currentSpan().context().spanId();
-	}
-
-	protected static Long id(Context context, Tracer tracer) {
-		if (context.hasKey(Span.class)) {
-			return context.get(Span.class).context().spanId();
-		}
-		return id(tracer);
 	}
 
 	@Configuration

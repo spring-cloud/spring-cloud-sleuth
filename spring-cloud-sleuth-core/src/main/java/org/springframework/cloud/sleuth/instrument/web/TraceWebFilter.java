@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -147,6 +147,11 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		return new MonoWebFilterTrace(chain.filter(exchange), exchange, this);
 	}
 
+	@Override
+	public int getOrder() {
+		return sleuthWebProperties().getFilterOrder();
+	}
+
 	private static class MonoWebFilterTrace extends MonoOperator<Void, Void> {
 
 		final ServerWebExchange exchange;
@@ -174,6 +179,37 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			Context context = subscriber.currentContext();
 			this.source.subscribe(new WebFilterTraceSubscriber(subscriber, context,
 					findOrCreateSpan(context), this));
+		}
+
+		private Span findOrCreateSpan(Context c) {
+			Span span;
+			if (c.hasKey(Span.class)) {
+				Span parent = c.get(Span.class);
+				span = this.tracer
+						.nextSpan(TraceContextOrSamplingFlags.create(parent.context()))
+						.start();
+				if (log.isDebugEnabled()) {
+					log.debug("Found span in reactor context" + span);
+				}
+			}
+			else {
+				if (this.attrSpan != null) {
+					span = this.attrSpan;
+					if (log.isDebugEnabled()) {
+						log.debug("Found span in attribute " + span);
+					}
+				}
+				else {
+					span = this.handler.handleReceive(this.extractor,
+							this.exchange.getRequest().getHeaders(),
+							this.exchange.getRequest());
+					if (log.isDebugEnabled()) {
+						log.debug("Handled receive of span " + span);
+					}
+				}
+				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
+			}
+			return span;
 		}
 
 		static final class WebFilterTraceSubscriber implements CoreSubscriber<Void> {
@@ -288,47 +324,13 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		}
 
-		private Span findOrCreateSpan(Context c) {
-			Span span;
-			if (c.hasKey(Span.class)) {
-				Span parent = c.get(Span.class);
-				span = this.tracer
-						.nextSpan(TraceContextOrSamplingFlags.create(parent.context()))
-						.start();
-				if (log.isDebugEnabled()) {
-					log.debug("Found span in reactor context" + span);
-				}
-			}
-			else {
-				if (this.attrSpan != null) {
-					span = this.attrSpan;
-					if (log.isDebugEnabled()) {
-						log.debug("Found span in attribute " + span);
-					}
-				}
-				else {
-					span = this.handler.handleReceive(this.extractor,
-							this.exchange.getRequest().getHeaders(),
-							this.exchange.getRequest());
-					if (log.isDebugEnabled()) {
-						log.debug("Handled receive of span " + span);
-					}
-				}
-				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
-			}
-			return span;
-		}
-
-	}
-
-	@Override
-	public int getOrder() {
-		return sleuthWebProperties().getFilterOrder();
 	}
 
 	static final class DecoratedServerHttpResponse extends ServerHttpResponseDecorator {
 
-		final String method, httpRoute;
+		final String method;
+
+		final String httpRoute;
 
 		DecoratedServerHttpResponse(ServerHttpResponse delegate, String method,
 				String httpRoute) {

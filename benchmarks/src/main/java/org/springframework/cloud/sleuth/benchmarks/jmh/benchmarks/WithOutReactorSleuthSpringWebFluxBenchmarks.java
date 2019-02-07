@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
 
 import org.openjdk.jmh.runner.Runner;
@@ -25,12 +26,20 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
  */
 public class WithOutReactorSleuthSpringWebFluxBenchmarks extends SpringWebFluxBenchmarks {
 
+	public static void main(String[] args) throws RunnerException {
+		Options opt = new OptionsBuilder().include(
+				".*" + WithOutReactorSleuthSpringWebFluxBenchmarks.class.getSimpleName()
+						+ ".*")
+				.build();
+
+		new Runner(opt).run();
+	}
+
 	@Override
 	protected String[] runArgs() {
-		return new String[]{"--spring.jmx.enabled=false",
+		return new String[] { "--spring.jmx.enabled=false",
 				"--spring.application.name=defaultTraceContext",
-				"--spring.sleuth.enabled=true",
-				"--spring.sleuth.reactor.enabled=false"
+				"--spring.sleuth.enabled=true", "--spring.sleuth.reactor.enabled=false"
 
 		};
 	}
@@ -40,11 +49,4 @@ public class WithOutReactorSleuthSpringWebFluxBenchmarks extends SpringWebFluxBe
 		super.postSetUp();
 	}
 
-	public static void main(String[] args) throws RunnerException {
-		Options opt = new OptionsBuilder()
-				.include(".*" + WithOutReactorSleuthSpringWebFluxBenchmarks.class.getSimpleName() + ".*")
-				.build();
-
-		new Runner(opt).run();
-	}
 }

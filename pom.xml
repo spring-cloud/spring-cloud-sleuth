@@ -15,8 +15,8 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xmlns="http://maven.apache.org/POM/4.0.0"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -36,8 +36,11 @@
 
 	<scm>
 		<url>https://github.com/spring-cloud/spring-cloud-sleuth</url>
-		<connection>scm:git:git://github.com/spring-cloud/spring-cloud-sleuth.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/spring-cloud/spring-cloud-sleuth.git</developerConnection>
+		<connection>scm:git:git://github.com/spring-cloud/spring-cloud-sleuth.git
+		</connection>
+		<developerConnection>
+			scm:git:ssh://git@github.com/spring-cloud/spring-cloud-sleuth.git
+		</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
@@ -112,12 +115,12 @@
 		</pluginManagement>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-			</plugin>
-			<plugin>
 				<groupId>io.spring.javaformat</groupId>
 				<artifactId>spring-javaformat-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
@@ -210,7 +213,7 @@
 				<groupId>org.objenesis</groupId>
 				<artifactId>objenesis</artifactId>
 				<version>2.1</version>
-                <!-- not test because we need it in stream -->
+				<!-- not test because we need it in stream -->
 			</dependency>
 			<dependency>
 				<groupId>commons-logging</groupId>
@@ -254,9 +257,17 @@
 		<spring-cloud-gateway.version>2.1.1.BUILD-SNAPSHOT</spring-cloud-gateway.version>
 		<spring-cloud-stream.version>Fishtown.BUILD-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>2.1.1.BUILD-SNAPSHOT</spring-cloud-netflix.version>
-		<spring-cloud-openfeign.version>2.1.1.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
+		<spring-cloud-openfeign.version>2.1.1.BUILD-SNAPSHOT
+		</spring-cloud-openfeign.version>
 		<brave.version>5.6.1</brave.version>
-		<spring-security-boot-autoconfigure.version>2.1.2.RELEASE</spring-security-boot-autoconfigure.version>
+		<spring-security-boot-autoconfigure.version>2.1.2.RELEASE
+		</spring-security-boot-autoconfigure.version>
+
+		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
+		<maven-checkstyle-plugin.failsOnViolation>true
+		</maven-checkstyle-plugin.failsOnViolation>
+		<maven-checkstyle-plugin.includeTestSourceDirectory>true
+		</maven-checkstyle-plugin.includeTestSourceDirectory>
 	</properties>
 
 	<profiles>
@@ -376,7 +387,8 @@
 								</goals>
 								<configuration>
 									<propertyName>surefireArgLine</propertyName>
-									<destFile>${project.build.directory}/jacoco.exec</destFile>
+									<destFile>${project.build.directory}/jacoco.exec
+									</destFile>
 								</configuration>
 							</execution>
 							<execution>
@@ -387,7 +399,8 @@
 								</goals>
 								<configuration>
 									<!-- Sets the path to the file which contains the execution data. -->
-									<dataFile>${project.build.directory}/jacoco.exec</dataFile>
+									<dataFile>${project.build.directory}/jacoco.exec
+									</dataFile>
 								</configuration>
 							</execution>
 						</executions>
