@@ -114,7 +114,7 @@ class ZipkinRestTemplateSenderConfiguration {
 	ZipkinUrlExtractor zipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
 		return new ZipkinUrlExtractor() {
 			@Override
-			public URI zipkinUrl(ZipkinProperties zipkinProperties) {
+			public URI zipkinUrl() {
 				return zipkinLoadBalancer.instance();
 			}
 		};
@@ -145,7 +145,7 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 	protected <T> T doExecute(URI originalUrl, HttpMethod method,
 			RequestCallback requestCallback, ResponseExtractor<T> responseExtractor)
 			throws RestClientException {
-		URI uri = this.extractor.zipkinUrl(this.zipkinProperties);
+		URI uri = this.extractor.zipkinUrl();
 		URI newUri = resolvedZipkinUri(originalUrl, uri);
 		return super.doExecute(newUri, method, requestCallback, responseExtractor);
 	}
@@ -175,7 +175,7 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
  */
 interface ZipkinUrlExtractor {
 
-	URI zipkinUrl(ZipkinProperties zipkinProperties);
+	URI zipkinUrl();
 
 }
 

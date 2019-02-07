@@ -44,11 +44,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectMonoTests.TestBean.TEST_STRING;
+import static org.springframework.test.annotation.DirtiesContext.MethodMode.BEFORE_METHOD;
 import static reactor.core.publisher.Mono.just;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectMonoTests.TestConfiguration.class)
 @RunWith(SpringRunner.class)
-@DirtiesContext
+@DirtiesContext(methodMode = BEFORE_METHOD)
 public class SleuthSpanCreatorAspectMonoTests {
 
 	@Autowired
@@ -140,7 +141,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnInterfaceMethod() {
 		// tag::execution[]
-		Mono<String> mono = this.testBean.testMethod5("test");
+		Mono<String> mono = this.testBean.testMethod5();
 
 		// end::execution[]
 		then(this.reporter.getSpans()).isEmpty();
@@ -159,7 +160,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnClassMethod() {
-		Mono<String> mono = this.testBean.testMethod6("test");
+		Mono<String> mono = this.testBean.testMethod6();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -177,7 +178,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnInterfaceMethod() {
-		Mono<String> mono = this.testBean.testMethod8("test");
+		Mono<String> mono = this.testBean.testMethod8();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -194,7 +195,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
-		Mono<String> mono = this.testBean.testMethod9("test");
+		Mono<String> mono = this.testBean.testMethod9();
 
 		then(this.reporter.getSpans()).isEmpty();
 
@@ -216,7 +217,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			Mono<String> mono = this.testBean.testMethod10("test");
+			Mono<String> mono = this.testBean.testMethod10();
 
 			then(this.reporter.getSpans()).isEmpty();
 
@@ -241,7 +242,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 	@Test
 	public void shouldStartAndCloseSpanOnContinueSpanIfSpanNotSet() {
-		this.testBean.testMethod10("test").block();
+		this.testBean.testMethod10().block();
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = this.reporter.getSpans();
@@ -261,7 +262,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			Mono<String> mono = this.testBean.testMethod10_v2("test");
+			Mono<String> mono = this.testBean.testMethod10_v2();
 
 			then(this.reporter.getSpans()).isEmpty();
 
@@ -290,7 +291,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			// tag::continue_span_execution[]
-			Mono<String> mono = this.testBean.testMethod11("test");
+			Mono<String> mono = this.testBean.testMethod11();
 			// end::continue_span_execution[]
 			then(this.reporter.getSpans()).isEmpty();
 
@@ -318,7 +319,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 	@Test
 	public void shouldAddErrorTagWhenExceptionOccurredInNewSpan() {
 		try {
-			Mono<String> mono = this.testBean.testMethod12("test");
+			Mono<String> mono = this.testBean.testMethod12();
 
 			then(this.reporter.getSpans()).isEmpty();
 
@@ -489,32 +490,32 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		// tag::custom_name_and_tag_on_annotated_method[]
 		@NewSpan(name = "customNameOnTestMethod5")
-		Mono<String> testMethod5(@SpanTag("testTag") String param);
+		Mono<String> testMethod5();
 		// end::custom_name_and_tag_on_annotated_method[]
 
-		Mono<String> testMethod6(String test);
+		Mono<String> testMethod6();
 
 		Mono<String> testMethod7();
 
 		@NewSpan(name = "customNameOnTestMethod8")
-		Mono<String> testMethod8(String param);
+		Mono<String> testMethod8();
 
 		@NewSpan(name = "testMethod9")
-		Mono<String> testMethod9(String param);
+		Mono<String> testMethod9();
 
 		@ContinueSpan(log = "customTest")
-		Mono<String> testMethod10(@SpanTag(value = "testTag10") String param);
+		Mono<String> testMethod10();
 
 		@ContinueSpan(log = "customTest")
-		Mono<String> testMethod10_v2(@SpanTag(key = "testTag10") String param);
+		Mono<String> testMethod10_v2();
 
 		// tag::continue_span[]
 		@ContinueSpan(log = "testMethod11")
-		Mono<String> testMethod11(@SpanTag("testTag11") String param);
+		Mono<String> testMethod11();
 		// end::continue_span[]
 
 		@NewSpan
-		Mono<String> testMethod12(@SpanTag("testTag12") String param);
+		Mono<String> testMethod12();
 
 		@ContinueSpan(log = "testMethod13")
 		Mono<String> testMethod13();
@@ -564,13 +565,13 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		@Override
-		public Mono<String> testMethod5(String test) {
+		public Mono<String> testMethod5() {
 			return TEST_MONO;
 		}
 
 		@NewSpan(name = "customNameOnTestMethod6")
 		@Override
-		public Mono<String> testMethod6(@SpanTag("testTag6") String test) {
+		public Mono<String> testMethod6() {
 			return TEST_MONO;
 		}
 
@@ -580,36 +581,34 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		@Override
-		public Mono<String> testMethod8(String param) {
+		public Mono<String> testMethod8() {
 			return TEST_MONO;
 		}
 
 		@NewSpan(name = "customNameOnTestMethod9")
 		@Override
-		public Mono<String> testMethod9(String param) {
+		public Mono<String> testMethod9() {
 			return TEST_MONO;
 		}
 
 		@Override
-		public Mono<String> testMethod10(
-				@SpanTag(value = "customTestTag10") String param) {
+		public Mono<String> testMethod10() {
 			return TEST_MONO;
 		}
 
 		@Override
-		public Mono<String> testMethod10_v2(
-				@SpanTag(key = "customTestTag10") String param) {
+		public Mono<String> testMethod10_v2() {
 			return TEST_MONO;
 		}
 
 		@ContinueSpan(log = "customTest")
 		@Override
-		public Mono<String> testMethod11(@SpanTag("customTestTag11") String param) {
+		public Mono<String> testMethod11() {
 			return TEST_MONO;
 		}
 
 		@Override
-		public Mono<String> testMethod12(String param) {
+		public Mono<String> testMethod12() {
 			return Mono
 					.defer(() -> Mono.error(new RuntimeException("test exception 12")));
 		}

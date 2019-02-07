@@ -95,9 +95,9 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		void testMethod4();
 
 		@NewSpan(name = "testMethod5")
-		void testMethod5(@SpanTag("testTag") String test);
+		void testMethod5();
 
-		void testMethod6(String test);
+		void testMethod6();
 
 		void testMethod7();
 
@@ -124,12 +124,12 @@ public class SleuthSpanCreatorAspectNegativeTests {
 		}
 
 		@Override
-		public void testMethod5(String test) {
+		public void testMethod5() {
 		}
 
 		@NewSpan(name = "testMethod6")
 		@Override
-		public void testMethod6(@SpanTag("testTag6") String test) {
+		public void testMethod6() {
 
 		}
 

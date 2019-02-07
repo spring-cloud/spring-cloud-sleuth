@@ -72,7 +72,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should().schedule(
 				BDDMockito.argThat(
-						matcher(Runnable.class, instanceOf(TraceRunnable.class))),
+						matcher(instanceOf(TraceRunnable.class))),
 				anyLong(), any(TimeUnit.class));
 	}
 
@@ -82,7 +82,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should().schedule(
 				BDDMockito.argThat(
-						matcher(Callable.class, instanceOf(TraceCallable.class))),
+						matcher(instanceOf(TraceCallable.class))),
 				anyLong(), any(TimeUnit.class));
 	}
 
@@ -93,7 +93,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should().scheduleAtFixedRate(
 				BDDMockito.argThat(
-						matcher(Runnable.class, instanceOf(TraceRunnable.class))),
+						matcher(instanceOf(TraceRunnable.class))),
 				anyLong(), anyLong(), any(TimeUnit.class));
 	}
 
@@ -104,7 +104,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should().scheduleWithFixedDelay(
 				BDDMockito.argThat(
-						matcher(Runnable.class, instanceOf(TraceRunnable.class))),
+						matcher(instanceOf(TraceRunnable.class))),
 				anyLong(), anyLong(), any(TimeUnit.class));
 	}
 
@@ -116,7 +116,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should(never()).schedule(
 				BDDMockito.argThat(
-						matcher(Runnable.class, instanceOf(TraceRunnable.class))),
+						matcher(instanceOf(TraceRunnable.class))),
 				anyLong(), any(TimeUnit.class));
 	}
 
@@ -128,7 +128,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should(never()).schedule(
 				BDDMockito.argThat(
-						matcher(Callable.class, instanceOf(TraceCallable.class))),
+						matcher(instanceOf(TraceCallable.class))),
 				anyLong(), any(TimeUnit.class));
 	}
 
@@ -141,7 +141,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should(never()).scheduleAtFixedRate(
 				BDDMockito.argThat(
-						matcher(Runnable.class, instanceOf(TraceRunnable.class))),
+						matcher(instanceOf(TraceRunnable.class))),
 				anyLong(), anyLong(), any(TimeUnit.class));
 	}
 
@@ -154,7 +154,7 @@ public class TraceableScheduledExecutorServiceTest {
 
 		then(this.scheduledExecutorService).should(never()).scheduleWithFixedDelay(
 				BDDMockito.argThat(
-						matcher(Runnable.class, instanceOf(TraceRunnable.class))),
+						matcher(instanceOf(TraceRunnable.class))),
 				anyLong(), anyLong(), any(TimeUnit.class));
 	}
 
@@ -162,7 +162,7 @@ public class TraceableScheduledExecutorServiceTest {
 		return (argument) -> argument.getClass().isAssignableFrom(clazz);
 	}
 
-	<T> ArgumentMatcher<T> matcher(Class<T> clazz, Predicate predicate) {
+	<T> ArgumentMatcher<T> matcher(Predicate predicate) {
 		return predicate::test;
 	}
 

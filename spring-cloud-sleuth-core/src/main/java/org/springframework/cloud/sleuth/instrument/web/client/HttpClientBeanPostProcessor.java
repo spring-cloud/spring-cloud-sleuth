@@ -106,8 +106,6 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		HttpTracing httpTracing;
 
-		Tracer tracer;
-
 		HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
 		TraceContext.Injector<HttpHeaders> injector;

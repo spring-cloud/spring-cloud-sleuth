@@ -131,7 +131,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnInterfaceMethod() {
 		// tag::execution[]
-		Flux<String> flux = this.testBean.testMethod5("test");
+		Flux<String> flux = this.testBean.testMethod5();
 
 		// end::execution[]
 		verifyNoSpansUntilFluxComplete(flux);
@@ -148,7 +148,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnClassMethod() {
-		Flux<String> flux = this.testBean.testMethod6("test");
+		Flux<String> flux = this.testBean.testMethod6();
 
 		verifyNoSpansUntilFluxComplete(flux);
 
@@ -164,7 +164,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnInterfaceMethod() {
-		Flux<String> flux = this.testBean.testMethod8("test");
+		Flux<String> flux = this.testBean.testMethod8();
 
 		verifyNoSpansUntilFluxComplete(flux);
 
@@ -179,7 +179,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
-		Flux<String> flux = this.testBean.testMethod9("test");
+		Flux<String> flux = this.testBean.testMethod9();
 
 		verifyNoSpansUntilFluxComplete(flux);
 
@@ -199,7 +199,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			Flux<String> flux = this.testBean.testMethod10("test");
+			Flux<String> flux = this.testBean.testMethod10();
 
 			verifyNoSpansUntilFluxComplete(flux);
 		}
@@ -222,7 +222,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 	@Test
 	public void shouldStartAndCloseSpanOnContinueSpanIfSpanNotSet() {
-		Flux<String> flux = this.testBean.testMethod10("test");
+		Flux<String> flux = this.testBean.testMethod10();
 		verifyNoSpansUntilFluxComplete(flux);
 
 		Awaitility.await().untilAsserted(() -> {
@@ -243,7 +243,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			Flux<String> flux = this.testBean.testMethod10_v2("test");
+			Flux<String> flux = this.testBean.testMethod10_v2();
 
 			verifyNoSpansUntilFluxComplete(flux);
 		}
@@ -270,7 +270,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			// tag::continue_span_execution[]
-			Flux<String> flux = this.testBean.testMethod11("test");
+			Flux<String> flux = this.testBean.testMethod11();
 			// end::continue_span_execution[]
 			verifyNoSpansUntilFluxComplete(flux);
 		}
@@ -296,7 +296,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 	@Test
 	public void shouldAddErrorTagWhenExceptionOccurredInNewSpan() {
 		try {
-			Flux<String> flux = this.testBean.testMethod12("test");
+			Flux<String> flux = this.testBean.testMethod12();
 
 			then(this.reporter.getSpans()).isEmpty();
 
@@ -428,38 +428,38 @@ public class SleuthSpanCreatorAspectFluxTests {
 
 		// tag::custom_name_and_tag_on_annotated_method[]
 		@NewSpan(name = "customNameOnTestMethod5")
-		Flux<String> testMethod5(@SpanTag("testTag") String param);
+		Flux<String> testMethod5();
 		// end::custom_name_and_tag_on_annotated_method[]
 
-		Flux<String> testMethod6(String test);
+		Flux<String> testMethod6();
 
 		Flux<String> testMethod7();
 
 		@NewSpan(name = "customNameOnTestMethod8")
-		Flux<String> testMethod8(String param);
+		Flux<String> testMethod8();
 
 		@NewSpan(name = "testMethod9")
-		Flux<String> testMethod9(String param);
+		Flux<String> testMethod9();
 
 		@ContinueSpan(log = "customTest")
-		Flux<String> testMethod10(@SpanTag(value = "testTag10") String param);
+		Flux<String> testMethod10();
 
 		@ContinueSpan(log = "customTest")
-		Flux<String> testMethod10_v2(@SpanTag(key = "testTag10") String param);
+		Flux<String> testMethod10_v2();
 
 		// tag::continue_span[]
 		@ContinueSpan(log = "testMethod11")
-		Flux<String> testMethod11(@SpanTag("testTag11") String param);
+		Flux<String> testMethod11();
 		// end::continue_span[]
 
 		@NewSpan
-		Flux<String> testMethod12(@SpanTag("testTag12") String param);
+		Flux<String> testMethod12();
 
 		@ContinueSpan(log = "testMethod13")
 		Flux<String> testMethod13();
 
 		@ContinueSpan
-		Flux<String> testMethod14(String param);
+		Flux<String> testMethod14();
 
 		@NewSpan(name = "spanInTraceContext")
 		Flux<Long> newSpanInTraceContext();
@@ -527,13 +527,13 @@ public class SleuthSpanCreatorAspectFluxTests {
 		}
 
 		@Override
-		public Flux<String> testMethod5(String test) {
+		public Flux<String> testMethod5() {
 			return this.testFlux;
 		}
 
 		@NewSpan(name = "customNameOnTestMethod6")
 		@Override
-		public Flux<String> testMethod6(@SpanTag("testTag6") String test) {
+		public Flux<String> testMethod6() {
 			return this.testFlux;
 		}
 
@@ -543,36 +543,34 @@ public class SleuthSpanCreatorAspectFluxTests {
 		}
 
 		@Override
-		public Flux<String> testMethod8(String param) {
+		public Flux<String> testMethod8() {
 			return this.testFlux;
 		}
 
 		@NewSpan(name = "customNameOnTestMethod9")
 		@Override
-		public Flux<String> testMethod9(String param) {
+		public Flux<String> testMethod9() {
 			return this.testFlux;
 		}
 
 		@Override
-		public Flux<String> testMethod10(
-				@SpanTag(value = "customTestTag10") String param) {
+		public Flux<String> testMethod10() {
 			return this.testFlux;
 		}
 
 		@Override
-		public Flux<String> testMethod10_v2(
-				@SpanTag(key = "customTestTag10") String param) {
+		public Flux<String> testMethod10_v2() {
 			return this.testFlux;
 		}
 
 		@ContinueSpan(log = "customTest")
 		@Override
-		public Flux<String> testMethod11(@SpanTag("customTestTag11") String param) {
+		public Flux<String> testMethod11() {
 			return this.testFlux;
 		}
 
 		@Override
-		public Flux<String> testMethod12(String param) {
+		public Flux<String> testMethod12() {
 			return Flux
 					.defer(() -> Flux.error(new RuntimeException("test exception 12")));
 		}
@@ -584,7 +582,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		}
 
 		@Override
-		public Flux<String> testMethod14(String param) {
+		public Flux<String> testMethod14() {
 			return Flux.just(TEST_STRING1, TEST_STRING2);
 		}
 

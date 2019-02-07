@@ -27,7 +27,7 @@ public class NoOpTagValueResolverTests {
 
 	@Test
 	public void should_return_null() throws Exception {
-		then(new NoOpTagValueResolver().resolve("")).isNull();
+		then(new NoOpTagValueResolver().resolve()).isNull();
 	}
 
 }
