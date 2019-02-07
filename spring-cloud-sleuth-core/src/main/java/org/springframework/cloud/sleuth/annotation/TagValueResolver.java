@@ -26,8 +26,9 @@ public interface TagValueResolver {
 
 	/**
 	 * Returns the tag value for the given parameter.
+	 * @param parameter - parameter annotated with {@link SpanTag}
 	 * @return the value of the tag
 	 */
-	String resolve();
+	String resolve(Object parameter);
 
 }

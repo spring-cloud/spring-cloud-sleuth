@@ -112,7 +112,7 @@ class ParticipantsBean {
 		return this.participantsClient.getParticipants(raceId);
 	}
 
-	public List<Object> defaultParticipants() {
+	public List<Object> defaultParticipants(String raceId) {
 		return new ArrayList<>();
 	}
 

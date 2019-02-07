@@ -105,7 +105,7 @@ public class SleuthSpanCreatorAspectTests {
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnInterfaceMethod() {
 		// tag::execution[]
-		this.testBean.testMethod5();
+		this.testBean.testMethod5("test");
 		// end::execution[]
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
@@ -118,7 +118,7 @@ public class SleuthSpanCreatorAspectTests {
 
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnClassMethod() {
-		this.testBean.testMethod6();
+		this.testBean.testMethod6("test");
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
@@ -130,7 +130,7 @@ public class SleuthSpanCreatorAspectTests {
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnInterfaceMethod() {
-		this.testBean.testMethod8();
+		this.testBean.testMethod8("test");
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
@@ -141,7 +141,7 @@ public class SleuthSpanCreatorAspectTests {
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
-		this.testBean.testMethod9();
+		this.testBean.testMethod9("test");
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
@@ -157,7 +157,7 @@ public class SleuthSpanCreatorAspectTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.testBean.testMethod10();
+			this.testBean.testMethod10("test");
 		}
 		finally {
 			span.finish();
@@ -176,7 +176,7 @@ public class SleuthSpanCreatorAspectTests {
 
 	@Test
 	public void shouldStartAndCloseSpanOnContinueSpanIfSpanNotSet() {
-		this.testBean.testMethod10();
+		this.testBean.testMethod10("test");
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(1);
@@ -194,7 +194,7 @@ public class SleuthSpanCreatorAspectTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.testBean.testMethod10_v2();
+			this.testBean.testMethod10_v2("test");
 		}
 		finally {
 			span.finish();
@@ -217,7 +217,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			// tag::continue_span_execution[]
-			this.testBean.testMethod11();
+			this.testBean.testMethod11("test");
 			// end::continue_span_execution[]
 		}
 		finally {
@@ -240,7 +240,7 @@ public class SleuthSpanCreatorAspectTests {
 	@Test
 	public void shouldAddErrorTagWhenExceptionOccurredInNewSpan() {
 		try {
-			this.testBean.testMethod12();
+			this.testBean.testMethod12("test");
 		}
 		catch (RuntimeException ignored) {
 		}
@@ -308,32 +308,32 @@ public class SleuthSpanCreatorAspectTests {
 
 		// tag::custom_name_and_tag_on_annotated_method[]
 		@NewSpan(name = "customNameOnTestMethod5")
-		void testMethod5();
+		void testMethod5(@SpanTag("testTag") String param);
 		// end::custom_name_and_tag_on_annotated_method[]
 
-		void testMethod6();
+		void testMethod6(String test);
 
 		void testMethod7();
 
 		@NewSpan(name = "customNameOnTestMethod8")
-		void testMethod8();
+		void testMethod8(String param);
 
 		@NewSpan(name = "testMethod9")
-		void testMethod9();
+		void testMethod9(String param);
 
 		@ContinueSpan(log = "customTest")
-		void testMethod10();
+		void testMethod10(@SpanTag(value = "testTag10") String param);
 
 		@ContinueSpan(log = "customTest")
-		void testMethod10_v2();
+		void testMethod10_v2(@SpanTag(key = "testTag10") String param);
 
 		// tag::continue_span[]
 		@ContinueSpan(log = "testMethod11")
-		void testMethod11();
+		void testMethod11(@SpanTag("testTag11") String param);
 		// end::continue_span[]
 
 		@NewSpan
-		void testMethod12();
+		void testMethod12(@SpanTag("testTag12") String param);
 
 		@ContinueSpan(log = "testMethod13")
 		void testMethod13();
@@ -363,12 +363,12 @@ public class SleuthSpanCreatorAspectTests {
 		}
 
 		@Override
-		public void testMethod5() {
+		public void testMethod5(String test) {
 		}
 
 		@NewSpan(name = "customNameOnTestMethod6")
 		@Override
-		public void testMethod6() {
+		public void testMethod6(@SpanTag("testTag6") String test) {
 
 		}
 
@@ -377,34 +377,34 @@ public class SleuthSpanCreatorAspectTests {
 		}
 
 		@Override
-		public void testMethod8() {
+		public void testMethod8(String param) {
 
 		}
 
 		@NewSpan(name = "customNameOnTestMethod9")
 		@Override
-		public void testMethod9() {
+		public void testMethod9(String param) {
 
 		}
 
 		@Override
-		public void testMethod10() {
+		public void testMethod10(@SpanTag(value = "customTestTag10") String param) {
 
 		}
 
 		@Override
-		public void testMethod10_v2() {
+		public void testMethod10_v2(@SpanTag(key = "customTestTag10") String param) {
 
 		}
 
 		@ContinueSpan(log = "customTest")
 		@Override
-		public void testMethod11() {
+		public void testMethod11(@SpanTag("customTestTag11") String param) {
 
 		}
 
 		@Override
-		public void testMethod12() {
+		public void testMethod12(String param) {
 			throw new RuntimeException("test exception 12");
 		}
 

@@ -103,19 +103,21 @@ public class SpanTagAnnotationHandlerTests {
 
 		// tag::resolver_bean[]
 		@NewSpan
-		public void getAnnotationForTagValueResolver() {
+		public void getAnnotationForTagValueResolver(
+				@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
 		}
 		// end::resolver_bean[]
 
 		// tag::spel[]
 		@NewSpan
-		public void getAnnotationForTagValueExpression() {
+		public void getAnnotationForTagValueExpression(
+				@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
 		}
 		// end::spel[]
 
 		// tag::toString[]
 		@NewSpan
-		public void getAnnotationForArgumentToString() {
+		public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 		}
 		// end::toString[]
 
@@ -128,7 +130,7 @@ public class SpanTagAnnotationHandlerTests {
 		// tag::custom_resolver[]
 		@Bean(name = "myCustomTagValueResolver")
 		public TagValueResolver tagValueResolver() {
-			return () -> "Value from myCustomTagValueResolver";
+			return parameter -> "Value from myCustomTagValueResolver";
 		}
 		// end::custom_resolver[]
 

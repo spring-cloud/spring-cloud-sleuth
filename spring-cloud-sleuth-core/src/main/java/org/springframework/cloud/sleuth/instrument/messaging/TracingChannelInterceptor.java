@@ -141,7 +141,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		headers.setImmutable();
 		Span result = this.tracer.nextSpan(extracted);
 		if (extracted.context() == null && !result.isNoop()) {
-			addTags(result, null);
+			addTags(message, result, null);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span " + result);
@@ -167,7 +167,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.PRODUCER).name("send").start();
 			span.remoteServiceName(REMOTE_SERVICE_NAME);
-			addTags(span, channel);
+			addTags(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in pre send" + span);
@@ -253,7 +253,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.CONSUMER).name("receive").start();
 			span.remoteServiceName(REMOTE_SERVICE_NAME);
-			addTags(span, channel);
+			addTags(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in post receive " + span);
@@ -292,7 +292,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (!consumerSpan.isNoop()) {
 			consumerSpan.kind(Span.Kind.CONSUMER).start();
 			consumerSpan.remoteServiceName(REMOTE_SERVICE_NAME);
-			addTags(consumerSpan, channel);
+			addTags(message, consumerSpan, channel);
 			consumerSpan.finish();
 		}
 		// create and scope a span for the message processor
@@ -331,7 +331,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	/**
 	 * When an upstream context was not present, lookup keys are unlikely added
 	 */
-	void addTags(SpanCustomizer result, MessageChannel channel) {
+	void addTags(Message<?> message, SpanCustomizer result, MessageChannel channel) {
 		// TODO topic etc
 		if (channel != null) {
 			result.tag("channel", messageChannelName(channel));

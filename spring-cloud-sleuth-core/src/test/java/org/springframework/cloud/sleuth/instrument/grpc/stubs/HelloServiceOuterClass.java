@@ -21,12 +21,13 @@ public final class HelloServiceOuterClass {
 	private HelloServiceOuterClass() {
 	}
 
-	public static void registerAllExtensions() {
+	public static void registerAllExtensions(
+			com.google.protobuf.ExtensionRegistryLite registry) {
 	}
 
 	public static void registerAllExtensions(
 			com.google.protobuf.ExtensionRegistry registry) {
-		registerAllExtensions();
+		registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
 	}
 
 	static final com.google.protobuf.Descriptors.Descriptor internal_static_sample_grpc_HelloRequest_descriptor;

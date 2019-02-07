@@ -151,7 +151,7 @@ class SpanTagAnnotationHandler {
 		if (annotation.resolver() != NoOpTagValueResolver.class) {
 			TagValueResolver tagValueResolver = this.beanFactory
 					.getBean(annotation.resolver());
-			return tagValueResolver.resolve();
+			return tagValueResolver.resolve(argument);
 		}
 		else if (StringUtils.hasText(annotation.expression())) {
 			return this.beanFactory.getBean(TagValueExpressionResolver.class)
