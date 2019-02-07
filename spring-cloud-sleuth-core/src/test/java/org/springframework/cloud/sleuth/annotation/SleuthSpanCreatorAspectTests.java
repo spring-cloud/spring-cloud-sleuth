@@ -33,12 +33,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.test.annotation.DirtiesContext.MethodMode.BEFORE_METHOD;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectTests.TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
+@DirtiesContext(methodMode = BEFORE_METHOD)
 public class SleuthSpanCreatorAspectTests {
 
 	@Autowired
