@@ -27,6 +27,8 @@ import brave.Tracing;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
+import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
+import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.actuate.endpoint.EndpointsSupplier;
 import org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint;
@@ -101,13 +103,12 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class,
-			ExposableWebEndpoint.class })
+	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class, ExposableWebEndpoint.class })
 	@ConditionalOnBean(ServerProperties.class)
 	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false", matchIfMissing = true)
 	protected static class ActuatorSkipPatternProviderConfig {
 
-		static Optional<Pattern> getEndpointsPatterns(ServerProperties serverProperties,
+		static Optional<Pattern> getEndpointsPatterns(String contextPath,
 				WebEndpointProperties webEndpointProperties,
 				EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
 			Collection<ExposableWebEndpoint> endpoints = endpointsSupplier.getEndpoints();
@@ -115,8 +116,6 @@ public class TraceWebAutoConfiguration {
 			if (endpoints.isEmpty()) {
 				return Optional.empty();
 			}
-
-			String contextPath = serverProperties.getServlet().getContextPath();
 
 			String pattern = endpoints.stream().map(PathMappedEndpoint::getRootPath)
 					.map(path -> path + "|" + path + "/.*").collect(
@@ -142,14 +141,23 @@ public class TraceWebAutoConfiguration {
 		}
 
 		@Bean
-		public SingleSkipPattern skipPatternForActuatorEndpoints(
+		@ConditionalOnManagementPort(ManagementPortType.SAME)
+		public SingleSkipPattern skipPatternForActuatorEndpointsSamePort(
 				final ServerProperties serverProperties,
 				final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(serverProperties, webEndpointProperties,
-					endpointsSupplier);
+			return () -> getEndpointsPatterns(serverProperties.getServlet().getContextPath(), 
+				webEndpointProperties, endpointsSupplier);
 		}
-
+		
+		@Bean
+		@ConditionalOnManagementPort(ManagementPortType.DIFFERENT)
+		public SingleSkipPattern skipPatternForActuatorEndpointsDifferentPort(
+				final ServerProperties serverProperties,
+				final WebEndpointProperties webEndpointProperties,
+				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
+			return () -> getEndpointsPatterns(null, webEndpointProperties, endpointsSupplier);
+		}
 	}
 
 	@Configuration
