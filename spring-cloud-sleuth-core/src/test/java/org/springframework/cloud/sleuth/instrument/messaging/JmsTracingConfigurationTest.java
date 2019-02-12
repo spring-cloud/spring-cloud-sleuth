@@ -208,8 +208,8 @@ public class JmsTracingConfigurationTest {
 		MessageListener simpleMessageListener(CurrentTraceContext current) {
 			return message -> {
 				// Didn't restart the trace
-				assertThat(current.get()).extracting(TraceContext::parentIdAsLong)
-						.isNotEqualTo(0L);
+				assertThat(current.get()).isNotNull()
+						.extracting(TraceContext::parentIdAsLong).isNotEqualTo(0L);
 			};
 		}
 
@@ -224,8 +224,8 @@ public class JmsTracingConfigurationTest {
 
 		@JmsListener(destination = "myQueue")
 		public void onMessage() {
-			assertThat(this.current.get()).extracting(TraceContext::parentIdAsLong)
-					.isNotEqualTo(0L);
+			assertThat(this.current.get()).isNotNull()
+					.extracting(TraceContext::parentIdAsLong).isNotEqualTo(0L);
 		}
 
 	}
