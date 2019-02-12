@@ -114,13 +114,13 @@ public final class TracingJmsListenerEndpointRegistry
 	@Override
 	public void registerListenerContainer(JmsListenerEndpoint endpoint,
 			JmsListenerContainerFactory<?> factory) {
-		this.delegate.registerListenerContainer(endpoint, factory);
+		this.delegate.registerListenerContainer(wrapEndpoint(endpoint), factory);
 	}
 
 	@Override
 	protected MessageListenerContainer createListenerContainer(
 			JmsListenerEndpoint endpoint, JmsListenerContainerFactory<?> factory) {
-		return this.delegate.createListenerContainer(endpoint, factory);
+		return this.delegate.createListenerContainer(wrapEndpoint(endpoint), factory);
 	}
 
 	@Override
@@ -178,13 +178,18 @@ public final class TracingJmsListenerEndpointRegistry
 	@Override
 	public void registerListenerContainer(JmsListenerEndpoint endpoint,
 			JmsListenerContainerFactory<?> factory, boolean startImmediately) {
+		this.delegate.registerListenerContainer(wrapEndpoint(endpoint), factory,
+				startImmediately);
+	}
+
+	private JmsListenerEndpoint wrapEndpoint(JmsListenerEndpoint endpoint) {
 		if (endpoint instanceof MethodJmsListenerEndpoint) {
-			endpoint = trace((MethodJmsListenerEndpoint) endpoint);
+			return trace((MethodJmsListenerEndpoint) endpoint);
 		}
 		else if (endpoint instanceof SimpleJmsListenerEndpoint) {
-			endpoint = trace((SimpleJmsListenerEndpoint) endpoint);
+			return trace((SimpleJmsListenerEndpoint) endpoint);
 		}
-		this.delegate.registerListenerContainer(endpoint, factory, startImmediately);
+		return endpoint;
 	}
 
 	/**
@@ -251,6 +256,10 @@ public final class TracingJmsListenerEndpointRegistry
 		}
 		return dest;
 	}
+
+}
+
+final class TracingMethodJmsListenerEndpoint extends MethodJmsListenerEndpoint {
 
 }
 

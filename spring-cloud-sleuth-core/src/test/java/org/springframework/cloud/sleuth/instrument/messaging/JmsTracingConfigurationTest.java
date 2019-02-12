@@ -51,6 +51,7 @@ import org.springframework.boot.test.context.assertj.AssertableApplicationContex
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jca.support.ResourceAdapterFactoryBean;
@@ -72,11 +73,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JmsTracingConfigurationTest {
 
 	final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(
-					AutoConfigurations.of(AnnotationJmsListenerConfiguration.class,
-							XAConfiguration.class, SimpleJmsListenerConfiguration.class,
-							JcaJmsListenerConfiguration.class,
-							JmsTestTracingConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(JmsTestTracingConfiguration.class,
+					AnnotationJmsListenerConfiguration.class, XAConfiguration.class,
+					SimpleJmsListenerConfiguration.class,
+					JcaJmsListenerConfiguration.class));
 
 	static void clearSpans(AssertableApplicationContext ctx) throws JMSException {
 		ctx.getBean(JmsTestTracingConfiguration.class).clearSpan();
@@ -137,8 +137,8 @@ public class JmsTracingConfigurationTest {
 
 					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
 							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).extracting(Span::name).contains("send", "receive",
-							"on-message");
+					assertThat(trace).isNotNull().extracting(Span::name).contains("send",
+							"receive", "on-message");
 				});
 	}
 
@@ -155,7 +155,7 @@ public class JmsTracingConfigurationTest {
 
 					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
 							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).extracting(Span::name)
+					assertThat(trace).isNotNull().extracting(Span::name)
 							.containsExactlyInAnyOrder("send", "receive", "on-message");
 				});
 	}
@@ -173,7 +173,7 @@ public class JmsTracingConfigurationTest {
 
 					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
 							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).extracting(Span::name)
+					assertThat(trace).isNotNull().extracting(Span::name)
 							.containsExactlyInAnyOrder("send", "receive", "on-message");
 				});
 	}
@@ -250,8 +250,8 @@ public class JmsTracingConfigurationTest {
 		MessageListener simpleMessageListener(CurrentTraceContext current) {
 			return message -> {
 				// Didn't restart the trace
-				assertThat(current.get()).extracting(TraceContext::parentIdAsLong)
-						.isNotEqualTo(0L);
+				assertThat(current.get()).isNotNull()
+						.extracting(TraceContext::parentIdAsLong).isNotEqualTo(0L);
 			};
 		}
 
@@ -277,7 +277,8 @@ public class JmsTracingConfigurationTest {
 
 @Configuration
 @EnableAutoConfiguration(exclude = { GatewayAutoConfiguration.class,
-		GatewayClassPathWarningAutoConfiguration.class })
+		GatewayClassPathWarningAutoConfiguration.class,
+		EurekaClientAutoConfiguration.class })
 class JmsTestTracingConfiguration {
 
 	static final String CONTEXT_LEAK = "context.leak";
