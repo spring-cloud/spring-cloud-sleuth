@@ -38,22 +38,25 @@ import org.springframework.lang.Nullable;
 
 /**
  * This ensures listeners end up continuing the trace from
- * {@link MessageConsumer#receive()}.
+ * {@link javax.jms.MessageConsumer#receive()}.
  *
- * Internal class, do not use. It's API can change at anytime.
+ * Internal class for Sleuth, do not use. Its API can change at anytime.
+ *
+ * Placed under this package cause we need to use the package scoped API.
  *
  * @author Marcin Grzejszczak
+ * @since 2.1.1
  */
 public final class TracingJmsListenerEndpointRegistry
 		extends JmsListenerEndpointRegistry {
 
-	final BeanFactory beanFactory;
+	private final BeanFactory beanFactory;
 
-	final JmsListenerEndpointRegistry delegate;
+	private final JmsListenerEndpointRegistry delegate;
 
-	JmsTracing jmsTracing;
+	private JmsTracing jmsTracing;
 
-	CurrentTraceContext currentTraceContext;
+	private CurrentTraceContext currentTraceContext;
 
 	// Not all state can be copied without using reflection
 	final Field messageHandlerMethodFactoryField;
@@ -219,7 +222,6 @@ public final class TracingJmsListenerEndpointRegistry
 				|| this.embeddedValueResolverField == null) {
 			return source;
 		}
-
 		// We want the stock implementation, except we want to wrap the message listener
 		// in a new span
 		MethodJmsListenerEndpoint dest = new MethodJmsListenerEndpoint() {
@@ -229,19 +231,16 @@ public final class TracingJmsListenerEndpointRegistry
 						currentTraceContext());
 			}
 		};
-
 		// set state from AbstractJmsListenerEndpoint
 		dest.setId(source.getId());
 		dest.setDestination(source.getDestination());
 		dest.setSubscription(source.getSubscription());
 		dest.setSelector(source.getSelector());
 		dest.setConcurrency(source.getConcurrency());
-
 		// set state from MethodJmsListenerEndpoint
 		dest.setBean(source.getBean());
 		dest.setMethod(source.getMethod());
 		dest.setMostSpecificMethod(source.getMostSpecificMethod());
-
 		try {
 			dest.setMessageHandlerMethodFactory(
 					get(source, this.messageHandlerMethodFactoryField));
