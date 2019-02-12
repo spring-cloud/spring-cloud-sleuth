@@ -16,36 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.lang.reflect.Field;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
-import javax.jms.Session;
 import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
 import javax.jms.XAJMSContext;
 
-import brave.Span;
 import brave.jms.JmsTracing;
-import brave.propagation.CurrentTraceContext;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.jms.config.JmsListenerContainerFactory;
-import org.springframework.jms.config.JmsListenerEndpoint;
-import org.springframework.jms.config.JmsListenerEndpointRegistry;
-import org.springframework.jms.config.MethodJmsListenerEndpoint;
-import org.springframework.jms.config.SimpleJmsListenerEndpoint;
 import org.springframework.jms.connection.CachingConnectionFactory;
-import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter;
 import org.springframework.jms.listener.endpoint.JmsMessageEndpointManager;
-import org.springframework.lang.Nullable;
 
 /**
  * {@link BeanPostProcessor} wrapping around JMS {@link ConnectionFactory}.
@@ -241,163 +228,6 @@ class LazyMessageListener implements MessageListener {
 		// Adds a consumer span as we have no visibility into JCA's implementation of
 		// messaging
 		return jmsTracing().messageListener(this.delegate, true);
-	}
-
-}
-
-/**
- * This ensures listeners end up continuing the trace from
- * {@link MessageConsumer#receive()}.
- */
-class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
-
-	final JmsTracing jmsTracing;
-
-	final CurrentTraceContext current;
-
-	// Not all state can be copied without using reflection
-	final Field messageHandlerMethodFactoryField;
-
-	final Field embeddedValueResolverField;
-
-	TracingJmsListenerEndpointRegistry(JmsTracing jmsTracing,
-			CurrentTraceContext current) {
-		this.jmsTracing = jmsTracing;
-		this.current = current;
-		this.messageHandlerMethodFactoryField = tryField("messageHandlerMethodFactory");
-		this.embeddedValueResolverField = tryField("embeddedValueResolver");
-	}
-
-	@Nullable
-	static Field tryField(String name) {
-		try {
-			Field field = MethodJmsListenerEndpoint.class.getDeclaredField(name);
-			field.setAccessible(true);
-			return field;
-		}
-		catch (NoSuchFieldException e) {
-			return null;
-		}
-	}
-
-	@Nullable
-	static <T> T get(Object object, Field field) throws IllegalAccessException {
-		return (T) field.get(object);
-	}
-
-	@Override
-	public void registerListenerContainer(JmsListenerEndpoint endpoint,
-			JmsListenerContainerFactory<?> factory, boolean startImmediately) {
-		if (endpoint instanceof MethodJmsListenerEndpoint) {
-			endpoint = trace((MethodJmsListenerEndpoint) endpoint);
-		}
-		else if (endpoint instanceof SimpleJmsListenerEndpoint) {
-			endpoint = trace((SimpleJmsListenerEndpoint) endpoint);
-		}
-		super.registerListenerContainer(endpoint, factory, startImmediately);
-	}
-
-	/**
-	 * This wraps the {@link SimpleJmsListenerEndpoint#getMessageListener()} delegate in a
-	 * new span.
-	 * @param source jms endpoint
-	 * @return wrapped endpoint
-	 */
-	SimpleJmsListenerEndpoint trace(SimpleJmsListenerEndpoint source) {
-		MessageListener delegate = source.getMessageListener();
-		if (delegate == null) {
-			return source;
-		}
-		source.setMessageListener(this.jmsTracing.messageListener(delegate, false));
-		return source;
-	}
-
-	/**
-	 * It would be better to trace by wrapping, but
-	 * {@link MethodJmsListenerEndpoint#createMessageListenerInstance()}, is protected so
-	 * we can't call it from outside code. In other words, a forwarding pattern can't be
-	 * used. Instead, we copy state from the input.
-	 * <p>
-	 * NOTE: As {@linkplain MethodJmsListenerEndpoint} is neither final, nor effectively
-	 * final. For this reason we can't ensure copying will get all state. For example, a
-	 * subtype could hold state we aren't aware of, or change behavior. We can consider
-	 * checking that input is not a subtype, and most conservatively leaving unknown
-	 * subtypes untraced.
-	 * @param source jms endpoint
-	 * @return wrapped endpoint
-	 */
-	MethodJmsListenerEndpoint trace(MethodJmsListenerEndpoint source) {
-		// Skip out rather than incompletely copying the source
-		if (this.messageHandlerMethodFactoryField == null
-				|| this.embeddedValueResolverField == null) {
-			return source;
-		}
-
-		// We want the stock implementation, except we want to wrap the message listener
-		// in a new span
-		MethodJmsListenerEndpoint dest = new MethodJmsListenerEndpoint() {
-			@Override
-			protected MessagingMessageListenerAdapter createMessageListenerInstance() {
-				return new TracingMessagingMessageListenerAdapter(
-						TracingJmsListenerEndpointRegistry.this.jmsTracing,
-						TracingJmsListenerEndpointRegistry.this.current);
-			}
-		};
-
-		// set state from AbstractJmsListenerEndpoint
-		dest.setId(source.getId());
-		dest.setDestination(source.getDestination());
-		dest.setSubscription(source.getSubscription());
-		dest.setSelector(source.getSelector());
-		dest.setConcurrency(source.getConcurrency());
-
-		// set state from MethodJmsListenerEndpoint
-		dest.setBean(source.getBean());
-		dest.setMethod(source.getMethod());
-		dest.setMostSpecificMethod(source.getMostSpecificMethod());
-
-		try {
-			dest.setMessageHandlerMethodFactory(
-					get(source, this.messageHandlerMethodFactoryField));
-			dest.setEmbeddedValueResolver(get(source, this.embeddedValueResolverField));
-		}
-		catch (IllegalAccessException e) {
-			return source; // skip out rather than incompletely copying the source
-		}
-		return dest;
-	}
-
-}
-
-/**
- * This wraps the message listener in a child span.
- */
-final class TracingMessagingMessageListenerAdapter
-		extends MessagingMessageListenerAdapter {
-
-	final JmsTracing jmsTracing;
-
-	final CurrentTraceContext current;
-
-	TracingMessagingMessageListenerAdapter(JmsTracing jmsTracing,
-			CurrentTraceContext current) {
-		this.jmsTracing = jmsTracing;
-		this.current = current;
-	}
-
-	@Override
-	public void onMessage(Message message, Session session) throws JMSException {
-		Span span = this.jmsTracing.nextSpan(message).name("on-message").start();
-		try (CurrentTraceContext.Scope ws = this.current.newScope(span.context())) {
-			super.onMessage(message, session);
-		}
-		catch (JMSException | RuntimeException | Error e) {
-			span.error(e);
-			throw e;
-		}
-		finally {
-			span.finish();
-		}
 	}
 
 }

@@ -25,7 +25,6 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.jms.JmsTracing;
 import brave.kafka.clients.KafkaTracing;
-import brave.propagation.CurrentTraceContext;
 import brave.spring.rabbit.SpringRabbitTracing;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -57,6 +56,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
 import org.springframework.jms.annotation.JmsListenerConfigurer;
+import org.springframework.jms.config.JmsListenerEndpointRegistry;
+import org.springframework.jms.config.TracingJmsListenerEndpointRegistry;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
@@ -129,6 +130,7 @@ public class TraceMessagingAutoConfiguration {
 	@Configuration
 	@ConditionalOnProperty(value = "spring.sleuth.messaging.jms.enabled", matchIfMissing = true)
 	@ConditionalOnClass(JmsListenerConfigurer.class)
+	@ConditionalOnBean(JmsListenerEndpointRegistry.class)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	protected static class SleuthJmsConfiguration {
 
@@ -149,12 +151,22 @@ public class TraceMessagingAutoConfiguration {
 			return new TracingConnectionFactoryBeanPostProcessor(beanFactory);
 		}
 
+		@Bean
+		JmsListenerConfigurer configureTracing(BeanFactory beanFactory,
+				JmsListenerEndpointRegistry defaultRegistry) {
+			return registrar -> {
+				TracingJmsBeanPostProcessor processor = tracingJmsBeanPostProcessor(
+						beanFactory);
+				JmsListenerEndpointRegistry registry = registrar.getEndpointRegistry();
+				registrar.setEndpointRegistry((JmsListenerEndpointRegistry) processor
+						.wrap(registry == null ? defaultRegistry : registry));
+			};
+		}
+
 		// Setup the tracing endpoint registry.
 		@Bean
-		JmsListenerConfigurer configureTracing(JmsTracing jmsTracing,
-				CurrentTraceContext current) {
-			return registrar -> registrar.setEndpointRegistry(
-					new TracingJmsListenerEndpointRegistry(jmsTracing, current));
+		TracingJmsBeanPostProcessor tracingJmsBeanPostProcessor(BeanFactory beanFactory) {
+			return new TracingJmsBeanPostProcessor(beanFactory);
 		}
 
 	}
@@ -322,6 +334,35 @@ class MessageListenerMethodInterceptor<T extends MessageListener>
 		finally {
 			span.finish();
 		}
+	}
+
+}
+
+class TracingJmsBeanPostProcessor implements BeanPostProcessor {
+
+	private final BeanFactory beanFactory;
+
+	TracingJmsBeanPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
+		return wrap(bean);
+	}
+
+	Object wrap(Object bean) {
+		if (typeMatches(bean)) {
+			return new TracingJmsListenerEndpointRegistry(
+					(JmsListenerEndpointRegistry) bean, this.beanFactory);
+		}
+		return bean;
+	}
+
+	private boolean typeMatches(Object bean) {
+		return bean instanceof JmsListenerEndpointRegistry
+				&& !(bean instanceof TracingJmsListenerEndpointRegistry);
 	}
 
 }
