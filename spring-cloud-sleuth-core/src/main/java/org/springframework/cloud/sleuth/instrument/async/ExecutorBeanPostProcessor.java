@@ -34,6 +34,7 @@ import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ReflectionUtils;
 
@@ -67,7 +68,8 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof ThreadPoolTaskExecutor) {
+		if (bean instanceof ThreadPoolTaskExecutor
+				&& !(bean instanceof LazyTraceThreadPoolTaskExecutor)) {
 			if (isProxyNeeded(beanName)) {
 				return wrapThreadPoolTaskExecutor(bean);
 			}
@@ -75,7 +77,8 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				log.info("Not instrumenting bean " + beanName);
 			}
 		}
-		else if (bean instanceof ExecutorService) {
+		else if (bean instanceof ExecutorService
+				&& !(bean instanceof TraceableExecutorService)) {
 			if (isProxyNeeded(beanName)) {
 				return wrapExecutorService(bean);
 			}
@@ -83,7 +86,16 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				log.info("Not instrumenting bean " + beanName);
 			}
 		}
-		else if (bean instanceof Executor) {
+		else if (bean instanceof AsyncTaskExecutor
+				&& !(bean instanceof LazyTraceAsyncTaskExecutor)) {
+			if (isProxyNeeded(beanName)) {
+				return wrapAsyncTaskExecutor(bean);
+			}
+			else {
+				log.info("Not instrumenting bean " + beanName);
+			}
+		}
+		else if (bean instanceof Executor && !(bean instanceof LazyTraceExecutor)) {
 			return wrapExecutor(bean);
 		}
 		return bean;
@@ -128,6 +140,13 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		return createExecutorServiceProxy(bean, cglibProxy, executor);
 	}
 
+	private Object wrapAsyncTaskExecutor(Object bean) {
+		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+		boolean cglibProxy = !classFinal;
+		AsyncTaskExecutor executor = (AsyncTaskExecutor) bean;
+		return createAsyncTaskExecutorProxy(bean, cglibProxy, executor);
+	}
+
 	boolean isProxyNeeded(String beanName) {
 		SleuthAsyncProperties sleuthAsyncProperties = asyncConfigurationProperties();
 		return !sleuthAsyncProperties.getIgnoredBeans().contains(beanName);
@@ -143,6 +162,12 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			ExecutorService executor) {
 		return getProxiedObject(bean, cglibProxy, executor,
 				() -> new TraceableExecutorService(this.beanFactory, executor));
+	}
+
+	Object createAsyncTaskExecutorProxy(Object bean, boolean cglibProxy,
+			AsyncTaskExecutor executor) {
+		return getProxiedObject(bean, cglibProxy, executor,
+				() -> new LazyTraceAsyncTaskExecutor(this.beanFactory, executor));
 	}
 
 	private Object getProxiedObject(Object bean, boolean cglibProxy, Executor executor,

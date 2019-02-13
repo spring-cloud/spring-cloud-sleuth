@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
@@ -34,6 +35,7 @@ import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -189,6 +191,16 @@ public class TraceAsyncIntegrationTests {
 			return new ArrayListSpanReporter();
 		}
 
+		@Bean
+		Executor fooExecutor() {
+			return new SimpleAsyncTaskExecutor();
+		}
+
+		@Bean
+		Executor barExecutor() {
+			return new SimpleAsyncTaskExecutor();
+		}
+
 	}
 
 	static class ClassPerformingAsyncLogic {
@@ -201,7 +213,7 @@ public class TraceAsyncIntegrationTests {
 			this.tracer = tracer;
 		}
 
-		@Async
+		@Async("fooExecutor")
 		public void invokeAsynchronousLogic() {
 			this.span.set(this.tracer.currentSpan());
 		}
