@@ -68,6 +68,9 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 		this.s = subscription;
 		try (CurrentTraceContext.Scope scope = this.currentTraceContext
 				.maybeScope(this.traceContext)) {
+			if (log.isTraceEnabled()) {
+				log.trace("OnSubscribe");
+			}
 			this.subscriber.onSubscribe(this);
 		}
 	}
@@ -76,6 +79,9 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 	public void request(long n) {
 		try (CurrentTraceContext.Scope scope = this.currentTraceContext
 				.maybeScope(this.traceContext)) {
+			if (log.isTraceEnabled()) {
+				log.trace("Request");
+			}
 			this.s.request(n);
 		}
 	}
@@ -84,6 +90,9 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 	public void cancel() {
 		try (CurrentTraceContext.Scope scope = this.currentTraceContext
 				.maybeScope(this.traceContext)) {
+			if (log.isTraceEnabled()) {
+				log.trace("Cancel");
+			}
 			this.s.cancel();
 		}
 
@@ -93,6 +102,9 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 	public void onNext(T o) {
 		try (CurrentTraceContext.Scope scope = this.currentTraceContext
 				.maybeScope(this.traceContext)) {
+			if (log.isTraceEnabled()) {
+				log.trace("OnNext");
+			}
 			this.subscriber.onNext(o);
 		}
 	}
@@ -101,6 +113,9 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 	public void onError(Throwable throwable) {
 		try (CurrentTraceContext.Scope scope = this.currentTraceContext
 				.maybeScope(this.traceContext)) {
+			if (log.isTraceEnabled()) {
+				log.trace("OnError");
+			}
 			this.subscriber.onError(throwable);
 		}
 	}
@@ -109,6 +124,9 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 	public void onComplete() {
 		try (CurrentTraceContext.Scope scope = this.currentTraceContext
 				.maybeScope(this.traceContext)) {
+			if (log.isTraceEnabled()) {
+				log.trace("OnComplete");
+			}
 			this.subscriber.onComplete();
 		}
 	}

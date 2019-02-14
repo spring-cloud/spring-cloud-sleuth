@@ -235,22 +235,34 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 			@Override
 			public void onSubscribe(Subscription subscription) {
+				if (log.isTraceEnabled()) {
+					log.trace("OnSubscribe in filter");
+				}
 				this.actual.onSubscribe(subscription);
 			}
 
 			@Override
 			public void onNext(Void aVoid) {
+				if (log.isTraceEnabled()) {
+					log.trace("OnNext in filter");
+				}
 				// IGNORE
 			}
 
 			@Override
 			public void onError(Throwable t) {
+				if (log.isTraceEnabled()) {
+					log.trace("OnError in filter");
+				}
 				terminateSpan(t);
 				this.actual.onError(t);
 			}
 
 			@Override
 			public void onComplete() {
+				if (log.isTraceEnabled()) {
+					log.trace("OnComplete in filter");
+				}
 				terminateSpan(null);
 				this.actual.onComplete();
 			}
