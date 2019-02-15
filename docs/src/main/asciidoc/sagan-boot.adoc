@@ -1,0 +1,74 @@
+Add Sleuth to your classpath:
+
+Maven
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-sleuth</artifactId>
+            <version>${spring-cloud-sleuth.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+    </dependency>
+</dependencies>
+```
+
+Gradle
+
+```groovy
+buildscript {
+    dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:0.5.2.RELEASE"
+    }
+}
+
+apply plugin: "io.spring.dependency-management"
+
+dependencyManagement {
+     imports {
+          mavenBom "org.springframework.cloud:spring-cloud-sleuth:${springCloudSleuthVersion}"
+     }
+}
+dependencies {
+    compile 'org.springframework.cloud:spring-cloud-starter-sleuth'
+}
+```
+
+As long as Spring Cloud Sleuth is on the classpath any Spring Boot application will generate trace data:
+
+```java
+@SpringBootApplication
+@RestController
+public class Application {
+
+  private static Logger log = LoggerFactory.getLogger(DemoController.class);
+
+  @RequestMapping("/")
+  public String home() {
+    log.info("Handling home");
+    return "Hello World";
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(Application.class, args);
+  }
+
+}
+```
+
+Run this app and then hit the home page. You will see traceId and spanId populated in the logs. If this app calls out to another one (e.g. with `RestTemplate`) it will send the trace data in headers and if the receiver is another Sleuth app you will see the trace continue there.
+
+IMPORTANT: instead of logging the request in the handler explicitly, you could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`
+
+IMPORTANT: If you use Zipkin, configure the probability of spans exported by setting (for `2.0.x`) `spring.sleuth.sampler.probability` or (up till `2.0.x`)`spring.sleuth.sampler.percentage` (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working because it omits some spans.
+
+IMPORTANT: Set `spring.application.name=bar` (for instance) to see the service name as well as the trace and span ids.
