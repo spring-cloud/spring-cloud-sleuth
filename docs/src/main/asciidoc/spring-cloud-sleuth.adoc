@@ -1223,7 +1223,9 @@ However, all the default instrumentation is still there.
 
 Spring Cloud Sleuth provides instrumentation for https://grpc.io/[gRPC] through `TraceGrpcAutoConfiguration`. You can disable it entirely by setting `spring.sleuth.grpc.enabled` to `false`.
 
-==== Dependencies
+==== Variant 1
+
+===== Dependencies
 IMPORTANT: The gRPC integration relies on two external libraries to instrument clients and servers and both of those libraries must be on the class path to enable the instrumentation.
 
 Maven: 
@@ -1243,11 +1245,11 @@ Gradle:
     compile("io.zipkin.brave:brave-instrumentation-grpc")
 ```
 
-==== Server Instrumentation
+===== Server Instrumentation
 
 Spring Cloud Sleuth leverages grpc-spring-boot-starter to register Brave's gRPC server interceptor with all services annotated with `@GRpcService`. 
 
-==== Client Instrumentation
+===== Client Instrumentation
 
 gRPC clients leverage a `ManagedChannelBuilder` to construct a `ManagedChannel` used to communicate to the gRPC server. The native `ManagedChannelBuilder` provides static methods as entry points for construction of `ManagedChannel` instances, however, this mechanism is outside the influence of the Spring application context.
 
@@ -1256,6 +1258,31 @@ IMPORTANT: Spring Cloud Sleuth provides a `SpringAwareManagedChannelBuilder` tha
 
 Sleuth creates a `TracingManagedChannelBuilderCustomizer` which inject Brave's client interceptor into the `SpringAwareManagedChannelBuilder`.
 
+==== Variant 2
+
+===== Dependencies
+IMPORTANT: The gRPC integration relies on two external libraries to instrument clients and servers and both of those libraries must be on the class path to enable the instrumentation.
+
+Maven: 
+```
+		<dependency>
+			<groupId>net.devh</groupId>
+			<artifactId>grpc-spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.zipkin.brave</groupId>
+			<artifactId>brave-instrumentation-grpc</artifactId>
+		</dependency>
+```
+Gradle:
+```
+    compile 'net.devh:grpc-spring-boot-starter'
+    compile("io.zipkin.brave:brave-instrumentation-grpc")
+```
+
+===== Server/Client Instrumentation
+
+https://github.com/yidongnan/grpc-spring-boot-starter[Grpc Spring Boot Starter] automatically detects the presence of Spring Cloud Sleuth and brave's instrumentation for gRPC and registers the necessary client and/or server tooling.
 
 === Asynchronous Communication
 
