@@ -1260,28 +1260,6 @@ Sleuth creates a `TracingManagedChannelBuilderCustomizer` which inject Brave's c
 
 ==== Variant 2
 
-===== Dependencies
-IMPORTANT: The gRPC integration relies on two external libraries to instrument clients and servers and both of those libraries must be on the class path to enable the instrumentation.
-
-Maven: 
-```
-		<dependency>
-			<groupId>net.devh</groupId>
-			<artifactId>grpc-spring-boot-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-grpc</artifactId>
-		</dependency>
-```
-Gradle:
-```
-    compile 'net.devh:grpc-spring-boot-starter'
-    compile("io.zipkin.brave:brave-instrumentation-grpc")
-```
-
-===== Server/Client Instrumentation
-
 https://github.com/yidongnan/grpc-spring-boot-starter[Grpc Spring Boot Starter] automatically detects the presence of Spring Cloud Sleuth and brave's instrumentation for gRPC and registers the necessary client and/or server tooling.
 
 === Asynchronous Communication
