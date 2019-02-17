@@ -125,8 +125,10 @@ public class TraceAsyncIntegrationTests {
 			then(asyncSpan.context().traceId()).isEqualTo(span.context().traceId());
 			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
 					.getSpans();
-			then(spans).hasSize(1);
-			zipkin2.Span reportedAsyncSpan = spans.get(0);
+			zipkin2.Span reportedAsyncSpan = spans.stream()
+					.filter(span2 -> span2.name().equals("invoke-asynchronous-logic"))
+					.findFirst()
+					.orElseThrow(() -> new AssertionError("Should have a span with custom name"));
 			then(reportedAsyncSpan.traceId()).isEqualTo(span.context().traceIdString());
 			then(reportedAsyncSpan.name()).isEqualTo("invoke-asynchronous-logic");
 			then(reportedAsyncSpan.tags())
@@ -141,9 +143,11 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
 					.getSpans();
-			then(spans).hasSize(1);
-			zipkin2.Span reportedAsyncSpan = spans.get(0);
-			then(reportedAsyncSpan.name()).isEqualTo("invoke-asynchronous-logic");
+			then(spans).hasSize(2);
+			zipkin2.Span reportedAsyncSpan = spans.stream()
+					.filter(span -> span.name().equals("invoke-asynchronous-logic"))
+					.findFirst()
+					.orElseThrow(() -> new AssertionError("Should have a span with custom name"));
 			then(reportedAsyncSpan.tags())
 					.contains(new AbstractMap.SimpleEntry<>("class",
 							"ClassPerformingAsyncLogic"))
@@ -160,8 +164,11 @@ public class TraceAsyncIntegrationTests {
 			then(asyncSpan.context().traceId()).isEqualTo(span.context().traceId());
 			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
 					.getSpans();
-			then(spans).hasSize(1);
-			zipkin2.Span reportedAsyncSpan = spans.get(0);
+			then(spans).hasSize(2);
+			zipkin2.Span reportedAsyncSpan = spans.stream()
+					.filter(span2 -> span2.name().equals("foo"))
+					.findFirst()
+					.orElseThrow(() -> new AssertionError("Should have a span with custom name"));
 			then(reportedAsyncSpan.traceId()).isEqualTo(span.context().traceIdString());
 			then(reportedAsyncSpan.name()).isEqualTo("foo");
 			then(reportedAsyncSpan.tags())
@@ -176,8 +183,10 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
 					.getSpans();
-			then(spans).hasSize(1);
-			zipkin2.Span reportedAsyncSpan = spans.get(0);
+			zipkin2.Span reportedAsyncSpan = spans.stream()
+					.filter(span2 -> span2.name().equals("foo"))
+					.findFirst()
+					.orElseThrow(() -> new AssertionError("Should have a span with custom name"));
 			then(reportedAsyncSpan.name()).isEqualTo("foo");
 			then(reportedAsyncSpan.tags())
 					.contains(new AbstractMap.SimpleEntry<>("class",
