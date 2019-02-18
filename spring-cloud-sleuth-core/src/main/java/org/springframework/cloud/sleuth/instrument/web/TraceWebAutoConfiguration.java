@@ -152,6 +152,7 @@ public class TraceWebAutoConfiguration {
 		
 		@Bean
 		@ConditionalOnManagementPort(ManagementPortType.DIFFERENT)
+		@ConditionalOnProperty(name = "management.server.servlet.context-path", havingValue = "/", matchIfMissing = true)
 		public SingleSkipPattern skipPatternForActuatorEndpointsDifferentPort(
 				final ServerProperties serverProperties,
 				final WebEndpointProperties webEndpointProperties,
