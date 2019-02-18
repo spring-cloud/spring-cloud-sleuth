@@ -127,8 +127,8 @@ public class TraceAsyncIntegrationTests {
 					.getSpans();
 			zipkin2.Span reportedAsyncSpan = spans.stream()
 					.filter(span2 -> span2.name().equals("invoke-asynchronous-logic"))
-					.findFirst()
-					.orElseThrow(() -> new AssertionError("Should have a span with custom name"));
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"Should have a span with custom name"));
 			then(reportedAsyncSpan.traceId()).isEqualTo(span.context().traceIdString());
 			then(reportedAsyncSpan.name()).isEqualTo("invoke-asynchronous-logic");
 			then(reportedAsyncSpan.tags())
@@ -146,8 +146,8 @@ public class TraceAsyncIntegrationTests {
 			then(spans).hasSize(2);
 			zipkin2.Span reportedAsyncSpan = spans.stream()
 					.filter(span -> span.name().equals("invoke-asynchronous-logic"))
-					.findFirst()
-					.orElseThrow(() -> new AssertionError("Should have a span with custom name"));
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"Should have a span with custom name"));
 			then(reportedAsyncSpan.tags())
 					.contains(new AbstractMap.SimpleEntry<>("class",
 							"ClassPerformingAsyncLogic"))
@@ -166,9 +166,9 @@ public class TraceAsyncIntegrationTests {
 					.getSpans();
 			then(spans).hasSize(2);
 			zipkin2.Span reportedAsyncSpan = spans.stream()
-					.filter(span2 -> span2.name().equals("foo"))
-					.findFirst()
-					.orElseThrow(() -> new AssertionError("Should have a span with custom name"));
+					.filter(span2 -> span2.name().equals("foo")).findFirst()
+					.orElseThrow(() -> new AssertionError(
+							"Should have a span with custom name"));
 			then(reportedAsyncSpan.traceId()).isEqualTo(span.context().traceIdString());
 			then(reportedAsyncSpan.name()).isEqualTo("foo");
 			then(reportedAsyncSpan.tags())
@@ -184,9 +184,9 @@ public class TraceAsyncIntegrationTests {
 			List<zipkin2.Span> spans = TraceAsyncIntegrationTests.this.reporter
 					.getSpans();
 			zipkin2.Span reportedAsyncSpan = spans.stream()
-					.filter(span2 -> span2.name().equals("foo"))
-					.findFirst()
-					.orElseThrow(() -> new AssertionError("Should have a span with custom name"));
+					.filter(span2 -> span2.name().equals("foo")).findFirst()
+					.orElseThrow(() -> new AssertionError(
+							"Should have a span with custom name"));
 			then(reportedAsyncSpan.name()).isEqualTo("foo");
 			then(reportedAsyncSpan.tags())
 					.contains(new AbstractMap.SimpleEntry<>("class",

@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
-
 import javax.annotation.PreDestroy;
 
 import brave.Tracing;
@@ -58,6 +55,8 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(TraceWebFluxAutoConfiguration.class)
 public class TraceReactorAutoConfiguration {
 
+	static final String SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY = "sleuth";
+
 	@Configuration
 	@ConditionalOnBean(Tracing.class)
 	static class TraceReactorConfiguration {
@@ -86,7 +85,8 @@ public class TraceReactorAutoConfiguration {
 				log.trace("Cleaning up hooks");
 			}
 			Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
-			Schedulers.resetFactory();
+			Schedulers
+					.removeExecutorServiceDecorator(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
 		}
 
 	}
@@ -118,17 +118,11 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		Hooks.onLastOperator(
 				TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY,
 				ReactorSleuth.scopePassingSpanOperator(this.context));
-		Schedulers.setFactory(factoryInstance(beanFactory));
-	}
-
-	private Schedulers.Factory factoryInstance(final BeanFactory beanFactory) {
-		return new Schedulers.Factory() {
-			@Override
-			public ScheduledExecutorService decorateExecutorService(String schedulerType,
-					Supplier<? extends ScheduledExecutorService> actual) {
-				return new TraceableScheduledExecutorService(beanFactory, actual.get());
-			}
-		};
+		Schedulers.setExecutorServiceDecorator(
+				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
+				(scheduler,
+						scheduledExecutorService) -> new TraceableScheduledExecutorService(
+								beanFactory, scheduledExecutorService));
 	}
 
 }
