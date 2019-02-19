@@ -1960,6 +1960,8 @@ However, all the default instrumentation is still there.</simpara>
 <section xml:id="_grpc">
 <title>gRPC</title>
 <simpara>Spring Cloud Sleuth provides instrumentation for <link xl:href="https://grpc.io/">gRPC</link> through <literal>TraceGrpcAutoConfiguration</literal>. You can disable it entirely by setting <literal>spring.sleuth.grpc.enabled</literal> to <literal>false</literal>.</simpara>
+<section xml:id="_variant_1">
+<title>Variant 1</title>
 <section xml:id="_dependencies">
 <title>Dependencies</title>
 <important>
@@ -1989,6 +1991,11 @@ However, all the default instrumentation is still there.</simpara>
 <simpara>Spring Cloud Sleuth provides a <literal>SpringAwareManagedChannelBuilder</literal> that can be customized through the Spring application context and injected by gRPC clients. <emphasis role="strong">This builder must be used when creating <literal>ManagedChannel</literal> instances.</emphasis></simpara>
 </important>
 <simpara>Sleuth creates a <literal>TracingManagedChannelBuilderCustomizer</literal> which inject Brave&#8217;s client interceptor into the <literal>SpringAwareManagedChannelBuilder</literal>.</simpara>
+</section>
+</section>
+<section xml:id="_variant_2">
+<title>Variant 2</title>
+<simpara><link xl:href="https://github.com/yidongnan/grpc-spring-boot-starter">Grpc Spring Boot Starter</link> automatically detects the presence of Spring Cloud Sleuth and brave&#8217;s instrumentation for gRPC and registers the necessary client and/or server tooling.</simpara>
 </section>
 </section>
 <section xml:id="_asynchronous_communication">
