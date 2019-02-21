@@ -32,7 +32,6 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -107,7 +106,7 @@ public class SpanSubscriberTests {
 		log.info("Hello");
 
 		// Disable global hooks for local hook testing
-		Hooks.resetOnLastOperator();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 
@@ -182,6 +181,8 @@ public class SpanSubscriberTests {
 		Awaitility.await().untilAsserted(() -> {
 			then(this.tracer.currentSpan()).isNull();
 		});
+
+		TraceReactorAutoConfigurationAccessorConfiguration.setup(this.factory);
 	}
 
 	@Test

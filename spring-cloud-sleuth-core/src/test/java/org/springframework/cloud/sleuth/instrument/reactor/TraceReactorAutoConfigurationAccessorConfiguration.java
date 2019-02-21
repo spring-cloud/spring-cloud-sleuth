@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import reactor.core.publisher.Hooks;
-import reactor.core.scheduler.Schedulers;
+
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * @author Marcin Grzejszczak
@@ -38,9 +38,15 @@ public final class TraceReactorAutoConfigurationAccessorConfiguration {
 			log.trace("Cleaning up hooks");
 		}
 		new TraceReactorAutoConfiguration.TraceReactorConfiguration().cleanupHooks();
-		Hooks.resetOnLastOperator();
-		Hooks.resetOnLastOperator();
-		Schedulers.resetFactory();
+	}
+
+	public static void setup(ConfigurableApplicationContext context) {
+		if (log.isTraceEnabled()) {
+			log.trace("Setting up hooks");
+		}
+		TraceReactorAutoConfiguration.TraceReactorConfiguration
+				.traceHookRegisteringBeanDefinitionRegistryPostProcessor(context)
+				.setupHooks(context);
 	}
 
 }

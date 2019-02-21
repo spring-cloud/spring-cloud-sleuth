@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.aop.interceptor.AsyncExecutionAspectSupport;
 import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
@@ -48,7 +49,7 @@ public class GH1212Tests {
 	@Test
 	public void defaultTaskExecutor() throws Exception {
 		try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(App.class,
-				DefaultTaskExecutorConfig.class).run()) {
+				DefaultTaskExecutorConfig.class).web(WebApplicationType.NONE).run()) {
 			String asyncThreadName = getAsyncThreadName(ctx);
 			assertThat(asyncThreadName).startsWith("defaultTaskExecutor");
 		}
@@ -57,7 +58,7 @@ public class GH1212Tests {
 	@Test
 	public void singleTaskExecutor() throws Exception {
 		try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(App.class,
-				SingleTaskExecutorConfig.class).run()) {
+				SingleTaskExecutorConfig.class).web(WebApplicationType.NONE).run()) {
 			String asyncThreadName = getAsyncThreadName(ctx);
 			assertThat(asyncThreadName).startsWith("singleTaskExecutor");
 		}
@@ -66,7 +67,7 @@ public class GH1212Tests {
 	@Test
 	public void multipleTaskExecutors() throws Exception {
 		try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(App.class,
-				MultipleTaskExecutorConfig.class).run()) {
+				MultipleTaskExecutorConfig.class).web(WebApplicationType.NONE).run()) {
 			String asyncThreadName = getAsyncThreadName(ctx);
 			assertThat(asyncThreadName).doesNotStartWith("multipleTaskExecutor");
 			assertThat(asyncThreadName).startsWith("SimpleAsyncTaskExecutor"); // <--
@@ -81,7 +82,7 @@ public class GH1212Tests {
 	@Test
 	public void customAsyncConfigurer() throws Exception {
 		try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(App.class,
-				CustomAsyncConfigurerConfig.class).run()) {
+				CustomAsyncConfigurerConfig.class).web(WebApplicationType.NONE).run()) {
 			String asyncThreadName = getAsyncThreadName(ctx);
 			assertThat(asyncThreadName).startsWith("customAsyncConfigurer");
 		}

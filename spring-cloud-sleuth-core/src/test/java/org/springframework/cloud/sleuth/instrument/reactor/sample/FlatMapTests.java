@@ -30,9 +30,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import zipkin2.Span;
 
 import org.springframework.boot.WebApplicationType;
@@ -41,6 +39,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -65,8 +64,7 @@ public class FlatMapTests {
 
 	@BeforeClass
 	public static void setup() {
-		Hooks.resetOnLastOperator();
-		Schedulers.resetFactory();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 		Issue866Configuration.hook = null;
 	}
 

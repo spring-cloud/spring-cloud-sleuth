@@ -57,8 +57,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import reactor.core.publisher.Hooks;
-import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 import zipkin2.Annotation;
@@ -80,6 +78,7 @@ import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfi
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
@@ -166,8 +165,7 @@ public class WebClientTests {
 
 	@BeforeClass
 	public static void cleanup() {
-		Hooks.resetOnLastOperator();
-		Schedulers.resetFactory();
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
 
 	@After
