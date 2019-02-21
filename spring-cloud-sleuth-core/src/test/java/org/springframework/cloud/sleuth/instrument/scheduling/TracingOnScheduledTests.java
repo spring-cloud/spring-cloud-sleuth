@@ -27,6 +27,8 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
@@ -37,20 +39,24 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
-import zipkin2.reporter.Reporter;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = { ScheduledTestConfiguration.class })
+@SpringBootTest(classes = {ScheduledTestConfiguration.class})
 @DirtiesContext
 public class TracingOnScheduledTests {
 
-	@Autowired TestBeanWithScheduledMethod beanWithScheduledMethod;
-	@Autowired TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
-	@Autowired ArrayListSpanReporter reporter;
+	@Autowired
+	TestBeanWithScheduledMethod beanWithScheduledMethod;
+	@Autowired
+	TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
+	@Autowired
+	TestBeanWithScheduledMethodThatThrowsAnException throwsAnException;
+	@Autowired
+	ArrayListSpanReporter reporter;
 
 	@Before
 	public void setup() {
@@ -60,9 +66,17 @@ public class TracingOnScheduledTests {
 
 	@Test
 	public void should_have_span_set_after_scheduled_method_has_been_executed() {
-		await().atMost(	10, SECONDS).untilAsserted(() -> {
+		await().atMost(10, SECONDS).untilAsserted(() -> {
 			then(this.beanWithScheduledMethod.isExecuted()).isTrue();
 			spanIsSetOnAScheduledMethod();
+		});
+	}
+
+	@Test
+	public void should_have_span_set_with_error_tag() {
+		await().atMost(10, SECONDS).untilAsserted(() -> {
+			then(this.throwsAnException.isExecuted()).isTrue();
+			spanIsSetOnAScheduledMethodWithErrorTag();
 		});
 	}
 
@@ -89,10 +103,28 @@ public class TracingOnScheduledTests {
 				.getSpan();
 		then(storedSpan).isNotNull();
 		then(storedSpan.context().traceId()).isNotNull();
-		then(this.reporter.getSpans().get(0).tags())
+		zipkin2.Span foundSpan = this.reporter.getSpans().stream()
+				.filter(span -> !span.tags().containsKey("error"))
+				.findFirst().orElseThrow(() -> new AssertionError("Span is missing"));
+		then(foundSpan.tags())
 				.contains(new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
 						new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
-		then(this.reporter.getSpans().get(0).durationAsLong()).isGreaterThan(0L);
+		then(foundSpan.durationAsLong()).isGreaterThan(0L);
+	}
+
+	private void spanIsSetOnAScheduledMethodWithErrorTag() {
+		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod
+				.getSpan();
+		then(storedSpan).isNotNull();
+		then(storedSpan.context().traceId()).isNotNull();
+		zipkin2.Span foundSpan = this.reporter.getSpans().stream()
+				.filter(span -> span.tags().containsKey("error"))
+				.findFirst().orElseThrow(() -> new AssertionError("Span is missing"));
+		then(foundSpan.tags())
+				.contains(new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethodThatThrowsAnException"),
+						new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
+		then(foundSpan.durationAsLong()).isGreaterThan(0L);
+		then(foundSpan.tags().get("error")).isNotEmpty();
 	}
 
 	private void differentSpanHasBeenSetThan(final Span spanToCompare) {
@@ -107,19 +139,28 @@ public class TracingOnScheduledTests {
 @EnableScheduling
 class ScheduledTestConfiguration {
 
-	@Bean Reporter<zipkin2.Span> testRepoter() {
+	@Bean
+	Reporter<zipkin2.Span> testRepoter() {
 		return new ArrayListSpanReporter();
 	}
 
-	@Bean TestBeanWithScheduledMethod testBeanWithScheduledMethod(Tracing tracing) {
+	@Bean
+	TestBeanWithScheduledMethod testBeanWithScheduledMethod(Tracing tracing) {
 		return new TestBeanWithScheduledMethod(tracing);
 	}
 
-	@Bean TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored(Tracing tracing) {
+	@Bean
+	TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored(Tracing tracing) {
 		return new TestBeanWithScheduledMethodToBeIgnored(tracing);
 	}
 
-	@Bean Sampler alwaysSampler() {
+	@Bean
+	TestBeanWithScheduledMethodThatThrowsAnException throwsAnException(Tracing tracing) {
+		return new TestBeanWithScheduledMethodThatThrowsAnException(tracing);
+	}
+
+	@Bean
+	Sampler alwaysSampler() {
 		return Sampler.ALWAYS_SAMPLE;
 	}
 
@@ -145,6 +186,43 @@ class TestBeanWithScheduledMethod {
 		this.span = this.tracing.tracer().currentSpan();
 		log.info("Stored the span " + this.span + " as current span");
 		this.executed.set(true);
+	}
+
+	public Span getSpan() {
+		return this.span;
+	}
+
+	public AtomicBoolean isExecuted() {
+		return this.executed;
+	}
+
+	public void clear() {
+		this.span = null;
+		this.executed.set(false);
+	}
+}
+
+class TestBeanWithScheduledMethodThatThrowsAnException {
+
+	private static final Log log = LogFactory.getLog(TestBeanWithScheduledMethod.class);
+
+	private final Tracing tracing;
+
+	Span span;
+
+	AtomicBoolean executed = new AtomicBoolean(false);
+
+	TestBeanWithScheduledMethodThatThrowsAnException(Tracing tracing) {
+		this.tracing = tracing;
+	}
+
+	@Scheduled(fixedDelay = 1L)
+	public void scheduledMethod() {
+		log.info("Running the scheduled method");
+		this.span = this.tracing.tracer().currentSpan();
+		log.info("Stored the span " + this.span + " as current span");
+		this.executed.set(true);
+		throw new RuntimeException("HELLO");
 	}
 
 	public Span getSpan() {

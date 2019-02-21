@@ -24,6 +24,7 @@ import brave.Tracing;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 /**
@@ -66,6 +67,11 @@ public class TraceSchedulingAspect {
 			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
 			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();
+		} catch(Throwable ex) {
+			String message = ex.getMessage() == null ?
+					ex.getClass().getSimpleName() : ex.getMessage();
+			span.tag("error", message);
+			throw ex;
 		} finally {
 			span.finish();
 		}
