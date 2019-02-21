@@ -103,7 +103,8 @@ public class TraceWebAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class, ExposableWebEndpoint.class })
+	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class,
+			ExposableWebEndpoint.class })
 	@ConditionalOnBean(ServerProperties.class)
 	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false", matchIfMissing = true)
 	protected static class ActuatorSkipPatternProviderConfig {
@@ -146,10 +147,11 @@ public class TraceWebAutoConfiguration {
 				final ServerProperties serverProperties,
 				final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(serverProperties.getServlet().getContextPath(), 
-				webEndpointProperties, endpointsSupplier);
+			return () -> getEndpointsPatterns(
+					serverProperties.getServlet().getContextPath(), webEndpointProperties,
+					endpointsSupplier);
 		}
-		
+
 		@Bean
 		@ConditionalOnManagementPort(ManagementPortType.DIFFERENT)
 		@ConditionalOnProperty(name = "management.server.servlet.context-path", havingValue = "/", matchIfMissing = true)
@@ -157,8 +159,10 @@ public class TraceWebAutoConfiguration {
 				final ServerProperties serverProperties,
 				final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(null, webEndpointProperties, endpointsSupplier);
+			return () -> getEndpointsPatterns(null, webEndpointProperties,
+					endpointsSupplier);
 		}
+
 	}
 
 	@Configuration

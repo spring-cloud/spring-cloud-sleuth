@@ -56,6 +56,9 @@ public class TracingOnScheduledTests {
 	TestBeanWithScheduledMethodToBeIgnored beanWithScheduledMethodToBeIgnored;
 
 	@Autowired
+	TestBeanWithScheduledMethodThatThrowsAnException throwsAnException;
+
+	@Autowired
 	ArrayListSpanReporter reporter;
 
 	@Before
@@ -69,6 +72,14 @@ public class TracingOnScheduledTests {
 		await().atMost(10, SECONDS).untilAsserted(() -> {
 			then(this.beanWithScheduledMethod.isExecuted()).isTrue();
 			spanIsSetOnAScheduledMethod();
+		});
+	}
+
+	@Test
+	public void should_have_span_set_with_error_tag() {
+		await().atMost(10, SECONDS).untilAsserted(() -> {
+			then(this.throwsAnException.isExecuted()).isTrue();
+			spanIsSetOnAScheduledMethodWithErrorTag();
 		});
 	}
 
@@ -94,10 +105,28 @@ public class TracingOnScheduledTests {
 		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
 		then(storedSpan).isNotNull();
 		then(storedSpan.context().traceId()).isNotNull();
-		then(this.reporter.getSpans().get(0).tags()).contains(
+		zipkin2.Span foundSpan = this.reporter.getSpans().stream()
+				.filter(span -> !span.tags().containsKey("error")).findFirst()
+				.orElseThrow(() -> new AssertionError("Span is missing"));
+		then(foundSpan.tags()).contains(
 				new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
 				new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
-		then(this.reporter.getSpans().get(0).durationAsLong()).isGreaterThan(0L);
+		then(foundSpan.durationAsLong()).isGreaterThan(0L);
+	}
+
+	private void spanIsSetOnAScheduledMethodWithErrorTag() {
+		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
+		then(storedSpan).isNotNull();
+		then(storedSpan.context().traceId()).isNotNull();
+		zipkin2.Span foundSpan = this.reporter.getSpans().stream()
+				.filter(span -> span.tags().containsKey("error")).findFirst()
+				.orElseThrow(() -> new AssertionError("Span is missing"));
+		then(foundSpan.tags()).contains(
+				new AbstractMap.SimpleEntry<>("class",
+						"TestBeanWithScheduledMethodThatThrowsAnException"),
+				new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
+		then(foundSpan.durationAsLong()).isGreaterThan(0L);
+		then(foundSpan.tags().get("error")).isNotEmpty();
 	}
 
 	private void differentSpanHasBeenSetThan(final Span spanToCompare) {
@@ -129,6 +158,11 @@ class ScheduledTestConfiguration {
 	}
 
 	@Bean
+	TestBeanWithScheduledMethodThatThrowsAnException throwsAnException(Tracing tracing) {
+		return new TestBeanWithScheduledMethodThatThrowsAnException(tracing);
+	}
+
+	@Bean
 	Sampler alwaysSampler() {
 		return Sampler.ALWAYS_SAMPLE;
 	}
@@ -155,6 +189,44 @@ class TestBeanWithScheduledMethod {
 		this.span = this.tracing.tracer().currentSpan();
 		log.info("Stored the span " + this.span + " as current span");
 		this.executed.set(true);
+	}
+
+	public Span getSpan() {
+		return this.span;
+	}
+
+	public AtomicBoolean isExecuted() {
+		return this.executed;
+	}
+
+	public void clear() {
+		this.span = null;
+		this.executed.set(false);
+	}
+
+}
+
+class TestBeanWithScheduledMethodThatThrowsAnException {
+
+	private static final Log log = LogFactory.getLog(TestBeanWithScheduledMethod.class);
+
+	private final Tracing tracing;
+
+	Span span;
+
+	AtomicBoolean executed = new AtomicBoolean(false);
+
+	TestBeanWithScheduledMethodThatThrowsAnException(Tracing tracing) {
+		this.tracing = tracing;
+	}
+
+	@Scheduled(fixedDelay = 1L)
+	public void scheduledMethod() {
+		log.info("Running the scheduled method");
+		this.span = this.tracing.tracer().currentSpan();
+		log.info("Stored the span " + this.span + " as current span");
+		this.executed.set(true);
+		throw new RuntimeException("HELLO");
 	}
 
 	public Span getSpan() {
