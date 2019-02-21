@@ -199,7 +199,7 @@ public class WebClientTests {
 			// at the interceptor level
 			then(noTraceSpan.get().tags().get("http.url")).matches(".*/notrace");
 		});
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	Object[] parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent() {
@@ -249,7 +249,7 @@ public class WebClientTests {
 		}
 
 		then(this.reporter.getSpans()).isEmpty();
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	Object[] parametersForShouldPropagateNotSamplingHeader() throws Exception {
