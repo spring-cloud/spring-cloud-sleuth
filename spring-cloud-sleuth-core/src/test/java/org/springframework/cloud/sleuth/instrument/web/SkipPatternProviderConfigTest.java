@@ -107,7 +107,8 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsSamePort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsSamePort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
@@ -129,7 +130,8 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsSamePort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsSamePort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
@@ -151,7 +153,8 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsSamePort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsSamePort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
@@ -173,7 +176,8 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsSamePort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsSamePort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
@@ -195,19 +199,22 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> patternDifferentPort = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsDifferentPort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsDifferentPort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
 
 		then(patternDifferentPort).isNotEmpty();
-		then(patternDifferentPort.get().pattern()).isEqualTo("/(info|info/.*|health|health/.*)");
-		
+		then(patternDifferentPort.get().pattern())
+				.isEqualTo("/(info|info/.*|health|health/.*)");
+
 		Optional<Pattern> patternSamePort = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsSamePort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsSamePort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
-		
+
 		then(patternSamePort).isNotEmpty();
 		then(patternSamePort.get().pattern())
-		   		.isEqualTo("foo/(info|info/.*|health|health/.*)");
+				.isEqualTo("foo/(info|info/.*|health|health/.*)");
 	}
 
 	@Test
@@ -225,17 +232,19 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> patternDifferentPort = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsDifferentPort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsDifferentPort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
 
 		then(patternDifferentPort).isNotEmpty();
 		then(patternDifferentPort.get().pattern())
 				.isEqualTo("/mgt/(info|info/.*|health|health/.*)");
-		
+
 		Optional<Pattern> patternSamePort = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsSamePort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsSamePort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
-		
+
 		then(patternSamePort).isNotEmpty();
 		then(patternSamePort.get().pattern())
 				.isEqualTo("foo/mgt/(info|info/.*|health|health/.*)");
@@ -256,18 +265,22 @@ public class SkipPatternProviderConfigTest {
 		};
 
 		Optional<Pattern> patternDifferentPort = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsDifferentPort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsDifferentPort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
 
 		then(patternDifferentPort).isNotEmpty();
-		then(patternDifferentPort.get().pattern()).isEqualTo("/actuator/(info|info/.*|health|health/.*)");
-		
+		then(patternDifferentPort.get().pattern())
+				.isEqualTo("/actuator/(info|info/.*|health|health/.*)");
+
 		Optional<Pattern> patternSamePort = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsSamePort(properties, webEndpointProperties, endpointsSupplier)
+				.skipPatternForActuatorEndpointsSamePort(properties,
+						webEndpointProperties, endpointsSupplier)
 				.skipPattern();
 
 		then(patternSamePort).isNotEmpty();
-		then(patternSamePort.get().pattern()).isEqualTo("/foo/actuator/(info|info/.*|health|health/.*)");
+		then(patternSamePort.get().pattern())
+				.isEqualTo("/foo/actuator/(info|info/.*|health|health/.*)");
 	}
 
 	@Test
