@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import java.lang.invoke.MethodHandles;
 import java.net.InetAddress;
 
 import org.apache.commons.logging.Log;

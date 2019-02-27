@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.zuul;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

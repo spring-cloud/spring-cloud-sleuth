@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.async.issues.issue546;
 
-import java.lang.invoke.MethodHandles;
-
 import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
