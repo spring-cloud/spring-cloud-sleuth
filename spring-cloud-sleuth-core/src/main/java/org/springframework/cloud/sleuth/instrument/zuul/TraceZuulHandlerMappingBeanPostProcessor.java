@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.lang.invoke.MethodHandles;
-
 import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,7 +34,7 @@ import org.springframework.cloud.netflix.zuul.web.ZuulHandlerMapping;
 class TraceZuulHandlerMappingBeanPostProcessor implements BeanPostProcessor {
 
 	private static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
+			.getLog(TraceZuulHandlerMappingBeanPostProcessor.class);
 
 	private final BeanFactory beanFactory;
 

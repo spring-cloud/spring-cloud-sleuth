@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client.exception;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
@@ -71,7 +70,7 @@ public class WebClientExceptionTests {
 	public static final SpringClassRule SCR = new SpringClassRule();
 
 	private static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
+			.getLog(WebClientExceptionTests.class);
 
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();

@@ -76,7 +76,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceZuulIntegrationTests {
 
 	private static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
+			.getLog(TraceZuulIntegrationTests.class);
 
 	@Autowired
 	Tracing tracing;

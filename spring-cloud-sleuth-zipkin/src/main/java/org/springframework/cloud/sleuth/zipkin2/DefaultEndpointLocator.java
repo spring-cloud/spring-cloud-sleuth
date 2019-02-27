@@ -50,7 +50,7 @@ public class DefaultEndpointLocator implements EndpointLocator,
 		ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
+			.getLog(DefaultEndpointLocator.class);
 
 	private static final String IP_ADDRESS_PROP_NAME = "spring.cloud.client.ipAddress";
 

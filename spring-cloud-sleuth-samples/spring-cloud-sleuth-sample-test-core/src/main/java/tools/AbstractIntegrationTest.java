@@ -16,8 +16,6 @@
 
 package tools;
 
-import java.lang.invoke.MethodHandles;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.awaitility.Awaitility;
@@ -33,7 +31,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public abstract class AbstractIntegrationTest {
 
 	protected static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
+			.getLog(AbstractIntegrationTest.class);
 
 	protected static final int POLL_INTERVAL = 1;
 

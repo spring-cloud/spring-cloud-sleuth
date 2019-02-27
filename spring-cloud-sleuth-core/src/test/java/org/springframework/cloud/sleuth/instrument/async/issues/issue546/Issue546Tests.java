@@ -80,7 +80,7 @@ class Issue546TestsApp {
 class Controller {
 
 	private static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
+			.getLog(Controller.class);
 
 	private final AsyncRestTemplate traceAsyncRestTemplate;
 
