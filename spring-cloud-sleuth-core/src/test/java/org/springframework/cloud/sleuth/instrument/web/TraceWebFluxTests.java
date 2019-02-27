@@ -440,14 +440,18 @@ class SleuthSpanCreatorAspectWebFlux {
 		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
-			List<zipkin2.Span> spans = getSpans();
-			then(spans).hasSize(2);
-			then(spans.get(0).name()).isEqualTo("new-span-in-trace-context");
-			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
-			then(spans.get(1).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
-			then(spans.get(1).name()).isEqualTo("get /test/newspan1");
+			then(spanWithName("new-span-in-trace-context").id())
+					.isEqualTo(toHexString(newSpanId));
+			then(spanWithName("get /test/newspan1").kind())
+					.isEqualTo(zipkin2.Span.Kind.SERVER);
 			then(this.tracer.currentSpan()).isNull();
 		});
+	}
+
+	private zipkin2.Span spanWithName(String name) {
+		return getSpans().stream().filter(span -> name.equals(span.name())).findFirst()
+				.orElseThrow(() -> new AssertionError(
+						"Span with name [" + name + "] not found"));
 	}
 
 	public void shouldCreateNewSpanInWebFluxInSubscriberContext() {
@@ -460,12 +464,10 @@ class SleuthSpanCreatorAspectWebFlux {
 		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
-			List<zipkin2.Span> spans = getSpans();
-			then(spans).hasSize(2);
-			then(spans.get(0).name()).isEqualTo("new-span-in-subscriber-context");
-			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
-			then(spans.get(1).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
-			then(spans.get(1).name()).isEqualTo("get /test/newspan2");
+			then(spanWithName("new-span-in-subscriber-context").id())
+					.isEqualTo(toHexString(newSpanId));
+			then(spanWithName("get /test/newspan2").kind())
+					.isEqualTo(zipkin2.Span.Kind.SERVER);
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -481,12 +483,10 @@ class SleuthSpanCreatorAspectWebFlux {
 		Long newSpanId = (Long) object;
 
 		Awaitility.await().untilAsserted(() -> {
-			List<zipkin2.Span> spans = getSpans();
-			then(spans).hasSize(1);
-			then(spans.get(0).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
-			then(spans.get(0).name()).isEqualTo("get /test/ping");
+			then(spanWithName("get /test/ping").kind())
+					.isEqualTo(zipkin2.Span.Kind.SERVER);
 			then(this.repository.getSpan()).isNotNull();
-			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId))
+			then(spanWithName("get /test/ping").id()).isEqualTo(toHexString(newSpanId))
 					.isEqualTo(this.repository.getSpan().context().traceIdString());
 			then(this.tracer.currentSpan()).isNull();
 		});

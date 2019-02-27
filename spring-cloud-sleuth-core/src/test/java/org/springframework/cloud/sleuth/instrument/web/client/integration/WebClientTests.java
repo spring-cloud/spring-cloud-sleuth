@@ -52,7 +52,6 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.awaitility.Awaitility;
 import org.junit.After;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -78,7 +77,6 @@ import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfi
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
@@ -162,11 +160,6 @@ public class WebClientTests {
 
 	@Autowired
 	MyRestTemplateCustomizer customizer;
-
-	@BeforeClass
-	public static void cleanup() {
-		TraceReactorAutoConfigurationAccessorConfiguration.close();
-	}
 
 	@After
 	public void close() {
