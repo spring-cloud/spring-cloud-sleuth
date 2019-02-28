@@ -392,11 +392,13 @@ public class WebClientTests {
 			span.finish();
 		}
 
-		System.out.println("Found spans " + this.reporter.getSpans());
-		final Optional<zipkin2.Span> clientSpan = this.reporter.getSpans().stream()
-				.filter(s -> s.kind() == zipkin2.Span.Kind.CLIENT).findFirst();
-		then(clientSpan).isPresent();
-		then(clientSpan.get().tags()).containsEntry("error", "CANCELLED");
+		Awaitility.await().untilAsserted(() -> {
+			System.out.println("Found spans " + this.reporter.getSpans());
+			final Optional<zipkin2.Span> clientSpan = this.reporter.getSpans().stream()
+					.filter(s -> s.kind() == zipkin2.Span.Kind.CLIENT).findFirst();
+			then(clientSpan).isPresent();
+			then(clientSpan.get().tags()).containsEntry("error", "CANCELLED");
+		});
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
