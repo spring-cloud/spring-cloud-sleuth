@@ -53,6 +53,7 @@ import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -377,6 +378,7 @@ public class WebClientTests {
 	}
 
 	@Test
+	@Ignore("Flakey on CI")
 	public void shouldReportTraceForCancelledRequestViaWebClient() {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
