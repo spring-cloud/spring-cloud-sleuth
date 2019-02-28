@@ -249,6 +249,9 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		protected void handle(HttpClientResponse httpClientResponse,
 				Throwable throwable) {
+			if (httpClientResponse == null) {
+				return;
+			}
 			AtomicReference reference = httpClientResponse.currentContext()
 					.getOrDefault(AtomicReference.class, null);
 			if (reference == null || reference.get() == null) {

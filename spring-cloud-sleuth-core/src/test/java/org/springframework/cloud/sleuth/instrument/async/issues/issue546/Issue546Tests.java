@@ -77,8 +77,7 @@ class Issue546TestsApp {
 @RestController
 class Controller {
 
-	private static final Log log = LogFactory
-			.getLog(Controller.class);
+	private static final Log log = LogFactory.getLog(Controller.class);
 
 	private final AsyncRestTemplate traceAsyncRestTemplate;
 

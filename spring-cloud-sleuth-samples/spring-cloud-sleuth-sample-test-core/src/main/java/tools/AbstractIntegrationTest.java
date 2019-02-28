@@ -30,8 +30,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 public abstract class AbstractIntegrationTest {
 
-	protected static final Log log = LogFactory
-			.getLog(AbstractIntegrationTest.class);
+	protected static final Log log = LogFactory.getLog(AbstractIntegrationTest.class);
 
 	protected static final int POLL_INTERVAL = 1;
 

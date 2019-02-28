@@ -69,8 +69,7 @@ public class WebClientExceptionTests {
 	@ClassRule
 	public static final SpringClassRule SCR = new SpringClassRule();
 
-	private static final Log log = LogFactory
-			.getLog(WebClientExceptionTests.class);
+	private static final Log log = LogFactory.getLog(WebClientExceptionTests.class);
 
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
