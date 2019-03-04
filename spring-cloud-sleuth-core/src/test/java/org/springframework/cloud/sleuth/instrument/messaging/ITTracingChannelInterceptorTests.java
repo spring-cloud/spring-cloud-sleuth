@@ -50,6 +50,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
 /**
  * Ported from
@@ -58,10 +59,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = ITTracingChannelInterceptor.App.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = ITTracingChannelInterceptorTests.App.class, webEnvironment = WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
 @DirtiesContext
-public class ITTracingChannelInterceptor implements MessageHandler {
+public class ITTracingChannelInterceptorTests implements MessageHandler {
 
 	@Autowired
 	@Qualifier("directChannel")
