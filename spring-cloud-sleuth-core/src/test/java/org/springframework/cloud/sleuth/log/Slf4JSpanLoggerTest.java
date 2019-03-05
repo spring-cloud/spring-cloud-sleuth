@@ -21,6 +21,7 @@ import brave.Tracing;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.TraceContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,29 +59,122 @@ public class Slf4JSpanLoggerTest {
 	public void should_set_entries_to_mdc_from_span() throws Exception {
 		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
 
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo(span.context().traceIdString());
-		assertThat(MDC.get("traceId")).isEqualTo(span.context().traceIdString());
+		assertMDCInfoEqualToSpanInfo(span.context());
 
 		scope.close();
 
-		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
-		assertThat(MDC.get("traceId")).isNullOrEmpty();
+		assertMDCInfoNullOrEmpty();
+	}
+
+	@Test
+	public void should_set_entries_to_mdc_from_two_spans() throws Exception {
+		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
+
+		assertMDCInfoEqualToSpanInfo(span.context());
+
+		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(this.span.context());
+
+		assertThat(scopeInner == Scope.NOOP);
+		assertMDCInfoEqualToSpanInfo(span.context());
+
+		scopeInner.close();
+
+		assertMDCInfoEqualToSpanInfo(span.context());
+
+		scope.close();
+
+		assertMDCInfoNullOrEmpty();
+	}
+
+	@Test
+	public void should_set_entries_to_mdc_from_two_spans1() throws Exception {
+		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
+
+		assertMDCInfoEqualToSpanInfo(span.context());
+
+		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(null);
+
+		assertMDCInfoNullOrEmpty();
+
+		scopeInner.close();
+
+		assertMDCInfoEqualToSpanInfo(span.context());
+
+		scope.close();
+
+		assertMDCInfoNullOrEmpty();
+	}
+
+	@Test
+	public void should_set_entries_to_mdc_from_two_spans2() throws Exception {
+		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
+
+		assertMDCInfoEqualToSpanInfo(span.context());
+
+		TraceContext nextSpan = this.tracing.tracer().nextSpan().start().context();
+		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(nextSpan);
+
+		assertMDCInfoEqualToSpanInfo(nextSpan);
+
+		scopeInner.close();
+
+		assertMDCInfoEqualToSpanInfo(span.context());
+
+		scope.close();
+
+		assertMDCInfoNullOrEmpty();
+	}
+
+	@Test
+	public void should_set_entries_to_mdc_from_two_spans3() throws Exception {
+		Scope scope = this.slf4jCurrentTraceContext.newScope(null);
+
+		assertThat(scope == Scope.NOOP);
+		assertMDCInfoNullOrEmpty();
+
+		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(null);
+
+		assertThat(scopeInner == Scope.NOOP);
+		assertMDCInfoNullOrEmpty();
+
+		scopeInner.close();
+
+		assertMDCInfoNullOrEmpty();
+
+		scope.close();
+
+		assertMDCInfoNullOrEmpty();
 	}
 
 	@Test
 	public void should_remove_entries_from_mdc_from_null_span() throws Exception {
 		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");
+		MDC.put("X-B3-SpanId", "A");
+		MDC.put("spanId", "A");
 
 		Scope scope = this.slf4jCurrentTraceContext
 				.newScope(null);
 
-		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
-		assertThat(MDC.get("traceId")).isNullOrEmpty();
+		assertMDCInfoNullOrEmpty();
 
 		scope.close();
 
 		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("A");
 		assertThat(MDC.get("traceId")).isEqualTo("A");
+	}
+
+	private void assertMDCInfoEqualToSpanInfo(TraceContext span){
+		assertThat(MDC.get("X-B3-TraceId")).isEqualTo(span.traceIdString());
+		assertThat(MDC.get("traceId")).isEqualTo(span.traceIdString());
+		assertThat(MDC.get("X-B3-SpanId")).isEqualTo(span.spanIdString());
+		assertThat(MDC.get("spanId")).isEqualTo(span.spanIdString());
+	}
+
+	private void assertMDCInfoNullOrEmpty(){
+		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
+		assertThat(MDC.get("traceId")).isNullOrEmpty();
+		assertThat(MDC.get("X-B3-SpanId")).isNullOrEmpty();
+		assertThat(MDC.get("spanId")).isNullOrEmpty();
 	}
 }

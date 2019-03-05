@@ -41,6 +41,8 @@ public abstract class ReactorSleuth {
 
 	private static final Log log = LogFactory.getLog(ReactorSleuth.class);
 
+	private static volatile boolean CONTEXT_REFRESHED = false;
+
 	/**
 	 * Return a span operator pointcut given a {@link BeanFactory}. This can be used in reactor
 	 * via {@link reactor.core.publisher.Flux#transform(Function)}, {@link
@@ -141,8 +143,15 @@ public abstract class ReactorSleuth {
 	}
 
 	private static boolean contextRefreshed(BeanFactory beanFactory) {
+		if (CONTEXT_REFRESHED) {
+			return true;
+		}
 		try {
-			return beanFactory.getBean(ApplicationContextRefreshedListener.class).isRefreshed();
+			boolean contextRefreshed = beanFactory.getBean(ApplicationContextRefreshedListener.class).isRefreshed();
+			if (contextRefreshed) {
+				CONTEXT_REFRESHED = true;
+			}
+			return contextRefreshed;
 		} catch (NoSuchBeanDefinitionException e) {
 			return false;
 		}
@@ -154,7 +163,7 @@ public abstract class ReactorSleuth {
 				beanFactory,
 				sub,
 				sub.currentContext(),
-				scannable.name()) {
+				null) {
 			@Override SpanSubscription newCoreSubscriber(Tracing tracing) {
 				return new ScopePassingSpanSubscriber<T>(
 						sub,

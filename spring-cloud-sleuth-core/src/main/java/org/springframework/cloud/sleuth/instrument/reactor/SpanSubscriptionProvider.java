@@ -38,7 +38,7 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	final Subscriber<? super T> subscriber;
 	final Context context;
 	final String name;
-	private Tracing tracing;
+	private static volatile Tracing TRACING;
 
 	SpanSubscriptionProvider(BeanFactory beanFactory,
 			Subscriber<? super T> subscriber,
@@ -61,9 +61,9 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	}
 
 	private Tracing tracing() {
-		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+		if (TRACING == null) {
+			TRACING = this.beanFactory.getBean(Tracing.class);
 		}
-		return this.tracing;
+		return TRACING;
 	}
 }
