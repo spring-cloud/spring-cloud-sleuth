@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import brave.Span;
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.TraceContext;
 import reactor.util.context.Context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,7 +39,7 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanS
 
 	private static final Log log = LogFactory.getLog(ScopePassingSpanSubscriber.class);
 
-	private final Span span;
+	private final TraceContext spanTraceContext;
 	private final Subscriber<? super T> subscriber;
 	private final Context context;
 	private final Tracing tracing;
@@ -49,7 +50,7 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanS
 		this.tracing = tracing;
 		Span root = ctx != null ?
 				ctx.getOrDefault(Span.class, tracing.tracer().currentSpan()) : null;
-		this.span = root;
+		this.spanTraceContext = root != null ? root.context() : null;
 		this.context = ctx != null && root != null ? ctx.put(Span.class, root) :
 				ctx != null ? ctx : Context.empty();
 		if (log.isTraceEnabled()) {
@@ -59,25 +60,25 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanS
 
 	@Override public void onSubscribe(Subscription subscription) {
 		this.s = subscription;
-		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.span.context())) {
+		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.spanTraceContext)) {
 			this.subscriber.onSubscribe(this);
 		}
 	}
 
 	@Override public void request(long n) {
-		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.span.context())) {
+		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.spanTraceContext)) {
 			this.s.request(n);
 		}
 	}
 
 	@Override public void cancel() {
-		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.span.context())) {
+		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.spanTraceContext)) {
 			this.s.cancel();
 		}
 	}
 
 	@Override public void onNext(T o) {
-		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.span.context())) {
+		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.spanTraceContext)) {
 			this.subscriber.onNext(o);
 		}
 	}
