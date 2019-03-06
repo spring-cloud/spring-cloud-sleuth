@@ -66,21 +66,9 @@ public final class Slf4jCurrentTraceContext extends CurrentTraceContext {
 	}
 
 	@Override public Scope newScope(@Nullable TraceContext currentSpan) {
-		TraceContext previousSpan = get();
-		final String previousSpanId = MDC.get("spanId");
-		if (currentSpan != null && previousSpan == currentSpan) {
-			if (currentSpan.spanIdString().equals(previousSpanId)) {
-				//when MDC is already set, and previousSpan == currentSpan, return Scope.NOOP
-				return Scope.NOOP;
-			}
-		} else if (previousSpan == null && currentSpan == null && previousSpanId == null) {
-			return Scope.NOOP;
-		} else if (previousSpan != null && currentSpan == null && previousSpanId == null) {
-			return this.delegate.newScope(currentSpan);
-		}
-
 		final String previousTraceId = MDC.get("traceId");
 		final String previousParentId = MDC.get("parentId");
+		final String previousSpanId = MDC.get("spanId");
 		final String spanExportable = MDC.get("spanExportable");
 		final String legacyPreviousTraceId = MDC.get(LEGACY_TRACE_ID_NAME);
 		final String legacyPreviousParentId = MDC.get(LEGACY_PARENT_ID_NAME);

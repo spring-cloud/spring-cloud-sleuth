@@ -74,7 +74,6 @@ public class Slf4JSpanLoggerTest {
 
 		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(this.span.context());
 
-		assertThat(scopeInner == Scope.NOOP);
 		assertMDCInfoEqualToSpanInfo(span.context());
 
 		scopeInner.close();
@@ -129,12 +128,10 @@ public class Slf4JSpanLoggerTest {
 	public void should_set_entries_to_mdc_from_two_spans3() throws Exception {
 		Scope scope = this.slf4jCurrentTraceContext.newScope(null);
 
-		assertThat(scope == Scope.NOOP);
 		assertMDCInfoNullOrEmpty();
 
 		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(null);
 
-		assertThat(scopeInner == Scope.NOOP);
 		assertMDCInfoNullOrEmpty();
 
 		scopeInner.close();
