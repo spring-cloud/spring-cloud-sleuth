@@ -40,14 +40,14 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanS
 	private static final Log log = LogFactory.getLog(ScopePassingSpanSubscriber.class);
 
 	private final TraceContext spanTraceContext;
+	private final CurrentTraceContext currentTraceContext;
 	private final Subscriber<? super T> subscriber;
 	private final Context context;
-	private final Tracing tracing;
 	private Subscription s;
 
 	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx, Tracing tracing) {
 		this.subscriber = subscriber;
-		this.tracing = tracing;
+		this.currentTraceContext = tracing.currentTraceContext();
 		Span root = ctx != null ?
 				ctx.getOrDefault(Span.class, tracing.tracer().currentSpan()) : null;
 		this.spanTraceContext = root != null ? root.context() : null;
@@ -60,25 +60,25 @@ final class ScopePassingSpanSubscriber<T> extends AtomicBoolean implements SpanS
 
 	@Override public void onSubscribe(Subscription subscription) {
 		this.s = subscription;
-		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.spanTraceContext)) {
+		try (CurrentTraceContext.Scope inScope = this.currentTraceContext.maybeScope(this.spanTraceContext)) {
 			this.subscriber.onSubscribe(this);
 		}
 	}
 
 	@Override public void request(long n) {
-		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.spanTraceContext)) {
+		try (CurrentTraceContext.Scope inScope = this.currentTraceContext.maybeScope(this.spanTraceContext)) {
 			this.s.request(n);
 		}
 	}
 
 	@Override public void cancel() {
-		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.spanTraceContext)) {
+		try (CurrentTraceContext.Scope inScope = this.currentTraceContext.maybeScope(this.spanTraceContext)) {
 			this.s.cancel();
 		}
 	}
 
 	@Override public void onNext(T o) {
-		try (CurrentTraceContext.Scope inScope = this.tracing.currentTraceContext().maybeScope(this.spanTraceContext)) {
+		try (CurrentTraceContext.Scope inScope = this.currentTraceContext.maybeScope(this.spanTraceContext)) {
 			this.subscriber.onNext(o);
 		}
 	}
