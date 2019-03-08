@@ -1,0 +1,53 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>4.&nbsp;Sampling</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="multi_spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="up" href="multi_spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="prev" href="multi__features.html" title="3.&nbsp;Features"><link rel="next" href="multi__propagation.html" title="5.&nbsp;Propagation"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4.&nbsp;Sampling</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="multi__features.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="multi__propagation.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_sampling" href="#_sampling"></a>4.&nbsp;Sampling</h1></div></div></div><p>Sampling may be employed to reduce the data collected and reported out of process.
+When a span is not sampled, it adds no overhead (a noop).</p><p>Sampling is an up-front decision, meaning that the decision to report data is made at the first operation in a trace and that decision is propagated downstream.</p><p>By default, a global sampler applies a single rate to all traced operations.
+<code class="literal">Tracer.Builder.sampler</code> controls this setting, and it defaults to tracing every request.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_declarative_sampling" href="#_declarative_sampling"></a>4.1&nbsp;Declarative sampling</h2></div></div></div><p>Some applications need to sample based on the type or annotations of a java method.</p><p>Most users use a framework interceptor to automate this sort of policy.
+The following example shows how that might work internally:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// derives a sample rate from an annotation on a java method</span>
+DeclarativeSampler&lt;Traced&gt; sampler = DeclarativeSampler.create(Traced::sampleRate);
+
+<em><span class="hl-annotation" style="color: gray">@Around("@annotation(traced)")</span></em>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Object traceThing(ProceedingJoinPoint pjp, Traced traced) <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> Throwable {
+  <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// When there is no trace in progress, this decides using an annotation</span>
+  Sampler decideUsingAnnotation = declarativeSampler.toSampler(traced);
+  Tracer tracer = tracer.withSampler(decideUsingAnnotation);
+
+  <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// This code looks the same as if there was no declarative override</span>
+  ScopedSpan span = tracer.startScopedSpan(spanName(pjp));
+  <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> {
+    <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> pjp.proceed();
+  } <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">catch</span> (RuntimeException | Error e) {
+    span.error(e);
+    <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throw</span> e;
+  } <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
+    span.finish();
+  }
+}</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_sampling" href="#_custom_sampling"></a>4.2&nbsp;Custom sampling</h2></div></div></div><p>Depending on what the operation is, you may want to apply different policies.
+For example, you might not want to trace requests to static resources such as images, or you might want to trace all requests to a new api.</p><p>Most users use a framework interceptor to automate this sort of policy.
+The following example shows how that might work internally:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+<em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Sampler fallback;
+
+Span nextSpan(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">final</span> Request input) {
+  Sampler requestBased = Sampler() {
+    <em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> isSampled(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">long</span> traceId) {
+      <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">if</span> (input.url().startsWith(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"/experimental"</span>)) {
+        <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true;
+      } <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">else</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">if</span> (input.url().startsWith(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"/static"</span>)) {
+        <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> false;
+      }
+      <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> fallback.isSampled(traceId);
+    }
+  };
+  <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> tracer.withSampler(requestBased).nextSpan();
+}</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_sampling_in_spring_cloud_sleuth" href="#_sampling_in_spring_cloud_sleuth"></a>4.3&nbsp;Sampling in Spring Cloud Sleuth</h2></div></div></div><p>By default Spring Cloud Sleuth sets all spans to non-exportable.
+That means that traces appear in logs but not in any remote store.
+For testing the default is often enough, and it probably is all you need if you use only the logs (for example, with an ELK aggregator).
+If you export span data to Zipkin, there is also an <code class="literal">Sampler.ALWAYS_SAMPLE</code> setting that exports everything and a <code class="literal">ProbabilityBasedSampler</code> setting that samples a fixed fraction of spans.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The <code class="literal">ProbabilityBasedSampler</code> is the default if you use <code class="literal">spring-cloud-sleuth-zipkin</code>.
+You can configure the exports by setting <code class="literal">spring.sleuth.sampler.probability</code>.
+The passed value needs to be a double from <code class="literal">0.0</code> to <code class="literal">1.0</code>.</p></td></tr></table></div><p>A sampler can be installed by creating a bean definition, as shown in the following example:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Sampler defaultSampler() {
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> Sampler.ALWAYS_SAMPLE;
+}</pre><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>You can set the HTTP header <code class="literal">X-B3-Flags</code> to <code class="literal">1</code>, or, when doing messaging, you can set the <code class="literal">spanFlags</code> header to <code class="literal">1</code>.
+Doing so forces the current span to be exportable regardless of the sampling decision.</p></td></tr></table></div><p>In order to use the rate-limited sampler set the <code class="literal">spring.sleuth.sampler.rate</code> property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi__features.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__propagation.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">3.&nbsp;Features&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;5.&nbsp;Propagation</td></tr></table></div></body></html>
