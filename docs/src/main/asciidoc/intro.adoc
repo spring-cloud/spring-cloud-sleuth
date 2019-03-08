@@ -426,7 +426,7 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 
 [source,java]
 ----
-include::../../../../spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
+include::../../../spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
 ----
 
 == Additional Resources
