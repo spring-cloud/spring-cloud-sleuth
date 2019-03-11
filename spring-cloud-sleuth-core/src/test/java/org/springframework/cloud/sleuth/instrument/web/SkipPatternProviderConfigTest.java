@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -98,8 +97,7 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.server.servlet.context-path=foo")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("|foo.*");
-					then(extractAllPatterns(context)).contains("foo.*");
+					then(pattern).isIn(withDefaults("/actuator/(health|health/.*|info|info/.*)", "foo.*"));
 				});
 	}
 
@@ -119,8 +117,7 @@ public class SkipPatternProviderConfigTest {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("/actuator/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("/actuator/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("/actuator/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -130,8 +127,7 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("server.servlet.context-path=foo")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("foo/actuator/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("foo/actuator/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("foo/actuator/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -141,8 +137,7 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.endpoints.web.base-path=/")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -153,8 +148,7 @@ public class SkipPatternProviderConfigTest {
 						"server.servlet.context-path=foo")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("foo/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("foo/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("foo/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -165,8 +159,7 @@ public class SkipPatternProviderConfigTest {
 						"management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -177,19 +170,7 @@ public class SkipPatternProviderConfigTest {
 						"server.servlet.context-path=foo")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("foo/mgt/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("foo/mgt/(health|health/.*|info|info/.*)");
-				});
-	}
-
-	@Test
-	public void should_return_endpoints_with_actuator_default_context_path() {
-		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
-				.withPropertyValues("server.servlet.context-path=foo")
-				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).contains("foo/actuator/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("foo/actuator/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("foo/mgt/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -199,8 +180,7 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("/actuator/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("/actuator/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("/actuator/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -211,8 +191,7 @@ public class SkipPatternProviderConfigTest {
 						"management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("/mgt/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("/mgt/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("/mgt/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -222,8 +201,7 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
 					final String pattern = extractPattern(context);
-					then(pattern).contains("/actuator/(health|health/.*|info|info/.*)");
-					then(extractAllPatterns(context)).contains("/actuator/(health|health/.*|info|info/.*)");
+					then(pattern).isIn(withDefaults("/actuator/(health|health/.*|info|info/.*)"));
 				});
 	}
 
@@ -253,21 +231,15 @@ public class SkipPatternProviderConfigTest {
 		return skipPatternProvider.skipPattern().pattern();
 	}
 	
-	/**
-	 * Extracts all single patterns 
-	 */
-	private Collection<String> extractAllPatterns(ApplicationContext context) {
-		return context
-			.getBeansOfType(SingleSkipPattern.class)
-			.values()
-			.stream()
-			.map(SingleSkipPattern::skipPattern)
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.map(Pattern::pattern)
-			.collect(Collectors.toList());
+	private Collection<String> withDefaults(String pattern, String ... tail) {
+		final String tailPattern = (tail.length == 0) ? "" : "|" + String.join("|", tail);
+		
+		return Arrays.asList(
+				pattern + "|" + SleuthWebProperties.DEFAULT_SKIP_PATTERN + tailPattern,
+				SleuthWebProperties.DEFAULT_SKIP_PATTERN + "|" + pattern + tailPattern 
+			);
 	}
-
+	
 	@Configuration
 	@EnableConfigurationProperties(ServerProperties.class)
 	static class ServerPropertiesConfig {
