@@ -45,7 +45,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.RequestEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -109,7 +109,7 @@ public class SpringDataInstrumentationTests {
 		return this.restTemplate
 				.exchange(RequestEntity
 						.get(URI.create("http://localhost:" + port() + "/reservations"))
-						.build(), PagedResources.class)
+						.build(), PagedModel.class)
 				.getBody().getMetadata().getTotalElements();
 	}
 
