@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -96,8 +97,9 @@ public class SkipPatternProviderConfigTest {
 						ManagementContextAutoConfiguration.class, ServerPropertiesConfig.class))
 				.withPropertyValues("management.server.servlet.context-path=foo")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("/actuator/(health|health/.*|info|info/.*)", "foo.*"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"/actuator/(health|health/.*|info|info/.*)", "foo.*", 
+							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -116,8 +118,8 @@ public class SkipPatternProviderConfigTest {
 	public void should_return_endpoints_without_context_path() {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("/actuator/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"/actuator/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -126,8 +128,8 @@ public class SkipPatternProviderConfigTest {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("server.servlet.context-path=foo")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("foo/actuator/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"foo/actuator/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -136,8 +138,8 @@ public class SkipPatternProviderConfigTest {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("management.endpoints.web.base-path=/")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -147,8 +149,8 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.endpoints.web.base-path=/",
 						"server.servlet.context-path=foo")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("foo/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"foo/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -158,8 +160,8 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.endpoints.web.base-path=/",
 						"management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -169,8 +171,8 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.endpoints.web.base-path=/mgt",
 						"server.servlet.context-path=foo")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("foo/mgt/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"foo/mgt/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -179,8 +181,8 @@ public class SkipPatternProviderConfigTest {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("/actuator/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"/actuator/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -190,8 +192,8 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.endpoints.web.base-path=/mgt",
 						"management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("/mgt/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"/mgt/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -200,8 +202,8 @@ public class SkipPatternProviderConfigTest {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
-					final String pattern = extractPattern(context);
-					then(pattern).isIn(withDefaults("/actuator/(health|health/.*|info|info/.*)"));
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+						"/actuator/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -230,14 +232,20 @@ public class SkipPatternProviderConfigTest {
 		SkipPatternProvider skipPatternProvider = context.getBean(SkipPatternProvider.class);
 		return skipPatternProvider.skipPattern().pattern();
 	}
-	
-	private Collection<String> withDefaults(String pattern, String ... tail) {
-		final String tailPattern = (tail.length == 0) ? "" : "|" + String.join("|", tail);
-		
-		return Arrays.asList(
-				pattern + "|" + SleuthWebProperties.DEFAULT_SKIP_PATTERN + tailPattern,
-				SleuthWebProperties.DEFAULT_SKIP_PATTERN + "|" + pattern + tailPattern 
-			);
+
+	/**
+	* Extracts all single patterns
+	*/
+	private Collection<String> extractAllPatterns(ApplicationContext context) {
+        return context
+            .getBeansOfType(SingleSkipPattern.class)
+            .values()
+            .stream()
+	        .map(SingleSkipPattern::skipPattern)
+	        .filter(Optional::isPresent)
+	        .map(Optional::get)
+	        .map(Pattern::pattern)
+	        .collect(Collectors.toList());
 	}
 	
 	@Configuration
