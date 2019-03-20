@@ -43,7 +43,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class, properties = {
-		"spring.zipkin.baseUrl=http://zipkin/", "spring.zipkin.sender.type=web" // override
+		"spring.zipkin.baseUrl=https://zipkin/", "spring.zipkin.sender.type=web" // override
 																				// default
 																				// priority
 																				// which

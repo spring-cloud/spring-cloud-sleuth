@@ -38,13 +38,13 @@ public class SampleController {
 	@RequestMapping("/")
 	public String hi() throws InterruptedException {
 		Thread.sleep(this.random.nextInt(1000));
-		String s = this.restTemplate.getForObject("http://zipkin/hi2", String.class);
+		String s = this.restTemplate.getForObject("https://zipkin/hi2", String.class);
 		return "hi/" + s;
 	}
 
 	@RequestMapping("/call")
 	public String traced() {
-		String s = this.restTemplate.getForObject("http://zipkin/call", String.class);
+		String s = this.restTemplate.getForObject("https://zipkin/call", String.class);
 		return "call/" + s;
 	}
 

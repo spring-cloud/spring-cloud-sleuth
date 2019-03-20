@@ -119,7 +119,7 @@ SockJS = (function () {
      */
 
     /* Simplified implementation of DOM2 EventTarget.
-     *   http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-EventTarget
+     *   https://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-EventTarget
      */
     var REventTarget = function () {
     };
@@ -289,7 +289,7 @@ SockJS = (function () {
         return (p + utils.random_number(max)).slice(-t);
     };
 
-// Assuming that url looks like: http://asdasd:111/asd
+// Assuming that url looks like: https://asdasd:111/asd
     utils.getOrigin = function (url) {
         url += '/';
         var parts = url.split('/').slice(0, 3);
@@ -342,7 +342,7 @@ SockJS = (function () {
         return code === 1000 || (code >= 3000 && code <= 4999);
     };
 
-// See: http://www.erg.abdn.ac.uk/~gerrit/dccp/notes/ccid2/rto_estimator/
+// See: https://erg.abdn.ac.uk/~gerrit/dccp/notes/ccid2/rto_estimator/
 // and RFC 2988.
     utils.countRTO = function (rtt) {
         var rto;
@@ -383,7 +383,7 @@ SockJS = (function () {
             throw new Error('Only basic urls are supported in SockJS');
         }
 
-        //  '//abc' --> 'http://abc'
+        //  '//abc' --> 'https://abc'
         if (url.indexOf('//') === 0) {
             url = dl.protocol + url;
         }
@@ -593,7 +593,7 @@ SockJS = (function () {
 
 // Quote string, also taking care of unicode characters that browsers
 // often break. Especially, take care of unicode surrogates:
-//    http://en.wikipedia.org/wiki/Mapping_of_Unicode_characters#Surrogates
+//    https://en.wikipedia.org/wiki/Mapping_of_Unicode_characters#Surrogates
     utils.quote = function (string) {
         var quoted = JSONQuote(string);
 
@@ -722,7 +722,7 @@ SockJS = (function () {
             _window.addEventListener(event, listener, false);
         } else {
             // IE quirks.
-            // According to: http://stevesouders.com/misc/test-postmessage.php
+            // According to: https://stevesouders.com/misc/test-postmessage.php
             // the message gets delivered only to 'document', not 'window'.
             _document.attachEvent("on" + event, listener);
             // I get 'window' for ie8.
@@ -943,7 +943,7 @@ SockJS = (function () {
         }
 
         // Explorer tends to keep connection open, even after the
-        // tab gets closed: http://bugs.jquery.com/ticket/5280
+        // tab gets closed: https://bugs.jquery.com/ticket/5280
         that.unload_ref = utils.unload_add(function () {
             that._cleanup(true);
         });
@@ -981,7 +981,7 @@ SockJS = (function () {
                         } catch (x) {
                         }
                         ;
-                        // IE returns 1223 for 204: http://bugs.jquery.com/ticket/1450
+                        // IE returns 1223 for 204: https://bugs.jquery.com/ticket/1450
                         if (status === 1223) status = 204;
 
                         // IE does return readystate == 3 for 404 answers.
@@ -991,7 +991,7 @@ SockJS = (function () {
                         break;
                     case 4:
                         var status = x.status;
-                        // IE returns 1223 for 204: http://bugs.jquery.com/ticket/1450
+                        // IE returns 1223 for 204: https://bugs.jquery.com/ticket/1450
                         if (status === 1223) status = 204;
 
                         that.emit('finish', status, x.responseText);
@@ -1049,7 +1049,7 @@ SockJS = (function () {
 
 // References:
 //   http://ajaxian.com/archives/100-line-ajax-wrapper
-//   http://msdn.microsoft.com/en-us/library/cc288060(v=VS.85).aspx
+//   https://msdn.microsoft.com/en-us/library/cc288060(v=VS.85).aspx
     var XDRObject = utils.XDRObject = function (method, url, payload) {
         var that = this;
         utils.delay(function () {
@@ -1692,9 +1692,9 @@ SockJS = (function () {
         // script object. Later, onreadystatechange, manually execute this
         // code. FF and Chrome doesn't work with 'event' and 'htmlFor'
         // set. For reference see:
-        //   http://jaubourg.net/2010/07/loading-script-as-onclick-handler-of.html
+        //   https://jaubourg.net/2010/07/loading-script-as-onclick-handler-of.html
         // Also, read on that about script ordering:
-        //   http://wiki.whatwg.org/wiki/Dynamic_Script_Execution_Order
+        //   https://wiki.whatwg.org/wiki/Dynamic_Script_Execution_Order
         if (typeof script.async === 'undefined' && _document.attachEvent) {
             // According to mozilla docs, in recent browsers script.async defaults
             // to 'true', so we may use it to detect a good browser:
@@ -1895,8 +1895,8 @@ SockJS = (function () {
 
 
 // According to:
-//   http://stackoverflow.com/questions/1641507/detect-browser-support-for-cross-domain-xmlhttprequests
-//   http://hacks.mozilla.org/2009/07/cross-site-xmlhttprequest-with-cors/
+//   https://stackoverflow.com/questions/1641507/detect-browser-support-for-cross-domain-xmlhttprequests
+//   https://hacks.mozilla.org/2009/07/cross-site-xmlhttprequest-with-cors/
 
 
 // xdr-streaming
@@ -1949,8 +1949,8 @@ SockJS = (function () {
 // remote domain. New browsers, have capabilities to communicate with
 // cross domain iframe, using postMessage(). In IE it was implemented
 // from IE 8+, but of course, IE got some details wrong:
-//    http://msdn.microsoft.com/en-us/library/cc197015(v=VS.85).aspx
-//    http://stevesouders.com/misc/test-postmessage.php
+//    https://msdn.microsoft.com/en-us/library/cc197015(v=VS.85).aspx
+//    https://stevesouders.com/misc/test-postmessage.php
 
     var IframeTransport = function () {
     };
@@ -2123,7 +2123,7 @@ SockJS = (function () {
 
         // alert('test ticker');
         // facade = new FacadeJS();
-        // facade._transport = new FacadeJS['w-iframe-xhr-polling'](facade, 'http://host.com:9999/ticker/12/basd');
+        // facade._transport = new FacadeJS['w-iframe-xhr-polling'](facade, 'https://host.com:9999/ticker/12/basd');
 
         utils.attachMessage(onMessage);
 
