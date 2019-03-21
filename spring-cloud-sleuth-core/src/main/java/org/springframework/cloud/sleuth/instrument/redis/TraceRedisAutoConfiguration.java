@@ -24,7 +24,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +42,7 @@ import org.springframework.context.annotation.Configuration;
 public class TraceRedisAutoConfiguration {
 
 	@Configuration
-	@ConditionalOnClass(ClientResources.class)
+	@ConditionalOnBean(ClientResources.class)
 	static class LettuceConfig {
 
 		@Bean
@@ -75,9 +74,7 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 			throws BeansException {
 		if (bean instanceof ClientResources) {
 			ClientResources cr = (ClientResources) bean;
-			// tracing of ClientResources instance created by default is `disabled()`
-			if (cr.tracing() == null
-					|| cr.tracing() == io.lettuce.core.tracing.Tracing.disabled()) {
+			if (!cr.tracing().isEnabled()) {
 				return cr.mutate().tracing(BraveTracing.create(this.tracing)).build();
 			}
 		}

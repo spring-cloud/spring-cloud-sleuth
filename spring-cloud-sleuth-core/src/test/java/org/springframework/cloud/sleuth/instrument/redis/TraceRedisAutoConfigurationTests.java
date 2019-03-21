@@ -47,9 +47,7 @@ public class TraceRedisAutoConfigurationTests {
 	@Test
 	public void tracing_should_be_set() {
 		then(this.traceLettuceClientResourcesBeanPostProcessor.tracingCalled).isTrue();
-		then(this.clientResources.tracing()).isNotNull();
-		then(this.clientResources.tracing())
-				.isNotSameAs(io.lettuce.core.tracing.Tracing.disabled());
+		then(this.clientResources.tracing().isEnabled()).isTrue();
 	}
 
 	@Configuration
@@ -59,8 +57,7 @@ public class TraceRedisAutoConfigurationTests {
 		@Bean
 		ClientResources clientResources() {
 			ClientResources clientResources = ClientResources.create();
-			then(clientResources.tracing())
-					.isSameAs(io.lettuce.core.tracing.Tracing.disabled());
+			then(clientResources.tracing().isEnabled()).isFalse();
 			return clientResources;
 		}
 
