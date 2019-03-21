@@ -16,9 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import brave.Tracing;
+import reactor.core.Scannable;
 import reactor.util.context.Context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,18 +39,19 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	final BeanFactory beanFactory;
 	final Subscriber<? super T> subscriber;
 	final Context context;
-	final String name;
+	final Scannable scannable;
 	private Tracing tracing;
 
 	SpanSubscriptionProvider(BeanFactory beanFactory,
 			Subscriber<? super T> subscriber,
-			Context context, String name) {
+			Context context, Scannable scannable) {
 		this.beanFactory = beanFactory;
 		this.subscriber = subscriber;
 		this.context = context;
-		this.name = name;
+		Objects.requireNonNull(scannable, "scannable must not be null");
+		this.scannable = scannable;
 		if (log.isTraceEnabled()) {
-			log.trace("Context [" + context + "], name [" + name + "]");
+			log.trace("Context [" + context + "], name [" + scannable.name() + "]");
 		}
 	}
 
@@ -57,7 +60,7 @@ class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>> {
 	}
 
 	SpanSubscription<T> newCoreSubscriber(Tracing tracing) {
-		return new SpanSubscriber<>(this.subscriber, this.context, tracing, this.name);
+		return new SpanSubscriber<>(this.subscriber, this.context, tracing, this.scannable.name());
 	}
 
 	private Tracing tracing() {

@@ -93,7 +93,7 @@ public abstract class ReactorSleuth {
 				beanFactory,
 				sub,
 				sub.currentContext(),
-				scannable.name());
+				scannable);
 	}
 
 	/**
@@ -163,7 +163,7 @@ public abstract class ReactorSleuth {
 				beanFactory,
 				sub,
 				sub.currentContext(),
-				null) {
+				scannable) {
 			@Override SpanSubscription newCoreSubscriber(Tracing tracing) {
 				return new ScopePassingSpanSubscriber<T>(
 						sub,
