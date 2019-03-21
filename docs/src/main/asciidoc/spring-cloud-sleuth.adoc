@@ -1373,6 +1373,11 @@ IMPORTANT: We don't support baggage propagation for JMS
 We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
 To disable Zuul support, set the `spring.sleuth.zuul.enabled` property to `false`.
 
+=== Redis
+
+We set `tracing` property to Lettcue `ClientResources` instance to enable Brave tracing built in Lettuce .
+To disable Redis support, set the `spring.sleuth.redis.enabled` property to `false`.
+
 == Running examples
 
 You can see the running examples deployed in the https://run.pivotal.io/[Pivotal Web Services].
