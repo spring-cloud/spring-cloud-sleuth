@@ -37,12 +37,11 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @OnRedisEnabled
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(value = { Tracing.class, ClientResources.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
 public class TraceRedisAutoConfiguration {
 
 	@Configuration
-	@ConditionalOnBean(ClientResources.class)
 	static class LettuceConfig {
 
 		@Bean
