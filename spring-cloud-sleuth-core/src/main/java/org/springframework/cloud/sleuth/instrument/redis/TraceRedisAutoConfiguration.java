@@ -75,7 +75,9 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 			throws BeansException {
 		if (bean instanceof ClientResources) {
 			ClientResources cr = (ClientResources) bean;
-			if (cr.tracing() == null) {
+			// tracing of ClientResources instance created by default is `disabled()`
+			if (cr.tracing() == null
+					|| cr.tracing() == io.lettuce.core.tracing.Tracing.disabled()) {
 				return cr.mutate().tracing(BraveTracing.create(this.tracing)).build();
 			}
 		}
