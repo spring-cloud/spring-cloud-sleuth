@@ -79,12 +79,16 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 		if (bean instanceof ClientResources) {
 			ClientResources cr = (ClientResources) bean;
 			if (!cr.tracing().isEnabled()) {
-				log.debug(
-						"Lettuce ClientResources bean is auto-configured to enable tracing.");
+				if (log.isDebugEnabled()) {
+					log.debug(
+							"Lettuce ClientResources bean is auto-configured to enable tracing.");
+				}
 				return cr.mutate().tracing(BraveTracing.create(this.tracing)).build();
 			}
-			log.debug(
-					"Lettuce ClientResources bean is skipped for auto-configuration because tracing was already enabled.");
+			if (log.isDebugEnabled()) {
+				log.debug(
+						"Lettuce ClientResources bean is skipped for auto-configuration because tracing was already enabled.");
+			}
 		}
 		return bean;
 	}
