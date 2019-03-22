@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.instrument.redis;
 import brave.Tracing;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.tracing.BraveTracing;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -37,7 +39,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @OnRedisEnabled
-@ConditionalOnBean(value = { Tracing.class, ClientResources.class })
+@ConditionalOnBean({ Tracing.class, ClientResources.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
 public class TraceRedisAutoConfiguration {
 
@@ -55,6 +57,9 @@ public class TraceRedisAutoConfiguration {
 }
 
 class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor {
+
+	private static final Log log = LogFactory
+			.getLog(TraceLettuceClientResourcesBeanPostProcessor.class);
 
 	private final Tracing tracing;
 
@@ -74,8 +79,12 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 		if (bean instanceof ClientResources) {
 			ClientResources cr = (ClientResources) bean;
 			if (!cr.tracing().isEnabled()) {
+				log.debug(
+						"Lettuce ClientResources bean is auto-configured to enable tracing.");
 				return cr.mutate().tracing(BraveTracing.create(this.tracing)).build();
 			}
+			log.debug(
+					"Lettuce ClientResources bean is skipped for auto-configuration because tracing was already enabled.");
 		}
 		return bean;
 	}
