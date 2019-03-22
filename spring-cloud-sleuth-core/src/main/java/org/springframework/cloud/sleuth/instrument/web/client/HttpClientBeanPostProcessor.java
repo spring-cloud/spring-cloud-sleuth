@@ -161,7 +161,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			AtomicReference reference = req.currentContext()
 					.getOrDefault(AtomicReference.class, new AtomicReference());
 			Span span = handler().handleSend(injector(), req.requestHeaders(), req,
-					(Span) reference.get());
+					reference.get() == null ? handler().nextSpan(req) : (Span) reference.get());
 			reference.set(span);
 		}
 
