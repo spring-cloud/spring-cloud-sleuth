@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?asciidoc-toc maxdepth="8"?>
 <?asciidoc-numbered?>
-<book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
+<book xmlns="https://docbook.org/ns/docbook" xmlns:xl="https://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Sleuth</title>
 <date>2018-07-20</date>
@@ -18,10 +18,10 @@
 </preface>
 <chapter xml:id="_introduction">
 <title>Introduction</title>
-<simpara>Spring Cloud Sleuth implements a distributed tracing solution for <link xl:href="http://cloud.spring.io">Spring Cloud</link>.</simpara>
+<simpara>Spring Cloud Sleuth implements a distributed tracing solution for <link xl:href="https://cloud.spring.io">Spring Cloud</link>.</simpara>
 <section xml:id="_terminology">
 <title>Terminology</title>
-<simpara>Spring Cloud Sleuth borrows <link xl:href="http://research.google.com/pubs/pub36356.html">Dapper&#8217;s</link> terminology.</simpara>
+<simpara>Spring Cloud Sleuth borrows <link xl:href="https://research.google.com/pubs/pub36356.html">Dapper&#8217;s</link> terminology.</simpara>
 <simpara><emphasis role="strong">Span:</emphasis> The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an
 RPC. Span&#8217;s are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span
 is a part of.  Spans also have other data, such as descriptions, timestamped events, key-value
@@ -200,7 +200,7 @@ service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262f
 service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
 service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]</screen>
 <simpara>If you&#8217;re using a log aggregating tool like <link xl:href="https://www.elastic.co/products/kibana">Kibana</link>,
-<link xl:href="http://www.splunk.com/">Splunk</link> etc. you can order the events that took place. An example of
+<link xl:href="https://www.splunk.com/">Splunk</link> etc. you can order the events that took place. An example of
 Kibana would look like this:</simpara>
 <informalfigure>
 <mediaobject>
@@ -1392,7 +1392,7 @@ Stream based span reporting).</simpara>
 <chapter xml:id="_span_data_as_messages">
 <title>Span Data as Messages</title>
 <simpara>You can accumulate and send span data over
-<link xl:href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</link> by
+<link xl:href="https://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</link> by
 including the <literal>spring-cloud-sleuth-stream</literal> jar as a dependency, and
 adding a Channel Binder implementation
 (e.g. <literal>spring-cloud-starter-stream-rabbit</literal> for RabbitMQ or
@@ -1485,7 +1485,7 @@ public static class CustomPollerConfiguration {
 <chapter xml:id="_metrics">
 <title>Metrics</title>
 <simpara>Currently Spring Cloud Sleuth registers very simple metrics related to spans.
-It&#8217;s using the <link xl:href="http://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics">Spring Boot&#8217;s metrics support</link>
+It&#8217;s using the <link xl:href="https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics">Spring Boot&#8217;s metrics support</link>
 to calculate the number of accepted and dropped spans. Each time a span gets
 sent to Zipkin the number of accepted spans will increase. If there&#8217;s an error then
 the number of dropped spans will get increased.</simpara>
@@ -1674,13 +1674,13 @@ static class Config {
 </section>
 <section xml:id="_traverson">
 <title>Traverson</title>
-<simpara>If you&#8217;re using the <link xl:href="http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</link> library
+<simpara>If you&#8217;re using the <link xl:href="https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</link> library
 it&#8217;s enough for you to inject a <literal>RestTemplate</literal> as a bean into your Traverson object. Since <literal>RestTemplate</literal>
 is already intercepted, you will get full support of tracing in your client. Below you can find a pseudo code
 of how to do that:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Autowired RestTemplate restTemplate;
 
-Traverson traverson = new Traverson(URI.create("http://some/address"),
+Traverson traverson = new Traverson(URI.create("https://some/address"),
     MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
 // use Traverson</programlisting>
 </section>
@@ -1773,7 +1773,7 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 </section>
 <section xml:id="_messaging">
 <title>Messaging</title>
-<simpara>Spring Cloud Sleuth integrates with <link xl:href="http://projects.spring.io/spring-integration/">Spring Integration</link>. It creates spans for publish and
+<simpara>Spring Cloud Sleuth integrates with <link xl:href="https://projects.spring.io/spring-integration/">Spring Integration</link>. It creates spans for publish and
 subscribe events. To disable Spring Integration instrumentation, set <literal>spring.sleuth.integration.enabled</literal> to false.</simpara>
 <simpara>You can provide the <literal>spring.sleuth.integration.patterns</literal> pattern to explicitly
 provide the names of channels that you want to include for tracing. By default all channels
@@ -1794,10 +1794,10 @@ To disable Zuul support set the <literal>spring.sleuth.zuul.enabled</literal> pr
 <simpara>You can find the running examples deployed in the <link xl:href="https://run.pivotal.io/">Pivotal Web Services</link>. Check them out in the following links:</simpara>
 <itemizedlist>
 <listitem>
-<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</link></simpara>
+<simpara><link xl:href="https://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</link></simpara>
 </listitem>
 <listitem>
-<simpara><link xl:href="http://docsbrewing-zipkin-web.cfapps.io/">Zipkin for Brewery on PWS</link>, its <link xl:href="https://github.com/spring-cloud-samples/brewery">Github Code</link></simpara>
+<simpara><link xl:href="https://docsbrewing-zipkin-web.cfapps.io/">Zipkin for Brewery on PWS</link>, its <link xl:href="https://github.com/spring-cloud-samples/brewery">Github Code</link></simpara>
 </listitem>
 </itemizedlist>
 </chapter>
