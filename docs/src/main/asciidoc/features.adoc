@@ -48,7 +48,7 @@ You can configure the location of the service by setting `spring.zipkin.baseUrl`
 
 CAUTION: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
 
-* Spring Cloud Sleuth is http://opentracing.io/[OpenTracing] compatible.
+* Spring Cloud Sleuth is https://opentracing.io/[OpenTracing] compatible.
 
 IMPORTANT: If you use Zipkin, configure the probability of spans exported by setting `spring.sleuth.sampler.probability`
 (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working be cause it omits some spans.
