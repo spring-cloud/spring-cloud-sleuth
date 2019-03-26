@@ -70,7 +70,7 @@ public class TracePreZuulFilterTests {
 	public void setup() {
 		MonitoringHelper.initMocks();
 		RequestContext requestContext = new RequestContext();
-		BDDMockito.given(this.httpServletRequest.getRequestURI()).willReturn("http://foo.bar");
+		BDDMockito.given(this.httpServletRequest.getRequestURI()).willReturn("https://foo.bar");
 		BDDMockito.given(this.httpServletRequest.getMethod()).willReturn("GET");
 		requestContext.setRequest(this.httpServletRequest);
 		RequestContext.testSetCurrentContext(requestContext);

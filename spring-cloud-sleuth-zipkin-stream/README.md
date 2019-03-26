@@ -7,7 +7,7 @@ See [our documentation](https://cloud.spring.io/spring-cloud-sleuth/single/sprin
 
 There are 3 parts to Zipkin: the instrumented client apps, the backend database and the Zipkin server. The database for this implementation is MySQL.
 
-> There is a running instance on PWS: http://zipkin-web.cfapps.io. It is backed by a `zipkin-server` with a MySQL backend and RabbitMQ (Spring Cloud Stream) for span transport.
+> There is a running instance on PWS: https://zipkin-web.cfapps.io. It is backed by a `zipkin-server` with a MySQL backend and RabbitMQ (Spring Cloud Stream) for span transport.
 
 ## Instrumenting Apps
 
