@@ -60,7 +60,7 @@ public class ProbabilityBasedSampler extends Sampler {
 	/**
 	 * Reservoir sampling algorithm borrowed from Stack Overflow.
 	 *
-	 * http://stackoverflow.com/questions/12817946/generate-a-random-bitset-with-n-1s
+	 * https://stackoverflow.com/questions/12817946/generate-a-random-bitset-with-n-1s
 	 * @param size size of the bit set
 	 * @param cardinality cardinality of the bit set
 	 * @param rnd random generator
