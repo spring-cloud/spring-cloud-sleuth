@@ -149,7 +149,7 @@ void userCode() {
 
 ==== RPC tracing
 
-TIP: Check for https://github.com/openzipkin/sleuth/tree/master/instrumentation[instrumentation written here] and http://zipkin.io/pages/existing_instrumentations.html[Zipkin's list] before rolling your own RPC instrumentation.
+TIP: Check for https://github.com/openzipkin/sleuth/tree/master/instrumentation[instrumentation written here] and https://zipkin.io/pages/existing_instrumentations.html[Zipkin's list] before rolling your own RPC instrumentation.
 
 RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.
 
@@ -884,7 +884,7 @@ You can configure the URL by setting the `spring.zipkin.baseUrl` property, as fo
 
 [source,yaml]
 ----
-spring.zipkin.baseUrl: http://192.168.99.100:9411/
+spring.zipkin.baseUrl: https://192.168.99.100:9411/
 ----
 
 If you want to find Zipkin through service discovery, you can pass the Zipkin's service ID inside the URL, as shown in the following example for `zipkinserver` service ID:
@@ -953,13 +953,13 @@ IMPORTANT: We recommend using Zipkin's native support for message-based span sen
 Starting from the Edgware release, the Zipkin Stream server is deprecated.
 In the Finchley release, it got removed.
 
-If for some reason you need to create the deprecated Stream Zipkin server, see the http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer[Dalston Documentation].
+If for some reason you need to create the deprecated Stream Zipkin server, see the https://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer[Dalston Documentation].
 
 == Integrations
 
 === OpenTracing
 
-Spring Cloud Sleuth is compatible with http://opentracing.io/[OpenTracing].
+Spring Cloud Sleuth is compatible with https://opentracing.io/[OpenTracing].
 If you have OpenTracing on the classpath, we automatically register the OpenTracing `Tracer` bean.
 If you wish to disable this, set `spring.sleuth.opentracing.enabled` to `false`
 
@@ -1119,7 +1119,7 @@ If you create a `WebClient` instance with a `new` keyword,  the instrumentation 
 
 ==== Traverson
 
-If you use the http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson[Traverson] library, you can inject a `RestTemplate` as a bean into your Traverson object.
+If you use the https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson[Traverson] library, you can inject a `RestTemplate` as a bean into your Traverson object.
 Since `RestTemplate` is already intercepted, you get full support for tracing in your client. The following pseudo code
 shows how to do that:
 
@@ -1227,7 +1227,7 @@ Features from this section can be disabled by setting the `spring.sleuth.messagi
 
 ==== Spring Integration and Spring Cloud Stream
 
-Spring Cloud Sleuth integrates with http://projects.spring.io/spring-integration/[Spring Integration].
+Spring Cloud Sleuth integrates with https://projects.spring.io/spring-integration/[Spring Integration].
 It creates spans for publish and subscribe events.
 To disable Spring Integration instrumentation, set `spring.sleuth.integration.enabled` to `false`.
 
@@ -1265,8 +1265,8 @@ To disable Zuul support, set the `spring.sleuth.zuul.enabled` property to `false
 You can see the running examples deployed in the https://run.pivotal.io/[Pivotal Web Services].
 Check them out at the following links:
 
-* http://docssleuth-zipkin-server.cfapps.io/[Zipkin for apps presented in the samples to the top]. First make
-a request to http://docssleuth-service1.cfapps.io/start[Service 1] and then check out the trace in Zipkin.
-* http://docsbrewing-zipkin-server.cfapps.io/[Zipkin for Brewery on PWS], its https://github.com/spring-cloud-samples/brewery[Github Code].
+* https://docssleuth-zipkin-server.cfapps.io/[Zipkin for apps presented in the samples to the top]. First make
+a request to https://docssleuth-service1.cfapps.io/start[Service 1] and then check out the trace in Zipkin.
+* https://docsbrewing-zipkin-server.cfapps.io/[Zipkin for Brewery on PWS], its https://github.com/spring-cloud-samples/brewery[Github Code].
 Ensure that you've picked the lookback period of 7 days. If there are no traces, go to https://docsbrewing-presenting.cfapps.io/[Presenting application]
 and order some beers. Then check Zipkin for traces.
