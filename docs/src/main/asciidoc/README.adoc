@@ -11,7 +11,7 @@ image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, lin
 
 == Spring Cloud Sleuth
 
-Spring Cloud Sleuth is a distributed tracing tool for Spring Cloud. It borrows from http://research.google.com/pubs/pub36356.html[Dapper], https://github.com/openzipkin/zipkin[Zipkin], and http://htrace.incubator.apache.org/[HTrace].
+Spring Cloud Sleuth is a distributed tracing tool for Spring Cloud. It borrows from https://research.google.com/pubs/pub36356.html[Dapper], https://github.com/openzipkin/zipkin[Zipkin], and https://htrace.incubator.apache.org/[HTrace].
 
 === Quick Start
 
