@@ -13,7 +13,7 @@ image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, lin
 
 == Spring Cloud Sleuth
 
-Spring Cloud Sleuth is a distributed tracing tool for Spring Cloud. It borrows from http://research.google.com/pubs/pub36356.html[Dapper], https://github.com/openzipkin/zipkin[Zipkin], and http://htrace.incubator.apache.org/[HTrace].
+Spring Cloud Sleuth is a distributed tracing tool for Spring Cloud. It borrows from https://research.google.com/pubs/pub36356.html[Dapper], https://github.com/openzipkin/zipkin[Zipkin], and https://htrace.incubator.apache.org/[HTrace].
 
 === Quick Start
 
@@ -49,11 +49,11 @@ IMPORTANT: If you use Zipkin, configure the probability of spans exported by set
 
 == Introduction
 
-Spring Cloud Sleuth implements a distributed tracing solution for http://cloud.spring.io[Spring Cloud].
+Spring Cloud Sleuth implements a distributed tracing solution for https://cloud.spring.io[Spring Cloud].
 
 === Terminology
 
-Spring Cloud Sleuth borrows http://research.google.com/pubs/pub36356.html[Dapper's] terminology.
+Spring Cloud Sleuth borrows https://research.google.com/pubs/pub36356.html[Dapper's] terminology.
 
 *Span*: The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC.
 Spans are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.
@@ -171,8 +171,8 @@ However, if you want to use the legacy Sleuth approaches, you can set the `sprin
 
 .Click the Pivotal Web Services icon to see it live!
 [caption="Click the Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
-http://docssleuth-zipkin-server.cfapps.io/[Click here to see it live!]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="https://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
+https://docssleuth-zipkin-server.cfapps.io/[Click here to see it live!]
 
 The dependency graph in Zipkin should resemble the following image:
 
@@ -180,8 +180,8 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 
 .Click the Pivotal Web Services icon to see it live!
 [caption="Click the Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="http://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
-http://docssleuth-zipkin-server.cfapps.io/dependency[Click here to see it live!]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="https://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
+https://docssleuth-zipkin-server.cfapps.io/dependency[Click here to see it live!]
 
 ==== Log correlation
 
@@ -196,7 +196,7 @@ service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262f
 service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
 service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]
 
-If you use a log aggregating tool (such as https://www.elastic.co/products/kibana[Kibana], http://www.splunk.com/[Splunk], and others), you can order the events that took place.
+If you use a log aggregating tool (such as https://www.elastic.co/products/kibana[Kibana], https://www.splunk.com/[Splunk], and others), you can order the events that took place.
 An example from Kibana would resemble the following image:
 
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/kibana.png[Log correlation with Kibana]
@@ -602,7 +602,7 @@ You can configure the location of the service by setting `spring.zipkin.baseUrl`
 
 CAUTION: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
 
-* Spring Cloud Sleuth is http://opentracing.io/[OpenTracing] compatible.
+* Spring Cloud Sleuth is https://opentracing.io/[OpenTracing] compatible.
 
 IMPORTANT: If you use Zipkin, configure the probability of spans exported by setting `spring.sleuth.sampler.probability`
 (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working be cause it omits some spans.
@@ -652,7 +652,7 @@ credentials and you already have those.
 
 The projects that require middleware generally include a
 `docker-compose.yml`, so consider using
-http://compose.docker.io/[Docker Compose] to run the middeware servers
+https://compose.docker.io/[Docker Compose] to run the middeware servers
 in Docker containers. See the README in the
 https://github.com/spring-cloud-samples/scripts[scripts demo
 repository] for specific instructions about the common cases of mongo,
@@ -674,13 +674,13 @@ a modified file in the correct place. Just commit it and push the change.
 
 === Working with the code
 If you don't have an IDE preference we would recommend that you use
-http://www.springsource.com/developer/sts[Spring Tools Suite] or
-http://eclipse.org[Eclipse] when working with the code. We use the
-http://eclipse.org/m2e/[m2eclipse] eclipse plugin for maven support. Other IDEs and tools
+https://www.springsource.com/developer/sts[Spring Tools Suite] or
+https://eclipse.org[Eclipse] when working with the code. We use the
+https://eclipse.org/m2e/[m2eclipse] eclipse plugin for maven support. Other IDEs and tools
 should also work without issue as long as they use Maven 3.3.3 or better.
 
 ==== Importing into eclipse with m2eclipse
-We recommend the http://eclipse.org/m2e/[m2eclipse] eclipse plugin when working with
+We recommend the https://eclipse.org/m2e/[m2eclipse] eclipse plugin when working with
 eclipse. If you don't already have m2eclipse installed it is available from the "eclipse
 marketplace".
 
@@ -741,7 +741,7 @@ added after the original pull request but before a merge.
   `eclipse-code-formatter.xml` file from the
   https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-dependencies-parent/eclipse-code-formatter.xml[Spring
   Cloud Build] project. If using IntelliJ, you can use the
-  http://plugins.jetbrains.com/plugin/6546[Eclipse Code Formatter
+  https://plugins.jetbrains.com/plugin/6546[Eclipse Code Formatter
   Plugin] to import the same file.
 * Make sure all new `.java` files to have a simple Javadoc class comment with at least an
   `@author` tag identifying you, and preferably at least a paragraph on what the class is
@@ -754,6 +754,6 @@ added after the original pull request but before a merge.
 * A few unit tests would help a lot as well -- someone has to do it.
 * If no-one else is using your branch, please rebase it against the current master (or
   other target branch in the main project).
-* When writing a commit message please follow http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html[these conventions],
+* When writing a commit message please follow https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html[these conventions],
   if you are fixing an existing issue please add `Fixes gh-XXXX` at the end of the commit
   message (where XXXX is the issue number).
