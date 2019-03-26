@@ -106,7 +106,7 @@ class Application {
 
 }
 
-@FeignClient(name = "foo", url = "http://non.existing.url")
+@FeignClient(name = "foo", url = "https://non.existing.url")
 interface MyNameRemote {
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
