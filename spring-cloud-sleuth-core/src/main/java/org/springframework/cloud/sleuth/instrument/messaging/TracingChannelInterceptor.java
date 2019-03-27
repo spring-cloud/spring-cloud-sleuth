@@ -192,13 +192,15 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			Message<?> retrievedMessage, MessageHeaderAccessor additionalHeaders) {
 		MessageHeaderAccessor headers = MessageHeaderAccessor
 				.getMutableAccessor(originalMessage);
-		if (originalMessage.getPayload() instanceof MessagingException) {
+		if (originalMessage instanceof ErrorMessage) {
+			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
 			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(
 					additionalHeaders.getMessageHeaders(),
 					this.tracing.propagation().keys()));
-			return new ErrorMessage((MessagingException) originalMessage.getPayload(),
+			return new ErrorMessage(errorMessage.getPayload(),
 					isWebSockets(headers) ? headers.getMessageHeaders()
-							: new MessageHeaders(headers.getMessageHeaders()));
+							: new MessageHeaders(headers.getMessageHeaders()),
+					errorMessage.getOriginalMessage());
 		}
 		headers.copyHeaders(additionalHeaders.getMessageHeaders());
 		return new GenericMessage<>(retrievedMessage.getPayload(),
