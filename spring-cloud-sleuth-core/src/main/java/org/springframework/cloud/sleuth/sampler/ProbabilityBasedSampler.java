@@ -70,7 +70,7 @@ public class ProbabilityBasedSampler extends Sampler {
 	/**
 	 * Reservoir sampling algorithm borrowed from Stack Overflow.
 	 *
-	 * http://stackoverflow.com/questions/12817946/generate-a-random-bitset-with-n-1s
+	 * https://stackoverflow.com/questions/12817946/generate-a-random-bitset-with-n-1s
 	 */
 	static BitSet randomBitSet(int size, int cardinality, Random rnd) {
 		BitSet result = new BitSet(size);
