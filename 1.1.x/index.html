@@ -9,7 +9,7 @@
 <title>Spring Cloud Sleuth</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
-/* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
 /* Remove comment around @import statement below when using as a custom stylesheet */
 /*@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";*/
 article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}
@@ -537,14 +537,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>1.1.5.BUILD-SNAPSHOT</strong></p>
 </div>
 <div class="paragraph">
-<p>Spring Cloud Sleuth implements a distributed tracing solution for <a href="http://cloud.spring.io">Spring Cloud</a>.</p>
+<p>Spring Cloud Sleuth implements a distributed tracing solution for <a href="https://cloud.spring.io">Spring Cloud</a>.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_terminology">Terminology</h3>
 <div class="paragraph">
-<p>Spring Cloud Sleuth borrows <a href="http://research.google.com/pubs/pub36356.html">Dapper&#8217;s</a> terminology.</p>
+<p>Spring Cloud Sleuth borrows <a href="https://research.google.com/pubs/pub36356.html">Dapper&#8217;s</a> terminology.</p>
 </div>
 <div class="paragraph">
 <p><strong>Span:</strong> The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an
@@ -731,7 +731,7 @@ setting proper tags on the span which Zipkin can properly colorize. You could se
 <h4 id="_live_examples">Live examples</h4>
 <div class="imageblock">
 <div class="content">
-<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+<a class="image" href="https://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
 </div>
 <div class="title">Click Pivotal Web Services icon to see it live!Click Pivotal Web Services icon to see it live!</div>
 </div>
@@ -745,7 +745,7 @@ setting proper tags on the span which Zipkin can properly colorize. You could se
 </div>
 <div class="imageblock">
 <div class="content">
-<a class="image" href="http://docssleuth-zipkin-server.cfapps.io/dependency"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+<a class="image" href="https://docssleuth-zipkin-server.cfapps.io/dependency"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/1.1.x/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
 </div>
 <div class="title">Click Pivotal Web Services icon to see it live!Click Pivotal Web Services icon to see it live!</div>
 </div>
@@ -768,7 +768,7 @@ service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec2785
 </div>
 <div class="paragraph">
 <p>If you&#8217;re using a log aggregating tool like <a href="https://www.elastic.co/products/kibana">Kibana</a>,
-<a href="http://www.splunk.com/">Splunk</a> etc. you can order the events that took place. An example of
+<a href="https://www.splunk.com/">Splunk</a> etc. you can order the events that took place. An example of
 Kibana would look like this:</p>
 </div>
 <div class="imageblock">
@@ -2080,7 +2080,7 @@ Stream based span reporting).</p>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You can accumulate and send span data over
-<a href="http://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</a> by
+<a href="https://cloud.spring.io/spring-cloud-stream">Spring Cloud Stream</a> by
 including the <code>spring-cloud-sleuth-stream</code> jar as a dependency, and
 adding a Channel Binder implementation
 (e.g. <code>spring-cloud-starter-stream-rabbit</code> for RabbitMQ or
@@ -2207,7 +2207,7 @@ the consumer app).
 <div class="sectionbody">
 <div class="paragraph">
 <p>Currently Spring Cloud Sleuth registers very simple metrics related to spans.
-It&#8217;s using the <a href="http://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics">Spring Boot&#8217;s metrics support</a>
+It&#8217;s using the <a href="https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics">Spring Boot&#8217;s metrics support</a>
 to calculate the number of accepted and dropped spans. Each time a span gets
 sent to Zipkin the number of accepted spans will increase. If there&#8217;s an error then
 the number of dropped spans will get increased.</p>
@@ -2599,7 +2599,7 @@ static class CustomExecutorConfig extends AsyncConfigurerSupport {
 <div class="sect2">
 <h3 id="_messaging">Messaging</h3>
 <div class="paragraph">
-<p>Spring Cloud Sleuth integrates with <a href="http://projects.spring.io/spring-integration/">Spring Integration</a>. It creates spans for publish and
+<p>Spring Cloud Sleuth integrates with <a href="https://projects.spring.io/spring-integration/">Spring Integration</a>. It creates spans for publish and
 subscribe events. To disable Spring Integration instrumentation, set <code>spring.sleuth.integration.enabled</code> to false.</p>
 </div>
 <div class="paragraph">
@@ -2632,10 +2632,10 @@ To disable Zuul support set the <code>spring.sleuth.zuul.enabled</code> property
 <div class="ulist">
 <ul>
 <li>
-<p><a href="http://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</a></p>
+<p><a href="https://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</a></p>
 </li>
 <li>
-<p><a href="http://docsbrewing-zipkin-web.cfapps.io/">Zipkin for Brewery on PWS</a>, its <a href="https://github.com/spring-cloud-samples/brewery">Github Code</a></p>
+<p><a href="https://docsbrewing-zipkin-web.cfapps.io/">Zipkin for Brewery on PWS</a>, its <a href="https://github.com/spring-cloud-samples/brewery">Github Code</a></p>
 </li>
 </ul>
 </div>

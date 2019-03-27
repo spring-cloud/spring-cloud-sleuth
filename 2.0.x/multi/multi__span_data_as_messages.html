@@ -4,13 +4,13 @@
 native support for message based span sending. Starting from
 Edgware Zipkin Stream server is deprecated and in Finchley
 it got removed.</p></td></tr></table></div><p>You can accumulate and send span data over
-<a class="link" href="http://cloud.spring.io/spring-cloud-stream" target="_top">Spring Cloud Stream</a> by
+<a class="link" href="https://cloud.spring.io/spring-cloud-stream" target="_top">Spring Cloud Stream</a> by
 including the <code class="literal">spring-cloud-sleuth-stream</code> jar as a dependency, and
 adding a Channel Binder implementation
 (e.g. <code class="literal">spring-cloud-starter-stream-rabbit</code> for RabbitMQ or
 <code class="literal">spring-cloud-starter-stream-kafka</code> for Kafka). This will
 automatically turn your app into a producer of messages with payload
-type <code class="literal">Spans</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_zipkin_consumer" href="#_zipkin_consumer"></a>11.1&nbsp;Zipkin Consumer</h2></div></div></div><p>Please refer to the <a class="link" href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer" target="_top">Dalston Documentaion</a>
+type <code class="literal">Spans</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_zipkin_consumer" href="#_zipkin_consumer"></a>11.1&nbsp;Zipkin Consumer</h2></div></div></div><p>Please refer to the <a class="link" href="https://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer" target="_top">Dalston Documentaion</a>
 on how to create a Stream Zipkin server. That approach has been
 deprecated in Edgware and removed in Finchley release.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_consumer" href="#_custom_consumer"></a>11.2&nbsp;Custom Consumer</h2></div></div></div><p>A custom consumer can also easily be implemented using
 <code class="literal">spring-cloud-sleuth-stream</code> and binding to the <code class="literal">SleuthSink</code>. Example:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@EnableBinding(SleuthSink.class)</span></em>
