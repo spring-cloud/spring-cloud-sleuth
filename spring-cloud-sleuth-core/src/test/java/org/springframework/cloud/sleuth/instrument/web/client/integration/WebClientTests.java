@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -208,21 +208,21 @@ public class WebClientTests {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/notrace", String.class),
+						.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/notrace", String.class),
+						.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/notrace", String.class),
+						.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/notrace", String.class),
+						.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/notrace", String.class),
+						.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/notrace", String.class),
+						.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/notrace", String.class),
+						.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/notrace", String.class) };
+						.getForEntity("http://fooservice/notrace", String.class) };
 	}
 
 	@Test
@@ -251,7 +251,7 @@ public class WebClientTests {
 		return new Object[] {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/", Map.class) };
+						.getForEntity("http://fooservice/", Map.class) };
 	}
 
 	@Test
@@ -264,7 +264,7 @@ public class WebClientTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			ResponseEntity<String> response = provider.get(this);
 
-			// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
+			// http://github.com/spring-cloud/spring-cloud-sleuth/issues/327
 			// we don't want to respond with any tracing data
 			then(getHeader(response, SAMPLED_NAME)).isNull();
 			then(getHeader(response, TRACE_ID_NAME)).isNull();
@@ -407,7 +407,7 @@ public class WebClientTests {
 		return new Object[] {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/traceid", String.class) };
+						.getForEntity("http://fooservice/traceid", String.class) };
 	}
 
 	@Test
@@ -432,13 +432,13 @@ public class WebClientTests {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface
 						.noResponseBody(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://fooservice/noresponse", String.class) };
+						.getForEntity("http://fooservice/noresponse", String.class) };
 	}
 
 	@Test
 	public void shouldCloseSpanWhenErrorControllerGetsCalled() {
 		try {
-			this.template.getForEntity("https://fooservice/nonExistent", String.class);
+			this.template.getForEntity("http://fooservice/nonExistent", String.class);
 			fail("An exception should be thrown");
 		}
 		catch (HttpClientErrorException e) {
@@ -465,7 +465,7 @@ public class WebClientTests {
 
 	@Test
 	public void shouldNotExecuteErrorControllerWhenUrlIsFound() {
-		this.template.getForEntity("https://fooservice/notrace", String.class);
+		this.template.getForEntity("http://fooservice/notrace", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.testErrorController.getSpan()).isNull();
