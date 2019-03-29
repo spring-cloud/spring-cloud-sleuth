@@ -31,7 +31,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -57,13 +56,6 @@ public class TraceWebServletAutoConfiguration {
 	 * Default filter order for the Http tracing filter.
 	 */
 	public static final int TRACING_FILTER_ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
-
-	@Bean
-	@ConditionalOnClass(name = "org.springframework.data.rest.webmvc.support.DelegatingHandlerMapping")
-	public static TraceSpringDataBeanPostProcessor traceSpringDataBeanPostProcessor(
-			ApplicationContext applicationContext) {
-		return new TraceSpringDataBeanPostProcessor(applicationContext);
-	}
 
 	@Bean
 	TraceWebAspect traceWebAspect(Tracing tracing, SpanNamer spanNamer) {
