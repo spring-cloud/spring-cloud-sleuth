@@ -6,7 +6,7 @@ By default it sends them via HTTP to a Zipkin server on localhost (port 9411). I
 on <code class="literal">spring-rabbit</code> or <code class="literal">spring-kafka</code> your app will send traces to a broker instead of http.</p></td></tr></table></div><p>By default if you add <code class="literal">spring-cloud-starter-zipkin</code> as a dependency to your project,
 when the span is closed, it will be sent to Zipkin over HTTP. The communication
 is asynchronous. You can configure the URL by setting the <code class="literal">spring.zipkin.baseUrl</code>
-property as follows:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.baseUrl</span>: http://<span class="hl-number">192.168</span>.<span class="hl-number">99.100</span>:<span class="hl-number">9411</span>/</pre><p>If you want to find Zipkin via service discovery it&#8217;s enough to pass the
+property as follows:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.baseUrl</span>: https://<span class="hl-number">192.168</span>.<span class="hl-number">99.100</span>:<span class="hl-number">9411</span>/</pre><p>If you want to find Zipkin via service discovery it&#8217;s enough to pass the
 Zipkin&#8217;s service id inside the URL. If you want to disable this feature
 just set <code class="literal">spring.zipkin.discoveryClientEnabled</code> to <code class="literal">false.
 Example for `zipkinserver</code> service id:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.baseUrl</span>: http://zipkinserver/</pre><p>When this Discovery Client feature is enabled, Sleuth uses

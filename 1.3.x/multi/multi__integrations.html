@@ -113,7 +113,7 @@ can see an example of how to set up such a custom <code class="literal">AsyncRes
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">//CUSTOMIZE HERE</span>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> factory;
 	}
-}</pre></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_traverson" href="#_traverson"></a>13.5.3&nbsp;Traverson</h3></div></div></div><p>If you&#8217;re using the <a class="link" href="http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson" target="_top">Traverson</a> library
+}</pre></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_traverson" href="#_traverson"></a>13.5.3&nbsp;Traverson</h3></div></div></div><p>If you&#8217;re using the <a class="link" href="https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson" target="_top">Traverson</a> library
 it&#8217;s enough for you to inject a <code class="literal">RestTemplate</code> as a bean into your Traverson object. Since <code class="literal">RestTemplate</code>
 is already intercepted, you will get full support of tracing in your client. Below you can find a pseudo code
 of how to do that:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> RestTemplate restTemplate;
@@ -154,7 +154,7 @@ can see an example of how to set up such a custom <code class="literal">Executor
 		executor.initialize();
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> LazyTraceExecutor(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.beanFactory, executor);
 	}
-}</pre></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_messaging" href="#_messaging"></a>13.8&nbsp;Messaging</h2></div></div></div><p>Spring Cloud Sleuth integrates with <a class="link" href="http://projects.spring.io/spring-integration/" target="_top">Spring Integration</a>. It creates spans for publish and
+}</pre></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_messaging" href="#_messaging"></a>13.8&nbsp;Messaging</h2></div></div></div><p>Spring Cloud Sleuth integrates with <a class="link" href="https://projects.spring.io/spring-integration/" target="_top">Spring Integration</a>. It creates spans for publish and
 subscribe events. To disable Spring Integration instrumentation, set <code class="literal">spring.sleuth.integration.enabled</code> to false.</p><p>You can provide the <code class="literal">spring.sleuth.integration.patterns</code> pattern to explicitly
 provide the names of channels that you want to include for tracing. By default all channels
 are included.</p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>When using the <code class="literal">Executor</code> to build a Spring Integration <code class="literal">IntegrationFlow</code> remember to use the <span class="strong"><strong>untraced</strong></span> version of the <code class="literal">Executor</code>.
