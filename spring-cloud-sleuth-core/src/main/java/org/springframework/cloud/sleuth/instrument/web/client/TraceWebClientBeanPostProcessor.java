@@ -75,14 +75,17 @@ final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 			throws BeansException {
 		if (bean instanceof WebClient) {
 			WebClient webClient = (WebClient) bean;
-			return webClient.mutate()
-					.filters(addTraceExchangeFilterFunctionIfNotPresent()).build();
+			return wrapBuilder(webClient.mutate()).build();
 		}
 		else if (bean instanceof WebClient.Builder) {
 			WebClient.Builder webClientBuilder = (WebClient.Builder) bean;
-			return webClientBuilder.filters(addTraceExchangeFilterFunctionIfNotPresent());
+			return wrapBuilder(webClientBuilder);
 		}
 		return bean;
+	}
+
+	private WebClient.Builder wrapBuilder(WebClient.Builder webClientBuilder) {
+		return webClientBuilder.filters(addTraceExchangeFilterFunctionIfNotPresent());
 	}
 
 	private Consumer<List<ExchangeFilterFunction>> addTraceExchangeFilterFunctionIfNotPresent() {
