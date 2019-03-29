@@ -83,7 +83,11 @@ enum MessageHeaderPropagation
 			accessor.removeHeader(keyToRemove);
 			if (accessor instanceof NativeMessageHeaderAccessor) {
 				NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
-				nativeAccessor.removeNativeHeader(keyToRemove);
+				if (accessor.isMutable()) {
+					// 1184 native headers can be an immutable map
+					ensureNativeHeadersAreMutable(nativeAccessor)
+							.removeNativeHeader(keyToRemove);
+				}
 			}
 			else {
 				Object nativeHeaders = accessor
@@ -93,6 +97,26 @@ enum MessageHeaderPropagation
 				}
 			}
 		}
+	}
+
+	/**
+	 * Since for some reason, the native headers sometimes are immutable even though the
+	 * accessor says that the headers are mutable, then we have to ensure their
+	 * mutability. We do so by first making a mutable copy of the native headers, then by
+	 * removing the native headers from the headers map and replacing them with a mutable
+	 * copy. Workaround for #1184
+	 * @param nativeAccessor accessor containing (or not) native headers
+	 * @return modified accessor
+	 */
+	private static NativeMessageHeaderAccessor ensureNativeHeadersAreMutable(
+			NativeMessageHeaderAccessor nativeAccessor) {
+		Map<String, List<String>> nativeHeaderMap = nativeAccessor.toNativeHeaderMap();
+		nativeHeaderMap = nativeHeaderMap instanceof LinkedMultiValueMap ? nativeHeaderMap
+				: new LinkedMultiValueMap<>(nativeHeaderMap);
+		nativeAccessor.removeHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
+		nativeAccessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
+				nativeHeaderMap);
+		return nativeAccessor;
 	}
 
 	@Override
@@ -116,7 +140,7 @@ enum MessageHeaderPropagation
 		accessor.setHeader(key, value);
 		if (accessor instanceof NativeMessageHeaderAccessor) {
 			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
-			nativeAccessor.setNativeHeader(key, value);
+			ensureNativeHeadersAreMutable(nativeAccessor).setNativeHeader(key, value);
 		}
 		else {
 			Object nativeHeaders = accessor
