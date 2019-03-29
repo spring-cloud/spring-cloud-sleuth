@@ -2789,7 +2789,7 @@ You can configure the URL by setting the <code>spring.zipkin.baseUrl</code> prop
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.baseUrl: http://zipkinserver/</code></pre>
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.baseUrl: https://zipkinserver/</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3210,7 +3210,7 @@ shows how to do that:</p>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired RestTemplate restTemplate;
 
-Traverson traverson = new Traverson(URI.create("http://some/address"),
+Traverson traverson = new Traverson(URI.create("https://some/address"),
     MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
 // use Traverson</code></pre>
 </div>
