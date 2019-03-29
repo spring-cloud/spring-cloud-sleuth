@@ -21,12 +21,12 @@
 	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
 	xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
-	    http://www.springframework.org/schema/beans/spring-beans.xsd
+	    https://www.springframework.org/schema/beans/spring-beans.xsd
 	    http://www.springframework.org/schema/integration
-		http://www.springframework.org/schema/integration/spring-integration.xsd
-		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
-		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd 
-		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd">
+		https://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/task https://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/util https://www.springframework.org/schema/util/spring-util.xsd 
+		http://www.springframework.org/schema/integration/stream https://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd">
 
 	<int:channel id="messagingChannel" />
 
