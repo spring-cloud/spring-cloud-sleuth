@@ -53,6 +53,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable span information propagation when using GRPC.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.redis.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable span information propagation when using Redis.",
+      "defaultValue": true
     }
   ]
 }
