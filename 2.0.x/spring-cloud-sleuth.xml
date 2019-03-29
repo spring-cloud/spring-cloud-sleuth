@@ -1749,7 +1749,7 @@ If you want to reuse Sleuth&#8217;s default skip patterns and append your own, p
 </section>
 <section xml:id="_dubbo_rpc_support">
 <title>Dubbo RPC support</title>
-<simpara>Via the integration with Brave, Spring Cloud Sleuth supports <link xl:href="http://dubbo.io/">Dubbo</link>.
+<simpara>Via the integration with Brave, Spring Cloud Sleuth supports <link xl:href="https://dubbo.apache.org/en-us/">Dubbo</link>.
 It&#8217;s enough to add the <literal>brave-instrumentation-dubbo-rpc</literal> dependency:</simpara>
 <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
     &lt;groupId&gt;io.zipkin.brave&lt;/groupId&gt;
