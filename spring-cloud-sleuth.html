@@ -274,6 +274,7 @@ $(addBlockSwitches);
 </ul>
 </li>
 <li><a href="#_zuul">Zuul</a></li>
+<li><a href="#_redis">Redis</a></li>
 </ul>
 </li>
 <li><a href="#_running_examples">Running examples</a></li>
@@ -3583,6 +3584,13 @@ We don&#8217;t support baggage propagation for JMS
 <div class="paragraph">
 <p>We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
 To disable Zuul support, set the <code>spring.sleuth.zuul.enabled</code> property to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_redis"><a class="link" href="#_redis">Redis</a></h3>
+<div class="paragraph">
+<p>We set <code>tracing</code> property to Lettcue <code>ClientResources</code> instance to enable Brave tracing built in Lettuce .
+To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> property to <code>false</code>.</p>
 </div>
 </div>
 </div>
