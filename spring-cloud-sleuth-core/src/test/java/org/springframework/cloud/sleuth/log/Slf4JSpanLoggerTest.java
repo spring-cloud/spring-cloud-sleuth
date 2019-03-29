@@ -57,88 +57,74 @@ public class Slf4JSpanLoggerTest {
 
 	@Test
 	public void should_set_entries_to_mdc_from_span() throws Exception {
-		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
-
-		assertMDCInfoEqualToSpanInfo(span.context());
-
-		scope.close();
+		try (Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context())) {
+			assertMDCInfoEqualToSpanInfo(span.context());
+		}
 
 		assertMDCInfoNullOrEmpty();
 	}
 
 	@Test
 	public void should_set_entries_to_mdc_from_two_spans() throws Exception {
-		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
+		try (Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context())) {
 
-		assertMDCInfoEqualToSpanInfo(span.context());
+			assertMDCInfoEqualToSpanInfo(span.context());
 
-		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(this.span.context());
+			try (Scope scopeInner = this.slf4jCurrentTraceContext.newScope(this.span.context())) {
+				assertMDCInfoEqualToSpanInfo(span.context());
+			}
 
-		assertMDCInfoEqualToSpanInfo(span.context());
-
-		scopeInner.close();
-
-		assertMDCInfoEqualToSpanInfo(span.context());
-
-		scope.close();
+			assertMDCInfoEqualToSpanInfo(span.context());
+		}
 
 		assertMDCInfoNullOrEmpty();
 	}
 
 	@Test
 	public void should_set_entries_to_mdc_from_two_spans1() throws Exception {
-		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
+		try (Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context())) {
 
-		assertMDCInfoEqualToSpanInfo(span.context());
+			assertMDCInfoEqualToSpanInfo(span.context());
 
-		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(null);
+			try (Scope scopeInner = this.slf4jCurrentTraceContext.newScope(null)) {
+				assertMDCInfoNullOrEmpty();
+			}
 
-		assertMDCInfoNullOrEmpty();
-
-		scopeInner.close();
-
-		assertMDCInfoEqualToSpanInfo(span.context());
-
-		scope.close();
+			assertMDCInfoEqualToSpanInfo(span.context());
+		}
 
 		assertMDCInfoNullOrEmpty();
 	}
 
 	@Test
 	public void should_set_entries_to_mdc_from_two_spans2() throws Exception {
-		Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context());
+		try (Scope scope = this.slf4jCurrentTraceContext.newScope(this.span.context())) {
 
-		assertMDCInfoEqualToSpanInfo(span.context());
+			assertMDCInfoEqualToSpanInfo(span.context());
 
-		TraceContext nextSpan = this.tracing.tracer().nextSpan().start().context();
-		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(nextSpan);
+			TraceContext nextSpan = this.tracing.tracer().nextSpan().start().context();
+			try (Scope scopeInner = this.slf4jCurrentTraceContext.newScope(nextSpan)) {
+				assertMDCInfoEqualToSpanInfo(nextSpan);
+			}
 
-		assertMDCInfoEqualToSpanInfo(nextSpan);
-
-		scopeInner.close();
-
-		assertMDCInfoEqualToSpanInfo(span.context());
-
-		scope.close();
+			assertMDCInfoEqualToSpanInfo(span.context());
+		}
 
 		assertMDCInfoNullOrEmpty();
 	}
 
 	@Test
 	public void should_set_entries_to_mdc_from_two_spans3() throws Exception {
-		Scope scope = this.slf4jCurrentTraceContext.newScope(null);
+		try (Scope scope = this.slf4jCurrentTraceContext.newScope(null)) {
 
-		assertMDCInfoNullOrEmpty();
+			assertMDCInfoNullOrEmpty();
 
-		Scope scopeInner = this.slf4jCurrentTraceContext.newScope(null);
+			try (Scope scopeInner = this.slf4jCurrentTraceContext.newScope(null)) {
+				assertMDCInfoNullOrEmpty();
+			}
 
-		assertMDCInfoNullOrEmpty();
-
-		scopeInner.close();
-
-		assertMDCInfoNullOrEmpty();
-
-		scope.close();
+			assertMDCInfoNullOrEmpty();
+		}
 
 		assertMDCInfoNullOrEmpty();
 	}
@@ -150,12 +136,9 @@ public class Slf4JSpanLoggerTest {
 		MDC.put("X-B3-SpanId", "A");
 		MDC.put("spanId", "A");
 
-		Scope scope = this.slf4jCurrentTraceContext
-				.newScope(null);
-
-		assertMDCInfoNullOrEmpty();
-
-		scope.close();
+		try (Scope scope = this.slf4jCurrentTraceContext.newScope(null)) {
+			assertMDCInfoNullOrEmpty();
+		}
 
 		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("A");
 		assertThat(MDC.get("traceId")).isEqualTo("A");
