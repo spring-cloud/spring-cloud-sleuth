@@ -1108,7 +1108,7 @@ To change the order of tracing filter registration, please set the
 
 ==== Dubbo RPC support
 
-Via the integration with Brave, Spring Cloud Sleuth supports http://dubbo.io/[Dubbo].
+Via the integration with Brave, Spring Cloud Sleuth supports https://dubbo.apache.org/[Dubbo].
 It's enough to add the `brave-instrumentation-dubbo-rpc` dependency:
 
 [source,xml,indent=0]
