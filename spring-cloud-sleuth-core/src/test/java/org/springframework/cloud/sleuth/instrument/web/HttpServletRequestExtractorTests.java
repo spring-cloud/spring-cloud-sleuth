@@ -44,7 +44,7 @@ public class HttpServletRequestExtractorTests {
 
 	@Before
 	public void setup() {
-		BDDMockito.given(this.request.getRequestURI()).willReturn("http://foo.com");
+		BDDMockito.given(this.request.getRequestURI()).willReturn("http://www.foo.com/");
 		BDDMockito.given(this.request.getContextPath()).willReturn("/");
 	}
 
@@ -323,7 +323,7 @@ public class HttpServletRequestExtractorTests {
 				.willReturn(Span.idToHex(10L));
 		BDDMockito.given(request.getHeader(Span.SPAN_ID_NAME))
 				.willReturn(Span.idToHex(20L));
-		BDDMockito.given(request.getRequestURI()).willReturn("http://foo.com");
+		BDDMockito.given(request.getRequestURI()).willReturn("http://www.foo.com/");
 		BDDMockito.given(request.getContextPath()).willReturn("/");
 		return request;
 	}
@@ -338,7 +338,7 @@ public class HttpServletRequestExtractorTests {
 				.willReturn(Span.idToHex(20L));
 		BDDMockito.given(request.getHeader(Span.SAMPLED_NAME))
 				.willReturn(Span.SPAN_SAMPLED);
-		BDDMockito.given(request.getRequestURI()).willReturn("http://foo.com");
+		BDDMockito.given(request.getRequestURI()).willReturn("http://www.foo.com/");
 		BDDMockito.given(request.getContextPath()).willReturn("/");
 		return request;
 	}

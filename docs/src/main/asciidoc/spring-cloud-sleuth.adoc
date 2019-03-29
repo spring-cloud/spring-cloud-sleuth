@@ -525,7 +525,7 @@ property as follows:
 
 [source,yaml]
 ----
-spring.zipkin.baseUrl: http://192.168.99.100:9411/
+spring.zipkin.baseUrl: https://192.168.99.100:9411/
 ----
 
 If you want to find Zipkin via service discovery it's enough to pass the
@@ -593,7 +593,7 @@ object, you will have to create a bean of `zipkin2.reporter.Sender` type.
 == Span Data as Messages
 
 You can accumulate and send span data over
-http://cloud.spring.io/spring-cloud-stream[Spring Cloud Stream] by
+https://cloud.spring.io/spring-cloud-stream[Spring Cloud Stream] by
 including the `spring-cloud-sleuth-stream` jar as a dependency, and
 adding a Channel Binder implementation
 (e.g. `spring-cloud-starter-stream-rabbit` for RabbitMQ or
@@ -698,7 +698,7 @@ include::../../../../spring-cloud-sleuth-stream/src/test/java/org/springframewor
 == Metrics
 
 Currently Spring Cloud Sleuth registers very simple metrics related to spans.
-It's using the http://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics[Spring Boot's metrics support]
+It's using the https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-recording-metrics[Spring Boot's metrics support]
 to calculate the number of accepted and dropped spans. Each time a span gets
 sent to Zipkin the number of accepted spans will increase. If there's an error then
 the number of dropped spans will get increased.
@@ -828,7 +828,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 ==== Traverson
 
-If you're using the http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson[Traverson] library
+If you're using the https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson[Traverson] library
 it's enough for you to inject a `RestTemplate` as a bean into your Traverson object. Since `RestTemplate`
 is already intercepted, you will get full support of tracing in your client. Below you can find a pseudo code
 of how to do that:
@@ -909,7 +909,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 
 === Messaging
 
-Spring Cloud Sleuth integrates with http://projects.spring.io/spring-integration/[Spring Integration]. It creates spans for publish and
+Spring Cloud Sleuth integrates with https://projects.spring.io/spring-integration/[Spring Integration]. It creates spans for publish and
 subscribe events. To disable Spring Integration instrumentation, set `spring.sleuth.integration.enabled` to false.
 
 You can provide the `spring.sleuth.integration.patterns` pattern to explicitly
@@ -960,5 +960,5 @@ class ReporterConfiguration {
 
 You can find the running examples deployed in the https://run.pivotal.io/[Pivotal Web Services]. Check them out in the following links:
 
-- http://docssleuth-zipkin-server.cfapps.io/[Zipkin for apps presented in the samples to the top]
-- http://docsbrewing-zipkin-server.cfapps.io/[Zipkin for Brewery on PWS], its https://github.com/spring-cloud-samples/brewery[Github Code]
+- https://docssleuth-zipkin-server.cfapps.io/[Zipkin for apps presented in the samples to the top]
+- https://docsbrewing-zipkin-server.cfapps.io/[Zipkin for Brewery on PWS], its https://github.com/spring-cloud-samples/brewery[Github Code]
