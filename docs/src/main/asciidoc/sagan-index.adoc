@@ -1,4 +1,4 @@
-Spring Cloud Sleuth implements a distributed tracing solution for Spring Cloud, borrowing heavily from http://research.google.com/pubs/pub36356.html[Dapper], https://github.com/openzipkin/zipkin[Zipkin] and HTrace. For most users Sleuth should be invisible, and all your interactions with external systems should be instrumented automatically. You can capture data simply in logs, or by sending it to a remote collector service.
+Spring Cloud Sleuth implements a distributed tracing solution for Spring Cloud, borrowing heavily from https://research.google.com/pubs/pub36356.html[Dapper], https://github.com/openzipkin/zipkin[Zipkin] and HTrace. For most users Sleuth should be invisible, and all your interactions with external systems should be instrumented automatically. You can capture data simply in logs, or by sending it to a remote collector service.
 
 ## Features
 
