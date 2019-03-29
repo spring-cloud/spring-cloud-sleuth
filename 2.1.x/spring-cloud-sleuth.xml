@@ -18,10 +18,10 @@
 </preface>
 <chapter xml:id="_introduction">
 <title>Introduction</title>
-<simpara>Spring Cloud Sleuth implements a distributed tracing solution for <link xl:href="http://cloud.spring.io">Spring Cloud</link>.</simpara>
+<simpara>Spring Cloud Sleuth implements a distributed tracing solution for <link xl:href="https://cloud.spring.io">Spring Cloud</link>.</simpara>
 <section xml:id="_terminology">
 <title>Terminology</title>
-<simpara>Spring Cloud Sleuth borrows <link xl:href="http://research.google.com/pubs/pub36356.html">Dapper&#8217;s</link> terminology.</simpara>
+<simpara>Spring Cloud Sleuth borrows <link xl:href="https://research.google.com/pubs/pub36356.html">Dapper&#8217;s</link> terminology.</simpara>
 <simpara><emphasis role="strong">Span</emphasis>: The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC.
 Spans are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.
 Spans also have other data, such as descriptions, timestamped events, key-value annotations (tags), the ID of the span that caused them, and process IDs (normally IP addresses).</simpara>
@@ -183,7 +183,7 @@ However, if you want to use the legacy Sleuth approaches, you can set the <liter
 <textobject><phrase>Zipkin deployed on Pivotal Web Services</phrase></textobject>
 </mediaobject>
 </figure>
-<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/">Click here to see it live!</link></simpara>
+<simpara><link xl:href="https://docssleuth-zipkin-server.cfapps.io/">Click here to see it live!</link></simpara>
 <simpara>The dependency graph in Zipkin should resemble the following image:</simpara>
 <informalfigure>
 <mediaobject>
@@ -202,7 +202,7 @@ However, if you want to use the legacy Sleuth approaches, you can set the <liter
 <textobject><phrase>Zipkin deployed on Pivotal Web Services</phrase></textobject>
 </mediaobject>
 </figure>
-<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/dependency">Click here to see it live!</link></simpara>
+<simpara><link xl:href="https://docssleuth-zipkin-server.cfapps.io/dependency">Click here to see it live!</link></simpara>
 </section>
 <section xml:id="_log_correlation">
 <title>Log correlation</title>
@@ -214,7 +214,7 @@ service2.log:2016-02-26 11:15:47.924  INFO [service2,2485ec27856c56f4,9aa10ee6fb
 service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
 service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
 service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]</screen>
-<simpara>If you use a log aggregating tool (such as <link xl:href="https://www.elastic.co/products/kibana">Kibana</link>, <link xl:href="http://www.splunk.com/">Splunk</link>, and others), you can order the events that took place.
+<simpara>If you use a log aggregating tool (such as <link xl:href="https://www.elastic.co/products/kibana">Kibana</link>, <link xl:href="https://www.splunk.com/">Splunk</link>, and others), you can order the events that took place.
 An example from Kibana would resemble the following image:</simpara>
 <informalfigure>
 <mediaobject>
@@ -745,7 +745,7 @@ You can configure the location of the service by setting <literal>spring.zipkin.
 </caution>
 <itemizedlist>
 <listitem>
-<simpara>Spring Cloud Sleuth is <link xl:href="http://opentracing.io/">OpenTracing</link> compatible.</simpara>
+<simpara>Spring Cloud Sleuth is <link xl:href="https://opentracing.io/">OpenTracing</link> compatible.</simpara>
 </listitem>
 </itemizedlist>
 <important>
@@ -872,7 +872,7 @@ void userCode() {
 <section xml:id="_rpc_tracing">
 <title>RPC tracing</title>
 <tip>
-<simpara>Check for <link xl:href="https://github.com/openzipkin/brave/tree/master/instrumentation">instrumentation written here</link> and <link xl:href="http://zipkin.io/pages/existing_instrumentations.html">Zipkin&#8217;s list</link> before rolling your own RPC instrumentation.</simpara>
+<simpara>Check for <link xl:href="https://github.com/openzipkin/brave/tree/master/instrumentation">instrumentation written here</link> and <link xl:href="https://zipkin.io/pages/existing_instrumentations.html">Zipkin&#8217;s list</link> before rolling your own RPC instrumentation.</simpara>
 </tip>
 <simpara>RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.</simpara>
 <simpara>The following example shows how to add a client span:</simpara>
@@ -1662,7 +1662,7 @@ If those are not set, we try to retrieve the host name from the network interfac
 <simpara>By default, if you add <literal>spring-cloud-starter-zipkin</literal> as a dependency to your project, when the span is closed, it is sent to Zipkin over HTTP.
 The communication is asynchronous.
 You can configure the URL by setting the <literal>spring.zipkin.baseUrl</literal> property, as follows:</simpara>
-<programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://192.168.99.100:9411/</programlisting>
+<programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: https://192.168.99.100:9411/</programlisting>
 <simpara>If you want to find Zipkin through service discovery, you can pass the Zipkin&#8217;s service ID inside the URL, as shown in the following example for <literal>zipkinserver</literal> service ID:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring.zipkin.baseUrl: http://zipkinserver/</programlisting>
 <simpara>To disable this feature just set <literal>spring.zipkin.discoveryClientEnabled</literal> to `false.</simpara>
@@ -1705,13 +1705,13 @@ object, you will have to create a bean of <literal>zipkin2.reporter.Sender</lite
 Starting from the Edgware release, the Zipkin Stream server is deprecated.
 In the Finchley release, it got removed.</simpara>
 </important>
-<simpara>If for some reason you need to create the deprecated Stream Zipkin server, see the <link xl:href="http://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentation</link>.</simpara>
+<simpara>If for some reason you need to create the deprecated Stream Zipkin server, see the <link xl:href="https://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentation</link>.</simpara>
 </chapter>
 <chapter xml:id="_integrations">
 <title>Integrations</title>
 <section xml:id="_opentracing">
 <title>OpenTracing</title>
-<simpara>Spring Cloud Sleuth is compatible with <link xl:href="http://opentracing.io/">OpenTracing</link>.
+<simpara>Spring Cloud Sleuth is compatible with <link xl:href="https://opentracing.io/">OpenTracing</link>.
 If you have OpenTracing on the classpath, we automatically register the OpenTracing <literal>Tracer</literal> bean.
 If you wish to disable this, set <literal>spring.sleuth.opentracing.enabled</literal> to <literal>false</literal></simpara>
 </section>
@@ -1917,7 +1917,7 @@ If you create a <literal>WebClient</literal> instance with a <literal>new</liter
 </section>
 <section xml:id="_traverson">
 <title>Traverson</title>
-<simpara>If you use the <link xl:href="http://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</link> library, you can inject a <literal>RestTemplate</literal> as a bean into your Traverson object.
+<simpara>If you use the <link xl:href="https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</link> library, you can inject a <literal>RestTemplate</literal> as a bean into your Traverson object.
 Since <literal>RestTemplate</literal> is already intercepted, you get full support for tracing in your client. The following pseudo code
 shows how to do that:</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Autowired RestTemplate restTemplate;
@@ -2092,7 +2092,7 @@ to add the <literal>@Role(BeanDefinition.ROLE_INFRASTRUCTURE)</literal> on your
 <simpara>Features from this section can be disabled by setting the <literal>spring.sleuth.messaging.enabled</literal> property with value equal to <literal>false</literal>.</simpara>
 <section xml:id="_spring_integration_and_spring_cloud_stream">
 <title>Spring Integration and Spring Cloud Stream</title>
-<simpara>Spring Cloud Sleuth integrates with <link xl:href="http://projects.spring.io/spring-integration/">Spring Integration</link>.
+<simpara>Spring Cloud Sleuth integrates with <link xl:href="https://projects.spring.io/spring-integration/">Spring Integration</link>.
 It creates spans for publish and subscribe events.
 To disable Spring Integration instrumentation, set <literal>spring.sleuth.integration.enabled</literal> to <literal>false</literal>.</simpara>
 <simpara>You can provide the <literal>spring.sleuth.integration.patterns</literal> pattern to explicitly provide the names of channels that you want to include for tracing.
@@ -2147,11 +2147,11 @@ To disable Zuul support, set the <literal>spring.sleuth.zuul.enabled</literal> p
 Check them out at the following links:</simpara>
 <itemizedlist>
 <listitem>
-<simpara><link xl:href="http://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</link>. First make
-a request to <link xl:href="http://docssleuth-service1.cfapps.io/start">Service 1</link> and then check out the trace in Zipkin.</simpara>
+<simpara><link xl:href="https://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</link>. First make
+a request to <link xl:href="https://docssleuth-service1.cfapps.io/start">Service 1</link> and then check out the trace in Zipkin.</simpara>
 </listitem>
 <listitem>
-<simpara><link xl:href="http://docsbrewing-zipkin-server.cfapps.io/">Zipkin for Brewery on PWS</link>, its <link xl:href="https://github.com/spring-cloud-samples/brewery">Github Code</link>.
+<simpara><link xl:href="https://docsbrewing-zipkin-server.cfapps.io/">Zipkin for Brewery on PWS</link>, its <link xl:href="https://github.com/spring-cloud-samples/brewery">Github Code</link>.
 Ensure that you&#8217;ve picked the lookback period of 7 days. If there are no traces, go to <link xl:href="https://docsbrewing-presenting.cfapps.io/">Presenting application</link>
 and order some beers. Then check Zipkin for traces.</simpara>
 </listitem>
