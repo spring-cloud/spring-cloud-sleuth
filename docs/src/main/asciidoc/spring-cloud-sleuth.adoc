@@ -932,7 +932,7 @@ If you want to find Zipkin through service discovery, you can pass the Zipkin's 
 
 [source,yaml]
 ----
-spring.zipkin.baseUrl: http://zipkinserver/
+spring.zipkin.baseUrl: https://zipkinserver/
 ----
 
 To disable this feature just set `spring.zipkin.discoveryClientEnabled` to `false.
@@ -1181,7 +1181,7 @@ shows how to do that:
 ----
 @Autowired RestTemplate restTemplate;
 
-Traverson traverson = new Traverson(URI.create("http://some/address"),
+Traverson traverson = new Traverson(URI.create("https://some/address"),
     MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
 // use Traverson
 ----

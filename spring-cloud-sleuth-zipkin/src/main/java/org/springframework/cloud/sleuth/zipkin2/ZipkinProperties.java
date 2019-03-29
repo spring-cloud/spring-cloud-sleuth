@@ -32,7 +32,7 @@ public class ZipkinProperties {
 	/**
 	 * URL of the zipkin query server instance. You can also provide the service id of the
 	 * Zipkin server if Zipkin's registered in service discovery (e.g.
-	 * http://zipkinserver/).
+	 * https://zipkinserver/).
 	 */
 	private String baseUrl = "http://localhost:9411/";
 

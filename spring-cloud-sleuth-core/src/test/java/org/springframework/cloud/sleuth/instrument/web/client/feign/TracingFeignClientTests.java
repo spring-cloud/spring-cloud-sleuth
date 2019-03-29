@@ -80,7 +80,7 @@ public class TracingFeignClientTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.traceFeignClient
 					.execute(
-							Request.create("GET", "http://foo", new HashMap<>(),
+							Request.create("GET", "https://foo", new HashMap<>(),
 									"".getBytes(), Charset.defaultCharset()),
 							new Request.Options());
 		}
@@ -101,7 +101,7 @@ public class TracingFeignClientTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.traceFeignClient
 					.execute(
-							Request.create("GET", "http://foo", new HashMap<>(),
+							Request.create("GET", "https://foo", new HashMap<>(),
 									"".getBytes(), Charset.defaultCharset()),
 							new Request.Options());
 			BDDAssertions.fail("Exception should have been thrown");
@@ -122,7 +122,7 @@ public class TracingFeignClientTests {
 	public void should_shorten_the_span_name() throws IOException {
 		this.traceFeignClient
 				.execute(
-						Request.create("GET", "http://foo/" + bigName(), new HashMap<>(),
+						Request.create("GET", "https://foo/" + bigName(), new HashMap<>(),
 								"".getBytes(), Charset.defaultCharset()),
 						new Request.Options());
 

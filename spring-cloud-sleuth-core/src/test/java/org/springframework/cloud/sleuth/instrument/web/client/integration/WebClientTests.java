@@ -208,21 +208,21 @@ public class WebClientTests {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class),
+						.getForEntity("https://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class),
+						.getForEntity("https://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class),
+						.getForEntity("https://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class),
+						.getForEntity("https://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class),
+						.getForEntity("https://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class),
+						.getForEntity("https://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class),
+						.getForEntity("https://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class) };
+						.getForEntity("https://fooservice/notrace", String.class) };
 	}
 
 	@Test
@@ -251,7 +251,7 @@ public class WebClientTests {
 		return new Object[] {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/", Map.class) };
+						.getForEntity("https://fooservice/", Map.class) };
 	}
 
 	@Test
@@ -407,7 +407,7 @@ public class WebClientTests {
 		return new Object[] {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/traceid", String.class) };
+						.getForEntity("https://fooservice/traceid", String.class) };
 	}
 
 	@Test
@@ -432,13 +432,13 @@ public class WebClientTests {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface
 						.noResponseBody(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/noresponse", String.class) };
+						.getForEntity("https://fooservice/noresponse", String.class) };
 	}
 
 	@Test
 	public void shouldCloseSpanWhenErrorControllerGetsCalled() {
 		try {
-			this.template.getForEntity("http://fooservice/nonExistent", String.class);
+			this.template.getForEntity("https://fooservice/nonExistent", String.class);
 			fail("An exception should be thrown");
 		}
 		catch (HttpClientErrorException e) {
@@ -465,7 +465,7 @@ public class WebClientTests {
 
 	@Test
 	public void shouldNotExecuteErrorControllerWhenUrlIsFound() {
-		this.template.getForEntity("http://fooservice/notrace", String.class);
+		this.template.getForEntity("https://fooservice/notrace", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.testErrorController.getSpan()).isNull();

@@ -289,7 +289,7 @@ SockJS = (function () {
         return (p + utils.random_number(max)).slice(-t);
     };
 
-// Assuming that url looks like: http://asdasd:111/asd
+// Assuming that url looks like: https://asdasd:111/asd
     utils.getOrigin = function (url) {
         url += '/';
         var parts = url.split('/').slice(0, 3);
@@ -383,7 +383,7 @@ SockJS = (function () {
             throw new Error('Only basic urls are supported in SockJS');
         }
 
-        //  '//abc' --> 'http://abc'
+        //  '//abc' --> 'https://abc'
         if (url.indexOf('//') === 0) {
             url = dl.protocol + url;
         }

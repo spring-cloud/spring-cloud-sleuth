@@ -111,7 +111,7 @@ public class WebClientDiscoveryExceptionTests {
 	@Test
 	public void testTemplate() throws Exception {
 		shouldCloseSpanUponException((ResponseEntityProvider) (tests) -> tests.template
-				.getForEntity("http://exceptionservice/", Map.class));
+				.getForEntity("https://exceptionservice/", Map.class));
 	}
 
 	@FeignClient("exceptionservice")

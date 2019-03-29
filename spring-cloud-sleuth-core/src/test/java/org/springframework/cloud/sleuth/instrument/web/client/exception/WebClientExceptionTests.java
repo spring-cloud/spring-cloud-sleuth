@@ -124,7 +124,7 @@ public class WebClientExceptionTests {
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
 						.shouldFailToConnect(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://exceptionservice/", Map.class) };
+						.getForEntity("https://exceptionservice/", Map.class) };
 	}
 
 	@FeignClient("exceptionservice")
