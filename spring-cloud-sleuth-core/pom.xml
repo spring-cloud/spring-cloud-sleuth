@@ -271,6 +271,11 @@
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>net.jcip</groupId>
+			<artifactId>jcip-annotations</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<profiles>
