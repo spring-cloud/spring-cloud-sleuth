@@ -272,7 +272,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		headers.setImmutable();
 		if (message instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) message;
-			return new ErrorMessage(errorMessage.getPayload(), errorMessage.getHeaders(),
+			return new ErrorMessage(errorMessage.getPayload(), headers.getMessageHeaders(),
 					errorMessage.getOriginalMessage());
 		}
 		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
