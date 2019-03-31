@@ -283,6 +283,28 @@ public class TracingChannelInterceptorTest {
 				.isSameAs(errorsReplyChannel);
 	}
 
+	@Test
+	public void errorMessageOriginalMessageRetained() {
+		this.channel.addInterceptor(this.interceptor);
+		Message<?> originalMessage = MessageBuilder.withPayload("Hello")
+				.setHeader("header", "value").build();
+		Message<?> failedMessage = MessageBuilder.fromMessage(originalMessage)
+				.removeHeader("header").build();
+		this.channel.send(new ErrorMessage(new MessagingException(failedMessage),
+				originalMessage.getHeaders(), originalMessage));
+
+		this.message = this.channel.receive();
+
+		assertThat(this.message).isNotNull();
+		assertThat(this.message)
+				.isInstanceOfSatisfying(ErrorMessage.class, errorMessage -> {
+					assertThat(errorMessage.getOriginalMessage())
+							.isSameAs(originalMessage);
+					assertThat(errorMessage.getHeaders().get("header"))
+							.isEqualTo("value");
+				});
+	}
+
 	ChannelInterceptor producerSideOnly(ChannelInterceptor delegate) {
 		return new ChannelInterceptorAdapter() {
 			@Override
