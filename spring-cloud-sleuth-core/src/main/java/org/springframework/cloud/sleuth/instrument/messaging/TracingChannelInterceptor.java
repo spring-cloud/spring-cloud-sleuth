@@ -192,13 +192,15 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			Message<?> retrievedMessage, MessageHeaderAccessor additionalHeaders) {
 		MessageHeaderAccessor headers = MessageHeaderAccessor
 				.getMutableAccessor(originalMessage);
-		if (originalMessage.getPayload() instanceof MessagingException) {
+		if (originalMessage instanceof ErrorMessage) {
+			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
 			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(
 					additionalHeaders.getMessageHeaders(),
 					this.tracing.propagation().keys()));
-			return new ErrorMessage((MessagingException) originalMessage.getPayload(),
+			return new ErrorMessage(errorMessage.getPayload(),
 					isWebSockets(headers) ? headers.getMessageHeaders()
-							: new MessageHeaders(headers.getMessageHeaders()));
+							: new MessageHeaders(headers.getMessageHeaders()),
+					errorMessage.getOriginalMessage());
 		}
 		headers.copyHeaders(additionalHeaders.getMessageHeaders());
 		return new GenericMessage<>(retrievedMessage.getPayload(),
@@ -268,6 +270,11 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			log.debug("Created a new span in post receive " + span);
 		}
 		headers.setImmutable();
+		if (message instanceof ErrorMessage) {
+			ErrorMessage errorMessage = (ErrorMessage) message;
+			return new ErrorMessage(errorMessage.getPayload(), headers.getMessageHeaders(),
+					errorMessage.getOriginalMessage());
+		}
 		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
 	}
 
