@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import brave.Span;
 import brave.Tracing;
 import brave.sampler.Sampler;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
@@ -47,6 +48,7 @@ import static org.awaitility.Awaitility.await;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { ScheduledTestConfiguration.class })
 @DirtiesContext
+@NotThreadSafe
 public class TracingOnScheduledTests {
 
 	@Autowired
