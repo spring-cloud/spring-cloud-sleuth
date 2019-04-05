@@ -19,10 +19,11 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 import java.util.AbstractMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import brave.Span;
 import brave.Tracing;
 import brave.sampler.Sampler;
-import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
@@ -185,11 +186,9 @@ class TestBeanWithScheduledMethod {
 		this.tracing = tracing;
 	}
 
-	@Scheduled(fixedDelay = 1L)
+	@Scheduled(fixedDelay = 1000L)
 	public void scheduledMethod() {
-		log.info("Running the scheduled method");
 		this.span = this.tracing.tracer().currentSpan();
-		log.info("Stored the span " + this.span + " as current span");
 		this.executed.set(true);
 	}
 
@@ -258,7 +257,7 @@ class TestBeanWithScheduledMethodToBeIgnored {
 		this.tracing = tracing;
 	}
 
-	@Scheduled(fixedDelay = 1L)
+	@Scheduled(fixedDelay = 1000L)
 	public void scheduledMethodToIgnore() {
 		this.span = this.tracing.tracer().currentSpan();
 		this.executed.set(true);

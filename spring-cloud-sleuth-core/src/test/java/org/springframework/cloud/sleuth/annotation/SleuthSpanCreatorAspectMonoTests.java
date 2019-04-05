@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
@@ -50,6 +52,7 @@ import static reactor.core.publisher.Mono.just;
 @SpringBootTest(classes = SleuthSpanCreatorAspectMonoTests.TestConfiguration.class)
 @RunWith(SpringRunner.class)
 @DirtiesContext(methodMode = BEFORE_METHOD)
+@NotThreadSafe
 public class SleuthSpanCreatorAspectMonoTests {
 
 	@Autowired

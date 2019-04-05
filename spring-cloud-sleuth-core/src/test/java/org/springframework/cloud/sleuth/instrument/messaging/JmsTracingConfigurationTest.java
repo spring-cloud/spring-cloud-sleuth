@@ -27,6 +27,8 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
 import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
 import javax.resource.spi.ResourceAdapter;
@@ -110,6 +112,22 @@ public class JmsTracingConfigurationTest {
 		}
 	}
 
+	static void checkTopicConnection(AssertableApplicationContext ctx)
+			throws JMSException {
+		// Not using try-with-resources as that doesn't exist in JMS 1.1
+		TopicConnection con = ctx.getBean(TopicConnectionFactory.class)
+				.createTopicConnection();
+		try {
+			con.setExceptionListener(exception -> {
+			});
+			assertThat(con.getExceptionListener().getClass().getName())
+					.startsWith("brave.jms.TracingExceptionListener");
+		}
+		finally {
+			con.close();
+		}
+	}
+
 	@Test
 	public void tracesConnectionFactory() {
 		this.contextRunner.run(JmsTracingConfigurationTest::checkConnection);
@@ -121,6 +139,15 @@ public class JmsTracingConfigurationTest {
 			clearSpans(ctx);
 			checkConnection(ctx);
 			checkXAConnection(ctx);
+		});
+	}
+
+	@Test
+	public void tracesTopicConnectionFactories() {
+		this.contextRunner.withUserConfiguration(XAConfiguration.class).run(ctx -> {
+			clearSpans(ctx);
+			checkConnection(ctx);
+			checkTopicConnection(ctx);
 		});
 	}
 

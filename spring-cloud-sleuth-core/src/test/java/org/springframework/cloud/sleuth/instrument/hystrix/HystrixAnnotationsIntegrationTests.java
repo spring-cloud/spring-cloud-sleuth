@@ -69,15 +69,6 @@ public class HystrixAnnotationsIntegrationTests {
 		this.catcher.invokeLogicWrappedInHystrixCommand();
 	}
 
-	private void thenSpanInHystrixThreadIsContinued(final Span span) {
-		then(span).isNotNull();
-		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(HystrixAnnotationsIntegrationTests.this.catcher).isNotNull();
-			then(span.context().traceId()).isEqualTo(
-					HystrixAnnotationsIntegrationTests.this.catcher.getTraceId());
-		});
-	}
-
 	private void thenSpanInHystrixThreadIsCreated() {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(HystrixAnnotationsIntegrationTests.this.catcher.getSpan()).isNotNull();
@@ -113,8 +104,10 @@ public class HystrixAnnotationsIntegrationTests {
 
 		@HystrixCommand
 		public void invokeLogicWrappedInHystrixCommand() {
+			System.out.println("FOOO");
 			this.spanCaughtFromHystrixThread = new AtomicReference<>(
 					this.tracing.tracer().currentSpan());
+			System.out.println("aksdhkasd: " + this.spanCaughtFromHystrixThread);
 		}
 
 		public Long getTraceId() {

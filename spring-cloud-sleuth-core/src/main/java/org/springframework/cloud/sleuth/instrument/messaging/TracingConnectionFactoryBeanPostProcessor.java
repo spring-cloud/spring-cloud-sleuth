@@ -22,6 +22,8 @@ import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
 import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
 import javax.jms.XAJMSContext;
@@ -73,6 +75,10 @@ class TracingConnectionFactoryBeanPostProcessor implements BeanPostProcessor {
 		if (bean instanceof XAConnectionFactory) {
 			return new LazyXAConnectionFactory(this.beanFactory,
 					(XAConnectionFactory) bean);
+		}
+		else if (bean instanceof TopicConnectionFactory) {
+			return new LazyTopicConnectionFactory(this.beanFactory,
+					(TopicConnectionFactory) bean);
 		}
 		else if (bean instanceof ConnectionFactory) {
 			return new LazyConnectionFactory(this.beanFactory, (ConnectionFactory) bean);
@@ -131,6 +137,73 @@ class LazyXAConnectionFactory implements XAConnectionFactory {
 		}
 		this.wrappedDelegate = jmsTracing().xaConnectionFactory(this.delegate);
 		return this.wrappedDelegate;
+	}
+
+}
+
+class LazyTopicConnectionFactory implements TopicConnectionFactory {
+
+	private final BeanFactory beanFactory;
+
+	private final TopicConnectionFactory delegate;
+
+	private final LazyConnectionFactory factory;
+
+	private JmsTracing jmsTracing;
+
+	LazyTopicConnectionFactory(BeanFactory beanFactory, TopicConnectionFactory delegate) {
+		this.beanFactory = beanFactory;
+		this.delegate = delegate;
+		this.factory = new LazyConnectionFactory(beanFactory, delegate);
+	}
+
+	@Override
+	public TopicConnection createTopicConnection() throws JMSException {
+		return jmsTracing().topicConnection(this.delegate.createTopicConnection());
+	}
+
+	@Override
+	public TopicConnection createTopicConnection(String s, String s1)
+			throws JMSException {
+		return jmsTracing().topicConnection(this.delegate.createTopicConnection(s, s1));
+	}
+
+	@Override
+	public Connection createConnection() throws JMSException {
+		return this.factory.createConnection();
+	}
+
+	@Override
+	public Connection createConnection(String s, String s1) throws JMSException {
+		return this.factory.createConnection(s, s1);
+	}
+
+	@Override
+	public JMSContext createContext() {
+		return this.factory.createContext();
+	}
+
+	@Override
+	public JMSContext createContext(String s, String s1) {
+		return this.factory.createContext(s, s1);
+	}
+
+	@Override
+	public JMSContext createContext(String s, String s1, int i) {
+		return this.factory.createContext(s, s1, i);
+	}
+
+	@Override
+	public JMSContext createContext(int i) {
+		return this.factory.createContext(i);
+	}
+
+	private JmsTracing jmsTracing() {
+		if (this.jmsTracing != null) {
+			return this.jmsTracing;
+		}
+		this.jmsTracing = this.beanFactory.getBean(JmsTracing.class);
+		return this.jmsTracing;
 	}
 
 }

@@ -296,8 +296,8 @@ public class TracingChannelInterceptorTest {
 		this.message = this.channel.receive();
 
 		assertThat(this.message).isNotNull();
-		assertThat(this.message)
-				.isInstanceOfSatisfying(ErrorMessage.class, errorMessage -> {
+		assertThat(this.message).isInstanceOfSatisfying(ErrorMessage.class,
+				errorMessage -> {
 					assertThat(errorMessage.getOriginalMessage())
 							.isSameAs(originalMessage);
 					assertThat(errorMessage.getHeaders().get("header"))

@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
@@ -64,6 +66,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
+@NotThreadSafe
 public class TraceWebFluxTests {
 
 	public static final String EXPECTED_TRACE_ID = "b919095138aa4c6e";
