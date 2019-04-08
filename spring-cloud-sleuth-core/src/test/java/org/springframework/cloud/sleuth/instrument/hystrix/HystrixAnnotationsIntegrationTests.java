@@ -104,10 +104,8 @@ public class HystrixAnnotationsIntegrationTests {
 
 		@HystrixCommand
 		public void invokeLogicWrappedInHystrixCommand() {
-			System.out.println("FOOO");
 			this.spanCaughtFromHystrixThread = new AtomicReference<>(
 					this.tracing.tracer().currentSpan());
-			System.out.println("aksdhkasd: " + this.spanCaughtFromHystrixThread);
 		}
 
 		public Long getTraceId() {
