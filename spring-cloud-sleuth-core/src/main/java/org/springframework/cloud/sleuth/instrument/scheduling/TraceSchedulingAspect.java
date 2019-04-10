@@ -59,6 +59,9 @@ public class TraceSchedulingAspect {
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
 		if (this.skipPattern.matcher(pjp.getTarget().getClass().getName()).matches()) {
+			// we might have a span in context due to wrapping of runnables
+			// we want to clear that context
+			this.tracer.withSpanInScope(null);
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());

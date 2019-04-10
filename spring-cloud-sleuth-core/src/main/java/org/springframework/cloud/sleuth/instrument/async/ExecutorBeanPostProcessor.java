@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Supplier;
 
 import org.aopalliance.aop.Advice;
@@ -35,6 +36,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -69,9 +71,11 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			throws BeansException {
 		if (bean instanceof ThreadPoolTaskExecutor) {
 			return wrapThreadPoolTaskExecutor(bean);
-		} else if (bean instanceof ExecutorService) {
+		}
+		else if (bean instanceof ExecutorService) {
 			return wrapExecutorService(bean);
-		} else if (bean instanceof Executor) {
+		}
+		else if (bean instanceof Executor) {
 			return wrapExecutor(bean);
 		}
 		return bean;
@@ -108,6 +112,22 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		return createThreadPoolTaskExecutorProxy(bean, cglibProxy, executor);
 	}
 
+	private ProxyFactoryBean wrapThreadPoolTaskScheduler(Object bean) {
+		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+		boolean cglibProxy = !classFinal;
+		ThreadPoolTaskScheduler executor = (ThreadPoolTaskScheduler) bean;
+		return proxyFactoryBean(bean, cglibProxy, executor,
+				createThreadPoolTaskSchedulerProxy(executor));
+	}
+
+	private ProxyFactoryBean wrapScheduledThreadPoolExecutor(Object bean) {
+		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+		boolean cglibProxy = !classFinal;
+		ScheduledThreadPoolExecutor executor = (ScheduledThreadPoolExecutor) bean;
+		return proxyFactoryBean(bean, cglibProxy, executor,
+				createScheduledThreadPoolExecutorProxy(executor));
+	}
+
 	private Object wrapExecutorService(Object bean) {
 		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
 		boolean cglibProxy = !classFinal;
@@ -121,6 +141,16 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				() -> new LazyTraceThreadPoolTaskExecutor(this.beanFactory, executor));
 	}
 
+	Supplier createThreadPoolTaskSchedulerProxy(ThreadPoolTaskScheduler executor) {
+		return () -> new LazyTraceThreadPoolTaskScheduler(this.beanFactory, executor);
+	}
+
+	Supplier createScheduledThreadPoolExecutorProxy(ScheduledThreadPoolExecutor executor) {
+		return () -> new LazyTraceScheduledThreadPoolExecutor(executor.getCorePoolSize(),
+				executor.getThreadFactory(), executor
+				.getRejectedExecutionHandler(), this.beanFactory, executor);
+	}
+
 	Object createExecutorServiceProxy(Object bean, boolean cglibProxy,
 			ExecutorService executor) {
 		return getProxiedObject(bean, cglibProxy, executor,
@@ -129,6 +159,42 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
 	private Object getProxiedObject(Object bean, boolean cglibProxy, Executor executor,
 			Supplier<Executor> supplier) {
+		ProxyFactoryBean factory = proxyFactoryBean(bean, cglibProxy, executor, supplier);
+		try {
+			return getObject(factory);
+		}
+		catch (Exception ex) {
+			if (log.isDebugEnabled()) {
+				log.debug("Exception occurred while trying to get a proxy. Will fallback to a different implementation", ex);
+			}
+			try {
+				if (bean instanceof ThreadPoolTaskScheduler) {
+					if (log.isDebugEnabled()) {
+						log.debug(
+								"Will wrap ThreadPoolTaskScheduler in its tracing representation due to previous errors");
+					}
+					return createThreadPoolTaskSchedulerProxy(
+							(ThreadPoolTaskScheduler) bean).get();
+				}
+				else if (bean instanceof ScheduledThreadPoolExecutor) {
+					if (log.isDebugEnabled()) {
+						log.debug(
+								"Will wrap ScheduledThreadPoolExecutor in its tracing representation due to previous errors");
+					}
+					return createScheduledThreadPoolExecutorProxy(
+							(ScheduledThreadPoolExecutor) bean).get();
+				}
+			}
+			catch (Exception ex2) {
+				if (log.isDebugEnabled()) {
+					log.debug("Fallback for special wrappers failed, will try the tracing representation instead", ex2);
+				}
+			}
+			return supplier.get();
+		}
+	}
+
+	private ProxyFactoryBean proxyFactoryBean(Object bean, boolean cglibProxy, Executor executor, Supplier<Executor> supplier) {
 		ProxyFactoryBean factory = new ProxyFactoryBean();
 		factory.setProxyTargetClass(cglibProxy);
 		factory.addAdvice(new ExecutorMethodInterceptor<Executor>(executor,
@@ -139,14 +205,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			}
 		});
 		factory.setTarget(bean);
-		try {
-			return getObject(factory);
-		} catch (Exception e) {
-			if (log.isDebugEnabled()) {
-				log.debug("Exception occurred while trying to get a proxy. Will fallback to a different implementation", e);
-			}
-			return supplier.get();
-		}
+		return factory;
 	}
 
 	Object getObject(ProxyFactoryBean factory) {
@@ -180,7 +239,8 @@ class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor
 		if (methodOnTracedBean != null) {
 			try {
 				return methodOnTracedBean.invoke(executor, invocation.getArguments());
-			} catch (InvocationTargetException ex) {
+			}
+			catch (InvocationTargetException ex) {
 				// gh-1092: throw the target exception (if present)
 				Throwable cause = ex.getCause();
 				throw (cause != null) ? cause : ex;
