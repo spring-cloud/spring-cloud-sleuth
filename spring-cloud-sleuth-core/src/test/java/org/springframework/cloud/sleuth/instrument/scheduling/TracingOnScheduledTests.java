@@ -68,6 +68,7 @@ public class TracingOnScheduledTests {
 	public void setup() {
 		this.beanWithScheduledMethod.clear();
 		this.beanWithScheduledMethodToBeIgnored.clear();
+		this.reporter.clear();
 	}
 
 	@Test

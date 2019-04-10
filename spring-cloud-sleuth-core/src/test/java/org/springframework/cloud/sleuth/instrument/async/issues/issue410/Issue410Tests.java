@@ -20,6 +20,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
@@ -45,6 +46,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -176,6 +178,58 @@ public class Issue410Tests {
 		then(this.tracer.currentSpan()).isNull();
 	}
 
+	/**
+	 * Related to issue #1232
+	 */
+	@Test
+	public void should_pass_tracing_info_for_completable_futures_with_threadPoolTaskScheduler() {
+		Span span = this.tracer.nextSpan().name("foo");
+		log.info("Starting test");
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			String response = this.restTemplate.getForObject(
+					"http://localhost:" + port() + "/threadPoolTaskScheduler",
+					String.class);
+
+			then(response).isEqualTo(span.context().traceIdString());
+			Awaitility.await().untilAsserted(() -> {
+				then(this.asyncTask.getSpan().get()).isNotNull();
+				then(this.asyncTask.getSpan().get().context().traceId())
+						.isEqualTo(span.context().traceId());
+			});
+		}
+		finally {
+			span.finish();
+		}
+
+		then(this.tracer.currentSpan()).isNull();
+	}
+
+	/**
+	 * Related to issue #1232
+	 */
+	@Test
+	public void should_pass_tracing_info_for_completable_futures_with_scheduledThreadPoolExecutor() {
+		Span span = this.tracer.nextSpan().name("foo");
+		log.info("Starting test");
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			String response = this.restTemplate.getForObject(
+					"http://localhost:" + port() + "/scheduledThreadPoolExecutor",
+					String.class);
+
+			then(response).isEqualTo(span.context().traceIdString());
+			Awaitility.await().untilAsserted(() -> {
+				then(this.asyncTask.getSpan().get()).isNotNull();
+				then(this.asyncTask.getSpan().get().context().traceId())
+						.isEqualTo(span.context().traceId());
+			});
+		}
+		finally {
+			span.finish();
+		}
+
+		then(this.tracer.currentSpan()).isNull();
+	}
+
 	private int port() {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
@@ -203,6 +257,18 @@ class AppConfig {
 		return executor;
 	}
 
+	@Bean
+	public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+		ThreadPoolTaskScheduler executor = new ThreadPoolTaskScheduler();
+		executor.initialize();
+		return executor;
+	}
+
+	@Bean
+	public ScheduledThreadPoolExecutor scheduledThreadPoolExecutor() {
+		return new ScheduledThreadPoolExecutor(10);
+	}
+
 }
 
 @Component
@@ -223,6 +289,12 @@ class AsyncTask {
 
 	@Autowired
 	BeanFactory beanFactory;
+
+	@Autowired
+	ThreadPoolTaskScheduler threadPoolTaskScheduler;
+
+	@Autowired
+	ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
 
 	private AtomicReference<Span> span = new AtomicReference<>();
 
@@ -290,6 +362,26 @@ class AsyncTask {
 		return this.span.get();
 	}
 
+	public Span scheduledThreadPoolExecutor()
+			throws ExecutionException, InterruptedException {
+		log.info("This task is running with ScheduledThreadPoolExecutor");
+		this.scheduledThreadPoolExecutor.submit(() -> {
+			log.info("Hello from runnable");
+			AsyncTask.this.span.set(AsyncTask.this.tracer.currentSpan());
+		}).get();
+		return this.span.get();
+	}
+
+	public Span threadPoolTaskScheduler()
+			throws ExecutionException, InterruptedException {
+		log.info("This task is running with ThreadPoolTaskScheduler");
+		this.threadPoolTaskScheduler.submit(() -> {
+			log.info("Hello from runnable");
+			AsyncTask.this.span.set(AsyncTask.this.tracer.currentSpan());
+		}).get();
+		return this.span.get();
+	}
+
 	public AtomicReference<Span> getSpan() {
 		return this.span;
 	}
@@ -333,6 +425,20 @@ class Application {
 	public String taskScheduler() throws ExecutionException, InterruptedException {
 		log.info("Executing completable via task scheduler");
 		return this.asyncTask.taskScheduler().context().traceIdString();
+	}
+
+	@RequestMapping("/threadPoolTaskScheduler")
+	public String threadPoolTaskScheduler()
+			throws ExecutionException, InterruptedException {
+		log.info("Executing completable via ThreadPoolTaskScheduler");
+		return this.asyncTask.threadPoolTaskScheduler().context().traceIdString();
+	}
+
+	@RequestMapping("/scheduledThreadPoolExecutor")
+	public String scheduledThreadPoolExecutor()
+			throws ExecutionException, InterruptedException {
+		log.info("Executing completable via ScheduledThreadPoolExecutor");
+		return this.asyncTask.scheduledThreadPoolExecutor().context().traceIdString();
 	}
 
 	/**
