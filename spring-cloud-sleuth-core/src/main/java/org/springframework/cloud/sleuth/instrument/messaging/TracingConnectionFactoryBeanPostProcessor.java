@@ -70,9 +70,13 @@ class TracingConnectionFactoryBeanPostProcessor implements BeanPostProcessor {
 			}
 			return bean;
 		}
+		if (bean instanceof XAConnectionFactory && bean instanceof ConnectionFactory) {
+			return new LazyConnectionAndXaConnectionFactory(this.beanFactory,
+					(ConnectionFactory) bean, (XAConnectionFactory) bean);
+		}
 		// We check XA first in case the ConnectionFactory also implements
 		// XAConnectionFactory
-		if (bean instanceof XAConnectionFactory) {
+		else if (bean instanceof XAConnectionFactory) {
 			return new LazyXAConnectionFactory(this.beanFactory,
 					(XAConnectionFactory) bean);
 		}
@@ -267,6 +271,77 @@ class LazyConnectionFactory implements ConnectionFactory {
 		}
 		this.wrappedDelegate = jmsTracing().connectionFactory(this.delegate);
 		return this.wrappedDelegate;
+	}
+
+}
+
+class LazyConnectionAndXaConnectionFactory
+		implements ConnectionFactory, XAConnectionFactory {
+
+	private final ConnectionFactory connectionFactoryDelegate;
+
+	private final XAConnectionFactory xaConnectionFactoryDelegate;
+
+	LazyConnectionAndXaConnectionFactory(BeanFactory beanFactory,
+			ConnectionFactory connectionFactoryDelegate,
+			XAConnectionFactory xaConnectionFactoryDelegate) {
+		this.connectionFactoryDelegate = new LazyConnectionFactory(beanFactory,
+				connectionFactoryDelegate);
+		this.xaConnectionFactoryDelegate = new LazyXAConnectionFactory(beanFactory,
+				xaConnectionFactoryDelegate);
+	}
+
+	@Override
+	public Connection createConnection() throws JMSException {
+		return this.connectionFactoryDelegate.createConnection();
+	}
+
+	@Override
+	public Connection createConnection(String userName, String password)
+			throws JMSException {
+		return this.connectionFactoryDelegate.createConnection(userName, password);
+	}
+
+	@Override
+	public JMSContext createContext() {
+		return this.connectionFactoryDelegate.createContext();
+	}
+
+	@Override
+	public JMSContext createContext(String userName, String password) {
+		return this.connectionFactoryDelegate.createContext(userName, password);
+	}
+
+	@Override
+	public JMSContext createContext(String userName, String password, int sessionMode) {
+		return this.connectionFactoryDelegate.createContext(userName, password,
+				sessionMode);
+	}
+
+	@Override
+	public JMSContext createContext(int sessionMode) {
+		return this.connectionFactoryDelegate.createContext(sessionMode);
+	}
+
+	@Override
+	public XAConnection createXAConnection() throws JMSException {
+		return this.xaConnectionFactoryDelegate.createXAConnection();
+	}
+
+	@Override
+	public XAConnection createXAConnection(String userName, String password)
+			throws JMSException {
+		return this.xaConnectionFactoryDelegate.createXAConnection(userName, password);
+	}
+
+	@Override
+	public XAJMSContext createXAContext() {
+		return this.xaConnectionFactoryDelegate.createXAContext();
+	}
+
+	@Override
+	public XAJMSContext createXAContext(String userName, String password) {
+		return this.xaConnectionFactoryDelegate.createXAContext(userName, password);
 	}
 
 }
