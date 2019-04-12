@@ -25,6 +25,7 @@ import brave.sampler.Sampler;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +62,7 @@ public class TracingOnScheduledTests {
 	ArrayListSpanReporter reporter;
 
 	@Before
+	@After
 	public void setup() {
 		this.beanWithScheduledMethod.clear();
 		this.beanWithScheduledMethodToBeIgnored.clear();
