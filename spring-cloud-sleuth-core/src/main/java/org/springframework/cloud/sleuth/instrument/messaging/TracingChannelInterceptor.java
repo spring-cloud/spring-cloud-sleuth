@@ -395,7 +395,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		Object payload = message.getPayload();
 		if (payload instanceof MessagingException) {
 			MessagingException e = (MessagingException) payload;
-			return e.getFailedMessage();
+			Message<?> failedMessage = e.getFailedMessage();
+			return failedMessage != null ? failedMessage : message;
 		}
 		return message;
 	}
