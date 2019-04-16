@@ -263,6 +263,28 @@ public class TracingChannelInterceptorTest {
 		assertThat(this.message.getHeaders().getErrorChannel()).isSameAs(errorsReplyChannel);
 	}
 
+	@Test
+	public void errorMessageHeadersWithNullPayloadRetained() {
+		this.channel.addInterceptor(this.interceptor);
+		Map<String, Object> errorChannelHeaders = new HashMap<>();
+		errorChannelHeaders.put(TraceMessageHeaders.TRACE_ID_NAME, "000000000000000a");
+		errorChannelHeaders.put(TraceMessageHeaders.SPAN_ID_NAME, "000000000000000a");
+		this.channel.send(new ErrorMessage(new MessagingException("exception"),
+				errorChannelHeaders));
+
+		this.message = this.channel.receive();
+
+		assertThat(this.message).isNotNull();
+		String spanId = this.message.getHeaders().get(TraceMessageHeaders.SPAN_ID_NAME,
+				String.class);
+		assertThat(spanId).isNotNull();
+		String traceId = this.message.getHeaders().get(TraceMessageHeaders.TRACE_ID_NAME,
+				String.class);
+		assertThat(traceId).isEqualTo("000000000000000a");
+		assertThat(spanId).isNotEqualTo("000000000000000a");
+		assertThat(this.spans).hasSize(2);
+	}
+
 	ChannelInterceptor producerSideOnly(ChannelInterceptor delegate) {
 		return new ChannelInterceptorAdapter() {
 			@Override
