@@ -70,6 +70,7 @@ public class TracingOnScheduledTests {
 	}
 
 	@Test
+	@DirtiesContext
 	public void should_have_span_set_after_scheduled_method_has_been_executed() {
 		await().atMost(10, SECONDS).untilAsserted(() -> {
 			then(this.beanWithScheduledMethod.isExecuted()).isTrue();
@@ -109,7 +110,7 @@ public class TracingOnScheduledTests {
 		then(storedSpan).isNotNull();
 		then(storedSpan.context().traceId()).isNotNull();
 		zipkin2.Span foundSpan = this.reporter.getSpans().stream()
-				.filter(span -> !span.tags().containsKey("error"))
+				.filter(span -> !span.tags().containsKey("error") && span.tags().containsValue("TestBeanWithScheduledMethod"))
 				.findFirst().orElseThrow(() -> new AssertionError("Span is missing"));
 		then(foundSpan.tags())
 				.contains(new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
